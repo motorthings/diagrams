@@ -1,0 +1,830 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>G&amp;A AI Initiative Dashboard -- Scoring Review</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  /* ============ THEME: BLUEPRINT ============ */
+  :root {
+    --font-body: 'DM Sans', system-ui, sans-serif;
+    --font-mono: 'IBM Plex Mono', 'SF Mono', Consolas, monospace;
+
+    --bg: #f0f4f8;
+    --surface: #ffffff;
+    --surface2: #e8eef4;
+    --surface-elevated: #ffffff;
+    --border: rgba(0, 20, 60, 0.08);
+    --border-bright: rgba(0, 20, 60, 0.15);
+    --text: #0f172a;
+    --text-dim: #64748b;
+    --accent: #1e40af;
+    --accent-dim: rgba(30, 64, 175, 0.07);
+    --accent-light: #3b82f6;
+    --green: #059669;
+    --green-dim: rgba(5, 150, 105, 0.08);
+    --red: #dc2626;
+    --red-dim: rgba(220, 38, 38, 0.07);
+    --orange: #d97706;
+    --orange-dim: rgba(217, 119, 6, 0.08);
+    --purple: #7c3aed;
+    --purple-dim: rgba(124, 58, 237, 0.08);
+    --cyan: #0891b2;
+    --cyan-dim: rgba(8, 145, 178, 0.08);
+    --finance: #1e40af;
+    --legal: #7c3aed;
+    --people: #059669;
+    --is: #d97706;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #0c1222;
+      --surface: #131b2e;
+      --surface2: #1a2540;
+      --surface-elevated: #1e2d4a;
+      --border: rgba(148, 180, 230, 0.08);
+      --border-bright: rgba(148, 180, 230, 0.15);
+      --text: #e2e8f0;
+      --text-dim: #94a3b8;
+      --accent: #60a5fa;
+      --accent-dim: rgba(96, 165, 250, 0.1);
+      --accent-light: #93c5fd;
+      --green: #34d399;
+      --green-dim: rgba(52, 211, 153, 0.1);
+      --red: #f87171;
+      --red-dim: rgba(248, 113, 113, 0.1);
+      --orange: #fbbf24;
+      --orange-dim: rgba(251, 191, 36, 0.1);
+      --purple: #a78bfa;
+      --purple-dim: rgba(167, 139, 250, 0.1);
+      --cyan: #22d3ee;
+      --cyan-dim: rgba(34, 211, 238, 0.1);
+      --finance: #60a5fa;
+      --legal: #a78bfa;
+      --people: #34d399;
+      --is: #fbbf24;
+    }
+  }
+
+  /* ============ RESET ============ */
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    background: var(--bg);
+    background-image:
+      radial-gradient(ellipse at 20% 0%, var(--accent-dim) 0%, transparent 55%),
+      radial-gradient(ellipse at 80% 100%, var(--purple-dim) 0%, transparent 45%);
+    color: var(--text);
+    font-family: var(--font-body);
+    padding: 40px;
+    min-height: 100vh;
+    overflow-wrap: break-word;
+  }
+
+  /* ============ ANIMATION ============ */
+  @keyframes fadeUp { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: translateY(0); } }
+  @keyframes fadeScale { from { opacity: 0; transform: scale(0.92); } to { opacity: 1; transform: scale(1); } }
+  .animate { animation: fadeUp 0.4s ease-out both; animation-delay: calc(var(--i, 0) * 0.04s); }
+  .animate-scale { animation: fadeScale 0.35s ease-out both; animation-delay: calc(var(--i, 0) * 0.06s); }
+  @media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; } }
+
+  /* ============ NAV LAYOUT ============ */
+  .wrap { max-width: 1400px; margin: 0 auto; display: grid; grid-template-columns: 170px 1fr; gap: 0 40px; }
+  .main { min-width: 0; }
+
+  .toc { position: sticky; top: 24px; align-self: start; padding: 14px 0; grid-row: 1 / -1; max-height: calc(100dvh - 48px); overflow-y: auto; }
+  .toc::-webkit-scrollbar { width: 3px; }
+  .toc::-webkit-scrollbar-thumb { background: var(--surface-elevated); border-radius: 2px; }
+  .toc-title { font-family: var(--font-mono); font-size: 9px; font-weight: 700; text-transform: uppercase; letter-spacing: 2px; color: var(--text-dim); padding: 0 0 10px; margin-bottom: 8px; border-bottom: 1px solid var(--border); }
+  .toc a { display: block; font-size: 11px; color: var(--text-dim); text-decoration: none; padding: 4px 8px; border-radius: 5px; border-left: 2px solid transparent; transition: all 0.15s; line-height: 1.4; margin-bottom: 1px; }
+  .toc a:hover { color: var(--text); background: var(--surface2); }
+  .toc a.active { color: var(--text); border-left-color: var(--accent); }
+
+  @media (max-width: 1000px) {
+    .wrap { grid-template-columns: 1fr; padding-top: 0; }
+    body { padding-top: 0; }
+    .toc { position: sticky; top: 0; z-index: 200; max-height: none; display: flex; gap: 4px; align-items: center; overflow-x: auto; -webkit-overflow-scrolling: touch; background: var(--bg); border-bottom: 1px solid var(--border); padding: 10px 0; margin: 0 -40px; padding-left: 40px; padding-right: 40px; grid-row: auto; }
+    .toc::-webkit-scrollbar { display: none; }
+    .toc-title { display: none; }
+    .toc a { white-space: nowrap; flex-shrink: 0; border-left: none; border-bottom: 2px solid transparent; border-radius: 4px 4px 0 0; padding: 6px 10px; font-size: 10px; }
+    .toc a.active { border-left: none; border-bottom-color: var(--accent); background: var(--surface); }
+    .main { padding-top: 20px; }
+    .sec-head { scroll-margin-top: 52px; }
+  }
+
+  /* ============ HEADER ============ */
+  h1 { font-size: 30px; font-weight: 700; letter-spacing: -0.5px; margin-bottom: 4px; }
+  .subtitle { color: var(--text-dim); font-family: var(--font-mono); font-size: 12px; margin-bottom: 32px; line-height: 1.5; }
+  .subtitle strong { color: var(--text); }
+
+  /* ============ SECTION HEADS ============ */
+  .sec-head { font-family: var(--font-mono); font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 1.5px; color: var(--accent); margin: 36px 0 16px; padding-bottom: 8px; border-bottom: 2px solid var(--accent-dim); display: flex; align-items: center; gap: 8px; }
+  .sec-head::before { content: ''; width: 8px; height: 8px; border-radius: 50%; background: var(--accent); }
+
+  /* ============ KPI CARDS ============ */
+  .kpi-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 14px; margin-bottom: 24px; }
+  .kpi-card { background: var(--surface-elevated); border: 1px solid var(--border); border-radius: 10px; padding: 18px; box-shadow: 0 2px 8px rgba(0,0,0,0.04); transition: transform 0.2s, box-shadow 0.2s; }
+  .kpi-card:hover { transform: translateY(-2px); box-shadow: 0 4px 12px rgba(0,0,0,0.08); }
+  .kpi-card__value { font-size: 32px; font-weight: 700; line-height: 1.1; font-variant-numeric: tabular-nums; letter-spacing: -1px; }
+  .kpi-card__label { font-family: var(--font-mono); font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: 1.2px; color: var(--text-dim); margin-top: 6px; }
+  .kpi-card__sub { font-family: var(--font-mono); font-size: 11px; color: var(--text-dim); margin-top: 4px; }
+
+  /* ============ TABLE ============ */
+  .table-wrap { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; overflow: hidden; margin-bottom: 24px; }
+  .table-scroll { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+  .data-table { width: 100%; border-collapse: collapse; font-size: 13px; line-height: 1.55; }
+  .data-table thead { position: sticky; top: 0; z-index: 2; }
+  .data-table th { background: var(--surface2); font-family: var(--font-mono); font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: 1px; color: var(--text-dim); text-align: left; padding: 12px 14px; border-bottom: 2px solid var(--border-bright); white-space: nowrap; }
+  .data-table td { padding: 12px 14px; border-bottom: 1px solid var(--border); vertical-align: top; }
+  .data-table tbody tr:last-child td { border-bottom: none; }
+  .data-table tbody tr:nth-child(even) { background: var(--accent-dim); }
+  .data-table tbody tr { transition: background 0.15s; animation: fadeUp 0.35s ease-out both; animation-delay: calc(var(--i, 0) * 0.03s); }
+  .data-table tbody tr:hover { background: var(--border); }
+  .data-table td.num, .data-table th.num { text-align: right; font-variant-numeric: tabular-nums; font-family: var(--font-mono); }
+  .data-table small { display: block; color: var(--text-dim); font-size: 11px; margin-top: 2px; }
+  .data-table tfoot td { background: var(--surface2); font-weight: 600; font-family: var(--font-mono); font-size: 12px; border-top: 2px solid var(--border-bright); border-bottom: none; padding: 12px 14px; }
+  .data-table .wide { min-width: 180px; max-width: 360px; }
+
+  /* ============ BADGES ============ */
+  .tag { font-family: var(--font-mono); font-size: 10px; font-weight: 500; padding: 2px 7px; border-radius: 4px; white-space: nowrap; }
+  .tag--finance { background: rgba(30,64,175,0.1); color: var(--finance); }
+  .tag--legal { background: rgba(124,58,237,0.1); color: var(--legal); }
+  .tag--people { background: rgba(5,150,105,0.1); color: var(--people); }
+  .tag--is { background: rgba(217,119,6,0.1); color: var(--is); }
+
+  .status { display: inline-flex; align-items: center; gap: 5px; font-family: var(--font-mono); font-size: 10px; font-weight: 600; padding: 3px 10px; border-radius: 6px; white-space: nowrap; letter-spacing: 0.3px; }
+  .status::before { content: ''; width: 6px; height: 6px; border-radius: 50%; background: currentColor; }
+  .status--up { background: var(--green-dim); color: var(--green); }
+  .status--down { background: var(--red-dim); color: var(--red); }
+  .status--flag { background: var(--orange-dim); color: var(--orange); }
+  .status--new { background: var(--purple-dim); color: var(--purple); }
+  .status--ok { background: var(--cyan-dim); color: var(--cyan); }
+
+  /* ============ SCORE BAR ============ */
+  .score-bar { display: flex; align-items: center; gap: 8px; }
+  .score-bar__track { flex: 1; height: 6px; background: var(--border); border-radius: 3px; overflow: hidden; min-width: 60px; position: relative; }
+  .score-bar__fill { height: 100%; border-radius: 3px; transition: width 0.6s ease-out; }
+  .score-bar__label { font-family: var(--font-mono); font-size: 12px; font-weight: 600; min-width: 32px; text-align: right; }
+  .score-bar__fill--current { background: var(--text-dim); opacity: 0.5; }
+  .score-bar__fill--suggested { background: var(--accent); }
+
+  /* ============ DELTA ARROW ============ */
+  .delta { font-family: var(--font-mono); font-size: 11px; font-weight: 600; }
+  .delta--pos { color: var(--green); }
+  .delta--neg { color: var(--red); }
+  .delta--neutral { color: var(--text-dim); }
+
+  /* ============ LEGEND ============ */
+  .legend { display: flex; gap: 16px; flex-wrap: wrap; margin-bottom: 16px; }
+  .legend-item { display: flex; align-items: center; gap: 6px; font-family: var(--font-mono); font-size: 11px; color: var(--text-dim); }
+  .legend-swatch { width: 10px; height: 10px; border-radius: 3px; }
+
+  /* ============ CALLOUT ============ */
+  .callout { background: color-mix(in srgb, var(--surface) 92%, var(--accent) 8%); border: 1px solid color-mix(in srgb, var(--border) 50%, var(--accent) 50%); border-radius: 10px; padding: 16px 20px; margin-bottom: 20px; font-size: 13px; line-height: 1.6; }
+  .callout strong { color: var(--accent); }
+  .callout-title { font-family: var(--font-mono); font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: 1.2px; color: var(--accent); margin-bottom: 8px; }
+
+  /* ============ THEME CARDS ============ */
+  .themes-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 14px; margin-bottom: 24px; }
+  .theme-card { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 18px; border-left: 3px solid var(--accent); }
+  .theme-card__num { font-family: var(--font-mono); font-size: 10px; font-weight: 600; color: var(--accent); text-transform: uppercase; letter-spacing: 1.5px; margin-bottom: 6px; }
+  .theme-card__title { font-size: 14px; font-weight: 600; margin-bottom: 6px; }
+  .theme-card__body { font-size: 12px; color: var(--text-dim); line-height: 1.5; }
+
+  /* ============ COLLAPSIBLE ============ */
+  details.collapsible { border: 1px solid var(--border); border-radius: 10px; overflow: hidden; margin-bottom: 16px; }
+  details.collapsible summary { padding: 14px 20px; background: var(--surface); font-family: var(--font-mono); font-size: 12px; font-weight: 600; cursor: pointer; list-style: none; display: flex; align-items: center; gap: 8px; color: var(--text); transition: background 0.15s; }
+  details.collapsible summary:hover { background: var(--surface-elevated); }
+  details.collapsible summary::-webkit-details-marker { display: none; }
+  details.collapsible summary::before { content: '\25B8'; font-size: 11px; color: var(--text-dim); transition: transform 0.15s; }
+  details.collapsible[open] summary::before { transform: rotate(90deg); }
+  details.collapsible .collapsible__body { padding: 16px 20px; border-top: 1px solid var(--border); font-size: 13px; line-height: 1.6; color: var(--text-dim); }
+  details.collapsible .collapsible__body strong { color: var(--text); }
+
+  /* ============ RESPONSIVE ============ */
+  @media (max-width: 768px) {
+    body { padding: 16px; }
+    h1 { font-size: 22px; }
+    .kpi-row { grid-template-columns: repeat(2, 1fr); }
+    .themes-grid { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+
+<div class="wrap">
+
+  <nav class="toc" id="toc">
+    <div class="toc-title">Sections</div>
+    <a href="#s0">Overview</a>
+    <a href="#s1">Underscored</a>
+    <a href="#s2">Overscored</a>
+    <a href="#s3">Multiplier Issues</a>
+    <a href="#s4">Missing Initiatives</a>
+    <a href="#s5">Full Comparison</a>
+    <a href="#s6">Key Themes</a>
+  </nav>
+
+  <div class="main">
+
+    <h1 class="animate" style="--i:0">G&amp;A AI Initiative Scoring Review</h1>
+    <p class="subtitle animate" style="--i:1">Cross-referencing 2-week SMT listening tour against dashboard scores<br><strong>April 9, 2026</strong> &mdash; Sources: Listening tour notes (Raul, Steven, Chad, Bella), team docs, IS FY27 pillars, FY27 company initiatives</p>
+
+    <!-- ============ KPI OVERVIEW ============ -->
+    <div id="s0" class="sec-head animate" style="--i:2">Overview</div>
+
+    <div class="kpi-row">
+      <div class="kpi-card animate-scale" style="--i:0">
+        <div class="kpi-card__value" style="color:var(--red)">6</div>
+        <div class="kpi-card__label">Underscored</div>
+        <div class="kpi-card__sub">Should be higher</div>
+      </div>
+      <div class="kpi-card animate-scale" style="--i:1">
+        <div class="kpi-card__value" style="color:var(--orange)">2</div>
+        <div class="kpi-card__label">Overscored</div>
+        <div class="kpi-card__sub">Should be lower</div>
+      </div>
+      <div class="kpi-card animate-scale" style="--i:2">
+        <div class="kpi-card__value" style="color:var(--purple)">2</div>
+        <div class="kpi-card__label">Multiplier Off</div>
+        <div class="kpi-card__sub">Strategic (H) misjudged</div>
+      </div>
+      <div class="kpi-card animate-scale" style="--i:3">
+        <div class="kpi-card__value" style="color:var(--accent)">5</div>
+        <div class="kpi-card__label">Missing</div>
+        <div class="kpi-card__sub">Not on dashboard</div>
+      </div>
+    </div>
+
+    <div class="callout animate" style="--i:5">
+      <div class="callout-title">Scoring Formula</div>
+      <strong>Score = (F + G) x I</strong> where F = Impact to KPI (1-5), G = Effort (5=low, 1=high), H = Strategic Initiative Impact (0-10), I = Multiplier (1 + H/10)
+    </div>
+
+    <div class="legend animate" style="--i:6">
+      <div class="legend-item"><div class="legend-swatch" style="background:var(--finance)"></div> Finance</div>
+      <div class="legend-item"><div class="legend-swatch" style="background:var(--legal)"></div> Legal</div>
+      <div class="legend-item"><div class="legend-swatch" style="background:var(--people)"></div> People</div>
+      <div class="legend-item"><div class="legend-swatch" style="background:var(--is)"></div> IS (Meta)</div>
+    </div>
+
+    <!-- ============ UNDERSCORED ============ -->
+    <div id="s1" class="sec-head animate" style="--i:7">1 -- Underscored (Should Be Higher)</div>
+
+    <div class="table-wrap animate" style="--i:8">
+      <div class="table-scroll">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>Initiative</th>
+              <th>SMT</th>
+              <th>Dept</th>
+              <th class="num">Current</th>
+              <th class="num">Suggested</th>
+              <th class="num">Delta</th>
+              <th>Issue</th>
+              <th>Evidence</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr style="--i:0">
+              <td><strong>Invoice-to-PO Matching</strong><small>AI matching of invoices to PO</small></td>
+              <td>Raul Rivera</td>
+              <td><span class="tag tag--finance">Finance</span></td>
+              <td class="num">7.2</td>
+              <td class="num"><strong>9.1-11.2</strong></td>
+              <td class="num"><span class="delta delta--pos">+1.9 to +4.0</span></td>
+              <td><span class="status status--up">G + H too low</span></td>
+              <td>Raul: "BEST OPPORTUNITY," "no upstream dependencies." 320 invoices/quarter manual. G=2 overstates effort; H=2 misses Carla's ROI proof demand.</td>
+            </tr>
+            <tr style="--i:1">
+              <td><strong>Rovo Help Desk</strong><small>Confluence-based ticket deflection</small></td>
+              <td>Ashley Adams</td>
+              <td><span class="tag tag--legal">Legal</span></td>
+              <td class="num">6.5</td>
+              <td class="num"><strong>7.8-9.1</strong></td>
+              <td class="num"><span class="delta delta--pos">+1.3 to +2.6</span></td>
+              <td><span class="status status--up">F too low</span></td>
+              <td>Ashley's own tracker rates Impact=3, Priority=9 (High). 1,500 tickets/yr is substantial. Proven AI pattern.</td>
+            </tr>
+            <tr style="--i:2">
+              <td><strong>AI Evals (AESOP)</strong><small>Agent evaluation framework</small></td>
+              <td>Mikki Hurt</td>
+              <td><span class="tag tag--is">IS</span></td>
+              <td class="num">8.4</td>
+              <td class="num"><strong>10.5-12.6</strong></td>
+              <td class="num"><span class="delta delta--pos">+2.1 to +4.2</span></td>
+              <td><span class="status status--up">F + H too low</span></td>
+              <td>Carla: "buying a tool is not a win." Evals are how you prove ROI. Pillar 3 KPI: "AI Program ROI measured on 2+ projects." This IS the measurement.</td>
+            </tr>
+            <tr style="--i:3">
+              <td><strong>Hire to Retire (Z0)</strong><small>Cross-functional lifecycle automation</small></td>
+              <td>Mikki Hurt</td>
+              <td><span class="tag tag--finance">Finance</span></td>
+              <td class="num">8.4</td>
+              <td class="num"><strong>9.6-10.8</strong></td>
+              <td class="num"><span class="delta delta--pos">+1.2 to +2.4</span></td>
+              <td><span class="status status--up">H too low</span></td>
+              <td>Pillar 3 KPI: "50%+ employee lifecycle scenarios automated." This IS that KPI. Tiger Team: Chad, Aby, Jonathan, Raul, Katelynn. Broadest coalition.</td>
+            </tr>
+            <tr style="--i:4">
+              <td><strong>Sandbox Environment</strong><small>Non-Glean AI hosting platform</small></td>
+              <td>Mikki Hurt</td>
+              <td><span class="tag tag--is">IS</span></td>
+              <td class="num">9.6</td>
+              <td class="num"><strong>10.2-10.8</strong></td>
+              <td class="num"><span class="delta delta--pos">+0.6 to +1.2</span></td>
+              <td><span class="status status--up">H slightly low</span></td>
+              <td>Steven's CPQ evaluator needs sandbox ("NOT a Glean use case"). Gates all non-Glean initiatives. Force multiplier for Pillar 2 + 3.</td>
+            </tr>
+            <tr style="--i:5">
+              <td><strong>Contract Tagging Tool</strong><small>AI-assisted retroactive tagging</small></td>
+              <td>Shane Lowenberg</td>
+              <td><span class="tag tag--legal">Legal</span></td>
+              <td class="num">6.0</td>
+              <td class="num"><strong>7.2</strong></td>
+              <td class="num"><span class="delta delta--pos">+1.2</span></td>
+              <td><span class="status status--up">G too low</span></td>
+              <td>Classification task with existing taxonomy in LinkSquares. Well-bounded scope. G=2 overstates effort for a labeling task.</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- ============ OVERSCORED ============ -->
+    <div id="s2" class="sec-head animate" style="--i:10">2 -- Overscored (Should Be Lower)</div>
+
+    <div class="table-wrap animate" style="--i:11">
+      <div class="table-scroll">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>Initiative</th>
+              <th>SMT</th>
+              <th>Dept</th>
+              <th class="num">Current</th>
+              <th class="num">Suggested</th>
+              <th class="num">Delta</th>
+              <th>Issue</th>
+              <th>Evidence</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr style="--i:0">
+              <td><strong>Separation Agent</strong><small>Multi-jurisdictional separation agreements</small></td>
+              <td>Aby Castro</td>
+              <td><span class="tag tag--legal">Legal</span></td>
+              <td class="num">12.8</td>
+              <td class="num"><strong>11.2</strong></td>
+              <td class="num"><span class="delta delta--neg">-1.6</span></td>
+              <td><span class="status status--down">G too high</span></td>
+              <td>Multi-jurisdictional (US/EMEA/AU), WoCo requirements, employment law sensitivity. G=4 is generous for this complexity. PRD still in process.</td>
+            </tr>
+            <tr style="--i:1">
+              <td><strong>Offer Letter Generator</strong><small>Exempt/non-exempt classification + template</small></td>
+              <td>Chad Meek</td>
+              <td><span class="tag tag--people">People</span></td>
+              <td class="num">16.2</td>
+              <td class="num"><strong>14.4*</strong></td>
+              <td class="num"><span class="delta delta--neg">-1.8*</span></td>
+              <td><span class="status status--flag">Dependency risk</span></td>
+              <td>*Only if Workday/Binder connectors unavailable. Chad's endorsement supports the scores if deps clear. FLSA Audit in progress on Stacey's roadmap -- rules may not be codified.</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- ============ MULTIPLIER ISSUES ============ -->
+    <div id="s3" class="sec-head animate" style="--i:13">3 -- Strategic Multiplier (H) Misjudged</div>
+
+    <div class="table-wrap animate" style="--i:14">
+      <div class="table-scroll">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>Initiative</th>
+              <th>SMT</th>
+              <th>Dept</th>
+              <th class="num">Current H</th>
+              <th class="num">Suggested H</th>
+              <th class="num">Score Impact</th>
+              <th>Rationale</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr style="--i:0">
+              <td><strong>Vendor Contract Agent</strong><small>Vendor-side compliance feedback</small></td>
+              <td>Shane Lowenberg</td>
+              <td><span class="tag tag--legal">Legal</span></td>
+              <td class="num">2</td>
+              <td class="num"><strong>3-4</strong></td>
+              <td class="num"><span class="delta delta--pos">9.6 -> 10.4-11.2</span></td>
+              <td>Customer-side deal agent gets H=7 vs vendor H=2. Gap too wide. Vendor compliance maps to Carla's cost discipline and Pillar 2.</td>
+            </tr>
+            <tr style="--i:1">
+              <td><strong>Glean Analysis Agent</strong><small>Legal department analytics</small></td>
+              <td>Ashley Adams</td>
+              <td><span class="tag tag--legal">Legal</span></td>
+              <td class="num">2</td>
+              <td class="num"><strong>3-4</strong></td>
+              <td class="num"><span class="delta delta--pos">7.2 -> 7.8-9.1</span></td>
+              <td>Legal analytics feeds Carla's metrics-driven demand. Ashley is operational center of legal. Maps to Pillar 3 data-driven decisions.</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- ============ MISSING INITIATIVES ============ -->
+    <div id="s4" class="sec-head animate" style="--i:16">4 -- Missing From Dashboard</div>
+
+    <div class="callout animate" style="--i:17">
+      <div class="callout-title">Source</div>
+      These initiatives emerged from listening tour conversations but have no row in the prioritization spreadsheet.
+    </div>
+
+    <div class="table-wrap animate" style="--i:18">
+      <div class="table-scroll">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>Initiative</th>
+              <th>SMT</th>
+              <th>Dept</th>
+              <th class="num">Sug. F</th>
+              <th class="num">Sug. G</th>
+              <th class="num">Sug. H</th>
+              <th class="num">Est. Score</th>
+              <th>Evidence</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr style="--i:0">
+              <td><strong>CPQ Deal Evaluator</strong><small>Real-time deal compliance + pricing guardrails</small></td>
+              <td>Steven Odell</td>
+              <td><span class="tag tag--finance">Finance</span></td>
+              <td class="num">5</td>
+              <td class="num">2-3</td>
+              <td class="num">8</td>
+              <td class="num"><strong>12.6-14.4</strong></td>
+              <td>Steven's #2. "Takes out 30-40% of workload" for commercial alone. Crawl-walk-run defined. Needs sandbox. NOT Glean.</td>
+            </tr>
+            <tr style="--i:1">
+              <td><strong>Revenue Contract Review</strong><small>Post-close invoice/contract/recognition reconciliation</small></td>
+              <td>Raul Rivera</td>
+              <td><span class="tag tag--finance">Finance</span></td>
+              <td class="num">4</td>
+              <td class="num">3</td>
+              <td class="num">5</td>
+              <td class="num"><strong>10.5</strong></td>
+              <td>Raul's #1 priority. Every deal >$75K ACV. Not blocked by Zora 2.0 (contract-based). Separate from deal feedback agent.</td>
+            </tr>
+            <tr style="--i:2">
+              <td><strong>Purchase Obligations Disclosure</strong><small>Quarterly US GAAP reporting automation</small></td>
+              <td>Raul Rivera</td>
+              <td><span class="tag tag--finance">Finance</span></td>
+              <td class="num">3</td>
+              <td class="num">3</td>
+              <td class="num">2</td>
+              <td class="num"><strong>7.2</strong></td>
+              <td>Carly spends 18 hours/quarter. Simple logic, massive manual effort. SF + Zora + NetSuite triangulation.</td>
+            </tr>
+            <tr style="--i:3">
+              <td><strong>DPA Review Agents (x2)</strong><small>Customer + vendor DPA comparison vs CF template</small></td>
+              <td>Ashley Adams</td>
+              <td><span class="tag tag--legal">Legal</span></td>
+              <td class="num">3</td>
+              <td class="num">3</td>
+              <td class="num">3</td>
+              <td class="num"><strong>7.8 each</strong></td>
+              <td>Ashley's tracker: Impact=3, Effort=2, "High volume," "Pattern-based," "High" automation potential.</td>
+            </tr>
+            <tr style="--i:4">
+              <td><strong>HRBP Coaching Agent</strong><small>Performance management super-agent for managers</small></td>
+              <td>Stacey Thompson</td>
+              <td><span class="tag tag--people">People</span></td>
+              <td class="num" colspan="4" style="text-align:center;color:var(--text-dim)">Needs discovery conversation</td>
+              <td>Stacey's vision from Google doc. "Review and leverage where AI adds value within PBP team" on FY27 roadmap (not started). Chris flagged 4/3.</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- ============ FULL COMPARISON ============ -->
+    <div id="s5" class="sec-head animate" style="--i:20">5 -- Full Score Comparison</div>
+
+    <p style="font-size:13px;color:var(--text-dim);margin-bottom:16px;" class="animate" style="--i:21">All scored initiatives ranked by suggested score. Bars show current (gray) vs suggested (blue).</p>
+
+    <div class="table-wrap animate" style="--i:22">
+      <div class="table-scroll">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>Initiative</th>
+              <th>Dept</th>
+              <th class="num">Current</th>
+              <th class="num">Suggested</th>
+              <th style="min-width:140px">Visual</th>
+              <th>Verdict</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr style="--i:0">
+              <td><strong>Deal Desk Bot</strong></td>
+              <td><span class="tag tag--finance">Fin</span></td>
+              <td class="num">16.2</td>
+              <td class="num">16.2</td>
+              <td><div class="score-bar"><div class="score-bar__track"><div class="score-bar__fill score-bar__fill--suggested" style="width:100%"></div></div></div></td>
+              <td><span class="status status--ok">Correct</span></td>
+            </tr>
+            <tr style="--i:1">
+              <td><strong>Offer Letter Generator</strong></td>
+              <td><span class="tag tag--people">Ppl</span></td>
+              <td class="num">16.2</td>
+              <td class="num">14.4*</td>
+              <td><div class="score-bar"><div class="score-bar__track"><div class="score-bar__fill score-bar__fill--suggested" style="width:89%"></div></div></div></td>
+              <td><span class="status status--flag">Dep. risk</span></td>
+            </tr>
+            <tr style="--i:1.5">
+              <td><strong>CPQ Deal Evaluator</strong></td>
+              <td><span class="tag tag--finance">Fin</span></td>
+              <td class="num" style="color:var(--text-dim)">--</td>
+              <td class="num">14.4</td>
+              <td><div class="score-bar"><div class="score-bar__track"><div class="score-bar__fill score-bar__fill--suggested" style="width:89%"></div></div></div></td>
+              <td><span class="status status--new">Missing</span></td>
+            </tr>
+            <tr style="--i:2">
+              <td><strong>Deal Feedback Agent</strong></td>
+              <td><span class="tag tag--finance">Fin</span> <span class="tag tag--legal">Leg</span></td>
+              <td class="num">13.6</td>
+              <td class="num">13.6</td>
+              <td><div class="score-bar"><div class="score-bar__track"><div class="score-bar__fill score-bar__fill--suggested" style="width:84%"></div></div></div></td>
+              <td><span class="status status--ok">Correct</span></td>
+            </tr>
+            <tr style="--i:3">
+              <td><strong>AI Evals (AESOP)</strong></td>
+              <td><span class="tag tag--is">IS</span></td>
+              <td class="num">8.4</td>
+              <td class="num">12.6</td>
+              <td><div class="score-bar"><div class="score-bar__track"><div class="score-bar__fill score-bar__fill--current" style="width:52%;position:absolute"></div><div class="score-bar__fill score-bar__fill--suggested" style="width:78%"></div></div></div></td>
+              <td><span class="status status--up">+4.2</span></td>
+            </tr>
+            <tr style="--i:4">
+              <td><strong>Separation Agent</strong></td>
+              <td><span class="tag tag--legal">Leg</span></td>
+              <td class="num">12.8</td>
+              <td class="num">11.2</td>
+              <td><div class="score-bar"><div class="score-bar__track"><div class="score-bar__fill score-bar__fill--current" style="width:79%;position:absolute"></div><div class="score-bar__fill score-bar__fill--suggested" style="width:69%"></div></div></div></td>
+              <td><span class="status status--down">-1.6</span></td>
+            </tr>
+            <tr style="--i:5">
+              <td><strong>JD Generator</strong></td>
+              <td><span class="tag tag--people">Ppl</span></td>
+              <td class="num">11.2</td>
+              <td class="num">11.2</td>
+              <td><div class="score-bar"><div class="score-bar__track"><div class="score-bar__fill score-bar__fill--suggested" style="width:69%"></div></div></div></td>
+              <td><span class="status status--ok">Correct</span></td>
+            </tr>
+            <tr style="--i:5.5">
+              <td><strong>Vendor Contract Agent</strong></td>
+              <td><span class="tag tag--legal">Leg</span></td>
+              <td class="num">9.6</td>
+              <td class="num">11.2</td>
+              <td><div class="score-bar"><div class="score-bar__track"><div class="score-bar__fill score-bar__fill--current" style="width:59%;position:absolute"></div><div class="score-bar__fill score-bar__fill--suggested" style="width:69%"></div></div></div></td>
+              <td><span class="status status--up">+1.6</span></td>
+            </tr>
+            <tr style="--i:6">
+              <td><strong>Invoice-to-PO Matching</strong></td>
+              <td><span class="tag tag--finance">Fin</span></td>
+              <td class="num">7.2</td>
+              <td class="num">11.2</td>
+              <td><div class="score-bar"><div class="score-bar__track"><div class="score-bar__fill score-bar__fill--current" style="width:44%;position:absolute"></div><div class="score-bar__fill score-bar__fill--suggested" style="width:69%"></div></div></div></td>
+              <td><span class="status status--up">+4.0</span></td>
+            </tr>
+            <tr style="--i:6.5">
+              <td><strong>Hire to Retire (Z0)</strong></td>
+              <td><span class="tag tag--finance">Fin</span></td>
+              <td class="num">8.4</td>
+              <td class="num">10.8</td>
+              <td><div class="score-bar"><div class="score-bar__track"><div class="score-bar__fill score-bar__fill--current" style="width:52%;position:absolute"></div><div class="score-bar__fill score-bar__fill--suggested" style="width:67%"></div></div></div></td>
+              <td><span class="status status--up">+2.4</span></td>
+            </tr>
+            <tr style="--i:7">
+              <td><strong>Sandbox Environment</strong></td>
+              <td><span class="tag tag--is">IS</span></td>
+              <td class="num">9.6</td>
+              <td class="num">10.8</td>
+              <td><div class="score-bar"><div class="score-bar__track"><div class="score-bar__fill score-bar__fill--current" style="width:59%;position:absolute"></div><div class="score-bar__fill score-bar__fill--suggested" style="width:67%"></div></div></div></td>
+              <td><span class="status status--up">+1.2</span></td>
+            </tr>
+            <tr style="--i:7.5">
+              <td><strong>Revenue Contract Review</strong></td>
+              <td><span class="tag tag--finance">Fin</span></td>
+              <td class="num" style="color:var(--text-dim)">--</td>
+              <td class="num">10.5</td>
+              <td><div class="score-bar"><div class="score-bar__track"><div class="score-bar__fill score-bar__fill--suggested" style="width:65%"></div></div></div></td>
+              <td><span class="status status--new">Missing</span></td>
+            </tr>
+            <tr style="--i:8">
+              <td><strong>Agent Factory</strong></td>
+              <td><span class="tag tag--is">IS</span></td>
+              <td class="num">9.8</td>
+              <td class="num">9.8</td>
+              <td><div class="score-bar"><div class="score-bar__track"><div class="score-bar__fill score-bar__fill--suggested" style="width:60%"></div></div></div></td>
+              <td><span class="status status--ok">Correct</span></td>
+            </tr>
+            <tr style="--i:8.5">
+              <td><strong>Contract Review (Cowork)</strong></td>
+              <td><span class="tag tag--legal">Leg</span></td>
+              <td class="num">9.6</td>
+              <td class="num">9.6</td>
+              <td><div class="score-bar"><div class="score-bar__track"><div class="score-bar__fill score-bar__fill--suggested" style="width:59%"></div></div></div></td>
+              <td><span class="status status--ok">Correct</span></td>
+            </tr>
+            <tr style="--i:9">
+              <td><strong>PRD Agent</strong></td>
+              <td><span class="tag tag--is">IS</span></td>
+              <td class="num">9.8</td>
+              <td class="num">9.8</td>
+              <td><div class="score-bar"><div class="score-bar__track"><div class="score-bar__fill score-bar__fill--suggested" style="width:60%"></div></div></div></td>
+              <td><span class="status status--ok">Correct</span></td>
+            </tr>
+            <tr style="--i:9.5">
+              <td><strong>BRD Automation</strong></td>
+              <td><span class="tag tag--is">IS</span></td>
+              <td class="num">9.1</td>
+              <td class="num">9.1</td>
+              <td><div class="score-bar"><div class="score-bar__track"><div class="score-bar__fill score-bar__fill--suggested" style="width:56%"></div></div></div></td>
+              <td><span class="status status--ok">Correct</span></td>
+            </tr>
+            <tr style="--i:10">
+              <td><strong>Analysis Agent</strong></td>
+              <td><span class="tag tag--legal">Leg</span></td>
+              <td class="num">7.2</td>
+              <td class="num">9.1</td>
+              <td><div class="score-bar"><div class="score-bar__track"><div class="score-bar__fill score-bar__fill--current" style="width:44%;position:absolute"></div><div class="score-bar__fill score-bar__fill--suggested" style="width:56%"></div></div></div></td>
+              <td><span class="status status--up">+1.9</span></td>
+            </tr>
+            <tr style="--i:10.5">
+              <td><strong>Rovo Help Desk</strong></td>
+              <td><span class="tag tag--legal">Leg</span></td>
+              <td class="num">6.5</td>
+              <td class="num">9.1</td>
+              <td><div class="score-bar"><div class="score-bar__track"><div class="score-bar__fill score-bar__fill--current" style="width:40%;position:absolute"></div><div class="score-bar__fill score-bar__fill--suggested" style="width:56%"></div></div></div></td>
+              <td><span class="status status--up">+2.6</span></td>
+            </tr>
+            <tr style="--i:11">
+              <td><strong>ITFA Agent</strong></td>
+              <td><span class="tag tag--legal">Leg</span></td>
+              <td class="num">8.4</td>
+              <td class="num">8.4</td>
+              <td><div class="score-bar"><div class="score-bar__track"><div class="score-bar__fill score-bar__fill--suggested" style="width:52%"></div></div></div></td>
+              <td><span class="status status--ok">Correct</span></td>
+            </tr>
+            <tr style="--i:11.5">
+              <td><strong>DPA Review Agents (x2)</strong></td>
+              <td><span class="tag tag--legal">Leg</span></td>
+              <td class="num" style="color:var(--text-dim)">--</td>
+              <td class="num">7.8</td>
+              <td><div class="score-bar"><div class="score-bar__track"><div class="score-bar__fill score-bar__fill--suggested" style="width:48%"></div></div></div></td>
+              <td><span class="status status--new">Missing</span></td>
+            </tr>
+            <tr style="--i:12">
+              <td><strong>Contract Tagging</strong></td>
+              <td><span class="tag tag--legal">Leg</span></td>
+              <td class="num">6.0</td>
+              <td class="num">7.2</td>
+              <td><div class="score-bar"><div class="score-bar__track"><div class="score-bar__fill score-bar__fill--current" style="width:37%;position:absolute"></div><div class="score-bar__fill score-bar__fill--suggested" style="width:44%"></div></div></div></td>
+              <td><span class="status status--up">+1.2</span></td>
+            </tr>
+            <tr style="--i:12.5">
+              <td><strong>Procurement Automation</strong></td>
+              <td><span class="tag tag--finance">Fin</span></td>
+              <td class="num">7.2</td>
+              <td class="num">7.2</td>
+              <td><div class="score-bar"><div class="score-bar__track"><div class="score-bar__fill score-bar__fill--suggested" style="width:44%"></div></div></div></td>
+              <td><span class="status status--ok">Correct</span></td>
+            </tr>
+            <tr style="--i:13">
+              <td><strong>Purchase Obligations</strong></td>
+              <td><span class="tag tag--finance">Fin</span></td>
+              <td class="num" style="color:var(--text-dim)">--</td>
+              <td class="num">7.2</td>
+              <td><div class="score-bar"><div class="score-bar__track"><div class="score-bar__fill score-bar__fill--suggested" style="width:44%"></div></div></div></td>
+              <td><span class="status status--new">Missing</span></td>
+            </tr>
+            <tr style="--i:14">
+              <td><strong>SoS Report Generator</strong></td>
+              <td><span class="tag tag--legal">Leg</span></td>
+              <td class="num">5.0</td>
+              <td class="num">5.0</td>
+              <td><div class="score-bar"><div class="score-bar__track"><div class="score-bar__fill score-bar__fill--suggested" style="width:31%"></div></div></div></td>
+              <td><span class="status status--ok">Correct</span></td>
+            </tr>
+          </tbody>
+          <tfoot>
+            <tr>
+              <td colspan="2">24 initiatives reviewed</td>
+              <td></td>
+              <td></td>
+              <td></td>
+              <td>10 changed / 5 missing / 9 correct</td>
+            </tr>
+          </tfoot>
+        </table>
+      </div>
+    </div>
+
+    <!-- ============ KEY THEMES ============ -->
+    <div id="s6" class="sec-head animate" style="--i:24">6 -- Key Themes</div>
+
+    <div class="themes-grid">
+      <div class="theme-card animate" style="--i:25">
+        <div class="theme-card__num">Theme 1</div>
+        <div class="theme-card__title">Infrastructure Systematically Underscored</div>
+        <div class="theme-card__body">Evals, Sandbox, and Hire-to-Retire all serve as force multipliers but their strategic alignment (H) doesn't reflect this. These enable the entire program. Without Sandbox, CPQ can't be built. Without Evals, nothing is provable to Carla.</div>
+      </div>
+      <div class="theme-card animate" style="--i:26; border-left-color: var(--red)">
+        <div class="theme-card__num" style="color:var(--red)">Theme 2</div>
+        <div class="theme-card__title">CPQ Deal Evaluator is the Biggest Miss</div>
+        <div class="theme-card__body">Steven mapped it out in detail with a crawl-walk-run path. "30-40% workload reduction" for commercial alone. Scores comparably to Deal Desk Bot (the current #1). Not on the board at all.</div>
+      </div>
+      <div class="theme-card animate" style="--i:27; border-left-color: var(--orange)">
+        <div class="theme-card__num" style="color:var(--orange)">Theme 3</div>
+        <div class="theme-card__title">Effort (G) Inconsistent with Evidence</div>
+        <div class="theme-card__body">Offer Letter Generator scores G=4 despite unconfirmed Glean connectors. Invoice-to-PO Matching scores G=2 despite Raul calling it the easiest win with no blockers. Effort scores don't reflect dependency reality.</div>
+      </div>
+      <div class="theme-card animate" style="--i:28; border-left-color: var(--purple)">
+        <div class="theme-card__num" style="color:var(--purple)">Theme 4</div>
+        <div class="theme-card__title">Legal Department Underrepresented</div>
+        <div class="theme-card__body">Ashley's DPA review agents and several items from her Legal Agentic Workflows tracker aren't in the main dashboard despite being well-defined, high-volume, and rated "High" in her own scoring.</div>
+      </div>
+      <div class="theme-card animate" style="--i:29; border-left-color: var(--green)">
+        <div class="theme-card__num" style="color:var(--green)">Theme 5</div>
+        <div class="theme-card__title">AI Evals is the Connective Tissue</div>
+        <div class="theme-card__body">Its current score (8.4) doesn't reflect that it's the mechanism for answering Carla's central question: "How many hours/dollars has AI saved G&amp;A this quarter?" Every deployed agent's value flows through evals.</div>
+      </div>
+    </div>
+
+    <details class="collapsible animate" style="--i:30">
+      <summary>Data Sources and Methodology</summary>
+      <div class="collapsible__body">
+        <strong>Spreadsheet:</strong> _G&amp;A AI Initiative Dashboard.xlsx (Prioritization Dashboard sheet)<br>
+        <strong>Google Doc:</strong> G&amp;A SMT Processes and Metrics.docx<br>
+        <strong>Listening Tour Notes:</strong> Raul Rivera (2026-04-07), Steven Odell (2026-04-08), Chad Meek (2026-04-07), Bella Thomas (2026-04-06)<br>
+        <strong>Team Documents:</strong> Ashley's Legal Agentic Workflows tracker, Stacey's FY27 PBP Roadmap, Steven's QTC Evolution deck, Finance-IS QBR deck, stakeholder profiles (Carla, Ray, Bella)<br>
+        <strong>Strategic Context:</strong> IS FY27 Pillars (4 pillars, scored 0-25 each), FY27 Company Initiatives (P13N, Enterprise Adoption, Customer Deployment, Next-Gen Platform), Year-2 AI Strategy<br><br>
+        <strong>Method:</strong> Each scored initiative was checked against (a) the SMT member's own stated priorities and language from listening tour notes, (b) alignment to IS FY27 pillar KPIs, (c) alignment to FY27 company initiatives, (d) Ashley's independent scoring where available, (e) dependency and blocker reality from conversation notes.
+      </div>
+    </details>
+
+  </div><!-- /main -->
+</div><!-- /wrap -->
+
+<script>
+(function() {
+  const toc = document.getElementById('toc');
+  const links = toc.querySelectorAll('a');
+  const sections = [];
+  links.forEach(link => {
+    const id = link.getAttribute('href').slice(1);
+    const el = document.getElementById(id);
+    if (el) sections.push({ id, el, link });
+  });
+  const observer = new IntersectionObserver(entries => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        links.forEach(l => l.classList.remove('active'));
+        const match = sections.find(s => s.el === entry.target);
+        if (match) {
+          match.link.classList.add('active');
+          if (window.innerWidth <= 1000) {
+            match.link.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
+          }
+        }
+      }
+    });
+  }, { rootMargin: '-10% 0px -80% 0px' });
+  sections.forEach(s => observer.observe(s.el));
+  links.forEach(link => {
+    link.addEventListener('click', e => {
+      e.preventDefault();
+      const id = link.getAttribute('href').slice(1);
+      const el = document.getElementById(id);
+      if (el) {
+        el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        history.replaceState(null, '', '#' + id);
+      }
+    });
+  });
+})();
+</script>
+
+</body>
+</html>

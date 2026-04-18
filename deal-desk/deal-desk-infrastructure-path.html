@@ -1,0 +1,937 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Deal Desk Calculator -- Infrastructure Path</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  /* ============ THEME ============ */
+  :root {
+    --font-body: 'DM Sans', system-ui, sans-serif;
+    --font-mono: 'JetBrains Mono', 'SF Mono', Consolas, monospace;
+
+    --bg: #fafaf9;
+    --surface: #ffffff;
+    --surface2: #f3f2ef;
+    --surface-elevated: #ffffff;
+    --border: rgba(0, 0, 0, 0.07);
+    --border-bright: rgba(0, 0, 0, 0.14);
+    --text: #1c1917;
+    --text-dim: #78716c;
+
+    /* Phase colors */
+    --now: #059669;
+    --now-dim: rgba(5, 150, 105, 0.07);
+    --now-surface: rgba(5, 150, 105, 0.03);
+    --next: #4f46e5;
+    --next-dim: rgba(79, 70, 229, 0.07);
+    --next-surface: rgba(79, 70, 229, 0.03);
+    --later: #7c3aed;
+    --later-dim: rgba(124, 58, 237, 0.07);
+    --later-surface: rgba(124, 58, 237, 0.03);
+
+    /* Actors */
+    --glean: #0891b2;
+    --glean-dim: rgba(8, 145, 178, 0.07);
+    --infra: #d97706;
+    --infra-dim: rgba(217, 119, 6, 0.07);
+    --sec: #dc2626;
+    --sec-dim: rgba(220, 38, 38, 0.07);
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #0c0a09;
+      --surface: #1c1917;
+      --surface2: #292524;
+      --surface-elevated: #292524;
+      --border: rgba(255, 255, 255, 0.06);
+      --border-bright: rgba(255, 255, 255, 0.12);
+      --text: #fafaf9;
+      --text-dim: #a8a29e;
+
+      --now: #34d399;
+      --now-dim: rgba(52, 211, 153, 0.12);
+      --now-surface: rgba(52, 211, 153, 0.05);
+      --next: #818cf8;
+      --next-dim: rgba(129, 140, 248, 0.12);
+      --next-surface: rgba(129, 140, 248, 0.05);
+      --later: #c4b5fd;
+      --later-dim: rgba(196, 181, 253, 0.12);
+      --later-surface: rgba(196, 181, 253, 0.05);
+
+      --glean: #22d3ee;
+      --glean-dim: rgba(34, 211, 238, 0.12);
+      --infra: #fbbf24;
+      --infra-dim: rgba(251, 191, 36, 0.12);
+      --sec: #f87171;
+      --sec-dim: rgba(248, 113, 113, 0.12);
+    }
+  }
+
+  /* ============ RESET + BASE ============ */
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: var(--bg);
+    background-image:
+      radial-gradient(ellipse at 15% 0%, var(--now-dim) 0%, transparent 50%),
+      radial-gradient(ellipse at 85% 100%, var(--later-dim) 0%, transparent 40%);
+    color: var(--text);
+    font-family: var(--font-body);
+    padding: 48px 40px;
+    min-height: 100vh;
+  }
+
+  /* ============ ANIMATION ============ */
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(14px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  @keyframes fadeScale {
+    from { opacity: 0; transform: scale(0.94); }
+    to { opacity: 1; transform: scale(1); }
+  }
+
+  .anim-up {
+    animation: fadeUp 0.45s ease-out both;
+    animation-delay: calc(var(--i, 0) * 0.06s);
+  }
+
+  .anim-scale {
+    animation: fadeScale 0.4s ease-out both;
+    animation-delay: calc(var(--i, 0) * 0.06s);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after {
+      animation-duration: 0.01ms !important;
+      animation-delay: 0ms !important;
+      transition-duration: 0.01ms !important;
+    }
+  }
+
+  /* ============ LAYOUT ============ */
+  .container {
+    max-width: 1100px;
+    margin: 0 auto;
+  }
+
+  h1 {
+    font-size: 36px;
+    font-weight: 700;
+    letter-spacing: -0.5px;
+    margin-bottom: 6px;
+    text-wrap: balance;
+  }
+
+  .subtitle {
+    color: var(--text-dim);
+    font-family: var(--font-mono);
+    font-size: 12px;
+    margin-bottom: 12px;
+  }
+
+  .intro {
+    font-size: 15px;
+    line-height: 1.7;
+    color: var(--text-dim);
+    max-width: 780px;
+    margin-bottom: 40px;
+  }
+
+  .intro strong { color: var(--text); }
+
+  /* ============ SECTION TITLES ============ */
+  .section-title {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    color: var(--text-dim);
+    margin-bottom: 20px;
+    padding-left: 4px;
+  }
+
+  /* ============ NETWORK DIAGRAM ============ */
+  .network {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 0;
+    margin-bottom: 48px;
+  }
+
+  .net-layer {
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 24px 28px;
+    position: relative;
+  }
+
+  .net-layer--glean {
+    background: linear-gradient(135deg, var(--glean-dim), var(--surface));
+    border-color: color-mix(in srgb, var(--border) 50%, var(--glean) 50%);
+  }
+
+  .net-layer--internet {
+    background: var(--surface2);
+    border-color: var(--border);
+    border-style: dashed;
+  }
+
+  .net-layer--contentful {
+    background: linear-gradient(135deg, var(--infra-dim), var(--surface));
+    border-color: color-mix(in srgb, var(--border) 50%, var(--infra) 50%);
+  }
+
+  .net-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 16px;
+  }
+
+  .net-badge {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+    padding: 4px 10px;
+    border-radius: 6px;
+  }
+
+  .net-layer--glean .net-badge {
+    background: var(--glean-dim);
+    color: var(--glean);
+  }
+
+  .net-layer--contentful .net-badge {
+    background: var(--infra-dim);
+    color: var(--infra);
+  }
+
+  .net-title {
+    font-size: 18px;
+    font-weight: 700;
+  }
+
+  .net-subtitle {
+    font-size: 12px;
+    color: var(--text-dim);
+    margin-left: auto;
+    font-family: var(--font-mono);
+  }
+
+  .net-body {
+    font-size: 13px;
+    color: var(--text-dim);
+    line-height: 1.6;
+  }
+
+  .net-body strong { color: var(--text); }
+
+  .net-inner-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+  }
+
+  .net-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 14px 16px;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+  }
+
+  .net-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+  }
+
+  .net-card .card-label {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin-bottom: 4px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .net-card .card-label::before {
+    content: '';
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: currentColor;
+  }
+
+  .net-card .card-title {
+    font-size: 13px;
+    font-weight: 600;
+    margin-bottom: 3px;
+  }
+
+  .net-card .card-desc {
+    font-size: 11px;
+    color: var(--text-dim);
+    line-height: 1.5;
+  }
+
+  .net-card code {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    padding: 1px 4px;
+    border-radius: 3px;
+    background: var(--infra-dim);
+    color: var(--infra);
+  }
+
+  /* Network connector */
+  .net-connector {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    padding: 14px 0;
+  }
+
+  .net-connector svg {
+    width: 24px;
+    height: 24px;
+    fill: none;
+    stroke: var(--text-dim);
+    stroke-width: 2;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+  }
+
+  .net-connector .conn-text {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    color: var(--text-dim);
+  }
+
+  .net-connector .conn-text--warn {
+    color: var(--sec);
+    font-weight: 600;
+  }
+
+  /* ============ OPEN QUESTIONS ============ */
+  .questions-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 12px;
+    margin-bottom: 48px;
+  }
+
+  .question-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-top: 3px solid var(--sec);
+    border-radius: 0 0 10px 10px;
+    padding: 16px;
+  }
+
+  .question-card .q-who {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: var(--sec);
+    margin-bottom: 6px;
+  }
+
+  .question-card .q-text {
+    font-size: 13px;
+    font-weight: 500;
+    margin-bottom: 4px;
+  }
+
+  .question-card .q-context {
+    font-size: 11px;
+    color: var(--text-dim);
+    line-height: 1.5;
+  }
+
+  /* ============ PHASED TIMELINE ============ */
+  .timeline {
+    position: relative;
+    padding-left: 32px;
+    margin-bottom: 48px;
+  }
+
+  .timeline::before {
+    content: '';
+    position: absolute;
+    left: 11px;
+    top: 0;
+    bottom: 0;
+    width: 2px;
+    background: var(--border-bright);
+  }
+
+  .phase {
+    position: relative;
+    margin-bottom: 28px;
+  }
+
+  .phase:last-child { margin-bottom: 0; }
+
+  .phase-dot {
+    position: absolute;
+    left: -32px;
+    top: 2px;
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    border: 2px solid;
+    background: var(--bg);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: var(--font-mono);
+    font-size: 9px;
+    font-weight: 700;
+  }
+
+  .phase--now .phase-dot {
+    border-color: var(--now);
+    color: var(--now);
+    background: var(--now-dim);
+  }
+
+  .phase--next .phase-dot {
+    border-color: var(--next);
+    color: var(--next);
+    background: var(--next-dim);
+  }
+
+  .phase--later .phase-dot {
+    border-color: var(--later);
+    color: var(--later);
+    background: var(--later-dim);
+  }
+
+  .phase-card {
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 20px 24px;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+  }
+
+  .phase-card:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.06);
+  }
+
+  .phase--now .phase-card {
+    background: var(--now-surface);
+    border-color: color-mix(in srgb, var(--border) 50%, var(--now) 50%);
+  }
+
+  .phase--next .phase-card {
+    background: var(--next-surface);
+    border-color: color-mix(in srgb, var(--border) 50%, var(--next) 50%);
+  }
+
+  .phase--later .phase-card {
+    background: var(--later-surface);
+    border-color: color-mix(in srgb, var(--border) 50%, var(--later) 50%);
+  }
+
+  .phase-header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 10px;
+  }
+
+  .phase-tag {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+    padding: 3px 8px;
+    border-radius: 4px;
+  }
+
+  .phase--now .phase-tag {
+    background: var(--now-dim);
+    color: var(--now);
+  }
+
+  .phase--next .phase-tag {
+    background: var(--next-dim);
+    color: var(--next);
+  }
+
+  .phase--later .phase-tag {
+    background: var(--later-dim);
+    color: var(--later);
+  }
+
+  .phase-title {
+    font-size: 16px;
+    font-weight: 700;
+  }
+
+  .phase-when {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    color: var(--text-dim);
+    margin-left: auto;
+  }
+
+  .phase-body {
+    font-size: 13px;
+    color: var(--text-dim);
+    line-height: 1.6;
+    margin-bottom: 12px;
+  }
+
+  .phase-body strong { color: var(--text); }
+
+  .phase-details {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+  }
+
+  .phase-detail-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 12px 14px;
+  }
+
+  .phase-detail-card .pd-label {
+    font-family: var(--font-mono);
+    font-size: 9px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: var(--text-dim);
+    margin-bottom: 3px;
+  }
+
+  .phase-detail-card .pd-value {
+    font-size: 12px;
+    font-weight: 500;
+  }
+
+  .phase-detail-card .pd-value code {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    padding: 1px 4px;
+    border-radius: 3px;
+    background: var(--infra-dim);
+    color: var(--infra);
+  }
+
+  .phase-detail-card .pd-note {
+    font-size: 10px;
+    color: var(--text-dim);
+    margin-top: 2px;
+  }
+
+  /* ============ STRATEGIC CALLOUT ============ */
+  .strategy-callout {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-left: 4px solid var(--now);
+    border-radius: 0 12px 12px 0;
+    padding: 20px 24px;
+    margin-bottom: 48px;
+  }
+
+  .strategy-callout .sc-title {
+    font-size: 15px;
+    font-weight: 700;
+    margin-bottom: 8px;
+  }
+
+  .strategy-callout .sc-body {
+    font-size: 13px;
+    color: var(--text-dim);
+    line-height: 1.7;
+  }
+
+  .strategy-callout .sc-body strong { color: var(--text); }
+
+  /* ============ DEPENDENCY LIST ============ */
+  .deps {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 12px;
+    margin-bottom: 48px;
+  }
+
+  .dep-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 16px;
+  }
+
+  .dep-card .dep-owner {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin-bottom: 6px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .dep-card .dep-owner::before {
+    content: '';
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: currentColor;
+  }
+
+  .dep-card .dep-owner--tyler { color: var(--glean); }
+  .dep-card .dep-owner--danny { color: var(--infra); }
+  .dep-card .dep-owner--steffan { color: var(--sec); }
+
+  .dep-card .dep-title {
+    font-size: 13px;
+    font-weight: 600;
+    margin-bottom: 4px;
+  }
+
+  .dep-card .dep-desc {
+    font-size: 11px;
+    color: var(--text-dim);
+    line-height: 1.5;
+  }
+
+  .dep-card .dep-date {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    color: var(--text-dim);
+    margin-top: 6px;
+    padding-top: 6px;
+    border-top: 1px solid var(--border);
+  }
+
+  /* ============ LEGEND ============ */
+  .legend {
+    display: flex;
+    gap: 24px;
+    flex-wrap: wrap;
+    padding-top: 20px;
+    border-top: 1px solid var(--border);
+  }
+
+  .legend-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-family: var(--font-mono);
+    font-size: 11px;
+    color: var(--text-dim);
+  }
+
+  .legend-swatch {
+    width: 14px;
+    height: 14px;
+    border-radius: 4px;
+    border: 1px solid var(--border);
+  }
+
+  /* ============ RESPONSIVE ============ */
+  @media (max-width: 900px) {
+    body { padding: 20px; }
+    h1 { font-size: 26px; }
+    .net-inner-grid { grid-template-columns: 1fr; }
+    .questions-grid { grid-template-columns: 1fr; }
+    .phase-details { grid-template-columns: 1fr; }
+    .deps { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+
+<div class="container">
+
+  <!-- HEADER -->
+  <h1 class="anim-up" style="--i:0">Where Does the Calculator Live?</h1>
+  <p class="subtitle anim-up" style="--i:1">infrastructure path for deal desk deterministic services</p>
+  <p class="intro anim-up" style="--i:2">
+    The calculator service is <strong>stateless Python</strong> -- it doesn't care where it runs.
+    But Glean needs to reach it over HTTPS, and Contentful needs to own it in production.
+    This creates a phased path: <strong>prove the pattern locally, then migrate to Contentful infrastructure</strong>
+    once the sandbox environment (G07) is ready.
+  </p>
+
+  <!-- NETWORK TOPOLOGY -->
+  <div class="section-title anim-up" style="--i:3">Network Topology (Production State)</div>
+  <div class="network anim-up" style="--i:4">
+
+    <!-- Glean Cloud -->
+    <div class="net-layer net-layer--glean">
+      <div class="net-header">
+        <span class="net-badge">SaaS</span>
+        <span class="net-title">Glean Cloud</span>
+        <span class="net-subtitle">Managed by Glean</span>
+      </div>
+      <div class="net-inner-grid">
+        <div class="net-card">
+          <div class="card-label" style="color: var(--glean);">Agent Runtime</div>
+          <div class="card-title">Deal Desk Agent</div>
+          <div class="card-desc">Runs Search, Branch, Think, Respond steps. LLM-driven workflow hosted entirely in Glean's infrastructure.</div>
+        </div>
+        <div class="net-card">
+          <div class="card-label" style="color: var(--glean);">Action Gateway</div>
+          <div class="card-title">Glean Actions</div>
+          <div class="card-desc">Outbound HTTP calls to external services. Configured per-action with endpoint URL, auth method, and input/output schema.</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Internet boundary -->
+    <div class="net-connector anim-scale" style="--i:5">
+      <span class="conn-text">HTTPS / TLS</span>
+      <div style="display:flex; gap:12px;">
+        <svg viewBox="0 0 24 24"><path d="M12 4 L12 20 M7 15 L12 20 L17 15"/></svg>
+        <svg viewBox="0 0 24 24"><path d="M12 20 L12 4 M7 9 L12 4 L17 9"/></svg>
+      </div>
+      <span class="conn-text--warn">Auth mechanism TBD -- Tyler conversation Apr 20</span>
+    </div>
+
+    <!-- Contentful Infrastructure -->
+    <div class="net-layer net-layer--contentful">
+      <div class="net-header">
+        <span class="net-badge">Internal</span>
+        <span class="net-title">Contentful Infrastructure</span>
+        <span class="net-subtitle">IS Sandbox Environment (G07)</span>
+      </div>
+      <div class="net-inner-grid">
+        <div class="net-card">
+          <div class="card-label" style="color: var(--infra);">Compute</div>
+          <div class="card-title">Calculator Service</div>
+          <div class="card-desc">Python / FastAPI. Stateless -- no database, no sessions. Receives JSON, returns JSON. Scales horizontally.</div>
+        </div>
+        <div class="net-card">
+          <div class="card-label" style="color: var(--infra);">Observability</div>
+          <div class="card-title">Audit Log</div>
+          <div class="card-desc">Every calculation logged with timestamp, inputs, outputs, caller identity. Required for finance compliance and deal review.</div>
+        </div>
+      </div>
+      <div style="margin-top:14px; padding:12px 16px; background:var(--surface2); border-radius:8px; font-size:12px; color:var(--text-dim); line-height:1.5; display:flex; align-items:flex-start; gap:10px;">
+        <span style="font-family:var(--font-mono); font-size:11px; font-weight:600; color:var(--infra); flex-shrink:0; margin-top:1px;">[G07]</span>
+        <span><strong>Sandbox initiative.</strong> Engineering told IS to be self-sufficient for hosting AI apps. Danny (infrastructure), Steffan (security), Kevin (infrastructure) are key partners. The calculator service is a concrete first tenant that demonstrates the need.</span>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- OPEN QUESTIONS FOR TYLER -->
+  <div class="section-title anim-up" style="--i:6">Open Questions -- Glean Actions Feasibility</div>
+  <div class="questions-grid anim-up" style="--i:7">
+    <div class="question-card">
+      <div class="q-who">Tyler -- Apr 20</div>
+      <div class="q-text">Can Actions pass structured JSON bodies?</div>
+      <div class="q-context">Calculators need typed fields (numbers, arrays), not just query string parameters. Does the Action config support POST with JSON body?</div>
+    </div>
+    <div class="question-card">
+      <div class="q-who">Tyler -- Apr 20</div>
+      <div class="q-text">What auth methods for outbound Actions?</div>
+      <div class="q-context">API key in header? OAuth? mTLS? This determines whether the calculator can sit on the open internet with a key or needs network-level access control.</div>
+    </div>
+    <div class="question-card">
+      <div class="q-who">Tyler -- Apr 20</div>
+      <div class="q-text">Can the agent use Action response fields?</div>
+      <div class="q-context">The Think step after the Action needs to reference specific fields from the calculator response (e.g., within_policy, approval_level). Does Glean pass structured responses back to the workflow?</div>
+    </div>
+  </div>
+
+  <!-- PHASED TIMELINE -->
+  <div class="section-title anim-up" style="--i:8">Deployment Path</div>
+  <div class="timeline anim-up" style="--i:9">
+
+    <!-- Phase 1: Now -->
+    <div class="phase phase--now">
+      <div class="phase-dot">1</div>
+      <div class="phase-card">
+        <div class="phase-header">
+          <span class="phase-tag">Now</span>
+          <span class="phase-title">Build + Validate Locally</span>
+          <span class="phase-when">Before Apr 20</span>
+        </div>
+        <div class="phase-body">
+          <strong>Port Excel logic to Python, test against original outputs.</strong>
+          No hosting needed yet. Run locally, validate row-by-row against the spreadsheet calculators.
+          This is pure business logic extraction -- the hardest part is getting the formulas right, not the infrastructure.
+        </div>
+        <div class="phase-details">
+          <div class="phase-detail-card">
+            <div class="pd-label">Runs on</div>
+            <div class="pd-value">Local machine</div>
+            <div class="pd-note">pytest against Excel test cases</div>
+          </div>
+          <div class="phase-detail-card">
+            <div class="pd-label">Deliverable</div>
+            <div class="pd-value">Validated calculator + test suite</div>
+            <div class="pd-note">Proof that Python matches Excel exactly</div>
+          </div>
+          <div class="phase-detail-card">
+            <div class="pd-label">Depends on</div>
+            <div class="pd-value">Access to current Excel calculators</div>
+            <div class="pd-note">Steven / Emily / Danette provide these</div>
+          </div>
+          <div class="phase-detail-card">
+            <div class="pd-label">Risk</div>
+            <div class="pd-value">None -- fully local, reversible</div>
+            <div class="pd-note">No infrastructure, no security review</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Phase 2: Next -->
+    <div class="phase phase--next">
+      <div class="phase-dot">2</div>
+      <div class="phase-card">
+        <div class="phase-header">
+          <span class="phase-tag">Next</span>
+          <span class="phase-title">Demo with Temporary Endpoint</span>
+          <span class="phase-when">Tyler session + stakeholder demo</span>
+        </div>
+        <div class="phase-body">
+          <strong>Stand up a temporary HTTPS endpoint to test with Glean Actions.</strong>
+          Confirm the full loop works: Glean agent sends structured request, calculator returns deterministic response,
+          agent uses result in its response. This is the "does the pattern actually work in Glean?" validation.
+        </div>
+        <div class="phase-details">
+          <div class="phase-detail-card">
+            <div class="pd-label">Runs on</div>
+            <div class="pd-value">Temporary endpoint (ngrok / <code>fly.io</code> staging)</div>
+            <div class="pd-note">Throwaway -- not production</div>
+          </div>
+          <div class="phase-detail-card">
+            <div class="pd-label">Deliverable</div>
+            <div class="pd-value">Working end-to-end demo</div>
+            <div class="pd-note">Glean agent calling live calculator</div>
+          </div>
+          <div class="phase-detail-card">
+            <div class="pd-label">Depends on</div>
+            <div class="pd-value">Tyler confirms Actions capability</div>
+            <div class="pd-note">JSON bodies, auth, response passthrough</div>
+          </div>
+          <div class="phase-detail-card">
+            <div class="pd-label">Risk</div>
+            <div class="pd-value">Low -- demo data only, no real deals</div>
+            <div class="pd-note">Temporary infra, torn down after demo</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Phase 3: Later -->
+    <div class="phase phase--later">
+      <div class="phase-dot">3</div>
+      <div class="phase-card">
+        <div class="phase-header">
+          <span class="phase-tag">Production</span>
+          <span class="phase-title">Deploy to Contentful Sandbox</span>
+          <span class="phase-when">After G07 sandbox is available</span>
+        </div>
+        <div class="phase-body">
+          <strong>Move validated calculator into Contentful-owned infrastructure.</strong>
+          Same code, new home. The service is stateless Python -- migration is a deployment config change, not a rewrite.
+          This is where the sandbox pitch becomes concrete: "we have a working tool that saves X hours per deal, it needs a home."
+        </div>
+        <div class="phase-details">
+          <div class="phase-detail-card">
+            <div class="pd-label">Runs on</div>
+            <div class="pd-value">IS Sandbox (G07)</div>
+            <div class="pd-note">Contentful-owned, security-reviewed</div>
+          </div>
+          <div class="phase-detail-card">
+            <div class="pd-label">Deliverable</div>
+            <div class="pd-value">Production-ready calculator service</div>
+            <div class="pd-note">Audit logging, monitoring, auth</div>
+          </div>
+          <div class="phase-detail-card">
+            <div class="pd-label">Depends on</div>
+            <div class="pd-value">G07 sandbox ready + security sign-off</div>
+            <div class="pd-note">Danny (infra), Steffan (security)</div>
+          </div>
+          <div class="phase-detail-card">
+            <div class="pd-label">Unlocks</div>
+            <div class="pd-value">Sandbox as proven pattern</div>
+            <div class="pd-note">First tenant justifies the platform for future AI apps</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- STRATEGIC CALLOUT -->
+  <div class="strategy-callout anim-up" style="--i:12">
+    <div class="sc-title">The Strategic Play</div>
+    <div class="sc-body">
+      Don't pitch the sandbox in the abstract. <strong>Build the calculator, demo it working, then say
+      "this saves the deal desk team X hours per deal and it needs a production home."</strong>
+      The sandbox conversation shifts from "we need infrastructure for AI apps" (vague)
+      to "we have a working tool that needs hosting" (concrete). The deal desk calculator becomes
+      the first tenant that justifies the platform -- and every future deterministic service
+      (legal calculators, finance tools, HR automation) follows the same pattern.
+    </div>
+  </div>
+
+  <!-- KEY DEPENDENCIES -->
+  <div class="section-title anim-up" style="--i:13">Key Dependencies</div>
+  <div class="deps anim-up" style="--i:14">
+    <div class="dep-card">
+      <div class="dep-owner dep-owner--tyler">Tyler</div>
+      <div class="dep-title">Glean Actions Capability</div>
+      <div class="dep-desc">Confirm Actions support JSON POST, auth mechanisms, and structured response passthrough to agent workflow.</div>
+      <div class="dep-date">Target: Apr 20 deep-dive session</div>
+    </div>
+    <div class="dep-card">
+      <div class="dep-owner dep-owner--danny">Danny / Kevin</div>
+      <div class="dep-title">Sandbox Environment (G07)</div>
+      <div class="dep-desc">IS-managed compute that can host stateless Python services with HTTPS endpoints accessible from Glean's cloud.</div>
+      <div class="dep-date">Target: TBD -- pending Danny conversation</div>
+    </div>
+    <div class="dep-card">
+      <div class="dep-owner dep-owner--steffan">Steffan</div>
+      <div class="dep-title">Security Review</div>
+      <div class="dep-desc">Approve external SaaS (Glean) making authenticated API calls to internal Contentful service. Auth pattern and network access.</div>
+      <div class="dep-date">Target: After sandbox + Glean auth are confirmed</div>
+    </div>
+  </div>
+
+  <!-- LEGEND -->
+  <div class="legend anim-up" style="--i:15">
+    <div class="legend-item"><div class="legend-swatch" style="background:var(--now-dim); border-color:var(--now);"></div> Phase 1: Build locally</div>
+    <div class="legend-item"><div class="legend-swatch" style="background:var(--next-dim); border-color:var(--next);"></div> Phase 2: Temp demo endpoint</div>
+    <div class="legend-item"><div class="legend-swatch" style="background:var(--later-dim); border-color:var(--later);"></div> Phase 3: Contentful sandbox</div>
+    <div class="legend-item"><div class="legend-swatch" style="background:var(--glean-dim); border-color:var(--glean);"></div> Glean (SaaS)</div>
+    <div class="legend-item"><div class="legend-swatch" style="background:var(--infra-dim); border-color:var(--infra);"></div> Contentful (Internal)</div>
+    <div class="legend-item"><div class="legend-swatch" style="background:var(--sec-dim); border-color:var(--sec);"></div> Open questions</div>
+  </div>
+
+</div>
+
+</body>
+</html>

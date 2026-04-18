@@ -1,0 +1,403 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>G&amp;A AI Initiatives -- Cross-Department Venn</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --font-body: 'Sora', system-ui, sans-serif;
+    --font-mono: 'IBM Plex Mono', 'SF Mono', Consolas, monospace;
+    --bg: #2e3440;
+    --surface: #3b4252;
+    --surface2: #434c5e;
+    --border: rgba(216, 222, 233, 0.08);
+    --border-bright: rgba(216, 222, 233, 0.15);
+    --text: #eceff4;
+    --text-dim: #9ba4b5;
+    --finance: #88c0d0;
+    --finance-fill: rgba(136, 192, 208, 0.18);
+    --finance-stroke: rgba(136, 192, 208, 0.55);
+    --legal: #b48ead;
+    --legal-fill: rgba(180, 142, 173, 0.18);
+    --legal-stroke: rgba(180, 142, 173, 0.55);
+    --people: #a3be8c;
+    --people-fill: rgba(163, 190, 140, 0.18);
+    --people-stroke: rgba(163, 190, 140, 0.55);
+    --is: #ebcb8b;
+    --is-fill: rgba(235, 203, 139, 0.12);
+    --is-stroke: rgba(235, 203, 139, 0.4);
+    --overlap-text: #eceff4;
+    --red: #bf616a;
+    --green: #a3be8c;
+    --amber: #ebcb8b;
+  }
+
+  @media (prefers-color-scheme: light) {
+    :root {
+      --bg: #eceff4;
+      --surface: #e5e9f0;
+      --surface2: #d8dee9;
+      --border: rgba(46, 52, 64, 0.08);
+      --border-bright: rgba(46, 52, 64, 0.15);
+      --text: #2e3440;
+      --text-dim: #616e88;
+      --finance: #5e81ac;
+      --finance-fill: rgba(94, 129, 172, 0.15);
+      --finance-stroke: rgba(94, 129, 172, 0.5);
+      --legal: #9b6fa3;
+      --legal-fill: rgba(155, 111, 163, 0.15);
+      --legal-stroke: rgba(155, 111, 163, 0.5);
+      --people: #6e9a50;
+      --people-fill: rgba(110, 154, 80, 0.15);
+      --people-stroke: rgba(110, 154, 80, 0.5);
+      --is: #d08770;
+      --is-fill: rgba(208, 135, 112, 0.12);
+      --is-stroke: rgba(208, 135, 112, 0.4);
+      --overlap-text: #2e3440;
+      --red: #bf616a;
+      --green: #4c7a2e;
+      --amber: #c08a3a;
+    }
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: var(--bg);
+    background-image:
+      radial-gradient(ellipse at 30% 10%, var(--finance-fill) 0%, transparent 50%),
+      radial-gradient(ellipse at 70% 90%, var(--legal-fill) 0%, transparent 40%);
+    color: var(--text);
+    font-family: var(--font-body);
+    padding: 40px;
+    min-height: 100vh;
+  }
+
+  @keyframes fadeUp { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: translateY(0); } }
+  @keyframes fadeScale { from { opacity: 0; transform: scale(0.92); } to { opacity: 1; transform: scale(1); } }
+  .anim { animation: fadeUp 0.4s ease-out both; animation-delay: calc(var(--i, 0) * 0.06s); }
+  .anim-s { animation: fadeScale 0.35s ease-out both; animation-delay: calc(var(--i, 0) * 0.06s); }
+  @media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; } }
+
+  .container { max-width: 1000px; margin: 0 auto; }
+
+  h1 { font-size: 32px; font-weight: 700; letter-spacing: -0.5px; margin-bottom: 4px; }
+  .subtitle { color: var(--text-dim); font-family: var(--font-mono); font-size: 12px; margin-bottom: 28px; line-height: 1.5; }
+
+  .legend-row {
+    display: flex; gap: 20px; flex-wrap: wrap; margin-bottom: 20px;
+    padding: 12px 16px; background: var(--surface); border: 1px solid var(--border); border-radius: 10px;
+  }
+  .legend-item { display: flex; align-items: center; gap: 7px; font-family: var(--font-mono); font-size: 11px; color: var(--text-dim); }
+  .legend-dot { width: 14px; height: 14px; border-radius: 50%; }
+  .legend-ring { width: 14px; height: 14px; border-radius: 50%; border: 2px dashed; background: transparent; }
+
+  .venn-wrap {
+    position: relative;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    margin-bottom: 20px;
+    overflow: hidden;
+  }
+
+  .venn-container {
+    position: relative;
+    width: 100%;
+    padding-bottom: 80%;
+    overflow: hidden;
+  }
+
+  .venn-container svg {
+    position: absolute;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+  }
+
+  .zone {
+    position: absolute;
+    pointer-events: none;
+  }
+
+  .zone-title {
+    font-family: var(--font-mono);
+    font-size: 9px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+    margin-bottom: 6px;
+    opacity: 0.6;
+  }
+
+  .zone-list {
+    list-style: none;
+    font-family: var(--font-mono);
+    font-size: 10.5px;
+    line-height: 1.7;
+  }
+
+  .zone-list li {
+    white-space: nowrap;
+    transition: opacity 0.2s;
+  }
+
+  .zone-list .score {
+    opacity: 0.5;
+    font-size: 9.5px;
+    margin-left: 2px;
+  }
+
+  .zone-list .new-tag {
+    font-size: 8px;
+    font-weight: 600;
+    padding: 1px 4px;
+    border-radius: 3px;
+    margin-left: 3px;
+    vertical-align: middle;
+  }
+
+  .platform-row {
+    display: flex;
+    gap: 12px;
+    flex-wrap: wrap;
+    justify-content: center;
+    padding: 20px 24px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    margin-bottom: 20px;
+  }
+
+  .platform-row .p-label {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+    color: var(--is);
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin-right: 8px;
+  }
+
+  .platform-pill {
+    background: var(--is-fill);
+    border: 1px dashed var(--is-stroke);
+    border-radius: 6px;
+    padding: 6px 12px;
+    font-family: var(--font-mono);
+    font-size: 11px;
+    color: var(--is);
+    font-weight: 500;
+    transition: transform 0.2s, box-shadow 0.2s;
+  }
+  .platform-pill:hover { transform: translateY(-1px); box-shadow: 0 2px 8px rgba(0,0,0,0.15); }
+  .platform-pill .p-score { opacity: 0.6; font-size: 10px; margin-left: 4px; }
+
+  .insight-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 14px;
+  }
+  .insight-grid > * { min-width: 0; }
+  @media (max-width: 768px) { .insight-grid { grid-template-columns: 1fr; } }
+
+  .insight {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 16px 20px;
+    font-size: 13px;
+    line-height: 1.6;
+    color: var(--text-dim);
+  }
+  .insight strong { color: var(--text); }
+  .insight-label {
+    font-family: var(--font-mono);
+    font-size: 9px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+    margin-bottom: 8px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .insight-label .dot { width: 7px; height: 7px; border-radius: 50%; display: inline-block; }
+  .insight--risk { border-left: 3px solid var(--red); }
+  .insight--risk .insight-label { color: var(--red); }
+  .insight--synergy { border-left: 3px solid var(--green); }
+  .insight--synergy .insight-label { color: var(--green); }
+
+  .note-bar {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    color: var(--text-dim);
+    padding: 12px 16px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    line-height: 1.5;
+    margin-top: 20px;
+  }
+  .note-bar strong { color: var(--text); }
+
+  @media (max-width: 768px) {
+    body { padding: 16px; }
+    h1 { font-size: 24px; }
+    .venn-container { padding-bottom: 100%; }
+    .zone { font-size: 9px; }
+    .zone-list { font-size: 9px; }
+  }
+</style>
+</head>
+<body>
+
+<div class="container">
+
+  <h1 class="anim" style="--i:0">Cross-Department Initiative Overlaps</h1>
+  <p class="subtitle anim" style="--i:1">G&amp;A AI Portfolio -- April 2026<br>Initiatives positioned by department ownership and cross-functional dependencies. IS/Platform layer enables all.</p>
+
+  <div class="legend-row anim" style="--i:2">
+    <div class="legend-item"><div class="legend-dot" style="background:var(--finance-stroke)"></div> Finance (9)</div>
+    <div class="legend-item"><div class="legend-dot" style="background:var(--legal-stroke)"></div> Legal (10)</div>
+    <div class="legend-item"><div class="legend-dot" style="background:var(--people-stroke)"></div> People (3)</div>
+    <div class="legend-item" style="margin-left:auto"><div class="legend-ring" style="border-color:var(--is)"></div> IS / Platform (6) -- enables all</div>
+  </div>
+
+  <div class="venn-wrap anim" style="--i:3">
+    <div class="venn-container" id="venn">
+      <svg viewBox="0 0 900 720" preserveAspectRatio="xMidYMid meet">
+        <defs>
+          <filter id="glow">
+            <feGaussianBlur stdDeviation="2" result="blur"/>
+            <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+          </filter>
+        </defs>
+
+        <!-- Circles -->
+        <circle cx="300" cy="245" r="215" fill="var(--finance-fill)" stroke="var(--finance-stroke)" stroke-width="2" opacity="1"/>
+        <circle cx="600" cy="245" r="215" fill="var(--legal-fill)" stroke="var(--legal-stroke)" stroke-width="2" opacity="1"/>
+        <circle cx="450" cy="480" r="215" fill="var(--people-fill)" stroke="var(--people-stroke)" stroke-width="2" opacity="1"/>
+
+        <!-- Department labels (large, near edges) -->
+        <text x="155" y="100" font-family="'Sora', sans-serif" font-size="18" font-weight="700" fill="var(--finance)" opacity="0.7" text-anchor="middle">FINANCE</text>
+        <text x="745" y="100" font-family="'Sora', sans-serif" font-size="18" font-weight="700" fill="var(--legal)" opacity="0.7" text-anchor="middle">LEGAL</text>
+        <text x="450" y="690" font-family="'Sora', sans-serif" font-size="18" font-weight="700" fill="var(--people)" opacity="0.7" text-anchor="middle">PEOPLE</text>
+
+        <!-- Overlap zone labels -->
+        <text x="450" y="132" font-family="'IBM Plex Mono', monospace" font-size="8" font-weight="600" fill="var(--text-dim)" text-anchor="middle" opacity="0.5" letter-spacing="1.5">FINANCE + LEGAL</text>
+        <text x="310" y="420" font-family="'IBM Plex Mono', monospace" font-size="8" font-weight="600" fill="var(--text-dim)" text-anchor="middle" opacity="0.5" letter-spacing="1.5">FIN + PPL</text>
+        <text x="595" y="420" font-family="'IBM Plex Mono', monospace" font-size="8" font-weight="600" fill="var(--text-dim)" text-anchor="middle" opacity="0.5" letter-spacing="1.5">LEGAL + PPL</text>
+
+        <!-- Center triple overlap highlight -->
+        <text x="450" y="348" font-family="'IBM Plex Mono', monospace" font-size="8" font-weight="700" fill="var(--amber)" text-anchor="middle" opacity="0.7" letter-spacing="1">ALL THREE</text>
+
+        <!-- FINANCE ONLY zone -->
+        <text x="145" y="158" font-family="'IBM Plex Mono', monospace" font-size="11" font-weight="600" fill="var(--finance)" text-anchor="start">
+          <tspan x="115" dy="0">Deal Desk Bot</tspan><tspan font-size="9" opacity="0.5"> 16.2</tspan>
+          <tspan x="115" dy="17">Invoice-to-PO</tspan><tspan font-size="9" opacity="0.5"> 10.2</tspan>
+          <tspan x="115" dy="17">Purchase Oblig.</tspan><tspan font-size="9" opacity="0.5"> 7.2</tspan>
+          <tspan x="115" dy="17">Procurement Auto</tspan><tspan font-size="9" opacity="0.5"> 7.2</tspan>
+        </text>
+
+        <!-- LEGAL ONLY zone -->
+        <text x="720" y="132" font-family="'IBM Plex Mono', monospace" font-size="11" font-weight="600" fill="var(--legal)" text-anchor="start">
+          <tspan x="680" dy="0">Contract Review</tspan><tspan font-size="9" opacity="0.5"> 9.6</tspan>
+          <tspan x="680" dy="17">Analysis Agent</tspan><tspan font-size="9" opacity="0.5"> 8.5</tspan>
+          <tspan x="680" dy="17">Rovo Help Desk</tspan><tspan font-size="9" opacity="0.5"> 8.5</tspan>
+          <tspan x="680" dy="17">ITFA Agent</tspan><tspan font-size="9" opacity="0.5"> 8.4</tspan>
+          <tspan x="680" dy="17">DPA Review</tspan><tspan font-size="9" opacity="0.5"> 7.8</tspan>
+          <tspan x="680" dy="17">SoS Report</tspan><tspan font-size="9" opacity="0.5"> 5.0</tspan>
+        </text>
+
+        <!-- PEOPLE ONLY zone -->
+        <text x="450" y="618" font-family="'IBM Plex Mono', monospace" font-size="11" font-weight="600" fill="var(--people)" text-anchor="middle">
+          <tspan x="450" dy="0">JD Generator</tspan><tspan font-size="9" opacity="0.5"> 11.2</tspan>
+        </text>
+
+        <!-- FINANCE + LEGAL overlap -->
+        <text x="450" y="152" font-family="'IBM Plex Mono', monospace" font-size="11" font-weight="500" fill="var(--overlap-text)" text-anchor="middle">
+          <tspan x="450" dy="0" font-weight="600">Deal Feedback</tspan><tspan font-size="9" opacity="0.5"> 13.6</tspan>
+          <tspan x="450" dy="17" font-weight="600">CPQ Evaluator</tspan><tspan font-size="9" opacity="0.5"> 13.5</tspan>
+          <tspan x="450" dy="17">Revenue Contract</tspan><tspan font-size="9" opacity="0.5"> 10.5</tspan>
+          <tspan x="450" dy="17">Vendor Contract</tspan><tspan font-size="9" opacity="0.5"> 10.8</tspan>
+          <tspan x="450" dy="17">Contract Tagging</tspan><tspan font-size="9" opacity="0.5"> 7.2</tspan>
+        </text>
+
+        <!-- FINANCE + PEOPLE overlap (thin zone) -->
+        <text x="318" y="440" font-family="'IBM Plex Mono', monospace" font-size="10" font-weight="400" fill="var(--text-dim)" text-anchor="middle" opacity="0.7">
+          <tspan x="318" dy="0" font-style="italic">(via Tiger Team)</tspan>
+        </text>
+
+        <!-- LEGAL + PEOPLE overlap -->
+        <text x="593" y="440" font-family="'IBM Plex Mono', monospace" font-size="11" font-weight="500" fill="var(--overlap-text)" text-anchor="middle">
+          <tspan x="593" dy="0" font-weight="600">Offer Letter</tspan><tspan font-size="9" opacity="0.5"> 14.4</tspan>
+          <tspan x="593" dy="17">Separation Agent</tspan><tspan font-size="9" opacity="0.5"> 11.2</tspan>
+        </text>
+
+        <!-- CENTER: all three -->
+        <text x="450" y="368" font-family="'IBM Plex Mono', monospace" font-size="12" font-weight="700" fill="var(--amber)" text-anchor="middle">
+          <tspan x="450" dy="0">Hire to Retire</tspan><tspan font-size="9" opacity="0.7"> 10.2</tspan>
+        </text>
+        <text x="450" y="390" font-family="'IBM Plex Mono', monospace" font-size="9" font-weight="400" fill="var(--text-dim)" text-anchor="middle" opacity="0.7">
+          <tspan>Tiger Team: Chad, Aby,</tspan>
+          <tspan x="450" dy="14">Raul, Katelynn, J. Fear</tspan>
+        </text>
+
+        <!-- Connecting annotation: score callouts for high-overlap initiatives -->
+        <!-- Score > 12 callout ring -->
+        <circle cx="450" cy="164" r="5" fill="none" stroke="var(--red)" stroke-width="1.5" stroke-dasharray="3 2" opacity="0.5"/>
+        <circle cx="450" cy="181" r="5" fill="none" stroke="var(--red)" stroke-width="1.5" stroke-dasharray="3 2" opacity="0.5"/>
+        <text x="528" y="170" font-family="'IBM Plex Mono', monospace" font-size="8" fill="var(--red)" opacity="0.7">
+          <tspan>highest-scoring</tspan><tspan x="528" dy="11">overlaps</tspan>
+        </text>
+
+      </svg>
+    </div>
+  </div>
+
+  <!-- IS / Platform row -->
+  <div class="platform-row anim" style="--i:4">
+    <div class="p-label"><svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="var(--is)" stroke-width="1.5"><circle cx="7" cy="7" r="5.5" stroke-dasharray="3 2"/></svg> IS / Platform</div>
+    <div class="platform-pill">Sandbox Env<span class="p-score">10.5</span></div>
+    <div class="platform-pill">AI Evals (AESOP)<span class="p-score">11.6</span></div>
+    <div class="platform-pill">Agent Factory<span class="p-score">9.8</span></div>
+    <div class="platform-pill">PRD Agent<span class="p-score">9.8</span></div>
+    <div class="platform-pill">BRD Automation<span class="p-score">9.1</span></div>
+    <div style="font-family:var(--font-mono);font-size:10px;color:var(--text-dim);display:flex;align-items:center;margin-left:4px;">-- enables all 3 departments</div>
+  </div>
+
+  <!-- Key insights -->
+  <div class="insight-grid anim" style="--i:5">
+    <div class="insight insight--risk">
+      <div class="insight-label"><span class="dot" style="background:var(--red)"></span> Densest Overlap</div>
+      <p><strong>5 initiatives sit in the Finance-Legal overlap.</strong> This is the contract review cluster. The combined score of these overlapping initiatives is 55.6 -- higher than any single department's exclusive initiatives. This zone needs shared architecture, not parallel builds.</p>
+    </div>
+    <div class="insight insight--synergy">
+      <div class="insight-label"><span class="dot" style="background:var(--green)"></span> People-Legal Bridge</div>
+      <p><strong>Offer Letter (14.4) and Separation Agent (11.2)</strong> both sit in the Legal-People overlap. Both involve employment law compliance applied to HR processes. The exempt/non-exempt classification in offer letters and multi-jurisdiction separation agreements share legal research infrastructure.</p>
+    </div>
+    <div class="insight insight--risk">
+      <div class="insight-label"><span class="dot" style="background:var(--red)"></span> Triple Center</div>
+      <p><strong>Hire to Retire is the only initiative touching all three departments.</strong> It has the broadest coalition but scored only 10.2 -- below simpler single-department initiatives. Its Tiger Team structure should be the governance model for the Finance-Legal contract cluster.</p>
+    </div>
+    <div class="insight insight--synergy">
+      <div class="insight-label"><span class="dot" style="background:var(--green)"></span> Platform Multiplier</div>
+      <p><strong>6 IS initiatives sit outside the Venn</strong> because they serve all departments equally. Sandbox and AI Evals together (22.1 combined) are prerequisites for proving the value of the 48.5 points of Finance-only initiatives and the 47.8 points of Legal-only initiatives.</p>
+    </div>
+  </div>
+
+  <div class="note-bar anim" style="--i:6">
+    <strong>Reading the diagram:</strong> Initiatives in overlap zones have cross-department dependencies -- they require coordination between teams to avoid duplicate work. The Finance-Legal overlap (5 initiatives, 55.6 combined score) is the highest-value coordination opportunity. IS/Platform sits outside as the enabling layer. The thicker the overlap zone, the more shared capability exists.
+  </div>
+
+</div>
+
+</body>
+</html>

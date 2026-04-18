@@ -1,0 +1,379 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Example: Process Map</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --font-body: 'IBM Plex Sans', system-ui, sans-serif;
+    --font-mono: 'IBM Plex Mono', 'SF Mono', Consolas, monospace;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: #ffffff;
+    color: #000000;
+    font-family: var(--font-body);
+    padding: 40px;
+    min-height: 100vh;
+  }
+
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(12px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .animate {
+    animation: fadeUp 0.4s ease-out both;
+    animation-delay: calc(var(--i, 0) * 0.06s);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after {
+      animation-duration: 0.01ms !important;
+      animation-delay: 0ms !important;
+      transition-duration: 0.01ms !important;
+    }
+    .mermaid-wrap .mermaid { transition: none; }
+  }
+
+  .container {
+    max-width: 960px;
+    margin: 0 auto;
+  }
+
+  h1 {
+    font-size: 28px;
+    font-weight: 700;
+    letter-spacing: -0.5px;
+    margin-bottom: 4px;
+  }
+
+  .subtitle {
+    color: #666666;
+    font-family: var(--font-mono);
+    font-size: 12px;
+    margin-bottom: 24px;
+  }
+
+  .legend {
+    display: flex;
+    gap: 24px;
+    flex-wrap: wrap;
+    margin-bottom: 24px;
+    padding: 0 4px;
+  }
+
+  .legend-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-family: var(--font-mono);
+    font-size: 11px;
+    color: #444444;
+  }
+
+  .legend-swatch {
+    width: 14px;
+    height: 14px;
+    background: #ffffff;
+    border-radius: 2px;
+  }
+
+  .legend-swatch--normal {
+    border: 1.5px solid #000000;
+  }
+
+  .legend-swatch--pain {
+    border: 2.5px solid #000000;
+  }
+
+  .legend-swatch--handoff {
+    border: 1.5px dashed #000000;
+  }
+
+  /* Mermaid container */
+  .mermaid-wrap {
+    position: relative;
+    background: #ffffff;
+    border: 1px solid #e0e0e0;
+    border-radius: 8px;
+    padding: 28px 20px 20px;
+    overflow: auto;
+    margin-bottom: 24px;
+    scrollbar-width: thin;
+    scrollbar-color: #cccccc transparent;
+  }
+  .mermaid-wrap::-webkit-scrollbar { width: 6px; height: 6px; }
+  .mermaid-wrap::-webkit-scrollbar-track { background: transparent; }
+  .mermaid-wrap::-webkit-scrollbar-thumb { background: #cccccc; border-radius: 3px; }
+
+  .mermaid-wrap .mermaid {
+    display: flex;
+    justify-content: center;
+    transition: transform 0.2s ease;
+    transform-origin: top center;
+  }
+
+  .zoom-controls {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    display: flex;
+    gap: 2px;
+    z-index: 10;
+    background: #ffffff;
+    border: 1px solid #e0e0e0;
+    border-radius: 6px;
+    padding: 2px;
+  }
+
+  .zoom-controls button {
+    width: 28px;
+    height: 28px;
+    border: none;
+    background: transparent;
+    color: #666666;
+    font-family: var(--font-mono);
+    font-size: 14px;
+    cursor: pointer;
+    border-radius: 4px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background 0.15s ease, color 0.15s ease;
+  }
+
+  .zoom-controls button:hover {
+    background: #f0f0f0;
+    color: #000000;
+  }
+
+  .mermaid-wrap.is-zoomed { cursor: grab; }
+  .mermaid-wrap.is-panning { cursor: grabbing; user-select: none; }
+
+  /* Mermaid SVG overrides */
+  .mermaid .nodeLabel {
+    font-family: var(--font-body) !important;
+    font-size: 13px !important;
+    color: #000000 !important;
+  }
+
+  .mermaid .edgeLabel {
+    font-family: var(--font-mono) !important;
+    font-size: 11px !important;
+    color: #000000 !important;
+  }
+
+  .mermaid .node rect {
+    stroke-width: 1.5px !important;
+  }
+
+  .mermaid .edge-pattern-solid,
+  .mermaid .edge-pattern-dotted {
+    stroke-width: 1.5px !important;
+  }
+
+  /* Findings */
+  .findings {
+    background: #ffffff;
+    border: 1px solid #e0e0e0;
+    border-left: 3px solid #000000;
+    border-radius: 0 8px 8px 0;
+    padding: 20px 24px;
+  }
+
+  .findings h2 {
+    font-family: var(--font-mono);
+    font-size: 12px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+    color: #444444;
+    margin-bottom: 12px;
+  }
+
+  .findings ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+  }
+
+  .findings li {
+    padding: 5px 0 5px 18px;
+    position: relative;
+    font-size: 14px;
+    line-height: 1.6;
+    color: #000000;
+  }
+
+  .findings li::before {
+    content: '--';
+    position: absolute;
+    left: 0;
+    color: #999999;
+    font-family: var(--font-mono);
+    font-size: 12px;
+  }
+
+  .findings .summary {
+    margin-top: 14px;
+    padding-top: 14px;
+    border-top: 1px solid #e0e0e0;
+    font-weight: 600;
+    font-size: 14px;
+    color: #000000;
+  }
+
+  @media (max-width: 768px) {
+    body { padding: 16px; }
+    h1 { font-size: 22px; }
+    .mermaid-wrap { padding: 16px 12px; }
+  }
+</style>
+</head>
+<body>
+
+<div class="container">
+
+  <h1 class="animate" style="--i:0">Example: Process Map</h1>
+  <p class="subtitle animate" style="--i:1">Routine legal questions via Slack</p>
+
+  <div class="legend animate" style="--i:2">
+    <div class="legend-item"><div class="legend-swatch legend-swatch--normal"></div> Process step</div>
+    <div class="legend-item"><div class="legend-swatch legend-swatch--pain"></div> Pain point / low value</div>
+    <div class="legend-item"><div class="legend-swatch legend-swatch--handoff"></div> Handoff</div>
+  </div>
+
+  <div class="mermaid-wrap animate" style="--i:3">
+    <div class="zoom-controls">
+      <button onclick="zoomDiagram(this, 1.2)" title="Zoom in">+</button>
+      <button onclick="zoomDiagram(this, 0.8)" title="Zoom out">&minus;</button>
+      <button onclick="resetZoom(this)" title="Reset zoom">&#8634;</button>
+    </div>
+    <pre class="mermaid">
+      graph LR
+        A["<b>1. Question arises</b><br/><br/>Sales rep has a contract<br/>term, template, or<br/>process question<br/><br/><i>Who: Sales rep</i>"]
+        B["<b>2. Posts in Slack</b><br/><br/>Rep posts in<br/>#legal-questions or<br/>DMs attorney directly<br/><br/><i>Who: Sales rep</i><br/><i>Time: &lt; 1 min</i>"]
+        C["<b>3. Attorney interrupted</b><br/><br/>Attorney stops current<br/>work to read the<br/>incoming question<br/><br/><i>Who: Attorney</i><br/><i>Time: immediate</i>"]
+        D["<b>4. Lookup answer</b><br/><br/>Attorney searches playbook<br/>or answers from memory<br/><br/><i>Who: Attorney</i><br/><i>Time: 5-15 min</i><br/><br/>Answer already exists<br/>in a document"]
+        E["<b>5. Type answer</b><br/><br/>Attorney types the<br/>answer back in Slack<br/><br/><i>Who: Attorney</i><br/><i>Time: 5-10 min</i><br/><br/>Retyping known<br/>information"]
+
+        A --> B
+        B -.->|"HANDOFF"| C
+        C --> D
+        D --> E
+
+        classDef normal fill:#ffffff,stroke:#000000,stroke-width:1.5px,color:#000000
+        classDef pain fill:#ffffff,stroke:#000000,stroke-width:2.5px,color:#000000
+
+        class A,B normal
+        class C,D,E pain
+    </pre>
+  </div>
+
+  <div class="findings animate" style="--i:4">
+    <h2>What this map exposes</h2>
+    <ul>
+      <li>The handoff from sales rep to attorney is where things break -- no triage, no self-serve option</li>
+      <li>Steps 3 and 4 are waste: the attorney is doing lookup work, not legal judgment</li>
+      <li>Step 5 is waste: the attorney is retyping information that already exists in a document</li>
+    </ul>
+    <div class="summary">3 of 5 steps are low-value for the attorney. Actual legal skill is not being used.</div>
+  </div>
+
+</div>
+
+<script type="module">
+  import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs';
+
+  mermaid.initialize({
+    startOnLoad: true,
+    theme: 'base',
+    look: 'handDrawn',
+    flowchart: {
+      nodeSpacing: 30,
+      rankSpacing: 60,
+      padding: 16,
+      htmlLabels: true,
+    },
+    themeVariables: {
+      primaryColor: '#ffffff',
+      primaryBorderColor: '#000000',
+      primaryTextColor: '#000000',
+      secondaryColor: '#ffffff',
+      secondaryBorderColor: '#000000',
+      secondaryTextColor: '#000000',
+      lineColor: '#000000',
+      fontSize: '13px',
+      fontFamily: "'IBM Plex Sans', system-ui, sans-serif",
+    }
+  });
+</script>
+<script>
+  function updateZoomState(wrap) {
+    var target = wrap.querySelector('.mermaid');
+    var zoom = parseFloat(target.dataset.zoom || '1');
+    wrap.classList.toggle('is-zoomed', zoom > 1);
+  }
+
+  function zoomDiagram(btn, factor) {
+    var wrap = btn.closest('.mermaid-wrap');
+    var target = wrap.querySelector('.mermaid');
+    var current = parseFloat(target.dataset.zoom || '1');
+    var next = Math.min(Math.max(current * factor, 0.3), 5);
+    target.dataset.zoom = next;
+    target.style.transform = 'scale(' + next + ')';
+    updateZoomState(wrap);
+  }
+
+  function resetZoom(btn) {
+    var wrap = btn.closest('.mermaid-wrap');
+    var target = wrap.querySelector('.mermaid');
+    target.dataset.zoom = '1';
+    target.style.transform = 'scale(1)';
+    updateZoomState(wrap);
+  }
+
+  document.querySelectorAll('.mermaid-wrap').forEach(function(wrap) {
+    wrap.addEventListener('wheel', function(e) {
+      if (!e.ctrlKey && !e.metaKey) return;
+      e.preventDefault();
+      var target = wrap.querySelector('.mermaid');
+      var current = parseFloat(target.dataset.zoom || '1');
+      var factor = e.deltaY < 0 ? 1.1 : 0.9;
+      var next = Math.min(Math.max(current * factor, 0.3), 5);
+      target.dataset.zoom = next;
+      target.style.transform = 'scale(' + next + ')';
+      updateZoomState(wrap);
+    }, { passive: false });
+
+    var startX, startY, scrollL, scrollT;
+    wrap.addEventListener('mousedown', function(e) {
+      if (e.target.closest('.zoom-controls')) return;
+      var target = wrap.querySelector('.mermaid');
+      if (parseFloat(target.dataset.zoom || '1') <= 1) return;
+      wrap.classList.add('is-panning');
+      startX = e.clientX;
+      startY = e.clientY;
+      scrollL = wrap.scrollLeft;
+      scrollT = wrap.scrollTop;
+    });
+    window.addEventListener('mousemove', function(e) {
+      if (!wrap.classList.contains('is-panning')) return;
+      wrap.scrollLeft = scrollL - (e.clientX - startX);
+      wrap.scrollTop = scrollT - (e.clientY - startY);
+    });
+    window.addEventListener('mouseup', function() {
+      wrap.classList.remove('is-panning');
+    });
+  });
+</script>
+
+</body>
+</html>

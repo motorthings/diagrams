@@ -1,0 +1,1860 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Agent Factory -- Build Decision Flow</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  /* ============ THEME: Blueprint ============ */
+  :root {
+    --font-body: 'DM Sans', system-ui, sans-serif;
+    --font-mono: 'Fira Code', 'SF Mono', Consolas, monospace;
+
+    --bg: #f5f7fa;
+    --surface: #ffffff;
+    --surface2: #eef1f6;
+    --border: rgba(0, 0, 0, 0.08);
+    --border-bright: rgba(0, 0, 0, 0.15);
+    --text: #1e293b;
+    --text-dim: #64748b;
+
+    --phase0: #6366f1;
+    --phase0-dim: rgba(99, 102, 241, 0.08);
+    --auto: #0891b2;
+    --auto-dim: rgba(8, 145, 178, 0.08);
+    --workflow: #7c3aed;
+    --workflow-dim: rgba(124, 58, 237, 0.08);
+    --fail: #dc2626;
+    --fail-dim: rgba(220, 38, 38, 0.08);
+    --gate: #d97706;
+    --gate-dim: rgba(217, 119, 6, 0.08);
+    --pattern: #059669;
+    --pattern-dim: rgba(5, 150, 105, 0.08);
+    --hybrid: #be185d;
+    --hybrid-dim: rgba(190, 24, 93, 0.08);
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #0f172a;
+      --surface: #1e293b;
+      --surface2: #283548;
+      --border: rgba(255, 255, 255, 0.06);
+      --border-bright: rgba(255, 255, 255, 0.12);
+      --text: #e2e8f0;
+      --text-dim: #94a3b8;
+
+      --phase0: #818cf8;
+      --phase0-dim: rgba(129, 140, 248, 0.14);
+      --auto: #22d3ee;
+      --auto-dim: rgba(34, 211, 238, 0.12);
+      --workflow: #c4b5fd;
+      --workflow-dim: rgba(196, 181, 253, 0.12);
+      --fail: #f87171;
+      --fail-dim: rgba(248, 113, 113, 0.12);
+      --gate: #fbbf24;
+      --gate-dim: rgba(251, 191, 36, 0.12);
+      --pattern: #34d399;
+      --pattern-dim: rgba(52, 211, 153, 0.12);
+      --hybrid: #f472b6;
+      --hybrid-dim: rgba(244, 114, 182, 0.12);
+    }
+  }
+
+  /* ============ RESET + BASE ============ */
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background-color: var(--bg);
+    background-image:
+      linear-gradient(var(--border) 1px, transparent 1px),
+      linear-gradient(90deg, var(--border) 1px, transparent 1px);
+    background-size: 40px 40px;
+    color: var(--text);
+    font-family: var(--font-body);
+    padding: 40px;
+    min-height: 100vh;
+    overflow-wrap: break-word;
+    padding-top: 24px;
+  }
+
+  /* ============ ANIMATION ============ */
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(12px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .animate {
+    animation: fadeUp 0.4s ease-out both;
+    animation-delay: calc(var(--i, 0) * 0.06s);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after {
+      animation-duration: 0.01ms !important;
+      animation-delay: 0ms !important;
+      transition-duration: 0.01ms !important;
+    }
+    .mermaid-wrap .mermaid { transition: none; }
+  }
+
+  /* ============ NAV LAYOUT ============ */
+  .wrap {
+    max-width: 1300px;
+    margin: 0 auto;
+    display: grid;
+    grid-template-columns: 170px 1fr;
+    gap: 0 40px;
+  }
+  .main { min-width: 0; }
+
+  .toc {
+    position: sticky;
+    top: 24px;
+    align-self: start;
+    padding: 14px 0;
+    grid-row: 1 / -1;
+    max-height: calc(100dvh - 48px);
+    overflow-y: auto;
+  }
+  .toc::-webkit-scrollbar { width: 3px; }
+  .toc::-webkit-scrollbar-thumb { background: var(--surface2); border-radius: 2px; }
+
+  .toc-title {
+    font-family: var(--font-mono);
+    font-size: 9px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    color: var(--text-dim);
+    padding: 0 0 10px;
+    margin-bottom: 8px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .toc a {
+    display: block;
+    font-size: 11px;
+    color: var(--text-dim);
+    text-decoration: none;
+    padding: 4px 8px;
+    border-radius: 5px;
+    border-left: 2px solid transparent;
+    transition: all 0.15s;
+    line-height: 1.4;
+    margin-bottom: 1px;
+  }
+  .toc a:hover { color: var(--text); background: var(--surface2); }
+  .toc a.active { color: var(--text); border-left-color: var(--phase0); }
+
+  @media (max-width: 1000px) {
+    .wrap { grid-template-columns: 1fr; padding-top: 0; }
+    body { padding-top: 0; }
+    .toc {
+      position: sticky; top: 0; z-index: 200;
+      max-height: none; display: flex; gap: 4px;
+      align-items: center; overflow-x: auto;
+      -webkit-overflow-scrolling: touch;
+      background: var(--bg);
+      border-bottom: 1px solid var(--border);
+      padding: 10px 0; margin: 0 -40px;
+      padding-left: 40px; padding-right: 40px;
+      grid-row: auto;
+    }
+    .toc::-webkit-scrollbar { display: none; }
+    .toc-title { display: none; }
+    .toc a {
+      white-space: nowrap; flex-shrink: 0;
+      border-left: none; border-bottom: 2px solid transparent;
+      border-radius: 4px 4px 0 0; padding: 6px 10px; font-size: 10px;
+    }
+    .toc a.active { border-left: none; border-bottom-color: var(--phase0); background: var(--surface); }
+    .main { padding-top: 20px; }
+    .sec-head { scroll-margin-top: 52px; }
+  }
+
+  /* ============ TYPOGRAPHY ============ */
+  h1 {
+    font-size: 36px;
+    font-weight: 700;
+    letter-spacing: -1px;
+    margin-bottom: 4px;
+    text-wrap: balance;
+  }
+
+  .subtitle {
+    color: var(--text-dim);
+    font-family: var(--font-mono);
+    font-size: 12px;
+    margin-bottom: 24px;
+  }
+
+  .description {
+    font-size: 14px;
+    line-height: 1.7;
+    color: var(--text-dim);
+    margin-bottom: 32px;
+    max-width: 800px;
+  }
+
+  .description code {
+    font-family: var(--font-mono);
+    font-size: 12px;
+    background: var(--phase0-dim);
+    color: var(--phase0);
+    padding: 1px 5px;
+    border-radius: 3px;
+  }
+
+  h2 {
+    font-size: 20px;
+    font-weight: 600;
+    margin-top: 40px;
+    margin-bottom: 16px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  h2 .section-tag {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+    padding: 3px 8px;
+    border-radius: 4px;
+  }
+
+  h3 {
+    font-size: 15px;
+    font-weight: 600;
+    margin-top: 20px;
+    margin-bottom: 10px;
+    color: var(--text);
+  }
+
+  /* ============ MERMAID CONTAINER ============ */
+  .mermaid-wrap {
+    position: relative;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 32px 24px;
+    overflow: auto;
+    margin-bottom: 24px;
+    scrollbar-width: thin;
+    scrollbar-color: var(--border) transparent;
+  }
+
+  .mermaid-wrap::-webkit-scrollbar { width: 6px; height: 6px; }
+  .mermaid-wrap::-webkit-scrollbar-track { background: transparent; }
+  .mermaid-wrap::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+  .mermaid-wrap::-webkit-scrollbar-thumb:hover { background: var(--text-dim); }
+
+  .mermaid-wrap .mermaid {
+    display: flex;
+    justify-content: center;
+    transition: transform 0.2s ease;
+    transform-origin: top center;
+  }
+
+  .mermaid-wrap.is-zoomed { cursor: grab; }
+  .mermaid-wrap.is-panning { cursor: grabbing; user-select: none; }
+
+  .zoom-controls {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    display: flex;
+    gap: 2px;
+    z-index: 10;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 2px;
+  }
+
+  .zoom-controls button {
+    width: 28px;
+    height: 28px;
+    border: none;
+    background: transparent;
+    color: var(--text-dim);
+    font-family: var(--font-mono);
+    font-size: 14px;
+    cursor: pointer;
+    border-radius: 4px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background 0.15s ease, color 0.15s ease;
+  }
+
+  .zoom-controls button:hover {
+    background: var(--border);
+    color: var(--text);
+  }
+
+  /* ============ MERMAID SVG OVERRIDES ============ */
+  .mermaid .nodeLabel {
+    font-family: var(--font-body) !important;
+    font-size: 14px !important;
+    color: var(--text) !important;
+  }
+
+  .mermaid .edgeLabel {
+    font-family: var(--font-mono) !important;
+    font-size: 11px !important;
+    color: var(--text-dim) !important;
+    background-color: var(--bg) !important;
+  }
+
+  .mermaid .edgeLabel rect { fill: var(--bg) !important; }
+
+  .mermaid .node rect, .mermaid .node circle, .mermaid .node polygon { stroke-width: 1.5px !important; }
+  .mermaid .edge-pattern-solid { stroke-width: 1.5px !important; }
+
+  /* ============ LEGEND ============ */
+  .legend {
+    display: flex;
+    gap: 20px;
+    flex-wrap: wrap;
+    margin-bottom: 16px;
+  }
+
+  .legend-item {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-family: var(--font-mono);
+    font-size: 11px;
+    color: var(--text-dim);
+  }
+
+  .legend-swatch {
+    width: 12px;
+    height: 12px;
+    border-radius: 3px;
+  }
+
+  /* ============ CALLOUT ============ */
+  .callout {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-left: 3px solid var(--phase0);
+    border-radius: 0 10px 10px 0;
+    padding: 16px 20px;
+    font-size: 13px;
+    line-height: 1.6;
+    color: var(--text-dim);
+    margin-bottom: 24px;
+  }
+
+  .callout strong { color: var(--text); }
+
+  .callout code {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    background: var(--phase0-dim);
+    color: var(--phase0);
+    padding: 1px 5px;
+    border-radius: 3px;
+  }
+
+  .callout.callout-warn { border-left-color: var(--fail); }
+  .callout.callout-gate { border-left-color: var(--gate); }
+
+  /* ============ COLLAPSIBLE DRILL-DOWN ============ */
+  details.drill {
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    overflow: hidden;
+    margin-bottom: 12px;
+  }
+
+  details.drill summary {
+    padding: 14px 20px;
+    background: var(--surface);
+    font-family: var(--font-body);
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    list-style: none;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    color: var(--text);
+    transition: background 0.15s ease;
+  }
+
+  details.drill summary:hover {
+    background: var(--surface2);
+  }
+
+  details.drill summary::-webkit-details-marker { display: none; }
+
+  details.drill summary::before {
+    content: '\25B8';
+    font-size: 11px;
+    color: var(--text-dim);
+    transition: transform 0.15s ease;
+    flex-shrink: 0;
+  }
+
+  details.drill[open] summary::before {
+    transform: rotate(90deg);
+  }
+
+  details.drill summary .drill-tag {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    font-weight: 500;
+    padding: 2px 7px;
+    border-radius: 4px;
+    margin-left: auto;
+  }
+
+  details.drill .drill-body {
+    padding: 16px 20px;
+    border-top: 1px solid var(--border);
+    font-size: 13px;
+    line-height: 1.7;
+    color: var(--text-dim);
+  }
+
+  details.drill .drill-body strong { color: var(--text); }
+
+  details.drill .drill-body code {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    background: var(--phase0-dim);
+    color: var(--phase0);
+    padding: 1px 5px;
+    border-radius: 3px;
+  }
+
+  details.drill .drill-body ul {
+    margin: 8px 0;
+    padding-left: 20px;
+  }
+
+  details.drill .drill-body li {
+    margin-bottom: 4px;
+  }
+
+  details.drill .drill-body .scoring-grid {
+    display: grid;
+    grid-template-columns: 1fr 90px 90px 90px;
+    gap: 0;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    overflow: hidden;
+    margin: 12px 0;
+    font-size: 12px;
+  }
+
+  details.drill .drill-body .scoring-grid > * {
+    padding: 8px 12px;
+    border-bottom: 1px solid var(--border);
+    min-width: 0;
+  }
+
+  details.drill .drill-body .scoring-grid > *:nth-child(4n+1) {
+    font-weight: 500;
+    color: var(--text);
+  }
+
+  details.drill .drill-body .scoring-grid .sg-header {
+    background: var(--surface2);
+    font-family: var(--font-mono);
+    font-size: 10px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: var(--text-dim);
+  }
+
+  details.drill .drill-body .scoring-grid .num {
+    text-align: center;
+    font-family: var(--font-mono);
+    font-variant-numeric: tabular-nums;
+  }
+
+  /* Nested drilldown */
+  details.drill details.drill {
+    margin: 8px 0;
+    border-color: var(--border);
+  }
+
+  details.drill details.drill summary {
+    font-size: 13px;
+    padding: 10px 16px;
+  }
+
+  details.drill details.drill .drill-body {
+    font-size: 12px;
+    padding: 12px 16px;
+  }
+
+  /* ============ EXAMPLE BOX ============ */
+  .example-box {
+    background: color-mix(in srgb, var(--surface) 92%, var(--pattern) 8%);
+    border: 1px solid color-mix(in srgb, var(--border) 50%, var(--pattern) 50%);
+    border-radius: 8px;
+    padding: 12px 16px;
+    margin: 12px 0 4px;
+    font-size: 12px;
+    line-height: 1.6;
+  }
+
+  .example-box .example-label {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+    color: var(--pattern);
+    margin-bottom: 6px;
+  }
+
+  .example-box strong { color: var(--text); }
+
+  /* ============ TABLE ============ */
+  .table-wrap {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    overflow: hidden;
+    margin-bottom: 24px;
+  }
+
+  .table-scroll { overflow-x: auto; }
+
+  .data-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13px;
+    line-height: 1.5;
+  }
+
+  .data-table thead { position: sticky; top: 0; z-index: 2; }
+
+  .data-table th {
+    background: var(--surface2);
+    font-family: var(--font-mono);
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: var(--text-dim);
+    text-align: left;
+    padding: 12px 16px;
+    border-bottom: 2px solid var(--border-bright);
+    white-space: nowrap;
+  }
+
+  .data-table td {
+    padding: 12px 16px;
+    border-bottom: 1px solid var(--border);
+    vertical-align: top;
+    color: var(--text);
+  }
+
+  .data-table tbody tr:nth-child(even) { background: var(--phase0-dim); }
+  .data-table tbody tr { transition: background 0.15s ease; }
+  .data-table tbody tr:hover { background: var(--border); }
+  .data-table tbody tr:last-child td { border-bottom: none; }
+
+  .data-table code {
+    font-family: var(--font-mono); font-size: 11px;
+    background: var(--phase0-dim); color: var(--phase0);
+    padding: 1px 5px; border-radius: 3px;
+  }
+
+  .data-table small { display: block; color: var(--text-dim); font-size: 11px; margin-top: 2px; }
+  .data-table td.num { text-align: right; font-variant-numeric: tabular-nums; font-family: var(--font-mono); }
+
+  .tag {
+    font-family: var(--font-mono); font-size: 10px; font-weight: 500;
+    padding: 2px 7px; border-radius: 4px; white-space: nowrap;
+  }
+
+  .tag-auto { background: var(--auto-dim); color: var(--auto); }
+  .tag-workflow { background: var(--workflow-dim); color: var(--workflow); }
+  .tag-fail { background: var(--fail-dim); color: var(--fail); }
+  .tag-hybrid { background: var(--hybrid-dim); color: var(--hybrid); }
+  .tag-pattern { background: var(--pattern-dim); color: var(--pattern); }
+  .tag-gate { background: var(--gate-dim); color: var(--gate); }
+
+  /* ============ RESPONSIVE ============ */
+  @media (max-width: 768px) {
+    body { padding: 16px; }
+    h1 { font-size: 24px; }
+    .mermaid-wrap { padding: 16px 12px; }
+  }
+</style>
+</head>
+<body>
+
+<div class="wrap">
+
+  <nav class="toc" id="toc">
+    <div class="toc-title">Contents</div>
+    <a href="#s1">1. Overview</a>
+    <a href="#s2">2. Build Class Selection</a>
+    <a href="#s3">3. Build Path Routing</a>
+    <a href="#s4">4. Pattern Selection</a>
+    <a href="#s5">5. Anti-Patterns</a>
+    <a href="#s6">6. Reference Tables</a>
+  </nav>
+
+  <div class="main">
+
+  <h1 class="animate" style="--i:0">Agent Factory Build Decision Flow</h1>
+  <p class="subtitle animate" style="--i:1">glean-agent-factory-app / backend / engine &mdash; from PRD to buildable agent</p>
+
+  <!-- ==================== SECTION 1: OVERVIEW ==================== -->
+  <div id="s1" class="sec-head"></div>
+
+  <p class="description animate" style="--i:2">
+    How the Agent Factory engine decides <strong>what to build</strong> and <strong>how to build it</strong>.
+    Every PRD enters at Phase 0 and exits as either a paste-ready brief (Auto Mode) or importable JSON (Workflow Mode).
+    The decision flow spans three layers: <strong>build class selection</strong> (what kind of agent),
+    <strong>build path routing</strong> (which phases to run), and <strong>architecture pattern selection</strong>
+    (which structural template to use within Workflow Mode).
+    Click any section below to drill into the decision logic.
+  </p>
+
+  <!-- ==================== SECTION 2: BUILD CLASS SELECTION ==================== -->
+  <div id="s2" class="sec-head"></div>
+  <h2 class="animate" style="--i:3">
+    <span class="section-tag" style="background:var(--phase0-dim);color:var(--phase0)">Layer 1</span>
+    Build Class Selection
+  </h2>
+
+  <div class="legend animate" style="--i:4">
+    <div class="legend-item"><div class="legend-swatch" style="background:var(--phase0)"></div> Decision gate</div>
+    <div class="legend-item"><div class="legend-swatch" style="background:var(--auto)"></div> Auto Mode</div>
+    <div class="legend-item"><div class="legend-swatch" style="background:var(--workflow)"></div> Workflow Mode</div>
+    <div class="legend-item"><div class="legend-swatch" style="background:var(--fail)"></div> Rejected</div>
+    <div class="legend-item"><div class="legend-swatch" style="background:var(--gate)"></div> Checkpoint</div>
+  </div>
+
+  <div class="mermaid-wrap animate" style="--i:5">
+    <div class="zoom-controls">
+      <button onclick="zoomDiagram(this, 1.2)" title="Zoom in">+</button>
+      <button onclick="zoomDiagram(this, 0.8)" title="Zoom out">&minus;</button>
+      <button onclick="resetZoom(this)" title="Reset zoom">&#8634;</button>
+    </div>
+    <pre class="mermaid">
+      graph TD
+        PRD["PRD Submitted"]
+        PM["Pattern Matcher<br/>keyword scoring"]
+        P0{"Phase 0<br/>Fitness Check"}
+        SCORE["Quick Scoring Model<br/>8 dimensions, 0-2 each"]
+        HARD{"Hard Gates<br/>Check"}
+        FAIL_N1["N1: Not Ready"]
+        CLASS_A1["A1: Assistant"]
+        CLASS_A2["A2: Assistant + Routing"]
+        CLASS_G1["G1: Conversational Agent"]
+        CLASS_G2["G2: Input Form Agent"]
+        CLASS_G3["G3: Scheduled Agent"]
+        CLASS_G4["G4: Content-Triggered"]
+        GAP{"Phase 1<br/>Gap Analysis<br/>+ Class Validation"}
+        HITL{"HITL Checkpoint"}
+        AUTO["Auto Mode Path<br/>Phase 2A + 3A"]
+        WKFL["Workflow Mode Path<br/>Phase 2 + 3 + 4"]
+
+        PRD --> PM
+        PM -->|"top 3 patterns"| P0
+        P0 -->|"FAIL"| FAIL_N1
+        P0 -->|"GO / CONDITIONAL"| SCORE
+        SCORE --> HARD
+        HARD -->|"0-4: broad Q&A"| CLASS_A1
+        HARD -->|"14-16: multi-domain"| CLASS_A2
+        HARD -->|"5-9: domain chat"| CLASS_G1
+        HARD -->|"10-13: form+steps"| CLASS_G2
+        HARD -->|"schedule trigger"| CLASS_G3
+        HARD -->|"content trigger"| CLASS_G4
+        CLASS_A1 --> GAP
+        CLASS_A2 --> GAP
+        CLASS_G1 --> GAP
+        CLASS_G2 --> GAP
+        CLASS_G3 --> GAP
+        CLASS_G4 --> GAP
+        GAP -->|"confirmed or<br/>overridden"| HITL
+        HITL -->|"BLOCK"| FAIL_N1
+        HITL -->|"A1, A2, G1"| AUTO
+        HITL -->|"G2, G3, G4"| WKFL
+
+        classDef decision fill:#6366f122,stroke:#6366f1,stroke-width:2px
+        classDef auto fill:#0891b222,stroke:#0891b2,stroke-width:2px
+        classDef wkfl fill:#7c3aed22,stroke:#7c3aed,stroke-width:2px
+        classDef fail fill:#dc262622,stroke:#dc2626,stroke-width:2px
+        classDef gate fill:#d9770622,stroke:#d97706,stroke-width:2px
+        classDef neutral fill:#64748b11,stroke:#64748b44,stroke-width:1px
+
+        class P0,HARD,GAP decision
+        class CLASS_A1,CLASS_A2,CLASS_G1,AUTO auto
+        class CLASS_G2,CLASS_G3,CLASS_G4,WKFL wkfl
+        class FAIL_N1 fail
+        class HITL gate
+        class PRD,PM,SCORE neutral
+    </pre>
+  </div>
+
+  <!-- Drill-downs for Layer 1 -->
+  <details class="drill animate" style="--i:6">
+    <summary>
+      Pattern Matcher
+      <span class="drill-tag" style="background:var(--phase0-dim);color:var(--phase0)">patterns.py</span>
+    </summary>
+    <div class="drill-body">
+      <strong>What it does:</strong> Keyword-scores the PRD against 10 built-in patterns, returns top 3 as hints.<br><br>
+      <strong>How it works:</strong> Each pattern has a keyword list (8-10 terms). The matcher counts keyword hits in the lowercased PRD text. Score > 0 means a match. The top-scoring pattern is passed to Phase 0 as a suggestion, not a binding decision.<br><br>
+      <strong>The 10 patterns:</strong>
+      <ul>
+        <li><strong>1. Q&A Bot</strong> -- question, answer, knowledge base, search, FAQ</li>
+        <li><strong>2. Workflow Agent</strong> -- form, workflow, collect, process, generate</li>
+        <li><strong>3. Scheduled Reporter</strong> -- report, weekly, daily, digest, recurring</li>
+        <li><strong>4. Approval Workflow</strong> -- approval, route, triage, classify, escalate</li>
+        <li><strong>5. Data Sync Agent</strong> -- sync, migrate, transfer, ETL, pipeline</li>
+        <li><strong>6. Alert Monitor</strong> -- monitor, alert, threshold, detect, anomaly</li>
+        <li><strong>7. Document Generator</strong> -- document, template, memo, draft, compose</li>
+        <li><strong>8. Conversational Assistant</strong> -- chat, conversation, multi-turn, coach</li>
+        <li><strong>9. Onboarding/Guided Flow</strong> -- onboarding, walkthrough, checklist, training</li>
+        <li><strong>10. Decision Tree Agent</strong> -- decision tree, evaluate, criteria, gate, eligibility</li>
+      </ul>
+      <strong>Limitation:</strong> Keyword matching is shallow. The LLM in Phase 0 makes the real decision. The matcher just primes it.
+    </div>
+  </details>
+
+  <details class="drill animate" style="--i:7">
+    <summary>
+      Phase 0 Fitness Check -- FAIL Conditions
+      <span class="drill-tag tag-fail">mandatory stops</span>
+    </summary>
+    <div class="drill-body">
+      <strong>Any one of these triggers an automatic FAIL:</strong>
+      <ul>
+        <li>Required data source has no Glean connector AND no viable workaround (no Remote MCP template, no API-based custom action, no export-to-Drive path)</li>
+        <li>Core workflow requires storing/caching data outside Glean (agents are stateless)</li>
+        <li>Use case requires real-time bidirectional sync (Glean is read-search-respond, not sync)</li>
+        <li>Problem is better solved by process change, policy change, or non-AI tool</li>
+        <li>Problem-solution fit is MISALIGNED</li>
+      </ul>
+      <strong>CONDITIONAL_PASS</strong> is only appropriate when all required connectors exist and gaps are about PRD clarity, not platform capability.
+    </div>
+  </details>
+
+  <details class="drill animate" style="--i:8">
+    <summary>
+      Quick Scoring Model -- 8 Dimensions
+      <span class="drill-tag" style="background:var(--phase0-dim);color:var(--phase0)">0-16 scale</span>
+    </summary>
+    <div class="drill-body">
+      <strong>Score each 0-2, then sum:</strong>
+
+      <div class="scoring-grid">
+        <div class="sg-header">Dimension</div>
+        <div class="sg-header num">0</div>
+        <div class="sg-header num">1</div>
+        <div class="sg-header num">2</div>
+
+        <div>Repeatability</div>
+        <div class="num">rare</div>
+        <div class="num">recurring</div>
+        <div class="num">high-vol</div>
+
+        <div>Workflow clarity</div>
+        <div class="num">unclear</div>
+        <div class="num">partial</div>
+        <div class="num">defined</div>
+
+        <div>Standard output</div>
+        <div class="num">no</div>
+        <div class="num">somewhat</div>
+        <div class="num">yes</div>
+
+        <div>Branching / logic</div>
+        <div class="num">none</div>
+        <div class="num">limited</div>
+        <div class="num">significant</div>
+
+        <div>Actions / integrations</div>
+        <div class="num">none</div>
+        <div class="num">future</div>
+        <div class="num">required</div>
+
+        <div>Risk / governance</div>
+        <div class="num">low</div>
+        <div class="num">medium</div>
+        <div class="num">high</div>
+
+        <div>Specialized KB</div>
+        <div class="num">broad</div>
+        <div class="num">mixed</div>
+        <div class="num">narrow</div>
+
+        <div>Single entry point</div>
+        <div class="num">no</div>
+        <div class="num">maybe</div>
+        <div class="num">yes</div>
+      </div>
+
+      <strong>Score interpretation:</strong>
+      <ul>
+        <li><strong>0-4:</strong> A1 (Assistant)</li>
+        <li><strong>5-9:</strong> A1 or A2 (lean A1, consider routing if multi-domain)</li>
+        <li><strong>10-13:</strong> Agent (G1-G4 based on trigger type)</li>
+        <li><strong>14-16:</strong> A2 (Assistant + routing to specialized agents)</li>
+      </ul>
+    </div>
+  </details>
+
+  <details class="drill animate" style="--i:9">
+    <summary>
+      Hard Gates -- Override the Score
+      <span class="drill-tag tag-gate">binding rules</span>
+    </summary>
+    <div class="drill-body">
+      <strong>These override the numeric score when triggered:</strong><br><br>
+
+      <details class="drill">
+        <summary>Force A1 (Assistant) if most are true</summary>
+        <div class="drill-body">
+          <ul>
+            <li>Primary value is broad Q&A / synthesis / drafting</li>
+            <li>No strict process needs to be followed</li>
+            <li>No action in another system required</li>
+            <li>User benefits from freeform conversation</li>
+            <li>Retrieval can remain dynamic</li>
+          </ul>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Force Agent (G1-G4) if ANY are true</summary>
+        <div class="drill-body">
+          <ul>
+            <li>Repeatable steps that can be written down</li>
+            <li>Deterministic inputs + structured outputs</li>
+            <li>Authoritative docs + system-specific logic</li>
+            <li>Must classify and respond differently by category</li>
+            <li>Must route to different paths / escalations</li>
+            <li>Requires system actions</li>
+            <li>Must be in Slack, scheduled, or triggered</li>
+          </ul>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Force A2 (Assistant + Routing) if ALL are true</summary>
+        <div class="drill-body">
+          <ul>
+            <li>Users shouldn't choose the specialist</li>
+            <li>2+ domain-specific use cases</li>
+            <li>Meaningful quality gain from specialization</li>
+            <li>Single front door desired</li>
+          </ul>
+        </div>
+      </details>
+
+      <strong>PRD-prescribed structure override:</strong> If the PRD prescribes explicit workflow steps but the problem maps to Auto Mode, recommend Auto Mode and note the override. PRDs often carry forward legacy design decisions.
+    </div>
+  </details>
+
+  <details class="drill animate" style="--i:10">
+    <summary>
+      Phase 1 Gap Analysis -- Build Class Validation (Category 12)
+      <span class="drill-tag" style="background:var(--phase0-dim);color:var(--phase0)">can override Phase 0</span>
+    </summary>
+    <div class="drill-body">
+      <strong>Phase 1 re-evaluates the Phase 0 classification using 12 gap categories.</strong> Category 12 specifically validates the build class:<br><br>
+      <ul>
+        <li><strong>If A1 recommended:</strong> Do requirements actually need repeatable steps, deterministic outputs, or system actions? If yes, upgrade to G1 or G2.</li>
+        <li><strong>If A2 recommended:</strong> Are there actually 2+ distinct domains that benefit from specialization? If not, downgrade to A1 or G1.</li>
+        <li><strong>If G1 recommended:</strong> Do requirements need branching, quality gates, multi-step data flow, or >20 actions? If yes, upgrade to G2.</li>
+        <li><strong>If G2/G3/G4 recommended:</strong> Is every step necessary, or could this be a single instruction block? If over-engineered, downgrade to G1 or A1.</li>
+      </ul>
+      <strong>Rule:</strong> Always choose the lowest complexity class that reliably solves the problem.
+    </div>
+  </details>
+
+  <details class="drill animate" style="--i:11">
+    <summary>
+      HITL Checkpoint -- Human Override
+      <span class="drill-tag tag-gate">UI checkpoint</span>
+    </summary>
+    <div class="drill-body">
+      <strong>Three verdict types:</strong>
+      <ul>
+        <li><strong>BLOCK</strong> -- red UI, requires explicit checkbox override to continue. Indicates critical gaps that may result in a broken agent.</li>
+        <li><strong>CAUTION</strong> -- amber UI, standard approve/reject flow. Gaps exist but are manageable.</li>
+        <li><strong>PROCEED</strong> -- green UI, standard approve/reject. No significant gaps.</li>
+      </ul>
+      <strong>User can:</strong> approve and continue, reject and halt the build, or override the classification (change the build class before proceeding).
+    </div>
+  </details>
+
+  <!-- ==================== SECTION 3: BUILD PATH ROUTING ==================== -->
+  <div id="s3" class="sec-head"></div>
+  <h2 class="animate" style="--i:12">
+    <span class="section-tag" style="background:var(--auto-dim);color:var(--auto)">Layer 2</span>
+    Build Path Routing
+  </h2>
+
+  <div class="mermaid-wrap animate" style="--i:13">
+    <div class="zoom-controls">
+      <button onclick="zoomDiagram(this, 1.2)" title="Zoom in">+</button>
+      <button onclick="zoomDiagram(this, 0.8)" title="Zoom out">&minus;</button>
+      <button onclick="resetZoom(this)" title="Reset zoom">&#8634;</button>
+    </div>
+    <pre class="mermaid">
+      graph LR
+        HITL2{"HITL Approved"}
+
+        subgraph autopath ["Auto Mode Path (A1, A2, G1)"]
+          direction TB
+          P2A["Phase 2A<br/>Instruction Design"]
+          P3A["Phase 3A<br/>Build Brief"]
+          P2A --> P3A
+        end
+
+        subgraph wkflpath ["Workflow Mode Path (G2, G3, G4)"]
+          direction TB
+          P2["Phase 2<br/>Workflow Design"]
+          P3["Phase 3<br/>Task Instructions"]
+          P4["Phase 4<br/>Generate Outputs"]
+          P2 --> P3 --> P4
+        end
+
+        P5["Phase 5: Summary"]
+
+        HITL2 -->|"A1, A2, G1"| P2A
+        HITL2 -->|"G2, G3, G4"| P2
+        P3A --> P5
+        P4 --> P5
+
+        classDef auto fill:#0891b222,stroke:#0891b2,stroke-width:2px
+        classDef wkfl fill:#7c3aed22,stroke:#7c3aed,stroke-width:2px
+        classDef gate fill:#d9770622,stroke:#d97706,stroke-width:2px
+        classDef summary fill:#64748b11,stroke:#64748b44,stroke-width:1px
+
+        class P2A,P3A auto
+        class P2,P3,P4 wkfl
+        class HITL2 gate
+        class P5 summary
+    </pre>
+  </div>
+
+  <!-- Drill-downs for Layer 2 -->
+  <details class="drill animate" style="--i:14">
+    <summary>
+      Auto Mode Path: Phase 2A + 3A
+      <span class="drill-tag tag-auto">A1, A2, G1</span>
+    </summary>
+    <div class="drill-body">
+      <strong>Phase 2A -- Instruction Design:</strong>
+      <ul>
+        <li>Write the instruction block (scope, persona, knowledge sources, response format)</li>
+        <li>Action budget: max 20 actions per Auto Mode agent. MCP tools consume action slots. If exceeded, split or switch to Workflow Mode.</li>
+        <li>Trace learning considerations: design for adoption, don't over-specify behavior that should adapt through traces</li>
+        <li>Context health check: test for distraction (noise in KB), clash (conflicting instructions), confusion (ambiguous routing)</li>
+      </ul>
+      <strong>Phase 3A -- Build Brief:</strong>
+      <ul>
+        <li>Paste-ready configuration for the Glean UI</li>
+        <li>Includes: instructions, knowledge sources, conversation starters, action selections, LLM config</li>
+        <li>For A2: also includes routing conditions and agent specs for each routed domain</li>
+        <li>Auto Mode agents cannot be imported via JSON -- manual paste only</li>
+      </ul>
+    </div>
+  </details>
+
+  <details class="drill animate" style="--i:15">
+    <summary>
+      Workflow Mode Path: Phase 2 + 3 + 4
+      <span class="drill-tag tag-workflow">G2, G3, G4</span>
+    </summary>
+    <div class="drill-body">
+      <strong>Phase 2 -- Workflow Design:</strong>
+      <ul>
+        <li>Select base architecture pattern (see Layer 3)</li>
+        <li>Apply hybrid modifiers if needed</li>
+        <li>Design branching architecture, sub-agent decisions, MCP integration</li>
+        <li>Context health check and skill/action detection scan</li>
+        <li>Output: step-by-step architecture with types, dependencies, tool assignments</li>
+      </ul>
+      <strong>Phase 3 -- Task Instructions:</strong>
+      <ul>
+        <li>Write each step's <code>instructionTemplate</code> using Goal-Return Format-Warnings-Context framework</li>
+        <li>Target 4,000 chars per step (warn at 6K, hard limit 8K)</li>
+        <li>Wire variable references: <code>[[step_id]]</code> for prior outputs, <code>[[field_name]]</code> for form inputs</li>
+      </ul>
+      <strong>Phase 4 -- Generate Outputs:</strong>
+      <ul>
+        <li>Produce importable JSON matching Glean's exact schema</li>
+        <li>UUIDs for each step, correct <code>type</code> field (BRANCH/TOOL/AGENT), <code>memoryConfig: ALL_DEPENDENCIES</code></li>
+        <li>Post-build validation: schema checks, dependency integrity, variable syntax, budget audit</li>
+      </ul>
+    </div>
+  </details>
+
+  <details class="drill animate" style="--i:16">
+    <summary>
+      Knowledge Docs Per Phase
+      <span class="drill-tag" style="background:var(--phase0-dim);color:var(--phase0)">system.py PHASE_KNOWLEDGE</span>
+    </summary>
+    <div class="drill-body">
+      <strong>Each phase gets only the docs it needs</strong> (token budget management). The <code>PHASE_KNOWLEDGE</code> dict in <code>system.py</code> controls filtering:<br><br>
+      <ul>
+        <li><strong>Phase 0:</strong> feasibility-rules, connector-registry, platform-ref-slim, prd-decision-framework, external-integrations</li>
+        <li><strong>Phase 1:</strong> feasibility-rules, connector-registry, platform-ref-slim, community-patterns-slim</li>
+        <li><strong>Phase 2:</strong> actions-catalog, connector-registry, platform-ref-slim, prompt-engineering, hybrid-patterns-slim, orchestration-decisions-slim, community-patterns-slim, tyler-best-practices</li>
+        <li><strong>Phase 3:</strong> platform-ref (full), prompt-engineering, orchestration-decisions-slim</li>
+        <li><strong>Phase 4:</strong> actions-catalog, json-schema, platform-ref (full), orchestration-decisions-slim</li>
+        <li><strong>Phase 2A:</strong> actions-catalog, platform-ref-slim, prompt-engineering, orchestration-decisions-slim</li>
+        <li><strong>Phase 3A:</strong> actions-catalog, platform-ref-slim, orchestration-decisions-slim</li>
+      </ul>
+      Phases 3 and 4 use the full platform reference (~45K chars) because they generate JSON and need complete action specs. All other phases use the slim version (~9K chars).
+    </div>
+  </details>
+
+  <!-- ==================== SECTION 4: PATTERN SELECTION ==================== -->
+  <div id="s4" class="sec-head"></div>
+  <h2 class="animate" style="--i:17">
+    <span class="section-tag" style="background:var(--workflow-dim);color:var(--workflow)">Layer 3</span>
+    Architecture Pattern Selection (Workflow Mode)
+  </h2>
+
+  <p class="description animate" style="--i:18">
+    During Phase 2, the engine selects a base pattern from 6 options, then optionally layers hybrid modifiers.
+    The pattern matcher provides a keyword hint, but the LLM makes the final call using full PRD context.
+  </p>
+
+  <div class="mermaid-wrap animate" style="--i:19">
+    <div class="zoom-controls">
+      <button onclick="zoomDiagram(this, 1.2)" title="Zoom in">+</button>
+      <button onclick="zoomDiagram(this, 0.8)" title="Zoom out">&minus;</button>
+      <button onclick="resetZoom(this)" title="Reset zoom">&#8634;</button>
+    </div>
+    <pre class="mermaid">
+      graph TD
+        P2S["Phase 2 Start"]
+        PSEL{"Select Base Pattern"}
+
+        PAT1["Cohesive Synthesis"]
+        PAT2["Decision Tree Pipeline"]
+        PAT3["Conditional Enterprise<br/>Action Framework"]
+        PAT4["Document Generator"]
+        PAT5["Dynamic Research"]
+        PAT6["Single-Step Agent"]
+
+        HYB{"Hybrid Modifier?"}
+
+        H1["Compute Bridge"]
+        H2["Validation Gate"]
+        H3["External Orchestration"]
+        H4["Memory Isolation"]
+
+        BR["Branching Design"]
+        SA{"Sub-Agent?"}
+
+        OUT["Workflow Architecture"]
+
+        P2S --> PSEL
+
+        PSEL -->|"prescriptive"| PAT1
+        PSEL -->|"3+ stages"| PAT2
+        PSEL -->|"type routing"| PAT3
+        PSEL -->|"template+data"| PAT4
+        PSEL -->|"exploratory"| PAT5
+        PSEL -->|"trivial"| PAT6
+
+        PAT1 --> HYB
+        PAT2 --> HYB
+        PAT3 --> HYB
+        PAT4 --> HYB
+        PAT5 --> HYB
+        PAT6 --> HYB
+
+        HYB -->|"compute"| H1
+        HYB -->|"QA"| H2
+        HYB -->|"webhook/MCP"| H3
+        HYB -->|"isolation"| H4
+        HYB -->|"none"| BR
+
+        H1 --> BR
+        H2 --> BR
+        H3 --> BR
+        H4 --> BR
+
+        BR --> SA
+        SA -->|"yes"| OUT
+        SA -->|"no"| OUT
+
+        classDef start fill:#7c3aed22,stroke:#7c3aed,stroke-width:2px
+        classDef decision fill:#6366f122,stroke:#6366f1,stroke-width:2px
+        classDef pattern fill:#05966922,stroke:#059669,stroke-width:2px
+        classDef hybrid fill:#be185d22,stroke:#be185d,stroke-width:2px
+        classDef branch fill:#d9770622,stroke:#d97706,stroke-width:2px
+        classDef output fill:#64748b11,stroke:#64748b44,stroke-width:1px
+
+        class P2S start
+        class PSEL,HYB,SA decision
+        class PAT1,PAT2,PAT3,PAT4,PAT5,PAT6 pattern
+        class H1,H2,H3,H4 hybrid
+        class BR branch
+        class OUT output
+    </pre>
+  </div>
+
+  <!-- Drill-downs for each pattern -->
+  <details class="drill animate" style="--i:20">
+    <summary>
+      Pattern 1: Cohesive Synthesis
+      <span class="drill-tag tag-pattern">most common</span>
+    </summary>
+    <div class="drill-body">
+      <strong>Flow:</strong> Search + Think + Respond<br><br>
+      <strong>When to use:</strong> Known inputs, defined outputs, standardized process. The vast majority of enterprise workflows are prescriptive -- this is the default.<br><br>
+      <strong>Key rules:</strong>
+      <ul>
+        <li>Think is the synthesis step. It reads dependency outputs via memory and compiles into structured result.</li>
+        <li>Think is deterministic and controllable.</li>
+        <li>Do NOT use Plan and Execute here -- that is only for genuinely exploratory workflows.</li>
+      </ul>
+      <div class="example-box">
+        <div class="example-label">Example: Job Description Generator</div>
+        <strong>Trigger:</strong> Form (role title, level, department, location).<br>
+        <strong>Flow:</strong> Search company JD templates and comp data -> Think synthesizes into standardized JD with sections (role summary, responsibilities, requirements, comp range) -> Respond delivers formatted output.<br>
+        <strong>Why this pattern:</strong> Every input field is known, the output format is standardized, and the process is always search-then-synthesize. No branching, no exploration, no autonomy needed.
+      </div>
+      <div class="example-box">
+        <div class="example-label">Example: Policy Compliance Checker</div>
+        <strong>Trigger:</strong> Form (policy area, document to check).<br>
+        <strong>Flow:</strong> Read submitted document -> Search relevant policy docs -> Think compares document against policies, outputs compliance report with pass/fail per section -> Respond delivers report.<br>
+        <strong>Why this pattern:</strong> Clear inputs, authoritative source (policy docs), deterministic output structure. Think handles the comparison logic.
+      </div>
+    </div>
+  </details>
+
+  <details class="drill animate" style="--i:21">
+    <summary>
+      Pattern 2: Decision Tree Pipeline
+      <span class="drill-tag tag-pattern">multi-stage gates</span>
+    </summary>
+    <div class="drill-body">
+      <strong>Flow:</strong> [Classify + Branch + Validate]* + Recommend<br><br>
+      <strong>When to use:</strong> 3+ decision stages with STOP/REVIEW gates and terminal outcomes.<br><br>
+      <strong>Architecture:</strong>
+      <ul>
+        <li>Each classification stage is a Think step</li>
+        <li>Each gate is a Branch step</li>
+        <li>Terminal outcomes get dedicated Respond steps</li>
+        <li>Final recommendation is a Think step consuming validated outputs from all prior stages</li>
+      </ul>
+      <strong>Critical rule:</strong> Gate enforcement must be structural (Branch steps), not behavioral (hoping the LLM follows "do not continue"). A decision tree PRD with 3+ stages MUST produce multiple steps -- a single TOOL step containing all decision logic is always wrong.
+
+      <div class="example-box">
+        <div class="example-label">Example: Technology Platform Selector</div>
+        <strong>Trigger:</strong> Chat message describing a technology need.<br>
+        <strong>Flow:</strong> Stage 1: Classify need (infra/app/data) -> Branch: STOP if out of scope -> Stage 2: Assess scale requirements -> Branch: REVIEW if enterprise-grade needed -> Stage 3: Check compliance/security -> Branch: STOP if non-compliant -> Final Think: produce recommendation with rationale from all validated stages -> Respond.<br>
+        <strong>Why this pattern:</strong> Three decision stages, each with a gate that can halt the process. The recommendation must only proceed if all gates pass. A single step would let the LLM skip gates.
+      </div>
+      <div class="example-box">
+        <div class="example-label">Example: Vendor Qualification Pipeline</div>
+        <strong>Trigger:</strong> Form (vendor name, category, annual spend).<br>
+        <strong>Flow:</strong> Search vendor docs -> Classify risk tier -> Branch: HIGH sends to manual review Respond -> MEDIUM continues -> Check insurance/compliance docs -> Branch: INCOMPLETE sends to request-docs Respond -> COMPLETE continues -> Score and rank -> Recommend.<br>
+        <strong>Why this pattern:</strong> Multiple STOP conditions at different stages. Each gate must structurally prevent the next stage from running.
+      </div>
+    </div>
+  </details>
+
+  <details class="drill animate" style="--i:22">
+    <summary>
+      Pattern 3: Conditional Enterprise Action Framework
+      <span class="drill-tag tag-pattern">type-based routing</span>
+    </summary>
+    <div class="drill-body">
+      <strong>Flow:</strong> Classify + Branch + Per-type processing steps<br><br>
+      <strong>When to use:</strong> The request type determines entirely different processing paths, actions, output formats, or compliance rules.<br><br>
+      <strong>Architecture:</strong>
+      <ul>
+        <li>First step classifies the request type</li>
+        <li>Branch step routes to type-specific sub-workflows</li>
+        <li>Each branch may have its own search, think, and action steps</li>
+        <li>Convergence step merges outputs from all branches</li>
+      </ul>
+      <div class="example-box">
+        <div class="example-label">Example: HR Request Router</div>
+        <strong>Trigger:</strong> Chat message or form (employee request description).<br>
+        <strong>Flow:</strong> Classify request type (benefits / leave / employment verification / payroll) -> Branch on type -> Benefits path: search benefits docs, generate benefits response -> Leave path: search leave policies, check accrual data, generate leave guidance -> Verification path: collect required fields, generate verification letter -> Convergence: format final response with appropriate disclaimers per type.<br>
+        <strong>Why this pattern:</strong> Each request type has completely different data sources, processing steps, and output formats. Benefits needs comp data; leave needs accrual lookups; verification needs legal templates. One workflow can't serve all types without branching.
+      </div>
+      <div class="example-box">
+        <div class="example-label">Example: Separation Agreement Generator</div>
+        <strong>Trigger:</strong> Form (employee name, jurisdiction, separation type).<br>
+        <strong>Flow:</strong> Search employee data -> Classify by jurisdiction (US / EMEA / Australia) -> Branch -> US path: calculate WARN compliance, severance per US policy, generate US-format agreement -> EMEA path: check local labor law, consult Works Council requirements, generate EMEA-format agreement -> AU path: calculate notice period, generate AU-format agreement -> Convergence: QA check, deliver to legal reviewer.<br>
+        <strong>Why this pattern:</strong> Jurisdiction determines entirely different legal frameworks, calculation methods, and output templates. Cannot be a single instruction block.
+      </div>
+    </div>
+  </details>
+
+  <details class="drill animate" style="--i:23">
+    <summary>
+      Pattern 4: Document Generator
+      <span class="drill-tag tag-pattern">template-based</span>
+    </summary>
+    <div class="drill-body">
+      <strong>Flow:</strong> Gather data + Generate + Deliver<br><br>
+      <strong>When to use:</strong> Template-based documents from gathered data. Output is a formatted deliverable.<br><br>
+      <strong>Steps:</strong>
+      <ul>
+        <li>Gather: search for source data, read reference docs</li>
+        <li>Generate: Think step fills template sections from gathered data</li>
+        <li>Deliver: Respond or write action (create page, send email)</li>
+      </ul>
+
+      <div class="example-box">
+        <div class="example-label">Example: Quarterly Business Review Generator</div>
+        <strong>Trigger:</strong> Form (business unit, quarter, focus areas).<br>
+        <strong>Flow:</strong> Search for quarterly metrics docs -> Read relevant dashboards/reports -> Think fills QBR template (executive summary, KPIs, highlights, risks, next quarter priorities) -> Create Confluence page with formatted output.<br>
+        <strong>Why this pattern:</strong> The output is a standardized template. The "intelligence" is in gathering the right data and filling sections accurately -- not in deciding what to do.
+      </div>
+      <div class="example-box">
+        <div class="example-label">Example: New Hire Onboarding Packet</div>
+        <strong>Trigger:</strong> Form (hire name, role, department, start date, manager).<br>
+        <strong>Flow:</strong> Search role-specific onboarding checklist -> Search department resources and contacts -> Search IT provisioning requirements -> Think compiles into personalized onboarding document (week 1 schedule, key contacts, required trainings, system access) -> Respond with formatted packet.<br>
+        <strong>Why this pattern:</strong> Multiple searches feed a single document with a known template. No branching, no decision logic -- just gather and generate.
+      </div>
+    </div>
+  </details>
+
+  <details class="drill animate" style="--i:24">
+    <summary>
+      Pattern 5: Dynamic Research
+      <span class="drill-tag tag-pattern">rare -- exploratory only</span>
+    </summary>
+    <div class="drill-body">
+      <strong>Flow:</strong> Plan and Execute<br><br>
+      <strong>When to use:</strong> The problem is genuinely open-ended with no known solution path. The agent needs to autonomously decide what to search, how to reason, and what to produce.<br><br>
+      <strong>This is rare.</strong> Most enterprise workflows are prescriptive. Use Plan and Execute ONLY when:
+      <ul>
+        <li>Source material may be thin and the agent needs to autonomously re-query</li>
+        <li>The workflow is conversational and exploratory</li>
+        <li>No defined output format exists</li>
+      </ul>
+      <strong>NEVER use when:</strong> defined inputs + expected output format, prescriptive steps, standardized document output. These are Think (Pattern 1) workflows.
+
+      <div class="example-box">
+        <div class="example-label">Example: Competitive Intelligence Researcher</div>
+        <strong>Trigger:</strong> Chat message ("What is [competitor] doing in [market]?").<br>
+        <strong>Flow:</strong> Plan and Execute autonomously decides: search internal competitive intel docs, search recent news, search product announcements, synthesize findings, identify gaps in knowledge, re-search if needed, produce analysis.<br>
+        <strong>Why this pattern:</strong> The user doesn't know what sources are available. The agent must autonomously decide what to search, evaluate whether results are sufficient, and re-query if thin. No predefined output template.
+      </div>
+      <div class="example-box">
+        <div class="example-label">Example: Root Cause Investigator</div>
+        <strong>Trigger:</strong> Chat message (incident description).<br>
+        <strong>Flow:</strong> Plan and Execute autonomously: search incident logs, search related past incidents, search runbooks, search architecture docs, trace the dependency chain, hypothesize root cause, search for confirming evidence, produce investigation report.<br>
+        <strong>Why this pattern:</strong> Each investigation is unique. The agent must follow the evidence, not a script. Source material is unpredictable.
+      </div>
+    </div>
+  </details>
+
+  <details class="drill animate" style="--i:25">
+    <summary>
+      Pattern 6: Single-Step Agent
+      <span class="drill-tag tag-pattern">minimal</span>
+    </summary>
+    <div class="drill-body">
+      <strong>Flow:</strong> One instruction block<br><br>
+      <strong>When to use:</strong> Trivial 1-2 step workflows where full orchestration adds no value.<br><br>
+      <strong>Note:</strong> If the workflow seems single-step but has decision logic or classification, it probably belongs in Pattern 1 or 2 instead. Don't collapse complexity into one step just because it fits in 8K characters.
+
+      <div class="example-box">
+        <div class="example-label">Example: Meeting Summary Formatter</div>
+        <strong>Trigger:</strong> Chat message with meeting transcript pasted.<br>
+        <strong>Flow:</strong> Single instruction: extract attendees, key decisions, action items, and next steps from the transcript. Format as structured summary.<br>
+        <strong>Why this pattern:</strong> One input (transcript), one output (summary), no search needed, no branching, no external data. The entire logic fits in one instruction block.
+      </div>
+      <div class="example-box">
+        <div class="example-label">Example: Email Draft Helper</div>
+        <strong>Trigger:</strong> Chat message ("Draft an email to [person] about [topic]").<br>
+        <strong>Flow:</strong> Single instruction: draft email in company voice with appropriate tone for the recipient and topic.<br>
+        <strong>Why this pattern:</strong> No search, no branching, no external systems. One instruction, one output. Adding orchestration would be over-engineering.
+      </div>
+    </div>
+  </details>
+
+  <details class="drill animate" style="--i:26">
+    <summary>
+      Hybrid Modifiers -- Applied on Top of Base Patterns
+      <span class="drill-tag tag-hybrid">optional layer</span>
+    </summary>
+    <div class="drill-body">
+      <strong>Hybrid modifiers address the gap between deterministic and non-deterministic steps.</strong> Apply one or more when the base pattern doesn't fully cover the workflow's needs.<br><br>
+
+      <details class="drill">
+        <summary>Compute Bridge</summary>
+        <div class="drill-body">
+          <strong>Insert:</strong> Custom Action step BEFORE a Branch step.<br>
+          <strong>When:</strong> Branch needs exact computed values (dates, scores, thresholds, math). Never use Think to compute values for branch routing -- Think output is non-deterministic.<br>
+          <div class="example-box">
+            <div class="example-label">Example: Contract Renewal Router</div>
+            Custom Action calculates days-until-renewal from contract end date. Branch: if <30 days -> urgent renewal path, if 30-90 -> standard renewal path, if >90 -> no action. Without the Compute Bridge, Think might say "about a month" and misroute.
+          </div>
+          <div class="example-box">
+            <div class="example-label">Example: Severance Package Calculator</div>
+            Custom Action computes severance amount from tenure + salary + jurisdiction rules. Branch on result: if >$X threshold -> requires VP approval path, else -> standard approval. LLM arithmetic would be unreliable here.
+          </div>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Validation Gate</summary>
+        <div class="drill-body">
+          <strong>Insert:</strong> Think step (FACTUAL mode) between synthesis and delivery.<br>
+          <strong>When:</strong> Output is externally visible, has required sections/format compliance, multiple upstream steps feed the final output, or PRD specifies success criteria.<br>
+          <strong>Checks:</strong> completeness, consistency, compliance. Passes through or flags specific issues.
+
+          <div class="example-box">
+            <div class="example-label">Example: JD Generator QA Step</div>
+            After Think generates the job description, a Validation Gate Think step checks: all required sections present? Comp range within band? No prohibited language? Required EEO statement included? Either passes through or flags "Missing: requirements section" for the Respond step to surface.
+          </div>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>External Orchestration Bridge</summary>
+        <div class="drill-body">
+          <strong>Insert:</strong> Webhook or MCP call between deterministic steps.<br>
+          <strong>When:</strong> External system call needed mid-workflow (approval API, calculation service, notification).<br>
+          <strong>Constraint:</strong> MCP tools only available in Plan and Execute and Auto Mode, not in explicit workflow steps. For Workflow Mode, use Custom Actions or webhooks.
+
+          <div class="example-box">
+            <div class="example-label">Example: Purchase Order with Approval API</div>
+            Agent gathers PO details and validates against budget -> Custom Action calls company approval API -> Branch on API response (approved/denied/pending) -> Approved path generates PO document, Denied path notifies requestor with reason. The external API call is deterministic and sits between workflow steps.
+          </div>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Memory Isolation Sandwich</summary>
+        <div class="drill-body">
+          <strong>Insert:</strong> Sub-agent (AGENT step) within parent workflow.<br>
+          <strong>When:</strong> Batch processing (CSV Splitter loop), modular domain encapsulation, reusable component across parents.<br>
+          <strong>Key constraint:</strong> Only the Respond step output returns to the parent. No native parent-to-child variable mapping -- use implicit memory only.
+
+          <div class="example-box">
+            <div class="example-label">Example: CSV Batch Processor</div>
+            Parent agent receives a CSV upload -> CSV Splitter loops through rows -> Each row spawns a sub-agent that processes independently (e.g., validates address, enriches company data) -> Sub-agent Respond returns result to parent -> Parent aggregates all results into final report. Sub-agent memory doesn't pollute the parent's context.
+          </div>
+          <div class="example-box">
+            <div class="example-label">Example: Multi-Region Compliance Check</div>
+            Parent agent receives document -> Spawns US compliance sub-agent, EU compliance sub-agent, APAC compliance sub-agent in parallel -> Each sub-agent searches its region's policy docs independently -> Each Responds with findings -> Parent aggregates into unified compliance report. Updating US rules doesn't require touching the parent workflow.
+          </div>
+        </div>
+      </details>
+    </div>
+  </details>
+
+  <details class="drill animate" style="--i:27">
+    <summary>
+      Branching Design Rules
+      <span class="drill-tag tag-gate">critical constraints</span>
+    </summary>
+    <div class="drill-body">
+      <strong>Three binding rules for all branching:</strong><br><br>
+
+      <details class="drill">
+        <summary>Branch-First Routing (Tyler's rule)</summary>
+        <div class="drill-body">
+          Branch on raw search output, never on Think interpretation. Do not insert a Think step between Search and Branch. Think output is non-deterministic and may reclassify, soften, or alter the routing signal.<br><br>
+          <strong>Correct:</strong> Search -> Branch -> [per-branch Think steps]<br>
+          <strong>Wrong:</strong> Search -> Think -> Branch
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Branching on Deterministic Computation</summary>
+        <div class="drill-body">
+          When a Branch depends on calculated values (dates, scores, thresholds), route the computation through a Custom Action BEFORE the Branch step. Never use Think to produce numeric values for branch conditions -- LLM arithmetic is unreliable.<br><br>
+          <strong>Correct:</strong> Custom Action (compute) -> Branch (on result)<br>
+          <strong>Wrong:</strong> Think (compute and decide) -> Branch
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Branch Depth and Convergence</summary>
+        <div class="drill-body">
+          <strong>Max 3 levels of nesting.</strong> If deeper, flatten the structure or delegate inner branches to a sub-agent.<br><br>
+          <strong>Convergence steps must handle missing inputs</strong> from branches that didn't fire. Check each dependency's status with a sentinel value before including its output. Don't assume every branch ran.
+        </div>
+      </details>
+    </div>
+  </details>
+
+  <details class="drill animate" style="--i:28">
+    <summary>
+      Sub-Agent Decision Framework
+      <span class="drill-tag" style="background:var(--auto-dim);color:var(--auto)">when to delegate</span>
+    </summary>
+    <div class="drill-body">
+      <strong>Use a sub-agent when:</strong>
+      <ul>
+        <li>Memory isolation is needed (sub-agent context doesn't pollute parent)</li>
+        <li>Batch processing pattern (CSV Splitter loop)</li>
+        <li>Modular domain encapsulation (updating sub-agent doesn't require rebuilding parent)</li>
+        <li>Reusable across multiple parent workflows</li>
+      </ul>
+      <strong>Do NOT use a sub-agent when:</strong>
+      <ul>
+        <li>Parent needs intermediate outputs (only Respond returns)</li>
+        <li>Task is 1-2 steps with tight coupling to parent context</li>
+        <li>The overhead of a separate agent exceeds the encapsulation benefit</li>
+      </ul>
+      <strong>Scoping rules:</strong> Single purpose, max 2 nesting levels, branch logic inside sub-agents to avoid duplication across parent branches. Start with "triage agent plus one or two specialists" -- don't over-architect.
+    </div>
+  </details>
+
+  <!-- ==================== SECTION 5: ANTI-PATTERNS ==================== -->
+  <div id="s5" class="sec-head"></div>
+  <h2 class="animate" style="--i:29">
+    <span class="section-tag" style="background:var(--fail-dim);color:var(--fail)">Review</span>
+    Key Anti-Patterns (Tyler + Community)
+  </h2>
+
+  <div class="callout callout-warn animate" style="--i:30">
+    <strong>Top 5 anti-patterns to review with Tyler.</strong> These are the most common failures in Agent Factory output and represent the highest-value review items.
+  </div>
+
+  <details class="drill animate" style="--i:31">
+    <summary>
+      1. Plan and Execute for prescriptive workflows
+      <span class="drill-tag tag-fail">most common mistake</span>
+    </summary>
+    <div class="drill-body">
+      <strong>Wrong:</strong> Using Plan and Execute when the workflow has defined inputs, expected output format, and prescriptive steps.<br>
+      <strong>Right:</strong> Use Search + Think + Respond (Cohesive Synthesis pattern).<br>
+      <strong>Why it matters:</strong> Plan and Execute is non-deterministic. For prescriptive workflows, you want Think, which is controllable and reads dependency outputs via memory.
+    </div>
+  </details>
+
+  <details class="drill animate" style="--i:32">
+    <summary>
+      2. Think step between Search and Branch
+      <span class="drill-tag tag-fail">Tyler's rule</span>
+    </summary>
+    <div class="drill-body">
+      <strong>Wrong:</strong> Search -> Think (interpret) -> Branch<br>
+      <strong>Right:</strong> Search -> Branch -> [per-branch Think steps]<br>
+      <strong>Why it matters:</strong> Think may reclassify, soften, or alter the routing signal. Branch on raw search output to preserve deterministic routing.
+    </div>
+  </details>
+
+  <details class="drill animate" style="--i:33">
+    <summary>
+      3. Think for branch-routing computation
+      <span class="drill-tag tag-fail">unreliable</span>
+    </summary>
+    <div class="drill-body">
+      <strong>Wrong:</strong> Think step calculates a score/date/threshold, Branch reads that value.<br>
+      <strong>Right:</strong> Custom Action computes the value, Branch reads the deterministic result.<br>
+      <strong>Why it matters:</strong> LLM arithmetic is unreliable. A Custom Action is deterministic.
+    </div>
+  </details>
+
+  <details class="drill animate" style="--i:34">
+    <summary>
+      4. TEXT inputs for constrained fields
+      <span class="drill-tag tag-fail">UI problem</span>
+    </summary>
+    <div class="drill-body">
+      <strong>Wrong:</strong> TEXT input for locations, departments, job levels, or any field with a known set of valid values.<br>
+      <strong>Right:</strong> SELECT dropdown with the valid options.<br>
+      <strong>Why it matters:</strong> Free text introduces typos and variations that break downstream classification and branching.
+    </div>
+  </details>
+
+  <details class="drill animate" style="--i:35">
+    <summary>
+      5. Deep branch nesting without sub-agents
+      <span class="drill-tag tag-fail">complexity trap</span>
+    </summary>
+    <div class="drill-body">
+      <strong>Wrong:</strong> 4+ levels of nested branching in a single workflow.<br>
+      <strong>Right:</strong> Max 3 levels. Delegate inner branches to sub-agents.<br>
+      <strong>Why it matters:</strong> Deep nesting creates maintenance nightmares and makes convergence steps fragile. Sub-agents encapsulate complexity with memory isolation.
+    </div>
+  </details>
+
+  <details class="drill animate" style="--i:36">
+    <summary>
+      More anti-patterns from community practice
+      <span class="drill-tag" style="background:var(--phase0-dim);color:var(--phase0)">community-patterns-slim.md</span>
+    </summary>
+    <div class="drill-body">
+      <ul>
+        <li><strong>Silent context truncation:</strong> Glean auto-truncates tokens with no indicator. Design with progressive memory scoping.</li>
+        <li><strong>Read Document token bloat:</strong> Full-doc reads exhaust context. Use snippet-based Company Search when possible.</li>
+        <li><strong>Large PDF failure:</strong> ~1,000-page PDFs fail in agents. Split or extract sections first.</li>
+        <li><strong>8K character limit:</strong> Hard limit per instructionTemplate. Move stable conventions to reference docs, split behavior across steps.</li>
+        <li><strong>OAuth switch breaks agents:</strong> Changing auth methods globally broke existing Google-connected agents.</li>
+        <li><strong>Slack bot limitation:</strong> Agents do NOT respond to bot/workflow messages. Human must initiate, or use Agent API.</li>
+      </ul>
+    </div>
+  </details>
+
+  <!-- ==================== SECTION 6: REFERENCE TABLES ==================== -->
+  <div id="s6" class="sec-head"></div>
+  <h2 class="animate" style="--i:37">
+    <span class="section-tag" style="background:var(--pattern-dim);color:var(--pattern)">Reference</span>
+    Quick Reference Tables
+  </h2>
+
+  <h3 class="animate" style="--i:38">Build Classes</h3>
+
+  <div class="table-wrap animate" style="--i:39">
+    <div class="table-scroll">
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>Class</th>
+            <th>Name</th>
+            <th>Mode</th>
+            <th>Trigger</th>
+            <th>Build Output</th>
+            <th>When to Use</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><code>A1</code></td>
+            <td>Assistant</td>
+            <td><span class="tag tag-auto">Auto</span></td>
+            <td>Chat</td>
+            <td>Paste-ready brief</td>
+            <td>Broad Q&A, summarization, drafting<br><small>"Help me think through this PRD" -- synthesis not execution, variable sources, follow-up questions matter</small></td>
+          </tr>
+          <tr>
+            <td><code>A2</code></td>
+            <td>Assistant + Routing</td>
+            <td><span class="tag tag-auto">Auto</span></td>
+            <td>Chat</td>
+            <td>Routing + agent specs</td>
+            <td>Single front door, 2+ domains<br><small>Company-wide help desk: routes HR questions to benefits agent, IT questions to support agent, facilities to office agent</small></td>
+          </tr>
+          <tr>
+            <td><code>G1</code></td>
+            <td>Conversational Agent</td>
+            <td><span class="tag tag-auto">Auto</span></td>
+            <td>Chat</td>
+            <td>Paste-ready brief</td>
+            <td>Domain chat, narrow KB, decision logic<br><small>Deal Desk booking policy Q&A -- narrow domain, classification logic, different response paths by deal type</small></td>
+          </tr>
+          <tr>
+            <td><code>G2</code></td>
+            <td>Input Form Agent</td>
+            <td><span class="tag tag-workflow">Workflow</span></td>
+            <td>Form</td>
+            <td>Importable JSON</td>
+            <td>Structured inputs, sequential steps<br><small>JD Generator -- user fills role/level/location form, agent searches policies, generates standardized job description</small></td>
+          </tr>
+          <tr>
+            <td><code>G3</code></td>
+            <td>Scheduled Agent</td>
+            <td><span class="tag tag-workflow">Workflow</span></td>
+            <td>Schedule</td>
+            <td>JSON + schedule</td>
+            <td>Time-triggered, no user initiation<br><small>Weekly compliance digest -- every Monday, searches recent policy changes, generates summary, posts to Slack channel</small></td>
+          </tr>
+          <tr>
+            <td><code>G4</code></td>
+            <td>Content-Triggered</td>
+            <td><span class="tag tag-workflow">Workflow</span></td>
+            <td>Event</td>
+            <td>JSON + trigger</td>
+            <td>File/folder event triggers<br><small>Contract review agent -- when new PDF lands in Contracts Drive folder, extracts terms, checks against policy, flags risks</small></td>
+          </tr>
+          <tr>
+            <td><code>S1</code></td>
+            <td>Skill</td>
+            <td><span class="tag tag-hybrid">Beta</span></td>
+            <td>AI-routed</td>
+            <td>SKILL.md</td>
+            <td>Narrow reusable single-task<br><small>Severance calculator -- fixed tool sequence (read agreement, calculate package, format output), reusable across HR agents</small></td>
+          </tr>
+          <tr>
+            <td><code>N1</code></td>
+            <td>Not Ready</td>
+            <td><span class="tag tag-fail">None</span></td>
+            <td>--</td>
+            <td>Gap summary</td>
+            <td>Missing sources, unresolved governance<br><small>"Automate the budget approval process" -- but no budget data in Glean, no approval API, no defined process</small></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <h3 class="animate" style="--i:40">Architecture Patterns</h3>
+
+  <div class="table-wrap animate" style="--i:41">
+    <div class="table-scroll">
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>#</th>
+            <th>Pattern</th>
+            <th>Flow</th>
+            <th>Selection Signal</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td class="num">1</td>
+            <td>Cohesive Synthesis</td>
+            <td><code>Search + Think + Respond</code></td>
+            <td>Prescriptive: known inputs, defined outputs</td>
+          </tr>
+          <tr>
+            <td class="num">2</td>
+            <td>Decision Tree Pipeline</td>
+            <td><code>[Classify+Branch+Validate]*</code></td>
+            <td>3+ decision stages with STOP/REVIEW gates</td>
+          </tr>
+          <tr>
+            <td class="num">3</td>
+            <td>Conditional Enterprise</td>
+            <td><code>Classify+Branch+Per-type</code></td>
+            <td>Request type determines different paths</td>
+          </tr>
+          <tr>
+            <td class="num">4</td>
+            <td>Document Generator</td>
+            <td><code>Gather+Generate+Deliver</code></td>
+            <td>Template-based output from gathered data</td>
+          </tr>
+          <tr>
+            <td class="num">5</td>
+            <td>Dynamic Research</td>
+            <td><code>Plan and Execute</code></td>
+            <td>Genuinely exploratory (rare)</td>
+          </tr>
+          <tr>
+            <td class="num">6</td>
+            <td>Single-Step</td>
+            <td><code>One block</code></td>
+            <td>Trivial, no orchestration needed</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <h3 class="animate" style="--i:42">Orchestration Decision Matrix</h3>
+
+  <div class="table-wrap animate" style="--i:43">
+    <div class="table-scroll">
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>Criterion</th>
+            <th>Skill</th>
+            <th>Custom Action</th>
+            <th>Action Pack</th>
+            <th>Sub-Agent</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Reusable across agents?</td>
+            <td>Yes (company-wide)</td>
+            <td>Yes (global)</td>
+            <td>Yes (system-wide)</td>
+            <td>Yes (published)</td>
+          </tr>
+          <tr>
+            <td>External side effects?</td>
+            <td>No</td>
+            <td>Yes (API call)</td>
+            <td>Yes (system write)</td>
+            <td>Depends</td>
+          </tr>
+          <tr>
+            <td>Structured I/O?</td>
+            <td>No (AI-routed)</td>
+            <td>Yes (OpenAPI)</td>
+            <td>Yes (fixed params)</td>
+            <td>Yes (form/memory)</td>
+          </tr>
+          <tr>
+            <td>Memory isolation?</td>
+            <td>N/A</td>
+            <td>No</td>
+            <td>No</td>
+            <td>Yes</td>
+          </tr>
+          <tr>
+            <td>Token cost?</td>
+            <td>Low (~100)</td>
+            <td>Minimal</td>
+            <td>Minimal</td>
+            <td>High (full exec)</td>
+          </tr>
+          <tr>
+            <td>Deterministic?</td>
+            <td>No</td>
+            <td>Yes</td>
+            <td>Yes</td>
+            <td>Depends</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  </div><!-- /main -->
+</div><!-- /wrap -->
+
+<script type="module">
+  import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs';
+  import elkLayouts from 'https://cdn.jsdelivr.net/npm/@mermaid-js/layout-elk/dist/mermaid-layout-elk.esm.min.mjs';
+
+  const isDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+
+  mermaid.registerLayoutLoaders(elkLayouts);
+  mermaid.initialize({
+    startOnLoad: true,
+    theme: 'base',
+    look: 'classic',
+    layout: 'elk',
+    themeVariables: {
+      primaryColor: isDark ? '#283548' : '#eef1f6',
+      primaryBorderColor: isDark ? '#818cf8' : '#6366f1',
+      primaryTextColor: isDark ? '#e2e8f0' : '#1e293b',
+      secondaryColor: isDark ? '#1a2332' : '#f0fdfa',
+      secondaryBorderColor: isDark ? '#22d3ee' : '#0891b2',
+      secondaryTextColor: isDark ? '#e2e8f0' : '#1e293b',
+      tertiaryColor: isDark ? '#2e2618' : '#fefce8',
+      tertiaryBorderColor: isDark ? '#fbbf24' : '#d97706',
+      tertiaryTextColor: isDark ? '#e2e8f0' : '#1e293b',
+      lineColor: isDark ? '#94a3b8' : '#64748b',
+      fontSize: '14px',
+      fontFamily: "'DM Sans', system-ui, sans-serif",
+      noteBkgColor: isDark ? '#283548' : '#fefce8',
+      noteTextColor: isDark ? '#e2e8f0' : '#1e293b',
+      noteBorderColor: isDark ? '#fbbf24' : '#d97706',
+    }
+  });
+</script>
+<script>
+  function updateZoomState(wrap) {
+    var target = wrap.querySelector('.mermaid');
+    var zoom = parseFloat(target.dataset.zoom || '1');
+    wrap.classList.toggle('is-zoomed', zoom > 1);
+  }
+
+  function zoomDiagram(btn, factor) {
+    var wrap = btn.closest('.mermaid-wrap');
+    var target = wrap.querySelector('.mermaid');
+    var current = parseFloat(target.dataset.zoom || '1');
+    var next = Math.min(Math.max(current * factor, 0.3), 5);
+    target.dataset.zoom = next;
+    target.style.transform = 'scale(' + next + ')';
+    updateZoomState(wrap);
+  }
+
+  function resetZoom(btn) {
+    var wrap = btn.closest('.mermaid-wrap');
+    var target = wrap.querySelector('.mermaid');
+    target.dataset.zoom = '1';
+    target.style.transform = 'scale(1)';
+    updateZoomState(wrap);
+  }
+
+  document.querySelectorAll('.mermaid-wrap').forEach(function(wrap) {
+    wrap.addEventListener('wheel', function(e) {
+      if (!e.ctrlKey && !e.metaKey) return;
+      e.preventDefault();
+      var target = wrap.querySelector('.mermaid');
+      var current = parseFloat(target.dataset.zoom || '1');
+      var factor = e.deltaY < 0 ? 1.1 : 0.9;
+      var next = Math.min(Math.max(current * factor, 0.3), 5);
+      target.dataset.zoom = next;
+      target.style.transform = 'scale(' + next + ')';
+      updateZoomState(wrap);
+    }, { passive: false });
+
+    var startX, startY, scrollL, scrollT;
+    wrap.addEventListener('mousedown', function(e) {
+      if (e.target.closest('.zoom-controls')) return;
+      var target = wrap.querySelector('.mermaid');
+      if (parseFloat(target.dataset.zoom || '1') <= 1) return;
+      wrap.classList.add('is-panning');
+      startX = e.clientX;
+      startY = e.clientY;
+      scrollL = wrap.scrollLeft;
+      scrollT = wrap.scrollTop;
+    });
+    window.addEventListener('mousemove', function(e) {
+      if (!wrap.classList.contains('is-panning')) return;
+      wrap.scrollLeft = scrollL - (e.clientX - startX);
+      wrap.scrollTop = scrollT - (e.clientY - startY);
+    });
+    window.addEventListener('mouseup', function() {
+      wrap.classList.remove('is-panning');
+    });
+  });
+</script>
+<script>
+(function() {
+  var toc = document.getElementById('toc');
+  var links = toc.querySelectorAll('a');
+  var sections = [];
+
+  links.forEach(function(link) {
+    var id = link.getAttribute('href').slice(1);
+    var el = document.getElementById(id);
+    if (el) sections.push({ id: id, el: el, link: link });
+  });
+
+  var observer = new IntersectionObserver(function(entries) {
+    entries.forEach(function(entry) {
+      if (entry.isIntersecting) {
+        links.forEach(function(l) { l.classList.remove('active'); });
+        var match = sections.find(function(s) { return s.el === entry.target; });
+        if (match) {
+          match.link.classList.add('active');
+          if (window.innerWidth <= 1000) {
+            match.link.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
+          }
+        }
+      }
+    });
+  }, { rootMargin: '-10% 0px -80% 0px' });
+
+  sections.forEach(function(s) { observer.observe(s.el); });
+
+  links.forEach(function(link) {
+    link.addEventListener('click', function(e) {
+      e.preventDefault();
+      var id = link.getAttribute('href').slice(1);
+      var el = document.getElementById(id);
+      if (el) {
+        el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        history.replaceState(null, '', '#' + id);
+      }
+    });
+  });
+})();
+</script>
+
+</body>
+</html>
