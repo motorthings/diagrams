@@ -46,10 +46,10 @@ Browse all diagrams: **https://charlie-fuller.github.io/diagrams/**
 |---------|-------------|
 | [Hydra Process Map](aesop/hydra-process-map.html) | Process map for the Hydra adversarial evaluation swarm |
 
-### Agent Factory
+### AESOP OS
 | Diagram | Description |
 |---------|-------------|
-| [Decision Flow](agent-factory/decision-flow.html) | Agent Factory decision flow diagram |
+| [Decision Flow](aesop-os-decision-flow.html) | AESOP OS build decision flow diagram |
 
 ## G&A AI Initiative Dashboard
 
