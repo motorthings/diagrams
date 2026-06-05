@@ -301,14 +301,28 @@
   </details>
 
   <script>
-    document.querySelectorAll('details.section').forEach(function(detail) {
-      detail.addEventListener('toggle', function() {
-        if (!this.open) return;
-        document.querySelectorAll('details.section').forEach(function(other) {
-          if (other !== detail) other.open = false;
-        });
+    var STORAGE_KEY = 'diagrams-index-panels';
+
+    function saveState() {
+      var open = [];
+      document.querySelectorAll('details.section').forEach(function(d, i) {
+        if (d.open) open.push(i);
       });
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(open));
+    }
+
+    function restoreState() {
+      var open = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
+      document.querySelectorAll('details.section').forEach(function(d, i) {
+        d.open = open.indexOf(i) !== -1;
+      });
+    }
+
+    document.querySelectorAll('details.section').forEach(function(detail) {
+      detail.addEventListener('toggle', saveState);
     });
+
+    restoreState();
   </script>
 
 </body>
