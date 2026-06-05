@@ -1,0 +1,496 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>TSE Voice Interview Pipeline</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --font-body: 'DM Sans', system-ui, sans-serif;
+    --font-mono: 'JetBrains Mono', 'SF Mono', Consolas, monospace;
+
+    --bg: #fafbfc;
+    --surface: #ffffff;
+    --surface2: #f3f4f6;
+    --border: rgba(0, 0, 0, 0.07);
+    --border-bright: rgba(0, 0, 0, 0.14);
+    --text: #111827;
+    --text-dim: #6b7280;
+
+    --admin: #7c3aed;
+    --admin-dim: rgba(124, 58, 237, 0.08);
+    --admin-bg: rgba(124, 58, 237, 0.06);
+    --user: #0891b2;
+    --user-dim: rgba(8, 145, 178, 0.08);
+    --user-bg: rgba(8, 145, 178, 0.06);
+    --system: #059669;
+    --system-dim: rgba(5, 150, 105, 0.08);
+    --system-bg: rgba(5, 150, 105, 0.06);
+    --fail: #dc2626;
+    --fail-dim: rgba(220, 38, 38, 0.08);
+
+    --elevenlabs: #f59e0b;
+    --railway: #9333ea;
+    --supabase: #10b981;
+    --anthropic: #d97706;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #0f1117;
+      --surface: #1a1d27;
+      --surface2: #22262f;
+      --border: rgba(255, 255, 255, 0.06);
+      --border-bright: rgba(255, 255, 255, 0.12);
+      --text: #e5e7eb;
+      --text-dim: #9ca3af;
+
+      --admin: #a78bfa;
+      --admin-dim: rgba(167, 139, 250, 0.12);
+      --admin-bg: rgba(167, 139, 250, 0.06);
+      --user: #22d3ee;
+      --user-dim: rgba(34, 211, 238, 0.12);
+      --user-bg: rgba(34, 211, 238, 0.06);
+      --system: #34d399;
+      --system-dim: rgba(52, 211, 153, 0.12);
+      --system-bg: rgba(52, 211, 153, 0.06);
+      --fail: #f87171;
+      --fail-dim: rgba(248, 113, 113, 0.12);
+
+      --elevenlabs: #fbbf24;
+      --railway: #c084fc;
+      --supabase: #34d399;
+      --anthropic: #fbbf24;
+    }
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background-color: var(--bg);
+    background-image:
+      radial-gradient(at 20% 10%, var(--admin-dim) 0%, transparent 50%),
+      radial-gradient(at 80% 50%, var(--system-dim) 0%, transparent 50%),
+      radial-gradient(at 50% 90%, var(--user-dim) 0%, transparent 40%);
+    color: var(--text);
+    font-family: var(--font-body);
+    padding: 40px;
+    min-height: 100vh;
+  }
+
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(12px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  .animate {
+    animation: fadeUp 0.4s ease-out both;
+    animation-delay: calc(var(--i, 0) * 0.06s);
+  }
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after {
+      animation-duration: 0.01ms !important;
+      animation-delay: 0ms !important;
+      transition-duration: 0.01ms !important;
+    }
+    .mermaid-wrap .mermaid { transition: none; }
+  }
+
+  .container { max-width: 1100px; margin: 0 auto; }
+
+  h1 { font-size: 36px; font-weight: 700; letter-spacing: -0.5px; margin-bottom: 4px; }
+  .subtitle { color: var(--text-dim); font-family: var(--font-mono); font-size: 12px; margin-bottom: 12px; }
+
+  .description { font-size: 14px; line-height: 1.7; color: var(--text-dim); margin-bottom: 28px; max-width: 750px; }
+  .description code { font-family: var(--font-mono); font-size: 12px; background: var(--system-dim); color: var(--system); padding: 1px 5px; border-radius: 3px; }
+
+  /* Legend */
+  .legend-bar {
+    display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 24px;
+  }
+  .legend-chip {
+    display: inline-flex; align-items: center; gap: 6px;
+    font-family: var(--font-mono); font-size: 11px; font-weight: 500;
+    padding: 5px 12px; border-radius: 20px;
+    border: 1px solid var(--border);
+    background: var(--surface);
+    color: var(--text-dim);
+  }
+  .legend-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+
+  /* Platform badges */
+  .platform-bar {
+    display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 28px;
+  }
+  .platform-chip {
+    display: inline-flex; align-items: center; gap: 5px;
+    font-family: var(--font-mono); font-size: 10px; font-weight: 500;
+    padding: 4px 10px; border-radius: 4px;
+    border: 1px solid var(--border);
+    background: var(--surface);
+    color: var(--text-dim);
+  }
+  .platform-chip .dot { width: 6px; height: 6px; border-radius: 50%; }
+
+  /* Mermaid */
+  .mermaid-wrap {
+    position: relative; background: var(--surface);
+    border: 1px solid var(--border); border-radius: 12px;
+    padding: 32px 24px; overflow: auto; margin-bottom: 24px;
+  }
+  .mermaid-wrap .mermaid {
+    display: flex; justify-content: center;
+    transition: transform 0.2s ease; transform-origin: top center;
+  }
+  .zoom-controls {
+    position: absolute; top: 8px; right: 8px; display: flex; gap: 2px; z-index: 10;
+    background: var(--surface); border: 1px solid var(--border); border-radius: 6px; padding: 2px;
+  }
+  .zoom-controls button {
+    width: 28px; height: 28px; border: none; background: transparent;
+    color: var(--text-dim); font-family: var(--font-mono); font-size: 14px;
+    cursor: pointer; border-radius: 4px; display: flex; align-items: center; justify-content: center;
+    transition: background 0.15s, color 0.15s;
+  }
+  .zoom-controls button:hover { background: var(--border); color: var(--text); }
+  .mermaid-wrap { scrollbar-width: thin; scrollbar-color: var(--border) transparent; }
+  .mermaid-wrap::-webkit-scrollbar { width: 6px; height: 6px; }
+  .mermaid-wrap::-webkit-scrollbar-track { background: transparent; }
+  .mermaid-wrap::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+  .mermaid-wrap.is-zoomed { cursor: grab; }
+  .mermaid-wrap.is-panning { cursor: grabbing; user-select: none; }
+
+  .mermaid .nodeLabel { font-family: var(--font-body) !important; font-size: 14px !important; }
+  .mermaid .edgeLabel { font-family: var(--font-mono) !important; font-size: 11px !important; }
+  .mermaid .node rect, .mermaid .node circle, .mermaid .node polygon { stroke-width: 1.5px !important; }
+  .mermaid .edge-pattern-solid { stroke-width: 1.5px !important; }
+
+  /* State machine section */
+  .section-label { font-size: 13px; font-weight: 600; color: var(--text-dim); text-transform: uppercase; letter-spacing: 1px; margin: 32px 0 12px; font-family: var(--font-mono); }
+
+  /* Callout */
+  .callout {
+    background: var(--surface); border: 1px solid var(--border);
+    border-left: 3px solid var(--system); border-radius: 0 10px 10px 0;
+    padding: 16px 20px; font-size: 13px; line-height: 1.6; color: var(--text-dim); margin-top: 24px;
+  }
+  .callout strong { color: var(--text); }
+  .callout code { font-family: var(--font-mono); font-size: 11px; background: var(--system-dim); color: var(--system); padding: 1px 5px; border-radius: 3px; }
+
+  @media (max-width: 768px) {
+    body { padding: 16px; }
+    h1 { font-size: 22px; }
+    .mermaid-wrap { padding: 16px 12px; }
+  }
+</style>
+</head>
+<body>
+
+<div class="container">
+
+  <h1 class="animate" style="--i:0">TSE Voice Interview Pipeline</h1>
+  <p class="subtitle animate" style="--i:1">the solomon engine &mdash; serverless processing architecture</p>
+
+  <p class="description animate" style="--i:2">
+    A two-part voice interview processed through a self-healing pipeline.
+    No always-on servers. The system runs only when an interview completes, recovers from failures automatically,
+    and pages a human only for genuine dead-ends.
+  </p>
+
+  <div class="legend-bar animate" style="--i:3">
+    <div class="legend-chip"><div class="legend-dot" style="background:var(--admin)"></div> Admin action</div>
+    <div class="legend-chip"><div class="legend-dot" style="background:var(--user)"></div> User action</div>
+    <div class="legend-chip"><div class="legend-dot" style="background:var(--system)"></div> System (automatic)</div>
+    <div class="legend-chip"><div class="legend-dot" style="background:var(--fail)"></div> Failure / recovery</div>
+  </div>
+
+  <div class="platform-bar animate" style="--i:4">
+    <div class="platform-chip"><div class="dot" style="background:var(--supabase)"></div> Supabase &mdash; database + edge functions</div>
+    <div class="platform-chip"><div class="dot" style="background:var(--elevenlabs)"></div> ElevenLabs &mdash; voice interview agents</div>
+    <div class="platform-chip"><div class="dot" style="background:var(--railway)"></div> Railway &mdash; processing worker (on-demand job)</div>
+    <div class="platform-chip"><div class="dot" style="background:var(--anthropic)"></div> Anthropic Claude &mdash; AI extraction + generation</div>
+  </div>
+
+  <div class="section-label animate" style="--i:5">Main Pipeline</div>
+
+  <div class="mermaid-wrap animate" style="--i:6">
+    <div class="zoom-controls">
+      <button onclick="zoomDiagram(this, 1.2)" title="Zoom in">+</button>
+      <button onclick="zoomDiagram(this, 0.8)" title="Zoom out">&minus;</button>
+      <button onclick="resetZoom(this)" title="Reset zoom">&#8634;</button>
+    </div>
+    <pre class="mermaid">
+flowchart TD
+    subgraph ADMIN["ADMIN"]
+        A1["Create invite<br/><b>POST /create-invite</b><br/><i>name + email</i>"]
+        A2["Email two links<br/>to user"]
+        A1 --> A2
+    end
+
+    subgraph SB1["SUPABASE"]
+        direction TB
+        DB1[("vi_sessions<br/>vi_invites<br/><i>created</i>")]
+    end
+
+    A1 -->|"creates session + invite"| DB1
+    A1 -->|"returns part_1_url + part_2_url"| A2
+
+    subgraph USER["USER"]
+        U1["Clicks Part 1 link"]
+        U2["Voice interview<br/>Pain Points & Workflow<br/><i>~6 min</i>"]
+        U3["Clicks Part 2 link"]
+        U4["Voice interview<br/>Work Style & Tools<br/><i>~6 min</i>"]
+        U1 --> U2 --> U3 --> U4
+    end
+
+    A2 -.->|"sends links"| U1
+
+    subgraph EL["ELEVENLABS"]
+        EL1["Agent 1<br/><i>var_session_id baked in</i>"]
+        EL2["Agent 2<br/><i>var_session_id baked in</i>"]
+    end
+
+    U2 -->|"talks to"| EL1
+    U4 -->|"talks to"| EL2
+
+    subgraph DISPATCH["SUPABASE EDGE FUNCTION"]
+        D1["Dispatcher<br/><b>/dispatcher</b>"]
+        D2{"Both halves<br/>received?"}
+        D1 --> D2
+    end
+
+    EL1 -->|"post-call webhook<br/>+ dynamic_variables"| D1
+    EL2 -->|"post-call webhook<br/>+ dynamic_variables"| D1
+
+    subgraph SB2["SUPABASE DB"]
+        DB2[("vi_transcripts<br/><i>filed by session_id</i>")]
+        DB3[("vi_jobs<br/><i>queued</i>")]
+    end
+
+    D1 -->|"verify sig + file transcript"| DB2
+    D2 -->|"No — wait"| DB2
+    D2 -->|"Yes — enqueue"| DB3
+
+    subgraph WORKER["RAILWAY JOB"]
+        W1["Claim job"]
+        W2["Stage 1: Extract<br/><b>Claude API</b><br/><i>JSON extraction</i>"]
+        W3{"Validate<br/>extraction"}
+        W4["Stage 2: Generate<br/><b>Claude API</b><br/><i>markdown instructions</i>"]
+        W5{"Validate<br/>output"}
+        W6["Write deliverable"]
+        W1 --> W2 --> W3
+        W3 -->|"pass"| W4 --> W5
+        W5 -->|"pass"| W6
+    end
+
+    DB3 -->|"trigger via Railway API"| W1
+
+    subgraph SB3["SUPABASE DB"]
+        DB4[("vi_deliverables<br/><i>review_status: pending</i>")]
+        DB5[("vi_sessions<br/><i>status: complete</i>")]
+    end
+
+    W6 -->|"atomic write"| DB4
+    W6 -->|"mark complete"| DB5
+
+    subgraph REVIEW["ADMIN"]
+        R1["Review deliverable"]
+        R2{"Approve?"}
+        R3["Deploy instructions"]
+        R4["Request re-interview"]
+        R1 --> R2
+        R2 -->|"yes"| R3
+        R2 -->|"no"| R4
+    end
+
+    DB4 -.->|"admin reviews"| R1
+
+    subgraph FAIL["FAILURE + RECOVERY"]
+        F1["Job fails"]
+        F2["Increment retry_count"]
+        F3{"retry_count<br/>< 5?"}
+        F4["Back to ready_to_process"]
+        F5["Mark FAILED<br/>+ alert admin"]
+    end
+
+    W3 -->|"fail"| F1
+    W5 -->|"fail"| F1
+    F1 --> F2 --> F3
+    F3 -->|"yes"| F4
+    F3 -->|"no"| F5
+
+    subgraph SWEEPER["SUPABASE CRON EDGE FUNCTION"]
+        S1["Sweeper<br/><i>every 5 min</i>"]
+        S2["Re-enqueue stuck jobs"]
+        S3["Flag orphan sessions"]
+        S1 --> S2
+        S1 --> S3
+    end
+
+    F4 -.->|"sweeper picks up"| S2
+    S2 -->|"create new vi_job + trigger worker"| DB3
+
+    classDef adminNode fill:#f3e8ff,stroke:#7c3aed,color:#5b21b6,stroke-width:2px
+    classDef userNode fill:#ecfeff,stroke:#0891b2,color:#155e75,stroke-width:2px
+    classDef systemNode fill:#ecfdf5,stroke:#059669,color:#065f46,stroke-width:2px
+    classDef dbNode fill:#f0fdf4,stroke:#10b981,color:#065f46,stroke-width:2px
+    classDef failNode fill:#fef2f2,stroke:#dc2626,color:#991b1b,stroke-width:2px
+    classDef elNode fill:#fffbeb,stroke:#f59e0b,color:#92400e,stroke-width:2px
+    classDef railNode fill:#faf5ff,stroke:#9333ea,color:#581c87,stroke-width:2px
+    classDef decisionNode fill:#fefce8,stroke:#d97706,color:#92400e,stroke-width:2px
+
+    class A1,A2,R1,R3,R4 adminNode
+    class U1,U2,U3,U4 userNode
+    class D1,S1,S2,S3 systemNode
+    class DB1,DB2,DB3,DB4,DB5 dbNode
+    class F1,F2,F4,F5 failNode
+    class EL1,EL2 elNode
+    class W1,W2,W4,W6 railNode
+    class D2,W3,W5,R2,F3 decisionNode
+
+    style ADMIN fill:transparent,stroke:#7c3aed,stroke-width:2px,stroke-dasharray:5 5,color:#7c3aed
+    style USER fill:transparent,stroke:#0891b2,stroke-width:2px,stroke-dasharray:5 5,color:#0891b2
+    style EL fill:transparent,stroke:#f59e0b,stroke-width:2px,stroke-dasharray:5 5,color:#f59e0b
+    style DISPATCH fill:transparent,stroke:#10b981,stroke-width:2px,stroke-dasharray:5 5,color:#10b981
+    style WORKER fill:transparent,stroke:#9333ea,stroke-width:2px,stroke-dasharray:5 5,color:#9333ea
+    style REVIEW fill:transparent,stroke:#7c3aed,stroke-width:2px,stroke-dasharray:5 5,color:#7c3aed
+    style FAIL fill:transparent,stroke:#dc2626,stroke-width:2px,stroke-dasharray:5 5,color:#dc2626
+    style SWEEPER fill:transparent,stroke:#10b981,stroke-width:2px,stroke-dasharray:5 5,color:#10b981
+    style SB1 fill:transparent,stroke:#10b981,stroke-width:1px,stroke-dasharray:3 3,color:#10b981
+    style SB2 fill:transparent,stroke:#10b981,stroke-width:1px,stroke-dasharray:3 3,color:#10b981
+    style SB3 fill:transparent,stroke:#10b981,stroke-width:1px,stroke-dasharray:3 3,color:#10b981
+    </pre>
+  </div>
+
+  <div class="section-label animate" style="--i:7">Session State Machine</div>
+
+  <div class="mermaid-wrap animate" style="--i:8">
+    <div class="zoom-controls">
+      <button onclick="zoomDiagram(this, 1.2)" title="Zoom in">+</button>
+      <button onclick="zoomDiagram(this, 0.8)" title="Zoom out">&minus;</button>
+      <button onclick="resetZoom(this)" title="Reset zoom">&#8634;</button>
+    </div>
+    <pre class="mermaid">
+flowchart LR
+    AH["awaiting_halves"]
+    RTP["ready_to_process"]
+    P["processing"]
+    C["complete"]
+    F["failed"]
+
+    AH -->|"both halves received"| RTP
+    RTP -->|"worker claims job"| P
+    P -->|"deliverable written"| C
+    P -->|"error + retries left"| RTP
+    P -->|"retry cap exhausted"| F
+    RTP -->|"retry cap exhausted"| F
+
+    classDef waiting fill:#ecfeff,stroke:#0891b2,color:#155e75,stroke-width:2px
+    classDef active fill:#fffbeb,stroke:#f59e0b,color:#92400e,stroke-width:2px
+    classDef done fill:#ecfdf5,stroke:#059669,color:#065f46,stroke-width:2px
+    classDef dead fill:#fef2f2,stroke:#dc2626,color:#991b1b,stroke-width:2px
+
+    class AH waiting
+    class RTP,P active
+    class C done
+    class F dead
+    </pre>
+  </div>
+
+  <div class="legend-bar animate" style="--i:9">
+    <div class="legend-chip"><div class="legend-dot" style="background:var(--user)"></div> Waiting</div>
+    <div class="legend-chip"><div class="legend-dot" style="background:var(--elevenlabs)"></div> Active</div>
+    <div class="legend-chip"><div class="legend-dot" style="background:var(--system)"></div> Complete</div>
+    <div class="legend-chip"><div class="legend-dot" style="background:var(--fail)"></div> Failed</div>
+  </div>
+
+  <div class="callout animate" style="--i:10">
+    <strong>Self-healing design.</strong> Two recovery layers catch different failures:
+    <strong>In-call retry</strong> (3 attempts, 2s/8s/30s backoff) handles transient API errors silently.
+    <strong>Sweeper</strong> (cron, every 5 min) catches jobs that crashed mid-processing or were never picked up.
+    Retry cap of <code>5</code> prevents infinite loops on unprocessable transcripts.
+    Admin is alerted only on permanent <code>failed</code> status.
+  </div>
+
+</div>
+
+<script type="module">
+  import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs';
+
+  const isDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+
+  mermaid.initialize({
+    startOnLoad: true,
+    theme: 'base',
+    look: 'classic',
+    themeVariables: {
+      primaryColor: isDark ? '#1e1b4b' : '#f3e8ff',
+      primaryBorderColor: isDark ? '#a78bfa' : '#7c3aed',
+      primaryTextColor: isDark ? '#e5e7eb' : '#111827',
+      secondaryColor: isDark ? '#1a2332' : '#ecfeff',
+      secondaryBorderColor: isDark ? '#22d3ee' : '#0891b2',
+      secondaryTextColor: isDark ? '#e5e7eb' : '#111827',
+      tertiaryColor: isDark ? '#27201a' : '#ecfdf5',
+      tertiaryBorderColor: isDark ? '#34d399' : '#059669',
+      tertiaryTextColor: isDark ? '#e5e7eb' : '#111827',
+      lineColor: isDark ? '#6b7280' : '#9ca3af',
+      fontSize: '14px',
+      fontFamily: "'DM Sans', system-ui, sans-serif",
+    }
+  });
+</script>
+<script>
+  function updateZoomState(wrap) {
+    var target = wrap.querySelector('.mermaid');
+    var zoom = parseFloat(target.dataset.zoom || '1');
+    wrap.classList.toggle('is-zoomed', zoom > 1);
+  }
+  function zoomDiagram(btn, factor) {
+    var wrap = btn.closest('.mermaid-wrap');
+    var target = wrap.querySelector('.mermaid');
+    var current = parseFloat(target.dataset.zoom || '1');
+    var next = Math.min(Math.max(current * factor, 0.3), 5);
+    target.dataset.zoom = next;
+    target.style.transform = 'scale(' + next + ')';
+    updateZoomState(wrap);
+  }
+  function resetZoom(btn) {
+    var wrap = btn.closest('.mermaid-wrap');
+    var target = wrap.querySelector('.mermaid');
+    target.dataset.zoom = '1';
+    target.style.transform = 'scale(1)';
+    updateZoomState(wrap);
+  }
+  document.querySelectorAll('.mermaid-wrap').forEach(function(wrap) {
+    wrap.addEventListener('wheel', function(e) {
+      if (!e.ctrlKey && !e.metaKey) return;
+      e.preventDefault();
+      var target = wrap.querySelector('.mermaid');
+      var current = parseFloat(target.dataset.zoom || '1');
+      var factor = e.deltaY < 0 ? 1.1 : 0.9;
+      var next = Math.min(Math.max(current * factor, 0.3), 5);
+      target.dataset.zoom = next;
+      target.style.transform = 'scale(' + next + ')';
+      updateZoomState(wrap);
+    }, { passive: false });
+    var startX, startY, scrollL, scrollT;
+    wrap.addEventListener('mousedown', function(e) {
+      if (e.target.closest('.zoom-controls')) return;
+      var target = wrap.querySelector('.mermaid');
+      if (parseFloat(target.dataset.zoom || '1') <= 1) return;
+      wrap.classList.add('is-panning');
+      startX = e.clientX; startY = e.clientY;
+      scrollL = wrap.scrollLeft; scrollT = wrap.scrollTop;
+    });
+    window.addEventListener('mousemove', function(e) {
+      if (!wrap.classList.contains('is-panning')) return;
+      wrap.scrollLeft = scrollL - (e.clientX - startX);
+      wrap.scrollTop = scrollT - (e.clientY - startY);
+    });
+    window.addEventListener('mouseup', function() { wrap.classList.remove('is-panning'); });
+  });
+</script>
+</body>
+</html>

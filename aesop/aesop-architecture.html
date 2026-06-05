@@ -1,0 +1,812 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AESOP — System Architecture</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;600;700;800&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --font-body: 'Sora', system-ui, sans-serif;
+    --font-mono: 'IBM Plex Mono', 'SF Mono', Consolas, monospace;
+
+    --bg: #f8fafb;
+    --surface: #ffffff;
+    --surface2: #f1f5f9;
+    --surface-elevated: #ffffff;
+    --border: rgba(0, 0, 0, 0.06);
+    --border-bright: rgba(0, 0, 0, 0.12);
+    --text: #0f172a;
+    --text-dim: #64748b;
+
+    --teal: #0d9488;
+    --teal-dim: rgba(13, 148, 136, 0.08);
+    --blue: #2563eb;
+    --blue-dim: rgba(37, 99, 235, 0.08);
+    --violet: #7c3aed;
+    --violet-dim: rgba(124, 58, 237, 0.08);
+    --orange: #ea580c;
+    --orange-dim: rgba(234, 88, 12, 0.08);
+    --red: #dc2626;
+    --red-dim: rgba(220, 38, 38, 0.08);
+    --emerald: #059669;
+    --emerald-dim: rgba(5, 150, 105, 0.08);
+    --amber: #d97706;
+    --amber-dim: rgba(217, 119, 6, 0.08);
+    --rose: #e11d48;
+    --rose-dim: rgba(225, 29, 72, 0.08);
+
+    --platinum: #6366f1;
+    --gold: #eab308;
+    --silver: #94a3b8;
+    --bronze: #b45309;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #0c1222;
+      --surface: #131c31;
+      --surface2: #1a2744;
+      --surface-elevated: #1e2d4f;
+      --border: rgba(255, 255, 255, 0.06);
+      --border-bright: rgba(255, 255, 255, 0.12);
+      --text: #e2e8f0;
+      --text-dim: #94a3b8;
+
+      --teal: #2dd4bf;
+      --teal-dim: rgba(45, 212, 191, 0.12);
+      --blue: #60a5fa;
+      --blue-dim: rgba(96, 165, 250, 0.12);
+      --violet: #a78bfa;
+      --violet-dim: rgba(167, 139, 250, 0.12);
+      --orange: #fb923c;
+      --orange-dim: rgba(251, 146, 60, 0.12);
+      --red: #f87171;
+      --red-dim: rgba(248, 113, 113, 0.12);
+      --emerald: #34d399;
+      --emerald-dim: rgba(52, 211, 153, 0.12);
+      --amber: #fbbf24;
+      --amber-dim: rgba(251, 191, 36, 0.12);
+      --rose: #fb7185;
+      --rose-dim: rgba(251, 113, 133, 0.12);
+    }
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: var(--bg);
+    background-image:
+      radial-gradient(at 20% 10%, var(--teal-dim) 0%, transparent 50%),
+      radial-gradient(at 80% 80%, var(--violet-dim) 0%, transparent 50%);
+    color: var(--text);
+    font-family: var(--font-body);
+    line-height: 1.6;
+    min-height: 100vh;
+    padding: 40px 24px 80px;
+  }
+
+  .container { max-width: 1100px; margin: 0 auto; }
+
+  /* Hero */
+  .hero {
+    text-align: center;
+    margin-bottom: 60px;
+    animation: fadeUp 0.6s ease-out;
+  }
+
+  .hero-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 16px;
+    background: var(--teal-dim);
+    border: 1px solid var(--teal);
+    border-radius: 20px;
+    font-family: var(--font-mono);
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--teal);
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+    margin-bottom: 20px;
+  }
+
+  .hero h1 {
+    font-size: 48px;
+    font-weight: 800;
+    letter-spacing: -1.5px;
+    background: linear-gradient(135deg, var(--teal), var(--blue), var(--violet));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    margin-bottom: 12px;
+  }
+
+  .hero p {
+    font-size: 18px;
+    color: var(--text-dim);
+    max-width: 600px;
+    margin: 0 auto;
+  }
+
+  /* Section */
+  .section {
+    margin-bottom: 48px;
+    opacity: 0;
+    animation: fadeUp 0.5s ease-out forwards;
+  }
+
+  .section:nth-child(2) { animation-delay: 0.1s; }
+  .section:nth-child(3) { animation-delay: 0.2s; }
+  .section:nth-child(4) { animation-delay: 0.3s; }
+  .section:nth-child(5) { animation-delay: 0.4s; }
+
+  .section-title {
+    font-size: 13px;
+    font-weight: 600;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    color: var(--text-dim);
+    margin-bottom: 16px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .section-title::before {
+    content: '';
+    width: 20px;
+    height: 2px;
+    border-radius: 1px;
+  }
+
+  /* Pipeline */
+  .pipeline {
+    display: flex;
+    gap: 0;
+    align-items: stretch;
+    overflow-x: auto;
+    padding: 4px;
+  }
+
+  .pipeline-step {
+    flex: 1;
+    min-width: 180px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 20px 16px;
+    text-align: center;
+    position: relative;
+    transition: transform 0.2s, box-shadow 0.2s;
+  }
+
+  .pipeline-step:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 24px rgba(0,0,0,0.08);
+  }
+
+  .pipeline-arrow {
+    display: flex;
+    align-items: center;
+    padding: 0 4px;
+    color: var(--text-dim);
+    font-size: 20px;
+    flex-shrink: 0;
+  }
+
+  .step-icon {
+    width: 44px;
+    height: 44px;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 12px;
+    font-size: 20px;
+  }
+
+  .step-name {
+    font-size: 14px;
+    font-weight: 600;
+    margin-bottom: 4px;
+  }
+
+  .step-version {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    color: var(--text-dim);
+  }
+
+  .step-weight {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    color: var(--text-dim);
+    margin-top: 8px;
+    padding-top: 8px;
+    border-top: 1px solid var(--border);
+  }
+
+  /* Modes grid */
+  .modes-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 20px;
+  }
+
+  @media (max-width: 768px) {
+    .modes-grid { grid-template-columns: 1fr; }
+    .pipeline { flex-direction: column; }
+    .pipeline-arrow { transform: rotate(90deg); justify-content: center; }
+  }
+
+  .mode-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 24px;
+    position: relative;
+    overflow: hidden;
+    transition: transform 0.2s, box-shadow 0.2s;
+  }
+
+  .mode-card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 12px 32px rgba(0,0,0,0.1);
+  }
+
+  .mode-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 3px;
+  }
+
+  .mode-card.standard::before { background: linear-gradient(90deg, var(--teal), var(--blue)); }
+  .mode-card.cave::before { background: linear-gradient(90deg, var(--red), var(--orange)); }
+  .mode-card.rubric::before { background: linear-gradient(90deg, var(--violet), var(--rose)); }
+
+  .mode-icon {
+    width: 48px;
+    height: 48px;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 22px;
+    margin-bottom: 16px;
+  }
+
+  .mode-name {
+    font-size: 18px;
+    font-weight: 700;
+    margin-bottom: 6px;
+  }
+
+  .mode-desc {
+    font-size: 14px;
+    color: var(--text-dim);
+    margin-bottom: 16px;
+    line-height: 1.5;
+  }
+
+  .mode-flow {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    align-items: center;
+  }
+
+  .flow-chip {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    padding: 3px 10px;
+    border-radius: 6px;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    white-space: nowrap;
+  }
+
+  .flow-arrow {
+    font-size: 12px;
+    color: var(--text-dim);
+  }
+
+  /* Certification badges */
+  .cert-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 16px;
+  }
+
+  @media (max-width: 600px) {
+    .cert-grid { grid-template-columns: repeat(2, 1fr); }
+  }
+
+  .cert-badge {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 20px 16px;
+    text-align: center;
+    transition: transform 0.2s;
+  }
+
+  .cert-badge:hover { transform: scale(1.03); }
+
+  .cert-medal {
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    margin: 0 auto 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 24px;
+    font-weight: 800;
+    color: white;
+  }
+
+  .cert-medal.platinum { background: linear-gradient(135deg, #6366f1, #8b5cf6); }
+  .cert-medal.gold { background: linear-gradient(135deg, #eab308, #f59e0b); }
+  .cert-medal.silver { background: linear-gradient(135deg, #94a3b8, #cbd5e1); color: #334155; }
+  .cert-medal.bronze { background: linear-gradient(135deg, #b45309, #d97706); }
+
+  .cert-name {
+    font-size: 15px;
+    font-weight: 600;
+    margin-bottom: 4px;
+  }
+
+  .cert-range {
+    font-family: var(--font-mono);
+    font-size: 13px;
+    color: var(--text-dim);
+  }
+
+  /* Scoring formula */
+  .formula-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 28px;
+    margin-top: 20px;
+  }
+
+  .formula-title {
+    font-size: 16px;
+    font-weight: 700;
+    margin-bottom: 16px;
+  }
+
+  .formula-tiers {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+  }
+
+  @media (max-width: 600px) {
+    .formula-tiers { grid-template-columns: 1fr; }
+  }
+
+  .tier {
+    padding: 16px;
+    border-radius: 10px;
+    border: 1px solid var(--border);
+  }
+
+  .tier-label {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+    margin-bottom: 10px;
+  }
+
+  .tier-items {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .tier-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 14px;
+  }
+
+  .tier-weight {
+    font-family: var(--font-mono);
+    font-size: 13px;
+    font-weight: 600;
+  }
+
+  .veto-warning {
+    margin-top: 16px;
+    padding: 12px 16px;
+    background: var(--red-dim);
+    border: 1px solid var(--red);
+    border-radius: 8px;
+    font-size: 13px;
+    color: var(--red);
+    font-weight: 500;
+  }
+
+  /* Tech stack */
+  .stack-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 16px;
+  }
+
+  @media (max-width: 600px) {
+    .stack-grid { grid-template-columns: 1fr; }
+  }
+
+  .stack-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 18px 20px;
+  }
+
+  .stack-label {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+    color: var(--text-dim);
+    margin-bottom: 8px;
+  }
+
+  .stack-items {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+
+  .stack-chip {
+    font-family: var(--font-mono);
+    font-size: 12px;
+    padding: 4px 10px;
+    border-radius: 6px;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+  }
+
+  /* Mermaid container */
+  .mermaid-wrap {
+    position: relative;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 24px;
+    overflow: hidden;
+  }
+
+  .mermaid-inner {
+    overflow: auto;
+    cursor: grab;
+    transform-origin: 0 0;
+  }
+
+  .mermaid-inner:active { cursor: grabbing; }
+
+  .zoom-controls {
+    position: absolute;
+    top: 12px;
+    right: 12px;
+    display: flex;
+    gap: 4px;
+    z-index: 10;
+  }
+
+  .zoom-btn {
+    width: 32px;
+    height: 32px;
+    border-radius: 8px;
+    border: 1px solid var(--border-bright);
+    background: var(--surface);
+    color: var(--text-dim);
+    font-size: 16px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background 0.15s;
+  }
+
+  .zoom-btn:hover {
+    background: var(--surface2);
+    color: var(--text);
+  }
+
+  .mermaid .nodeLabel { color: var(--text) !important; }
+  .mermaid .edgeLabel { color: var(--text-dim) !important; background-color: var(--bg) !important; }
+  .mermaid .edgeLabel rect { fill: var(--bg) !important; }
+
+  /* Animations */
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(16px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .section, .hero { animation: none; opacity: 1; }
+  }
+
+  /* Footer */
+  .footer {
+    text-align: center;
+    margin-top: 60px;
+    padding-top: 24px;
+    border-top: 1px solid var(--border);
+    font-size: 13px;
+    color: var(--text-dim);
+  }
+</style>
+</head>
+<body>
+<div class="container">
+
+  <!-- Hero -->
+  <div class="hero">
+    <div class="hero-badge">&#9670; AI Ethics Protocol</div>
+    <h1>AESOP</h1>
+    <p>AI Ethical System Optimization Protocol — evaluate AI system instructions across Ethics, Bias, Safety, and Instruction quality</p>
+  </div>
+
+  <!-- Evaluation Modes -->
+  <div class="section" style="animation-delay: 0.1s;">
+    <div class="section-title" style="--c: var(--teal);"><span style="color: var(--teal);">&#9679;</span> Three Evaluation Modes</div>
+    <div class="modes-grid">
+      <div class="mode-card standard">
+        <div class="mode-icon" style="background: var(--teal-dim); color: var(--teal);">&#9874;</div>
+        <div class="mode-name">Standard Analysis</div>
+        <div class="mode-desc">Full 5-agent pipeline evaluating instructions across 4 dimensions with weighted scoring and certification.</div>
+        <div class="mode-flow">
+          <span class="flow-chip">Instructions</span>
+          <span class="flow-arrow">&#8594;</span>
+          <span class="flow-chip">Ethos</span>
+          <span class="flow-arrow">&#8594;</span>
+          <span class="flow-chip">Bias</span>
+          <span class="flow-arrow">&#8594;</span>
+          <span class="flow-chip">Safety</span>
+          <span class="flow-arrow">&#8594;</span>
+          <span class="flow-chip">Synthesis</span>
+        </div>
+      </div>
+
+      <div class="mode-card cave">
+        <div class="mode-icon" style="background: var(--red-dim); color: var(--red);">&#9876;</div>
+        <div class="mode-name">Cave of Shadows</div>
+        <div class="mode-desc">Red-team testing. Generate adversarial scenarios from analysis reports, then execute them against a live chatbot.</div>
+        <div class="mode-flow">
+          <span class="flow-chip">Reports</span>
+          <span class="flow-arrow">&#8594;</span>
+          <span class="flow-chip">Scenarios</span>
+          <span class="flow-arrow">&#8594;</span>
+          <span class="flow-chip">Execute</span>
+          <span class="flow-arrow">&#8594;</span>
+          <span class="flow-chip">Results</span>
+        </div>
+      </div>
+
+      <div class="mode-card rubric">
+        <div class="mode-icon" style="background: var(--violet-dim); color: var(--violet);">&#9883;</div>
+        <div class="mode-name">Custom Rubric</div>
+        <div class="mode-desc">PRAXIS generates a tailored rubric, THESIS creates test scenarios. Optionally test against a live chatbot.</div>
+        <div class="mode-flow">
+          <span class="flow-chip">PRAXIS</span>
+          <span class="flow-arrow">&#8594;</span>
+          <span class="flow-chip">Rubric</span>
+          <span class="flow-arrow">&#8594;</span>
+          <span class="flow-chip">THESIS</span>
+          <span class="flow-arrow">&#8594;</span>
+          <span class="flow-chip">Scenarios</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Core Pipeline (Mermaid) -->
+  <div class="section" style="animation-delay: 0.2s;">
+    <div class="section-title"><span style="color: var(--blue);">&#9679;</span> Standard Analysis Pipeline</div>
+    <div class="mermaid-wrap">
+      <div class="zoom-controls">
+        <button class="zoom-btn" onclick="zoomIn()">+</button>
+        <button class="zoom-btn" onclick="zoomOut()">&minus;</button>
+        <button class="zoom-btn" onclick="zoomReset()">&#8634;</button>
+      </div>
+      <div class="mermaid-inner" id="mermaidContainer">
+        <pre class="mermaid">
+graph TD
+  INPUT["&#128196; System Instructions\n+ Vital Context"]
+  INPUT --> INST
+
+  subgraph Analysis ["Sequential Agent Pipeline"]
+    direction TB
+    INST["&#128270; Instructions Agent\nv4.6 — Structure, Intent, UX"]
+    INST --> ETHOS["&#9878; Ethos Agent\nv3.3 — Empowerment, Responsibility"]
+    ETHOS --> BIAS["&#9878; Bias Agent\nv2.4 — Fair Access, Inclusion"]
+    BIAS --> SAFETY["&#128737; Safety Agent\nv2.5 — Input Validation, Data Protection"]
+  end
+
+  SAFETY --> SYNTH["&#9733; Synthesis Agent\nv2.3 — Integrated Risk Strategy"]
+  SYNTH --> REPORT["&#128203; Final Report\nHTML + Scores + Certification"]
+  SYNTH --> SCORE["&#127942; Certification\nPlatinum / Gold / Silver / Bronze"]
+
+  classDef input fill:#0d948822,stroke:#0d9488,stroke-width:2px
+  classDef agent fill:#2563eb22,stroke:#2563eb,stroke-width:1.5px
+  classDef synth fill:#7c3aed22,stroke:#7c3aed,stroke-width:2px
+  classDef output fill:#05966922,stroke:#059669,stroke-width:2px
+
+  class INPUT input
+  class INST,ETHOS,BIAS,SAFETY agent
+  class SYNTH synth
+  class REPORT,SCORE output
+        </pre>
+      </div>
+    </div>
+  </div>
+
+  <!-- Scoring -->
+  <div class="section" style="animation-delay: 0.3s;">
+    <div class="section-title"><span style="color: var(--amber);">&#9679;</span> Scoring &amp; Certification</div>
+    <div class="cert-grid">
+      <div class="cert-badge">
+        <div class="cert-medal platinum">P</div>
+        <div class="cert-name">Platinum</div>
+        <div class="cert-range">&ge; 90</div>
+      </div>
+      <div class="cert-badge">
+        <div class="cert-medal gold">G</div>
+        <div class="cert-name">Gold</div>
+        <div class="cert-range">&ge; 85</div>
+      </div>
+      <div class="cert-badge">
+        <div class="cert-medal silver">S</div>
+        <div class="cert-name">Silver</div>
+        <div class="cert-range">&ge; 80</div>
+      </div>
+      <div class="cert-badge">
+        <div class="cert-medal bronze">B</div>
+        <div class="cert-name">Bronze</div>
+        <div class="cert-range">&ge; 75</div>
+      </div>
+    </div>
+
+    <div class="formula-card">
+      <div class="formula-title">Weighted Scoring Formula</div>
+      <div class="formula-tiers">
+        <div class="tier" style="background: var(--red-dim);">
+          <div class="tier-label" style="color: var(--red);">Tier 1 — Critical (1.5x)</div>
+          <div class="tier-items">
+            <div class="tier-item">
+              <span>Safety</span>
+              <span class="tier-weight" style="color: var(--red);">1.5x</span>
+            </div>
+            <div class="tier-item">
+              <span>Bias</span>
+              <span class="tier-weight" style="color: var(--red);">1.5x</span>
+            </div>
+          </div>
+        </div>
+        <div class="tier" style="background: var(--blue-dim);">
+          <div class="tier-label" style="color: var(--blue);">Tier 2 — Foundation (1.0x)</div>
+          <div class="tier-items">
+            <div class="tier-item">
+              <span>Instructions</span>
+              <span class="tier-weight" style="color: var(--blue);">1.0x</span>
+            </div>
+            <div class="tier-item">
+              <span>Ethos</span>
+              <span class="tier-weight" style="color: var(--blue);">1.0x</span>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="veto-warning">&#9888; Veto Rule: If Safety or Bias scores below 75, the final score is capped at that score regardless of other dimensions.</div>
+    </div>
+  </div>
+
+  <!-- Tech Stack -->
+  <div class="section" style="animation-delay: 0.4s;">
+    <div class="section-title"><span style="color: var(--emerald);">&#9679;</span> Technology Stack</div>
+    <div class="stack-grid">
+      <div class="stack-card">
+        <div class="stack-label">Frontend</div>
+        <div class="stack-items">
+          <span class="stack-chip">Next.js 16</span>
+          <span class="stack-chip">React 19</span>
+          <span class="stack-chip">TypeScript</span>
+          <span class="stack-chip">Tailwind v4</span>
+          <span class="stack-chip">Lucide</span>
+          <span class="stack-chip">Recharts</span>
+        </div>
+      </div>
+      <div class="stack-card">
+        <div class="stack-label">Backend</div>
+        <div class="stack-items">
+          <span class="stack-chip">FastAPI</span>
+          <span class="stack-chip">Uvicorn</span>
+          <span class="stack-chip">Anthropic SDK</span>
+          <span class="stack-chip">httpx</span>
+          <span class="stack-chip">SSE</span>
+        </div>
+      </div>
+      <div class="stack-card">
+        <div class="stack-label">Database &amp; Auth</div>
+        <div class="stack-items">
+          <span class="stack-chip">Supabase</span>
+          <span class="stack-chip">PostgreSQL</span>
+          <span class="stack-chip">JWT</span>
+          <span class="stack-chip">RLS</span>
+        </div>
+      </div>
+      <div class="stack-card">
+        <div class="stack-label">AI</div>
+        <div class="stack-items">
+          <span class="stack-chip">Claude Sonnet 4.5</span>
+          <span class="stack-chip">3 Evaluation Modes</span>
+          <span class="stack-chip">Sequential Pipeline</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="footer">
+    AESOP — AI Ethical System Optimization Protocol &middot; Created by Charlie Fuller &middot; charlie@waifinder.org
+  </div>
+
+</div>
+
+<script type="module">
+  import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs';
+
+  const isDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+
+  mermaid.initialize({
+    startOnLoad: true,
+    theme: 'base',
+    look: 'classic',
+    themeVariables: {
+      primaryColor: isDark ? '#1a2744' : '#eff6ff',
+      primaryBorderColor: isDark ? '#60a5fa' : '#2563eb',
+      primaryTextColor: isDark ? '#e2e8f0' : '#0f172a',
+      secondaryColor: isDark ? '#1e1338' : '#f5f3ff',
+      secondaryBorderColor: isDark ? '#a78bfa' : '#7c3aed',
+      tertiaryColor: isDark ? '#1a2218' : '#f0fdf4',
+      tertiaryBorderColor: isDark ? '#34d399' : '#059669',
+      lineColor: isDark ? '#475569' : '#94a3b8',
+      fontSize: '14px',
+      fontFamily: "'Sora', system-ui, sans-serif",
+    }
+  });
+
+  // Zoom controls
+  let scale = 1;
+  const container = document.getElementById('mermaidContainer');
+
+  window.zoomIn = () => { scale = Math.min(scale * 1.2, 3); container.style.transform = `scale(${scale})`; };
+  window.zoomOut = () => { scale = Math.max(scale / 1.2, 0.3); container.style.transform = `scale(${scale})`; };
+  window.zoomReset = () => { scale = 1; container.style.transform = 'scale(1)'; };
+
+  container.addEventListener('wheel', (e) => {
+    if (e.ctrlKey || e.metaKey) {
+      e.preventDefault();
+      if (e.deltaY < 0) window.zoomIn();
+      else window.zoomOut();
+    }
+  }, { passive: false });
+</script>
+</body>
+</html>

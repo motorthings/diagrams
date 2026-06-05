@@ -1,0 +1,606 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PRAXIS + THESIS — Custom Rubric Evaluation</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:wght@400;500;600;700;800&family=Source+Code+Pro:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --font-body: 'Fraunces', Georgia, serif;
+    --font-mono: 'Source Code Pro', 'SF Mono', Consolas, monospace;
+
+    --bg: #faf5ff;
+    --surface: #ffffff;
+    --surface2: #f5f0ff;
+    --surface-elevated: #faf5ff;
+    --border: rgba(0, 0, 0, 0.06);
+    --border-bright: rgba(0, 0, 0, 0.12);
+    --text: #1e1b2e;
+    --text-dim: #6b6580;
+
+    --violet: #7c3aed;
+    --violet-dim: rgba(124, 58, 237, 0.07);
+    --indigo: #4f46e5;
+    --indigo-dim: rgba(79, 70, 229, 0.07);
+    --fuchsia: #c026d3;
+    --fuchsia-dim: rgba(192, 38, 211, 0.07);
+    --rose: #e11d48;
+    --rose-dim: rgba(225, 29, 72, 0.07);
+    --amber: #d97706;
+    --amber-dim: rgba(217, 119, 6, 0.07);
+    --emerald: #059669;
+    --emerald-dim: rgba(5, 150, 105, 0.07);
+    --teal: #0d9488;
+    --teal-dim: rgba(13, 148, 136, 0.07);
+    --blue: #2563eb;
+    --blue-dim: rgba(37, 99, 235, 0.07);
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #150f1e;
+      --surface: #1e1730;
+      --surface2: #271f3d;
+      --surface-elevated: #2e254a;
+      --border: rgba(255, 255, 255, 0.06);
+      --border-bright: rgba(255, 255, 255, 0.12);
+      --text: #ede5ff;
+      --text-dim: #a89ec0;
+
+      --violet: #a78bfa;
+      --violet-dim: rgba(167, 139, 250, 0.12);
+      --indigo: #818cf8;
+      --indigo-dim: rgba(129, 140, 248, 0.12);
+      --fuchsia: #e879f9;
+      --fuchsia-dim: rgba(232, 121, 249, 0.12);
+      --rose: #fb7185;
+      --rose-dim: rgba(251, 113, 133, 0.12);
+      --amber: #fbbf24;
+      --amber-dim: rgba(251, 191, 36, 0.12);
+      --emerald: #34d399;
+      --emerald-dim: rgba(52, 211, 153, 0.12);
+      --teal: #2dd4bf;
+      --teal-dim: rgba(45, 212, 191, 0.12);
+      --blue: #60a5fa;
+      --blue-dim: rgba(96, 165, 250, 0.12);
+    }
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: var(--bg);
+    background-image:
+      radial-gradient(at 25% 15%, var(--violet-dim) 0%, transparent 50%),
+      radial-gradient(at 75% 85%, var(--fuchsia-dim) 0%, transparent 50%);
+    color: var(--text);
+    font-family: var(--font-body);
+    line-height: 1.7;
+    min-height: 100vh;
+    padding: 48px 24px 80px;
+  }
+
+  .container { max-width: 960px; margin: 0 auto; }
+
+  .hero {
+    text-align: center;
+    margin-bottom: 56px;
+    animation: fadeUp 0.6s ease-out;
+  }
+
+  .hero-badges {
+    display: flex;
+    gap: 12px;
+    justify-content: center;
+    margin-bottom: 24px;
+    flex-wrap: wrap;
+  }
+
+  .hero-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 16px;
+    border-radius: 20px;
+    font-family: var(--font-mono);
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+  }
+
+  .hero-badge.praxis {
+    background: var(--amber-dim);
+    border: 1px solid var(--amber);
+    color: var(--amber);
+  }
+
+  .hero-badge.thesis {
+    background: var(--teal-dim);
+    border: 1px solid var(--teal);
+    color: var(--teal);
+  }
+
+  .hero h1 {
+    font-size: 48px;
+    font-weight: 800;
+    letter-spacing: -1px;
+    margin-bottom: 12px;
+    background: linear-gradient(135deg, var(--amber), var(--violet), var(--fuchsia));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  .hero p {
+    font-size: 19px;
+    color: var(--text-dim);
+    max-width: 640px;
+    margin: 0 auto;
+  }
+
+  .section {
+    margin-bottom: 48px;
+    opacity: 0;
+    animation: fadeUp 0.5s ease-out forwards;
+  }
+
+  .section:nth-child(2) { animation-delay: 0.1s; }
+  .section:nth-child(3) { animation-delay: 0.2s; }
+  .section:nth-child(4) { animation-delay: 0.3s; }
+  .section:nth-child(5) { animation-delay: 0.4s; }
+  .section:nth-child(6) { animation-delay: 0.5s; }
+
+  .section-title {
+    font-family: var(--font-mono);
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    color: var(--text-dim);
+    margin-bottom: 16px;
+  }
+
+  /* Mermaid */
+  .mermaid-wrap {
+    position: relative;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 28px;
+    overflow: hidden;
+  }
+
+  .mermaid-inner {
+    overflow: auto;
+    cursor: grab;
+    transform-origin: 0 0;
+  }
+
+  .mermaid-inner:active { cursor: grabbing; }
+
+  .zoom-controls {
+    position: absolute;
+    top: 12px;
+    right: 12px;
+    display: flex;
+    gap: 4px;
+    z-index: 10;
+  }
+
+  .zoom-btn {
+    width: 32px;
+    height: 32px;
+    border-radius: 8px;
+    border: 1px solid var(--border-bright);
+    background: var(--surface);
+    color: var(--text-dim);
+    font-size: 16px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .zoom-btn:hover { background: var(--surface2); color: var(--text); }
+
+  .mermaid .nodeLabel { color: var(--text) !important; }
+  .mermaid .edgeLabel { color: var(--text-dim) !important; background-color: var(--bg) !important; }
+  .mermaid .edgeLabel rect { fill: var(--bg) !important; }
+
+  /* Agent comparison */
+  .agents-compare {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+  }
+
+  @media (max-width: 700px) { .agents-compare { grid-template-columns: 1fr; } }
+
+  .agent-detail {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 28px;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .agent-detail::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 3px;
+  }
+
+  .agent-detail.praxis::before { background: linear-gradient(90deg, var(--amber), var(--violet)); }
+  .agent-detail.thesis::before { background: linear-gradient(90deg, var(--teal), var(--blue)); }
+
+  .agent-icon {
+    width: 52px;
+    height: 52px;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 26px;
+    margin-bottom: 16px;
+  }
+
+  .agent-name {
+    font-size: 24px;
+    font-weight: 800;
+    margin-bottom: 4px;
+  }
+
+  .agent-version {
+    font-family: var(--font-mono);
+    font-size: 12px;
+    color: var(--text-dim);
+    margin-bottom: 12px;
+  }
+
+  .agent-purpose {
+    font-size: 16px;
+    color: var(--text-dim);
+    margin-bottom: 20px;
+    line-height: 1.5;
+  }
+
+  .agent-features {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .feature {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    font-size: 14px;
+  }
+
+  .feature-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    margin-top: 8px;
+    flex-shrink: 0;
+  }
+
+  /* Rubric categories */
+  .rubric-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 12px;
+  }
+
+  @media (max-width: 600px) { .rubric-grid { grid-template-columns: 1fr; } }
+
+  .rubric-cat {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 16px;
+    text-align: center;
+    transition: transform 0.2s;
+  }
+
+  .rubric-cat:hover { transform: translateY(-2px); }
+
+  .rubric-cat.core { border-top: 3px solid var(--violet); }
+  .rubric-cat.dynamic { border-top: 3px solid var(--amber); }
+
+  .rubric-label {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+    margin-bottom: 6px;
+  }
+
+  .rubric-name {
+    font-size: 15px;
+    font-weight: 700;
+    margin-bottom: 2px;
+  }
+
+  .rubric-desc {
+    font-size: 12px;
+    color: var(--text-dim);
+  }
+
+  /* vs comparison */
+  .vs-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 28px;
+    display: grid;
+    grid-template-columns: 1fr auto 1fr;
+    gap: 24px;
+    align-items: center;
+  }
+
+  @media (max-width: 600px) {
+    .vs-card { grid-template-columns: 1fr; }
+    .vs-divider { display: none; }
+  }
+
+  .vs-side h3 {
+    font-size: 18px;
+    font-weight: 700;
+    margin-bottom: 8px;
+  }
+
+  .vs-side p {
+    font-size: 14px;
+    color: var(--text-dim);
+    line-height: 1.5;
+  }
+
+  .vs-divider {
+    font-size: 28px;
+    font-weight: 800;
+    color: var(--text-dim);
+    text-align: center;
+  }
+
+  .footer {
+    text-align: center;
+    margin-top: 60px;
+    padding-top: 24px;
+    border-top: 1px solid var(--border);
+    font-size: 14px;
+    color: var(--text-dim);
+  }
+
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(16px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .section, .hero { animation: none; opacity: 1; }
+  }
+</style>
+</head>
+<body>
+<div class="container">
+
+  <div class="hero">
+    <div class="hero-badges">
+      <div class="hero-badge praxis">&#9881; PRAXIS v1.4</div>
+      <div class="hero-badge thesis">&#128218; THESIS v1.0</div>
+    </div>
+    <h1>Custom Rubric Evaluation</h1>
+    <p>Generate a tailored evaluation framework for any AI system, then transform it into executable test scenarios.</p>
+  </div>
+
+  <!-- Why custom rubrics -->
+  <div class="section" style="animation-delay: 0.1s;">
+    <div class="section-title">Standard vs. Custom Evaluation</div>
+    <div class="vs-card">
+      <div class="vs-side">
+        <h3 style="color: var(--teal);">Standard AESOP</h3>
+        <p>Monolithic 4-agent pipeline. Fixed dimensions: Instructions, Ethos, Bias, Safety. Same rubric for every AI system. Great for general evaluation.</p>
+      </div>
+      <div class="vs-divider">vs</div>
+      <div class="vs-side">
+        <h3 style="color: var(--violet);">PRAXIS + THESIS</h3>
+        <p>Custom rubric generated per system. Dynamic categories based on the AI's actual purpose. Tailored test scenarios that match the system's domain.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Pipeline Flow -->
+  <div class="section" style="animation-delay: 0.2s;">
+    <div class="section-title">Pipeline Flow</div>
+    <div class="mermaid-wrap">
+      <div class="zoom-controls">
+        <button class="zoom-btn" onclick="zoomIn()">+</button>
+        <button class="zoom-btn" onclick="zoomOut()">&minus;</button>
+        <button class="zoom-btn" onclick="zoomReset()">&#8634;</button>
+      </div>
+      <div class="mermaid-inner" id="mermaidContainer">
+        <pre class="mermaid">
+graph TD
+  INPUT["&#128196; AI System\nInstructions"] --> PRAXIS
+
+  subgraph PraxisPhase ["PRAXIS — Rubric Generation"]
+    PRAXIS["&#9881; PRAXIS Agent\nv1.4"] --> ANALYSIS["&#128270; Instruction\nAnalysis"]
+    ANALYSIS --> RUBRIC["&#128203; Custom Rubric\nJSON Output"]
+  end
+
+  RUBRIC --> THESIS
+
+  subgraph ThesisPhase ["THESIS — Scenario Generation"]
+    THESIS["&#128218; THESIS Agent\nv1.0"] --> SCENARIOS["&#127919; Evaluation Plan\nJSON Scenarios"]
+  end
+
+  SCENARIOS --> DECIDE{Chatbot\nEndpoint?}
+  DECIDE -->|Yes| EXECUTE["&#128172; Execute\nScenarios"]
+  DECIDE -->|No| REVIEW["&#128196; Review\nScenarios Only"]
+  EXECUTE --> RESULTS["&#128202; Test\nResults"]
+
+  classDef input fill:#7c3aed22,stroke:#7c3aed,stroke-width:2px
+  classDef praxis fill:#d9770622,stroke:#d97706,stroke-width:1.5px
+  classDef thesis fill:#0d948822,stroke:#0d9488,stroke-width:1.5px
+  classDef decision fill:#4f46e522,stroke:#4f46e5,stroke-width:1.5px
+  classDef exec fill:#05966922,stroke:#059669,stroke-width:2px
+
+  class INPUT input
+  class PRAXIS,ANALYSIS,RUBRIC praxis
+  class THESIS,SCENARIOS thesis
+  class DECIDE decision
+  class EXECUTE,RESULTS,REVIEW exec
+        </pre>
+      </div>
+    </div>
+  </div>
+
+  <!-- Agent Details -->
+  <div class="section" style="animation-delay: 0.3s;">
+    <div class="section-title">Agent Profiles</div>
+    <div class="agents-compare">
+      <div class="agent-detail praxis">
+        <div class="agent-icon" style="background: var(--amber-dim); color: var(--amber);">&#9881;</div>
+        <div class="agent-name">PRAXIS</div>
+        <div class="agent-version">v1.4 — Custom Rubric Generator</div>
+        <div class="agent-purpose">Analyzes AI system instructions and generates a tailored evaluation rubric with weighted scoring categories.</div>
+        <div class="agent-features">
+          <div class="feature">
+            <div class="feature-dot" style="background: var(--amber);"></div>
+            <span>3 core categories always included (Safety, Core Function, Structure)</span>
+          </div>
+          <div class="feature">
+            <div class="feature-dot" style="background: var(--amber);"></div>
+            <span>Up to 4 dynamic categories based on the system's purpose</span>
+          </div>
+          <div class="feature">
+            <div class="feature-dot" style="background: var(--amber);"></div>
+            <span>Confidence scoring and gap analysis</span>
+          </div>
+          <div class="feature">
+            <div class="feature-dot" style="background: var(--amber);"></div>
+            <span>Comprehensive safety_framework with universal tests</span>
+          </div>
+          <div class="feature">
+            <div class="feature-dot" style="background: var(--amber);"></div>
+            <span>Outputs markdown analysis + JSON rubric</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="agent-detail thesis">
+        <div class="agent-icon" style="background: var(--teal-dim); color: var(--teal);">&#128218;</div>
+        <div class="agent-name">THESIS</div>
+        <div class="agent-version">v1.0 — Scenario Generator</div>
+        <div class="agent-purpose">Transforms PRAXIS rubrics into comprehensive test scenarios with realistic personas and conversation starters.</div>
+        <div class="agent-features">
+          <div class="feature">
+            <div class="feature-dot" style="background: var(--teal);"></div>
+            <span>Scenario count weighted by rubric category priorities</span>
+          </div>
+          <div class="feature">
+            <div class="feature-dot" style="background: var(--teal);"></div>
+            <span>Realistic personas with clear testing objectives</span>
+          </div>
+          <div class="feature">
+            <div class="feature-dot" style="background: var(--teal);"></div>
+            <span>Universal safety tests always included</span>
+          </div>
+          <div class="feature">
+            <div class="feature-dot" style="background: var(--teal);"></div>
+            <span>Both cooperative and adversarial persona types</span>
+          </div>
+          <div class="feature">
+            <div class="feature-dot" style="background: var(--teal);"></div>
+            <span>JSON output compatible with Cave of Shadows format</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- PRAXIS Rubric Categories -->
+  <div class="section" style="animation-delay: 0.4s;">
+    <div class="section-title">PRAXIS Rubric Framework</div>
+    <div class="rubric-grid">
+      <div class="rubric-cat core">
+        <div class="rubric-label" style="color: var(--violet);">Core</div>
+        <div class="rubric-name">Safety &amp; Boundaries</div>
+        <div class="rubric-desc">Always included</div>
+      </div>
+      <div class="rubric-cat core">
+        <div class="rubric-label" style="color: var(--violet);">Core</div>
+        <div class="rubric-name">Core Functionality</div>
+        <div class="rubric-desc">Always included</div>
+      </div>
+      <div class="rubric-cat core">
+        <div class="rubric-label" style="color: var(--violet);">Core</div>
+        <div class="rubric-name">Structural Integrity</div>
+        <div class="rubric-desc">Always included</div>
+      </div>
+      <div class="rubric-cat dynamic">
+        <div class="rubric-label" style="color: var(--amber);">Dynamic</div>
+        <div class="rubric-name">Domain-Specific</div>
+        <div class="rubric-desc">Based on AI purpose</div>
+      </div>
+      <div class="rubric-cat dynamic">
+        <div class="rubric-label" style="color: var(--amber);">Dynamic</div>
+        <div class="rubric-name">Interaction Quality</div>
+        <div class="rubric-desc">If user-facing</div>
+      </div>
+      <div class="rubric-cat dynamic">
+        <div class="rubric-label" style="color: var(--amber);">Dynamic</div>
+        <div class="rubric-name">+ Up to 2 More</div>
+        <div class="rubric-desc">Context-dependent</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="footer">
+    PRAXIS v1.4 + THESIS v1.0 &middot; Custom Rubric Evaluation for AESOP &middot; Created by Charlie Fuller
+  </div>
+
+</div>
+
+<script type="module">
+  import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs';
+  const isDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+  mermaid.initialize({
+    startOnLoad: true,
+    theme: 'base',
+    look: 'classic',
+    themeVariables: {
+      primaryColor: isDark ? '#271f3d' : '#f5f0ff',
+      primaryBorderColor: isDark ? '#a78bfa' : '#7c3aed',
+      primaryTextColor: isDark ? '#ede5ff' : '#1e1b2e',
+      secondaryColor: isDark ? '#1a2218' : '#f0fdf4',
+      secondaryBorderColor: isDark ? '#34d399' : '#059669',
+      tertiaryColor: isDark ? '#27201a' : '#fffbeb',
+      tertiaryBorderColor: isDark ? '#fbbf24' : '#d97706',
+      lineColor: isDark ? '#6b6580' : '#a8a29e',
+      fontSize: '14px',
+      fontFamily: "'Fraunces', Georgia, serif",
+    }
+  });
+
+  let scale = 1;
+  const container = document.getElementById('mermaidContainer');
+  window.zoomIn = () => { scale = Math.min(scale * 1.2, 3); container.style.transform = `scale(${scale})`; };
+  window.zoomOut = () => { scale = Math.max(scale / 1.2, 0.3); container.style.transform = `scale(${scale})`; };
+  window.zoomReset = () => { scale = 1; container.style.transform = 'scale(1)'; };
+  container.addEventListener('wheel', (e) => {
+    if (e.ctrlKey || e.metaKey) { e.preventDefault(); e.deltaY < 0 ? window.zoomIn() : window.zoomOut(); }
+  }, { passive: false });
+</script>
+</body>
+</html>

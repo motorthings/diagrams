@@ -1,0 +1,442 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SuperAssistant MVP — Health Audit</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --font-body: 'Space Grotesk', system-ui, sans-serif;
+    --font-mono: 'Space Mono', 'SF Mono', Consolas, monospace;
+
+    --bg: #0c0f1a;
+    --surface: #141827;
+    --surface2: #1a2035;
+    --surface-elevated: #1f2744;
+    --border: rgba(255, 255, 255, 0.06);
+    --border-bright: rgba(255, 255, 255, 0.12);
+    --text: #e4e8f7;
+    --text-dim: #7b83a6;
+    --accent: #818cf8;
+    --accent-dim: rgba(129, 140, 248, 0.1);
+    --green: #4ade80;
+    --green-dim: rgba(74, 222, 128, 0.1);
+    --red: #f87171;
+    --red-dim: rgba(248, 113, 113, 0.1);
+    --orange: #fbbf24;
+    --orange-dim: rgba(251, 191, 36, 0.1);
+    --cyan: #22d3ee;
+    --cyan-dim: rgba(34, 211, 238, 0.08);
+  }
+
+  @media (prefers-color-scheme: light) {
+    :root {
+      --bg: #f5f6fa;
+      --surface: #ffffff;
+      --surface2: #eef0f6;
+      --surface-elevated: #ffffff;
+      --border: rgba(0, 0, 0, 0.07);
+      --border-bright: rgba(0, 0, 0, 0.14);
+      --text: #1a1d2e;
+      --text-dim: #6b7094;
+      --accent: #6366f1;
+      --accent-dim: rgba(99, 102, 241, 0.07);
+      --green: #16a34a;
+      --green-dim: rgba(22, 163, 74, 0.08);
+      --red: #dc2626;
+      --red-dim: rgba(220, 38, 38, 0.08);
+      --orange: #d97706;
+      --orange-dim: rgba(217, 119, 6, 0.08);
+      --cyan: #0891b2;
+      --cyan-dim: rgba(8, 145, 178, 0.06);
+    }
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: var(--bg);
+    background-image:
+      radial-gradient(ellipse at 15% 0%, var(--accent-dim) 0%, transparent 50%),
+      radial-gradient(ellipse at 85% 100%, var(--cyan-dim) 0%, transparent 40%);
+    color: var(--text);
+    font-family: var(--font-body);
+    padding: 40px;
+    min-height: 100vh;
+  }
+
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  @keyframes fadeScale {
+    from { opacity: 0; transform: scale(0.92); }
+    to { opacity: 1; transform: scale(1); }
+  }
+
+  .animate { animation: fadeUp 0.35s ease-out both; animation-delay: calc(var(--i, 0) * 0.04s); }
+  .animate-scale { animation: fadeScale 0.35s ease-out both; animation-delay: calc(var(--i, 0) * 0.06s); }
+
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; }
+  }
+
+  .wrap { max-width: 1400px; margin: 0 auto; display: grid; grid-template-columns: 180px 1fr; gap: 0 40px; }
+  .main { min-width: 0; }
+
+  /* TOC */
+  .toc { position: sticky; top: 24px; align-self: start; padding: 14px 0; grid-row: 1 / -1; max-height: calc(100dvh - 48px); overflow-y: auto; }
+  .toc::-webkit-scrollbar { width: 3px; }
+  .toc::-webkit-scrollbar-thumb { background: var(--surface-elevated); border-radius: 2px; }
+  .toc-title { font-family: var(--font-mono); font-size: 9px; font-weight: 700; text-transform: uppercase; letter-spacing: 2px; color: var(--text-dim); padding: 0 0 10px; margin-bottom: 8px; border-bottom: 1px solid var(--border); }
+  .toc a { display: block; font-size: 11px; font-family: var(--font-mono); color: var(--text-dim); text-decoration: none; padding: 5px 8px; border-radius: 5px; border-left: 2px solid transparent; transition: all 0.15s; line-height: 1.4; margin-bottom: 1px; }
+  .toc a:hover { color: var(--text); background: var(--surface2); }
+  .toc a.active { color: var(--text); border-left-color: var(--accent); }
+
+  @media (max-width: 1000px) {
+    .wrap { grid-template-columns: 1fr; }
+    body { padding-top: 0; }
+    .toc { position: sticky; top: 0; z-index: 200; max-height: none; display: flex; gap: 4px; overflow-x: auto; -webkit-overflow-scrolling: touch; background: var(--bg); border-bottom: 1px solid var(--border); padding: 10px 0; margin: 0 -40px; padding-left: 40px; padding-right: 40px; grid-row: auto; }
+    .toc::-webkit-scrollbar { display: none; }
+    .toc-title { display: none; }
+    .toc a { white-space: nowrap; flex-shrink: 0; border-left: none; border-bottom: 2px solid transparent; border-radius: 4px 4px 0 0; padding: 6px 10px; font-size: 10px; }
+    .toc a.active { border-left: none; border-bottom-color: var(--accent); background: var(--surface); }
+    .main { padding-top: 20px; }
+    .sec-head { scroll-margin-top: 52px; }
+  }
+
+  h1 { font-size: 30px; font-weight: 700; letter-spacing: -0.5px; margin-bottom: 4px; }
+  .subtitle { color: var(--text-dim); font-family: var(--font-mono); font-size: 12px; margin-bottom: 28px; }
+
+  /* KPI */
+  .kpi-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 12px; margin-bottom: 28px; }
+  .kpi-card { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 16px; }
+  .kpi-card__value { font-size: 28px; font-weight: 700; line-height: 1.1; font-variant-numeric: tabular-nums; }
+  .kpi-card__value--green { color: var(--green); }
+  .kpi-card__value--orange { color: var(--orange); }
+  .kpi-card__value--red { color: var(--red); }
+  .kpi-card__value--cyan { color: var(--cyan); }
+  .kpi-card__value--accent { color: var(--accent); }
+  .kpi-card__label { font-family: var(--font-mono); font-size: 9px; font-weight: 700; text-transform: uppercase; letter-spacing: 1.2px; color: var(--text-dim); margin-top: 6px; }
+
+  .sec-head { font-family: var(--font-mono); font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 1.5px; color: var(--accent); padding: 16px 0 12px; margin-top: 8px; border-bottom: 1px solid var(--border); margin-bottom: 16px; display: flex; align-items: center; gap: 10px; }
+  .sec-head .status { text-transform: none; letter-spacing: 0.3px; }
+
+  .card { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 20px 24px; margin-bottom: 14px; }
+  .card h3 { font-size: 15px; font-weight: 600; margin-bottom: 10px; display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+  .card--ok { border-left: 3px solid var(--green); }
+  .card--warn { border-left: 3px solid var(--orange); }
+  .card--alert { border-left: 3px solid var(--red); }
+  .card--info { border-left: 3px solid var(--cyan); }
+
+  .dl { list-style: none; padding: 0; font-size: 13px; line-height: 1.7; }
+  .dl li { padding-left: 16px; position: relative; margin-bottom: 3px; }
+  .dl li::before { content: ''; position: absolute; left: 0; top: 9px; width: 6px; height: 6px; border-radius: 50%; background: var(--border-bright); }
+  .dl li.ok::before { background: var(--green); }
+  .dl li.warn::before { background: var(--orange); }
+  .dl li.bad::before { background: var(--red); }
+  .dl li.info::before { background: var(--cyan); }
+  .dl code { font-family: var(--font-mono); font-size: 11px; background: var(--accent-dim); color: var(--accent); padding: 1px 5px; border-radius: 3px; }
+  .dl small { display: block; color: var(--text-dim); font-size: 11px; margin-top: 2px; }
+
+  .status { display: inline-flex; align-items: center; gap: 5px; font-family: var(--font-mono); font-size: 10px; font-weight: 700; padding: 3px 10px; border-radius: 6px; white-space: nowrap; }
+  .status::before { content: ''; width: 6px; height: 6px; border-radius: 50%; background: currentColor; }
+  .status--pass { background: var(--green-dim); color: var(--green); }
+  .status--warn { background: var(--orange-dim); color: var(--orange); }
+  .status--alert { background: var(--red-dim); color: var(--red); }
+  .status--info { background: var(--cyan-dim); color: var(--cyan); }
+
+  .tag { font-family: var(--font-mono); font-size: 10px; font-weight: 500; padding: 2px 7px; border-radius: 4px; }
+  .tag--cyan { background: var(--cyan-dim); color: var(--cyan); }
+  .tag--orange { background: var(--orange-dim); color: var(--orange); }
+
+  /* Table */
+  .table-wrap { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; overflow: hidden; margin-bottom: 18px; }
+  .table-scroll { overflow-x: auto; }
+  .data-table { width: 100%; border-collapse: collapse; font-size: 13px; line-height: 1.5; }
+  .data-table th { background: var(--surface2); font-family: var(--font-mono); font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; color: var(--text-dim); text-align: left; padding: 12px 16px; border-bottom: 2px solid var(--border-bright); white-space: nowrap; }
+  .data-table td { padding: 10px 16px; border-bottom: 1px solid var(--border); vertical-align: top; }
+  .data-table tbody tr:last-child td { border-bottom: none; }
+  .data-table tbody tr:nth-child(even) { background: var(--accent-dim); }
+  .data-table tbody tr { transition: background 0.15s; }
+  .data-table tbody tr:hover { background: var(--border); }
+  .data-table code { font-family: var(--font-mono); font-size: 11px; background: var(--accent-dim); color: var(--accent); padding: 1px 5px; border-radius: 3px; }
+  .data-table td.num { text-align: right; font-variant-numeric: tabular-nums; font-family: var(--font-mono); }
+
+  details.collapsible { border: 1px solid var(--border); border-radius: 10px; overflow: hidden; margin-bottom: 14px; }
+  details.collapsible summary { padding: 14px 20px; background: var(--surface); font-family: var(--font-mono); font-size: 12px; font-weight: 600; cursor: pointer; list-style: none; display: flex; align-items: center; gap: 8px; color: var(--text); transition: background 0.15s; }
+  details.collapsible summary:hover { background: var(--surface-elevated); }
+  details.collapsible summary::-webkit-details-marker { display: none; }
+  details.collapsible summary::before { content: '\25B8'; font-size: 11px; color: var(--text-dim); transition: transform 0.15s; }
+  details.collapsible[open] summary::before { transform: rotate(90deg); }
+  details.collapsible .cb { padding: 16px 20px; border-top: 1px solid var(--border); font-size: 13px; line-height: 1.6; color: var(--text-dim); }
+  details.collapsible .cb strong { color: var(--text); }
+  details.collapsible .cb code { font-family: var(--font-mono); font-size: 11px; background: var(--accent-dim); color: var(--accent); padding: 1px 5px; border-radius: 3px; }
+
+  @media (max-width: 768px) { body { padding: 16px; } h1 { font-size: 24px; } .card { padding: 16px; } }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <nav class="toc" id="toc">
+    <div class="toc-title">Audit</div>
+    <a href="#s1">Security</a>
+    <a href="#s2">Railway Deploy</a>
+    <a href="#s3">Backups</a>
+    <a href="#s4">RLS Policies</a>
+    <a href="#s5">DB Indexes</a>
+    <a href="#s6">Table Sizes</a>
+    <a href="#s7">Vercel Env Vars</a>
+    <a href="#s8">Actions</a>
+  </nav>
+
+  <div class="main">
+    <h1 class="animate" style="--i:0">Health Audit</h1>
+    <p class="subtitle animate" style="--i:1">SuperAssistant MVP &mdash; deep infrastructure scan &mdash; 2026-03-08</p>
+
+    <div class="kpi-row animate-scale" style="--i:2">
+      <div class="kpi-card">
+        <div class="kpi-card__value kpi-card__value--green">52</div>
+        <div class="kpi-card__label">DB Tables</div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-card__value kpi-card__value--accent">190+</div>
+        <div class="kpi-card__label">Indexes</div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-card__value kpi-card__value--orange">117</div>
+        <div class="kpi-card__label">RLS Warnings</div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-card__value kpi-card__value--cyan">29</div>
+        <div class="kpi-card__label">Backups</div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-card__value" style="color:var(--red)">2d</div>
+        <div class="kpi-card__label">Backup Gap</div>
+      </div>
+    </div>
+
+    <!-- SECURITY -->
+    <div id="s1" class="sec-head animate" style="--i:4">Security Advisors <span class="status status--warn">1 Finding</span></div>
+
+    <div class="card card--warn animate" style="--i:5">
+      <h3>Leaked Password Protection Disabled <span class="tag tag--orange">AUTH</span></h3>
+      <ul class="dl">
+        <li class="warn">Supabase Auth can check passwords against HaveIBeenPwned.org to block compromised credentials</li>
+        <li class="warn">This feature is currently <strong>disabled</strong></li>
+        <li class="info">Fix: Enable in Supabase Dashboard &rarr; Auth &rarr; Providers &rarr; Email &rarr; Leaked password protection
+          <small><a href="https://supabase.com/docs/guides/auth/password-security#password-strength-and-leaked-password-protection" style="color:var(--accent)">Documentation</a></small>
+        </li>
+      </ul>
+    </div>
+
+    <!-- RAILWAY -->
+    <div id="s2" class="sec-head animate" style="--i:6">Railway Deployment <span class="status status--pass">Healthy</span></div>
+
+    <div class="card card--ok animate" style="--i:7">
+      <h3>Latest Build</h3>
+      <ul class="dl">
+        <li class="ok">Build completed in <strong>21.16 seconds</strong></li>
+        <li class="ok">Builder: Nixpacks with Python venv</li>
+        <li class="ok">No error logs in recent deployment (filtered for "error" &mdash; zero results)</li>
+        <li class="ok">Both schedulers started successfully on deploy</li>
+      </ul>
+    </div>
+
+    <!-- BACKUPS -->
+    <div id="s3" class="sec-head animate" style="--i:8">Backup Integrity <span class="status status--warn">Gap Detected</span></div>
+
+    <div class="card card--warn animate" style="--i:9">
+      <h3>Daily Backups</h3>
+      <ul class="dl">
+        <li class="ok">29 backups in storage, daily cadence confirmed (Feb 6 &ndash; Mar 6)</li>
+        <li class="ok">Naming convention consistent: <code>backup_YYYYMMDD_020000.json</code></li>
+        <li class="warn"><strong>Latest backup: March 6</strong> &mdash; missing March 7 and March 8
+          <small>Today's backup should run at 02:00 UTC. The scheduler restarted at 16:14 UTC today, so March 7 backup was missed during a deployment window.</small>
+        </li>
+        <li class="info">Consider: trigger a manual backup to close the gap</li>
+      </ul>
+    </div>
+
+    <details class="collapsible animate" style="--i:10">
+      <summary>Recent Backup History</summary>
+      <div class="cb">
+        <table class="data-table" style="font-size:12px">
+          <thead><tr><th>Backup</th><th>Created</th></tr></thead>
+          <tbody>
+            <tr><td><code>backup_20260306_020000.json</code></td><td>Mar 6, 02:00 UTC</td></tr>
+            <tr><td><code>backup_20260305_020000.json</code></td><td>Mar 5, 02:00 UTC</td></tr>
+            <tr><td><code>backup_20260304_020000.json</code></td><td>Mar 4, 02:00 UTC</td></tr>
+            <tr><td><code>backup_20260303_020000.json</code></td><td>Mar 3, 02:00 UTC</td></tr>
+            <tr><td><code>backup_20260302_020000.json</code></td><td>Mar 2, 02:00 UTC</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </details>
+
+    <!-- RLS -->
+    <div id="s4" class="sec-head animate" style="--i:11">RLS Policy Audit <span class="status status--warn">117 Warnings</span></div>
+
+    <div class="card card--warn animate" style="--i:12">
+      <h3>Multiple Permissive Policies</h3>
+      <ul class="dl">
+        <li class="warn"><strong>117 instances</strong> of multiple permissive RLS policies on the same table/role/action</li>
+        <li class="warn">Performance impact: every permissive policy must be evaluated for each query (OR logic)</li>
+        <li class="info">Consider consolidating overlapping policies into fewer, more targeted ones</li>
+      </ul>
+    </div>
+
+    <div class="table-wrap animate" style="--i:13">
+      <div class="table-scroll">
+        <table class="data-table">
+          <thead><tr><th>Table</th><th class="num">Policy Count</th><th>Severity</th></tr></thead>
+          <tbody>
+            <tr><td><code>conversations</code></td><td class="num">14</td><td><span class="status status--alert">High</span></td></tr>
+            <tr><td><code>documents</code></td><td class="num">11</td><td><span class="status status--alert">High</span></td></tr>
+            <tr><td><code>messages</code></td><td class="num">11</td><td><span class="status status--alert">High</span></td></tr>
+            <tr><td><code>users</code></td><td class="num">10</td><td><span class="status status--alert">High</span></td></tr>
+            <tr><td><code>document_chunks</code></td><td class="num">8</td><td><span class="status status--warn">Medium</span></td></tr>
+            <tr><td><code>notion_tokens</code></td><td class="num">8</td><td><span class="status status--warn">Medium</span></td></tr>
+            <tr><td><code>clients</code></td><td class="num">5</td><td><span class="status status--warn">Medium</span></td></tr>
+            <tr><td><code>cave_runs</code></td><td class="num">4</td><td><span class="status status--info">Low</span></td></tr>
+            <tr><td><code>unified_evaluations</code></td><td class="num">4</td><td><span class="status status--info">Low</span></td></tr>
+            <tr><td><code>theme_settings</code></td><td class="num">4</td><td><span class="status status--info">Low</span></td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- INDEXES -->
+    <div id="s5" class="sec-head animate" style="--i:14">Database Indexes <span class="status status--pass">Well Indexed</span></div>
+
+    <div class="card card--ok animate" style="--i:15">
+      <h3>Index Coverage</h3>
+      <ul class="dl">
+        <li class="ok"><strong>190+ indexes</strong> across 52 tables &mdash; comprehensive coverage</li>
+        <li class="ok">Vector index on <code>document_chunks.embedding</code> for pgvector similarity search</li>
+        <li class="ok">Composite indexes on hot paths: <code>conversations(user_id, updated_at)</code>, <code>messages(conversation_id, timestamp)</code></li>
+        <li class="ok">GIN indexes for text search: <code>conversations.title</code>, <code>messages.content</code></li>
+        <li class="ok">Foreign key indexes present on all join columns</li>
+      </ul>
+    </div>
+
+    <!-- TABLE SIZES -->
+    <div id="s6" class="sec-head animate" style="--i:16">Table Row Counts <span class="status status--info">Low Volume</span></div>
+
+    <div class="table-wrap animate" style="--i:17">
+      <div class="table-scroll">
+        <table class="data-table">
+          <thead><tr><th>Table</th><th class="num">Rows</th><th>Notes</th></tr></thead>
+          <tbody>
+            <tr><td><code>help_chunks</code></td><td class="num">238</td><td>Help documentation embeddings</td></tr>
+            <tr><td><code>evaluation_steps</code></td><td class="num">65</td><td>AESOP evaluation pipeline</td></tr>
+            <tr><td><code>help_documents</code></td><td class="num">43</td><td>Indexed help docs</td></tr>
+            <tr><td><code>interview_segments</code></td><td class="num">38</td><td>ElevenLabs segments</td></tr>
+            <tr><td><code>evaluations</code></td><td class="num">13</td><td></td></tr>
+            <tr><td><code>users</code></td><td class="num">12</td><td></td></tr>
+            <tr><td><code>conversations</code></td><td class="num">11</td><td></td></tr>
+            <tr><td><code>messages</code></td><td class="num">12</td><td></td></tr>
+            <tr><td><code>interview_sessions</code></td><td class="num">9</td><td></td></tr>
+            <tr><td><code>agents</code></td><td class="num">6</td><td></td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="card card--info animate" style="--i:18">
+      <h3>Observation</h3>
+      <ul class="dl">
+        <li class="info">Data volume is very low &mdash; this is a pre-production/MVP environment</li>
+        <li class="info">Many tables have 0 rows (stakeholders, roi_opportunities, contract_analysis, etc.)</li>
+        <li class="info">No performance concerns at this scale &mdash; the 190+ indexes are ready for growth</li>
+      </ul>
+    </div>
+
+    <!-- VERCEL ENV VARS -->
+    <div id="s7" class="sec-head animate" style="--i:19">Vercel Env Vars <span class="status status--warn">Duplicates</span></div>
+
+    <div class="card card--warn animate" style="--i:20">
+      <h3>71 Environment Variables</h3>
+      <ul class="dl">
+        <li class="warn"><strong>Duplicate keys detected</strong> &mdash; several vars appear twice (once for production, once for preview):
+          <small>SUPABASE_SERVICE_ROLE_KEY, ANTHROPIC_API_KEY, VOYAGE_API_KEY, ELEVENLABS_API_KEY, ELEVENLABS_AGENT_ID, OAUTH_ENCRYPTION_KEY, ELEVENLABS_VOICE_ID, SKIP_WEBHOOK_VERIFICATION, SUPABASE_JWT_SECRET, ELEVENLABS_WEBHOOK_SECRET, GOOGLE_GENERATIVE_AI_API_KEY, HELP_REINDEX_API_KEY, ENABLE_SEGMENTED_INTERVIEWS, RESEND_API_KEY, RESEND_FROM_EMAIL, ANTHROPIC_MODEL, DATABASE_URL, DOTENV_PRIVATE_KEY, and all ELEVENLABS_WEBHOOK_SECRET_SEGMENT_* and ELEVENLABS_AGENT_SEGMENT_* vars</small>
+        </li>
+        <li class="info">This is likely intentional &mdash; Vercel allows different values per target (production vs preview)</li>
+        <li class="info">Verify that production and preview values are intentionally different where duplicated</li>
+      </ul>
+    </div>
+
+    <!-- ACTIONS -->
+    <div id="s8" class="sec-head animate" style="--i:21">Recommended Actions</div>
+
+    <div class="card card--alert animate" style="--i:22">
+      <h3>Priority 1: Security</h3>
+      <ul class="dl">
+        <li class="bad"><strong>Enable leaked password protection</strong> in Supabase Auth settings
+          <small>Dashboard &rarr; Authentication &rarr; Providers &rarr; Email &rarr; Enable "Leaked password protection"</small>
+        </li>
+      </ul>
+    </div>
+
+    <div class="card card--warn animate" style="--i:23">
+      <h3>Priority 2: Operations</h3>
+      <ul class="dl">
+        <li class="warn"><strong>Investigate missing backups</strong> (Mar 7-8) &mdash; likely caused by Railway redeployment
+          <small>Tonight's 02:00 UTC run should auto-resume. Trigger manual backup if data changed since Mar 6.</small>
+        </li>
+        <li class="warn"><strong>Audit RLS policies</strong> on high-count tables (conversations: 14, documents: 11, messages: 11, users: 10)
+          <small>Consolidate overlapping permissive policies to reduce per-query evaluation overhead</small>
+        </li>
+      </ul>
+    </div>
+
+    <div class="card card--info animate" style="--i:24">
+      <h3>Priority 3: Cleanup (Optional)</h3>
+      <ul class="dl">
+        <li class="info"><strong>Clean orphaned storage</strong> &mdash; 45 files in <code>documents</code> bucket with no matching DB records (legacy uploads from Nov-Dec 2025)</li>
+        <li class="info"><strong>Verify Vercel env var duplicates</strong> are intentional (production vs preview targeting)</li>
+        <li class="info"><strong>Remove empty tables</strong> if features are deprecated (stakeholders, roi_opportunities, contract_analysis have 0 rows)</li>
+      </ul>
+    </div>
+
+  </div>
+</div>
+
+<script>
+(function() {
+  const toc = document.getElementById('toc');
+  const links = toc.querySelectorAll('a');
+  const sections = [];
+  links.forEach(link => {
+    const id = link.getAttribute('href').slice(1);
+    const el = document.getElementById(id);
+    if (el) sections.push({ id, el, link });
+  });
+  const observer = new IntersectionObserver(entries => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        links.forEach(l => l.classList.remove('active'));
+        const match = sections.find(s => s.el === entry.target);
+        if (match) {
+          match.link.classList.add('active');
+          if (window.innerWidth <= 1000) match.link.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
+        }
+      }
+    });
+  }, { rootMargin: '-10% 0px -80% 0px' });
+  sections.forEach(s => observer.observe(s.el));
+  links.forEach(link => {
+    link.addEventListener('click', e => {
+      e.preventDefault();
+      const el = document.getElementById(link.getAttribute('href').slice(1));
+      if (el) { el.scrollIntoView({ behavior: 'smooth', block: 'start' }); history.replaceState(null, '', link.getAttribute('href')); }
+    });
+  });
+})();
+</script>
+</body>
+</html>

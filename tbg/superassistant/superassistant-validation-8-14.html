@@ -1,0 +1,920 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SuperAssistant MVP — Infrastructure Validation Report</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --font-body: 'DM Serif Display', 'Georgia', serif;
+    --font-mono: 'IBM Plex Mono', 'SF Mono', Consolas, monospace;
+    --font-sans: system-ui, -apple-system, sans-serif;
+
+    --bg: #faf9f7;
+    --surface: #ffffff;
+    --surface2: #f3f1ee;
+    --surface-elevated: #fefefe;
+    --border: rgba(0, 0, 0, 0.07);
+    --border-bright: rgba(0, 0, 0, 0.13);
+    --text: #1a1715;
+    --text-dim: #7a7267;
+    --accent: #6d28d9;
+    --accent-dim: rgba(109, 40, 217, 0.06);
+    --green: #16a34a;
+    --green-dim: rgba(22, 163, 74, 0.08);
+    --red: #dc2626;
+    --red-dim: rgba(220, 38, 38, 0.08);
+    --orange: #d97706;
+    --orange-dim: rgba(217, 119, 6, 0.08);
+    --blue: #2563eb;
+    --blue-dim: rgba(37, 99, 235, 0.07);
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #12100e;
+      --surface: #1c1916;
+      --surface2: #262220;
+      --surface-elevated: #2a2623;
+      --border: rgba(255, 255, 255, 0.06);
+      --border-bright: rgba(255, 255, 255, 0.11);
+      --text: #ede8e3;
+      --text-dim: #9e958c;
+      --accent: #a78bfa;
+      --accent-dim: rgba(167, 139, 250, 0.1);
+      --green: #4ade80;
+      --green-dim: rgba(74, 222, 128, 0.1);
+      --red: #f87171;
+      --red-dim: rgba(248, 113, 113, 0.1);
+      --orange: #fbbf24;
+      --orange-dim: rgba(251, 191, 36, 0.1);
+      --blue: #60a5fa;
+      --blue-dim: rgba(96, 165, 250, 0.1);
+    }
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: var(--bg);
+    background-image:
+      radial-gradient(ellipse at 20% 0%, var(--accent-dim) 0%, transparent 50%),
+      radial-gradient(ellipse at 80% 100%, var(--green-dim) 0%, transparent 40%);
+    color: var(--text);
+    font-family: var(--font-sans);
+    padding: 40px;
+    min-height: 100vh;
+  }
+
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  @keyframes fadeScale {
+    from { opacity: 0; transform: scale(0.92); }
+    to { opacity: 1; transform: scale(1); }
+  }
+
+  .animate {
+    animation: fadeUp 0.35s ease-out both;
+    animation-delay: calc(var(--i, 0) * 0.04s);
+  }
+
+  .animate-scale {
+    animation: fadeScale 0.35s ease-out both;
+    animation-delay: calc(var(--i, 0) * 0.06s);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after {
+      animation-duration: 0.01ms !important;
+      animation-delay: 0ms !important;
+      transition-duration: 0.01ms !important;
+    }
+  }
+
+  /* ============ LAYOUT ============ */
+  .wrap {
+    max-width: 1400px;
+    margin: 0 auto;
+    display: grid;
+    grid-template-columns: 170px 1fr;
+    gap: 0 40px;
+  }
+  .main { min-width: 0; }
+
+  /* ============ TOC ============ */
+  .toc {
+    position: sticky;
+    top: 24px;
+    align-self: start;
+    padding: 14px 0;
+    grid-row: 1 / -1;
+    max-height: calc(100dvh - 48px);
+    overflow-y: auto;
+  }
+  .toc::-webkit-scrollbar { width: 3px; }
+  .toc::-webkit-scrollbar-thumb { background: var(--surface-elevated); border-radius: 2px; }
+
+  .toc-title {
+    font-family: var(--font-mono);
+    font-size: 9px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    color: var(--text-dim);
+    padding: 0 0 10px;
+    margin-bottom: 8px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .toc a {
+    display: block;
+    font-size: 11px;
+    font-family: var(--font-mono);
+    color: var(--text-dim);
+    text-decoration: none;
+    padding: 5px 8px;
+    border-radius: 5px;
+    border-left: 2px solid transparent;
+    transition: all 0.15s;
+    line-height: 1.4;
+    margin-bottom: 1px;
+  }
+  .toc a:hover { color: var(--text); background: var(--surface2); }
+  .toc a.active { color: var(--text); border-left-color: var(--accent); }
+
+  @media (max-width: 1000px) {
+    .wrap { grid-template-columns: 1fr; padding-top: 0; }
+    body { padding-top: 0; }
+    .toc {
+      position: sticky;
+      top: 0;
+      z-index: 200;
+      max-height: none;
+      display: flex;
+      gap: 4px;
+      align-items: center;
+      overflow-x: auto;
+      -webkit-overflow-scrolling: touch;
+      background: var(--bg);
+      border-bottom: 1px solid var(--border);
+      padding: 10px 0;
+      margin: 0 -40px;
+      padding-left: 40px;
+      padding-right: 40px;
+      grid-row: auto;
+    }
+    .toc::-webkit-scrollbar { display: none; }
+    .toc-title { display: none; }
+    .toc a {
+      white-space: nowrap;
+      flex-shrink: 0;
+      border-left: none;
+      border-bottom: 2px solid transparent;
+      border-radius: 4px 4px 0 0;
+      padding: 6px 10px;
+      font-size: 10px;
+    }
+    .toc a.active {
+      border-left: none;
+      border-bottom-color: var(--accent);
+      background: var(--surface);
+    }
+    .main { padding-top: 20px; }
+    .sec-head { scroll-margin-top: 52px; }
+  }
+
+  /* ============ HEADER ============ */
+  h1 {
+    font-family: var(--font-body);
+    font-size: 34px;
+    font-weight: 400;
+    letter-spacing: -0.3px;
+    margin-bottom: 6px;
+  }
+
+  .subtitle {
+    color: var(--text-dim);
+    font-family: var(--font-mono);
+    font-size: 12px;
+    margin-bottom: 32px;
+  }
+
+  /* ============ KPI ============ */
+  .kpi-row {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+    gap: 14px;
+    margin-bottom: 28px;
+  }
+
+  .kpi-card {
+    background: var(--surface-elevated);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 18px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+  }
+
+  .kpi-card__value {
+    font-family: var(--font-body);
+    font-size: 32px;
+    font-weight: 400;
+    line-height: 1.1;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .kpi-card__value--green { color: var(--green); }
+  .kpi-card__value--orange { color: var(--orange); }
+  .kpi-card__value--accent { color: var(--accent); }
+
+  .kpi-card__label {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 1.2px;
+    color: var(--text-dim);
+    margin-top: 6px;
+  }
+
+  /* ============ SECTION HEADS ============ */
+  .sec-head {
+    font-family: var(--font-mono);
+    font-size: 12px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+    color: var(--accent);
+    padding: 16px 0 12px;
+    margin-top: 8px;
+    border-bottom: 1px solid var(--border);
+    margin-bottom: 16px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .sec-head .status {
+    text-transform: none;
+    letter-spacing: 0.3px;
+  }
+
+  /* ============ ITEM CARD ============ */
+  .item-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 20px 24px;
+    margin-bottom: 16px;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+  }
+
+  .item-card:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.06);
+  }
+
+  .item-card--warning {
+    border-left: 3px solid var(--orange);
+  }
+
+  .item-card--pass {
+    border-left: 3px solid var(--green);
+  }
+
+  .item-card--partial {
+    border-left: 3px solid var(--orange);
+  }
+
+  .item-card h3 {
+    font-family: var(--font-sans);
+    font-size: 15px;
+    font-weight: 600;
+    margin-bottom: 12px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+  }
+
+  /* ============ DETAIL LIST ============ */
+  .detail-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    font-size: 13px;
+    line-height: 1.7;
+  }
+
+  .detail-list li {
+    padding-left: 16px;
+    position: relative;
+    margin-bottom: 4px;
+  }
+
+  .detail-list li::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 9px;
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--border-bright);
+  }
+
+  .detail-list li.check::before {
+    background: var(--green);
+  }
+
+  .detail-list li.warn::before {
+    background: var(--orange);
+  }
+
+  .detail-list li.info::before {
+    background: var(--blue);
+  }
+
+  .detail-list code {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    background: var(--accent-dim);
+    color: var(--accent);
+    padding: 1px 5px;
+    border-radius: 3px;
+  }
+
+  .detail-list small {
+    display: block;
+    color: var(--text-dim);
+    font-size: 11px;
+    margin-top: 2px;
+  }
+
+  /* ============ STATUS BADGES ============ */
+  .status {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    font-family: var(--font-mono);
+    font-size: 10px;
+    font-weight: 600;
+    padding: 3px 10px;
+    border-radius: 6px;
+    white-space: nowrap;
+    letter-spacing: 0.3px;
+  }
+
+  .status::before {
+    content: '';
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: currentColor;
+  }
+
+  .status--pass {
+    background: var(--green-dim);
+    color: var(--green);
+  }
+
+  .status--warn {
+    background: var(--orange-dim);
+    color: var(--orange);
+  }
+
+  .status--partial {
+    background: var(--orange-dim);
+    color: var(--orange);
+  }
+
+  /* ============ SUMMARY TABLE ============ */
+  .table-wrap {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    overflow: hidden;
+    margin-bottom: 24px;
+  }
+
+  .table-scroll {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .data-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13px;
+    line-height: 1.55;
+  }
+
+  .data-table thead {
+    position: sticky;
+    top: 0;
+    z-index: 2;
+  }
+
+  .data-table th {
+    background: var(--surface2);
+    font-family: var(--font-mono);
+    font-size: 10px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 1.2px;
+    color: var(--text-dim);
+    text-align: left;
+    padding: 14px 16px;
+    border-bottom: 2px solid var(--border-bright);
+    white-space: nowrap;
+  }
+
+  .data-table td {
+    padding: 14px 16px;
+    border-bottom: 1px solid var(--border);
+    vertical-align: top;
+  }
+
+  .data-table tbody tr:last-child td {
+    border-bottom: none;
+  }
+
+  .data-table tbody tr:nth-child(even) {
+    background: var(--accent-dim);
+  }
+
+  .data-table tbody tr {
+    transition: background 0.15s ease;
+    animation: fadeUp 0.35s ease-out both;
+    animation-delay: calc(var(--i, 0) * 0.04s);
+  }
+
+  .data-table tbody tr:hover {
+    background: var(--border);
+  }
+
+  .data-table code {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    background: var(--accent-dim);
+    color: var(--accent);
+    padding: 1px 5px;
+    border-radius: 3px;
+  }
+
+  .data-table tfoot td {
+    background: var(--surface2);
+    font-weight: 600;
+    font-family: var(--font-mono);
+    font-size: 12px;
+    border-top: 2px solid var(--border-bright);
+    border-bottom: none;
+    padding: 14px 16px;
+  }
+
+  /* ============ COLLAPSIBLE ============ */
+  details.collapsible {
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    overflow: hidden;
+    margin-bottom: 16px;
+  }
+
+  details.collapsible summary {
+    padding: 14px 20px;
+    background: var(--surface);
+    font-family: var(--font-mono);
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    list-style: none;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: var(--text);
+    transition: background 0.15s ease;
+  }
+
+  details.collapsible summary:hover {
+    background: var(--surface-elevated);
+  }
+
+  details.collapsible summary::-webkit-details-marker { display: none; }
+
+  details.collapsible summary::before {
+    content: '\25B8';
+    font-size: 11px;
+    color: var(--text-dim);
+    transition: transform 0.15s ease;
+  }
+
+  details.collapsible[open] summary::before {
+    transform: rotate(90deg);
+  }
+
+  details.collapsible .collapsible__body {
+    padding: 16px 20px;
+    border-top: 1px solid var(--border);
+    font-size: 13px;
+    line-height: 1.6;
+    color: var(--text-dim);
+  }
+
+  details.collapsible .collapsible__body strong {
+    color: var(--text);
+    font-weight: 600;
+  }
+
+  details.collapsible .collapsible__body code {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    background: var(--accent-dim);
+    color: var(--accent);
+    padding: 1px 5px;
+    border-radius: 3px;
+  }
+
+  /* ============ TAG ============ */
+  .tag {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    font-weight: 500;
+    padding: 2px 7px;
+    border-radius: 4px;
+    background: var(--blue-dim);
+    color: var(--blue);
+  }
+
+  /* ============ RESPONSIVE ============ */
+  @media (max-width: 768px) {
+    body { padding: 16px; }
+    h1 { font-size: 24px; }
+    .item-card { padding: 16px; }
+  }
+</style>
+</head>
+<body>
+
+<div class="wrap">
+
+  <nav class="toc" id="toc">
+    <div class="toc-title">Checks</div>
+    <a href="#s8">8. API Keys</a>
+    <a href="#s9">9. Help Reindex</a>
+    <a href="#s10">10. CORS</a>
+    <a href="#s11">11. Background Svcs</a>
+    <a href="#s12">12. Supabase Auth</a>
+    <a href="#s13">13. Storage & Data</a>
+    <a href="#s14">14. Vercel Build</a>
+  </nav>
+
+  <div class="main">
+
+    <h1 class="animate" style="--i:0">Infrastructure Validation Report</h1>
+    <p class="subtitle animate" style="--i:1">SuperAssistant MVP &mdash; Items 8&ndash;14 &mdash; 2026-03-08</p>
+
+    <div class="kpi-row animate-scale" style="--i:2">
+      <div class="kpi-card">
+        <div class="kpi-card__value">7</div>
+        <div class="kpi-card__label">Items Checked</div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-card__value kpi-card__value--green">5</div>
+        <div class="kpi-card__label">Pass</div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-card__value kpi-card__value--orange">2</div>
+        <div class="kpi-card__label">Warning</div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-card__value kpi-card__value--accent">71%</div>
+        <div class="kpi-card__label">Clean Pass</div>
+      </div>
+    </div>
+
+    <!-- SUMMARY TABLE -->
+    <div class="table-wrap animate" style="--i:4">
+      <div class="table-scroll">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>Check</th>
+              <th>Result</th>
+              <th>Status</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr style="--i:5">
+              <td>8</td>
+              <td>Third-Party API Keys</td>
+              <td>Keys configured; embeddings low (1 chunk)</td>
+              <td><span class="status status--partial">Partial</span></td>
+            </tr>
+            <tr style="--i:6">
+              <td>9</td>
+              <td>Help Documentation Reindex</td>
+              <td>24 docs, 277 chunks indexed</td>
+              <td><span class="status status--pass">Pass</span></td>
+            </tr>
+            <tr style="--i:7">
+              <td>10</td>
+              <td>CORS & Connectivity</td>
+              <td>Healthy, CORS enforced, 116 endpoints</td>
+              <td><span class="status status--pass">Pass</span></td>
+            </tr>
+            <tr style="--i:8">
+              <td>11</td>
+              <td>Background Services</td>
+              <td>Both schedulers running</td>
+              <td><span class="status status--pass">Pass</span></td>
+            </tr>
+            <tr style="--i:9">
+              <td>12</td>
+              <td>Supabase Auth Config</td>
+              <td>ES256 JWT, 11 email users confirmed</td>
+              <td><span class="status status--pass">Pass</span></td>
+            </tr>
+            <tr style="--i:10">
+              <td>13</td>
+              <td>Storage & Data Migration</td>
+              <td>4 buckets, 78 objects; embeddings low</td>
+              <td><span class="status status--warn">Warning</span></td>
+            </tr>
+            <tr style="--i:11">
+              <td>14</td>
+              <td>Vercel Build Settings</td>
+              <td>Next.js, Node 22.x, 71 env vars</td>
+              <td><span class="status status--pass">Pass</span></td>
+            </tr>
+          </tbody>
+          <tfoot>
+            <tr>
+              <td colspan="2">7 items validated</td>
+              <td></td>
+              <td>5 pass &middot; 2 warning</td>
+            </tr>
+          </tfoot>
+        </table>
+      </div>
+    </div>
+
+    <!-- ==================== ITEM 8 ==================== -->
+    <div id="s8" class="sec-head animate" style="--i:12">
+      8 &mdash; Third-Party API Keys
+      <span class="status status--partial">Partial Pass</span>
+    </div>
+
+    <div class="item-card item-card--partial animate" style="--i:13">
+      <h3>Anthropic <span class="tag">claude-sonnet-4-6</span></h3>
+      <ul class="detail-list">
+        <li class="check"><code>ANTHROPIC_API_KEY</code> set in Vercel (production + preview) and Railway</li>
+        <li class="check"><code>ANTHROPIC_MODEL</code> set to <code>claude-sonnet-4-6</code></li>
+        <li class="info">No direct key validation endpoint &mdash; keys confirmed by env var presence only</li>
+      </ul>
+    </div>
+
+    <div class="item-card item-card--partial animate" style="--i:14">
+      <h3>Resend Email</h3>
+      <ul class="detail-list">
+        <li class="check"><code>RESEND_API_KEY</code> set in Vercel (production + preview)</li>
+        <li class="check"><code>RESEND_FROM_EMAIL</code> set in Vercel (production + preview)</li>
+        <li class="info">Used for admin notifications when interviews complete</li>
+      </ul>
+    </div>
+
+    <div class="item-card item-card--warning animate" style="--i:15">
+      <h3>Voyage AI Embeddings <span class="status status--warn">Low Embeddings</span></h3>
+      <ul class="detail-list">
+        <li class="check"><code>VOYAGE_API_KEY</code> set in both environments. Model: <code>voyage-3</code></li>
+        <li class="warn">Only <strong>1 document chunk</strong> has embeddings out of the entire <code>document_chunks</code> table</li>
+        <li class="warn">45 documents in storage but embeddings are not populated &mdash; may need reprocessing</li>
+      </ul>
+    </div>
+
+    <!-- ==================== ITEM 9 ==================== -->
+    <div id="s9" class="sec-head animate" style="--i:16">
+      9 &mdash; Help Documentation Reindex
+      <span class="status status--pass">Pass</span>
+    </div>
+
+    <div class="item-card item-card--pass animate" style="--i:17">
+      <h3>Help System Status</h3>
+      <ul class="detail-list">
+        <li class="check"><code>/api/help/status</code> returns: 24 documents, 277 chunks, database connected, indexing complete</li>
+        <li class="check">Direct DB query: 43 <code>help_documents</code>, 238 <code>help_chunks</code></li>
+        <li class="check"><code>/api/help/stats</code> correctly returns 403 (requires admin auth)</li>
+        <li class="check">Reindex endpoints available: <code>POST /api/help/index-docs</code> (admin), <code>POST /api/help/index-docs-webhook</code> (API key)</li>
+        <li class="check"><code>HELP_REINDEX_API_KEY</code> set in Vercel env vars</li>
+      </ul>
+      <small style="color:var(--text-dim);font-size:11px;margin-top:8px;display:block;">Note: API reports 24 docs / 277 chunks vs DB shows 43 docs / 238 chunks. API may filter active documents or use caching.</small>
+    </div>
+
+    <!-- ==================== ITEM 10 ==================== -->
+    <div id="s10" class="sec-head animate" style="--i:18">
+      10 &mdash; CORS & Connectivity
+      <span class="status status--pass">Pass</span>
+    </div>
+
+    <div class="item-card item-card--pass animate" style="--i:19">
+      <h3>Backend Health</h3>
+      <ul class="detail-list">
+        <li class="check"><code>/health</code> returns: status "healthy", database "connected", version "1.0.0"</li>
+        <li class="check">Swagger UI loads at <code>/docs</code> &mdash; <strong>116 API endpoints</strong> registered</li>
+        <li class="check">OpenAPI spec accessible at <code>/openapi.json</code></li>
+      </ul>
+    </div>
+
+    <div class="item-card item-card--pass animate" style="--i:20">
+      <h3>CORS Configuration</h3>
+      <ul class="detail-list">
+        <li class="check">Allows <code>superassistant-mvp.vercel.app</code> &mdash; confirmed via response headers</li>
+        <li class="check">Blocks unauthorized origins &mdash; <code>evil-site.com</code> gets no <code>access-control-allow-origin</code> header</li>
+        <li class="check">Vercel preview regex: <code>superassistant-.*-charlie-fullers-projects\.vercel\.app</code></li>
+        <li class="check">Preflight OPTIONS returns 200</li>
+      </ul>
+    </div>
+
+    <div class="item-card item-card--pass animate" style="--i:21">
+      <h3>Security Headers & Auth</h3>
+      <ul class="detail-list">
+        <li class="check"><code>X-Frame-Options: DENY</code></li>
+        <li class="check"><code>X-Content-Type-Options: nosniff</code></li>
+        <li class="check"><code>Strict-Transport-Security: max-age=31536000; includeSubDomains</code></li>
+        <li class="check"><code>access-control-allow-credentials: true</code></li>
+        <li class="check">JWT: ES256 via JWKS, audience <code>authenticated</code>, HS256 fallback</li>
+      </ul>
+    </div>
+
+    <!-- ==================== ITEM 11 ==================== -->
+    <div id="s11" class="sec-head animate" style="--i:22">
+      11 &mdash; Background Services
+      <span class="status status--pass">Pass</span>
+    </div>
+
+    <div class="item-card item-card--pass animate" style="--i:23">
+      <h3>Schedulers (Railway Logs)</h3>
+      <ul class="detail-list">
+        <li class="check"><strong>Google Drive Sync Scheduler</strong>: RUNNING &mdash; check interval 5 minutes
+          <small>Started at 2026-03-08 16:14:55 UTC</small>
+        </li>
+        <li class="check"><strong>Database Backup Scheduler</strong>: RUNNING &mdash; daily at 02:00 UTC
+          <small>Started at 2026-03-08 16:14:55 UTC</small>
+        </li>
+        <li class="info"><strong>slowapi</strong>: No logs mentioning slowapi errors. Rate limiting configured in code but no runtime issues detected.</li>
+      </ul>
+    </div>
+
+    <!-- ==================== ITEM 12 ==================== -->
+    <div id="s12" class="sec-head animate" style="--i:24">
+      12 &mdash; Supabase Auth Config
+      <span class="status status--pass">Pass</span>
+    </div>
+
+    <div class="item-card item-card--pass animate" style="--i:25">
+      <h3>Authentication</h3>
+      <ul class="detail-list">
+        <li class="check">Project: <code>ycyrirjplwpjezlerzig.supabase.co</code></li>
+        <li class="check">Auth provider: <strong>email</strong> (11 users, all emails confirmed)</li>
+        <li class="check">JWT: <strong>ES256</strong> with JWKS auto-detection, HS256 fallback via <code>SUPABASE_JWT_SECRET</code></li>
+        <li class="check">Audience: <code>authenticated</code></li>
+        <li class="check"><code>NEXT_PUBLIC_SUPABASE_URL</code> + <code>NEXT_PUBLIC_SUPABASE_ANON_KEY</code> set for all Vercel targets</li>
+      </ul>
+    </div>
+
+    <div class="item-card item-card--pass animate" style="--i:26">
+      <h3>OAuth & Redirect URLs</h3>
+      <ul class="detail-list">
+        <li class="check">Google Drive: <code>/api/google-drive/oauth-callback</code></li>
+        <li class="check">Notion: <code>/api/notion/oauth-callback</code></li>
+        <li class="info">Site URL and email templates should be verified manually in Supabase dashboard</li>
+      </ul>
+    </div>
+
+    <!-- ==================== ITEM 13 ==================== -->
+    <div id="s13" class="sec-head animate" style="--i:27">
+      13 &mdash; Storage & Data Migration
+      <span class="status status--warn">Warning</span>
+    </div>
+
+    <div class="item-card item-card--pass animate" style="--i:28">
+      <h3>Storage Buckets</h3>
+      <ul class="detail-list">
+        <li class="check"><strong>avatars</strong>: 2 objects</li>
+        <li class="check"><strong>backups</strong>: 29 objects</li>
+        <li class="check"><strong>documents</strong>: 45 objects</li>
+        <li class="check"><strong>system-instructions</strong>: 2 objects</li>
+        <li class="info">Total: <strong>78 objects</strong> across 4 buckets</li>
+      </ul>
+    </div>
+
+    <div class="item-card item-card--warning animate" style="--i:29">
+      <h3>Embeddings & Data <span class="status status--warn">Action Needed</span></h3>
+      <ul class="detail-list">
+        <li class="warn">Only <strong>1 document chunk</strong> has a non-null embedding vector</li>
+        <li class="warn">45 documents uploaded but embeddings not populated &mdash; Voyage AI processing may need to be re-triggered</li>
+        <li class="check">52 public tables present &mdash; all expected tables confirmed</li>
+        <li class="check">System instructions: 2 files in storage bucket</li>
+      </ul>
+    </div>
+
+    <!-- ==================== ITEM 14 ==================== -->
+    <div id="s14" class="sec-head animate" style="--i:30">
+      14 &mdash; Vercel Build Settings
+      <span class="status status--pass">Pass</span>
+    </div>
+
+    <div class="item-card item-card--pass animate" style="--i:31">
+      <h3>Build Configuration</h3>
+      <ul class="detail-list">
+        <li class="check">Framework: <code>nextjs</code></li>
+        <li class="check">Root directory: <code>frontend</code></li>
+        <li class="check">Node version: <code>22.x</code></li>
+        <li class="check">Build command: <code>npm run build</code></li>
+        <li class="check">Install command: <code>npm install</code></li>
+        <li class="check">Output directory: <code>.next</code></li>
+      </ul>
+    </div>
+
+    <div class="item-card item-card--pass animate" style="--i:32">
+      <h3>Environment & Integrations</h3>
+      <ul class="detail-list">
+        <li class="check">Auto expose system envs: <strong>enabled</strong></li>
+        <li class="check">Region: <code>iad1</code> (US East)</li>
+        <li class="check"><strong>71 environment variables</strong> configured</li>
+        <li class="check">Sentry integration: active (source maps + React component annotation)</li>
+        <li class="check">Crons: enabled (no active definitions)</li>
+        <li class="check">Preview deploys: active (Vercel preview regex configured)</li>
+        <li class="info">No <code>vercel.json</code> &mdash; all config via Vercel dashboard (framework auto-detected)</li>
+      </ul>
+    </div>
+
+    <!-- ==================== ACTION ITEMS ==================== -->
+    <details class="collapsible animate" style="--i:33">
+      <summary>Action Items (2 warnings)</summary>
+      <div class="collapsible__body">
+        <p style="margin-bottom:12px"><strong>1. Reprocess document embeddings</strong></p>
+        <p>Only 1 out of many document chunks has an embedding vector. This means semantic search and RAG functionality for user documents is effectively non-functional. Re-trigger the embedding pipeline or manually invoke the document processing endpoint for existing documents.</p>
+        <br>
+        <p style="margin-bottom:12px"><strong>2. Verify Supabase dashboard settings</strong></p>
+        <p>Site URL, redirect URLs, and email templates should be confirmed directly in the Supabase Authentication dashboard. These cannot be verified via API alone.</p>
+      </div>
+    </details>
+
+  </div><!-- /main -->
+
+</div><!-- /wrap -->
+
+<script>
+(function() {
+  const toc = document.getElementById('toc');
+  const links = toc.querySelectorAll('a');
+  const sections = [];
+
+  links.forEach(link => {
+    const id = link.getAttribute('href').slice(1);
+    const el = document.getElementById(id);
+    if (el) sections.push({ id, el, link });
+  });
+
+  const observer = new IntersectionObserver(entries => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        links.forEach(l => l.classList.remove('active'));
+        const match = sections.find(s => s.el === entry.target);
+        if (match) {
+          match.link.classList.add('active');
+          if (window.innerWidth <= 1000) {
+            match.link.scrollIntoView({
+              behavior: 'smooth', block: 'nearest', inline: 'center'
+            });
+          }
+        }
+      }
+    });
+  }, { rootMargin: '-10% 0px -80% 0px' });
+
+  sections.forEach(s => observer.observe(s.el));
+
+  links.forEach(link => {
+    link.addEventListener('click', e => {
+      e.preventDefault();
+      const id = link.getAttribute('href').slice(1);
+      const el = document.getElementById(id);
+      if (el) {
+        el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        history.replaceState(null, '', '#' + id);
+      }
+    });
+  });
+})();
+</script>
+
+</body>
+</html>

@@ -1,0 +1,577 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AESOP Studio — Frontend Color Audit</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --font-body: 'DM Serif Display', Georgia, serif;
+    --font-mono: 'JetBrains Mono', 'SF Mono', Consolas, monospace;
+
+    --bg: #f7f4ff;
+    --surface: #ffffff;
+    --surface2: #f0ecff;
+    --surface-elevated: #faf8ff;
+    --border: rgba(0,0,0,0.07);
+    --border-bright: rgba(0,0,0,0.13);
+    --text: #1a1228;
+    --text-dim: #6b5f88;
+
+    --fix: #7c3aed;
+    --fix-dim: rgba(124,58,237,0.08);
+    --keep: #0d9488;
+    --keep-dim: rgba(13,148,136,0.08);
+    --warn: #d97706;
+    --warn-dim: rgba(217,119,6,0.08);
+
+    --count-color: #2563eb;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #100b1c;
+      --surface: #1a1230;
+      --surface2: #221840;
+      --surface-elevated: #1e1535;
+      --border: rgba(255,255,255,0.07);
+      --border-bright: rgba(255,255,255,0.14);
+      --text: #ede5ff;
+      --text-dim: #8b7daa;
+
+      --fix: #a78bfa;
+      --fix-dim: rgba(167,139,250,0.12);
+      --keep: #34d399;
+      --keep-dim: rgba(52,211,153,0.1);
+      --warn: #fbbf24;
+      --warn-dim: rgba(251,191,36,0.1);
+
+      --count-color: #93c5fd;
+    }
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: var(--bg);
+    background-image:
+      radial-gradient(ellipse at 20% 0%, var(--fix-dim) 0%, transparent 55%),
+      radial-gradient(ellipse at 80% 100%, var(--keep-dim) 0%, transparent 45%);
+    color: var(--text);
+    font-family: var(--font-mono);
+    font-size: 13px;
+    padding: 40px 32px;
+    min-height: 100vh;
+  }
+
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(8px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .animate {
+    animation: fadeUp 0.3s ease-out both;
+    animation-delay: calc(var(--i,0) * 0.05s);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after {
+      animation-duration: 0.01ms !important;
+      animation-delay: 0ms !important;
+    }
+  }
+
+  .container { max-width: 1100px; margin: 0 auto; }
+
+  h1 {
+    font-family: var(--font-body);
+    font-size: 34px;
+    font-weight: 400;
+    letter-spacing: -0.3px;
+    margin-bottom: 4px;
+  }
+
+  .subtitle {
+    color: var(--text-dim);
+    font-size: 11px;
+    letter-spacing: 0.5px;
+    margin-bottom: 28px;
+  }
+
+  /* KPI row */
+  .kpi-row {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+    gap: 12px;
+    margin-bottom: 24px;
+  }
+
+  .kpi {
+    background: var(--surface-elevated);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 16px 18px;
+  }
+
+  .kpi__val {
+    font-family: var(--font-body);
+    font-size: 36px;
+    font-weight: 400;
+    line-height: 1;
+    margin-bottom: 6px;
+  }
+
+  .kpi__val--fix  { color: var(--fix); }
+  .kpi__val--keep { color: var(--keep); }
+  .kpi__val--warn { color: var(--warn); }
+
+  .kpi__label {
+    font-size: 10px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 1.2px;
+    color: var(--text-dim);
+  }
+
+  /* Section heading */
+  .section-head {
+    font-family: var(--font-body);
+    font-size: 18px;
+    font-weight: 400;
+    margin-bottom: 10px;
+    margin-top: 28px;
+    padding-bottom: 6px;
+    border-bottom: 2px solid var(--border-bright);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .section-tag {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    font-weight: 600;
+    padding: 3px 9px;
+    border-radius: 5px;
+    letter-spacing: 0.5px;
+  }
+
+  .section-tag--fix  { background: var(--fix-dim);  color: var(--fix); }
+  .section-tag--keep { background: var(--keep-dim); color: var(--keep); }
+
+  /* Table */
+  .table-wrap {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    overflow: hidden;
+    margin-bottom: 16px;
+  }
+
+  .table-scroll { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 12.5px;
+    line-height: 1.5;
+  }
+
+  thead { position: sticky; top: 0; z-index: 2; }
+
+  th {
+    background: var(--surface2);
+    font-size: 10px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 1.2px;
+    color: var(--text-dim);
+    text-align: left;
+    padding: 11px 14px;
+    border-bottom: 2px solid var(--border-bright);
+    white-space: nowrap;
+  }
+
+  td {
+    padding: 11px 14px;
+    border-bottom: 1px solid var(--border);
+    vertical-align: top;
+  }
+
+  tbody tr:last-child td { border-bottom: none; }
+
+  tbody tr {
+    transition: background 0.12s ease;
+    animation: fadeUp 0.3s ease-out both;
+    animation-delay: calc(var(--i,0) * 0.03s);
+  }
+
+  tbody tr:nth-child(even) { background: rgba(0,0,0,0.02); }
+
+  @media (prefers-color-scheme: dark) {
+    tbody tr:nth-child(even) { background: rgba(255,255,255,0.025); }
+  }
+
+  tbody tr:hover { background: var(--border); }
+
+  code {
+    font-family: var(--font-mono);
+    font-size: 10.5px;
+    background: var(--fix-dim);
+    color: var(--fix);
+    padding: 1px 5px;
+    border-radius: 3px;
+    white-space: nowrap;
+  }
+
+  .keep-code {
+    background: var(--keep-dim);
+    color: var(--keep);
+  }
+
+  small {
+    display: block;
+    color: var(--text-dim);
+    font-size: 10.5px;
+    margin-top: 3px;
+    line-height: 1.4;
+  }
+
+  .count {
+    font-weight: 600;
+    color: var(--count-color);
+    font-variant-numeric: tabular-nums;
+  }
+
+  /* Status badges */
+  .badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    font-size: 10px;
+    font-weight: 700;
+    padding: 3px 9px;
+    border-radius: 5px;
+    letter-spacing: 0.5px;
+    white-space: nowrap;
+    text-transform: uppercase;
+  }
+
+  .badge::before {
+    content: '';
+    width: 5px;
+    height: 5px;
+    border-radius: 50%;
+    background: currentColor;
+    flex-shrink: 0;
+  }
+
+  .badge--fix  { background: var(--fix-dim);  color: var(--fix); }
+  .badge--keep { background: var(--keep-dim); color: var(--keep); }
+  .badge--warn { background: var(--warn-dim); color: var(--warn); }
+
+  /* Color swatch inline */
+  .swatch {
+    display: inline-block;
+    width: 10px;
+    height: 10px;
+    border-radius: 2px;
+    border: 1px solid rgba(0,0,0,0.15);
+    vertical-align: middle;
+    margin-right: 3px;
+    flex-shrink: 0;
+  }
+
+  /* Wide columns */
+  .col-color  { min-width: 210px; }
+  .col-loc    { min-width: 250px; }
+  .col-rep    { min-width: 280px; }
+
+  /* Footer note */
+  .footer-note {
+    margin-top: 24px;
+    padding: 14px 18px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    color: var(--text-dim);
+    font-size: 11px;
+    line-height: 1.6;
+  }
+
+  .footer-note strong { color: var(--text); }
+</style>
+</head>
+<body>
+<div class="container">
+
+  <h1 class="animate" style="--i:0">Frontend Color Audit</h1>
+  <p class="subtitle animate" style="--i:1">AESOP STUDIO · HARDCODED COLOR INVENTORY · ALL FILES IN /frontend/app AND /frontend/components</p>
+
+  <div class="kpi-row animate" style="--i:2">
+    <div class="kpi">
+      <div class="kpi__val kpi__val--fix">118</div>
+      <div class="kpi__label">Need Fixing</div>
+    </div>
+    <div class="kpi">
+      <div class="kpi__val kpi__val--keep">~170</div>
+      <div class="kpi__label">Intentional (keep)</div>
+    </div>
+    <div class="kpi">
+      <div class="kpi__val kpi__val--warn">7</div>
+      <div class="kpi__label">Pattern Types to Fix</div>
+    </div>
+    <div class="kpi">
+      <div class="kpi__val" style="color:var(--fix)">3</div>
+      <div class="kpi__label">Files Affected</div>
+    </div>
+  </div>
+
+  <!-- SECTION 1: REMAINING TAILWIND CLASSES -->
+  <div class="section-head animate" style="--i:3">
+    Remaining Tailwind Arbitrary Hex Classes
+    <span class="section-tag section-tag--fix">Fix</span>
+  </div>
+
+  <div class="table-wrap animate" style="--i:4">
+    <div class="table-scroll">
+      <table>
+        <thead>
+          <tr>
+            <th class="col-color">Color / Class</th>
+            <th>Count</th>
+            <th class="col-loc">Location / Context</th>
+            <th>Action</th>
+            <th class="col-rep">Replacement</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr style="--i:5">
+            <td class="col-color">
+              <span class="swatch" style="background:#ede5ff"></span>
+              <code>dark:hover:text-[#ede5ff]</code>
+            </td>
+            <td><span class="count">59</span></td>
+            <td class="col-loc">
+              hover text on links, buttons, summaries throughout app
+              <small>cave/[id], investigate/[id], evaluate, guides, about, nerve/layout</small>
+            </td>
+            <td><span class="badge badge--fix">Fix</span></td>
+            <td class="col-rep"><code>dark:hover:text-[var(--color-text-primary)]</code></td>
+          </tr>
+          <tr style="--i:6">
+            <td class="col-color">
+              <span class="swatch" style="background:#2e254a"></span>
+              <code>dark:hover:bg-[#2e254a]</code>
+            </td>
+            <td><span class="count">36</span></td>
+            <td class="col-loc">
+              hover background on buttons, tags, toolbars
+              <small>cave/[id], investigate/[id], evaluate/[id]/report, evaluate/page</small>
+            </td>
+            <td><span class="badge badge--fix">Fix</span></td>
+            <td class="col-rep"><code>dark:hover:bg-[var(--color-bg-elevated)]</code></td>
+          </tr>
+          <tr style="--i:7">
+            <td class="col-color">
+              <span class="swatch" style="background:#a89ec0"></span>
+              <code>text-[#a89ec0]</code>
+              <small>bare — no dark: prefix</small>
+            </td>
+            <td><span class="count">14</span></td>
+            <td class="col-loc">
+              placeholder text in eval step inputs
+              <small>StepCapabilities, StepGovernance, StepMaterials, StepEndpoint</small>
+            </td>
+            <td><span class="badge badge--fix">Fix</span></td>
+            <td class="col-rep"><code>placeholder:text-[var(--color-text-secondary)]/50</code></td>
+          </tr>
+          <tr style="--i:8">
+            <td class="col-color">
+              <span class="swatch" style="background:#faf5ff"></span>
+              <code>bg-[#faf5ff]</code>
+              <small>bare — no dark: prefix</small>
+            </td>
+            <td><span class="count">13</span></td>
+            <td class="col-loc">
+              page background in layout wrappers
+              <small>app/(app)/layout.tsx, app/nerve/layout.tsx, layout-work.tsx (×2)</small>
+            </td>
+            <td><span class="badge badge--fix">Fix</span></td>
+            <td class="col-rep"><code>bg-[var(--color-bg-page)]</code></td>
+          </tr>
+          <tr style="--i:9">
+            <td class="col-color">
+              <span class="swatch" style="background:#a89ec0"></span>
+              <code>dark:placeholder:text-[#a89ec0]/50</code>
+            </td>
+            <td><span class="count">~8</span></td>
+            <td class="col-loc">
+              input placeholder text in evaluation wizard
+              <small>StepMaterials, StepGovernance, StepCapabilities, StepEndpoint (×2 each)</small>
+            </td>
+            <td><span class="badge badge--fix">Fix</span></td>
+            <td class="col-rep"><code>dark:placeholder:text-[var(--color-text-secondary)]/50</code></td>
+          </tr>
+          <tr style="--i:10">
+            <td class="col-color">
+              <span class="swatch" style="background:#352d52"></span>
+              <code>dark:hover:bg-[#352d52]</code>
+            </td>
+            <td><span class="count">1</span></td>
+            <td class="col-loc">
+              hover state on disabled CapabilityCard toggle
+              <small>evaluate/_components/CapabilityCard.tsx:70</small>
+            </td>
+            <td><span class="badge badge--fix">Fix</span></td>
+            <td class="col-rep"><code>dark:hover:bg-[var(--color-bg-elevated)]</code></td>
+          </tr>
+          <tr style="--i:11">
+            <td class="col-color">
+              <span class="swatch" style="background:#a89ec0"></span>
+              <code>dark:hover:text-[#a89ec0]</code>
+            </td>
+            <td><span class="count">1</span></td>
+            <td class="col-loc">
+              small text hover in evaluate/page.tsx
+              <small>evaluate/page.tsx:376</small>
+            </td>
+            <td><span class="badge badge--fix">Fix</span></td>
+            <td class="col-rep"><code>dark:hover:text-[var(--color-text-secondary)]</code></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- SECTION 2: INLINE STYLE PROPS — INTENTIONAL -->
+  <div class="section-head animate" style="--i:12">
+    Inline Style Props — Intentional (keep)
+    <span class="section-tag section-tag--keep">Keep</span>
+  </div>
+
+  <div class="table-wrap animate" style="--i:13">
+    <div class="table-scroll">
+      <table>
+        <thead>
+          <tr>
+            <th class="col-color">Colors</th>
+            <th>Count</th>
+            <th class="col-loc">File / Context</th>
+            <th>Action</th>
+            <th>Reason</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr style="--i:14">
+            <td class="col-color">
+              <span class="swatch" style="background:#a855f7"></span>
+              <span class="swatch" style="background:#3b82f6"></span>
+              <span class="swatch" style="background:#06b6d4"></span>
+              <span class="swatch" style="background:#f97316"></span>
+              <span class="swatch" style="background:#22c55e"></span>
+              <span class="swatch" style="background:#f43f5e"></span>
+              <small>Stage accent colors</small>
+            </td>
+            <td><span class="count">6</span></td>
+            <td class="col-loc">
+              Home page pipeline stage cards
+              <small>app/(app)/page.tsx — stage.accent, stage.bg in JSX inline styles</small>
+            </td>
+            <td><span class="badge badge--keep">Keep</span></td>
+            <td>Fixed stage identity colors. Each stage has a distinct permanent color unrelated to the UI theme.</td>
+          </tr>
+          <tr style="--i:15">
+            <td class="col-color">
+              Various per-series colors
+              <small>Chart.js dataset configs</small>
+            </td>
+            <td><span class="count">~120</span></td>
+            <td class="col-loc">
+              Analytics and admin chart datasets
+              <small>dashboard/analytics/page.tsx, admin/page.tsx</small>
+            </td>
+            <td><span class="badge badge--keep">Keep</span></td>
+            <td>Chart.js requires resolved color values, not CSS variable references. Semantic data series colors (correct, errors, etc.) are not theme-dependent.</td>
+          </tr>
+          <tr style="--i:16">
+            <td class="col-color">
+              SVG fill/stroke colors
+              <small>Radar chart series</small>
+            </td>
+            <td><span class="count">~20</span></td>
+            <td class="col-loc">
+              NERVE radar visualization
+              <small>components/nerve/RadarChart.tsx</small>
+            </td>
+            <td><span class="badge badge--keep">Keep</span></td>
+            <td>SVG chart colors specific to NERVE dimension visualization. Not UI chrome.</td>
+          </tr>
+          <tr style="--i:17">
+            <td class="col-color">
+              <span class="swatch" style="background:#1f2937"></span>
+              <span class="swatch" style="background:#f9fafb"></span>
+              <code>#1f2937</code> / <code>#f9fafb</code>
+            </td>
+            <td><span class="count">2</span></td>
+            <td class="col-loc">
+              Toast notification background and text color
+              <small>components/Providers.tsx — Toaster toastOptions.style</small>
+            </td>
+            <td><span class="badge badge--warn">Consider</span></td>
+            <td>
+              Could use <code style="background:var(--keep-dim);color:var(--keep)">style={{ background: 'var(--color-bg-elevated)', color: 'var(--color-text-primary)' }}</code> — but Toaster style is a JS object, CSS vars in inline style props work fine.
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- SECTION 3: REPORT HTML INLINE CSS -->
+  <div class="section-head animate" style="--i:18">
+    Report HTML / dangerouslySetInnerHTML Inline CSS
+    <span class="section-tag section-tag--keep">Keep</span>
+  </div>
+
+  <div class="table-wrap animate" style="--i:19">
+    <div class="table-scroll">
+      <table>
+        <thead>
+          <tr>
+            <th>Pattern</th>
+            <th>Count</th>
+            <th class="col-loc">Files</th>
+            <th>Action</th>
+            <th>Reason</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr style="--i:20">
+            <td>CSS strings in <code class="keep-code">dangerouslySetInnerHTML</code></td>
+            <td><span class="count">~50</span></td>
+            <td class="col-loc">
+              cave, investigate, evaluate — agent-generated report rendering
+              <small>cave/[id]/page.tsx, investigate/[id]/page.tsx, evaluate/[id]/page.tsx</small>
+            </td>
+            <td><span class="badge badge--keep">Keep</span></td>
+            <td>Embedded CSS for rendered HTML content that lives inside the React DOM as raw HTML. Already overridden by <code class="keep-code">.report-content</code> rules in globals.css for dark mode.</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="footer-note animate" style="--i:21">
+    <strong>Summary:</strong> 118 instances across 7 class patterns can be fixed with sed replacements (all mechanical, no logic changes).
+    The <strong>59 hover-text</strong> and <strong>36 hover-bg</strong> are the highest priority — they're the most visible mismatches when a non-purple theme is active.
+    The <strong>13 bare bg-[#faf5ff]</strong> in layouts are the second priority — they break the page background when a theme with a different bg is applied.
+    After fixing, the only remaining hardcoded colors will be intentional: stage identity colors, chart data series, and rendered report HTML.
+  </div>
+
+</div>
+</body>
+</html>
