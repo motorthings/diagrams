@@ -1,0 +1,285 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>KB Audit Process — AESOP Transformation OS</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600;9..40,700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --font-display: 'Instrument Serif', Georgia, serif;
+    --font-body: 'DM Sans', system-ui, sans-serif;
+    --font-mono: 'JetBrains Mono', 'SF Mono', monospace;
+
+    --monday-purple: #6366FF;
+    --monday-purple-dim: rgba(99,102,255,0.08);
+    --monday-pink: #FD5B71;
+    --monday-pink-dim: rgba(253,91,113,0.08);
+    --monday-green: #00C875;
+    --monday-green-dim: rgba(0,200,117,0.08);
+    --monday-yellow: #FFCC00;
+    --monday-yellow-dim: rgba(255,204,0,0.1);
+    --monday-blue: #00B5E2;
+    --monday-blue-dim: rgba(0,181,226,0.08);
+    --monday-orange: #FF8C3C;
+    --monday-orange-dim: rgba(255,140,60,0.08);
+
+    --bg: #F7F8FC;
+    --surface: #ffffff;
+    --surface-alt: #F2F3F8;
+    --border: rgba(0,0,0,0.06);
+    --border-strong: rgba(0,0,0,0.12);
+    --text: #181B34;
+    --text-dim: #5B6080;
+    --text-muted: #989BB5;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #0D0E1A;
+      --surface: #181B34;
+      --surface-alt: #1F2244;
+      --border: rgba(255,255,255,0.06);
+      --border-strong: rgba(255,255,255,0.11);
+      --text: #EDEEF5;
+      --text-dim: #A0A3C0;
+      --text-muted: #6B6E8A;
+      --monday-purple-dim: rgba(99,102,255,0.12);
+      --monday-pink-dim: rgba(253,91,113,0.1);
+      --monday-green-dim: rgba(0,200,117,0.1);
+      --monday-yellow-dim: rgba(255,204,0,0.1);
+      --monday-blue-dim: rgba(0,181,226,0.1);
+      --monday-orange-dim: rgba(255,140,60,0.1);
+    }
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: var(--bg);
+    background-image:
+      radial-gradient(ellipse 60% 40% at 50% 10%, var(--monday-purple-dim) 0%, transparent 60%),
+      radial-gradient(ellipse 50% 30% at 80% 90%, var(--monday-green-dim) 0%, transparent 50%);
+    color: var(--text);
+    font-family: var(--font-body);
+    padding: 64px 40px;
+    min-height: 100vh;
+    display: flex; justify-content: center;
+    overflow-wrap: break-word;
+  }
+
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(16px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  .anim { animation: fadeUp 0.5s ease-out both; }
+
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after { animation-duration: 0.01ms !important; animation-delay: 0ms !important; }
+  }
+
+  .page { max-width: 900px; width: 100%; }
+
+  .header {
+    text-align: center; margin-bottom: 48px;
+  }
+  .header .label {
+    font-family: var(--font-display);
+    font-size: 32px; font-style: italic; font-weight: 400;
+    color: var(--monday-purple); margin-bottom: 8px;
+  }
+  .header .byline {
+    font-size: 16px; color: var(--text-dim);
+  }
+
+  .process {
+    display: flex; flex-direction: column;
+    align-items: center; gap: 0;
+  }
+
+  .connector {
+    width: 2px; height: 24px;
+    background: var(--border-strong);
+  }
+
+  .stage {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 20px 36px;
+    display: flex; align-items: center; gap: 28px;
+    width: 100%;
+    transition: transform 0.2s, box-shadow 0.2s;
+  }
+  .stage:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(0,0,0,0.06);
+  }
+  .stage__num {
+    font-family: var(--font-mono);
+    font-size: 28px; font-weight: 500;
+    flex-shrink: 0; width: 56px; text-align: center;
+  }
+  .stage__body { flex: 1; min-width: 0; }
+  .stage__name {
+    font-family: var(--font-display);
+    font-size: 34px; font-style: italic; font-weight: 400;
+    line-height: 1.1; margin-bottom: 3px;
+  }
+  .stage__desc {
+    font-size: 16px; color: var(--text-dim);
+    line-height: 1.5;
+  }
+
+  .stage--upload { border-left: 4px solid var(--monday-blue); }
+  .stage--upload .stage__num { color: var(--monday-blue); }
+  .stage--analyze { border-left: 4px solid var(--monday-purple); }
+  .stage--analyze .stage__num { color: var(--monday-purple); }
+  .stage--synthesize { border-left: 4px solid var(--monday-orange); }
+  .stage--synthesize .stage__num { color: var(--monday-orange); }
+  .stage--results { border-left: 4px solid var(--monday-green); }
+  .stage--results .stage__num { color: var(--monday-green); }
+
+  .dimensions {
+    display: grid; grid-template-columns: repeat(4, 1fr);
+    gap: 12px; margin-top: 14px;
+  }
+  .dim {
+    background: var(--surface-alt);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 12px 14px; text-align: center;
+  }
+  .dim__name {
+    font-size: 13px; font-weight: 600; margin-bottom: 4px;
+  }
+  .dim__weight {
+    font-family: var(--font-mono);
+    font-size: 11px; color: var(--text-muted);
+  }
+
+  .results-grid {
+    display: grid; grid-template-columns: repeat(4, 1fr);
+    gap: 12px; margin-top: 14px;
+  }
+  .result-card {
+    background: var(--surface-alt);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 14px 16px; text-align: center;
+  }
+  .result-card__label {
+    font-family: var(--font-mono);
+    font-size: 11px; font-weight: 500;
+    text-transform: uppercase; letter-spacing: 0.5px;
+    color: var(--text-muted); margin-bottom: 6px;
+  }
+  .result-card__value {
+    font-family: var(--font-display);
+    font-size: 26px; font-style: italic; font-weight: 400;
+    line-height: 1.1;
+  }
+
+  @media (max-width: 640px) {
+    body { padding: 32px 16px; }
+    .stage { padding: 16px 20px; gap: 16px; }
+    .stage__num { font-size: 24px; width: 40px; }
+    .stage__name { font-size: 28px; }
+    .dimensions, .results-grid { grid-template-columns: 1fr 1fr; }
+  }
+</style>
+</head>
+<body>
+
+<div class="page">
+
+  <div class="header anim" style="--i:0">
+    <div class="label">KB Audit Process</div>
+    <div class="byline">AESOP Transformation OS</div>
+  </div>
+
+  <div class="process">
+
+    <div class="stage stage--upload anim" style="--i:1">
+      <div class="stage__num">01</div>
+      <div class="stage__body">
+        <div class="stage__name">Upload knowledge base documents</div>
+        <div class="stage__desc">Upload your KB source files (.md, .txt, .html, .pdf, .docx) along with the agent's PRD as context. Stored documents can be selected for inclusion per audit.</div>
+      </div>
+    </div>
+
+    <div class="connector anim" style="--i:1"></div>
+
+    <div class="stage stage--analyze anim" style="--i:2">
+      <div class="stage__num">02</div>
+      <div class="stage__body">
+        <div class="stage__name">Per-document quality analysis</div>
+        <div class="stage__desc">Each document is scored against four dimensions using a configurable LLM. Images and inline examples are flagged when they contain content not present in the extracted text &mdash; a common source of silent knowledge gaps.</div>
+        <div class="dimensions">
+          <div class="dim">
+            <div class="dim__name">Readability</div>
+            <div class="dim__weight">30%</div>
+          </div>
+          <div class="dim">
+            <div class="dim__name">Clarity</div>
+            <div class="dim__weight">30%</div>
+          </div>
+          <div class="dim">
+            <div class="dim__name">Consistency</div>
+            <div class="dim__weight">25%</div>
+          </div>
+          <div class="dim">
+            <div class="dim__name">Completeness</div>
+            <div class="dim__weight">15%</div>
+          </div>
+        </div>
+        <div class="stage__desc" style="margin-top: 10px; font-size: 13px; color: var(--monday-pink);">Image &amp; example detection: identifies content locked in images or examples that is absent from extractable text, preventing blind spots in agent retrieval.</div>
+      </div>
+    </div>
+
+    <div class="connector anim" style="--i:2"></div>
+
+    <div class="stage stage--synthesize anim" style="--i:3">
+      <div class="stage__num">03</div>
+      <div class="stage__body">
+        <div class="stage__name">Cross-document synthesis</div>
+        <div class="stage__desc">Compares all documents as a cohort. Flags contradictory claims (conflicting dates, numbers, or facts), terminology inconsistencies (same concept, different names), and generates prioritized recommendations.</div>
+      </div>
+    </div>
+
+    <div class="connector anim" style="--i:3"></div>
+
+    <div class="stage stage--results anim" style="--i:4">
+      <div class="stage__num">04</div>
+      <div class="stage__body">
+        <div class="stage__name">Results &amp; recommendations</div>
+        <div class="stage__desc">Overall quality score, risk level assessment, per-document breakdown, conflict detection, and actionable recommendations. Exportable as a downloadable markdown report.</div>
+        <div class="results-grid">
+          <div class="result-card">
+            <div class="result-card__label">Overall Score</div>
+            <div class="result-card__value" style="color: var(--monday-purple);">0 &ndash; 100</div>
+          </div>
+          <div class="result-card">
+            <div class="result-card__label">Risk Level</div>
+            <div class="result-card__value" style="color: var(--monday-pink);">Good to At Risk</div>
+          </div>
+          <div class="result-card">
+            <div class="result-card__label">Hallucination Risk</div>
+            <div class="result-card__value" style="color: var(--monday-orange);">Flagged if present</div>
+          </div>
+          <div class="result-card">
+            <div class="result-card__label">Report</div>
+            <div class="result-card__value" style="color: var(--monday-green);">Markdown export</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+</div>
+
+</body>
+</html>
