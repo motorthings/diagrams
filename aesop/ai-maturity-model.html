@@ -1,0 +1,856 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AI Maturity Model — AESOP Transformation OS</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,wght@0,400;0,500;0,600;0,700;1,400&family=Source+Code+Pro:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  /* ============ THEME — waifinder.org / Gulf ============ */
+  :root {
+    --font-display: 'Fraunces', Georgia, serif;
+    --font-body: 'Fraunces', Georgia, serif;
+    --font-mono: 'Source Code Pro', 'SF Mono', Consolas, monospace;
+
+    --bg: #eef4f9;
+    --bg-gradient: radial-gradient(ellipse at 80% 0%, rgba(232, 98, 26, 0.04) 0%, transparent 50%),
+                   radial-gradient(ellipse at 20% 60%, rgba(74, 144, 196, 0.03) 0%, transparent 40%);
+    --surface: #ffffff;
+    --surface2: #f5f8fc;
+    --surface-elevated: #ddeaf4;
+    --border: #c8daea;
+    --border-bright: #a0bedb;
+    --heading: #0a1628;
+    --text: #0a1628;
+    --text-dim: #3d5a7a;
+
+    --primary: #e8621a;
+    --primary-dim: rgba(232, 98, 26, 0.08);
+    --primary-bright: #d05510;
+    --secondary: #4a90c4;
+    --secondary-dim: rgba(74, 144, 196, 0.08);
+    --accent-blue: var(--secondary);
+
+    --emerald: #16a34a;
+    --emerald-dim: rgba(22, 163, 74, 0.08);
+    --amber: #d97706;
+    --amber-dim: rgba(217, 119, 6, 0.08);
+    --rose: #dc2626;
+    --rose-dim: rgba(220, 38, 38, 0.08);
+    --violet: #7c3aed;
+    --violet-dim: rgba(124, 58, 237, 0.08);
+
+    /* Maturity level colors — cool to warm progression */
+    --l1-color: #6b7d95;
+    --l1-dim: rgba(107, 125, 149, 0.08);
+    --l2-color: #4a90c4;
+    --l2-dim: rgba(74, 144, 196, 0.1);
+    --l3-color: #2563a8;
+    --l3-dim: rgba(37, 99, 168, 0.1);
+    --l4-color: #7c3aed;
+    --l4-dim: rgba(124, 58, 237, 0.1);
+    --l5-color: #e8621a;
+    --l5-dim: rgba(232, 98, 26, 0.12);
+
+    --number-ghost: rgba(232, 98, 26, 0.06);
+  }
+
+  html.dark {
+    --bg: #0a1628;
+    --bg-gradient: radial-gradient(ellipse at 80% 0%, rgba(243, 112, 33, 0.04) 0%, transparent 50%),
+                   radial-gradient(ellipse at 20% 60%, rgba(108, 172, 228, 0.03) 0%, transparent 40%);
+    --surface: #132240;
+    --surface2: #1a2d52;
+    --surface-elevated: #132240;
+    --border: #1a2d52;
+    --border-bright: #2d4570;
+    --heading: #e8edf5;
+    --text: #e8edf5;
+    --text-dim: #9bb0d4;
+
+    --primary: #f37021;
+    --primary-dim: rgba(243, 112, 33, 0.12);
+    --primary-bright: #f58a4d;
+    --secondary: #6cace4;
+    --secondary-dim: rgba(108, 172, 228, 0.12);
+    --accent-blue: var(--secondary);
+
+    --emerald: #22c55e;
+    --emerald-dim: rgba(34, 197, 94, 0.12);
+    --amber: #fbbf24;
+    --amber-dim: rgba(251, 191, 36, 0.12);
+    --rose: #ef4444;
+    --rose-dim: rgba(239, 68, 68, 0.12);
+    --violet: #a78bfa;
+    --violet-dim: rgba(167, 139, 250, 0.12);
+
+    --l1-color: #9bb0d4;
+    --l1-dim: rgba(155, 176, 212, 0.1);
+    --l2-color: #6cace4;
+    --l2-dim: rgba(108, 172, 228, 0.12);
+    --l3-color: #4a90d9;
+    --l3-dim: rgba(74, 144, 217, 0.12);
+    --l4-color: #a78bfa;
+    --l4-dim: rgba(167, 139, 250, 0.12);
+    --l5-color: #f37021;
+    --l5-dim: rgba(243, 112, 33, 0.15);
+
+    --number-ghost: rgba(243, 112, 33, 0.08);
+  }
+
+  /* ============ RESET + BASE ============ */
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: var(--bg) var(--bg-gradient);
+    color: var(--text);
+    font-family: var(--font-body);
+    min-height: 100vh;
+    line-height: 1.6;
+    overflow-wrap: break-word;
+    transition: background 0.3s, color 0.3s;
+    padding: 0 32px 32px;
+  }
+
+  /* ============ NAV ============ */
+  .nav {
+    position: sticky; top: 0; z-index: 100;
+    backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px);
+    background: color-mix(in srgb, var(--surface) 85%, transparent);
+    border-bottom: 1px solid var(--border);
+    margin: 0 -32px 32px; padding: 0 32px;
+    transition: background 0.3s, border-color 0.3s;
+  }
+  .nav-inner {
+    max-width: 1400px; margin: 0 auto; padding: 12px 0;
+    display: flex; align-items: center; justify-content: space-between;
+  }
+  .nav-brand {
+    font-family: var(--font-mono); font-size: 12px; font-weight: 600;
+    letter-spacing: 0.5px; color: var(--primary); text-decoration: none;
+  }
+  .theme-toggle {
+    width: 36px; height: 36px; border-radius: 10px;
+    border: 1px solid var(--border); background: var(--surface);
+    cursor: pointer; display: flex; align-items: center; justify-content: center;
+    font-size: 16px; color: var(--text-dim); transition: all 0.2s;
+  }
+  .theme-toggle:hover { border-color: var(--primary); color: var(--primary); }
+
+  /* ============ ANIMATION ============ */
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(12px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  @keyframes fadeScale {
+    from { opacity: 0; transform: scale(0.92); }
+    to { opacity: 1; transform: scale(1); }
+  }
+  .animate { animation: fadeUp 0.4s ease-out both; animation-delay: calc(var(--i, 0) * 0.05s); }
+  .anim-scale { animation: fadeScale 0.35s ease-out both; animation-delay: calc(var(--i, 0) * 0.06s); }
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after { animation-duration: 0.01ms !important; animation-delay: 0ms !important; transition-duration: 0.01ms !important; }
+  }
+
+  /* ============ LAYOUT ============ */
+  .wrap { max-width: 1400px; margin: 0 auto; display: grid; grid-template-columns: 180px 1fr; gap: 0 48px; }
+  .main { min-width: 0; }
+
+  /* ============ TOC ============ */
+  .toc { position: sticky; top: 64px; align-self: start; padding: 14px 0; grid-row: 1 / -1; max-height: calc(100dvh - 80px); overflow-y: auto; }
+  .toc::-webkit-scrollbar { width: 3px; }
+  .toc::-webkit-scrollbar-thumb { background: var(--surface-elevated); border-radius: 2px; }
+  .toc-title { font-family: var(--font-mono); font-size: 9px; font-weight: 700; text-transform: uppercase; letter-spacing: 2px; color: var(--text-dim); padding: 0 0 10px; margin-bottom: 8px; border-bottom: 1px solid var(--border); }
+  .toc a { display: block; font-size: 11px; color: var(--text-dim); text-decoration: none; padding: 5px 8px; border-radius: 5px; border-left: 2px solid transparent; transition: all 0.15s; line-height: 1.4; margin-bottom: 1px; }
+  .toc a:hover { color: var(--text); background: var(--surface2); }
+  .toc a.active { color: var(--primary); border-left-color: var(--accent-blue); background: var(--secondary-dim); }
+
+  /* ============ TYPOGRAPHY ============ */
+  h1 { font-family: var(--font-display); font-size: 42px; font-weight: 700; letter-spacing: -0.5px; line-height: 1.15; margin-bottom: 8px; text-wrap: balance; color: var(--heading); }
+  h2 { font-family: var(--font-display); font-size: 24px; font-weight: 600; letter-spacing: -0.3px; margin-bottom: 16px; color: var(--heading); }
+  h3 { font-family: var(--font-body); font-size: 16px; font-weight: 600; margin-bottom: 8px; color: var(--heading); }
+  .subtitle { color: var(--text-dim); font-family: var(--font-mono); font-size: 12px; margin-bottom: 32px; }
+  .description { font-size: 14px; line-height: 1.7; color: var(--text-dim); margin-bottom: 24px; max-width: 720px; }
+
+  /* ============ SECTION HEADERS ============ */
+  .sec-head { display: flex; align-items: center; gap: 12px; font-family: var(--font-mono); font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 1.5px; color: var(--primary); margin-bottom: 20px; scroll-margin-top: 72px; }
+  .sec-head::before { content: ''; width: 24px; height: 2px; background: var(--accent-blue); border-radius: 1px; }
+
+  /* ============ LEVEL PIPELINE ============ */
+  .level-pipeline {
+    display: flex;
+    gap: 0;
+    align-items: stretch;
+    overflow-x: auto;
+    padding-bottom: 8px;
+    margin-bottom: 32px;
+    scrollbar-width: thin;
+    scrollbar-color: var(--border) transparent;
+  }
+  .level-pipeline::-webkit-scrollbar { height: 6px; }
+  .level-pipeline::-webkit-scrollbar-track { background: transparent; }
+  .level-pipeline::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+
+  .level-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 20px 18px;
+    min-width: 200px;
+    max-width: 240px;
+    flex-shrink: 0;
+    position: relative;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .level-card__number {
+    font-family: var(--font-display);
+    font-size: 56px;
+    font-weight: 700;
+    position: absolute;
+    top: 8px;
+    right: 16px;
+    line-height: 1;
+    opacity: 0.12;
+    transition: opacity 0.2s;
+  }
+
+  .level-card__name {
+    font-family: var(--font-display);
+    font-size: 18px;
+    font-weight: 600;
+    margin-bottom: 4px;
+    letter-spacing: -0.2px;
+  }
+
+  .level-card__tagline {
+    font-size: 12px;
+    color: var(--text-dim);
+    line-height: 1.5;
+    margin-bottom: 14px;
+    min-height: 36px;
+  }
+
+  .level-card__section-label {
+    font-family: var(--font-mono);
+    font-size: 9px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+    margin-bottom: 6px;
+  }
+
+  .level-card ul {
+    list-style: none;
+    font-size: 11px;
+    line-height: 1.6;
+    color: var(--text-dim);
+    margin-bottom: 10px;
+  }
+
+  .level-card ul li {
+    padding-left: 12px;
+    position: relative;
+    margin-bottom: 3px;
+  }
+
+  .level-card ul li::before {
+    content: '›';
+    position: absolute;
+    left: 0;
+    color: var(--text-dim);
+    font-weight: 600;
+  }
+
+  /* Level accent colors */
+  .level-card--1 { border-top: 3px solid var(--l1-color); }
+  .level-card--1 .level-card__number { color: var(--l1-color); }
+  .level-card--1 .level-card__section-label { color: var(--l1-color); }
+  .level-card--2 { border-top: 3px solid var(--l2-color); }
+  .level-card--2 .level-card__number { color: var(--l2-color); }
+  .level-card--2 .level-card__section-label { color: var(--l2-color); }
+  .level-card--3 { border-top: 3px solid var(--l3-color); }
+  .level-card--3 .level-card__number { color: var(--l3-color); }
+  .level-card--3 .level-card__section-label { color: var(--l3-color); }
+  .level-card--4 { border-top: 3px solid var(--l4-color); }
+  .level-card--4 .level-card__number { color: var(--l4-color); }
+  .level-card--4 .level-card__section-label { color: var(--l4-color); }
+  .level-card--5 { border-top: 3px solid var(--l5-color); }
+  .level-card--5 .level-card__number { color: var(--l5-color); }
+  .level-card--5 .level-card__section-label { color: var(--l5-color); }
+
+  .level-arrow {
+    display: flex;
+    align-items: center;
+    padding: 0 6px;
+    color: var(--border-bright);
+    font-family: var(--font-mono);
+    font-size: 18px;
+    flex-shrink: 0;
+    align-self: center;
+    margin-bottom: 40px;
+  }
+
+  /* ============ PROGRESS BAR ============ */
+  .progress-track {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    height: 8px;
+    margin-bottom: 32px;
+    position: relative;
+    overflow: hidden;
+    display: flex;
+  }
+  .progress-segment {
+    height: 100%;
+    position: relative;
+    transition: width 0.6s ease;
+  }
+  .progress-segment--1 { background: var(--l1-color); }
+  .progress-segment--2 { background: var(--l2-color); }
+  .progress-segment--3 { background: var(--l3-color); }
+  .progress-segment--4 { background: var(--l4-color); }
+  .progress-segment--5 { background: var(--l5-color); }
+  .progress-label {
+    font-family: var(--font-mono);
+    font-size: 8px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: var(--text-dim);
+    margin-top: -8px;
+    text-align: center;
+  }
+
+  /* ============ DIMENSION BARS ============ */
+  .dimension-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 10px;
+    margin-bottom: 24px;
+  }
+  .dimension-row {
+    display: grid;
+    grid-template-columns: 180px 1fr 48px;
+    gap: 14px;
+    align-items: center;
+    font-size: 12px;
+  }
+  .dimension-row__label {
+    font-weight: 600;
+    font-size: 12px;
+    text-align: right;
+    color: var(--heading);
+  }
+  .dimension-row__hint {
+    font-size: 10px;
+    color: var(--text-dim);
+    font-style: italic;
+  }
+  .dimension-bar-wrap {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 5px;
+    height: 22px;
+    overflow: hidden;
+    position: relative;
+  }
+  .dimension-bar-fill {
+    height: 100%;
+    border-radius: 4px;
+    transition: width 0.8s ease;
+    display: flex;
+    align-items: center;
+    padding-left: 8px;
+    font-family: var(--font-mono);
+    font-size: 10px;
+    font-weight: 600;
+    color: #fff;
+    min-width: 0;
+    overflow: hidden;
+    white-space: nowrap;
+  }
+  .dimension-bar-fill--1 { background: linear-gradient(90deg, var(--l1-color), color-mix(in srgb, var(--l1-color) 80%, var(--l2-color))); }
+  .dimension-bar-fill--2 { background: linear-gradient(90deg, var(--l2-color), color-mix(in srgb, var(--l2-color) 80%, var(--l3-color))); }
+  .dimension-bar-fill--3 { background: linear-gradient(90deg, var(--l3-color), color-mix(in srgb, var(--l3-color) 80%, var(--l4-color))); }
+  .dimension-bar-fill--4 { background: linear-gradient(90deg, var(--l4-color), color-mix(in srgb, var(--l4-color) 80%, var(--l5-color))); }
+  .dimension-bar-fill--5 { background: var(--l5-color); }
+  .dimension-row__score {
+    font-family: var(--font-mono);
+    font-size: 14px;
+    font-weight: 600;
+    text-align: center;
+  }
+
+  /* ============ KPI ROW ============ */
+  .kpi-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 14px; margin-bottom: 24px; }
+  .kpi-card { background: var(--surface-elevated); border: 1px solid var(--border); border-radius: 10px; padding: 20px; }
+  .kpi-card__value { font-family: var(--font-display); font-size: 36px; font-weight: 700; letter-spacing: -1px; line-height: 1.1; }
+  .kpi-card__label { font-family: var(--font-mono); font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: 1.5px; color: var(--text-dim); margin-top: 6px; }
+
+  /* ============ CALLOUT ============ */
+  .callout { background: var(--surface); border: 1px solid var(--border); border-left: 3px solid var(--primary); border-radius: 0 10px 10px 0; padding: 16px 20px; font-size: 13px; line-height: 1.6; color: var(--text-dim); margin: 24px 0; }
+  .callout strong { color: var(--heading); }
+
+  /* ============ INSIGHT GRID ============ */
+  .insight-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 14px; margin-bottom: 32px; }
+  .insight-card { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 20px; border-left: 3px solid var(--primary); }
+  .insight-card__icon { font-family: var(--font-display); font-size: 24px; margin-bottom: 8px; opacity: 0.5; }
+  .insight-card h3 { font-size: 14px; margin-bottom: 6px; }
+  .insight-card p { font-size: 12px; color: var(--text-dim); line-height: 1.6; }
+
+  /* ============ TABLE ============ */
+  .table-wrap { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; overflow: hidden; margin-bottom: 24px; }
+  .table-scroll { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+  .data-table { width: 100%; border-collapse: collapse; font-size: 13px; line-height: 1.5; }
+  .data-table thead { position: sticky; top: 0; z-index: 2; }
+  .data-table th { background: var(--surface2); font-family: var(--font-mono); font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: 1px; color: var(--text-dim); text-align: left; padding: 10px 14px; border-bottom: 2px solid var(--border-bright); white-space: nowrap; }
+  .data-table td { padding: 10px 14px; border-bottom: 1px solid var(--border); vertical-align: top; color: var(--text); }
+  .data-table tbody tr:nth-child(even) { background: var(--secondary-dim); }
+  .data-table tbody tr { transition: background 0.15s ease; }
+  .data-table tbody tr:hover { background: var(--border); }
+  .data-table tbody tr:last-child td { border-bottom: none; }
+  .data-table code { font-family: var(--font-mono); font-size: 10px; background: var(--secondary-dim); color: var(--secondary); padding: 1px 4px; border-radius: 3px; }
+
+  /* ============ RESPONSIVE ============ */
+  @media (max-width: 1000px) {
+    .wrap { grid-template-columns: 1fr; padding-top: 0; }
+    body { padding: 0; }
+    .nav { margin: 0; padding: 0 16px; }
+    .toc { position: sticky; top: 52px; z-index: 200; max-height: none; display: flex; gap: 4px; align-items: center; overflow-x: auto; -webkit-overflow-scrolling: touch; background: var(--bg); border-bottom: 1px solid var(--border); padding: 10px 0; margin: 0 -16px; padding-left: 16px; padding-right: 16px; grid-row: auto; }
+    .toc::-webkit-scrollbar { display: none; }
+    .toc-title { display: none; }
+    .toc a { white-space: nowrap; flex-shrink: 0; border-left: none; border-bottom: 2px solid transparent; border-radius: 4px 4px 0 0; padding: 6px 10px; font-size: 10px; }
+    .toc a.active { border-left: none; border-bottom-color: var(--accent-blue); background: var(--surface); }
+    .main { padding: 24px 16px; }
+    .sec-head { scroll-margin-top: 112px; }
+    h1 { font-size: 28px; }
+    .level-pipeline { flex-wrap: nowrap; }
+    .level-card { min-width: 170px; max-width: 200px; padding: 14px 12px; }
+    .level-arrow { display: none; }
+    .dimension-row { grid-template-columns: 120px 1fr 40px; font-size: 11px; }
+    .dimension-row__label { font-size: 11px; }
+  }
+  @media (max-width: 640px) {
+    .main { padding: 16px 12px; }
+    h1 { font-size: 24px; }
+    .insight-grid { grid-template-columns: 1fr; }
+    .dimension-row { grid-template-columns: 100px 1fr 40px; gap: 8px; }
+    .dimension-row__label { font-size: 10px; }
+  }
+  .backlink{position:fixed;top:12px;left:16px;z-index:100;font-family:var(--font-mono);font-size:11px;color:var(--text-dim);text-decoration:none;padding:6px 10px;border:1px solid var(--border);border-radius:6px;background:var(--surface);transition:color .15s,border-color .15s}
+  .backlink:hover{color:var(--text);border-color:var(--border-bright)}
+</style>
+</head>
+<body>
+<a href="https://motorthings.github.io/diagrams/" class="backlink" title="Back to Index">&larr; Index</a>
+
+  <!-- ─── NAV ─────────────────────────── -->
+  <div class="nav">
+    <div class="nav-inner">
+      <span class="nav-brand">AESOP Transformation OS</span>
+      <button class="theme-toggle" id="themeToggle" aria-label="Toggle dark mode">
+        <span class="icon-light">&#9788;</span>
+        <span class="icon-dark" style="display:none">&#9790;</span>
+      </button>
+    </div>
+  </div>
+
+<div class="wrap">
+
+  <!-- ─── TOC ─────────────────────────── -->
+  <nav class="toc" id="toc">
+    <div class="toc-title">Sections</div>
+    <a href="#s1">1. The Five Levels</a>
+    <a href="#s2">2. Bottleneck Principle</a>
+    <a href="#s3">3. Dimension Scoring</a>
+    <a href="#s4">4. Sample Profile</a>
+    <a href="#s5">5. Phase-to-Level Map</a>
+    <a href="#s6">6. Key Principles</a>
+  </nav>
+
+  <div class="main">
+
+    <h1 class="animate" style="--i:0">AI Maturity Model</h1>
+    <p class="subtitle animate" style="--i:1">AESOP Transformation OS &mdash; a five-level framework for SMB AI adoption</p>
+
+    <p class="description animate" style="--i:2">
+      Each level of maturity enables certain things and requires certain things.
+      You cannot skip stages. This model helps SMB founders understand where they stand,
+      what&rsquo;s possible at their current level, and what must be true before advancing.
+    </p>
+
+    <!-- ════════════ S1: THE FIVE LEVELS ════════════ -->
+    <div id="s1" class="sec-head animate" style="--i:3">1 &mdash; The Five Levels</div>
+
+    <div class="level-pipeline">
+      <div class="level-card level-card--1 animate" style="--i:4">
+        <div class="level-card__number">1</div>
+        <div class="level-card__name">AI Aware</div>
+        <div class="level-card__tagline">"We know AI is coming, but we haven&rsquo;t started."</div>
+        <div class="level-card__section-label">Enables</div>
+        <ul>
+          <li>Learning what AI can and can&rsquo;t do</li>
+          <li>Spotting high-impact starting points</li>
+          <li>Beginning to capture team knowledge</li>
+        </ul>
+        <div class="level-card__section-label">Requires</div>
+        <ul>
+          <li>Curiosity and willingness to learn</li>
+          <li>Honest assessment of current state</li>
+        </ul>
+      </div>
+
+      <div class="level-arrow">→</div>
+
+      <div class="level-card level-card--2 animate" style="--i:5">
+        <div class="level-card__number">2</div>
+        <div class="level-card__name">AI Ready</div>
+        <div class="level-card__tagline">"Our knowledge is organized. We&rsquo;ve run one experiment."</div>
+        <div class="level-card__section-label">Enables</div>
+        <ul>
+          <li>Running a focused AI experiment</li>
+          <li>AI-assisted drafts of existing work</li>
+          <li>Team gains hands-on AI experience</li>
+        </ul>
+        <div class="level-card__section-label">Requires</div>
+        <ul>
+          <li>Documented operational knowledge</li>
+          <li>End-to-end workflow maps</li>
+          <li>Baseline team AI literacy</li>
+          <li>Clear decision authority</li>
+        </ul>
+      </div>
+
+      <div class="level-arrow">→</div>
+
+      <div class="level-card level-card--3 animate" style="--i:6">
+        <div class="level-card__number">3</div>
+        <div class="level-card__name">AI Capable</div>
+        <div class="level-card__tagline">"AI supports specific workflows. We measure results."</div>
+        <div class="level-card__section-label">Enables</div>
+        <ul>
+          <li>AI in production on core workflows</li>
+          <li>Measurable before/after results</li>
+          <li>Prioritized improvement roadmap</li>
+        </ul>
+        <div class="level-card__section-label">Requires</div>
+        <ul>
+          <li>One proven, measured success</li>
+          <li>AI governance document</li>
+          <li>Consistent evaluation framework</li>
+          <li>Team can assess AI opportunities</li>
+        </ul>
+      </div>
+
+      <div class="level-arrow">→</div>
+
+      <div class="level-card level-card--4 animate" style="--i:7">
+        <div class="level-card__number">4</div>
+        <div class="level-card__name">AI Mature</div>
+        <div class="level-card__tagline">"AI is integrated into operations. We&rsquo;re scaling what works."</div>
+        <div class="level-card__section-label">Enables</div>
+        <ul>
+          <li>Multiple AI-assisted workflows</li>
+          <li>Scaling without founder bottleneck</li>
+          <li>Technology decisions from experience</li>
+        </ul>
+        <div class="level-card__section-label">Requires</div>
+        <ul>
+          <li>Proven ROI on initial projects</li>
+          <li>Governance is routine, not heroic</li>
+          <li>New team members onboard onto systems</li>
+          <li>Systems survive key-person absence</li>
+        </ul>
+      </div>
+
+      <div class="level-arrow">→</div>
+
+      <div class="level-card level-card--5 animate" style="--i:8">
+        <div class="level-card__number">5</div>
+        <div class="level-card__name">AI Native</div>
+        <div class="level-card__tagline">"AI is how we think and operate. Continuous improvement."</div>
+        <div class="level-card__section-label">Enables</div>
+        <ul>
+          <li>AI as a strategic capability</li>
+          <li>Rapid adaptation to new opportunities</li>
+          <li>Compounding improvement over time</li>
+        </ul>
+        <div class="level-card__section-label">Requires</div>
+        <ul>
+          <li>AI embedded in decision-making</li>
+          <li>Continuous measurement culture</li>
+          <li>Organization learns as fast as tools improve</li>
+        </ul>
+      </div>
+    </div>
+
+    <!-- Progression bar -->
+    <div class="progress-track animate" style="--i:9">
+      <div class="progress-segment progress-segment--1" style="width:20%"></div>
+      <div class="progress-segment progress-segment--2" style="width:20%"></div>
+      <div class="progress-segment progress-segment--3" style="width:20%"></div>
+      <div class="progress-segment progress-segment--4" style="width:20%"></div>
+      <div class="progress-segment progress-segment--5" style="width:20%"></div>
+    </div>
+    <div style="display:flex;justify-content:space-between;margin-top:-28px;margin-bottom:32px;font-family:var(--font-mono);font-size:9px;font-weight:600;text-transform:uppercase;letter-spacing:1px;color:var(--text-dim);padding:0 4px">
+      <span>Aware</span><span>Ready</span><span>Capable</span><span>Mature</span><span>Native</span>
+    </div>
+
+    <!-- ════════════ S2: BOTTLENECK PRINCIPLE ════════════ -->
+    <div id="s2" class="sec-head animate" style="--i:10">2 &mdash; The Bottleneck Principle</div>
+
+    <div class="callout animate" style="--i:11;border-left-color:var(--primary);background:var(--primary-dim);padding:24px 28px;">
+      <h3 style="margin-bottom:12px;color:var(--primary)">You&rsquo;re only as mature as your weakest dimension.</h3>
+      <p style="font-size:14px;line-height:1.7;">
+        A business with <strong>Level 4 processes</strong> but <strong>Level 1 governance</strong> is Level 1.
+        A business with <strong>clean, organized data</strong> but a <strong>team that fears AI</strong> is stuck until the fear is addressed.
+        The bottleneck dimension sets your true operating level — everything else is potential waiting on permission.
+      </p>
+      <p style="font-size:14px;line-height:1.7;margin-top:8px;">
+        This is why the maturity model scores across dimensions rather than assigning a single number.
+        The <em>lowest</em> score is the honest one. Fix the weakest link first.
+      </p>
+    </div>
+
+    <!-- ════════════ S3: DIMENSION SCORING ════════════ -->
+    <div id="s3" class="sec-head animate" style="--i:12">3 &mdash; The Five Dimensions</div>
+
+    <p class="description animate" style="--i:13">
+      Maturity isn&rsquo;t a single number — it&rsquo;s a profile across five dimensions.
+      Each dimension is scored 1&ndash;5, corresponding to the five maturity levels.
+      The overall maturity is the <strong>lowest</strong> score across all dimensions.
+    </p>
+
+    <div class="dimension-grid animate" style="--i:14">
+      <!-- Information Readiness -->
+      <div class="dimension-row">
+        <div>
+          <div class="dimension-row__label">Information Readiness</div>
+          <div class="dimension-row__hint">Is your business knowledge documented and findable?</div>
+        </div>
+        <div class="dimension-bar-wrap">
+          <div class="dimension-bar-fill dimension-bar-fill--2" style="width:40%">Level 2</div>
+        </div>
+        <div class="dimension-row__score" style="color:var(--l2-color)">2</div>
+      </div>
+      <!-- Process Clarity -->
+      <div class="dimension-row">
+        <div>
+          <div class="dimension-row__label">Process Clarity</div>
+          <div class="dimension-row__hint">Are your workflows mapped? Does everyone know who does what?</div>
+        </div>
+        <div class="dimension-bar-wrap">
+          <div class="dimension-bar-fill dimension-bar-fill--3" style="width:60%">Level 3</div>
+        </div>
+        <div class="dimension-row__score" style="color:var(--l3-color)">3</div>
+      </div>
+      <!-- Decision Governance -->
+      <div class="dimension-row">
+        <div>
+          <div class="dimension-row__label">Decision Governance</div>
+          <div class="dimension-row__hint">Are approval rules clear? Can decisions happen without the founder?</div>
+        </div>
+        <div class="dimension-bar-wrap">
+          <div class="dimension-bar-fill dimension-bar-fill--1" style="width:20%">Level 1</div>
+        </div>
+        <div class="dimension-row__score" style="color:var(--l1-color)">1</div>
+      </div>
+      <!-- Team Capability -->
+      <div class="dimension-row">
+        <div>
+          <div class="dimension-row__label">Team Capability</div>
+          <div class="dimension-row__hint">Does your team understand AI? Are they curious or afraid?</div>
+        </div>
+        <div class="dimension-bar-wrap">
+          <div class="dimension-bar-fill dimension-bar-fill--2" style="width:40%">Level 2</div>
+        </div>
+        <div class="dimension-row__score" style="color:var(--l2-color)">2</div>
+      </div>
+      <!-- Tool Foundation -->
+      <div class="dimension-row">
+        <div>
+          <div class="dimension-row__label">Tool Foundation</div>
+          <div class="dimension-row__hint">Is your data clean? Do your systems work together?</div>
+        </div>
+        <div class="dimension-bar-wrap">
+          <div class="dimension-bar-fill dimension-bar-fill--1" style="width:20%">Level 1</div>
+        </div>
+        <div class="dimension-row__score" style="color:var(--l1-color)">1</div>
+      </div>
+    </div>
+
+    <!-- ════════════ S4: SAMPLE PROFILE ════════════ -->
+    <div id="s4" class="sec-head animate" style="--i:15">4 &mdash; Sample Profile: GreenScape Landscaping</div>
+
+    <p class="description animate" style="--i:16">
+      A 15-person commercial landscaping company. 12 years in business, $2.5M revenue.
+      The founder runs everything from memory — pricing, scheduling, customer history.
+      The crews are experienced but processes aren&rsquo;t documented.
+      <strong>Overall maturity: Level 1</strong> (bottlenecked by Decision Governance and Tool Foundation).
+      The Process Clarity dimension is stronger because the crews know their jobs — but that knowledge
+      isn&rsquo;t documented and can&rsquo;t transfer.
+    </p>
+
+    <div class="kpi-row animate" style="--i:17">
+      <div class="kpi-card anim-scale" style="--i:0">
+        <div class="kpi-card__value" style="color:var(--primary)">1</div>
+        <div class="kpi-card__label">Overall Maturity</div>
+      </div>
+      <div class="kpi-card anim-scale" style="--i:1">
+        <div class="kpi-card__value" style="color:var(--accent-blue)">AI Aware</div>
+        <div class="kpi-card__label">Current Level</div>
+      </div>
+      <div class="kpi-card anim-scale" style="--i:2">
+        <div class="kpi-card__value" style="color:var(--emerald)">3</div>
+        <div class="kpi-card__label">Strongest Dimension</div>
+      </div>
+      <div class="kpi-card anim-scale" style="--i:3">
+        <div class="kpi-card__value" style="color:var(--rose)">1</div>
+        <div class="kpi-card__label">Bottleneck Dimension</div>
+      </div>
+    </div>
+
+    <div class="callout animate" style="--i:18">
+      <strong>What this profile tells us:</strong> GreenScape has experienced crews who understand the work (Process Clarity: 3),
+      but the business runs on one person&rsquo;s memory. The founder cannot step away. The bottleneck dimensions —
+      Decision Governance (1) and Tool Foundation (1) — are what keep the company at Level 1. The prescription:
+      Phase 1 is <em>Getting Organized</em> — document what the crews know, map where information lives,
+      establish who decides what. Only then can the company advance to Level 2 and run its first AI experiment.
+    </div>
+
+    <!-- ════════════ S5: PHASE-TO-LEVEL MAP ════════════ -->
+    <div id="s5" class="sec-head animate" style="--i:19">5 &mdash; How Cohort Phases Advance Maturity</div>
+
+    <p class="description animate" style="--i:20">
+      The 12-week TSE cohort is designed to move a business through the maturity model.
+      Each phase targets specific dimensions and creates the conditions for the next level.
+    </p>
+
+    <div class="table-wrap animate" style="--i:21">
+      <div class="table-scroll">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>Cohort Phase</th>
+              <th>Weeks</th>
+              <th>Moves From</th>
+              <th>Toward</th>
+              <th>Primary Dimensions Addressed</th>
+              <th>What Changes</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><strong>Phase 1: Getting Organized</strong></td>
+              <td>1&ndash;4</td>
+              <td>Level 1<br><small>AI Aware</small></td>
+              <td>Level 2<br><small>AI Ready</small></td>
+              <td>Information Readiness<br>Process Clarity<br>Decision Governance</td>
+              <td>Knowledge moves from heads to documents. Workflows are mapped end-to-end. Who decides what is explicit. Team understands what AI is.</td>
+            </tr>
+            <tr>
+              <td><strong>Phase 2: First Win</strong></td>
+              <td>5&ndash;8</td>
+              <td>Level 2<br><small>AI Ready</small></td>
+              <td>Level 3<br><small>AI Capable</small></td>
+              <td>Team Capability<br>Tool Foundation</td>
+              <td>One AI-assisted process is working with measured results. Team has hands-on experience. First before/after numbers exist.</td>
+            </tr>
+            <tr>
+              <td><strong>Phase 3: Building the Foundation</strong></td>
+              <td>9&ndash;12</td>
+              <td>Level 3<br><small>AI Capable</small></td>
+              <td>Level 4<br><small>AI Mature</small></td>
+              <td>Decision Governance<br>Tool Foundation<br>Team Capability</td>
+              <td>AI governance is documented and routine. Prioritized improvement roadmap exists. Team can evaluate new AI opportunities without the founder.</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- ════════════ S6: KEY PRINCIPLES ════════════ -->
+    <div id="s6" class="sec-head animate" style="--i:22">6 &mdash; Key Principles</div>
+
+    <div class="insight-grid">
+      <div class="insight-card animate" style="--i:23">
+        <div class="insight-card__icon">1</div>
+        <h3>You can&rsquo;t skip levels.</h3>
+        <p>Each level creates the conditions for the next. A business that tries to deploy AI agents before organizing its information will fail — not because the AI is bad, but because the foundation doesn&rsquo;t exist. Level 1 done right makes Level 3 possible.</p>
+      </div>
+      <div class="insight-card animate" style="--i:24">
+        <div class="insight-card__icon">2</div>
+        <h3>Speed comes from foundation, not shortcuts.</h3>
+        <p>The businesses that move fastest through the levels are the ones that invest heavily in Level 1 — documentation, process clarity, governance. What feels slow at the start compounds into speed later. Rushing past the foundation guarantees rework.</p>
+      </div>
+      <div class="insight-card animate" style="--i:25">
+        <div class="insight-card__icon">3</div>
+        <h3>The bottleneck dimension sets your true level.</h3>
+        <p>A high score in one dimension doesn&rsquo;t compensate for a low score in another. Fix the weakest link first. This is why the model scores across five dimensions — it tells you <em>exactly what to work on</em>, not just &ldquo;you&rsquo;re a 2.&rdquo;</p>
+      </div>
+      <div class="insight-card animate" style="--i:26">
+        <div class="insight-card__icon">4</div>
+        <h3>Level 5 is a direction, not a destination.</h3>
+        <p>Most SMBs will operate at Level 3&ndash;4. Level 5 — AI Native — is an aspiration that describes continuous improvement, not a checkbox. The goal isn&rsquo;t to reach Level 5. The goal is to keep moving, keep measuring, and keep the bottleneck dimension from holding everything else back.</p>
+      </div>
+    </div>
+
+    <!-- Footer -->
+    <div style="text-align:center;padding:32px 0 16px;font-family:var(--font-mono);font-size:10px;color:var(--text-dim);border-top:1px solid var(--border);margin-top:32px">
+      AESOP Transformation OS &mdash; AI Maturity Model v1.0 &mdash; June 2026
+    </div>
+
+  </div><!-- .main -->
+</div><!-- .wrap -->
+
+<script>
+  // Theme toggle
+  const toggle = document.getElementById('themeToggle');
+  const iconLight = toggle.querySelector('.icon-light');
+  const iconDark = toggle.querySelector('.icon-dark');
+
+  function setTheme(dark) {
+    document.documentElement.classList.toggle('dark', dark);
+    iconLight.style.display = dark ? 'none' : '';
+    iconDark.style.display = dark ? '' : 'none';
+    try { localStorage.setItem('diagram-theme', dark ? 'dark' : 'light'); } catch(e) {}
+  }
+
+  toggle.addEventListener('click', () => {
+    setTheme(!document.documentElement.classList.contains('dark'));
+  });
+
+  // Load saved preference
+  try {
+    const saved = localStorage.getItem('diagram-theme');
+    if (saved === 'dark') setTheme(true);
+  } catch(e) {}
+
+  // TOC scroll spy
+  const tocLinks = document.querySelectorAll('.toc a');
+  const sections = [...document.querySelectorAll('[id^="s"]')];
+  const tocEl = document.getElementById('toc');
+
+  function updateTOC() {
+    let current = '';
+    sections.forEach(s => {
+      if (window.scrollY >= s.offsetTop - 120) current = s.id;
+    });
+    tocLinks.forEach(a => {
+      a.classList.toggle('active', a.getAttribute('href') === '#' + current);
+      if (a.classList.contains('active') && tocEl) {
+        tocEl.scrollTo({ left: a.offsetLeft - 16, behavior: 'smooth' });
+      }
+    });
+  }
+
+  window.addEventListener('scroll', updateTOC, { passive: true });
+</script>
+
+</body>
+</html>
