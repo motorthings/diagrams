@@ -1,0 +1,359 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AESOP Transformation OS + Monday.com</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600;9..40,700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  /* ============ MONDAY.COM BRAND COLORS ============ */
+  :root {
+    --font-display: 'Instrument Serif', Georgia, serif;
+    --font-body: 'DM Sans', system-ui, sans-serif;
+    --font-mono: 'JetBrains Mono', 'SF Mono', monospace;
+
+    /* Monday.com palette */
+    --monday-purple: #6366FF;
+    --monday-purple-dim: rgba(99, 102, 255, 0.08);
+    --monday-purple-glow: rgba(99, 102, 255, 0.14);
+    --monday-pink: #FD5B71;
+    --monday-pink-dim: rgba(253, 91, 113, 0.08);
+    --monday-green: #00C875;
+    --monday-green-dim: rgba(0, 200, 117, 0.08);
+    --monday-yellow: #FFCC00;
+    --monday-yellow-dim: rgba(255, 204, 0, 0.08);
+    --monday-blue: #00B5E2;
+    --monday-blue-dim: rgba(0, 181, 226, 0.08);
+
+    --bg: #F7F8FC;
+    --surface: #ffffff;
+    --surface-alt: #F2F3F8;
+    --border: rgba(0, 0, 0, 0.06);
+    --border-strong: rgba(0, 0, 0, 0.11);
+    --text: #181B34;
+    --text-dim: #5B6080;
+    --text-muted: #989BB5;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #0D0E1A;
+      --surface: #181B34;
+      --surface-alt: #1F2244;
+      --border: rgba(255, 255, 255, 0.06);
+      --border-strong: rgba(255, 255, 255, 0.11);
+      --text: #EDEEF5;
+      --text-dim: #A0A3C0;
+      --text-muted: #6B6E8A;
+
+      --monday-purple-dim: rgba(99, 102, 255, 0.12);
+      --monday-purple-glow: rgba(99, 102, 255, 0.18);
+      --monday-pink-dim: rgba(253, 91, 113, 0.10);
+      --monday-green-dim: rgba(0, 200, 117, 0.10);
+      --monday-yellow-dim: rgba(255, 204, 0, 0.10);
+      --monday-blue-dim: rgba(0, 181, 226, 0.10);
+    }
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: var(--bg);
+    background-image:
+      radial-gradient(ellipse 70% 40% at 50% 20%, var(--monday-purple-dim) 0%, transparent 70%);
+    color: var(--text);
+    font-family: var(--font-body);
+    padding: 56px 40px 80px;
+    min-height: 100vh;
+    overflow-wrap: break-word;
+  }
+
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(16px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  .anim { animation: fadeUp 0.5s ease-out both; }
+
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after { animation-duration: 0.01ms !important; animation-delay: 0ms !important; }
+  }
+
+  .page {
+    max-width: 1100px;
+    margin: 0 auto;
+    display: flex; flex-direction: column; align-items: center;
+  }
+
+  /* ---------- HEADER ---------- */
+  .header {
+    text-align: center; margin-bottom: 56px;
+  }
+  .header .overline {
+    font-family: var(--font-mono);
+    font-size: 12px; font-weight: 500;
+    text-transform: uppercase; letter-spacing: 2px;
+    color: var(--monday-purple); margin-bottom: 12px;
+  }
+  .header h1 {
+    font-family: var(--font-display);
+    font-size: 36px; font-weight: 400; font-style: italic;
+    line-height: 1.2; letter-spacing: -0.5px;
+    white-space: nowrap; margin: 0 auto;
+  }
+  .header h1 em { font-style: normal; color: var(--monday-purple); }
+  .brand { font-style: normal; color: var(--monday-purple); }
+
+  /* ============ PROCESS MAP ============ */
+  .process {
+    display: flex; flex-direction: column;
+    align-items: center; gap: 0;
+    width: 100%;
+  }
+
+  /* Connector */
+  .connector {
+    width: 2px; height: 36px;
+    background: var(--border-strong);
+  }
+
+  /* Step card */
+  .step {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 28px 40px;
+    text-align: center;
+    width: 100%;
+  }
+  .step__num {
+    font-family: var(--font-mono);
+    font-size: 12px; font-weight: 500;
+    text-transform: uppercase; letter-spacing: 1.5px;
+    color: var(--text-muted); margin-bottom: 10px;
+  }
+  .step__title {
+    font-family: var(--font-display);
+    font-size: 32px; font-style: italic; font-weight: 400;
+    margin-bottom: 6px;
+  }
+  .step__desc {
+    font-size: 17px; color: var(--text-dim);
+    max-width: 560px; margin: 0 auto;
+  }
+
+  /* Step 1 — Input */
+  .step--input {
+    border-color: color-mix(in srgb, var(--border) 50%, var(--monday-blue) 50%);
+    border-style: dashed;
+    background: color-mix(in srgb, var(--surface) 97%, var(--monday-blue) 3%);
+  }
+  .step--input .step__num { color: var(--monday-blue); }
+  .step--input .step__pills {
+    display: flex; justify-content: center; gap: 12px;
+    margin-top: 16px; flex-wrap: wrap;
+  }
+  .step--input .pill {
+    background: var(--surface-alt);
+    border: 1.5px solid var(--border-strong);
+    border-radius: 100px;
+    padding: 9px 24px;
+    font-size: 16px; font-weight: 500;
+  }
+
+  /* Step 2 — Build (FOCAL) */
+  .step--build {
+    border-color: color-mix(in srgb, var(--border) 40%, var(--monday-purple) 60%);
+    border-width: 2px;
+    background: color-mix(in srgb, var(--surface) 94%, var(--monday-purple) 6%);
+    box-shadow: 0 4px 32px var(--monday-purple-glow);
+    padding: 36px 40px 28px;
+  }
+  .step--build .step__substeps {
+    display: flex; justify-content: center; align-items: center;
+    gap: 8px; margin-top: 18px;
+  }
+  .step--build .substep {
+    font-family: var(--font-body);
+    font-size: 15px; font-weight: 500;
+    color: var(--text);
+    padding: 9px 22px;
+    background: var(--surface-alt);
+    border: 1px solid var(--border-strong);
+    border-radius: 100px;
+  }
+  .step--build .substep-arrow {
+    color: var(--text-muted); font-size: 16px;
+  }
+
+  /* Step 3 — Output */
+  .step--output {
+    border-color: color-mix(in srgb, var(--border) 50%, var(--monday-pink) 50%);
+    background: color-mix(in srgb, var(--surface) 97%, var(--monday-pink) 3%);
+  }
+  .step--output .step__num { color: var(--monday-pink); }
+  .step--output .output-grid {
+    display: grid; grid-template-columns: repeat(4, 1fr);
+    gap: 16px; margin-top: 20px;
+  }
+  .step--output .out-item {
+    text-align: center; padding: 8px;
+  }
+  .step--output .out-icon {
+    margin-bottom: 14px;
+  }
+  .step--output .out-icon svg {
+    width: 36px; height: 36px;
+    fill: none; stroke-width: 2;
+    stroke-linecap: round; stroke-linejoin: round;
+  }
+  .step--output .out-item:nth-child(1) .out-icon svg { stroke: var(--monday-green); }
+  .step--output .out-item:nth-child(2) .out-icon svg { stroke: var(--monday-yellow); }
+  .step--output .out-item:nth-child(3) .out-icon svg { stroke: var(--monday-purple); }
+  .step--output .out-item:nth-child(4) .out-icon svg { stroke: var(--monday-blue); }
+
+  .step--output .out-name {
+    font-size: 15px; font-weight: 600; margin-bottom: 6px;
+  }
+  .step--output .out-desc {
+    font-size: 13px; color: var(--text-dim);
+    line-height: 1.5;
+  }
+
+  /* Step 4 — Deploy */
+  .step--deploy {
+    background: color-mix(in srgb, var(--surface) 90%, var(--monday-green) 10%);
+    border-color: color-mix(in srgb, var(--monday-green) 30%, transparent);
+    padding: 22px 40px;
+  }
+  .step--deploy .step__title {
+    color: var(--monday-green); font-size: 26px;
+  }
+
+  .deploy-list {
+    list-style: none; padding: 0; margin: 0 auto;
+    text-align: left; display: inline-block;
+    font-size: 16px; line-height: 2;
+  }
+  .deploy-list li::before {
+    content: '\2022'; color: var(--monday-green);
+    font-weight: bold; margin-right: 10px;
+  }
+
+  /* ============ CLOSE ============ */
+  .close {
+    text-align: center; margin-top: 44px;
+  }
+  .close p {
+    font-family: var(--font-display);
+    font-size: 34px; font-style: italic; line-height: 1.25; white-space: nowrap;
+    margin: 0 auto;
+  }
+  .close p strong { font-style: normal; color: var(--monday-purple); }
+
+  /* ============ RESPONSIVE ============ */
+  @media (max-width: 768px) {
+    body { padding: 28px 16px 48px; }
+    .header h1 { font-size: 28px; }
+    .step { padding: 20px 16px; }
+    .step__title { font-size: 24px; }
+    .step--output .output-grid { grid-template-columns: 1fr 1fr; }
+    .close p { font-size: 24px; white-space: normal; }
+  }
+</style>
+</head>
+<body>
+
+<div class="page">
+
+  <!-- HEADER -->
+  <div class="header anim" style="--i:0">
+    <h1>Turn requirements into a deployed <em>Monday.com</em> solution</h1>
+  </div>
+
+  <!-- VERTICAL PROCESS MAP -->
+  <div class="process">
+
+    <!-- Step 1: Input -->
+    <div class="step step--input anim" style="--i:1">
+      <div class="step__title">Describe what you need</div>
+      <div class="step__desc">Any format. Natural language, human intent.</div>
+      <div class="step__pills">
+        <span class="pill">PRD</span>
+        <span class="pill">Discovery interview</span>
+        <span class="pill">Product brief</span>
+      </div>
+    </div>
+
+    <div class="connector anim" style="--i:1"></div>
+
+    <!-- Step 2: Build (FOCAL) -->
+    <div class="step step--build anim" style="--i:2">
+      <div class="step__title"><span class="brand">AESOP Transformation OS</span> designs &amp; generates every artifact</div>
+      <div class="step__desc">Designs and generates every artifact. Validates against Monday.com's API before you touch the platform.</div>
+      <div class="step__substeps">
+        <span class="substep">Discover</span>
+        <span class="substep-arrow">&rarr;</span>
+        <span class="substep">Design</span>
+        <span class="substep-arrow">&rarr;</span>
+        <span class="substep">Build</span>
+      </div>
+    </div>
+
+    <div class="connector anim" style="--i:2"></div>
+
+    <!-- Step 3: Output -->
+    <div class="step step--output anim" style="--i:3">
+      <div class="step__title">You get four ready-to-deploy artifacts</div>
+      <div class="output-grid">
+        <div class="out-item">
+          <div class="out-icon"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg></div>
+          <div class="out-name">Board Schema</div>
+          <div class="out-desc">Boards, groups, columns, views &mdash; all 35 column types, naming enforced</div>
+        </div>
+        <div class="out-item">
+          <div class="out-icon"><svg viewBox="0 0 24 24"><polygon points="13,2 3,14 11,14 9,22 21,10 13,10 15,2"/></svg></div>
+          <div class="out-name">Automation Recipes</div>
+          <div class="out-desc">Trigger/action pairs with conditional logic. 8 triggers + 6 actions</div>
+        </div>
+        <div class="out-item">
+          <div class="out-icon"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3M5.6 5.6l2.1 2.1M16.3 16.3l2.1 2.1M5.6 18.4l2.1-2.1M16.3 7.7l2.1-2.1"/></svg></div>
+          <div class="out-name">AI Agent Config</div>
+          <div class="out-desc">Sidekick tools, Claude/GPT providers, webhooks, scoped permissions</div>
+        </div>
+        <div class="out-item">
+          <div class="out-icon"><svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14,2 14,8 20,8"/><polyline points="9,13 11,15 15,11"/></svg></div>
+          <div class="out-name">Deployment Guide</div>
+          <div class="out-desc">GraphQL mutations, column ordering, verification checklist, rollback plan</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="connector anim" style="--i:3"></div>
+
+    <!-- Step 4: Deploy -->
+    <div class="step step--deploy anim" style="--i:4">
+      <div class="step__title">Deploy to Monday.com</div>
+      <div class="step__desc">
+        <ul class="deploy-list">
+          <li>Every artifact pre-validated against Monday.com API constraints</li>
+          <li>One GraphQL call per resource</li>
+          <li>Board, automations, and agent live in minutes</li>
+        </ul>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- CLOSE -->
+  <div class="close anim" style="--i:5">
+    <p>
+      Days of board design, automation wiring, and agent configuration &mdash; <strong>done in one build run.</strong>
+    </p>
+  </div>
+
+</div>
+
+</body>
+</html>
