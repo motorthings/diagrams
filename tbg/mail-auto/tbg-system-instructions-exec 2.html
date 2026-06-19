@@ -1,0 +1,497 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>TBG System Instructions — Executive View</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,500;0,600;0,700;1,500&family=DM+Mono:wght@400;500&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --font-heading: 'Playfair Display', Georgia, serif;
+    --font-body: 'Inter', system-ui, sans-serif;
+    --font-mono: 'DM Mono', 'SF Mono', Consolas, monospace;
+
+    --gulf-blue: #6CB4EE;
+    --gulf-blue-light: #a3d4f7;
+    --gulf-blue-pale: #d8edfb;
+    --gulf-orange: #FF6600;
+    --gulf-orange-dim: rgba(255, 102, 0, 0.08);
+    --gulf-navy: #0d1a28;
+
+    --bg: #f0f2f5;
+    --surface: #ffffff;
+    --border: rgba(0, 0, 0, 0.12);
+    --divider: #bcc5cf;
+    --text: #0d1a28;
+    --text-dim: #4a5b6a;
+
+    --red: #c9402e;
+    --red-dim: rgba(201, 64, 46, 0.1);
+    --green: #3a8a78;
+    --green-dim: rgba(58, 138, 120, 0.1);
+    --amber: #e85d00;
+    --amber-dim: rgba(232, 93, 0, 0.1);
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--font-body);
+    padding: 64px 32px 80px;
+    min-height: 100vh;
+  }
+
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(16px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  .animate { animation: fadeUp 0.6s ease-out both; }
+
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; }
+  }
+
+  .container { max-width: 800px; margin: 0 auto; }
+
+  /* ---- Header ---- */
+  .header { text-align: center; margin-bottom: 56px; }
+  .header .kicker {
+    font-family: var(--font-mono); font-size: 10px; font-weight: 500;
+    text-transform: uppercase; letter-spacing: 2.5px; color: var(--text-dim); margin-bottom: 10px;
+  }
+  .header h1 {
+    font-family: var(--font-heading); font-size: 40px; font-weight: 700;
+    letter-spacing: -0.5px; line-height: 1.15; margin-bottom: 8px;
+  }
+  .header .sub { font-size: 16px; color: var(--text-dim); font-style: italic; }
+
+  /* ---- Problem / Solution summary ---- */
+  .summary-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+    margin-bottom: 48px;
+  }
+  @media (max-width: 640px) { .summary-row { grid-template-columns: 1fr; } }
+
+  .summary-card {
+    background: var(--surface);
+    border-radius: 12px;
+    padding: 28px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+  }
+  .summary-card--problem { border-top: 4px solid var(--red); }
+  .summary-card--solution { border-top: 4px solid var(--green); }
+  .summary-card h3 {
+    font-family: var(--font-heading); font-size: 20px; font-weight: 600; margin-bottom: 12px;
+  }
+  .summary-card--problem h3 { color: var(--red); }
+  .summary-card--solution h3 { color: var(--green); }
+  .summary-card ul {
+    list-style: none; padding: 0; font-size: 14px; line-height: 1.8; color: var(--text-dim);
+  }
+  .summary-card ul li { padding-left: 18px; position: relative; }
+  .summary-card ul li::before {
+    content: ''; position: absolute; left: 0; top: 8px;
+    width: 6px; height: 6px; border-radius: 50%;
+  }
+  .summary-card--problem ul li::before { background: var(--red); }
+  .summary-card--solution ul li::before { background: var(--green); }
+
+  /* ---- Big arrow divider ---- */
+  .big-arrow {
+    text-align: center; padding: 28px 0;
+    font-family: var(--font-heading); font-size: 28px;
+    color: var(--divider); letter-spacing: 4px;
+  }
+
+  /* ---- Section ---- */
+  .section-title {
+    font-family: var(--font-mono); font-size: 11px; font-weight: 600;
+    text-transform: uppercase; letter-spacing: 2px;
+    padding: 14px 24px; border-radius: 10px 10px 0 0;
+    display: flex; align-items: center; gap: 10px;
+  }
+  .section-title--before { background: var(--red-dim); color: var(--red); border: 2px solid var(--red); border-bottom: none; }
+  .section-title--after { background: var(--green-dim); color: var(--green); border: 2px solid var(--green); border-bottom: none; }
+  .section-title .dot { width: 10px; height: 10px; border-radius: 50%; background: currentColor; }
+
+  .section-body {
+    background: var(--surface);
+    border: 2px solid var(--divider);
+    border-top: none;
+    border-radius: 0 0 12px 12px;
+    padding: 36px 32px;
+    margin-bottom: 40px;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.04);
+  }
+
+  /* ---- As-is chaos ---- */
+  .chaos-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 16px;
+    margin-bottom: 28px;
+    text-align: center;
+  }
+  @media (max-width: 640px) { .chaos-grid { grid-template-columns: 1fr; } }
+
+  .chaos-card {
+    background: var(--surface);
+    border: 2px solid var(--red);
+    border-radius: 10px;
+    padding: 22px 16px;
+  }
+  .chaos-card h4 {
+    font-family: var(--font-heading); font-size: 17px; font-weight: 600;
+    color: var(--red); margin-bottom: 6px;
+  }
+  .chaos-card p {
+    font-size: 12px; color: var(--text-dim); line-height: 1.5;
+  }
+
+  .problem-statement {
+    text-align: center; font-size: 15px; color: var(--red);
+    font-weight: 600; font-style: italic; padding: 8px 0;
+  }
+
+  /* ---- Platform row ---- */
+  .plat-row {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 12px;
+    margin-bottom: 24px;
+  }
+  @media (max-width: 640px) { .plat-row { grid-template-columns: 1fr; } }
+
+  .plat {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 16px 18px;
+    display: flex; align-items: center; gap: 14px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.03);
+  }
+  .plat--auto { border-left: 4px solid var(--green); }
+  .plat--manual { border-left: 4px solid var(--amber); }
+
+  .plat__icon {
+    width: 40px; height: 40px; border-radius: 8px;
+    display: flex; align-items: center; justify-content: center;
+    font-family: var(--font-mono); font-size: 18px; font-weight: 600;
+    flex-shrink: 0;
+  }
+  .plat--auto .plat__icon { background: var(--green-dim); color: var(--green); }
+  .plat--manual .plat__icon { background: var(--amber-dim); color: var(--amber); }
+
+  .plat__info { min-width: 0; }
+  .plat__name {
+    font-family: var(--font-heading); font-size: 15px; font-weight: 600; margin-bottom: 2px;
+  }
+  .plat__owner {
+    font-family: var(--font-mono); font-size: 8px; color: var(--text-dim);
+    text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 3px;
+  }
+  .plat__desc { font-size: 12px; color: var(--text-dim); line-height: 1.5; }
+
+  /* ---- Source highlight ---- */
+  .source-highlight {
+    background: var(--gulf-blue-pale);
+    border: 2px solid var(--gulf-blue);
+    border-radius: 12px;
+    padding: 24px 32px;
+    text-align: center;
+    margin-bottom: 28px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+  }
+  .source-highlight h3 {
+    font-family: var(--font-heading); font-size: 20px; font-weight: 700;
+    color: var(--gulf-navy); margin-bottom: 4px;
+  }
+  .source-highlight p {
+    font-size: 14px; color: var(--text-dim); line-height: 1.5;
+  }
+
+  /* ---- Infra panel ---- */
+  .infra-panel {
+    background: var(--surface);
+    border: 2px solid var(--divider);
+    border-radius: 10px;
+    padding: 20px 24px;
+    margin-top: 24px;
+  }
+  .infra-panel h4 {
+    font-family: var(--font-mono); font-size: 10px; font-weight: 600;
+    text-transform: uppercase; letter-spacing: 1.5px; color: var(--text-dim);
+    margin-bottom: 14px;
+  }
+  .infra-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 10px;
+  }
+  @media (max-width: 640px) { .infra-grid { grid-template-columns: 1fr 1fr; } }
+
+  .infra-item {
+    display: flex; align-items: flex-start; gap: 10px;
+    font-size: 12px; line-height: 1.5;
+  }
+  .infra-item__icon {
+    width: 28px; height: 28px; border-radius: 6px;
+    display: flex; align-items: center; justify-content: center;
+    font-family: var(--font-mono); font-size: 13px; font-weight: 600;
+    flex-shrink: 0;
+    background: var(--gulf-blue-pale); color: var(--gulf-blue);
+  }
+  .infra-item__text { min-width: 0; }
+  .infra-item__name { font-weight: 600; color: var(--text); }
+  .infra-item__desc { color: var(--text-dim); font-size: 11px; }
+  .infra-cost {
+    font-family: var(--font-mono); font-size: 9px; font-weight: 600;
+    padding: 1px 6px; border-radius: 3px;
+    display: inline-block; margin-top: 3px;
+  }
+  .infra-cost--free { background: var(--green-dim); color: var(--green); }
+  .infra-cost--paid { background: var(--amber-dim); color: var(--amber); }
+
+  .label-row {
+    display: flex; align-items: center; gap: 12px;
+    margin: 28px 0 16px;
+    font-family: var(--font-mono); font-size: 10px; font-weight: 600;
+    text-transform: uppercase; letter-spacing: 1.5px; color: var(--text);
+  }
+  .label-row::after { content: ''; flex: 1; height: 2px; background: var(--divider); }
+
+  /* ---- Callout ---- */
+  .callout {
+    background: var(--gulf-blue-pale);
+    border: 2px solid var(--gulf-blue);
+    border-radius: 12px;
+    padding: 20px 24px;
+    font-size: 14px; line-height: 1.7;
+    text-align: center; font-weight: 500;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.04);
+    max-width: 800px; margin: 0 auto;
+  }
+  .callout strong { color: var(--gulf-navy); }
+
+  .footer {
+    margin-top: 32px; text-align: center;
+    font-family: var(--font-mono); font-size: 10px; color: var(--text-dim);
+  }
+.backlink{position:fixed;top:12px;left:16px;z-index:100;font-family:var(--font-mono,monospace);font-size:11px;color:var(--text-dim,#8b949e);text-decoration:none;padding:6px 10px;border:1px solid var(--border,rgba(255,255,255,0.08));border-radius:6px;background:var(--surface,#161b22);transition:color .15s,border-color .15s}.backlink:hover{color:var(--text,#e6edf3);border-color:var(--text-dim,#8b949e)}
+</style>
+</head>
+<body>
+<a href="https://motorthings.github.io/diagrams/" class="backlink" title="Back to Index">← Index</a>
+
+<div class="container">
+
+  <div class="header animate" style="--i:0">
+    <div class="kicker">The Bradbury Group</div>
+    <h1>System Instructions</h1>
+    <p class="sub">How we manage the prompts that power every AI surface</p>
+  </div>
+
+  <!-- ============ PROBLEM / SOLUTION SUMMARY ============ -->
+  <div class="summary-row">
+    <div class="summary-card summary-card--problem animate" style="--i:1">
+      <h3>The Problem</h3>
+      <ul>
+        <li>Instructions scattered across Drive, repos, and platform UIs</li>
+        <li>No one knows which version is current</li>
+        <li>No record of what changed, when, or why</li>
+        <li>Gemini Gems pasted twice &mdash; .com and .net &mdash; with no sync</li>
+        <li>Same prompts live in 3+ places with no connection</li>
+      </ul>
+    </div>
+    <div class="summary-card summary-card--solution animate" style="--i:2">
+      <h3>The Fix</h3>
+      <ul>
+        <li>One GitHub repo &mdash; single source of truth for every prompt</li>
+        <li>Full version history on every change</li>
+        <li>Auto-deploy where APIs exist, clear process where they don&rsquo;t</li>
+        <li>Team notified on every update with diff and action required</li>
+        <li>Same format everywhere &mdash; YAML + Markdown</li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- ============ AS-IS ============ -->
+  <div class="section-title section-title--before animate" style="--i:3">
+    <span class="dot"></span> Today
+  </div>
+  <div class="section-body animate" style="--i:4">
+
+    <div class="chaos-grid">
+      <div class="chaos-card">
+        <h4>Google Drive</h4>
+        <p>Stale since June 2025. No version history.</p>
+      </div>
+      <div class="chaos-card">
+        <h4>App Repos</h4>
+        <p>TSE-stripped, SuperAssistant, Walter. Each has its own copy.</p>
+      </div>
+      <div class="chaos-card">
+        <h4>Platform UIs</h4>
+        <p>Pasted into ElevenLabs, Gemini, ClickUp. No record.</p>
+      </div>
+    </div>
+
+    <div class="problem-statement">6 platforms, 6 different update methods, zero visibility.</div>
+
+  </div>
+
+  <!-- ============ BIG SHIFT ARROW ============ -->
+  <div class="big-arrow animate" style="--i:5">&darr;</div>
+
+  <!-- ============ TO-BE ============ -->
+  <div class="section-title section-title--after animate" style="--i:6">
+    <span class="dot"></span> Target
+  </div>
+  <div class="section-body animate" style="--i:7">
+
+    <div class="source-highlight">
+      <h3>GitHub</h3>
+      <p>Single source of truth. Every system prompt in one place. Full history, reviewable, deployable.</p>
+    </div>
+
+    <div class="infra-panel">
+      <h4>Infrastructure needed &amp; cost</h4>
+      <div class="infra-grid">
+        <div class="infra-item">
+          <div class="infra-item__icon">S</div>
+          <div class="infra-item__text">
+            <div class="infra-item__name">Supabase Storage</div>
+            <div class="infra-item__desc">Runtime fetch bucket. Backend pulls latest instructions on each call.</div>
+            <div class="infra-cost infra-cost--free">$0 &mdash; included in existing Supabase plan</div>
+          </div>
+        </div>
+        <div class="infra-item">
+          <div class="infra-item__icon">A</div>
+          <div class="infra-item__text">
+            <div class="infra-item__name">GitHub Actions</div>
+            <div class="infra-item__desc">CI/CD. Runs validation and sync scripts on push. <code>sync-elevenlabs.yml</code>, <code>validate.yml</code>.</div>
+            <div class="infra-cost infra-cost--free">$0 &mdash; free for public repos</div>
+          </div>
+        </div>
+        <div class="infra-item">
+          <div class="infra-item__icon">R</div>
+          <div class="infra-item__text">
+            <div class="infra-item__name">Railway</div>
+            <div class="infra-item__desc">Hosts Walter and SuperAssistant backends.</div>
+            <div class="infra-cost infra-cost--free">$0 &mdash; already running, no change</div>
+          </div>
+        </div>
+        <div class="infra-item">
+          <div class="infra-item__icon">K</div>
+          <div class="infra-item__text">
+            <div class="infra-item__name">ElevenLabs API key</div>
+            <div class="infra-item__desc">One secret in repo settings. Enables auto-deploy to live voice agents.</div>
+            <div class="infra-cost infra-cost--free">$0 &mdash; key already exists in TSE-stripped</div>
+          </div>
+        </div>
+        <div class="infra-item">
+          <div class="infra-item__icon">T</div>
+          <div class="infra-item__text">
+            <div class="infra-item__name">ClickUp task</div>
+            <div class="infra-item__desc">Committer creates task for updater with file link and diff. Already part of daily workflow.</div>
+            <div class="infra-cost infra-cost--free">$0 &mdash; already using ClickUp</div>
+          </div>
+        </div>
+        <div class="infra-item">
+          <div class="infra-item__icon">H</div>
+          <div class="infra-item__text">
+            <div class="infra-item__name">Webhook handler</div>
+            <div class="infra-item__desc">Thin service for ClickUp runtime fetch. Same pointer pattern as ElevenLabs.</div>
+            <div class="infra-cost infra-cost--free">$0 &mdash; Supabase Edge Function, free tier covers it</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="label-row">Push once, deploy everywhere</div>
+
+    <div class="plat-row">
+      <div class="plat plat--auto">
+        <div class="plat__icon">A</div>
+        <div class="plat__info">
+          <div class="plat__name">ElevenLabs</div>
+          <div class="plat__owner">Auto &middot; Charlie</div>
+          <div class="plat__desc">Git push updates live voice agents via API.</div>
+        </div>
+      </div>
+      <div class="plat plat--auto">
+        <div class="plat__icon">A</div>
+        <div class="plat__info">
+          <div class="plat__name">Claude API</div>
+          <div class="plat__owner">Auto &middot; Charlie</div>
+          <div class="plat__desc">Backend fetches latest from Supabase on deploy.</div>
+        </div>
+      </div>
+      <div class="plat plat--auto">
+        <div class="plat__icon">A</div>
+        <div class="plat__info">
+          <div class="plat__name">Claude Code</div>
+          <div class="plat__owner">Auto &middot; Charlie</div>
+          <div class="plat__desc">CLAUDE.md files live in repo. Pull to update.</div>
+        </div>
+      </div>
+      <div class="plat plat--auto">
+        <div class="plat__icon">A</div>
+        <div class="plat__info">
+          <div class="plat__name">Gemini API</div>
+          <div class="plat__owner">Auto &middot; Charlie</div>
+          <div class="plat__desc">system_instruction param fetches from Supabase.</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="label-row">Push notifies, human applies</div>
+
+    <div class="plat-row">
+      <div class="plat plat--manual">
+        <div class="plat__icon">M</div>
+        <div class="plat__info">
+          <div class="plat__name">Gemini Gems App</div>
+          <div class="plat__owner">Manual &middot; Aperna</div>
+          <div class="plat__desc">Copy once, paste into .com and .net. ClickUp task prompts the step.</div>
+        </div>
+      </div>
+      <div class="plat plat--manual">
+        <div class="plat__icon">M</div>
+        <div class="plat__info">
+          <div class="plat__name">Claude.ai Projects</div>
+          <div class="plat__owner">Manual &middot; Charlie / Paige</div>
+          <div class="plat__desc">Paste into project custom instructions. History in GitHub.</div>
+        </div>
+      </div>
+      <div class="plat plat--manual">
+        <div class="plat__icon">M</div>
+        <div class="plat__info">
+          <div class="plat__name">ClickUp AI</div>
+          <div class="plat__owner">Manual &middot; Paige</div>
+          <div class="plat__desc">Static pointer in UI. Runtime instructions via webhook.</div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- ============ CALLOUT ============ -->
+  <div class="callout animate" style="--i:8">
+    <strong>The bottom line:</strong> One repo. One format. Everyone knows where to look and what changed. Auto where we can, clear process where we can&rsquo;t. No more hunting through Drive folders or guessing which version is live.
+  </div>
+
+  <div class="footer animate" style="--i:9">
+    The-Bradbury-Group/tbg-system-instructions &middot; June 2026
+  </div>
+
+</div>
+
+</body>
+</html>
