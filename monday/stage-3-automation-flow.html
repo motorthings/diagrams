@@ -1,0 +1,526 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Stage 3 — Automation Flow: Stark Industries PMO</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,wght@0,400;0,500;0,600;0,700;1,400&family=Source+Code+Pro:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --font-display: 'Fraunces', Georgia, serif;
+    --font-body: 'Fraunces', Georgia, serif;
+    --font-mono: 'Source Code Pro', 'SF Mono', Consolas, monospace;
+
+    --bg: #eef4f9;
+    --surface: #ffffff;
+    --surface2: #f5f8fc;
+    --surface-elevated: #ddeaf4;
+    --border: #c8daea;
+    --border-bright: #a0bedb;
+    --heading: #0a1628;
+    --text: #0a1628;
+    --text-dim: #3d5a7a;
+
+    --primary: #e8621a;
+    --primary-dim: rgba(232,98,26,0.08);
+    --secondary: #4a90c4;
+    --secondary-dim: rgba(74,144,196,0.08);
+    --teal: #008c85;
+    --teal-dim: rgba(0,140,133,0.08);
+    --green: #059669;
+    --green-dim: rgba(5,150,105,0.08);
+    --coral: #e05050;
+    --coral-dim: rgba(224,80,80,0.08);
+    --amber: #d97706;
+    --amber-dim: rgba(217,119,6,0.08);
+  }
+
+  html.dark {
+    --bg: #0a1628;
+    --surface: #132240;
+    --surface2: #1a2d52;
+    --surface-elevated: #132240;
+    --border: #1a2d52;
+    --border-bright: #2d4570;
+    --heading: #e8edf5;
+    --text: #e8edf5;
+    --text-dim: #9bb0d4;
+
+    --primary: #f37021;
+    --primary-dim: rgba(243,112,33,0.12);
+    --secondary: #6cace4;
+    --secondary-dim: rgba(108,172,228,0.12);
+    --teal: #2dd4bf;
+    --teal-dim: rgba(45,212,191,0.12);
+    --green: #34d399;
+    --green-dim: rgba(52,211,153,0.12);
+    --coral: #f87171;
+    --coral-dim: rgba(248,113,113,0.12);
+    --amber: #fbbf24;
+    --amber-dim: rgba(251,191,36,0.12);
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--bg);
+    background-image:
+      radial-gradient(ellipse at 80% 0%, var(--primary-dim) 0%, transparent 50%),
+      radial-gradient(ellipse at 20% 60%, var(--secondary-dim) 0%, transparent 40%);
+    color: var(--text);
+    font-family: var(--font-body);
+    min-height: 100vh;
+    line-height: 1.6;
+    transition: background 0.3s, color 0.3s;
+    padding: 0 32px 48px;
+  }
+
+  /* Nav */
+  .nav {
+    position: sticky; top: 0; z-index: 100;
+    backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px);
+    background: color-mix(in srgb, var(--surface) 85%, transparent);
+    border-bottom: 1px solid var(--border);
+    margin: 0 -32px 32px; padding: 0 32px;
+    transition: background 0.3s, border-color 0.3s;
+  }
+  .nav-inner {
+    max-width: 1100px; margin: 0 auto; padding: 12px 0;
+    display: flex; align-items: center; justify-content: space-between;
+  }
+  .nav-brand {
+    font-family: var(--font-mono); font-size: 14px; font-weight: 600;
+    letter-spacing: 0.5px; color: var(--primary); text-decoration: none;
+  }
+  .theme-toggle {
+    width: 36px; height: 36px; border-radius: 10px;
+    border: 1px solid var(--border); background: var(--surface);
+    cursor: pointer; display: flex; align-items: center; justify-content: center;
+    font-size: 18px; color: var(--text-dim); transition: all 0.2s;
+  }
+  .theme-toggle:hover { border-color: var(--primary); color: var(--primary); }
+
+  .container { max-width: 1100px; margin: 0 auto; }
+
+  h1 {
+    font-family: var(--font-display); font-size: 40px; font-weight: 700;
+    letter-spacing: -0.5px; color: var(--heading); margin-bottom: 8px;
+  }
+  .subtitle {
+    font-family: var(--font-mono); font-size: 14px; color: var(--text-dim);
+    margin-bottom: 6px;
+  }
+  .stage-badge {
+    display: inline-block; font-family: var(--font-mono); font-size: 11px;
+    font-weight: 600; padding: 3px 10px; border-radius: 5px;
+    background: var(--primary-dim); color: var(--primary); margin-bottom: 28px;
+  }
+  .description {
+    font-size: 15px; line-height: 1.7; color: var(--text-dim);
+    margin-bottom: 36px; max-width: 780px;
+  }
+  .description strong { color: var(--text); }
+  .description code {
+    font-family: var(--font-mono); font-size: 12px;
+    background: var(--secondary-dim); color: var(--secondary);
+    padding: 1px 5px; border-radius: 3px;
+  }
+
+  /* Two column board panels */
+  .board-panels {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+    margin-bottom: 28px;
+  }
+  .board-panels > * { min-width: 0; }
+  @media (max-width: 780px) { .board-panels { grid-template-columns: 1fr; } }
+
+  .board-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 20px;
+    transition: border-color 0.2s;
+  }
+  .board-card:hover { border-color: var(--border-bright); }
+
+  .board-card__header {
+    font-family: var(--font-mono); font-size: 10px; font-weight: 600;
+    text-transform: uppercase; letter-spacing: 1.5px;
+    margin-bottom: 14px; display: flex; align-items: center; gap: 8px;
+  }
+  .board-card__header.portfolio { color: var(--primary); }
+  .board-card__header.execution { color: var(--secondary); }
+  .board-card__header::before { content: ''; width: 8px; height: 8px; border-radius: 50%; }
+  .board-card__header.portfolio::before { background: var(--primary); }
+  .board-card__header.execution::before { background: var(--secondary); }
+
+  .board-card__title {
+    font-family: var(--font-display); font-size: 16px; font-weight: 600;
+    color: var(--heading); margin-bottom: 14px;
+  }
+
+  .col-item {
+    display: flex; align-items: center; gap: 8px;
+    padding: 7px 0; border-bottom: 1px solid var(--border);
+    font-size: 14px;
+  }
+  .col-item:last-of-type { border-bottom: none; }
+  .col-item__type {
+    font-family: var(--font-mono); font-size: 10px; font-weight: 500;
+    padding: 2px 7px; border-radius: 4px; flex-shrink: 0;
+  }
+  .col-item__type.text  { background: var(--primary-dim); color: var(--primary); }
+  .col-item__type.ppl   { background: var(--secondary-dim); color: var(--secondary); }
+  .col-item__type.date  { background: var(--amber-dim); color: var(--amber); }
+  .col-item__type.stat  { background: var(--coral-dim); color: var(--coral); }
+  .col-item__type.prog  { background: var(--green-dim); color: var(--green); }
+  .col-item__type.deferred {
+    background: transparent; color: var(--text-dim);
+    border: 1px dashed var(--border-bright); opacity: 0.7;
+  }
+  .col-item.deferred { opacity: 0.55; }
+  .col-item__label.deferred { color: var(--text-dim); }
+  .col-item__label.deferred::after { content: ' · deferred'; font-family: var(--font-mono); font-size: 10px; opacity: 0.7; }
+
+  /* Mermaid container */
+  .mermaid-wrap {
+    position: relative; background: var(--surface);
+    border: 1px solid var(--border); border-radius: 10px;
+    padding: 28px 20px; overflow: auto; margin-bottom: 28px;
+    min-height: 420px; display: flex; align-items: flex-start; justify-content: center;
+  }
+  .mermaid-wrap .mermaid { transition: transform 0.2s ease; transform-origin: top center; width: 100%; }
+
+  .zoom-controls {
+    position: absolute; top: 8px; right: 8px; display: flex; gap: 2px; z-index: 10;
+    background: var(--surface); border: 1px solid var(--border); border-radius: 6px; padding: 2px;
+  }
+  .zoom-controls button {
+    width: 28px; height: 28px; border: none; background: transparent; color: var(--text-dim);
+    font-family: var(--font-mono); font-size: 14px; cursor: pointer; border-radius: 4px;
+    display: flex; align-items: center; justify-content: center; transition: background 0.15s, color 0.15s;
+  }
+  .zoom-controls button:hover { background: var(--border); color: var(--text); }
+
+  .mermaid-wrap { scrollbar-width: thin; scrollbar-color: var(--border) transparent; }
+  .mermaid-wrap::-webkit-scrollbar { width: 6px; height: 6px; }
+  .mermaid-wrap::-webkit-scrollbar-track { background: transparent; }
+  .mermaid-wrap::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+  .mermaid-wrap::-webkit-scrollbar-thumb:hover { background: var(--text-dim); }
+  .mermaid-wrap.is-zoomed { cursor: grab; }
+  .mermaid-wrap.is-panning { cursor: grabbing; user-select: none; }
+
+  .mermaid .nodeLabel { font-family: var(--font-body) !important; font-size: 14px !important; }
+  .mermaid .edgeLabel { font-family: var(--font-mono) !important; font-size: 11px !important; }
+
+  /* Legend */
+  .legend { display: flex; gap: 24px; flex-wrap: wrap; margin-bottom: 28px; }
+  .legend-item { display: flex; align-items: center; gap: 7px; font-family: var(--font-mono); font-size: 11px; color: var(--text-dim); }
+  .legend-swatch { width: 12px; height: 12px; border-radius: 3px; }
+
+  /* Callout */
+  .callout {
+    background: var(--surface); border: 1px solid var(--border);
+    border-left: 3px solid var(--green); border-radius: 0 10px 10px 0;
+    padding: 16px 20px; font-size: 14px; line-height: 1.6; color: var(--text-dim);
+  }
+  .callout strong { color: var(--text); }
+  .callout code {
+    font-family: var(--font-mono); font-size: 11px;
+    background: var(--green-dim); color: var(--green);
+    padding: 1px 5px; border-radius: 3px;
+  }
+
+  @media (max-width: 768px) { body { padding: 0 16px 32px; } h1 { font-size: 28px; } .mermaid-wrap { padding: 16px 8px; } }
+</style>
+</head>
+<body>
+
+  <div class="nav">
+    <div class="nav-inner">
+      <a href="../../index.html" class="nav-brand">Stark Industries PMO &mdash; Interview Build</a>
+      <button class="theme-toggle" id="themeToggle" aria-label="Toggle dark mode">
+        <span class="icon-light">&#9788;</span>
+        <span class="icon-dark" style="display:none">&#9790;</span>
+      </button>
+    </div>
+  </div>
+
+  <div class="container">
+
+    <h1>Stage 3 — Automation Flow</h1>
+    <p class="subtitle">Stark Industries PMO &middot; 4 automations across 2 boards</p>
+    <div class="stage-badge">BUILD IN PROGRESS</div>
+
+    <p class="description">
+      <strong>4 automations</strong> connect the tiers. Only <strong>#3 (deadline breach)</strong> can be built now —
+      it depends solely on the <code>Evaluation Deadline</code> date column and <code>Status</code>, both available today.
+      Automations #1 and #2 depend on the <strong>Completeness Score formula</strong> (Stage&nbsp;5);
+      #4 depends on <strong>Connect Boards</strong> (Stage&nbsp;6).
+    </p>
+
+    <!-- Board panels -->
+    <div class="board-panels">
+
+      <div class="board-card">
+        <div class="board-card__header portfolio">Portfolio Board</div>
+        <div class="board-card__title">PM Strategic View</div>
+        <div class="col-item"><span class="col-item__type text">Text</span> Project name</div>
+        <div class="col-item"><span class="col-item__type text">Text</span> Requestor / Department</div>
+        <div class="col-item"><span class="col-item__type text">Long Text</span> Business problem</div>
+        <div class="col-item"><span class="col-item__type stat">Status</span> Incomplete / Pending Review / Approved / Rejected</div>
+        <div class="col-item"><span class="col-item__type ppl">People</span> Assigned PM</div>
+        <div class="col-item"><span class="col-item__type date">Date</span> Evaluation Deadline</div>
+        <div class="col-item"><span class="col-item__type prog">Progress</span> SLA Progress</div>
+        <div class="col-item"><span class="col-item__type date">Timeline</span> Timeline</div>
+        <div class="col-item deferred"><span class="col-item__type deferred">AI</span><span class="col-item__label deferred">AI Summary</span></div>
+        <div class="col-item deferred"><span class="col-item__type deferred">Formula</span><span class="col-item__label deferred">Completeness Score</span></div>
+        <div class="col-item deferred"><span class="col-item__type deferred">Connect</span><span class="col-item__label deferred">Connected Execution Board</span></div>
+      </div>
+
+      <div class="board-card">
+        <div class="board-card__header execution">Execution Board</div>
+        <div class="board-card__title">Tactical — Sprint 1 &amp; Sprint 2</div>
+        <div class="col-item"><span class="col-item__type text">Text</span> Task name</div>
+        <div class="col-item"><span class="col-item__type ppl">People</span> Assigned to</div>
+        <div class="col-item"><span class="col-item__type stat">Status</span> To Do / In Progress / Blocked / Done</div>
+        <div class="col-item"><span class="col-item__type date">Date</span> Due date</div>
+        <div class="col-item"><span class="col-item__type text">Dropdown</span> Sprint (1, 2, 3)</div>
+        <div class="col-item deferred"><span class="col-item__type deferred">Connect</span><span class="col-item__label deferred">Connected portfolio item</span></div>
+      </div>
+
+    </div>
+
+    <!-- Mermaid flow -->
+    <div class="mermaid-wrap">
+      <div class="zoom-controls">
+        <button onclick="zoomDiagram(this, 1.2)" title="Zoom in">+</button>
+        <button onclick="zoomDiagram(this, 0.8)" title="Zoom out">&minus;</button>
+        <button onclick="resetZoom(this)" title="Reset zoom">&#8634;</button>
+      </div>
+      <pre class="mermaid">
+        flowchart TD
+          FORM["📥 Form Submission\ncreates Intake Board item"]
+          COMPLETE{"🔲 Completeness Score\n≥ threshold?\nStage 5"}
+          APPROVE["✅ Status → Approved"]
+          DEADLINE{"📅 Evaluation Deadline\narrives?"}
+          BREACH{"Status ≠ Approved\nor Rejected?"}
+
+          FORM --> COMPLETE
+
+          COMPLETE -->|"Yes · Auto 1"| PENDING["Status → Pending Review\nset Deadline = TODAY()+5\nnotify Assigned PM\nStage 5"]
+          COMPLETE -->|"No · Auto 2"| INCOMPLETE["Status → Incomplete\nnotify requestor\nStage 5"]
+
+          PENDING --> DEADLINE
+
+          DEADLINE -->|"Yes · Auto 3 ✅"| BREACH
+          BREACH -->|"Yes"| NOTIFY["🔔 Notify PM + Pepper\nSLA breach alert\nBUILD NOW"]
+
+          PENDING --> APPROVE
+
+          APPROVE -->|"Auto 4"| EXEC["Create Execution Board\nfrom template\nlink via Connect Boards\nnotify PM\nStage 6"]
+
+          NOTIFY:::liveNode
+          PENDING:::futureNode
+          INCOMPLETE:::futureNode
+          EXEC:::futureNode
+          COMPLETE:::futureNode
+          FORM:::formNode
+          DEADLINE:::decisionNode
+          BREACH:::decisionNode
+          APPROVE:::decisionNode
+
+          classDef liveNode stroke:#059669,stroke-width:2px
+          classDef futureNode stroke:#9bb0d4,stroke-dasharray:6 4,color:#9bb0d4
+          classDef formNode stroke:#e8621a,stroke-width:2px
+          classDef decisionNode stroke:#e05050,stroke-width:1.5px
+      </pre>
+    </div>
+
+    <div class="legend">
+      <div class="legend-item"><div class="legend-swatch" style="background:var(--green)"></div> Build now — Automation 3</div>
+      <div class="legend-item"><div class="legend-swatch" style="opacity:0.5;border:1px dashed var(--text-dim);background:transparent"></div> Deferred — Stage 5/6</div>
+      <div class="legend-item"><div class="legend-swatch" style="background:var(--primary)"></div> Form / Input</div>
+      <div class="legend-item"><div class="legend-swatch" style="background:var(--coral)"></div> Decision gate</div>
+    </div>
+
+    <div class="callout">
+      <strong>The one automation to build now:</strong><br>
+      <code>When Evaluation Deadline arrives AND Status ≠ Approved/Rejected</code> → notify Assigned PM + Pepper.<br><br>
+      This is the SLA breach notification — the "watch it fire" moment for the live demo.
+      The other 3 automations depend on the Completeness Score formula (Stage&nbsp;5) and Connect Boards (Stage&nbsp;6).
+      Explaining <em>why</em> they're gated on those columns demonstrates architectural thinking — you don't wire
+      automations against columns that don't exist yet.
+    </div>
+
+  </div>
+
+  <script>
+    // Theme toggle
+    const html = document.documentElement;
+    const toggle = document.getElementById('themeToggle');
+    const iconLight = toggle.querySelector('.icon-light');
+    const iconDark = toggle.querySelector('.icon-dark');
+
+    const saved = localStorage.getItem('theme');
+    if (saved === 'dark' || (!saved && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+      html.classList.add('dark');
+      iconLight.style.display = 'none';
+      iconDark.style.display = 'inline';
+    }
+
+    toggle.addEventListener('click', function() {
+      html.classList.toggle('dark');
+      const isDark = html.classList.contains('dark');
+      iconLight.style.display = isDark ? 'none' : 'inline';
+      iconDark.style.display = isDark ? 'inline' : 'none';
+      localStorage.setItem('theme', isDark ? 'dark' : 'light');
+    });
+  </script>
+
+  <script type="module">
+    import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs';
+
+    function getTheme() {
+      const styles = getComputedStyle(document.documentElement);
+      return {
+        primaryColor: styles.getPropertyValue('--surface').trim(),
+        primaryBorderColor: styles.getPropertyValue('--primary').trim(),
+        primaryTextColor: styles.getPropertyValue('--text').trim(),
+        secondaryColor: styles.getPropertyValue('--surface').trim(),
+        secondaryBorderColor: styles.getPropertyValue('--secondary').trim(),
+        secondaryTextColor: styles.getPropertyValue('--text').trim(),
+        tertiaryColor: styles.getPropertyValue('--surface').trim(),
+        tertiaryBorderColor: styles.getPropertyValue('--coral').trim(),
+        tertiaryTextColor: styles.getPropertyValue('--text').trim(),
+        lineColor: styles.getPropertyValue('--text-dim').trim(),
+        fontSize: '14px',
+        fontFamily: "'Fraunces', Georgia, serif",
+      };
+    }
+
+    function buildClassDef(isDark) {
+      const liveStroke = isDark ? '#34d399' : '#059669';
+      const futureStroke = isDark ? '#9bb0d4' : '#9bb0d4';
+      const formStroke = isDark ? '#f37021' : '#e8621a';
+      const decisionStroke = isDark ? '#f87171' : '#e05050';
+      return `
+          classDef liveNode stroke:${liveStroke},stroke-width:2px
+          classDef futureNode stroke:${futureStroke},stroke-dasharray:6 4,color:${futureStroke}
+          classDef formNode stroke:${formStroke},stroke-width:2px
+          classDef decisionNode stroke:${decisionStroke},stroke-width:1.5px
+        `;
+    }
+
+    function buildMermaidSrc(isDark) {
+      const cd = buildClassDef(isDark);
+      return `
+        flowchart TD
+          FORM["📥 Form Submission\ncreates Intake Board item"]
+          COMPLETE{"🔲 Completeness Score\n≥ threshold?\nStage 5"}
+          APPROVE["✅ Status → Approved"]
+          DEADLINE{"📅 Evaluation Deadline\narrives?"}
+          BREACH{"Status ≠ Approved\nor Rejected?"}
+
+          FORM --> COMPLETE
+
+          COMPLETE -->|"Yes · Auto 1"| PENDING["Status → Pending Review\nset Deadline = TODAY()+5\nnotify Assigned PM\nStage 5"]
+          COMPLETE -->|"No · Auto 2"| INCOMPLETE["Status → Incomplete\nnotify requestor\nStage 5"]
+
+          PENDING --> DEADLINE
+
+          DEADLINE -->|"Yes · Auto 3 ✅"| BREACH
+          BREACH -->|"Yes"| NOTIFY["🔔 Notify PM + Pepper\nSLA breach alert\nBUILD NOW"]
+
+          PENDING --> APPROVE
+
+          APPROVE -->|"Auto 4"| EXEC["Create Execution Board\nfrom template\nlink via Connect Boards\nnotify PM\nStage 6"]
+
+          NOTIFY:::liveNode
+          PENDING:::futureNode
+          INCOMPLETE:::futureNode
+          EXEC:::futureNode
+          COMPLETE:::futureNode
+          FORM:::formNode
+          DEADLINE:::decisionNode
+          BREACH:::decisionNode
+          APPROVE:::decisionNode
+
+          ${cd}
+      `;
+    }
+
+    const pre = document.querySelector('pre.mermaid');
+    const isDarkInit = document.documentElement.classList.contains('dark');
+    pre.textContent = buildMermaidSrc(isDarkInit);
+
+    await mermaid.initialize({
+      startOnLoad: true,
+      theme: 'base',
+      look: 'classic',
+      layout: 'elk',
+      themeVariables: getTheme(),
+    });
+    await mermaid.run({ nodes: [pre] });
+
+    // Re-render on theme toggle
+    document.getElementById('themeToggle').addEventListener('click', async function() {
+      const isDark = document.documentElement.classList.contains('dark');
+      const container = document.querySelector('.mermaid-wrap');
+      const oldSvg = container.querySelector('svg');
+      if (oldSvg) oldSvg.remove();
+      pre.textContent = buildMermaidSrc(isDark);
+      pre.removeAttribute('data-processed');
+      await mermaid.initialize({
+        startOnLoad: true,
+        theme: 'base',
+        look: 'classic',
+        layout: 'elk',
+        themeVariables: getTheme(),
+      });
+      await mermaid.run({ nodes: [pre] });
+    });
+  </script>
+
+  <script>
+    function updateZoomState(wrap) {
+      var t = wrap.querySelector('.mermaid');
+      wrap.classList.toggle('is-zoomed', parseFloat(t.dataset.zoom || '1') > 1);
+    }
+    function zoomDiagram(btn, factor) {
+      var wrap = btn.closest('.mermaid-wrap'), t = wrap.querySelector('.mermaid');
+      var next = Math.min(Math.max(parseFloat(t.dataset.zoom || '1') * factor, 0.3), 5);
+      t.dataset.zoom = next; t.style.transform = 'scale(' + next + ')'; updateZoomState(wrap);
+    }
+    function resetZoom(btn) {
+      var wrap = btn.closest('.mermaid-wrap'), t = wrap.querySelector('.mermaid');
+      t.dataset.zoom = '1'; t.style.transform = 'scale(1)'; updateZoomState(wrap);
+    }
+    document.querySelectorAll('.mermaid-wrap').forEach(function(w) {
+      w.addEventListener('wheel', function(e) {
+        if (!e.ctrlKey && !e.metaKey) return;
+        e.preventDefault();
+        var t = w.querySelector('.mermaid');
+        var next = Math.min(Math.max(parseFloat(t.dataset.zoom || '1') * (e.deltaY < 0 ? 1.1 : 0.9), 0.3), 5);
+        t.dataset.zoom = next; t.style.transform = 'scale(' + next + ')'; updateZoomState(w);
+      }, { passive: false });
+      var sx, sy, sl, st;
+      w.addEventListener('mousedown', function(e) {
+        if (e.target.closest('.zoom-controls')) return;
+        if (parseFloat(w.querySelector('.mermaid').dataset.zoom || '1') <= 1) return;
+        w.classList.add('is-panning'); sx = e.clientX; sy = e.clientY; sl = w.scrollLeft; st = w.scrollTop;
+      });
+      window.addEventListener('mousemove', function(e) {
+        if (!w.classList.contains('is-panning')) return;
+        w.scrollLeft = sl - (e.clientX - sx); w.scrollTop = st - (e.clientY - sy);
+      });
+      window.addEventListener('mouseup', function() { w.classList.remove('is-panning'); });
+    });
+  </script>
+
+</body>
+</html>
