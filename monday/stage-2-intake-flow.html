@@ -1,0 +1,570 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Stage 2 — Intake Flow: Stark Industries PMO</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  /* ============ THEME ============ */
+  :root {
+    --font-body: 'Plus Jakarta Sans', system-ui, sans-serif;
+    --font-mono: 'JetBrains Mono', 'SF Mono', Consolas, monospace;
+
+    --bg: #0f0b1a;
+    --surface: #1a1530;
+    --surface2: #241f3d;
+    --border: rgba(255, 255, 255, 0.06);
+    --border-bright: rgba(255, 255, 255, 0.12);
+    --text: #ede9f6;
+    --text-dim: #8a85a0;
+
+    --purple: #7c5ce7;
+    --purple-dim: rgba(124, 92, 231, 0.15);
+    --coral: #ff6b6b;
+    --coral-dim: rgba(255, 107, 107, 0.12);
+    --teal: #00b5ad;
+    --teal-dim: rgba(0, 181, 173, 0.12);
+    --amber: #f59e0b;
+    --amber-dim: rgba(245, 158, 11, 0.12);
+    --green: #34d399;
+    --green-dim: rgba(52, 211, 153, 0.12);
+  }
+
+  @media (prefers-color-scheme: light) {
+    :root {
+      --bg: #f8f6fc;
+      --surface: #ffffff;
+      --surface2: #f3f0fa;
+      --border: rgba(0, 0, 0, 0.07);
+      --border-bright: rgba(0, 0, 0, 0.13);
+      --text: #1e1b2e;
+      --text-dim: #6b6580;
+
+      --purple: #5a3e9b;
+      --purple-dim: rgba(90, 62, 155, 0.08);
+      --coral: #e05050;
+      --coral-dim: rgba(224, 80, 80, 0.08);
+      --teal: #008c85;
+      --teal-dim: rgba(0, 140, 133, 0.08);
+      --amber: #d97706;
+      --amber-dim: rgba(217, 119, 6, 0.08);
+      --green: #059669;
+      --green-dim: rgba(5, 150, 105, 0.08);
+    }
+  }
+
+  /* ============ RESET + BASE ============ */
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background-color: var(--bg);
+    background-image:
+      radial-gradient(ellipse at 50% 0%, var(--purple-dim) 0%, transparent 55%),
+      radial-gradient(ellipse at 85% 60%, var(--teal-dim) 0%, transparent 40%);
+    color: var(--text);
+    font-family: var(--font-body);
+    padding: 40px;
+    min-height: 100vh;
+  }
+
+  /* ============ ANIMATION ============ */
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(12px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  @keyframes fadeScale {
+    from { opacity: 0; transform: scale(0.94); }
+    to { opacity: 1; transform: scale(1); }
+  }
+
+  .animate { animation: fadeUp 0.4s ease-out both; animation-delay: calc(var(--i, 0) * 0.06s); }
+  .animate-scale { animation: fadeScale 0.35s ease-out both; animation-delay: calc(var(--i, 0) * 0.07s); }
+
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after { animation-duration: 0.01ms !important; animation-delay: 0ms !important; transition-duration: 0.01ms !important; }
+    .mermaid-wrap .mermaid { transition: none; }
+  }
+
+  /* ============ LAYOUT ============ */
+  .container { max-width: 1100px; margin: 0 auto; }
+
+  h1 {
+    font-size: 40px;
+    font-weight: 700;
+    letter-spacing: -1.5px;
+    margin-bottom: 4px;
+    text-wrap: balance;
+    background: linear-gradient(135deg, var(--purple) 0%, var(--teal) 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  .subtitle {
+    color: var(--text-dim);
+    font-family: var(--font-mono);
+    font-size: 12px;
+    margin-bottom: 8px;
+  }
+
+  .stage-badge {
+    display: inline-block;
+    font-family: var(--font-mono);
+    font-size: 11px;
+    font-weight: 600;
+    padding: 3px 10px;
+    border-radius: 5px;
+    background: var(--purple-dim);
+    color: var(--purple);
+    margin-bottom: 24px;
+  }
+
+  .description {
+    font-size: 14px;
+    line-height: 1.7;
+    color: var(--text-dim);
+    margin-bottom: 32px;
+    max-width: 720px;
+  }
+
+  .description strong { color: var(--text); }
+
+  /* ============ TWO-COLUMN GRID ============ */
+  .main-grid {
+    display: grid;
+    grid-template-columns: 340px 1fr;
+    gap: 24px;
+    margin-bottom: 24px;
+  }
+  .main-grid > * { min-width: 0; }
+
+  @media (max-width: 860px) {
+    .main-grid { grid-template-columns: 1fr; }
+  }
+
+  /* ============ FORM CARD ============ */
+  .form-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 24px;
+    position: relative;
+  }
+
+  .form-card__header {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+    color: var(--purple);
+    margin-bottom: 20px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .form-card__header::before {
+    content: '';
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--purple);
+  }
+
+  .form-card__title {
+    font-size: 16px;
+    font-weight: 600;
+    margin-bottom: 18px;
+    color: var(--text);
+  }
+
+  .form-field {
+    padding: 10px 0;
+    border-bottom: 1px solid var(--border);
+    position: relative;
+  }
+
+  .form-field:last-of-type { border-bottom: none; }
+
+  .form-field__label {
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--text);
+    margin-bottom: 3px;
+  }
+
+  .form-field__label .required {
+    color: var(--coral);
+    margin-left: 2px;
+  }
+
+  .form-field__meta {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    color: var(--text-dim);
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .form-field__type {
+    padding: 1px 6px;
+    border-radius: 3px;
+    background: var(--purple-dim);
+    color: var(--purple);
+  }
+
+  .form-field__ai-badge {
+    padding: 1px 6px;
+    border-radius: 3px;
+    background: var(--teal-dim);
+    color: var(--teal);
+  }
+
+  /* ============ MERMAID CONTAINER ============ */
+  .mermaid-wrap {
+    position: relative;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 24px 20px;
+    overflow: auto;
+    min-height: 500px;
+    display: flex;
+    align-items: flex-start;
+    justify-content: center;
+  }
+
+  .mermaid-wrap .mermaid {
+    transition: transform 0.2s ease;
+    transform-origin: top center;
+    width: 100%;
+  }
+
+  .zoom-controls {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    display: flex;
+    gap: 2px;
+    z-index: 10;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 2px;
+  }
+
+  .zoom-controls button {
+    width: 28px;
+    height: 28px;
+    border: none;
+    background: transparent;
+    color: var(--text-dim);
+    font-family: var(--font-mono);
+    font-size: 14px;
+    cursor: pointer;
+    border-radius: 4px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background 0.15s ease, color 0.15s ease;
+  }
+
+  .zoom-controls button:hover { background: var(--border); color: var(--text); }
+
+  .mermaid-wrap {
+    scrollbar-width: thin;
+    scrollbar-color: var(--border) transparent;
+  }
+  .mermaid-wrap::-webkit-scrollbar { width: 6px; height: 6px; }
+  .mermaid-wrap::-webkit-scrollbar-track { background: transparent; }
+  .mermaid-wrap::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+  .mermaid-wrap::-webkit-scrollbar-thumb:hover { background: var(--text-dim); }
+
+  .mermaid-wrap.is-zoomed { cursor: grab; }
+  .mermaid-wrap.is-panning { cursor: grabbing; user-select: none; }
+
+  /* Mermaid SVG overrides */
+  .mermaid .nodeLabel { font-family: var(--font-body) !important; font-size: 14px !important; }
+  .mermaid .edgeLabel { font-family: var(--font-mono) !important; font-size: 11px !important; }
+  .mermaid .node rect, .mermaid .node circle, .mermaid .node polygon { stroke-width: 1.5px !important; }
+  .mermaid .edge-pattern-solid { stroke-width: 1.5px !important; }
+
+  /* ============ LEGEND ============ */
+  .legend {
+    display: flex;
+    gap: 22px;
+    flex-wrap: wrap;
+    margin-bottom: 24px;
+  }
+  .legend-item {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    font-family: var(--font-mono);
+    font-size: 11px;
+    color: var(--text-dim);
+  }
+  .legend-swatch {
+    width: 12px;
+    height: 12px;
+    border-radius: 3px;
+  }
+
+  /* ============ CALLOUT ============ */
+  .callout {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-left: 3px solid var(--teal);
+    border-radius: 0 10px 10px 0;
+    padding: 16px 20px;
+    font-size: 13px;
+    line-height: 1.6;
+    color: var(--text-dim);
+    margin-top: 24px;
+  }
+  .callout strong { color: var(--text); }
+  .callout code {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    background: var(--teal-dim);
+    color: var(--teal);
+    padding: 1px 5px;
+    border-radius: 3px;
+    word-break: break-all;
+  }
+
+  /* ============ RESPONSIVE ============ */
+  @media (max-width: 768px) {
+    body { padding: 16px; }
+    h1 { font-size: 26px; }
+    .mermaid-wrap { padding: 16px 8px; }
+  }
+</style>
+</head>
+<body>
+
+<div class="container">
+
+  <h1 class="animate" style="--i:0">Stage 2 — Intake Flow</h1>
+  <p class="subtitle animate" style="--i:1">Stark Industries PMO &middot; form submission &rarr; triage routing</p>
+  <div class="stage-badge animate" style="--i:2">LIVE &middot; forms.monday.com</div>
+
+  <p class="description animate" style="--i:3">
+    The <strong>public-facing intake form</strong> captures 8 fields from any Stark Industries employee.
+    On submission, an item lands on the Intake Board.
+    In <strong>Stage 5</strong>, an AI Summary column will read the Business Problem field,
+    and a Completeness Formula will drive routing logic.
+    In <strong>Stage 6</strong>, Connect Boards will link approved items to the Portfolio Board.
+  </p>
+
+  <div class="main-grid">
+
+    <!-- LEFT: Form fields card -->
+    <div class="form-card animate" style="--i:4">
+      <div class="form-card__header">Intake Form</div>
+      <div class="form-card__title">Stark Industries — Project Intake Request</div>
+
+      <div class="form-field">
+        <div class="form-field__label">Project name<span class="required">*</span></div>
+        <div class="form-field__meta"><span class="form-field__type">Short Text</span></div>
+      </div>
+
+      <div class="form-field">
+        <div class="form-field__label">Requestor name<span class="required">*</span></div>
+        <div class="form-field__meta"><span class="form-field__type">Short Text</span></div>
+      </div>
+
+      <div class="form-field">
+        <div class="form-field__label">Requestor email<span class="required">*</span></div>
+        <div class="form-field__meta"><span class="form-field__type">Email</span></div>
+      </div>
+
+      <div class="form-field">
+        <div class="form-field__label">Department<span class="required">*</span></div>
+        <div class="form-field__meta"><span class="form-field__type">Dropdown</span> IT / Operations / HR</div>
+      </div>
+
+      <div class="form-field">
+        <div class="form-field__label">Business problem<span class="required">*</span></div>
+        <div class="form-field__meta">
+          <span class="form-field__type">Long Text</span>
+          <span class="form-field__ai-badge">AI source column</span>
+        </div>
+      </div>
+
+      <div class="form-field">
+        <div class="form-field__label">Estimated budget range<span class="required">*</span></div>
+        <div class="form-field__meta"><span class="form-field__type">Dropdown</span> Under $50K / $50–200K / $200K+ / Unknown</div>
+      </div>
+
+      <div class="form-field">
+        <div class="form-field__label">Desired timeline<span class="required">*</span></div>
+        <div class="form-field__meta"><span class="form-field__type">Date</span></div>
+      </div>
+
+      <div class="form-field">
+        <div class="form-field__label">Success criteria</div>
+        <div class="form-field__meta"><span class="form-field__type">Long Text</span> optional</div>
+      </div>
+    </div>
+
+    <!-- RIGHT: Mermaid flow diagram -->
+    <div class="mermaid-wrap animate-scale" style="--i:5">
+      <div class="zoom-controls">
+        <button onclick="zoomDiagram(this, 1.2)" title="Zoom in">+</button>
+        <button onclick="zoomDiagram(this, 0.8)" title="Zoom out">&minus;</button>
+        <button onclick="resetZoom(this)" title="Reset zoom">&#8634;</button>
+      </div>
+      <pre class="mermaid">
+        flowchart TD
+          FORM["🔲 Intake Form\n8 fields · public-facing"]
+          SUBMIT["📥 Submission received"]
+          INTAKE["📋 Intake Board\nitem created"]
+
+          FORM -->|"submit"| SUBMIT
+          SUBMIT --> INTAKE
+
+          INTAKE -.->|"Stage 5"| AI["🤖 AI Summary column\nreads Business Problem"]
+          INTAKE -.->|"Stage 5"| SCORE["📐 Completeness Formula\nchecks required fields"]
+
+          AI --> DECIDE{"Score ≥ threshold?"}
+          SCORE --> DECIDE
+
+          DECIDE -->|"Yes"| PORTFOLIO["📊 Portfolio Board\nStatus → Pending Review"]
+          DECIDE -->|"No"| INCOMPLETE["⚠️ Status → Incomplete\nNotify requestor"]
+
+          PORTFOLIO -.->|"Stage 6"| CONNECT["🔗 Connect Boards\nlinks Execution Board"]
+
+          classDef formNode fill:#1a1530,stroke:#7c5ce7,color:#ede9f6
+          classDef submitNode fill:#1a1530,stroke:#f59e0b,color:#ede9f6
+          classDef boardNode fill:#1a1530,stroke:#00b5ad,color:#ede9f6
+          classDef futureNode fill:#1a1530,stroke:#8a85a0,color:#8a85a0,stroke-dasharray:5 5
+          classDef decisionNode fill:#241f3d,stroke:#ff6b6b,color:#ede9f6
+          classDef goodNode fill:#1a1530,stroke:#34d399,color:#ede9f6
+          classDef badNode fill:#1a1530,stroke:#ff6b6b,color:#ede9f6
+
+          class FORM formNode
+          class SUBMIT submitNode
+          class INTAKE,PORTFOLIO boardNode
+          class AI,SCORE,CONNECT futureNode
+          class DECIDE decisionNode
+          class INCOMPLETE badNode
+      </pre>
+    </div>
+
+  </div>
+
+  <div class="legend animate" style="--i:6">
+    <div class="legend-item"><div class="legend-swatch" style="background:var(--purple)"></div> Form / Input</div>
+    <div class="legend-item"><div class="legend-swatch" style="background:var(--teal)"></div> Board / Data</div>
+    <div class="legend-item"><div class="legend-swatch" style="background:var(--amber)"></div> Submission event</div>
+    <div class="legend-item"><div class="legend-swatch" style="background:var(--coral)"></div> Decision / Rejection</div>
+    <div class="legend-item"><div class="legend-swatch" style="background:var(--green)"></div> Approval path</div>
+    <div class="legend-item"><div class="legend-swatch" style="background:var(--text-dim); opacity:0.4"></div> Future stage (5 &amp; 6)</div>
+  </div>
+
+  <div class="callout animate" style="--i:7">
+    <strong>Live form URL:</strong>
+    <code>https://forms.monday.com/forms/479b794a383233e17a99854cbeb536cd?r=use1</code><br><br>
+    <strong>Backing board:</strong> Intake Board (created in Stage 1).
+    The AI column and Completeness Formula (Stage 5) will read the <strong>Business Problem</strong> field
+    and the 7 required-field values respectively.
+    The <strong>"what I'd build next"</strong> verbal answer preserves the full multi-stage SLA escalation
+    ladder that was deliberately cut from this MVP — the thinking is done, it just lives in Q&A instead of the build.
+  </div>
+
+</div>
+
+<script type="module">
+  import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs';
+
+  const isDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+
+  mermaid.initialize({
+    startOnLoad: true,
+    theme: 'base',
+    look: 'classic',
+    layout: 'elk',
+    themeVariables: {
+      primaryColor: isDark ? '#1a1530' : '#ffffff',
+      primaryBorderColor: isDark ? '#7c5ce7' : '#5a3e9b',
+      primaryTextColor: isDark ? '#ede9f6' : '#1e1b2e',
+      secondaryColor: isDark ? '#1a1530' : '#f3f0fa',
+      secondaryBorderColor: isDark ? '#00b5ad' : '#008c85',
+      secondaryTextColor: isDark ? '#ede9f6' : '#1e1b2e',
+      tertiaryColor: isDark ? '#241f3d' : '#fff5f5',
+      tertiaryBorderColor: isDark ? '#ff6b6b' : '#e05050',
+      tertiaryTextColor: isDark ? '#ede9f6' : '#1e1b2e',
+      lineColor: isDark ? '#8a85a0' : '#6b6580',
+      fontSize: '14px',
+      fontFamily: "'Plus Jakarta Sans', system-ui, sans-serif",
+    }
+  });
+</script>
+<script>
+  function updateZoomState(wrap) {
+    var target = wrap.querySelector('.mermaid');
+    var zoom = parseFloat(target.dataset.zoom || '1');
+    wrap.classList.toggle('is-zoomed', zoom > 1);
+  }
+
+  function zoomDiagram(btn, factor) {
+    var wrap = btn.closest('.mermaid-wrap');
+    var target = wrap.querySelector('.mermaid');
+    var current = parseFloat(target.dataset.zoom || '1');
+    var next = Math.min(Math.max(current * factor, 0.3), 5);
+    target.dataset.zoom = next;
+    target.style.transform = 'scale(' + next + ')';
+    updateZoomState(wrap);
+  }
+
+  function resetZoom(btn) {
+    var wrap = btn.closest('.mermaid-wrap');
+    var target = wrap.querySelector('.mermaid');
+    target.dataset.zoom = '1';
+    target.style.transform = 'scale(1)';
+    updateZoomState(wrap);
+  }
+
+  document.querySelectorAll('.mermaid-wrap').forEach(function(wrap) {
+    wrap.addEventListener('wheel', function(e) {
+      if (!e.ctrlKey && !e.metaKey) return;
+      e.preventDefault();
+      var target = wrap.querySelector('.mermaid');
+      var current = parseFloat(target.dataset.zoom || '1');
+      var factor = e.deltaY < 0 ? 1.1 : 0.9;
+      var next = Math.min(Math.max(current * factor, 0.3), 5);
+      target.dataset.zoom = next;
+      target.style.transform = 'scale(' + next + ')';
+      updateZoomState(wrap);
+    }, { passive: false });
+
+    var startX, startY, scrollL, scrollT;
+    wrap.addEventListener('mousedown', function(e) {
+      if (e.target.closest('.zoom-controls')) return;
+      var target = wrap.querySelector('.mermaid');
+      if (parseFloat(target.dataset.zoom || '1') <= 1) return;
+      wrap.classList.add('is-panning');
+      startX = e.clientX;
+      startY = e.clientY;
+      scrollL = wrap.scrollLeft;
+      scrollT = wrap.scrollTop;
+    });
+    window.addEventListener('mousemove', function(e) {
+      if (!wrap.classList.contains('is-panning')) return;
+      wrap.scrollLeft = scrollL - (e.clientX - startX);
+      wrap.scrollTop = scrollT - (e.clientY - startY);
+    });
+    window.addEventListener('mouseup', function() {
+      wrap.classList.remove('is-panning');
+    });
+  });
+</script>
+
+</body>
+</html>
