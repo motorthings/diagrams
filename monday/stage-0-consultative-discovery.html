@@ -135,17 +135,54 @@
 flowchart TD
   PEPPER["Pepper's Email\nIntake · SLA tracking · Executive dashboard"]
 
-  PEPPER -->|"gap analysis"| TIER1
+  PEPPER --> GAP["Gap Analysis\nWhat's NOT said"]
 
-  TIER1["Tier 1: Intake Form\n8 fields → Intake Board\nAI summary + completeness formula"]
-  TIER2["Tier 2: Portfolio Board\nPM strategic view\nSLA tracking + automations"]
-  TIER3["Tier 3: Execution Board\nSprint 1 / Sprint 2\ntactical, structured differently"]
-  TIER4["Tier 4: Dashboard\n4 widgets · zero manual work\nPortfolio Health · SLA Compliance"]
+  GAP --> IMP1["No triage layer\nIMPLICIT"]
+  GAP --> IMP2["SLA needs escalation\nIMPLICIT"]
+  GAP --> IMP3["Exec view ≠ PM view\nIMPLICIT"]
+  GAP --> IMP4["Request quality = root cause\nIMPLICIT"]
 
-  TIER1 --> TIER2
-  TIER2 --> TIER3
-  TIER3 -.->|"mirror roll-up"| TIER2
-  TIER2 --> TIER4
+  IMP4 --> TIER1
+  IMP1 --> TIER1
+
+  TIER1["Tier 1: Intake Form\n8 fields → Intake Board"]
+  TIER1 -->|"form submitted"| AI
+
+  AI["AI Summary\n+ Completeness Formula"]
+  AI --> DEC1{"Completeness\n≥ threshold?"}
+  DEC1 -->|"YES · complete"| TIER2
+  DEC1 -.->|"NO · incomplete\n→ back to submitter"| TIER1
+
+  SLA_CLOCK["⏱ SLA Clock Starts\n5-day review window"]:::trigger
+  TIER2["Tier 2: Portfolio Board\nPM strategic view · 3 PMs"]
+  TIER2 -->|"item arrives"| PM_ASSIGN["PM Assignment\nAutomation"]:::trigger
+  TIER2 -->|"item arrives"| SLA_CLOCK
+
+  PM_ASSIGN --> DEC2{"PM Review\nApprove?"}
+  DEC2 -->|"YES · approved"| EXEC_CREATE["Execution Board\nCreation"]:::trigger
+  DEC2 -.->|"NO · rejected\n→ back to submitter"| TIER1
+
+  SLA_CLOCK --> DEC3{"5 days\nelapsed?"}
+  DEC3 -->|"YES · breach"| SLA_ALERT["SLA Breach\nNotification to PM"]:::trigger
+  DEC3 -->|"NO"| SLA_CLOCK
+
+  EXEC_CREATE --> TIER3
+
+  TIER3["Tier 3: Execution Board\nSprint 1 / Sprint 2\ntactical execution"]
+  TIER3 -->|"status changed"| ROLLUP["Mirror Roll-Up\nStatus + Due Date"]:::trigger
+  ROLLUP --> TIER2
+
+  IMP3 --> TIER4
+  TIER2 -->|"data feeds"| TIER4
+
+  TIER4["Tier 4: Executive Dashboard\n4 widgets · zero manual work"]
+  TIER4 --> D1["Portfolio Health"]
+  TIER4 --> D2["SLA Compliance"]
+  TIER4 --> D3["Active Projects"]
+  TIER4 --> D4["Department Load"]
+
+  classDef trigger fill:var(--primary-dim),stroke:var(--primary),stroke-width:2px,color:var(--primary)
+  classDef decision fill:var(--surface2),stroke:var(--amber),stroke-width:2px,color:var(--text)
   </pre>
 </div>
 
