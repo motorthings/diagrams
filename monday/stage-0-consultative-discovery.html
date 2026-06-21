@@ -135,51 +135,43 @@
 flowchart TD
   USER["User submits\na vague request"]:::hitl
 
-  USER --> PEPPER["Pepper triages the request\nsurfaces what's NOT being said"]:::hitl
+  USER --> FORM["Tier 1: Intake Form\n8 fields → Intake Board"]
 
-  PEPPER --> IMP1["Requests need screening\nbefore SLA clock starts\nIMPLICIT"]
-  PEPPER --> IMP2["SLA breach must notify\nnot just silently expire\nIMPLICIT"]
-  PEPPER --> IMP3["Executives and PMs need\ndifferent views of the same data\nIMPLICIT"]
-  PEPPER --> IMP4["Vague requests create\nall downstream problems\nIMPLICIT"]
+  FORM -->|"item created"| AI_SUMMARY
+  FORM -->|"item created"| AI_COMPLETE
 
-  IMP4 --> TIER1
-  IMP1 --> TIER1
+  AI_SUMMARY["AI Summary column\nsummarizes Business Problem\nfor the PM to review"]
+  AI_COMPLETE["AI Completeness column\nreads Business Problem +\nBudget + Timeline + Success Criteria\noutputs COMPLETE or INCOMPLETE: reason"]
 
-  TIER1["Tier 1: Intake Form\n8 fields → Intake Board"]
-  TIER1 -->|"form submitted"| AI_SUMMARY
+  AI_COMPLETE --> GATE["AI Completeness Gate\nformula extracts\nCOMPLETE / INCOMPLETE"]
+  GATE --> DEC1{"AI says\nrequest is complete?"}
+  DEC1 -->|"YES · conceptually sound"| FIELD["Field Completeness\nformula checks all\nrequired fields filled"]
+  DEC1 -.->|"NO · missing info"| NOTIFY["Notify requester\nwith AI's reason\nfor incompleteness"]:::trigger
+  NOTIFY -.->|"requester revises\nand resubmits"| FORM
 
-  AI_SUMMARY["AI Summary column\nsummarizes the\nBusiness Problem"]
-  TIER1 -->|"form submitted"| AI_COMPLETE
+  FIELD -->|"YES · all fields present"| TIER2
+  FIELD -.->|"NO · blank fields"| FORM
 
-  AI_COMPLETE["AI Completeness column\njudges: does this request\nhave enough info?"]
-  AI_COMPLETE --> AI_GATE["AI Completeness Gate\nFormula extracts\nCOMPLETE / INCOMPLETE"]
-  AI_GATE --> DEC1{"AI says\nrequest is complete?"}
-  DEC1 -->|"YES · conceptually sound"| FIELD_CHECK["Field Completeness\nFormula: are all\nrequired fields filled?"]
-  DEC1 -.->|"NO · missing info\n→ back to submitter"| TIER1
-
-  FIELD_CHECK -->|"YES · all fields present"| TIER2
-  FIELD_CHECK -.->|"NO · blank fields\n→ back to submitter"| TIER1
+  TIER2["Tier 2: Portfolio Board\nPM strategic view · 3 PMs"]
+  TIER2 -->|"item arrives"| SLA_CLOCK
+  TIER2 -->|"item arrives"| PEPPER
 
   SLA_CLOCK["SLA Clock Starts\n5-day review window"]:::trigger
-  TIER2["Tier 2: Portfolio Board\nPM strategic view · 3 PMs"]
-  TIER2 -->|"item arrives"| PM_ASSIGN["PM Assignment\nAutomation"]:::trigger
-  TIER2 -->|"item arrives"| SLA_CLOCK
-
-  PM_ASSIGN --> DEC2{"PM Review\nApprove?"}:::hitl
-  DEC2 -->|"YES · approved"| EXEC_CREATE["Execution Board\nCreation"]:::trigger
-  DEC2 -.->|"NO · rejected\n→ back to submitter"| TIER1
-
   SLA_CLOCK --> DEC3{"5 days passed\nwithout review?"}
   DEC3 -->|"YES · SLA broken"| SLA_ALERT["SLA Breach\nNotify PM immediately"]:::trigger
   DEC3 -->|"NO · still waiting"| SLA_CLOCK
 
+  PEPPER["Pepper triages the request\nsurfaces what's NOT being said\nreads between the lines"]:::hitl
+  PEPPER --> DEC2{"Approve\nfor execution?"}
+  DEC2 -->|"YES · approved"| EXEC_CREATE["Execution Board\ncreated from template\nPM assigned"]:::trigger
+  DEC2 -.->|"NO · rejected\n→ back to submitter"| FORM
+
   EXEC_CREATE --> TIER3
 
-  TIER3["Tier 3: Execution Board\nWhere the actual work happens\norganized by sprint"]
+  TIER3["Tier 3: Execution Board\nwhere the actual work happens\norganized by sprint"]
   TIER3 -->|"status changed"| ROLLUP["Status + Due Date\nsync back to Portfolio"]:::trigger
   ROLLUP --> TIER2
 
-  IMP3 --> TIER4
   TIER2 -->|"data feeds"| TIER4
 
   TIER4["Tier 4: Executive Dashboard\n4 widgets · zero manual work"]
@@ -223,12 +215,16 @@ flowchart TD
     <div class="card__header built">What We Built</div>
     <div class="card__title">The LEAN MVP — traceable to assignment text</div>
     <div class="card-item">
-      <div class="card-item__label">8 form fields → AI Summary → AI Completeness Gate → Field Check → Portfolio</div>
-      <div class="card-item__note">Two-layer gate: AI reads the Business Problem and judges conceptual completeness (does this request actually make sense?), then a formula checks field fill. Both must pass before the request reaches the Portfolio Board. AI handles fuzzy, formula handles deterministic — distinct layers, same pattern.</div>
+      <div class="card-item__label">Two AI columns firing on form submit</div>
+      <div class="card-item__note"><strong>AI Summary</strong> — general summarization of the Business Problem for PM review. <strong>AI Completeness</strong> — reads Business Problem, Budget, Timeline, and Success Criteria. Outputs exactly COMPLETE or INCOMPLETE: [specific reason]. Two columns, two jobs.</div>
     </div>
     <div class="card-item">
-      <div class="card-item__label">4 automations across Intake + Portfolio</div>
-      <div class="card-item__note">Completeness routing, SLA breach notification, PM assignment, Execution Board creation on approval. End-to-end automated.</div>
+      <div class="card-item__label">AI Completeness Gate + Field Check — two barriers before Portfolio</div>
+      <div class="card-item__note">AI gate judges conceptual completeness (does this request actually make sense?). Field formula checks required fields are filled. Both must pass. If AI says INCOMPLETE, an automation notifies the requester with the specific reason.</div>
+    </div>
+    <div class="card-item">
+      <div class="card-item__label">5 automations across Intake + Portfolio</div>
+      <div class="card-item__note">AI completeness routing (new), field completeness routing, SLA breach notification, PM assignment, Execution Board creation on approval. End-to-end automated.</div>
     </div>
     <div class="card-item">
       <div class="card-item__label">Connected Boards: live status sync from Execution → Portfolio</div>
