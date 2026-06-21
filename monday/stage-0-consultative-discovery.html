@@ -148,10 +148,14 @@ flowchart TD
   TIER1["Tier 1: Intake Form\n8 fields → Intake Board"]
   TIER1 -->|"form submitted"| AI
 
-  AI["AI Summary\n+ Completeness Formula"]
-  AI --> DEC1{"Is the request\ncomplete enough?"}
-  DEC1 -->|"YES · complete"| TIER2
-  DEC1 -.->|"NO · incomplete\n→ back to submitter"| TIER1
+  AI["AI Summary\nreads Business Problem\ndetects missing info"]
+  AI --> AI_GATE["AI Completeness Gate\nFormula extracts\nCOMPLETE / INCOMPLETE"]
+  AI_GATE --> DEC1{"AI says\nrequest is complete?"}
+  DEC1 -->|"YES · conceptually sound"| FIELD_CHECK["Field Completeness\nFormula: are all\nrequired fields filled?"]
+  DEC1 -.->|"NO · missing info\n→ back to submitter"| TIER1
+
+  FIELD_CHECK -->|"YES · all fields present"| TIER2
+  FIELD_CHECK -.->|"NO · blank fields\n→ back to submitter"| TIER1
 
   SLA_CLOCK["SLA Clock Starts\n5-day review window"]:::trigger
   TIER2["Tier 2: Portfolio Board\nPM strategic view · 3 PMs"]
@@ -216,8 +220,8 @@ flowchart TD
     <div class="card__header built">What We Built</div>
     <div class="card__title">The LEAN MVP — traceable to assignment text</div>
     <div class="card-item">
-      <div class="card-item__label">8 form fields → AI Summary + Completeness Formula</div>
-      <div class="card-item__note">AI handles fuzzy (summarize vague requests), formula handles deterministic (field completeness check). Two distinct layers.</div>
+      <div class="card-item__label">8 form fields → AI Summary → AI Completeness Gate → Field Check → Portfolio</div>
+      <div class="card-item__note">Two-layer gate: AI reads the Business Problem and judges conceptual completeness (does this request actually make sense?), then a formula checks field fill. Both must pass before the request reaches the Portfolio Board. AI handles fuzzy, formula handles deterministic — distinct layers, same pattern.</div>
     </div>
     <div class="card-item">
       <div class="card-item__label">4 automations across Intake + Portfolio</div>
