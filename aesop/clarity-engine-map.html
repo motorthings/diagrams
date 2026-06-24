@@ -1,0 +1,575 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Clarity Engine — Three-Layer AI Transformation Diagnostic</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:ital,wght@0,400;0,500;0,600;0,700;0,800;1,400&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --font-body: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+    --font-mono: 'JetBrains Mono', 'SF Mono', Consolas, monospace;
+
+    --bg: #060912;
+    --card: #0C1220;
+    --cardAlt: #0F172A;
+    --aesop: #F59E0B;
+    --sdl: #22D3EE;
+    --unhyped: #A78BFA;
+    --emergent: #34D399;
+    --text: #EFF6FF;
+    --muted: #94A3B8;
+    --dim: #3B4A63;
+    --border: #1E293B;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--font-body);
+    min-height: 100vh;
+    line-height: 1.6;
+  }
+
+  /* Nav */
+  .nav {
+    position: sticky; top: 0; z-index: 100;
+    backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px);
+    background: rgba(6, 9, 18, 0.85);
+    border-bottom: 1px solid var(--border);
+    padding: 0 24px;
+  }
+  .nav-inner {
+    max-width: 1100px; margin: 0 auto; padding: 12px 0;
+    display: flex; align-items: center; justify-content: space-between;
+  }
+  .nav-brand {
+    font-family: var(--font-mono); font-size: 13px; font-weight: 600;
+    letter-spacing: 0.5px; color: var(--emergent); text-decoration: none;
+  }
+  .nav-back {
+    font-family: var(--font-mono); font-size: 12px; color: var(--dim);
+    text-decoration: none; transition: color 0.2s;
+  }
+  .nav-back:hover { color: var(--muted); }
+
+  /* Header */
+  .header {
+    padding: 52px 24px 40px;
+    text-align: center;
+    border-bottom: 1px solid var(--border);
+    background: radial-gradient(ellipse at top, #0F1E3A 0%, var(--bg) 70%);
+  }
+  .header-chip {
+    display: inline-block;
+    padding: 4px 14px;
+    border: 1px solid rgba(52, 211, 153, 0.25);
+    border-radius: 100px;
+    font-size: 11px;
+    letter-spacing: 0.18em;
+    color: var(--emergent);
+    text-transform: uppercase;
+    margin-bottom: 24px;
+    font-weight: 600;
+  }
+  .header h1 {
+    font-size: clamp(30px, 6vw, 52px);
+    font-weight: 800;
+    margin: 0 0 20px;
+    letter-spacing: -0.025em;
+    line-height: 1.05;
+  }
+  .header h1 .gradient-text {
+    background: linear-gradient(90deg, var(--aesop), var(--sdl), var(--unhyped));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+  .header p {
+    color: var(--muted);
+    font-size: 16px;
+    max-width: 540px;
+    margin: 0 auto;
+    line-height: 1.65;
+  }
+
+  /* Section label */
+  .section-label {
+    font-size: 10px;
+    letter-spacing: 0.18em;
+    color: var(--dim);
+    text-transform: uppercase;
+    margin-bottom: 20px;
+    text-align: center;
+    font-weight: 600;
+    font-family: var(--font-mono);
+  }
+
+  /* Content sections */
+  .section { padding: 48px 20px 16px; }
+  .section-convergence { padding: 32px 24px; text-align: center; position: relative; }
+  .section-emergent { padding: 0 20px 48px; }
+  .section-talent { padding: 48px 20px; background: var(--card); border-top: 1px solid var(--border); border-bottom: 1px solid var(--border); }
+  .section-failures { padding: 48px 20px 60px; }
+
+  /* Grids */
+  .grid-3 {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 14px;
+    max-width: 1060px;
+    margin: 0 auto;
+  }
+  .grid-4 {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 12px;
+    max-width: 1060px;
+    margin: 0 auto;
+  }
+  .grid-3-talent {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
+    gap: 14px;
+    max-width: 900px;
+    margin: 0 auto;
+    align-items: stretch;
+  }
+  .grid-failures {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 12px;
+    max-width: 1060px;
+    margin: 0 auto;
+  }
+
+  /* Framework cards */
+  .fw-card {
+    background: var(--card);
+    border-radius: 14px;
+    border: 1px solid var(--border);
+    border-left: 4px solid;
+    padding: 24px;
+    cursor: pointer;
+    transition: border-color 0.2s ease;
+  }
+  .fw-card:hover { border-color: rgba(255,255,255,0.08); }
+  .fw-card.open { border-color: rgba(255,255,255,0.05); }
+
+  .fw-card .layer-tag {
+    font-size: 10px;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    font-weight: 700;
+    margin-bottom: 6px;
+  }
+  .fw-card .fw-name {
+    font-size: 19px;
+    font-weight: 700;
+    margin-bottom: 2px;
+  }
+  .fw-card .fw-sub {
+    font-size: 12px;
+    color: var(--dim);
+    margin-bottom: 16px;
+  }
+  .fw-card .fw-question {
+    font-size: 14px;
+    font-style: italic;
+    margin: 0 0 12px;
+    line-height: 1.55;
+  }
+  .fw-card .fw-detail { margin-top: 16px; display: none; }
+  .fw-card.open .fw-detail { display: block; }
+
+  .fw-card .measures-label {
+    font-size: 10px;
+    letter-spacing: 0.14em;
+    color: var(--dim);
+    text-transform: uppercase;
+    margin-bottom: 10px;
+  }
+  .fw-card .measure {
+    font-size: 13px;
+    color: var(--muted);
+    padding: 5px 0 5px 12px;
+    border-left: 2px solid rgba(255,255,255,0.08);
+    margin-bottom: 4px;
+    line-height: 1.45;
+  }
+  .fw-card .output-box {
+    margin-top: 16px;
+    padding: 14px;
+    border-radius: 8px;
+    font-size: 13px;
+    color: var(--muted);
+    line-height: 1.55;
+  }
+  .fw-card .output-box strong { font-weight: 600; }
+  .fw-card .expand-hint {
+    margin-top: 0;
+    font-size: 11px;
+    color: var(--dim);
+    text-align: right;
+  }
+  .fw-card.open .expand-hint { margin-top: 16px; }
+
+  /* Convergence */
+  .streams { display: flex; justify-content: center; gap: 72px; margin-bottom: 0; }
+  .stream { display: flex; flex-direction: column; align-items: center; }
+  .stream-line { width: 2px; height: 32px; }
+  .stream-dot { width: 6px; height: 6px; border-radius: 50%; opacity: 0.5; }
+
+  .synthesis-node {
+    display: inline-block;
+    position: relative;
+    padding: 28px 36px;
+    background: var(--cardAlt);
+    border-radius: 16px;
+    border: 1px solid var(--border);
+    max-width: 480px;
+    margin: 0 auto;
+    box-shadow: 0 0 60px rgba(52, 211, 153, 0.07);
+  }
+  .synthesis-node::before {
+    content: '';
+    position: absolute; inset: 0;
+    border-radius: 16px;
+    background: linear-gradient(135deg, rgba(245,158,11,0.09) 0%, rgba(34,211,238,0.06) 50%, rgba(167,139,250,0.09) 100%);
+    pointer-events: none;
+  }
+  .synthesis-node .inner { position: relative; z-index: 1; }
+  .synthesis-node .synth-tag {
+    font-size: 11px; letter-spacing: 0.16em; color: var(--emergent);
+    text-transform: uppercase; font-weight: 600; margin-bottom: 12px;
+  }
+  .synthesis-node p { font-size: 15px; color: var(--text); margin: 0; line-height: 1.65; }
+
+  .flow-down { display: flex; justify-content: center; margin-top: 0; }
+  .flow-down .flow-inner { display: flex; flex-direction: column; align-items: center; }
+  .flow-down .flow-line { width: 2px; height: 32px; }
+  .flow-down .flow-dot { width: 6px; height: 6px; border-radius: 50%; opacity: 0.6; }
+
+  /* Emergent cards */
+  .em-card {
+    background: var(--cardAlt);
+    border-radius: 12px;
+    border: 1px solid rgba(52, 211, 153, 0.12);
+    padding: 20px 22px;
+  }
+  .em-card .em-dot {
+    width: 8px; height: 8px; border-radius: 50%;
+    background: var(--emergent); margin-bottom: 12px;
+    box-shadow: 0 0 10px rgba(52, 211, 153, 0.38);
+  }
+  .em-card h4 { font-size: 14px; font-weight: 700; margin: 0 0 10px; color: var(--text); line-height: 1.35; }
+  .em-card p { font-size: 13px; color: var(--muted); margin: 0; line-height: 1.65; }
+
+  /* Talent columns */
+  .talent-col {
+    padding: 20px; border-radius: 12px;
+  }
+  .talent-col.candidate { border: 1px solid rgba(34,211,238,0.19); background: rgba(34,211,238,0.03); }
+  .talent-col.match {
+    border: 1px solid rgba(52,211,153,0.22); background: rgba(52,211,153,0.03);
+    display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center;
+  }
+  .talent-col.org { border: 1px solid rgba(245,158,11,0.19); background: rgba(245,158,11,0.03); }
+
+  .talent-col .col-tag {
+    font-size: 10px; letter-spacing: 0.14em; text-transform: uppercase;
+    font-weight: 700; margin-bottom: 14px;
+  }
+  .talent-col .talent-line {
+    font-size: 13px; color: var(--muted); padding: 4px 0; line-height: 1.5;
+  }
+  .talent-col .talent-footer {
+    margin-top: 14px; padding-top: 14px;
+    font-size: 13px; font-weight: 700;
+  }
+
+  .match-icon { font-size: 28px; margin-bottom: 12px; letter-spacing: -2px; }
+  .match-title { font-size: 14px; font-weight: 700; margin-bottom: 10px; }
+  .match-desc { font-size: 12px; color: var(--muted); line-height: 1.6; }
+
+  /* Failure cards */
+  .fail-card {
+    padding: 18px 20px; border-radius: 10px;
+    background: var(--card); border: 1px solid var(--border);
+    border-left: 3px solid;
+  }
+  .fail-card .fail-mode { font-size: 14px; font-weight: 700; margin-bottom: 8px; }
+  .fail-card .fail-desc { font-size: 13px; color: var(--muted); margin-bottom: 14px; line-height: 1.55; }
+  .fail-card .fail-catcher {
+    font-size: 10px; color: var(--dim); letter-spacing: 0.12em;
+    text-transform: uppercase;
+  }
+
+  @media (max-width: 640px) {
+    .header { padding: 36px 16px 28px; }
+    .section { padding: 32px 12px 12px; }
+    .section-convergence { padding: 24px 12px; }
+    .section-emergent { padding: 0 12px 32px; }
+    .section-talent { padding: 32px 12px; }
+    .section-failures { padding: 32px 12px 40px; }
+    .grid-3, .grid-4, .grid-3-talent, .grid-failures { grid-template-columns: 1fr; }
+    .streams { gap: 36px; }
+  }
+</style>
+</head>
+<body>
+
+  <div class="nav">
+    <div class="nav-inner">
+      <a href="../index.html" class="nav-back">← Visual Explainers</a>
+      <span class="nav-brand">AESOP Transformation OS</span>
+    </div>
+  </div>
+
+  <!-- HEADER -->
+  <div class="header">
+    <div class="header-chip">System Architecture</div>
+
+    <h1>
+      The Three-Layer<br />
+      <span class="gradient-text">Clarity Engine</span>
+    </h1>
+
+    <p>
+      Three frameworks that each diagnose a different reason AI transformation fails.
+      Together, they produce capabilities none can generate alone.
+    </p>
+  </div>
+
+  <!-- 01 — THE THREE ENGINES -->
+  <div class="section">
+    <div class="section-label">01 — The Three Diagnostic Engines</div>
+
+    <div class="grid-3">
+
+      <!-- AESOP -->
+      <div class="fw-card" data-fw="aesop" style="border-left-color: var(--aesop);">
+        <div class="layer-tag" style="color: var(--aesop);">Transformation Layer</div>
+        <div class="fw-name">AESOP</div>
+        <div class="fw-sub">Waifinder / Charlie Fuller</div>
+        <p class="fw-question" style="color: var(--aesop);">"Where is this org — and what is the real path forward?"</p>
+
+        <div class="fw-detail">
+          <div class="measures-label">What it measures</div>
+          <div class="measure" style="border-left-color: rgba(245,158,11,0.21);">AI maturity stage &amp; trajectory</div>
+          <div class="measure" style="border-left-color: rgba(245,158,11,0.21);">Transformation readiness signals</div>
+          <div class="measure" style="border-left-color: rgba(245,158,11,0.21);">Strategic priority sequencing</div>
+          <div class="measure" style="border-left-color: rgba(245,158,11,0.21);">Capability &amp; investment gaps</div>
+          <div class="output-box" style="background: rgba(245,158,11,0.05);">
+            <strong style="color: var(--aesop);">Output → </strong>
+            A sequenced roadmap calibrated to real organizational context — not aspirational positioning.
+          </div>
+        </div>
+
+        <div class="expand-hint">tap to expand ↓</div>
+      </div>
+
+      <!-- Stealth Dog Labs -->
+      <div class="fw-card" data-fw="sdl" style="border-left-color: var(--sdl);">
+        <div class="layer-tag" style="color: var(--sdl);">Human Layer</div>
+        <div class="fw-name">Stealth Dog Labs</div>
+        <div class="fw-sub">Christopher Skinner</div>
+        <p class="fw-question" style="color: var(--sdl);">"Who are the actual people — and how do they really think?"</p>
+
+        <div class="fw-detail">
+          <div class="measures-label">What it measures</div>
+          <div class="measure" style="border-left-color: rgba(34,211,238,0.21);">Cognitive profiles across 90+ dimensions</div>
+          <div class="measure" style="border-left-color: rgba(34,211,238,0.21);">Psycholinguistic signal extraction</div>
+          <div class="measure" style="border-left-color: rgba(34,211,238,0.21);">Decision-making &amp; reasoning patterns</div>
+          <div class="measure" style="border-left-color: rgba(34,211,238,0.21);">Change disposition &amp; capacity to adapt</div>
+          <div class="output-box" style="background: rgba(34,211,238,0.05);">
+            <strong style="color: var(--sdl);">Output → </strong>
+            Individual thinking maps, team composition models, mandate quality scores — and candidate profiles from resumes as behavioral artifacts.
+          </div>
+        </div>
+
+        <div class="expand-hint">tap to expand ↓</div>
+      </div>
+
+      <!-- Unhyped AI -->
+      <div class="fw-card" data-fw="unhyped" style="border-left-color: var(--unhyped);">
+        <div class="layer-tag" style="color: var(--unhyped);">Structure Layer</div>
+        <div class="fw-name">Unhyped AI</div>
+        <div class="fw-sub">Stuart Winter-Tear</div>
+        <p class="fw-question" style="color: var(--unhyped);">"Is the org actually wired for this — or will AI just inherit its dysfunction?"</p>
+
+        <div class="fw-detail">
+          <div class="measures-label">What it measures</div>
+          <div class="measure" style="border-left-color: rgba(167,139,250,0.21);">Coordination clarity &amp; authority structure</div>
+          <div class="measure" style="border-left-color: rgba(167,139,250,0.21);">Value flow mapping across the operating model</div>
+          <div class="measure" style="border-left-color: rgba(167,139,250,0.21);">Governance &amp; decision architecture</div>
+          <div class="measure" style="border-left-color: rgba(167,139,250,0.21);">Agentic readiness before deployment</div>
+          <div class="output-box" style="background: rgba(167,139,250,0.05);">
+            <strong style="color: var(--unhyped);">Output → </strong>
+            Operating model diagnosis, coordination health score, agentic readiness assessment — the structural truth before anything gets built.
+          </div>
+        </div>
+
+        <div class="expand-hint">tap to expand ↓</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- CONVERGENCE -->
+  <div class="section-convergence">
+    <!-- Three streams flowing down -->
+    <div class="streams">
+      <div class="stream">
+        <div class="stream-line" style="background: linear-gradient(to bottom, rgba(245,158,11,0.5), rgba(245,158,11,0.12));"></div>
+        <div class="stream-dot" style="background: var(--aesop);"></div>
+      </div>
+      <div class="stream">
+        <div class="stream-line" style="background: linear-gradient(to bottom, rgba(34,211,238,0.5), rgba(34,211,238,0.12));"></div>
+        <div class="stream-dot" style="background: var(--sdl);"></div>
+      </div>
+      <div class="stream">
+        <div class="stream-line" style="background: linear-gradient(to bottom, rgba(167,139,250,0.5), rgba(167,139,250,0.12));"></div>
+        <div class="stream-dot" style="background: var(--unhyped);"></div>
+      </div>
+    </div>
+
+    <!-- Synthesis Node -->
+    <div class="synthesis-node">
+      <div class="inner">
+        <div class="synth-tag">The Synthesis Point</div>
+        <p>
+          When all three run simultaneously on the same organization, you stop seeing three partial pictures — and start seeing the <em>whole system</em>.
+        </p>
+      </div>
+    </div>
+
+    <!-- Flow down to emergent -->
+    <div class="flow-down">
+      <div class="flow-inner">
+        <div class="flow-line" style="background: linear-gradient(to bottom, rgba(52,211,153,0.5), rgba(52,211,153,0.12));"></div>
+        <div class="flow-dot" style="background: var(--emergent);"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 02 — EMERGENT CAPABILITIES -->
+  <div class="section-emergent">
+    <div class="section-label">02 — What Only Exists When All Three Combine</div>
+
+    <div class="grid-4">
+      <div class="em-card">
+        <div class="em-dot"></div>
+        <h4>Calibrated Transformation Roadmap</h4>
+        <p>Not just where you need to go — a path that accounts for how your specific people think, what your structure can actually carry, and where you genuinely are on the maturity curve.</p>
+      </div>
+      <div class="em-card">
+        <div class="em-dot"></div>
+        <h4>Real Role Definition</h4>
+        <p>What you actually need to hire for — derived from operating model gaps, maturity context, and team cognitive composition. Not the ghost role your gut wrote into the JD.</p>
+      </div>
+      <div class="em-card">
+        <div class="em-dot"></div>
+        <h4>Cognitive-Fit Talent Matching</h4>
+        <p>Shape-to-shape matching between candidate profile and organizational need profile. The resume is a psycholinguistic artifact. The org need is derived, not declared. No keyword theater.</p>
+      </div>
+      <div class="em-card">
+        <div class="em-dot"></div>
+        <h4>Transformation Momentum Score</h4>
+        <p>Ongoing measurement across all three layers — tracking whether change is actually taking hold at the human, structural, and strategic levels before financial outcomes confirm it.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- 03 — TALENT MATCHING -->
+  <div class="section-talent">
+    <div class="section-label">03 — Application: The Talent Matching Engine</div>
+
+    <div class="grid-3-talent">
+      <!-- Candidate -->
+      <div class="talent-col candidate">
+        <div class="col-tag" style="color: var(--sdl);">Candidate Side</div>
+        <div class="talent-line">→ Resume as psycholinguistic artifact</div>
+        <div class="talent-line">→ SDL extracts cognitive shape</div>
+        <div class="talent-line">→ Presentation quality scored</div>
+        <div class="talent-line">→ The "slinger coefficient" measured</div>
+        <div class="talent-line">Proven capability mapped</div>
+        <div class="talent-footer" style="border-top: 1px solid rgba(34,211,238,0.12); color: var(--sdl);">Candidate Profile</div>
+      </div>
+
+      <!-- Match Engine -->
+      <div class="talent-col match">
+        <div class="match-icon" style="color: var(--emergent);">⟷</div>
+        <div class="match-title" style="color: var(--emergent);">Shape-to-Shape Match</div>
+        <div class="match-desc">
+          Not keyword-to-keyword.<br />
+          Vector fit across cognitive,<br />
+          structural, and maturity<br />
+          dimensions simultaneously.
+        </div>
+      </div>
+
+      <!-- Organization -->
+      <div class="talent-col org">
+        <div class="col-tag" style="color: var(--aesop);">Organization Side</div>
+        <div class="talent-line">→ AESOP maturity context</div>
+        <div class="talent-line">→ Unhyped operating model gaps</div>
+        <div class="talent-line">→ SDL team composition map</div>
+        <div class="talent-line">→ Real role definition derived</div>
+        <div class="talent-line">Not declared from gut feel</div>
+        <div class="talent-footer" style="border-top: 1px solid rgba(245,158,11,0.12); color: var(--aesop);">Organization Profile</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 04 — FAILURE MODES -->
+  <div class="section-failures">
+    <div class="section-label">04 — The Four Failure Modes This Prevents</div>
+
+    <div class="grid-failures">
+      <div class="fail-card" style="border-left-color: var(--aesop);">
+        <div class="fail-mode" style="color: var(--aesop);">Wrong Path</div>
+        <div class="fail-desc">Pursuing the wrong priorities at the wrong maturity stage</div>
+        <div class="fail-catcher">Caught by AESOP</div>
+      </div>
+      <div class="fail-card" style="border-left-color: var(--unhyped);">
+        <div class="fail-mode" style="color: var(--unhyped);">Wrong Structure</div>
+        <div class="fail-desc">Deploying AI into broken coordination — making dysfunction faster</div>
+        <div class="fail-catcher">Caught by Unhyped AI</div>
+      </div>
+      <div class="fail-card" style="border-left-color: var(--sdl);">
+        <div class="fail-mode" style="color: var(--sdl);">Wrong People</div>
+        <div class="fail-desc">Hiring for a ghost role, not the real capability the org actually needs</div>
+        <div class="fail-catcher">Caught by Stealth Dog Labs</div>
+      </div>
+      <div class="fail-card" style="border-left-color: var(--emergent);">
+        <div class="fail-mode" style="color: var(--emergent);">Wrong Sequence</div>
+        <div class="fail-desc">Doing all of the above in the wrong order and losing 18 months doing it</div>
+        <div class="fail-catcher">Caught by The Integration</div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    /* Expand/collapse framework cards */
+    document.querySelectorAll('.fw-card').forEach(function(card) {
+      card.addEventListener('click', function() {
+        var wasOpen = card.classList.contains('open');
+        // Close all
+        document.querySelectorAll('.fw-card').forEach(function(c) { c.classList.remove('open'); });
+        // Update hints
+        document.querySelectorAll('.fw-card .expand-hint').forEach(function(h) { h.textContent = 'tap to expand ↓'; });
+        // Open clicked (unless it was already open)
+        if (!wasOpen) {
+          card.classList.add('open');
+          card.querySelector('.expand-hint').textContent = 'tap to collapse ↑';
+        }
+      });
+    });
+  </script>
+
+</body>
+</html>
