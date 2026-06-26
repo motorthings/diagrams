@@ -1,0 +1,1137 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AESOP Testing &amp; CI/CD — Detailed</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  /* ============ THEME — AESOP Neon Dashboard ============ */
+  :root {
+    --font-body: 'Space Grotesk', system-ui, sans-serif;
+    --font-mono: 'JetBrains Mono', 'SF Mono', Consolas, monospace;
+
+    --bg: #0d0b14;
+    --surface: #15121f;
+    --surface2: #1c1829;
+    --surface-elevated: #211d30;
+    --border: rgba(255, 255, 255, 0.06);
+    --border-bright: rgba(255, 255, 255, 0.12);
+    --text: #ede5ff;
+    --text-dim: #7a6f94;
+
+    /* Stage accents */
+    --mauve: #a855f7;
+    --mauve-dim: rgba(168, 85, 247, 0.12);
+    --green: #22c55e;
+    --green-dim: rgba(34, 197, 94, 0.1);
+    --blue: #3b82f6;
+    --blue-dim: rgba(59, 130, 246, 0.1);
+    --red: #f43f5e;
+    --red-dim: rgba(244, 63, 94, 0.12);
+    --orange: #f97316;
+    --orange-dim: rgba(249, 115, 22, 0.12);
+    --yellow: #eab308;
+    --yellow-dim: rgba(234, 179, 8, 0.12);
+    --teal: #14b8a6;
+    --teal-dim: rgba(20, 184, 166, 0.1);
+  }
+
+  @media (prefers-color-scheme: light) {
+    :root {
+      --bg: #f5f3ff;
+      --surface: #ffffff;
+      --surface2: #f0ecff;
+      --surface-elevated: #ffffff;
+      --border: rgba(0, 0, 0, 0.07);
+      --border-bright: rgba(0, 0, 0, 0.14);
+      --text: #1a1530;
+      --text-dim: #6b5f8a;
+
+      --mauve: #8839ef;
+      --mauve-dim: rgba(136, 57, 239, 0.08);
+      --green: #16a34a;
+      --green-dim: rgba(22, 163, 74, 0.08);
+      --blue: #2563eb;
+      --blue-dim: rgba(37, 99, 235, 0.08);
+      --red: #e11d48;
+      --red-dim: rgba(225, 29, 72, 0.08);
+      --orange: #ea580c;
+      --orange-dim: rgba(234, 88, 12, 0.08);
+      --yellow: #ca8a04;
+      --yellow-dim: rgba(202, 138, 4, 0.08);
+      --teal: #0d9488;
+      --teal-dim: rgba(13, 148, 136, 0.08);
+    }
+  }
+
+  /* ============ RESET + BASE ============ */
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: var(--bg);
+    background-image:
+      radial-gradient(ellipse at 15% 0%, var(--mauve-dim) 0%, transparent 45%),
+      radial-gradient(ellipse at 85% 100%, var(--teal-dim) 0%, transparent 40%);
+    color: var(--text);
+    font-family: var(--font-body);
+    padding: 40px;
+    min-height: 100vh;
+    overflow-wrap: break-word;
+  }
+
+  /* ============ ANIMATION ============ */
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(12px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  @keyframes fadeScale {
+    from { opacity: 0; transform: scale(0.92); }
+    to { opacity: 1; transform: scale(1); }
+  }
+
+  .animate { animation: fadeUp 0.4s ease-out both; animation-delay: calc(var(--i, 0) * 0.06s); }
+  .kpi-card { animation: fadeScale 0.35s ease-out both; animation-delay: calc(var(--i, 0) * 0.07s); }
+
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after {
+      animation-duration: 0.01ms !important;
+      animation-delay: 0ms !important;
+      transition-duration: 0.01ms !important;
+    }
+  }
+
+  /* ============ LAYOUT ============ */
+  .wrap {
+    max-width: 1200px;
+    margin: 0 auto;
+    display: grid;
+    grid-template-columns: 185px 1fr;
+    gap: 0 44px;
+  }
+  .main { min-width: 0; }
+
+  /* ============ TOC ============ */
+  .toc {
+    position: sticky;
+    top: 24px;
+    align-self: start;
+    padding: 14px 0;
+    grid-row: 1 / -1;
+    max-height: calc(100dvh - 48px);
+    overflow-y: auto;
+  }
+  .toc::-webkit-scrollbar { width: 3px; }
+  .toc::-webkit-scrollbar-thumb { background: var(--border-bright); border-radius: 2px; }
+
+  .toc-title {
+    font-family: var(--font-mono);
+    font-size: 9px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    color: var(--text-dim);
+    padding: 0 0 10px;
+    margin-bottom: 8px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .toc a {
+    display: block;
+    font-size: 11px;
+    color: var(--text-dim);
+    text-decoration: none;
+    padding: 5px 10px;
+    border-radius: 5px;
+    border-left: 2px solid transparent;
+    transition: all 0.15s;
+    line-height: 1.4;
+    margin-bottom: 1px;
+  }
+  .toc a:hover { color: var(--text); background: var(--surface2); }
+  .toc a.active { color: var(--text); border-left-color: var(--mauve); }
+
+  /* ============ HEADER ============ */
+  h1 {
+    font-size: 34px;
+    font-weight: 700;
+    letter-spacing: -1px;
+    margin-bottom: 5px;
+    text-wrap: balance;
+  }
+
+  .subtitle {
+    color: var(--text-dim);
+    font-family: var(--font-mono);
+    font-size: 12px;
+    margin-bottom: 10px;
+  }
+
+  .description {
+    font-size: 14px;
+    line-height: 1.7;
+    color: var(--text-dim);
+    margin-bottom: 28px;
+    max-width: 760px;
+  }
+  .description code {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    background: var(--mauve-dim);
+    color: var(--mauve);
+    padding: 1px 5px;
+    border-radius: 3px;
+  }
+
+  /* ============ SECTION HEADS ============ */
+  .sec-head {
+    font-family: var(--font-mono);
+    font-size: 13px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+    color: var(--mauve);
+    margin: 44px 0 16px 0;
+    padding-bottom: 10px;
+    border-bottom: 1px solid var(--border-bright);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    scroll-margin-top: 52px;
+  }
+  .sec-head .dot {
+    width: 9px;
+    height: 9px;
+    border-radius: 50%;
+    background: var(--mauve);
+  }
+
+  /* ============ KPI ROW ============ */
+  .kpi-row {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 14px;
+    margin-bottom: 32px;
+  }
+
+  .kpi-card {
+    background: var(--surface-elevated);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 20px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+  }
+  .kpi-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.25);
+  }
+
+  .kpi-card__value {
+    font-size: 34px;
+    font-weight: 700;
+    letter-spacing: -1px;
+    line-height: 1.1;
+    font-variant-numeric: tabular-nums;
+  }
+  .kpi-card__value--green { color: var(--green); }
+  .kpi-card__value--red { color: var(--red); }
+  .kpi-card__value--orange { color: var(--orange); }
+  .kpi-card__value--blue { color: var(--blue); }
+
+  .kpi-card__label {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 1.2px;
+    color: var(--text-dim);
+    margin-top: 6px;
+  }
+  .kpi-card__detail {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    color: var(--text-dim);
+    margin-top: 4px;
+    opacity: 0.7;
+  }
+
+  /* ============ PYRAMID ============ */
+  .pyramid {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0;
+    margin-bottom: 36px;
+  }
+
+  .pyramid-tier {
+    width: 100%;
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 24px 28px;
+    position: relative;
+    transition: border-color 0.2s ease, box-shadow 0.2s ease;
+  }
+  .pyramid-tier:hover {
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+  }
+
+  .pyramid-tier--unit {
+    width: 100%;
+    background: var(--surface-elevated);
+    border-color: var(--green-dim);
+  }
+  .pyramid-tier--unit:hover { border-color: color-mix(in srgb, var(--green) 30%, transparent); }
+
+  .pyramid-tier--integration {
+    width: 76%;
+    margin: 0 auto;
+    background: var(--surface);
+    border-color: var(--orange-dim);
+  }
+  .pyramid-tier--integration:hover { border-color: color-mix(in srgb, var(--orange) 30%, transparent); }
+
+  .pyramid-tier--e2e {
+    width: 50%;
+    margin: 0 auto;
+    background: var(--surface2);
+    border-color: var(--red-dim);
+  }
+  .pyramid-tier--e2e:hover { border-color: color-mix(in srgb, var(--red) 30%, transparent); }
+
+  .pyramid-connector {
+    height: 18px;
+    width: 2px;
+    background: var(--border-bright);
+    position: relative;
+    margin: 0 auto;
+  }
+  .pyramid-connector::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    border-left: 6px solid transparent;
+    border-right: 6px solid transparent;
+    border-top: 6px solid var(--border-bright);
+  }
+
+  .pyramid-tier__header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 12px;
+  }
+
+  .pyramid-tier__badge {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    padding: 3px 10px;
+    border-radius: 5px;
+    white-space: nowrap;
+  }
+  .pyramid-tier__badge--unit { background: var(--green-dim); color: var(--green); }
+  .pyramid-tier__badge--integration { background: var(--orange-dim); color: var(--orange); }
+  .pyramid-tier__badge--e2e { background: var(--red-dim); color: var(--red); }
+
+  .pyramid-tier__title {
+    font-weight: 600;
+    font-size: 15px;
+    color: var(--text);
+  }
+
+  .pyramid-tier__stats {
+    font-family: var(--font-mono);
+    font-size: 12px;
+    color: var(--text-dim);
+    margin-left: auto;
+  }
+
+  .pyramid-tier__grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+  }
+
+  .pyramid-tier__item {
+    font-size: 12px;
+    line-height: 1.5;
+    padding: 8px 12px;
+    background: color-mix(in srgb, var(--surface) 50%, var(--bg) 50%);
+    border-radius: 6px;
+    border: 1px solid var(--border);
+  }
+  .pyramid-tier__item code {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    background: var(--mauve-dim);
+    color: var(--mauve);
+    padding: 1px 4px;
+    border-radius: 3px;
+  }
+
+  /* ============ MERMAID CONTAINER ============ */
+  .mermaid-wrap {
+    position: relative;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 32px 24px;
+    overflow: auto;
+    margin-bottom: 24px;
+    scrollbar-width: thin;
+    scrollbar-color: var(--border) transparent;
+  }
+  .mermaid-wrap::-webkit-scrollbar { width: 6px; height: 6px; }
+  .mermaid-wrap::-webkit-scrollbar-track { background: transparent; }
+  .mermaid-wrap::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+  .mermaid-wrap::-webkit-scrollbar-thumb:hover { background: var(--text-dim); }
+
+  .mermaid-wrap .mermaid {
+    display: flex;
+    justify-content: center;
+    transition: transform 0.2s ease;
+    transform-origin: top center;
+  }
+
+  .zoom-controls {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    display: flex;
+    gap: 2px;
+    z-index: 10;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 2px;
+  }
+  .zoom-controls button {
+    width: 28px;
+    height: 28px;
+    border: none;
+    background: transparent;
+    color: var(--text-dim);
+    font-family: var(--font-mono);
+    font-size: 14px;
+    cursor: pointer;
+    border-radius: 4px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background 0.15s ease, color 0.15s ease;
+  }
+  .zoom-controls button:hover { background: var(--border); color: var(--text); }
+
+  .mermaid-wrap.is-zoomed { cursor: grab; }
+  .mermaid-wrap.is-panning { cursor: grabbing; user-select: none; }
+
+  /* ============ TABLE ============ */
+  .table-wrap {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    overflow: hidden;
+    margin-bottom: 24px;
+  }
+  .table-scroll { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+
+  .data-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13px;
+    line-height: 1.5;
+  }
+  .data-table thead { position: sticky; top: 0; z-index: 2; }
+  .data-table th {
+    background: var(--surface2);
+    font-family: var(--font-mono);
+    font-size: 10px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 1.2px;
+    color: var(--text-dim);
+    text-align: left;
+    padding: 14px 16px;
+    border-bottom: 2px solid var(--border-bright);
+    white-space: nowrap;
+  }
+  .data-table td {
+    padding: 14px 16px;
+    border-bottom: 1px solid var(--border);
+    vertical-align: top;
+  }
+  .data-table tbody tr:last-child td { border-bottom: none; }
+  .data-table .wide { min-width: 220px; max-width: 440px; }
+  .data-table tbody tr:nth-child(even) { background: var(--surface2); }
+  .data-table tbody tr { transition: background 0.15s ease; }
+  .data-table tbody tr:hover { background: var(--border); }
+  .data-table code {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    background: var(--mauve-dim);
+    color: var(--mauve);
+    padding: 1px 5px;
+    border-radius: 3px;
+  }
+  .data-table small {
+    display: block;
+    color: var(--text-dim);
+    font-size: 11px;
+    margin-top: 3px;
+  }
+  .data-table tfoot td {
+    background: var(--surface2);
+    font-weight: 600;
+    font-family: var(--font-mono);
+    font-size: 12px;
+    border-top: 2px solid var(--border-bright);
+    border-bottom: none;
+    padding: 14px 16px;
+  }
+
+  .status {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-family: var(--font-mono);
+    font-size: 10px;
+    font-weight: 700;
+    padding: 3px 10px;
+    border-radius: 6px;
+    white-space: nowrap;
+    letter-spacing: 0.5px;
+  }
+  .status::before { content: ''; width: 6px; height: 6px; border-radius: 50%; background: currentColor; }
+  .status--critical { background: var(--red-dim); color: var(--red); }
+  .status--high { background: var(--orange-dim); color: var(--orange); }
+  .status--medium { background: var(--yellow-dim); color: var(--yellow); }
+  .status--planned { background: var(--blue-dim); color: var(--blue); }
+
+  /* ============ DIFF PANELS ============ */
+  .diff-panels {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0;
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    overflow: hidden;
+    margin-bottom: 32px;
+  }
+  .diff-panels > * { min-width: 0; overflow-wrap: break-word; }
+  .diff-panel__header {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+    padding: 12px 20px;
+  }
+  .diff-panel__header--before {
+    background: var(--red-dim);
+    color: var(--red);
+    border-bottom: 2px solid var(--red);
+  }
+  .diff-panel__header--after {
+    background: var(--green-dim);
+    color: var(--green);
+    border-bottom: 2px solid var(--green);
+  }
+  .diff-panel__body {
+    padding: 20px;
+    background: var(--surface);
+    font-size: 13px;
+    line-height: 1.6;
+  }
+  .diff-panel__body ul {
+    list-style: none;
+    padding: 0;
+  }
+  .diff-panel__body li {
+    padding: 4px 0 4px 16px;
+    position: relative;
+    font-size: 12px;
+    color: var(--text-dim);
+  }
+  .diff-panel__body li::before {
+    content: '\203A';
+    position: absolute;
+    left: 0;
+    color: var(--text-dim);
+    font-weight: 700;
+  }
+  .diff-panel__body li.has { color: var(--green); }
+  .diff-panel__body li.missing { color: var(--red); }
+
+  /* ============ LEGEND ============ */
+  .legend {
+    display: flex;
+    gap: 24px;
+    flex-wrap: wrap;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 16px 20px;
+  }
+  .legend-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-family: var(--font-mono);
+    font-size: 11px;
+    color: var(--text-dim);
+  }
+  .legend-swatch {
+    width: 12px;
+    height: 12px;
+    border-radius: 3px;
+    flex-shrink: 0;
+  }
+
+  /* ============ RESPONSIVE ============ */
+  @media (max-width: 1000px) {
+    .wrap { grid-template-columns: 1fr; padding-top: 0; }
+    body { padding: 16px; padding-top: 0; }
+    .toc {
+      position: sticky;
+      top: 0;
+      z-index: 200;
+      max-height: none;
+      display: flex;
+      gap: 4px;
+      align-items: center;
+      overflow-x: auto;
+      -webkit-overflow-scrolling: touch;
+      background: var(--bg);
+      border-bottom: 1px solid var(--border);
+      padding: 10px 0;
+      margin: 0 -16px;
+      padding-left: 16px;
+      padding-right: 16px;
+      grid-row: auto;
+    }
+    .toc::-webkit-scrollbar { display: none; }
+    .toc-title { display: none; }
+    .toc a {
+      white-space: nowrap;
+      flex-shrink: 0;
+      border-left: none;
+      border-bottom: 2px solid transparent;
+      border-radius: 4px 4px 0 0;
+      padding: 6px 10px;
+      font-size: 10px;
+    }
+    .toc a.active { border-left: none; border-bottom-color: var(--mauve); background: var(--surface); }
+    .main { padding-top: 20px; }
+    .sec-head { scroll-margin-top: 52px; }
+
+    .kpi-row { grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); }
+    .pyramid-tier--integration { width: 90%; }
+    .pyramid-tier--e2e { width: 74%; }
+    .diff-panels { grid-template-columns: 1fr; }
+    .pyramid-tier__grid { grid-template-columns: 1fr; }
+  }
+
+  @media (max-width: 600px) {
+    h1 { font-size: 24px; }
+    .kpi-row { grid-template-columns: 1fr 1fr; }
+  }
+</style>
+</head>
+<body>
+
+<div class="wrap">
+
+  <nav class="toc" id="toc">
+    <div class="toc-title">Contents</div>
+    <a href="#s1">KPI Summary</a>
+    <a href="#s2">Testing Pyramid</a>
+    <a href="#s3">CI/CD Pipeline</a>
+    <a href="#s4">Gap Analysis</a>
+    <a href="#s5">Diff: Current vs Target</a>
+  </nav>
+
+  <div class="main">
+
+    <h1 class="animate" style="--i:0">AESOP Studio</h1>
+    <p class="subtitle animate" style="--i:1">Testing Methodology &amp; CI/CD Architecture</p>
+    <p class="description animate" style="--i:2">
+      Multi-layered testing strategy for the six-stage agent development pipeline
+      (<code>Discover</code> &rarr; <code>Design</code> &rarr; <code>Build</code> &rarr; <code>Evaluate</code> &rarr; <code>Repair</code> &rarr; <code>Track</code>).
+      Backend on Fly.io, frontend on Vercel, database on Supabase.
+    </p>
+
+    <!-- ============================================================ -->
+    <!-- KPI SUMMARY                                                -->
+    <!-- ============================================================ -->
+    <div id="s1" class="sec-head animate" style="--i:3"><span class="dot"></span>1 — Current Test Suite at a Glance</div>
+
+    <div class="kpi-row">
+      <div class="kpi-card" style="--i:4">
+        <div class="kpi-card__value kpi-card__value--green">847</div>
+        <div class="kpi-card__label">Passing Tests</div>
+        <div class="kpi-card__detail">Backend · pytest</div>
+      </div>
+      <div class="kpi-card" style="--i:5">
+        <div class="kpi-card__value kpi-card__value--red">5</div>
+        <div class="kpi-card__label">Failing Tests</div>
+        <div class="kpi-card__detail">Pre-existing</div>
+      </div>
+      <div class="kpi-card" style="--i:6">
+        <div class="kpi-card__value">20</div>
+        <div class="kpi-card__label">Skipped Tests</div>
+        <div class="kpi-card__detail">Conditional skips</div>
+      </div>
+      <div class="kpi-card" style="--i:7">
+        <div class="kpi-card__value">6.6s</div>
+        <div class="kpi-card__label">Test Runtime</div>
+        <div class="kpi-card__detail">847 tests</div>
+      </div>
+      <div class="kpi-card" style="--i:8">
+        <div class="kpi-card__value kpi-card__value--orange">0</div>
+        <div class="kpi-card__label">CI/CD Pipelines</div>
+        <div class="kpi-card__detail">No GitHub Actions</div>
+      </div>
+    </div>
+
+    <!-- ============================================================ -->
+    <!-- TESTING PYRAMID                                             -->
+    <!-- ============================================================ -->
+    <div id="s2" class="sec-head animate" style="--i:9"><span class="dot"></span>2 — Testing Pyramid</div>
+
+    <div class="pyramid">
+
+      <!-- E2E (top) -->
+      <div class="pyramid-tier pyramid-tier--e2e animate" style="--i:10">
+        <div class="pyramid-tier__header">
+          <div class="pyramid-tier__badge pyramid-tier__badge--e2e">E2E</div>
+          <div class="pyramid-tier__title">End-to-End</div>
+          <div class="pyramid-tier__stats">9 spec files · Playwright · ~3 min</div>
+        </div>
+        <div class="pyramid-tier__grid">
+          <div class="pyramid-tier__item">
+            <strong>Target:</strong> Vercel preview deployments via PR bot<br>
+            <strong>Auth:</strong> Session-based (<code>E2E_AUTH=true</code>)<br>
+            <strong>Coverage:</strong> Full user journeys, agent CRUD, eval wizard
+          </div>
+          <div class="pyramid-tier__item">
+            <strong>Specs:</strong> <code>evaluations.spec.ts</code>, <code>agents.spec.ts</code>, <code>auth-flows.spec.ts</code>, <code>dashboard.spec.ts</code>, <code>repair.spec.ts</code>, <code>hydra.spec.ts</code>, <code>evaluation-execution.spec.ts</code>, <code>evaluation-wizard.spec.ts</code>, <code>user-journey.spec.ts</code>
+          </div>
+        </div>
+      </div>
+
+      <div class="pyramid-connector animate" style="--i:11"></div>
+
+      <!-- Integration (middle) -->
+      <div class="pyramid-tier pyramid-tier--integration animate" style="--i:12">
+        <div class="pyramid-tier__header">
+          <div class="pyramid-tier__badge pyramid-tier__badge--integration">Integration</div>
+          <div class="pyramid-tier__title">API Contract + Service Integration</div>
+          <div class="pyramid-tier__stats">Target: ~40 tests · pytest · ~2s</div>
+        </div>
+        <div class="pyramid-tier__grid">
+          <div class="pyramid-tier__item">
+            <strong>API Contract Tests:</strong> Verify frontend API assumptions against backend schema<br>
+            <strong>Supabase Integration:</strong> Real DB tests with seeded data<br>
+            <strong>Auth Flow:</strong> JWT validation, RLS policies, role-based access
+          </div>
+          <div class="pyramid-tier__item">
+            <strong>Status:</strong> <span style="color:var(--red)">Not yet built</span> — all backend tests mock Supabase<br>
+            <strong>Tool:</strong> <code>httpx.AsyncClient</code> + <code>pytest-asyncio</code><br>
+            <strong>Gate:</strong> Must pass before E2E runs
+          </div>
+        </div>
+      </div>
+
+      <div class="pyramid-connector animate" style="--i:13"></div>
+
+      <!-- Unit (bottom) -->
+      <div class="pyramid-tier pyramid-tier--unit animate" style="--i:14">
+        <div class="pyramid-tier__header">
+          <div class="pyramid-tier__badge pyramid-tier__badge--unit">Unit</div>
+          <div class="pyramid-tier__title">Backend Unit Tests + Frontend Component Tests</div>
+          <div class="pyramid-tier__stats">847+ tests · <code>pytest -v</code> · ~6.6s</div>
+        </div>
+        <div class="pyramid-tier__grid">
+          <div class="pyramid-tier__item">
+            <strong>Backend (59 files):</strong> Routes, agents, scoring, connectors, build pipeline, auth, middleware, org isolation, versioning, analytics<br>
+            <strong>Key fixtures:</strong> <code>mock_supabase</code>, <code>mock_anthropic</code>, <code>authenticated_client</code>, <code>valid_jwt_token</code>
+          </div>
+          <div class="pyramid-tier__item">
+            <strong>Frontend (4 files):</strong> <code>ErrorBoundary.test.tsx</code>, <code>LoadingSpinner.test.tsx</code>, <code>EmptyState.test.tsx</code>, <code>api.test.ts</code><br>
+            <strong>Status:</strong> <span style="color:var(--orange)">Severely under-tested</span> — 4 components vs. full Next.js app with complex multi-stage flows
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- ============================================================ -->
+    <!-- CI/CD PIPELINE                                              -->
+    <!-- ============================================================ -->
+    <div id="s3" class="sec-head animate" style="--i:15"><span class="dot"></span>3 — Target CI/CD Pipeline</div>
+
+    <div class="mermaid-wrap animate" style="--i:16">
+      <div class="zoom-controls">
+        <button onclick="zoomDiagram(this, 1.2)" title="Zoom in">+</button>
+        <button onclick="zoomDiagram(this, 0.8)" title="Zoom out">&minus;</button>
+        <button onclick="resetZoom(this)" title="Reset zoom">&#8634;</button>
+      </div>
+      <pre class="mermaid">
+        graph TD
+          A["Push / PR Open"] --> B["Pre-commit Hooks<br/><small>lint · type-check · format</small>"]
+          B --> C{"Branch?"}
+          C -->|main| D["GitHub Actions Triggered"]
+          C -->|feature| E["GitHub Actions Triggered"]
+
+          D --> F{"Parallel Stage 1"}
+          E --> F
+
+          F --> G["Backend Unit<br/><small>pytest · 847+ tests · ~7s</small>"]
+          F --> H["Frontend Unit<br/><small>Jest · ~50 tests (target) · ~5s</small>"]
+
+          G --> I{"Parallel: all pass?"}
+          H --> I
+
+          I -->|Yes| J["Integration Tests<br/><small>API contracts + Supabase seed · ~8s</small>"]
+          I -->|No| K["Fail Fast — notify, block merge"]
+
+          J --> L{"Pass?"}
+          L -->|Yes| M["Preview Deploy<br/><small>Vercel (frontend) + Fly.io (backend)</small>"]
+          L -->|No| K
+
+          M --> N["E2E Tests<br/><small>Playwright vs preview URL · ~3 min</small>"]
+          N --> O{"Pass?"}
+          O -->|Yes| P["Coverage Report<br/><small>pytest-cov + Jest coverage</small>"]
+          O -->|No| Q["Alert + Block Merge<br/><small>Playwright HTML report attached</small>"]
+
+          P --> R{"Thresholds Met?<br/><small>Backend ≥80% · Frontend ≥70%</small>"}
+          R -->|Yes| S["Deploy Gate Open<br/><small>Merge allowed · auto-deploy to production</small>"]
+          R -->|No| T["Warning + Allow Merge<br/><small>Coverage regression noted</small>"]
+
+          S --> U["Production Deploy<br/><small>Fly.io + Vercel</small>"]
+          U --> V["Health Check<br/><small>GET / · GET /health · smoke test</small>"]
+          V --> W["Done — Slack Notification"]
+      </pre>
+    </div>
+
+    <div class="legend animate" style="--i:17">
+      <div class="legend-item"><div class="legend-swatch" style="background:var(--green)"></div> Pass / Merge Allowed</div>
+      <div class="legend-item"><div class="legend-swatch" style="background:var(--red)"></div> Fail / Block Merge</div>
+      <div class="legend-item"><div class="legend-swatch" style="background:var(--orange)"></div> Warning / Conditional</div>
+      <div class="legend-item"><div class="legend-swatch" style="background:var(--blue)"></div> Automated Step</div>
+      <div class="legend-item"><div class="legend-swatch" style="background:var(--yellow)"></div> Decision Gate</div>
+    </div>
+
+    <!-- ============================================================ -->
+    <!-- GAP ANALYSIS TABLE                                          -->
+    <!-- ============================================================ -->
+    <div id="s4" class="sec-head animate" style="--i:18"><span class="dot"></span>4 — Gap Analysis &amp; Remediation Plan</div>
+
+    <div class="table-wrap animate" style="--i:19">
+      <div class="table-scroll">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>#</th>
+              <th class="wide">Gap</th>
+              <th class="wide">Current State</th>
+              <th class="wide">Target State</th>
+              <th>Severity</th>
+              <th>Effort</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>1</td>
+              <td class="wide"><strong>No CI/CD Pipeline</strong></td>
+              <td class="wide">Tests run manually via CLI. No automation, no PR gating, no alerting.</td>
+              <td class="wide">GitHub Actions workflow with parallel stages, preview deploys, and Slack notifications.</td>
+              <td><span class="status status--critical">Critical</span></td>
+              <td><small>1 day — scaffold workflow YAML</small></td>
+            </tr>
+            <tr>
+              <td>2</td>
+              <td class="wide"><strong>No PR/Branch Protection</strong></td>
+              <td class="wide">Code can merge without any test gate. E2E targets production only.</td>
+              <td class="wide">Branch protection rules requiring passing CI. E2E runs against Vercel preview deploy URL.</td>
+              <td><span class="status status--critical">Critical</span></td>
+              <td><small>2 hr — GitHub branch rules</small></td>
+            </tr>
+            <tr>
+              <td>3</td>
+              <td class="wide"><strong>No JSONL Logging Test Harness</strong></td>
+              <td class="wide">Build standard requires structured JSONL logging + fixture-based test harness; not implemented.</td>
+              <td class="wide"><code>conftest.py</code> fixture that captures structured logs, asserts log shape per request.</td>
+              <td><span class="status status--critical">Critical</span></td>
+              <td><small>2 days — log capture fixture + assertions</small></td>
+            </tr>
+            <tr>
+              <td>4</td>
+              <td class="wide"><strong>Frontend Unit Tests Anemic</strong></td>
+              <td class="wide">4 component tests vs. full Next.js app with complex Discover→Design→Build→Evaluate flows.</td>
+              <td class="wide">Jest tests for all pages, forms, hooks, and state management. Target: ≥50 test files.</td>
+              <td><span class="status status--high">High</span></td>
+              <td><small>1-2 weeks — write tests per page/component</small></td>
+            </tr>
+            <tr>
+              <td>5</td>
+              <td class="wide"><strong>No Supabase Integration Tests</strong></td>
+              <td class="wide">Every backend test mocks <code>supabase</code>. RLS, migrations, and DB constraints untested.</td>
+              <td class="wide">Dedicated test Supabase project. Seed scripts. Integration tests with <code>httpx.AsyncClient</code>.</td>
+              <td><span class="status status--high">High</span></td>
+              <td><small>2 days — test DB + seed + suite</small></td>
+            </tr>
+            <tr>
+              <td>6</td>
+              <td class="wide"><strong>No Coverage Thresholds</strong></td>
+              <td class="wide">Unknown test coverage. No <code>pytest-cov</code> or Jest coverage config.</td>
+              <td class="wide"><code>pytest-cov</code> with ≥80% branch threshold. Jest coverage with ≥70% threshold. CI enforcement.</td>
+              <td><span class="status status--high">High</span></td>
+              <td><small>3 hr — config + CI enforcement</small></td>
+            </tr>
+            <tr>
+              <td>7</td>
+              <td class="wide"><strong>No Pre-commit Hooks</strong></td>
+              <td class="wide">Lint/type-check not enforced. No <code>.pre-commit-config.yaml</code>.</td>
+              <td class="wide"><code>pre-commit</code> hooks: ruff format, ruff check, mypy, eslint, prettier.</td>
+              <td><span class="status status--medium">Medium</span></td>
+              <td><small>2 hr — config + install</small></td>
+            </tr>
+            <tr>
+              <td>8</td>
+              <td class="wide"><strong>E2E Only Targets Production</strong></td>
+              <td class="wide">Playwright connects to <code>aesop-studio.vercel.app</code>. No preview URL testing.</td>
+              <td class="wide">CI passes <code>PLAYWRIGHT_BASE_URL</code> from Vercel preview deploy. Tests run before merge.</td>
+              <td><span class="status status--medium">Medium</span></td>
+              <td><small>3 hr — CI env var + deploy hook</small></td>
+            </tr>
+            <tr>
+              <td>9</td>
+              <td class="wide"><strong>No Failure Alerting</strong></td>
+              <td class="wide">5 pre-existing failures sit unfixed with no notification.</td>
+              <td class="wide">Slack webhook on CI failure. GitHub issue auto-created for persistent failures.</td>
+              <td><span class="status status--medium">Medium</span></td>
+              <td><small>1 hr — Slack webhook + CI step</small></td>
+            </tr>
+            <tr>
+              <td>10</td>
+              <td class="wide"><strong>No API Contract Tests</strong></td>
+              <td class="wide">Frontend API assumptions against backend schema unverified. Type drift possible.</td>
+              <td class="wide">OpenAPI schema snapshot tests. CI fails if backend schema changes without frontend update.</td>
+              <td><span class="status status--medium">Medium</span></td>
+              <td><small>1 day — schema export + snapshot</small></td>
+            </tr>
+            <tr>
+              <td>11</td>
+              <td class="wide"><strong>Single Python Version</strong></td>
+              <td class="wide">Only tests against Python 3.14. No version matrix.</td>
+              <td class="wide">GitHub Actions matrix: Python 3.12, 3.13, 3.14.</td>
+              <td><span class="status status--planned">Low</span></td>
+              <td><small>1 hr — matrix config</small></td>
+            </tr>
+            <tr>
+              <td>12</td>
+              <td class="wide"><strong>No Visual Regression</strong></td>
+              <td class="wide">Playwright can do visual snapshots; not configured.</td>
+              <td class="wide"><code>toHaveScreenshot()</code> on critical pages. Stored as CI artifacts.</td>
+              <td><span class="status status--planned">Low</span></td>
+              <td><small>4 hr — snapshot config + baselines</small></td>
+            </tr>
+          </tbody>
+          <tfoot>
+            <tr>
+              <td colspan="6" style="text-align:center">
+                12 gaps identified &middot;
+                <span style="color:var(--red)">3 Critical</span> &middot;
+                <span style="color:var(--orange)">3 High</span> &middot;
+                <span style="color:var(--yellow)">4 Medium</span> &middot;
+                <span style="color:var(--blue)">2 Low</span>
+              </td>
+            </tr>
+          </tfoot>
+        </table>
+      </div>
+    </div>
+
+    <!-- ============================================================ -->
+    <!-- CURRENT vs TARGET                                           -->
+    <!-- ============================================================ -->
+    <div id="s5" class="sec-head animate" style="--i:20"><span class="dot"></span>5 — Current vs Target State</div>
+
+    <div class="diff-panels animate" style="--i:21">
+      <div class="diff-panel__header diff-panel__header--before">Current State</div>
+      <div class="diff-panel__header diff-panel__header--after">Target State</div>
+
+      <div class="diff-panel__body">
+        <ul>
+          <li class="missing">No CI/CD — manual test runs only</li>
+          <li class="missing">No pre-commit hooks</li>
+          <li class="missing">No coverage tracking</li>
+          <li class="missing">No PR gating / branch protection</li>
+          <li class="missing">No integration tests (all Supabase mocked)</li>
+          <li class="missing">No contract tests (frontend↔backend)</li>
+          <li class="missing">No failure alerting</li>
+          <li class="missing">No JSONL logging test harness</li>
+          <li class="has">847 backend pytest tests · 6.6s</li>
+          <li class="has">9 Playwright E2E specs</li>
+          <li class="missing">4 frontend component tests (anemic)</li>
+          <li class="missing">E2E targets production only</li>
+        </ul>
+      </div>
+
+      <div class="diff-panel__body">
+        <ul>
+          <li class="has">GitHub Actions CI/CD with parallel stages</li>
+          <li class="has">Pre-commit hooks: ruff + mypy + eslint</li>
+          <li class="has">pytest-cov ≥80% · Jest ≥70% · enforced in CI</li>
+          <li class="has">Branch protection — CI must pass before merge</li>
+          <li class="has">Supabase test project + seeded integration suite</li>
+          <li class="has">OpenAPI schema snapshot + contract tests</li>
+          <li class="has">Slack notifications on failure</li>
+          <li class="has">Structured JSONL log capture fixture</li>
+          <li class="has">847+ backend tests (maintained + growing)</li>
+          <li class="has">9 E2E specs vs. preview deploys</li>
+          <li class="has">50+ frontend unit tests (pages, hooks, forms)</li>
+          <li class="has">Visual regression snapshots on critical paths</li>
+        </ul>
+      </div>
+    </div>
+
+  </div><!-- /main -->
+</div><!-- /wrap -->
+
+<script type="module">
+  import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs';
+
+  const isDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+
+  mermaid.initialize({
+    startOnLoad: true,
+    theme: 'base',
+    look: 'classic',
+    themeVariables: {
+      primaryColor: isDark ? '#15121f' : '#f0ecff',
+      primaryBorderColor: isDark ? '#a855f7' : '#8839ef',
+      primaryTextColor: isDark ? '#ede5ff' : '#1a1530',
+      secondaryColor: isDark ? '#1c1829' : '#dce0e8',
+      secondaryBorderColor: isDark ? '#3b82f6' : '#2563eb',
+      secondaryTextColor: isDark ? '#ede5ff' : '#1a1530',
+      tertiaryColor: isDark ? '#211d30' : '#ffffff',
+      tertiaryBorderColor: isDark ? '#22c55e' : '#16a34a',
+      tertiaryTextColor: isDark ? '#ede5ff' : '#1a1530',
+      lineColor: isDark ? '#7a6f94' : '#6b5f8a',
+      fontSize: '16px',
+      fontFamily: "'Space Grotesk', system-ui, sans-serif",
+      noteBkgColor: isDark ? '#0d0b14' : '#f5f3ff',
+      noteTextColor: isDark ? '#ede5ff' : '#1a1530',
+      noteBorderColor: isDark ? '#eab308' : '#ca8a04',
+    }
+  });
+</script>
+
+<!-- Zoom -->
+<script>
+  function updateZoomState(wrap) {
+    var target = wrap.querySelector('.mermaid');
+    var zoom = parseFloat(target.dataset.zoom || '1');
+    wrap.classList.toggle('is-zoomed', zoom > 1);
+  }
+  function zoomDiagram(btn, factor) {
+    var wrap = btn.closest('.mermaid-wrap');
+    var target = wrap.querySelector('.mermaid');
+    var current = parseFloat(target.dataset.zoom || '1');
+    var next = Math.min(Math.max(current * factor, 0.3), 5);
+    target.dataset.zoom = next;
+    target.style.transform = 'scale(' + next + ')';
+    updateZoomState(wrap);
+  }
+  function resetZoom(btn) {
+    var wrap = btn.closest('.mermaid-wrap');
+    var target = wrap.querySelector('.mermaid');
+    target.dataset.zoom = '1';
+    target.style.transform = 'scale(1)';
+    updateZoomState(wrap);
+  }
+  document.querySelectorAll('.mermaid-wrap').forEach(function(wrap) {
+    wrap.addEventListener('wheel', function(e) {
+      if (!e.ctrlKey && !e.metaKey) return;
+      e.preventDefault();
+      var target = wrap.querySelector('.mermaid');
+      var current = parseFloat(target.dataset.zoom || '1');
+      var factor = e.deltaY < 0 ? 1.1 : 0.9;
+      var next = Math.min(Math.max(current * factor, 0.3), 5);
+      target.dataset.zoom = next;
+      target.style.transform = 'scale(' + next + ')';
+      updateZoomState(wrap);
+    }, { passive: false });
+    var startX, startY, scrollL, scrollT;
+    wrap.addEventListener('mousedown', function(e) {
+      if (e.target.closest('.zoom-controls')) return;
+      var target = wrap.querySelector('.mermaid');
+      if (parseFloat(target.dataset.zoom || '1') <= 1) return;
+      wrap.classList.add('is-panning');
+      startX = e.clientX;
+      startY = e.clientY;
+      scrollL = wrap.scrollLeft;
+      scrollT = wrap.scrollTop;
+    });
+    window.addEventListener('mousemove', function(e) {
+      if (!wrap.classList.contains('is-panning')) return;
+      wrap.scrollLeft = scrollL - (e.clientX - startX);
+      wrap.scrollTop = scrollT - (e.clientY - startY);
+    });
+    window.addEventListener('mouseup', function() { wrap.classList.remove('is-panning'); });
+  });
+</script>
+
+<!-- Scroll Spy -->
+<script>
+(function() {
+  const toc = document.getElementById('toc');
+  const links = toc.querySelectorAll('a');
+  const sections = [];
+  links.forEach(link => {
+    const id = link.getAttribute('href').slice(1);
+    const el = document.getElementById(id);
+    if (el) sections.push({ id, el, link });
+  });
+  const observer = new IntersectionObserver(entries => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        links.forEach(l => l.classList.remove('active'));
+        const match = sections.find(s => s.el === entry.target);
+        if (match) {
+          match.link.classList.add('active');
+          if (window.innerWidth <= 1000) {
+            match.link.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
+          }
+        }
+      }
+    });
+  }, { rootMargin: '-10% 0px -80% 0px' });
+  sections.forEach(s => observer.observe(s.el));
+  links.forEach(link => {
+    link.addEventListener('click', e => {
+      e.preventDefault();
+      const id = link.getAttribute('href').slice(1);
+      const el = document.getElementById(id);
+      if (el) {
+        el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        history.replaceState(null, '', '#' + id);
+      }
+    });
+  });
+})();
+</script>
+
+</body>
+</html>
