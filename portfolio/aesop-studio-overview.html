@@ -4,6 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>AESOP Transformation OS — Executive Overview</title>
+<link rel="icon" type="image/svg+xml" href="../icon.svg">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,wght@0,400;0,500;0,600;0,700;1,400&family=Source+Code+Pro:wght@400;500;600&display=swap" rel="stylesheet">
@@ -11,12 +12,12 @@
   :root {
     --font-display: 'Fraunces', Georgia, serif;
     --font-mono: 'Source Code Pro', 'SF Mono', Consolas, monospace;
-    --bg: #eef4f9; --surface: #ffffff;
+    --bg: #eef4f9; --surface: #ffffff; --surface2: #f5f8fc;
     --border: rgba(0,0,0,0.07); --border-bright: rgba(0,0,0,0.13);
     --text: #0a1628; --text-dim: #3d5a7a; --text-muted: #7a9ab8;
     --primary: #e8621a; --primary-dim: rgba(232,98,26,0.06);
     --secondary: #4a90c4; --secondary-dim: rgba(74,144,196,0.06);
-    --teal: #0d9488;
+    --metric: #0d9488; --metric-dim: rgba(13,148,136,0.06);
   }
   @media (prefers-color-scheme: dark) {
     :root {
@@ -25,55 +26,67 @@
       --text: #e8edf5; --text-dim: #9bb0d4; --text-muted: #5e7aa3;
       --primary: #f37021; --primary-dim: rgba(243,112,33,0.10);
       --secondary: #6cace4; --secondary-dim: rgba(108,172,228,0.10);
+      --metric: #14b8a6; --metric-dim: rgba(20,184,166,0.08);
     }
   }
   * { margin:0; padding:0; box-sizing:border-box; }
   body {
     background: var(--bg);
-    background-image: radial-gradient(ellipse at 80% 0%, var(--primary-dim) 0%, transparent 50%), radial-gradient(ellipse at 20% 60%, var(--secondary-dim) 0%, transparent 40%);
+    background-image: radial-gradient(ellipse at 80% 0%, var(--primary-dim) 0%, transparent 50%);
     color: var(--text); font-family: var(--font-display);
     min-height: 100vh; line-height: 1.7; padding: 32px 24px 64px;
   }
-  .nav { max-width:860px; margin:0 auto 8px; }
-  .nav a { font-family:var(--font-mono); font-size:12px; color:var(--primary); text-decoration:none; }
+  .backlink{position:fixed;top:12px;left:16px;z-index:101;font-family:var(--font-mono);font-size:11px;color:var(--text-dim);text-decoration:none;padding:6px 10px;border:1px solid var(--border);border-radius:6px;background:var(--surface);transition:color .15s,border-color .15s}
+  .backlink:hover{color:var(--text);border-color:var(--border-bright)}
   .container { max-width:860px; margin:0 auto; }
-
   .hero { text-align:center; padding:40px 0 32px; }
   .hero h1 { font-size:44px; font-weight:700; letter-spacing:-0.5px; color:var(--primary); margin-bottom:12px; }
   .hero .lead { font-size:20px; color:var(--text-dim); max-width:620px; margin:0 auto; line-height:1.5; }
 
   section { margin-top:40px; }
-  h2 { font-size:24px; font-weight:700; color:var(--text); margin-bottom:16px; }
+  h2 { font-size:24px; font-weight:700; color:var(--text); margin-bottom:20px; }
 
-  .big-question { font-size:18px; font-weight:600; color:var(--primary); margin-bottom:12px; }
-  .answer { font-size:16px; color:var(--text-dim); margin-bottom:28px; line-height:1.7; }
+  .stage { margin-bottom:28px; }
+  .stage-head { display:flex; align-items:flex-start; gap:16px; margin-bottom:6px; }
+  .stage-num { width:36px;height:36px;border-radius:50%;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-family:var(--font-mono);font-size:14px;font-weight:700;color:#fff;background:var(--primary);margin-top:2px; }
+  .stage-info { flex:1; }
+  .stage-info h3 { font-size:19px; font-weight:700; color:var(--text); margin-bottom:4px; }
+  .stage-info .what { font-size:14px; color:var(--text-dim); line-height:1.6; margin-bottom:8px; }
+  .stage-info .concrete { background:var(--surface); border:1px solid var(--border); border-radius:8px; padding:14px 18px; font-size:13px; color:var(--text-dim); line-height:1.6; }
+  .stage-info .concrete strong { color:var(--text); }
+  .stage-info .concrete ul { list-style:none; padding:0; margin-top:6px; }
+  .stage-info .concrete li { padding:3px 0 3px 14px; position:relative; }
+  .stage-info .concrete li::before { content:'\2022'; position:absolute; left:0; color:var(--primary); }
 
-  .three-up { display:grid; grid-template-columns:repeat(auto-fill,minmax(250px,1fr)); gap:16px; margin-top:20px; }
-  .card { background:var(--surface); border:1px solid var(--border); border-radius:12px; padding:24px; }
-  .card h3 { font-size:17px; font-weight:700; color:var(--text); margin-bottom:8px; }
-  .card p { font-size:14px; color:var(--text-dim); line-height:1.6; }
+  .subpanels { display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-top:12px; }
+  @media(max-width:600px){ .subpanels{grid-template-columns:1fr;} }
+  .subpanel { background:var(--surface2); border:1px solid var(--border); border-radius:7px; padding:12px 14px; font-size:12px; color:var(--text-dim); line-height:1.5; }
+  .subpanel strong { color:var(--text); display:block; margin-bottom:2px; font-size:13px; }
 
-  .flow { margin:32px 0; }
-  .flow-step { display:flex; gap:0; margin-bottom:0; }
-  .flow-connector { display:flex; justify-content:center; height:24px; }
-  .flow-connector-line { width:2px; background:var(--border-bright); }
-  .flow-header { display:flex; align-items:center; gap:14px; padding:14px 0; }
-  .flow-num { width:30px;height:30px;border-radius:50%;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-family:var(--font-mono);font-size:13px;font-weight:700;color:#fff;background:var(--primary); }
-  .flow-label { font-size:18px; font-weight:700; color:var(--text); }
-  .flow-body { background:var(--surface); border:1px solid var(--border); border-radius:8px; padding:18px 22px; margin-bottom:12px; font-size:15px; color:var(--text-dim); line-height:1.7; }
-  .flow-body strong { color:var(--text); }
+  .metrics-panel { background:var(--metric-dim); border:1px solid var(--metric); border-radius:7px; padding:11px 14px; margin-top:12px; font-size:12px; color:var(--text-dim); line-height:1.5; display:flex; align-items:flex-start; gap:10px; }
+  .metrics-panel .metric-icon { font-family:var(--font-mono); font-size:11px; font-weight:700; color:var(--metric); flex-shrink:0; padding-top:1px; }
+  .metrics-panel .metric-body strong { color:var(--metric); }
+  .metrics-panel .callback { font-family:var(--font-mono); font-size:10px; color:var(--metric); margin-top:4px; }
 
   .outcome-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(180px,1fr)); gap:12px; margin-top:20px; }
   .outcome { background:var(--surface); border:1px solid var(--border); border-radius:8px; padding:16px; text-align:center; }
   .outcome .num { font-size:32px; font-weight:800; color:var(--primary); }
   .outcome .label { font-size:12px; color:var(--text-dim); font-family:var(--font-mono); text-transform:uppercase; margin-top:4px; }
 
+  @keyframes fadeUp { from{opacity:0;transform:translateY(8px);} to{opacity:1;transform:translateY(0);} }
+  .stage { animation:fadeUp 0.35s ease-out both; }
+  .stage:nth-child(1){animation-delay:0.03s}.stage:nth-child(2){animation-delay:0.08s}
+  .stage:nth-child(3){animation-delay:0.13s}.stage:nth-child(4){animation-delay:0.18s}
+  .stage:nth-child(5){animation-delay:0.23s}.stage:nth-child(6){animation-delay:0.28s}
+  .stage:nth-child(7){animation-delay:0.33s}.stage:nth-child(8){animation-delay:0.38s}
+  @media(prefers-reduced-motion:reduce){.stage{animation:none}}
+
   .footer { margin-top:48px; padding-top:16px; border-top:1px solid var(--border); text-align:center; font-size:12px; color:var(--text-muted); }
   .footer a { color:var(--primary); text-decoration:none; }
 </style>
 </head>
 <body>
-<div class="nav"><a href="../index.html">&larr; Portfolio Index</a></div>
+<a href="../index.html" class="backlink" title="Back to Index">&larr; Index</a>
 <div class="container">
 
   <div class="hero">
@@ -81,55 +94,161 @@
     <p class="lead">A platform that helps organizations move from &ldquo;we know we should use AI&rdquo; to actually running governed, trusted AI agents across the business.</p>
   </div>
 
-  <!-- What it does -->
   <section>
-    <h2>What it does</h2>
-    <div class="big-question">Every organization hits the same wall with AI.</div>
-    <div class="answer">You build a few agents. They work. Then you build more. Suddenly you have twenty agents, no idea which ones are safe, no consistent way to evaluate them, and no process for keeping them current. The person who built the marketing agent leaves, and nobody knows how it works.</div>
-    <div class="answer">AESOP solves this. It's a single system that takes an AI agent from idea to production — with governance, evaluation, and maintenance built in from day one, not bolted on after something breaks.</div>
-  </section>
+    <h2>How it works</h2>
 
-  <section>
-    <h2>How it works — in plain terms</h2>
+    <!-- ══════ STAGE 1: ORG CONTEXT ══════ -->
+    <div class="stage">
+      <div class="stage-head"><div class="stage-num">1</div><div class="stage-info">
+        <h3>Ground the work in your organization</h3>
+        <div class="what">Before anyone builds anything, AESOP captures how your organization actually works &mdash; departments, priorities, where work gets stuck. Three lenses together: the context you operate in, the research that informs decisions, and the discovery of what&rsquo;s actually needed.</div>
+        <div class="concrete">
+          <strong>In the app:</strong> An admin dashboard with portfolio KPIs, an organization context library, a department roster, and a strategic prioritization view that scores AI project candidates.
+          <div class="subpanels">
+            <div class="subpanel"><strong>Context</strong>Upload org charts, strategy docs, process maps. Define departments, team members, and decision rights. The platform builds a living model of how your organization operates.</div>
+            <div class="subpanel"><strong>Research</strong>AI Adoption Roadmap auto-generated from your context. Delegation of Authority Report maps who decides what. Strategic Portfolio Kanban visualizes all projects: Backlog, On Deck, In Progress, Done.</div>
+          </div>
+          <div class="metrics-panel">
+            <div class="metric-icon">&#x1F4CF;</div>
+            <div class="metric-body"><strong>Metrics:</strong> Portfolio health tracked via project count per stage, average time-in-stage, and adoption readiness score. These baselines set the benchmark that stages 7 and 8 measure against.</div>
+          </div>
+        </div>
+      </div></div>
+    </div>
 
-    <div class="flow">
-      <div class="flow-header"><div class="flow-num">1</div><span class="flow-label">Understand your organization first</span></div>
-      <div class="flow-body">Before anyone builds anything, AESOP captures <strong>how your organization actually works</strong> — who decides what, where work gets stuck, what your real priorities are. This isn't a form. It's the foundation everything else is built on, and it stays current as things change.</div>
+    <!-- ══════ STAGE 2: WORKING AGREEMENT ══════ -->
+    <div class="stage">
+      <div class="stage-head"><div class="stage-num">2</div><div class="stage-info">
+        <h3>Secure management sponsorship with a Working Agreement</h3>
+        <div class="what">Every initiative lives inside a project container. Before design starts, a Working Agreement locks in scope, responsibilities, and a north star metric &mdash; ensuring leadership commitment exists before resources are spent.</div>
+        <div class="concrete">
+          <strong>In the app:</strong> Create a project, define a north star metric (what does success look like?), then generate a Working Agreement from a template. It auto-fills stakeholder names, autonomy level, and commitment scores from discovery data. Design is locked until the agreement is signed &mdash; with an override for internal projects.
+          <ul>
+            <li>Pipeline progress bar shows green checkmarks for completed stages, amber spinners for in-progress</li>
+            <li>Working Agreement status: draft &rarr; sent &rarr; signed</li>
+            <li>North star metric is the thread that runs through every subsequent stage</li>
+          </ul>
+          <div class="metrics-panel">
+            <div class="metric-icon">&#x1F4CF;</div>
+            <div class="metric-body"><strong>Metrics:</strong> North star metric defined here &mdash; a single measurable outcome that answers &ldquo;what does success look like?&rdquo; Example: &ldquo;Reduce contract review turnaround from 14 days to 2 days.&rdquo; This metric is referenced at every gate: Design (can we achieve it?), Build (does the agent target it?), Evaluate (did we hit it?), and Monitor (are we still hitting it?).</div>
+          </div>
+        </div>
+      </div></div>
+    </div>
 
-      <div class="flow-connector"><div class="flow-connector-line"></div></div>
+    <!-- ══════ STAGE 3: DISCOVERY ══════ -->
+    <div class="stage">
+      <div class="stage-head"><div class="stage-num">3</div><div class="stage-info">
+        <h3>Validate the problem before you build</h3>
+        <div class="what">A structured interview walks through the problem, the stakeholders, and the constraints &mdash; then gives a straight answer: go, no-go, or conditional. Data from stages 1 and 2 (org context, north star) feeds directly into the interview.</div>
+        <div class="concrete">
+          <strong>In the app:</strong> A guided interview screen with structured questions. The system classifies how autonomous the agent should be and scores commitment readiness across three dimensions: does the team have capacity, will they respond quickly enough, and can they absorb the change?
+          <ul>
+            <li>Opportunity Brief auto-generated from interview answers</li>
+            <li>Triage verdict: GO, NO-GO, or CONDITIONAL &mdash; with the reasoning visible</li>
+            <li>Stakeholder map captured: executive sponsor, project owner, affected groups</li>
+          </ul>
+          <div class="metrics-panel">
+            <div class="metric-icon">&#x1F4CF;</div>
+            <div class="metric-body"><strong>Metrics:</strong> Commitment readiness scored 0&ndash;100 across three dimensions (capacity, responsiveness, change appetite). Scores below 60 trigger a CONDITIONAL verdict. North star alignment is checked: does the discovery brief actually target the metric defined in the Working Agreement?</div>
+          </div>
+        </div>
+      </div></div>
+    </div>
 
-      <div class="flow-header"><div class="flow-num">2</div><span class="flow-label">Define the project and agree on scope</span></div>
-      <div class="flow-body">Every AI initiative is wrapped in a <strong>project container</strong> that tracks all work from start to finish. Before anyone writes a line, a <strong>Working Agreement</strong> spells out exactly what will be delivered, who is responsible, and how fast people need to respond. No scope creep, no orphaned projects.</div>
+    <!-- ══════ STAGE 4: DESIGN ══════ -->
+    <div class="stage">
+      <div class="stage-head"><div class="stage-num">4</div><div class="stage-info">
+        <h3>Design the right solution</h3>
+        <div class="what">From the opportunity brief, AESOP generates a full PRD and scores which AI platform is the best fit &mdash; not defaulting to whatever tool you already have.</div>
+        <div class="concrete">
+          <strong>In the app:</strong> A PRD document generated from the discovery brief. An architecture recommendation card scores each platform option (Glean, Claude API, OpenAI, custom) across feasibility, capability, and fit. An 11-dimension gap analysis flags missing or infeasible requirements.
+          <ul>
+            <li>Side-by-side platform comparison with scores and rationale</li>
+            <li>Gap analysis: red flags for anything that can't be built as specified</li>
+            <li>PRD can be downloaded as Markdown for sharing outside the platform</li>
+          </ul>
+        </div>
+      </div></div>
+    </div>
 
-      <div class="flow-connector"><div class="flow-connector-line"></div></div>
+    <!-- ══════ STAGE 5: BUILD ══════ -->
+    <div class="stage">
+      <div class="stage-head"><div class="stage-num">5</div><div class="stage-info">
+        <h3>Build the agent &mdash; with a human checkpoint</h3>
+        <div class="what">A six-phase pipeline writes the agent's instructions. A human must approve before the build proceeds past the gap analysis. You see every phase stream in real time.</div>
+        <div class="concrete">
+          <strong>In the app:</strong> A build page showing six phases with real-time streaming progress. Phase 1 (Gap Analysis) halts for human approval &mdash; a big "Approve" button, not a silent automation. Nine quick-start patterns (Q&A Bot, Workflow Agent, Approval Workflow, etc.) let you skip the blank page.
+          <ul>
+            <li>Phase 0: Fitness Check &mdash; auto-stops if the platform can't support this agent</li>
+            <li>Phase 3: Write Instructions &mdash; the actual system prompt, visible and editable</li>
+            <li>Phase 5: Summary &mdash; what will change, what could go wrong, what ripple effects to watch for</li>
+          </ul>
+        </div>
+      </div></div>
+    </div>
 
-      <div class="flow-header"><div class="flow-num">3</div><span class="flow-label">Validate the problem before building</span></div>
-      <div class="flow-body">A structured interview asks: <strong>Who has this problem? How often? What do they do today?</strong> It produces a straightforward GO / NO-GO verdict. If the problem isn't real, frequent, and costly, AESOP tells you to stop before you waste months building something nobody needs.</div>
+    <!-- ══════ STAGE 6: EVALUATE ══════ -->
+    <div class="stage">
+      <div class="stage-head"><div class="stage-num">6</div><div class="stage-info">
+        <h3>Evaluate before you deploy &mdash; with a hard safety gate</h3>
+        <div class="what">Seven different ways to test the agent. If safety or bias scores drop below 75%, the agent cannot ship. This is enforced by the platform, not left to judgment calls.</div>
+        <div class="concrete">
+          <strong>In the app:</strong> An evaluation dashboard showing per-dimension scores, a certification badge (Bronze through Platinum), and a pass/fail verdict with the veto rule visible. Each evaluation mode has its own interface &mdash; red-team attack personas, custom rubric builder, bias probe scenario configurator.
+          <ul>
+            <li>Standard Analysis: 5 evaluators score Instructions, Ethos, Bias, Safety &mdash; with weighted scoring</li>
+            <li>Cave of Shadows: adversarial testing with attack personas probing boundary violations</li>
+            <li>KB Audit: per-document issues and suggestions for retrieval agents</li>
+            <li>Evaluation reports downloadable, all findings link back to source evidence</li>
+          </ul>
+          <div class="metrics-panel">
+            <div class="metric-icon">&#x1F4CF;</div>
+            <div class="metric-body"><strong>Metrics:</strong> Certification score (Bronze 75+, Silver 80+, Gold 85+, Platinum 90+). Hard veto: if Bias or Safety falls below 75, the total score is capped at 74.9 regardless of other dimensions. North star metric is evaluated: does the agent&rsquo;s output actually move the needle defined in stage 2?</div>
+          </div>
+        </div>
+      </div></div>
+    </div>
 
-      <div class="flow-connector"><div class="flow-connector-line"></div></div>
+    <!-- ══════ STAGE 7: OPERATIONALIZE ══════ -->
+    <div class="stage">
+      <div class="stage-head"><div class="stage-num">7</div><div class="stage-info">
+        <h3>Give the organization what it needs to adopt the agent</h3>
+        <div class="what">A technically perfect agent that nobody uses is a failure. AESOP generates the documents your organization actually needs to deploy, adopt, and maintain the agent &mdash; using data it already collected.</div>
+        <div class="concrete">
+          <strong>In the app:</strong> A "Generate Launch Package" button on the Build page. One click produces four documents. Each can be expanded inline, downloaded as Markdown, and marked as reviewed. Tiger Team feedback can be pasted directly into the Repair workflow.
+          <ul>
+            <li><strong>RACI Matrix:</strong> Who is Responsible, Accountable, Consulted, Informed for every activity</li>
+            <li><strong>Tiger Team Brief:</strong> A 5-minute read for stakeholders &mdash; what changes for them, what's needed</li>
+            <li><strong>Maintenance Plan:</strong> Evaluation cadence, drift thresholds, decommission criteria</li>
+            <li><strong>Adoption Plan:</strong> Phased rollout calibrated to how ready the organization actually is</li>
+          </ul>
+          <div class="metrics-panel">
+            <div class="metric-icon">&#x1F4CF;</div>
+            <div class="metric-body"><strong>Metrics &mdash; calling back to stage 2:</strong> The Adoption Plan includes a target for the north star metric defined in the Working Agreement. If the metric was &ldquo;reduce turnaround from 14 days to 2 days,&rdquo; the adoption plan specifies: measure baseline before rollout, track weekly during phased adoption, and define the threshold that counts as &ldquo;adopted.&rdquo; <span class="callback">&#x2192; Stage 8 monitors these same metrics continuously.</span></div>
+          </div>
+        </div>
+      </div></div>
+    </div>
 
-      <div class="flow-header"><div class="flow-num">4</div><span class="flow-label">Design the right solution</span></div>
-      <div class="flow-body">AESOP generates a product requirements document from the discovery interview and <strong>scores which AI platform is the right fit</strong> for this specific problem — not just defaulting to the tool you already have. It flags gaps and infeasible requirements before a single line of code is written.</div>
-
-      <div class="flow-connector"><div class="flow-connector-line"></div></div>
-
-      <div class="flow-header"><div class="flow-num">5</div><span class="flow-label">Build the agent, with a human checkpoint</span></div>
-      <div class="flow-body">A six-phase build pipeline writes the agent's instructions. <strong>A human must approve</strong> before the build proceeds past the gap analysis phase — this is not a fully automated black box. The pipeline outputs not just instructions, but a clear explanation of what will change, what could go wrong, and what second-order effects to watch for.</div>
-
-      <div class="flow-connector"><div class="flow-connector-line"></div></div>
-
-      <div class="flow-header"><div class="flow-num">6</div><span class="flow-label">Evaluate before you deploy</span></div>
-      <div class="flow-body">Seven different ways of testing the agent, not just one. Beyond checking if it works, AESOP tests for <strong>safety, bias, and edge cases</strong>. If safety or bias scores fall below 75%, the agent <strong>cannot ship</strong> — period. This is a hard rule, not a suggestion.</div>
-
-      <div class="flow-connector"><div class="flow-connector-line"></div></div>
-
-      <div class="flow-header"><div class="flow-num">7</div><span class="flow-label">Give the organization what it needs to adopt the agent</span></div>
-      <div class="flow-body">A technically sound agent that nobody uses is a failure. AESOP generates four documents from data it already collected: <strong>who does what (RACI), what stakeholders need to know (Tiger Team Brief), how to maintain it, and how to roll it out in phases.</strong></div>
-
-      <div class="flow-connector"><div class="flow-connector-line"></div></div>
-
-      <div class="flow-header"><div class="flow-num">8</div><span class="flow-label">Monitor and improve continuously</span></div>
-      <div class="flow-body">Once agents are live, AESOP tracks <strong>how they're performing, what they cost, and whether they're drifting from their original quality.</strong> When scores drop or something breaks, the Repair workflow analyzes what went wrong and rewrites instructions — closing the loop between real-world feedback and improvement.</div>
+    <!-- ══════ STAGE 8: MONITOR ══════ -->
+    <div class="stage">
+      <div class="stage-head"><div class="stage-num">8</div><div class="stage-info">
+        <h3>Monitor, repair, and improve</h3>
+        <div class="what">Once agents are live, AESOP tracks how they're performing, what they cost, and whether they're drifting. When scores drop, the Repair workflow analyzes failures and rewrites instructions.</div>
+        <div class="concrete">
+          <strong>In the app:</strong> A portfolio health dashboard showing all agents with current scores, cost tracking, and drift alerts. The Repair page lets you paste evaluation reports and Tiger Team findings, then runs an extended-thinking analysis to produce rewritten instructions with a tracked change summary.
+          <ul>
+            <li>Score trajectory charts show improvement (or decline) across evaluation iterations</li>
+            <li>Version history with diffs for all agent iterations</li>
+            <li>Drift alerts: score below certification threshold, 30+ days since last evaluation</li>
+            <li>Cost tracking: per agent, per evaluation, and in aggregate across the organization</li>
+          </ul>
+          <div class="metrics-panel">
+            <div class="metric-icon">&#x1F4CF;</div>
+            <div class="metric-body"><strong>Metrics &mdash; calling back to stage 2:</strong> North star metric time-series charts show whether the agent is still delivering on the outcome defined in the Working Agreement. Adoption metrics from stage 7 are tracked: is anyone actually using it? Drift alerts fire when the north star metric degrades, triggering a Repair workflow that rewrites instructions to close the gap. <span class="callback">&#x2190; Full loop from define (stage 2) &rarr; target (stage 7) &rarr; track (stage 8) &rarr; repair.</span></div>
+          </div>
+        </div>
+      </div></div>
     </div>
   </section>
 
@@ -138,7 +257,7 @@
     <div class="outcome-grid">
       <div class="outcome"><div class="num">1</div><div class="label">Single System</div><p style="font-size:12px;color:var(--text-dim);margin-top:6px;">One platform for the entire agent lifecycle. No scattered tools, no lost context.</p></div>
       <div class="outcome"><div class="num">Hard Veto</div><div class="label">Safety First</div><p style="font-size:12px;color:var(--text-dim);margin-top:6px;">Unsafe agents can't ship. Governance is enforced by the platform, not by hoping people follow policy.</p></div>
-      <div class="outcome"><div class="num">No Ghosts</div><div class="label">Knowledge Persists</div><p style="font-size:12px;color:var(--text-dim);margin-top:6px;">When people leave, their expertise stays. Every decision, evaluation, and repair is documented and traceable.</p></div>
+      <div class="outcome"><div class="num">Measured</div><div class="label">North Star Metric</div><p style="font-size:12px;color:var(--text-dim);margin-top:6px;">Every agent is built against a measurable outcome. The metric is defined at Working Agreement and tracked through to monitoring.</p></div>
       <div class="outcome"><div class="num">Adoption</div><div class="label">Not Just Build</div><p style="font-size:12px;color:var(--text-dim);margin-top:6px;">Every agent ships with adoption and maintenance plans. The platform cares whether anyone actually uses it.</p></div>
     </div>
   </section>
