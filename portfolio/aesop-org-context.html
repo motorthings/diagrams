@@ -1,0 +1,828 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AESOP — Organization Context</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:wght@400;500;600;700;800&family=Source+Code+Pro:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --font-body: 'Fraunces', Georgia, serif;
+    --font-mono: 'Source Code Pro', 'SF Mono', Consolas, monospace;
+
+    --bg: #fdf6ee;
+    --surface: #ffffff;
+    --surface2: #fef8f0;
+    --surface-elevated: #fff7ed;
+    --border: rgba(0, 0, 0, 0.06);
+    --border-bright: rgba(0, 0, 0, 0.12);
+    --text: #1c1917;
+    --text-dim: #78716c;
+
+    --indigo: #4f46e5;
+    --indigo-dim: rgba(79, 70, 229, 0.07);
+    --amber: #d97706;
+    --amber-dim: rgba(217, 119, 6, 0.07);
+    --orange: #ea580c;
+    --orange-dim: rgba(234, 88, 12, 0.07);
+    --red: #dc2626;
+    --red-dim: rgba(220, 38, 38, 0.07);
+    --slate: #475569;
+    --slate-dim: rgba(71, 85, 105, 0.07);
+    --emerald: #059669;
+    --emerald-dim: rgba(5, 150, 105, 0.07);
+    --violet: #7c3aed;
+    --violet-dim: rgba(124, 58, 237, 0.07);
+    --rose: #e11d48;
+    --rose-dim: rgba(225, 29, 72, 0.07);
+    --sky: #0284c7;
+    --sky-dim: rgba(2, 132, 199, 0.07);
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #1a130a;
+      --surface: #231a10;
+      --surface2: #2d2015;
+      --surface-elevated: #352718;
+      --border: rgba(255, 255, 255, 0.06);
+      --border-bright: rgba(255, 255, 255, 0.12);
+      --text: #fcecd4;
+      --text-dim: #d4b896;
+
+      --indigo: #818cf8;
+      --indigo-dim: rgba(129, 140, 248, 0.12);
+      --amber: #fbbf24;
+      --amber-dim: rgba(251, 191, 36, 0.12);
+      --orange: #fb923c;
+      --orange-dim: rgba(251, 146, 60, 0.12);
+      --red: #f87171;
+      --red-dim: rgba(248, 113, 113, 0.12);
+      --slate: #94a3b8;
+      --slate-dim: rgba(148, 163, 184, 0.12);
+      --emerald: #34d399;
+      --emerald-dim: rgba(52, 211, 153, 0.12);
+      --violet: #a78bfa;
+      --violet-dim: rgba(167, 139, 250, 0.12);
+      --rose: #fb7185;
+      --rose-dim: rgba(251, 113, 133, 0.12);
+      --sky: #38bdf8;
+      --sky-dim: rgba(56, 189, 248, 0.12);
+    }
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: var(--bg);
+    background-image:
+      radial-gradient(at 30% 0%, var(--indigo-dim) 0%, transparent 50%),
+      radial-gradient(at 70% 100%, var(--violet-dim) 0%, transparent 50%);
+    color: var(--text);
+    font-family: var(--font-body);
+    line-height: 1.7;
+    min-height: 100vh;
+    padding: 48px 24px 80px;
+  }
+
+  .container { max-width: 960px; margin: 0 auto; }
+
+  .hero {
+    text-align: center;
+    margin-bottom: 56px;
+    animation: fadeUp 0.6s ease-out;
+  }
+
+  .hero-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 6px 18px;
+    background: var(--indigo-dim);
+    border: 1px solid var(--indigo);
+    border-radius: 20px;
+    font-family: var(--font-mono);
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--indigo);
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    margin-bottom: 24px;
+  }
+
+  .hero h1 {
+    font-size: 52px;
+    font-weight: 800;
+    letter-spacing: -1px;
+    margin-bottom: 12px;
+    background: linear-gradient(135deg, var(--indigo), var(--violet), var(--emerald));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  .hero p {
+    font-size: 20px;
+    color: var(--text-dim);
+    max-width: 640px;
+    margin: 0 auto;
+  }
+
+  .section {
+    margin-bottom: 48px;
+    opacity: 0;
+    animation: fadeUp 0.5s ease-out forwards;
+  }
+
+  .section:nth-child(2) { animation-delay: 0.1s; }
+  .section:nth-child(3) { animation-delay: 0.2s; }
+  .section:nth-child(4) { animation-delay: 0.3s; }
+  .section:nth-child(5) { animation-delay: 0.4s; }
+
+  .section-title {
+    font-family: var(--font-mono);
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    color: var(--text-dim);
+    margin-bottom: 16px;
+  }
+
+  /* Pipeline diagram */
+  .pipeline-diagram {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 40px 32px;
+  }
+
+  .pipeline-input {
+    display: flex;
+    justify-content: center;
+  }
+
+  .pipeline-node {
+    border-radius: 14px;
+    padding: 20px 28px;
+    text-align: center;
+    border: 2px solid;
+    position: relative;
+    transition: transform 0.2s, box-shadow 0.2s;
+  }
+
+  .pipeline-node:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 24px rgba(0,0,0,0.1);
+  }
+
+  .pipeline-node.input-node {
+    background: var(--orange-dim);
+    border-color: var(--orange);
+    min-width: 320px;
+  }
+
+  .pipeline-node.human-node {
+    background: var(--indigo-dim);
+    border-color: var(--indigo);
+    min-width: 320px;
+  }
+
+  .pipeline-node.agent-node {
+    background: var(--amber-dim);
+    border-color: var(--amber);
+    min-width: 320px;
+  }
+
+  .pipeline-node.output-node {
+    background: var(--emerald-dim);
+    border-color: var(--emerald);
+    min-width: 320px;
+  }
+
+  .pipeline-node.review-node {
+    background: var(--violet-dim);
+    border-color: var(--violet);
+    min-width: 320px;
+  }
+
+  .pipeline-node.result-node {
+    background: var(--emerald-dim);
+    border-color: var(--emerald);
+    flex: 1;
+    min-width: 0;
+  }
+
+  .pipeline-node.map-node {
+    background: var(--slate-dim);
+    border-color: var(--slate);
+    flex: 1;
+    min-width: 0;
+  }
+
+  .node-icon {
+    font-family: var(--font-mono);
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+    color: var(--text-dim);
+    margin-bottom: 8px;
+  }
+
+  .node-name {
+    font-size: 17px;
+    font-weight: 700;
+    margin-bottom: 4px;
+  }
+
+  .node-desc {
+    font-size: 13px;
+    color: var(--text-dim);
+    margin-top: 4px;
+  }
+
+  .pipeline-connector {
+    display: flex;
+    justify-content: center;
+    align-items: stretch;
+    padding: 0;
+    height: 36px;
+  }
+
+  .connector-line {
+    width: 3px;
+    border-radius: 0;
+    background: var(--indigo);
+    position: relative;
+  }
+
+  .connector-line.orange { background: var(--orange); }
+  .connector-line.emerald { background: var(--emerald); }
+  .connector-line.violet { background: var(--violet); }
+  .connector-line.slate { background: var(--slate); }
+  .connector-line.amber { background: var(--amber); }
+  .connector-line.indigo { background: var(--indigo); }
+
+  .connector-line::after {
+    content: '';
+    position: absolute;
+    bottom: -1px;
+    left: 50%;
+    transform: translateX(-50%);
+    border-left: 7px solid transparent;
+    border-right: 7px solid transparent;
+    border-top: 7px solid var(--indigo);
+  }
+
+  .connector-line.orange::after { border-top-color: var(--orange); }
+  .connector-line.emerald::after { border-top-color: var(--emerald); }
+  .connector-line.violet::after { border-top-color: var(--violet); }
+  .connector-line.slate::after { border-top-color: var(--slate); }
+  .connector-line.amber::after { border-top-color: var(--amber); }
+  .connector-line.indigo::after { border-top-color: var(--indigo); }
+
+  .pipeline-row {
+    display: grid;
+    gap: 16px;
+  }
+
+  .pipeline-row.two-col { grid-template-columns: repeat(2, 1fr); }
+
+  .pipeline-row-label {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    color: var(--text-dim);
+    text-align: center;
+    margin-bottom: 12px;
+  }
+
+  .pipeline-fork {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 0;
+    position: relative;
+  }
+
+  .fork-lines {
+    position: relative;
+    width: 60%;
+    height: 36px;
+  }
+
+  .fork-lines::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 3px;
+    height: 16px;
+    background: var(--amber);
+  }
+
+  .fork-lines::after {
+    content: '';
+    position: absolute;
+    top: 16px;
+    left: 25%;
+    right: 25%;
+    height: 3px;
+    background: var(--amber);
+  }
+
+  .fork-drop {
+    position: absolute;
+    bottom: 0;
+    width: 3px;
+    height: 17px;
+    background: var(--amber);
+  }
+
+  .fork-drop::after {
+    content: '';
+    position: absolute;
+    bottom: -1px;
+    left: 50%;
+    transform: translateX(-50%);
+    border-left: 7px solid transparent;
+    border-right: 7px solid transparent;
+    border-top: 7px solid var(--amber);
+  }
+
+  .fork-drop.left { left: 25%; }
+  .fork-drop.right { right: 25%; }
+
+  .merge-lines {
+    position: relative;
+    width: 60%;
+    height: 36px;
+  }
+
+  .merge-lines::after {
+    content: '';
+    position: absolute;
+    bottom: 16px;
+    left: 25%;
+    right: 25%;
+    height: 3px;
+    background: var(--emerald);
+  }
+
+  .merge-lines::before {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 3px;
+    height: 16px;
+    background: var(--violet);
+  }
+
+  .merge-drop {
+    position: absolute;
+    top: 0;
+    width: 3px;
+    height: 17px;
+    background: var(--emerald);
+  }
+
+  .merge-drop.left { left: 25%; }
+  .merge-drop.right { right: 25%; }
+
+  @media (max-width: 768px) {
+    .pipeline-row.two-col { grid-template-columns: 1fr; }
+  }
+
+  /* Lifecycle connector */
+  .lifecycle-arrow {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 48px;
+    position: relative;
+  }
+
+  .lifecycle-arrow .arrow-body {
+    width: 3px;
+    height: 100%;
+    background: var(--slate);
+    position: relative;
+  }
+
+  .lifecycle-arrow .arrow-label {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, -50%);
+    font-family: var(--font-mono);
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+    color: var(--text-dim);
+    background: var(--bg);
+    padding: 2px 12px;
+    border-radius: 4px;
+    white-space: nowrap;
+  }
+
+  /* Feature cards */
+  .feature-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 16px;
+  }
+
+  @media (max-width: 700px) { .feature-grid { grid-template-columns: 1fr; } }
+
+  .feature-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 20px;
+    border-left: 3px solid;
+    transition: transform 0.2s;
+  }
+
+  .feature-card:hover { transform: translateY(-2px); }
+
+  .feature-card.indigo { border-left-color: var(--indigo); }
+  .feature-card.violet { border-left-color: var(--violet); }
+  .feature-card.emerald { border-left-color: var(--emerald); }
+  .feature-card.amber { border-left-color: var(--amber); }
+  .feature-card.rose { border-left-color: var(--rose); }
+  .feature-card.sky { border-left-color: var(--sky); }
+
+  .feature-label {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+    margin-bottom: 8px;
+  }
+
+  .feature-name {
+    font-size: 17px;
+    font-weight: 700;
+    margin-bottom: 6px;
+  }
+
+  .feature-desc {
+    font-size: 14px;
+    color: var(--text-dim);
+    line-height: 1.5;
+  }
+
+  .origin-note {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 24px 28px;
+    font-size: 15px;
+    line-height: 1.6;
+    color: var(--text-dim);
+    border-left: 3px solid var(--indigo);
+  }
+
+  .origin-note strong {
+    color: var(--text);
+  }
+
+  /* How to access */
+  .access-steps {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+  }
+
+  .access-step {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 20px 24px;
+    display: flex;
+    gap: 16px;
+    align-items: flex-start;
+    transition: transform 0.2s;
+  }
+
+  .access-step:hover { transform: translateY(-2px); }
+
+  .step-number {
+    flex-shrink: 0;
+    width: 36px;
+    height: 36px;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: var(--font-mono);
+    font-size: 14px;
+    font-weight: 700;
+  }
+
+  .step-content {
+    flex: 1;
+  }
+
+  .step-title {
+    font-size: 16px;
+    font-weight: 700;
+    margin-bottom: 4px;
+  }
+
+  .step-desc {
+    font-size: 14px;
+    color: var(--text-dim);
+    line-height: 1.5;
+  }
+
+  .pipeline-note {
+    background: var(--surface2);
+    border: 1px dashed var(--border-bright);
+    border-radius: 10px;
+    padding: 14px 20px;
+    font-size: 13px;
+    color: var(--text-dim);
+    text-align: center;
+    margin-top: 24px;
+  }
+
+  .pipeline-note strong {
+    color: var(--text);
+  }
+
+  .footer {
+    text-align: center;
+    margin-top: 60px;
+    padding-top: 24px;
+    border-top: 1px solid var(--border);
+    font-size: 14px;
+    color: var(--text-dim);
+  }
+
+  /* Tabs */
+  .tabs {
+    display: flex;
+    gap: 4px;
+    margin-bottom: 32px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .tab-btn {
+    font-family: var(--font-mono);
+    font-size: 13px;
+    font-weight: 500;
+    letter-spacing: 0.3px;
+    padding: 10px 20px;
+    background: none;
+    border: none;
+    border-bottom: 2px solid transparent;
+    color: var(--text-dim);
+    cursor: pointer;
+    transition: color 0.2s, border-color 0.2s;
+  }
+
+  .tab-btn:hover { color: var(--text); }
+
+  .tab-btn.active {
+    color: var(--indigo);
+    border-bottom-color: var(--indigo);
+    font-weight: 600;
+  }
+
+  .tab-panel { display: none; }
+  .tab-panel.active { display: block; }
+
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(16px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .section, .hero { animation: none; opacity: 1; }
+  }
+</style>
+</head>
+<body>
+<div class="container">
+
+  <div class="hero">
+    <div class="hero-badge">Foundation</div>
+    <h1>Organization Context</h1>
+    <p>The grounding layer beneath the whole pipeline. The sharper your org context, the sharper every downstream judgment.</p>
+  </div>
+
+  <div class="tabs">
+    <button class="tab-btn active" onclick="switchTab('overview')">Overview</button>
+    <button class="tab-btn" onclick="switchTab('types')">Context Types</button>
+    <button class="tab-btn" onclick="switchTab('flow')">How It Flows</button>
+  </div>
+
+  <!-- Overview -->
+  <div id="tab-overview" class="tab-panel active">
+
+  <div class="section" style="animation-delay: 0.05s;">
+    <div class="section-title">Why Organization Context</div>
+    <div class="origin-note">
+      <strong>Every agent decision is made against a backdrop the org already knows but rarely writes down.</strong> Organization Context captures that backdrop once -- who decides, how teams hand off, what risk the org will tolerate, what would quietly make delegation fail -- and feeds it into every stage that needs it. It is not a stage you complete and leave behind; it is the foundation the pipeline stands on, and it is read continuously by discovery, prioritization, and Delegation Readiness.
+    </div>
+  </div>
+
+  <div class="section" style="animation-delay: 0.08s;">
+    <div class="section-title">How to Capture It</div>
+    <div class="access-steps">
+      <div class="access-step">
+        <div class="step-number" style="background: var(--indigo-dim); color: var(--indigo);">1</div>
+        <div class="step-content">
+          <div class="step-title">Open Organization &rarr; Context</div>
+          <div class="step-desc">Each context type has its own card. Add as many entries as you need -- they are versioned and can be toggled active/inactive.</div>
+        </div>
+      </div>
+      <div class="access-step">
+        <div class="step-number" style="background: var(--violet-dim); color: var(--violet);">2</div>
+        <div class="step-content">
+          <div class="step-title">Write or Upload</div>
+          <div class="step-desc">Enter content directly, or upload an org document (org chart, policy, interview transcript). Only active entries are injected downstream.</div>
+        </div>
+      </div>
+      <div class="access-step">
+        <div class="step-number" style="background: var(--amber-dim); color: var(--amber);">3</div>
+        <div class="step-content">
+          <div class="step-title">Let It Flow</div>
+          <div class="step-desc">From there, context is read automatically wherever it is relevant -- you do not paste it into each stage. Update it once and every stage sees the new version.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  </div><!-- end overview -->
+
+  <!-- Context Types -->
+  <div id="tab-types" class="tab-panel">
+
+  <div class="section" style="animation-delay: 0.05s;">
+    <div class="section-title">Operating &amp; Brand Context</div>
+    <div class="feature-grid">
+      <div class="feature-card indigo">
+        <div class="feature-label" style="color: var(--indigo);">Discovery</div>
+        <div class="feature-name">Company Profile</div>
+        <div class="feature-desc">Organizational background, injected into discovery interviews.</div>
+      </div>
+      <div class="feature-card violet">
+        <div class="feature-label" style="color: var(--violet);">Discovery + Scoring</div>
+        <div class="feature-name">Strategic Goals</div>
+        <div class="feature-desc">Injected into discovery and into portfolio scoring for strategic alignment.</div>
+      </div>
+      <div class="feature-card emerald">
+        <div class="feature-label" style="color: var(--emerald);">Build</div>
+        <div class="feature-name">Brand Guidelines</div>
+        <div class="feature-desc">Injected into build synthesis for tone and voice consistency.</div>
+      </div>
+      <div class="feature-card amber">
+        <div class="feature-label" style="color: var(--amber);">Discovery + Design</div>
+        <div class="feature-name">Org Chart</div>
+        <div class="feature-desc">Used for stakeholder mapping in discovery and design.</div>
+      </div>
+      <div class="feature-card rose">
+        <div class="feature-label" style="color: var(--rose);">Evaluation</div>
+        <div class="feature-name">Governance Policy</div>
+        <div class="feature-desc">Pre-populates the evaluation governance step with org-level policies.</div>
+      </div>
+      <div class="feature-card sky">
+        <div class="feature-label" style="color: var(--sky);">Evaluation</div>
+        <div class="feature-name">Evaluation Criteria</div>
+        <div class="feature-desc">Default criteria applied to all new evaluations.</div>
+      </div>
+      <div class="feature-card indigo">
+        <div class="feature-label" style="color: var(--indigo);">Discovery</div>
+        <div class="feature-name">Stakeholder Interviews</div>
+        <div class="feature-desc">Interview transcripts, stakeholder profiles, and KPI extracts from listening tours.</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="section" style="animation-delay: 0.12s;">
+    <div class="section-title">Delegation Readiness Context</div>
+    <div class="origin-note" style="border-left-color: var(--violet); margin-bottom: 16px;">
+      These five types map directly onto the five Delegation Readiness dimensions. They are the inputs that let the readiness assessment judge whether autonomy can be scaled responsibly -- and say "not ready" honestly when it cannot.
+    </div>
+    <div class="feature-grid">
+      <div class="feature-card indigo">
+        <div class="feature-label" style="color: var(--indigo);">Readiness</div>
+        <div class="feature-name">Authority &amp; Decision Rights</div>
+        <div class="feature-desc">Who can act, override, pause, and own the stop button; decision rights and escalation paths.</div>
+      </div>
+      <div class="feature-card violet">
+        <div class="feature-label" style="color: var(--violet);">Readiness</div>
+        <div class="feature-name">Coordination &amp; Dependencies</div>
+        <div class="feature-desc">Handoffs, upstream/downstream dependencies, and exception paths between teams.</div>
+      </div>
+      <div class="feature-card emerald">
+        <div class="feature-label" style="color: var(--emerald);">Readiness</div>
+        <div class="feature-name">Tacit Knowledge &amp; Human Repair</div>
+        <div class="feature-desc">The judgment and exception-handling people currently absorb; expertise at risk of displacement.</div>
+      </div>
+      <div class="feature-card amber">
+        <div class="feature-label" style="color: var(--amber);">Readiness</div>
+        <div class="feature-name">Exposure &amp; Commitment Posture</div>
+        <div class="feature-desc">Risk appetite, autonomy tolerance, and the commitments shipping autonomous agents creates.</div>
+      </div>
+      <div class="feature-card rose">
+        <div class="feature-label" style="color: var(--rose);">Readiness</div>
+        <div class="feature-name">Systemic Blockers</div>
+        <div class="feature-desc">Structural reasons delegation could fail here -- unowned stop button, coordination debt, unaccounted human repair.</div>
+      </div>
+    </div>
+  </div>
+
+  </div><!-- end types -->
+
+  <!-- How It Flows -->
+  <div id="tab-flow" class="tab-panel">
+
+  <div class="section" style="animation-delay: 0.05s;">
+    <div class="section-title">Where Context Is Read Across the Pipeline</div>
+    <div class="section-subtitle" style="margin-bottom: 4px;">Capture context once; each stage pulls the active entries it needs.</div>
+
+    <div class="access-steps" style="margin-top: 16px;">
+      <div class="access-step">
+        <div class="step-number" style="background: var(--violet-dim); color: var(--violet);">RDY</div>
+        <div class="step-content">
+          <div class="step-title">Delegation Readiness</div>
+          <div class="step-desc">Reads Authority, Coordination, Tacit Knowledge, Exposure Posture, and Systemic Blockers -- plus departments and the portfolio -- to produce the verdict, dimension scores, and action items.</div>
+        </div>
+      </div>
+      <div class="access-step">
+        <div class="step-number" style="background: var(--teal-dim, var(--sky-dim)); color: var(--sky);">DSC</div>
+        <div class="step-content">
+          <div class="step-title">Discover</div>
+          <div class="step-desc">Injects Company Profile, Strategic Goals, Org Chart, and Stakeholder Interviews into the discovery interview so the opportunity brief reflects the real organization.</div>
+        </div>
+      </div>
+      <div class="access-step">
+        <div class="step-number" style="background: var(--blue-dim, var(--indigo-dim)); color: var(--indigo);">DSN</div>
+        <div class="step-content">
+          <div class="step-title">Design</div>
+          <div class="step-desc">Uses the Org Chart for stakeholder mapping when shaping the PRD and architecture recommendation.</div>
+        </div>
+      </div>
+      <div class="access-step">
+        <div class="step-number" style="background: var(--orange-dim, var(--amber-dim)); color: var(--orange);">BLD</div>
+        <div class="step-content">
+          <div class="step-title">Build</div>
+          <div class="step-desc">Pulls Brand Guidelines into build synthesis so generated artifacts match the org's tone and voice.</div>
+        </div>
+      </div>
+      <div class="access-step">
+        <div class="step-number" style="background: var(--emerald-dim); color: var(--emerald);">EVL</div>
+        <div class="step-content">
+          <div class="step-title">Evaluate</div>
+          <div class="step-desc">Pre-populates the governance step with Governance Policy and applies default Evaluation Criteria to every new evaluation.</div>
+        </div>
+      </div>
+      <div class="access-step">
+        <div class="step-number" style="background: var(--slate-dim); color: var(--slate);">PRT</div>
+        <div class="step-content">
+          <div class="step-title">Portfolio &amp; Prioritization</div>
+          <div class="step-desc">Strategic Goals feed portfolio scoring so the highest-alignment work rises to the top of the board.</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="pipeline-note">
+      <strong>One source of truth:</strong> update a context entry once and every stage above reads the new version on its next run. Inactive entries are ignored, so you can stage context without affecting live output.
+    </div>
+  </div>
+
+  </div><!-- end flow -->
+
+  <div class="footer">
+    AESOP OS &middot; Organization Context &mdash; the foundation the whole pipeline stands on
+  </div>
+
+</div>
+<script>
+  window.switchTab = function(tab) {
+    document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+    document.getElementById('tab-' + tab).classList.add('active');
+    document.querySelector('[onclick="switchTab(\'' + tab + '\')"]').classList.add('active');
+    document.getElementById('tab-' + tab).querySelectorAll('.section').forEach(s => {
+      s.style.animation = 'none';
+      s.offsetHeight;
+      s.style.animation = '';
+    });
+  };
+</script>
+</body>
+</html>

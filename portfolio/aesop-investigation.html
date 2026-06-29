@@ -1,0 +1,807 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Black Box Investigation — Discover Chatbot Behavior</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:wght@400;500;600;700;800&family=Source+Code+Pro:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --font-body: 'Fraunces', Georgia, serif;
+    --font-mono: 'Source Code Pro', 'SF Mono', Consolas, monospace;
+
+    --bg: #f0fafb;
+    --surface: #ffffff;
+    --surface2: #f0f9fa;
+    --surface-elevated: #e8f6f8;
+    --border: rgba(0, 0, 0, 0.06);
+    --border-bright: rgba(0, 0, 0, 0.12);
+    --text: #0f172a;
+    --text-dim: #64748b;
+
+    --teal: #0d9488;
+    --teal-dim: rgba(13, 148, 136, 0.07);
+    --cyan: #0891b2;
+    --cyan-dim: rgba(8, 145, 178, 0.07);
+    --blue: #2563eb;
+    --blue-dim: rgba(37, 99, 235, 0.07);
+    --sky: #0284c7;
+    --sky-dim: rgba(2, 132, 199, 0.07);
+    --slate: #475569;
+    --slate-dim: rgba(71, 85, 105, 0.07);
+    --emerald: #059669;
+    --emerald-dim: rgba(5, 150, 105, 0.07);
+    --amber: #d97706;
+    --amber-dim: rgba(217, 119, 6, 0.07);
+    --violet: #7c3aed;
+    --violet-dim: rgba(124, 58, 237, 0.07);
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #0a1519;
+      --surface: #0f1f24;
+      --surface2: #142a30;
+      --surface-elevated: #19343b;
+      --border: rgba(255, 255, 255, 0.06);
+      --border-bright: rgba(255, 255, 255, 0.12);
+      --text: #e0f2f4;
+      --text-dim: #8ab4be;
+
+      --teal: #2dd4bf;
+      --teal-dim: rgba(45, 212, 191, 0.12);
+      --cyan: #22d3ee;
+      --cyan-dim: rgba(34, 211, 238, 0.12);
+      --blue: #60a5fa;
+      --blue-dim: rgba(96, 165, 250, 0.12);
+      --sky: #38bdf8;
+      --sky-dim: rgba(56, 189, 248, 0.12);
+      --slate: #94a3b8;
+      --slate-dim: rgba(148, 163, 184, 0.12);
+      --emerald: #34d399;
+      --emerald-dim: rgba(52, 211, 153, 0.12);
+      --amber: #fbbf24;
+      --amber-dim: rgba(251, 191, 36, 0.12);
+      --violet: #a78bfa;
+      --violet-dim: rgba(167, 139, 250, 0.12);
+    }
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: var(--bg);
+    background-image:
+      radial-gradient(at 30% 0%, var(--teal-dim) 0%, transparent 50%),
+      radial-gradient(at 70% 100%, var(--cyan-dim) 0%, transparent 50%);
+    color: var(--text);
+    font-family: var(--font-body);
+    line-height: 1.7;
+    min-height: 100vh;
+    padding: 48px 24px 80px;
+  }
+
+  .container { max-width: 960px; margin: 0 auto; }
+
+  .hero {
+    text-align: center;
+    margin-bottom: 56px;
+    animation: fadeUp 0.6s ease-out;
+  }
+
+  .hero-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 6px 18px;
+    background: var(--teal-dim);
+    border: 1px solid var(--teal);
+    border-radius: 20px;
+    font-family: var(--font-mono);
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--teal);
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    margin-bottom: 24px;
+  }
+
+  .hero h1 {
+    font-size: 52px;
+    font-weight: 800;
+    letter-spacing: -1px;
+    margin-bottom: 12px;
+    background: linear-gradient(135deg, var(--teal), var(--cyan), var(--blue));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  .hero p {
+    font-size: 20px;
+    color: var(--text-dim);
+    max-width: 640px;
+    margin: 0 auto;
+  }
+
+  .section {
+    margin-bottom: 48px;
+    opacity: 0;
+    animation: fadeUp 0.5s ease-out forwards;
+  }
+
+  .section:nth-child(2) { animation-delay: 0.1s; }
+  .section:nth-child(3) { animation-delay: 0.2s; }
+  .section:nth-child(4) { animation-delay: 0.3s; }
+  .section:nth-child(5) { animation-delay: 0.4s; }
+
+  .section-title {
+    font-family: var(--font-mono);
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    color: var(--text-dim);
+    margin-bottom: 16px;
+  }
+
+  /* Info cards */
+  .info-note {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 24px 28px;
+    font-size: 15px;
+    line-height: 1.6;
+    color: var(--text-dim);
+    border-left: 3px solid var(--teal);
+  }
+
+  .info-note strong {
+    color: var(--text);
+  }
+
+  /* Discovery grid */
+  .discovery-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 16px;
+  }
+
+  @media (max-width: 600px) { .discovery-grid { grid-template-columns: 1fr; } }
+
+  .discovery-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 20px;
+    border-left: 3px solid;
+    transition: transform 0.2s;
+  }
+
+  .discovery-card:hover { transform: translateY(-2px); }
+
+  .discovery-card.purpose { border-left-color: var(--teal); }
+  .discovery-card.patterns { border-left-color: var(--cyan); }
+  .discovery-card.safety { border-left-color: var(--blue); }
+  .discovery-card.risks { border-left-color: var(--violet); }
+
+  .discovery-label {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+    margin-bottom: 8px;
+  }
+
+  .discovery-name {
+    font-size: 17px;
+    font-weight: 700;
+    margin-bottom: 6px;
+  }
+
+  .discovery-desc {
+    font-size: 14px;
+    color: var(--text-dim);
+    line-height: 1.5;
+  }
+
+  /* Use-case grid */
+  .usecase-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 16px;
+  }
+
+  @media (max-width: 600px) { .usecase-grid { grid-template-columns: 1fr; } }
+
+  .usecase-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 20px;
+    position: relative;
+  }
+
+  .usecase-icon {
+    width: 40px;
+    height: 40px;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: var(--font-mono);
+    font-size: 12px;
+    font-weight: 700;
+    margin-bottom: 12px;
+  }
+
+  .usecase-name {
+    font-size: 16px;
+    font-weight: 700;
+    margin-bottom: 4px;
+  }
+
+  .usecase-desc {
+    font-size: 13px;
+    color: var(--text-dim);
+  }
+
+  /* Pipeline diagram */
+  .pipeline-diagram {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 40px 32px;
+  }
+
+  .pipeline-input {
+    display: flex;
+    justify-content: center;
+  }
+
+  .pipeline-node {
+    border-radius: 14px;
+    padding: 20px 28px;
+    text-align: center;
+    border: 2px solid;
+    position: relative;
+    transition: transform 0.2s, box-shadow 0.2s;
+  }
+
+  .pipeline-node:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 24px rgba(0,0,0,0.1);
+  }
+
+  .pipeline-node.input-node {
+    background: var(--cyan-dim);
+    border-color: var(--cyan);
+    min-width: 320px;
+  }
+
+  .pipeline-node.investigate-node {
+    background: var(--teal-dim);
+    border-color: var(--teal);
+    min-width: 320px;
+  }
+
+  .pipeline-node.interview-node {
+    background: var(--blue-dim);
+    border-color: var(--blue);
+    flex: 1;
+    min-width: 0;
+  }
+
+  .pipeline-node.discovery-node {
+    background: var(--sky-dim);
+    border-color: var(--sky);
+    min-width: 320px;
+  }
+
+  .pipeline-node.rubric-node {
+    background: var(--amber-dim);
+    border-color: var(--amber);
+    min-width: 320px;
+  }
+
+  .pipeline-node.optional-node {
+    background: var(--violet-dim);
+    border-color: var(--violet);
+    min-width: 320px;
+    border-style: dashed;
+  }
+
+  .pipeline-node.result-node {
+    background: var(--emerald-dim);
+    border-color: var(--emerald);
+    min-width: 320px;
+  }
+
+  .node-icon {
+    font-family: var(--font-mono);
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+    color: var(--text-dim);
+    margin-bottom: 8px;
+  }
+
+  .node-name {
+    font-size: 17px;
+    font-weight: 700;
+    margin-bottom: 4px;
+  }
+
+  .node-version {
+    font-family: var(--font-mono);
+    font-size: 12px;
+    color: var(--text-dim);
+  }
+
+  .node-desc {
+    font-size: 13px;
+    color: var(--text-dim);
+    margin-top: 4px;
+  }
+
+  .pipeline-connector {
+    display: flex;
+    justify-content: center;
+    align-items: stretch;
+    padding: 0;
+    height: 36px;
+  }
+
+  .connector-line {
+    width: 3px;
+    border-radius: 0;
+    background: var(--teal);
+    position: relative;
+  }
+
+  .connector-line.cyan { background: var(--cyan); }
+  .connector-line.blue { background: var(--blue); }
+  .connector-line.sky { background: var(--sky); }
+  .connector-line.amber { background: var(--amber); }
+  .connector-line.violet { background: var(--violet); }
+  .connector-line.emerald { background: var(--emerald); }
+
+  .connector-line::after {
+    content: '';
+    position: absolute;
+    bottom: -1px;
+    left: 50%;
+    transform: translateX(-50%);
+    border-left: 7px solid transparent;
+    border-right: 7px solid transparent;
+    border-top: 7px solid var(--teal);
+  }
+
+  .connector-line.cyan::after { border-top-color: var(--cyan); }
+  .connector-line.blue::after { border-top-color: var(--blue); }
+  .connector-line.sky::after { border-top-color: var(--sky); }
+  .connector-line.amber::after { border-top-color: var(--amber); }
+  .connector-line.violet::after { border-top-color: var(--violet); }
+  .connector-line.emerald::after { border-top-color: var(--emerald); }
+
+  .pipeline-row {
+    display: grid;
+    gap: 16px;
+  }
+
+  .pipeline-row.three-col { grid-template-columns: repeat(3, 1fr); }
+
+  .pipeline-row-label {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    color: var(--text-dim);
+    text-align: center;
+    margin-bottom: 12px;
+  }
+
+  .pipeline-fork {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 0;
+    position: relative;
+  }
+
+  .fork-lines {
+    position: relative;
+    width: 80%;
+    height: 36px;
+  }
+
+  .fork-lines::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 3px;
+    height: 16px;
+    background: var(--teal);
+  }
+
+  .fork-lines::after {
+    content: '';
+    position: absolute;
+    top: 16px;
+    left: 16.67%;
+    right: 16.67%;
+    height: 3px;
+    background: var(--blue);
+  }
+
+  .fork-drop {
+    position: absolute;
+    bottom: 0;
+    width: 3px;
+    height: 17px;
+    background: var(--blue);
+  }
+
+  .fork-drop::after {
+    content: '';
+    position: absolute;
+    bottom: -1px;
+    left: 50%;
+    transform: translateX(-50%);
+    border-left: 7px solid transparent;
+    border-right: 7px solid transparent;
+    border-top: 7px solid var(--blue);
+  }
+
+  .fork-drop.left { left: 16.67%; }
+  .fork-drop.center { left: 50%; transform: translateX(-50%); }
+  .fork-drop.right { right: 16.67%; }
+
+  .merge-lines {
+    position: relative;
+    width: 80%;
+    height: 36px;
+  }
+
+  .merge-lines::after {
+    content: '';
+    position: absolute;
+    bottom: 16px;
+    left: 16.67%;
+    right: 16.67%;
+    height: 3px;
+    background: var(--blue);
+  }
+
+  .merge-lines::before {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 3px;
+    height: 16px;
+    background: var(--sky);
+  }
+
+  .merge-drop {
+    position: absolute;
+    top: 0;
+    width: 3px;
+    height: 17px;
+    background: var(--blue);
+  }
+
+  .merge-drop.left { left: 16.67%; }
+  .merge-drop.center { left: 50%; transform: translateX(-50%); }
+  .merge-drop.right { right: 16.67%; }
+
+  @media (max-width: 768px) {
+    .pipeline-row.three-col { grid-template-columns: 1fr; }
+  }
+
+  .optional-label {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+    color: var(--violet);
+    background: var(--violet-dim);
+    padding: 2px 8px;
+    border-radius: 4px;
+    display: inline-block;
+    margin-bottom: 4px;
+  }
+
+  /* Tabs */
+  .tabs {
+    display: flex;
+    gap: 4px;
+    margin-bottom: 32px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .tab-btn {
+    font-family: var(--font-mono);
+    font-size: 13px;
+    font-weight: 500;
+    letter-spacing: 0.3px;
+    padding: 10px 20px;
+    background: none;
+    border: none;
+    border-bottom: 2px solid transparent;
+    color: var(--text-dim);
+    cursor: pointer;
+    transition: color 0.2s, border-color 0.2s;
+  }
+
+  .tab-btn:hover { color: var(--text); }
+
+  .tab-btn.active {
+    color: var(--teal);
+    border-bottom-color: var(--teal);
+    font-weight: 600;
+  }
+
+  .tab-panel { display: none; }
+  .tab-panel.active { display: block; }
+
+  .footer {
+    text-align: center;
+    margin-top: 60px;
+    padding-top: 24px;
+    border-top: 1px solid var(--border);
+    font-size: 14px;
+    color: var(--text-dim);
+  }
+
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(16px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .section, .hero { animation: none; opacity: 1; }
+  }
+</style>
+</head>
+<body>
+<div class="container">
+
+  <div class="hero">
+    <div class="hero-badge">Discovery Mode</div>
+    <h1>Black Box Investigation</h1>
+    <p>Discover chatbot behavior through multi-turn interviews</p>
+  </div>
+
+  <!-- Tabs -->
+  <div class="tabs">
+    <button class="tab-btn active" onclick="switchTab('overview')">Overview</button>
+    <button class="tab-btn" onclick="switchTab('pipeline')">Pipeline Diagram</button>
+  </div>
+
+  <!-- Overview Tab -->
+  <div id="tab-overview" class="tab-panel active">
+
+  <!-- What It Does -->
+  <div class="section" style="animation-delay: 0.05s;">
+    <div class="section-title">What Investigation Does</div>
+    <div class="info-note">
+      <strong>Black Box Investigation</strong> is designed for situations where you have a live chatbot but <strong>no access to its system instructions</strong>. AESOP interviews the chatbot through progressive, multi-turn conversations to discover its behavior, capabilities, boundaries, and potential issues -- all without ever seeing the underlying prompt. The investigator agent acts as a skilled interviewer, probing the chatbot from multiple angles to build a comprehensive behavioral profile.
+    </div>
+  </div>
+
+  <!-- When To Use -->
+  <div class="section" style="animation-delay: 0.1s;">
+    <div class="section-title">When To Use It</div>
+    <div class="usecase-grid">
+      <div class="usecase-card">
+        <div class="usecase-icon" style="background: var(--teal-dim); color: var(--teal);">3P</div>
+        <div class="usecase-name">Third-Party Chatbot</div>
+        <div class="usecase-desc">Evaluating a vendor or partner chatbot where you have endpoint access but not the system prompt or configuration.</div>
+      </div>
+      <div class="usecase-card">
+        <div class="usecase-icon" style="background: var(--cyan-dim); color: var(--cyan);">IN</div>
+        <div class="usecase-name">Inherited System</div>
+        <div class="usecase-desc">A chatbot built by a previous team with no documentation. Investigation reveals what it actually does.</div>
+      </div>
+      <div class="usecase-card">
+        <div class="usecase-icon" style="background: var(--blue-dim); color: var(--blue);">CA</div>
+        <div class="usecase-name">Competitive Analysis</div>
+        <div class="usecase-desc">Understanding a competitor's chatbot capabilities, safety posture, and behavioral patterns through structured interviews.</div>
+      </div>
+      <div class="usecase-card">
+        <div class="usecase-icon" style="background: var(--violet-dim); color: var(--violet);">PA</div>
+        <div class="usecase-name">Pre-Audit Discovery</div>
+        <div class="usecase-desc">Before a formal evaluation, investigate the chatbot to understand what you are working with and scope the audit appropriately.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- How It Works in the Wizard -->
+  <div class="section" style="animation-delay: 0.15s;">
+    <div class="section-title">How It Works in the Wizard</div>
+    <div class="info-note">
+      In the evaluation wizard, <strong>skip the system instructions</strong> in Step 1 and provide only a <strong>chatbot endpoint URL</strong> in Step 2. When no instructions are provided, the <strong>"Black Box Investigation"</strong> option becomes available in Step 3. Select it to begin the automated interview process. AESOP will handle the rest -- conducting multi-turn conversations, analyzing transcripts, and building a behavioral profile of the chatbot.
+    </div>
+  </div>
+
+  <!-- What It Discovers -->
+  <div class="section" style="animation-delay: 0.2s;">
+    <div class="section-title">What It Discovers</div>
+    <div class="discovery-grid">
+      <div class="discovery-card purpose">
+        <div class="discovery-label" style="color: var(--teal);">Purpose</div>
+        <div class="discovery-name">System Purpose</div>
+        <div class="discovery-desc">What the chatbot is designed to do, its domain of expertise, and its stated or implied mission.</div>
+      </div>
+      <div class="discovery-card patterns">
+        <div class="discovery-label" style="color: var(--cyan);">Behavior</div>
+        <div class="discovery-name">Behavioral Patterns</div>
+        <div class="discovery-desc">Conversational style, response strategies, escalation behavior, and how it handles ambiguity.</div>
+      </div>
+      <div class="discovery-card safety">
+        <div class="discovery-label" style="color: var(--blue);">Boundaries</div>
+        <div class="discovery-name">Safety Posture</div>
+        <div class="discovery-desc">Where the chatbot draws lines, how it refuses requests, and its approach to sensitive topics.</div>
+      </div>
+      <div class="discovery-card risks">
+        <div class="discovery-label" style="color: var(--violet);">Risks</div>
+        <div class="discovery-name">Potential Vulnerabilities</div>
+        <div class="discovery-desc">Gaps in boundary enforcement, inconsistent behavior, and areas where the chatbot may be exploitable.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Connection to Other Capabilities -->
+  <div class="section" style="animation-delay: 0.25s;">
+    <div class="section-title">What Happens Next</div>
+    <div class="info-note">
+      After investigation completes, AESOP can optionally <strong>generate evaluation rubrics</strong> and <strong>test scenarios</strong> based on the discovered behavior. The investigation report serves as a foundation for further evaluation -- you can feed the behavioral profile into Cave of Shadows for red-team testing, or use it to create a Custom Rubric tailored to the chatbot's actual capabilities rather than assumed ones.
+    </div>
+  </div>
+
+  </div><!-- end Overview tab -->
+
+  <!-- Pipeline Diagram Tab -->
+  <div id="tab-pipeline" class="tab-panel">
+
+    <div class="section" style="animation-delay: 0.1s;">
+      <div class="section-title"><span style="color: var(--teal);">&bull;</span> Investigation Pipeline</div>
+      <div class="pipeline-diagram">
+
+        <!-- Input: Wizard -->
+        <div class="pipeline-input">
+          <div class="pipeline-node input-node">
+            <div class="node-icon">Wizard Step 2</div>
+            <div class="node-name">Endpoint Only</div>
+            <div class="node-desc">Provide chatbot endpoint URL (no system instructions needed)</div>
+          </div>
+        </div>
+
+        <div class="pipeline-connector"><div class="connector-line cyan"></div></div>
+
+        <!-- Step 3: Enable Investigation -->
+        <div class="pipeline-input">
+          <div class="pipeline-node investigate-node">
+            <div class="node-icon">Wizard Step 3</div>
+            <div class="node-name">Enable Black Box Investigation</div>
+            <div class="node-desc">Available when no instructions are provided -- select to begin automated discovery</div>
+          </div>
+        </div>
+
+        <div class="pipeline-connector"><div class="connector-line"></div></div>
+
+        <!-- Interview Phase -->
+        <div class="pipeline-row-label">Interview Phase</div>
+
+        <!-- Fork to interview conversations -->
+        <div class="pipeline-fork">
+          <div class="fork-lines">
+            <div class="fork-drop left"></div>
+            <div class="fork-drop center"></div>
+            <div class="fork-drop right"></div>
+          </div>
+        </div>
+
+        <div class="pipeline-row three-col">
+          <div class="pipeline-node interview-node">
+            <div class="node-icon">Probe</div>
+            <div class="node-name">Progressive Probing</div>
+            <div class="node-desc">Gradually escalating questions to map capabilities and boundaries</div>
+          </div>
+          <div class="pipeline-node interview-node">
+            <div class="node-icon">Probe</div>
+            <div class="node-name">Behavioral Mapping</div>
+            <div class="node-desc">Multi-angle conversations to understand response patterns and style</div>
+          </div>
+          <div class="pipeline-node interview-node">
+            <div class="node-icon">Probe</div>
+            <div class="node-name">Boundary Testing</div>
+            <div class="node-desc">Exploring edge cases and refusal behaviors across sensitive topics</div>
+          </div>
+        </div>
+
+        <!-- Merge interviews -->
+        <div class="pipeline-fork">
+          <div class="merge-lines">
+            <div class="merge-drop left"></div>
+            <div class="merge-drop center"></div>
+            <div class="merge-drop right"></div>
+          </div>
+        </div>
+
+        <!-- Discovery Phase -->
+        <div class="pipeline-input">
+          <div class="pipeline-node discovery-node">
+            <div class="node-icon">Discovery</div>
+            <div class="node-name">Analyze Interview Transcripts</div>
+            <div class="node-desc">Reconstruct understanding of system behavior from conversation evidence</div>
+          </div>
+        </div>
+
+        <div class="pipeline-connector"><div class="connector-line sky"></div></div>
+
+        <!-- Rubric Inference -->
+        <div class="pipeline-input">
+          <div class="pipeline-node rubric-node">
+            <div class="node-icon">Inference</div>
+            <div class="node-name">Rubric Generation</div>
+            <div class="node-desc">Generate evaluation criteria based on discovered capabilities and behaviors</div>
+          </div>
+        </div>
+
+        <div class="pipeline-connector"><div class="connector-line amber"></div></div>
+
+        <!-- Optional Scenario Execution -->
+        <div class="pipeline-input">
+          <div class="pipeline-node optional-node">
+            <div class="optional-label">Optional</div>
+            <div class="node-icon">Execute</div>
+            <div class="node-name">Scenario Execution</div>
+            <div class="node-desc">Generate and run test scenarios against the chatbot based on discovered behavior</div>
+          </div>
+        </div>
+
+        <div class="pipeline-connector"><div class="connector-line emerald"></div></div>
+
+        <!-- Results -->
+        <div class="pipeline-input">
+          <div class="pipeline-node result-node">
+            <div class="node-icon">Output</div>
+            <div class="node-name">Investigation Results</div>
+            <div class="node-desc">Behavioral profile, discovered capabilities, identified risks, and recommended follow-up evaluations</div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+  </div><!-- end Pipeline tab -->
+
+</div>
+
+<script>
+  window.switchTab = function(tab) {
+    document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+    document.getElementById('tab-' + tab).classList.add('active');
+    document.querySelector('[onclick="switchTab(\'' + tab + '\')"]').classList.add('active');
+    document.getElementById('tab-' + tab).querySelectorAll('.section').forEach(s => {
+      s.style.animation = 'none';
+      s.offsetHeight;
+      s.style.animation = '';
+    });
+  };
+</script>
+</body>
+</html>

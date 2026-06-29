@@ -1,0 +1,1050 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Custom Test Suite — AESOP</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:wght@400;500;600;700;800&family=Source+Code+Pro:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --font-body: 'Fraunces', Georgia, serif;
+    --font-mono: 'Source Code Pro', 'SF Mono', Consolas, monospace;
+
+    --bg: #faf5ff;
+    --surface: #ffffff;
+    --surface2: #f5f0ff;
+    --surface-elevated: #faf5ff;
+    --border: rgba(0, 0, 0, 0.06);
+    --border-bright: rgba(0, 0, 0, 0.12);
+    --text: #1e1b2e;
+    --text-dim: #6b6580;
+
+    --violet: #7c3aed;
+    --violet-dim: rgba(124, 58, 237, 0.07);
+    --indigo: #4f46e5;
+    --indigo-dim: rgba(79, 70, 229, 0.07);
+    --fuchsia: #c026d3;
+    --fuchsia-dim: rgba(192, 38, 211, 0.07);
+    --rose: #e11d48;
+    --rose-dim: rgba(225, 29, 72, 0.07);
+    --amber: #d97706;
+    --amber-dim: rgba(217, 119, 6, 0.07);
+    --emerald: #059669;
+    --emerald-dim: rgba(5, 150, 105, 0.07);
+    --teal: #0d9488;
+    --teal-dim: rgba(13, 148, 136, 0.07);
+    --blue: #2563eb;
+    --blue-dim: rgba(37, 99, 235, 0.07);
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #150f1e;
+      --surface: #1e1730;
+      --surface2: #271f3d;
+      --surface-elevated: #2e254a;
+      --border: rgba(255, 255, 255, 0.06);
+      --border-bright: rgba(255, 255, 255, 0.12);
+      --text: #ede5ff;
+      --text-dim: #a89ec0;
+
+      --violet: #a78bfa;
+      --violet-dim: rgba(167, 139, 250, 0.12);
+      --indigo: #818cf8;
+      --indigo-dim: rgba(129, 140, 248, 0.12);
+      --fuchsia: #e879f9;
+      --fuchsia-dim: rgba(232, 121, 249, 0.12);
+      --rose: #fb7185;
+      --rose-dim: rgba(251, 113, 133, 0.12);
+      --amber: #fbbf24;
+      --amber-dim: rgba(251, 191, 36, 0.12);
+      --emerald: #34d399;
+      --emerald-dim: rgba(52, 211, 153, 0.12);
+      --teal: #2dd4bf;
+      --teal-dim: rgba(45, 212, 191, 0.12);
+      --blue: #60a5fa;
+      --blue-dim: rgba(96, 165, 250, 0.12);
+    }
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: var(--bg);
+    background-image:
+      radial-gradient(at 25% 15%, var(--violet-dim) 0%, transparent 50%),
+      radial-gradient(at 75% 85%, var(--fuchsia-dim) 0%, transparent 50%);
+    color: var(--text);
+    font-family: var(--font-body);
+    line-height: 1.7;
+    min-height: 100vh;
+    padding: 48px 24px 80px;
+  }
+
+  .container { max-width: 960px; margin: 0 auto; }
+
+  .hero {
+    text-align: center;
+    margin-bottom: 56px;
+    animation: fadeUp 0.6s ease-out;
+  }
+
+  .hero-badges {
+    display: flex;
+    gap: 12px;
+    justify-content: center;
+    margin-bottom: 24px;
+    flex-wrap: wrap;
+  }
+
+  .hero-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 16px;
+    border-radius: 20px;
+    font-family: var(--font-mono);
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+  }
+
+  .hero-badge.rubric {
+    background: var(--amber-dim);
+    border: 1px solid var(--amber);
+    color: var(--amber);
+  }
+
+  .hero-badge.scenario {
+    background: var(--teal-dim);
+    border: 1px solid var(--teal);
+    color: var(--teal);
+  }
+
+  .hero h1 {
+    font-size: 48px;
+    font-weight: 800;
+    letter-spacing: -1px;
+    margin-bottom: 12px;
+    background: linear-gradient(135deg, var(--amber), var(--violet), var(--fuchsia));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  .hero p {
+    font-size: 19px;
+    color: var(--text-dim);
+    max-width: 680px;
+    margin: 0 auto;
+  }
+
+  .section {
+    margin-bottom: 48px;
+    opacity: 0;
+    animation: fadeUp 0.5s ease-out forwards;
+  }
+
+  .section:nth-child(2) { animation-delay: 0.1s; }
+  .section:nth-child(3) { animation-delay: 0.2s; }
+  .section:nth-child(4) { animation-delay: 0.3s; }
+  .section:nth-child(5) { animation-delay: 0.4s; }
+  .section:nth-child(6) { animation-delay: 0.5s; }
+
+  .section-title {
+    font-family: var(--font-mono);
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    color: var(--text-dim);
+    margin-bottom: 16px;
+  }
+
+  /* Pipeline diagram */
+  .pipeline-diagram {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 40px 32px;
+  }
+
+  .pipeline-input {
+    display: flex;
+    justify-content: center;
+  }
+
+  .pipeline-node {
+    border-radius: 14px;
+    padding: 20px 28px;
+    text-align: center;
+    border: 2px solid;
+    position: relative;
+    transition: transform 0.2s, box-shadow 0.2s;
+  }
+
+  .pipeline-node:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 24px rgba(0,0,0,0.1);
+  }
+
+  .pipeline-node.input-node {
+    background: var(--violet-dim);
+    border-color: var(--violet);
+    min-width: 320px;
+  }
+
+  .pipeline-node.wizard-node {
+    background: var(--fuchsia-dim);
+    border-color: var(--fuchsia);
+    min-width: 320px;
+  }
+
+  .pipeline-node.rubric-node {
+    background: var(--amber-dim);
+    border-color: var(--amber);
+    flex: 1;
+    min-width: 0;
+  }
+
+  .pipeline-node.scenario-node {
+    background: var(--teal-dim);
+    border-color: var(--teal);
+    flex: 1;
+    min-width: 0;
+  }
+
+  .pipeline-node.decision-node {
+    background: var(--indigo-dim);
+    border-color: var(--indigo);
+    flex: 1;
+    min-width: 0;
+  }
+
+  .pipeline-node.output-node {
+    background: var(--emerald-dim);
+    border-color: var(--emerald);
+    flex: 1;
+    min-width: 0;
+  }
+
+  .node-icon {
+    font-family: var(--font-mono);
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+    color: var(--text-dim);
+    margin-bottom: 8px;
+  }
+
+  .node-name {
+    font-size: 17px;
+    font-weight: 700;
+    margin-bottom: 4px;
+  }
+
+  .node-version {
+    font-family: var(--font-mono);
+    font-size: 12px;
+    color: var(--text-dim);
+  }
+
+  .node-desc {
+    font-size: 13px;
+    color: var(--text-dim);
+    margin-top: 4px;
+  }
+
+  .pipeline-connector {
+    display: flex;
+    justify-content: center;
+    align-items: stretch;
+    padding: 0;
+    height: 36px;
+  }
+
+  .connector-line {
+    width: 3px;
+    border-radius: 0;
+    background: var(--violet);
+    position: relative;
+  }
+
+  .connector-line.amber { background: var(--amber); }
+  .connector-line.teal { background: var(--teal); }
+  .connector-line.indigo { background: var(--indigo); }
+  .connector-line.fuchsia { background: var(--fuchsia); }
+
+  .connector-line::after {
+    content: '';
+    position: absolute;
+    bottom: -1px;
+    left: 50%;
+    transform: translateX(-50%);
+    border-left: 7px solid transparent;
+    border-right: 7px solid transparent;
+    border-top: 7px solid var(--violet);
+  }
+
+  .connector-line.amber::after { border-top-color: var(--amber); }
+  .connector-line.teal::after { border-top-color: var(--teal); }
+  .connector-line.indigo::after { border-top-color: var(--indigo); }
+  .connector-line.fuchsia::after { border-top-color: var(--fuchsia); }
+
+  .pipeline-row {
+    display: grid;
+    gap: 16px;
+  }
+
+  .pipeline-row.three-col { grid-template-columns: repeat(3, 1fr); }
+  .pipeline-row.two-col { grid-template-columns: repeat(2, 1fr); max-width: 700px; margin: 0 auto; }
+
+  .pipeline-row-label {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    color: var(--text-dim);
+    text-align: center;
+    margin-bottom: 12px;
+  }
+
+  .pipeline-fork {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 0;
+    position: relative;
+  }
+
+  .fork-lines {
+    position: relative;
+    width: 60%;
+    height: 36px;
+  }
+
+  .fork-lines::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 3px;
+    height: 16px;
+    background: var(--indigo);
+  }
+
+  .fork-lines::after {
+    content: '';
+    position: absolute;
+    top: 16px;
+    left: 25%;
+    right: 25%;
+    height: 3px;
+    background: var(--emerald);
+  }
+
+  .fork-drop {
+    position: absolute;
+    bottom: 0;
+    width: 3px;
+    height: 17px;
+    background: var(--emerald);
+  }
+
+  .fork-drop::after {
+    content: '';
+    position: absolute;
+    bottom: -1px;
+    left: 50%;
+    transform: translateX(-50%);
+    border-left: 7px solid transparent;
+    border-right: 7px solid transparent;
+    border-top: 7px solid var(--emerald);
+  }
+
+  .fork-drop.left { left: 25%; }
+  .fork-drop.right { right: 25%; }
+
+  @media (max-width: 768px) {
+    .pipeline-row.three-col { grid-template-columns: 1fr; }
+    .pipeline-row.two-col { grid-template-columns: 1fr; }
+  }
+
+  /* Stage comparison */
+  .stages-compare {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+  }
+
+  @media (max-width: 700px) { .stages-compare { grid-template-columns: 1fr; } }
+
+  .stage-detail {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 28px;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .stage-detail::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 3px;
+  }
+
+  .stage-detail.rubric-gen::before { background: linear-gradient(90deg, var(--amber), var(--violet)); }
+  .stage-detail.scenario-gen::before { background: linear-gradient(90deg, var(--teal), var(--blue)); }
+
+  .stage-icon {
+    width: 52px;
+    height: 52px;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: var(--font-mono);
+    font-size: 18px;
+    margin-bottom: 16px;
+  }
+
+  .stage-name {
+    font-size: 24px;
+    font-weight: 800;
+    margin-bottom: 4px;
+  }
+
+  .stage-version {
+    font-family: var(--font-mono);
+    font-size: 12px;
+    color: var(--text-dim);
+    margin-bottom: 12px;
+  }
+
+  .stage-purpose {
+    font-size: 16px;
+    color: var(--text-dim);
+    margin-bottom: 20px;
+    line-height: 1.5;
+  }
+
+  .stage-features {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .feature {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    font-size: 14px;
+  }
+
+  .feature-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    margin-top: 8px;
+    flex-shrink: 0;
+  }
+
+  /* Rubric categories */
+  .rubric-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 12px;
+  }
+
+  @media (max-width: 600px) { .rubric-grid { grid-template-columns: 1fr; } }
+
+  .rubric-cat {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 16px;
+    text-align: center;
+    transition: transform 0.2s;
+  }
+
+  .rubric-cat:hover { transform: translateY(-2px); }
+
+  .rubric-cat.core { border-top: 3px solid var(--violet); }
+  .rubric-cat.dynamic { border-top: 3px solid var(--amber); }
+
+  .rubric-label {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+    margin-bottom: 6px;
+  }
+
+  .rubric-name {
+    font-size: 15px;
+    font-weight: 700;
+    margin-bottom: 2px;
+  }
+
+  .rubric-desc {
+    font-size: 12px;
+    color: var(--text-dim);
+  }
+
+  /* vs comparison */
+  .vs-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 28px;
+    display: grid;
+    grid-template-columns: 1fr auto 1fr;
+    gap: 24px;
+    align-items: center;
+  }
+
+  @media (max-width: 600px) {
+    .vs-card { grid-template-columns: 1fr; }
+    .vs-divider { display: none; }
+  }
+
+  .vs-side h3 {
+    font-size: 18px;
+    font-weight: 700;
+    margin-bottom: 8px;
+  }
+
+  .vs-side p {
+    font-size: 14px;
+    color: var(--text-dim);
+    line-height: 1.5;
+  }
+
+  .vs-divider {
+    font-size: 28px;
+    font-weight: 800;
+    color: var(--text-dim);
+    text-align: center;
+  }
+
+  /* How to access card */
+  .access-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 28px;
+  }
+
+  .access-steps {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+  }
+
+  .access-step {
+    display: flex;
+    align-items: flex-start;
+    gap: 16px;
+  }
+
+  .access-step-num {
+    width: 36px;
+    height: 36px;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: var(--font-mono);
+    font-size: 14px;
+    font-weight: 700;
+    flex-shrink: 0;
+  }
+
+  .access-step-text {
+    padding-top: 6px;
+    font-size: 15px;
+    line-height: 1.5;
+  }
+
+  .access-step-text strong {
+    font-weight: 700;
+  }
+
+  .access-step-text code {
+    font-family: var(--font-mono);
+    font-size: 13px;
+    background: var(--violet-dim);
+    color: var(--violet);
+    padding: 2px 8px;
+    border-radius: 4px;
+  }
+
+  /* Mode comparison cards */
+  .mode-cards {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+  }
+
+  @media (max-width: 600px) { .mode-cards { grid-template-columns: 1fr; } }
+
+  .mode-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 24px;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .mode-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 3px;
+  }
+
+  .mode-card.static-mode::before { background: linear-gradient(90deg, var(--amber), var(--teal)); }
+  .mode-card.live-mode::before { background: linear-gradient(90deg, var(--emerald), var(--blue)); }
+
+  .mode-label {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+    margin-bottom: 8px;
+  }
+
+  .mode-name {
+    font-size: 20px;
+    font-weight: 800;
+    margin-bottom: 8px;
+  }
+
+  .mode-desc {
+    font-size: 14px;
+    color: var(--text-dim);
+    line-height: 1.5;
+    margin-bottom: 16px;
+  }
+
+  .mode-includes {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+
+  .mode-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+    font-size: 13px;
+    color: var(--text-dim);
+  }
+
+  .mode-check {
+    font-family: var(--font-mono);
+    font-size: 12px;
+    font-weight: 700;
+    flex-shrink: 0;
+    margin-top: 2px;
+  }
+
+  .footer {
+    text-align: center;
+    margin-top: 60px;
+    padding-top: 24px;
+    border-top: 1px solid var(--border);
+    font-size: 14px;
+    color: var(--text-dim);
+  }
+
+  /* Tabs */
+  .tabs {
+    display: flex;
+    gap: 4px;
+    margin-bottom: 32px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .tab-btn {
+    font-family: var(--font-mono);
+    font-size: 13px;
+    font-weight: 500;
+    letter-spacing: 0.3px;
+    padding: 10px 20px;
+    background: none;
+    border: none;
+    border-bottom: 2px solid transparent;
+    color: var(--text-dim);
+    cursor: pointer;
+    transition: color 0.2s, border-color 0.2s;
+  }
+
+  .tab-btn:hover { color: var(--text); }
+
+  .tab-btn.active {
+    color: var(--violet);
+    border-bottom-color: var(--violet);
+    font-weight: 600;
+  }
+
+  .tab-panel { display: none; }
+  .tab-panel.active { display: block; }
+
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(16px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .section, .hero { animation: none; opacity: 1; }
+  }
+</style>
+</head>
+<body>
+<div class="container">
+
+  <div class="hero">
+    <div class="hero-badges">
+      <span class="hero-badge rubric">Rubric Generator v1.4</span>
+      <span class="hero-badge scenario">Scenario Generator v1.0</span>
+    </div>
+    <h1>Custom Test Suite</h1>
+    <p>A wizard capability that generates bespoke rubrics and test scenarios from your system instructions</p>
+  </div>
+
+  <!-- Tabs -->
+  <div class="tabs">
+    <button class="tab-btn active" onclick="switchTab('overview')">Overview</button>
+    <button class="tab-btn" onclick="switchTab('pipeline')">Pipeline Diagram</button>
+  </div>
+
+  <!-- Overview Tab -->
+  <div id="tab-overview" class="tab-panel active">
+
+  <!-- How to access -->
+  <div class="section" style="animation-delay: 0.1s;">
+    <div class="section-title">How to Access</div>
+    <div class="access-card">
+      <div class="access-steps">
+        <div class="access-step">
+          <div class="access-step-num" style="background: var(--violet-dim); color: var(--violet);">1</div>
+          <div class="access-step-text">Open the evaluation wizard and provide your <strong>system instructions</strong> along with any context documents in <strong>Step 1</strong>.</div>
+        </div>
+        <div class="access-step">
+          <div class="access-step-num" style="background: var(--fuchsia-dim); color: var(--fuchsia);">2</div>
+          <div class="access-step-text">Optionally provide a <strong>chatbot endpoint URL</strong> in <strong>Step 2</strong>. This determines whether you get a static framework or a live execution with transcripts.</div>
+        </div>
+        <div class="access-step">
+          <div class="access-step-num" style="background: var(--amber-dim); color: var(--amber);">3</div>
+          <div class="access-step-text">In <strong>Step 3 (Capabilities)</strong>, enable the <strong>"Custom Test Suite"</strong> toggle. This activates the custom rubric and scenario generation pipeline alongside any other selected capabilities.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Static vs Live -->
+  <div class="section" style="animation-delay: 0.2s;">
+    <div class="section-title">Static vs. Live Execution</div>
+    <div class="mode-cards">
+      <div class="mode-card static-mode">
+        <div class="mode-label" style="color: var(--amber);">No endpoint provided</div>
+        <div class="mode-name">Static Framework</div>
+        <div class="mode-desc">Get a complete evaluation framework for manual review. Ideal when you want to inspect the rubric and scenarios before testing, or when the chatbot is not yet deployed.</div>
+        <div class="mode-includes">
+          <div class="mode-item">
+            <span class="mode-check" style="color: var(--amber);">+</span>
+            <span>Custom rubric with weighted scoring categories</span>
+          </div>
+          <div class="mode-item">
+            <span class="mode-check" style="color: var(--amber);">+</span>
+            <span>Generated test scenarios with personas</span>
+          </div>
+          <div class="mode-item">
+            <span class="mode-check" style="color: var(--amber);">+</span>
+            <span>Conversation starters and testing objectives</span>
+          </div>
+          <div class="mode-item">
+            <span class="mode-check" style="color: var(--text-dim);">-</span>
+            <span>No automated execution or transcripts</span>
+          </div>
+        </div>
+      </div>
+      <div class="mode-card live-mode">
+        <div class="mode-label" style="color: var(--emerald);">Endpoint provided</div>
+        <div class="mode-name">Live Execution</div>
+        <div class="mode-desc">Full automated evaluation. Scenarios are executed against your live chatbot endpoint, producing conversation transcripts and scored results.</div>
+        <div class="mode-includes">
+          <div class="mode-item">
+            <span class="mode-check" style="color: var(--emerald);">+</span>
+            <span>Everything in the static framework</span>
+          </div>
+          <div class="mode-item">
+            <span class="mode-check" style="color: var(--emerald);">+</span>
+            <span>Automated scenario execution against chatbot</span>
+          </div>
+          <div class="mode-item">
+            <span class="mode-check" style="color: var(--emerald);">+</span>
+            <span>Full conversation transcripts</span>
+          </div>
+          <div class="mode-item">
+            <span class="mode-check" style="color: var(--emerald);">+</span>
+            <span>Scored results per rubric category</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Stage Details -->
+  <div class="section" style="animation-delay: 0.3s;">
+    <div class="section-title">The Two-Stage Pipeline</div>
+    <div class="stages-compare">
+      <div class="stage-detail rubric-gen">
+        <div class="stage-icon" style="background: var(--amber-dim); color: var(--amber);">1</div>
+        <div class="stage-name">Rubric Generator</div>
+        <div class="stage-version">Stage 1 — Rubric Generation &middot; v1.4</div>
+        <div class="stage-purpose">Analyzes your AI system instructions and generates a tailored evaluation rubric with weighted scoring categories specific to your use case.</div>
+        <div class="stage-features">
+          <div class="feature">
+            <div class="feature-dot" style="background: var(--amber);"></div>
+            <span>3 core categories always included (Safety, Core Function, Structure)</span>
+          </div>
+          <div class="feature">
+            <div class="feature-dot" style="background: var(--amber);"></div>
+            <span>Up to 4 dynamic categories based on the system's purpose</span>
+          </div>
+          <div class="feature">
+            <div class="feature-dot" style="background: var(--amber);"></div>
+            <span>Confidence scoring and gap analysis</span>
+          </div>
+          <div class="feature">
+            <div class="feature-dot" style="background: var(--amber);"></div>
+            <span>Comprehensive safety framework with universal tests</span>
+          </div>
+          <div class="feature">
+            <div class="feature-dot" style="background: var(--amber);"></div>
+            <span>Outputs detailed analysis + structured rubric</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="stage-detail scenario-gen">
+        <div class="stage-icon" style="background: var(--teal-dim); color: var(--teal);">2</div>
+        <div class="stage-name">Scenario Generator</div>
+        <div class="stage-version">Stage 2 — Scenario Generation &middot; v1.0</div>
+        <div class="stage-purpose">Transforms the custom rubric into comprehensive test scenarios with realistic personas and conversation starters.</div>
+        <div class="stage-features">
+          <div class="feature">
+            <div class="feature-dot" style="background: var(--teal);"></div>
+            <span>Scenario count weighted by rubric category priorities</span>
+          </div>
+          <div class="feature">
+            <div class="feature-dot" style="background: var(--teal);"></div>
+            <span>Realistic personas with clear testing objectives</span>
+          </div>
+          <div class="feature">
+            <div class="feature-dot" style="background: var(--teal);"></div>
+            <span>Universal safety tests always included</span>
+          </div>
+          <div class="feature">
+            <div class="feature-dot" style="background: var(--teal);"></div>
+            <span>Both cooperative and adversarial persona types</span>
+          </div>
+          <div class="feature">
+            <div class="feature-dot" style="background: var(--teal);"></div>
+            <span>Output compatible with Cave of Shadows execution format</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Rubric Categories -->
+  <div class="section" style="animation-delay: 0.4s;">
+    <div class="section-title">Rubric Framework</div>
+    <div class="rubric-grid">
+      <div class="rubric-cat core">
+        <div class="rubric-label" style="color: var(--violet);">Core</div>
+        <div class="rubric-name">Safety &amp; Boundaries</div>
+        <div class="rubric-desc">Always included</div>
+      </div>
+      <div class="rubric-cat core">
+        <div class="rubric-label" style="color: var(--violet);">Core</div>
+        <div class="rubric-name">Core Functionality</div>
+        <div class="rubric-desc">Always included</div>
+      </div>
+      <div class="rubric-cat core">
+        <div class="rubric-label" style="color: var(--violet);">Core</div>
+        <div class="rubric-name">Structural Integrity</div>
+        <div class="rubric-desc">Always included</div>
+      </div>
+      <div class="rubric-cat dynamic">
+        <div class="rubric-label" style="color: var(--amber);">Dynamic</div>
+        <div class="rubric-name">Domain-Specific</div>
+        <div class="rubric-desc">Based on AI purpose</div>
+      </div>
+      <div class="rubric-cat dynamic">
+        <div class="rubric-label" style="color: var(--amber);">Dynamic</div>
+        <div class="rubric-name">Interaction Quality</div>
+        <div class="rubric-desc">If user-facing</div>
+      </div>
+      <div class="rubric-cat dynamic">
+        <div class="rubric-label" style="color: var(--amber);">Dynamic</div>
+        <div class="rubric-name">+ Up to 2 More</div>
+        <div class="rubric-desc">Context-dependent</div>
+      </div>
+    </div>
+  </div>
+
+  </div><!-- end Overview tab -->
+
+  <!-- Pipeline Diagram Tab -->
+  <div id="tab-pipeline" class="tab-panel">
+
+    <div class="section" style="animation-delay: 0.1s;">
+      <div class="section-title"><span style="color: var(--violet);">&bull;</span> Wizard Entry &amp; Stage 1 — Rubric Generation</div>
+      <div class="pipeline-diagram">
+
+        <!-- Wizard Input -->
+        <div class="pipeline-input">
+          <div class="pipeline-node input-node">
+            <div class="node-icon">Wizard Step 1</div>
+            <div class="node-name">Instructions + Context</div>
+            <div class="node-desc">System instructions and context documents provided in the evaluation wizard</div>
+          </div>
+        </div>
+
+        <div class="pipeline-connector"><div class="connector-line"></div></div>
+
+        <!-- Wizard Step 2 (optional) -->
+        <div class="pipeline-input">
+          <div class="pipeline-node wizard-node">
+            <div class="node-icon">Wizard Step 2 (optional)</div>
+            <div class="node-name">Chatbot Endpoint</div>
+            <div class="node-desc">Provide a URL to enable live execution. Skip for static framework only.</div>
+          </div>
+        </div>
+
+        <div class="pipeline-connector"><div class="connector-line fuchsia"></div></div>
+
+        <!-- Wizard Step 3 -->
+        <div class="pipeline-input">
+          <div class="pipeline-node wizard-node">
+            <div class="node-icon">Wizard Step 3</div>
+            <div class="node-name">Enable "Custom Test Suite"</div>
+            <div class="node-desc">Toggle on the Custom Test Suite capability to activate the custom rubric and scenario generation pipeline</div>
+          </div>
+        </div>
+
+        <div class="pipeline-connector"><div class="connector-line amber"></div></div>
+
+        <!-- Rubric Generator row -->
+        <div class="pipeline-row-label">Rubric Generator v1.4 — Rubric Generation</div>
+        <div class="pipeline-row three-col">
+          <div class="pipeline-node rubric-node">
+            <div class="node-icon">Step 1</div>
+            <div class="node-name">Analyze Instructions</div>
+            <div class="node-desc">Parse and understand the AI system's purpose and domain</div>
+          </div>
+          <div class="pipeline-node rubric-node">
+            <div class="node-icon">Step 2</div>
+            <div class="node-name">Identify Purpose &amp; Risks</div>
+            <div class="node-desc">Map capabilities, boundaries, and potential vulnerabilities</div>
+          </div>
+          <div class="pipeline-node rubric-node">
+            <div class="node-icon">Output</div>
+            <div class="node-name">Custom Rubric</div>
+            <div class="node-version">JSON</div>
+            <div class="node-desc">3 core + up to 4 dynamic weighted scoring categories</div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <div class="section" style="animation-delay: 0.2s;">
+      <div class="section-title"><span style="color: var(--teal);">&bull;</span> Stage 2 — Scenario Generation &amp; Execution</div>
+      <div class="pipeline-diagram">
+
+        <!-- Scenario Generator row -->
+        <div class="pipeline-row-label">Scenario Generator v1.0 — Scenario Generation</div>
+        <div class="pipeline-row three-col">
+          <div class="pipeline-node scenario-node">
+            <div class="node-icon">Step 1</div>
+            <div class="node-name">Build Test Scenarios</div>
+            <div class="node-desc">Transform rubric categories into realistic test personas</div>
+          </div>
+          <div class="pipeline-node scenario-node">
+            <div class="node-icon">Output</div>
+            <div class="node-name">Evaluation Plan</div>
+            <div class="node-version">JSON Scenarios</div>
+            <div class="node-desc">Personas, conversation goals, and start messages</div>
+          </div>
+          <div class="pipeline-node decision-node">
+            <div class="node-icon">Decision</div>
+            <div class="node-name">Endpoint Provided?</div>
+            <div class="node-desc">From wizard Step 2 — determines static or live execution</div>
+          </div>
+        </div>
+
+        <!-- Fork -->
+        <div class="pipeline-fork">
+          <div class="fork-lines">
+            <div class="fork-drop left"></div>
+            <div class="fork-drop right"></div>
+          </div>
+        </div>
+
+        <!-- Outputs -->
+        <div class="pipeline-row two-col">
+          <div class="pipeline-node output-node">
+            <div class="node-icon">Yes — Live Execution</div>
+            <div class="node-name">Execute Against Chatbot</div>
+            <div class="node-desc">Run each scenario against the live endpoint, collect transcripts and scored results</div>
+          </div>
+          <div class="pipeline-node output-node">
+            <div class="node-icon">No — Static Framework</div>
+            <div class="node-name">Deliver Evaluation Framework</div>
+            <div class="node-desc">Rubric + scenarios delivered as a complete evaluation framework for manual review</div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+  </div><!-- end Pipeline tab -->
+
+
+</div>
+
+<script>
+  window.switchTab = function(tab) {
+    document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+    document.getElementById('tab-' + tab).classList.add('active');
+    document.querySelector('[onclick="switchTab(\'' + tab + '\')"]').classList.add('active');
+    document.getElementById('tab-' + tab).querySelectorAll('.section').forEach(s => {
+      s.style.animation = 'none';
+      s.offsetHeight;
+      s.style.animation = '';
+    });
+  };
+</script>
+</body>
+</html>

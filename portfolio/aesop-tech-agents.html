@@ -1,0 +1,393 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AESOP OS — Agents &amp; Architecture</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:wght@400;500;600;700;800&family=Source+Code+Pro:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --font-body: 'Fraunces', Georgia, serif;
+    --font-mono: 'Source Code Pro', 'SF Mono', Consolas, monospace;
+
+    --bg: #f6f7fb;
+    --surface: #ffffff;
+    --surface2: #f0f2f7;
+    --surface-elevated: #ffffff;
+    --border: rgba(0, 0, 0, 0.06);
+    --border-bright: rgba(0, 0, 0, 0.12);
+    --text: #0f172a;
+    --text-dim: #64748b;
+
+    --teal: #0d9488;
+    --teal-dim: rgba(13, 148, 136, 0.08);
+    --blue: #2563eb;
+    --blue-dim: rgba(37, 99, 235, 0.08);
+    --violet: #7c3aed;
+    --violet-dim: rgba(124, 58, 237, 0.08);
+    --orange: #ea580c;
+    --orange-dim: rgba(234, 88, 12, 0.08);
+    --red: #dc2626;
+    --red-dim: rgba(220, 38, 38, 0.08);
+    --emerald: #059669;
+    --emerald-dim: rgba(5, 150, 105, 0.08);
+    --amber: #d97706;
+    --amber-dim: rgba(217, 119, 6, 0.08);
+    --rose: #e11d48;
+    --rose-dim: rgba(225, 29, 72, 0.08);
+    --sky: #0284c7;
+    --sky-dim: rgba(2, 132, 199, 0.08);
+    --slate: #475569;
+    --slate-dim: rgba(71, 85, 105, 0.08);
+    --indigo: #4f46e5;
+    --indigo-dim: rgba(79, 70, 229, 0.08);
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #0c1222;
+      --surface: #131c31;
+      --surface2: #1a2744;
+      --surface-elevated: #1e2d4f;
+      --border: rgba(255, 255, 255, 0.06);
+      --border-bright: rgba(255, 255, 255, 0.12);
+      --text: #e2e8f0;
+      --text-dim: #94a3b8;
+
+      --teal: #2dd4bf;
+      --teal-dim: rgba(45, 212, 191, 0.12);
+      --blue: #60a5fa;
+      --blue-dim: rgba(96, 165, 250, 0.12);
+      --violet: #a78bfa;
+      --violet-dim: rgba(167, 139, 250, 0.12);
+      --orange: #fb923c;
+      --orange-dim: rgba(251, 146, 60, 0.12);
+      --red: #f87171;
+      --red-dim: rgba(248, 113, 113, 0.12);
+      --emerald: #34d399;
+      --emerald-dim: rgba(52, 211, 153, 0.12);
+      --amber: #fbbf24;
+      --amber-dim: rgba(251, 191, 36, 0.12);
+      --rose: #fb7185;
+      --rose-dim: rgba(251, 113, 133, 0.12);
+      --sky: #38bdf8;
+      --sky-dim: rgba(56, 189, 248, 0.12);
+      --slate: #94a3b8;
+      --slate-dim: rgba(148, 163, 184, 0.12);
+      --indigo: #818cf8;
+      --indigo-dim: rgba(129, 140, 248, 0.12);
+    }
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: var(--bg);
+    background-image:
+      radial-gradient(at 20% 0%, var(--violet-dim) 0%, transparent 50%),
+      radial-gradient(at 80% 100%, var(--teal-dim) 0%, transparent 50%);
+    color: var(--text);
+    font-family: var(--font-body);
+    font-size: 15px;
+    line-height: 1.7;
+    min-height: 100vh;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  .container {
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 48px 24px 80px;
+  }
+
+  /* Hero */
+  .hero {
+    text-align: center;
+    margin-bottom: 48px;
+    animation: fadeUp 0.5s ease both;
+  }
+
+  .hero h1 {
+    font-size: 38px;
+    font-weight: 800;
+    letter-spacing: -1px;
+    margin-bottom: 8px;
+    background: linear-gradient(135deg, var(--violet), var(--teal));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  .hero p {
+    font-size: 17px;
+    color: var(--text-dim);
+    max-width: 600px;
+    margin: 0 auto;
+  }
+
+  /* Sections */
+  .section {
+    margin-bottom: 32px;
+    animation: fadeUp 0.5s ease both;
+  }
+
+  .section-title {
+    font-size: 18px;
+    font-weight: 700;
+    margin-bottom: 16px;
+    letter-spacing: -0.3px;
+  }
+
+  .section-subtitle {
+    font-size: 14px;
+    color: var(--text-dim);
+    margin-top: -12px;
+    margin-bottom: 16px;
+  }
+
+  /* Agent Grid */
+  .agent-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 10px;
+  }
+
+  .agent-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 16px;
+    text-align: center;
+  }
+
+  .agent-card-icon {
+    width: 36px;
+    height: 36px;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: var(--font-mono);
+    font-size: 11px;
+    font-weight: 700;
+    margin: 0 auto 8px;
+  }
+
+  .agent-card-name {
+    font-size: 13px;
+    font-weight: 700;
+    margin-bottom: 2px;
+  }
+
+  .agent-card-role {
+    font-size: 12px;
+    color: var(--text-dim);
+  }
+
+  /* Agent group label */
+  .agent-group-label {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    color: var(--text-dim);
+    margin-bottom: 8px;
+    margin-top: 20px;
+  }
+
+  .agent-group-label:first-child {
+    margin-top: 0;
+  }
+
+  /* Tech badges */
+  .tech-row {
+    display: flex;
+    justify-content: center;
+    gap: 12px;
+    flex-wrap: wrap;
+  }
+
+  .tech-badge {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 14px 20px;
+    text-align: center;
+    min-width: 120px;
+  }
+
+  .tech-badge-label {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+    color: var(--text-dim);
+    margin-bottom: 4px;
+  }
+
+  .tech-badge-value {
+    font-size: 14px;
+    font-weight: 700;
+  }
+
+  /* Footer */
+  .footer {
+    text-align: center;
+    margin-top: 60px;
+    padding-top: 24px;
+    border-top: 1px solid var(--border);
+    font-size: 13px;
+    color: var(--text-dim);
+  }
+
+  /* Animations */
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(16px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .section, .hero { animation: none; opacity: 1; }
+  }
+
+  @media (max-width: 640px) {
+    .agent-grid { grid-template-columns: 1fr 1fr; }
+  }
+</style>
+</head>
+<body>
+<div class="container">
+
+  <!-- Hero -->
+  <div class="hero">
+    <h1>Agents &amp; Architecture</h1>
+    <p>21 specialized agents powered by Claude Sonnet 4.5, each running independently.</p>
+  </div>
+
+  <!-- Agent Roster -->
+  <div class="section" style="animation-delay: 0.05s;">
+    <div class="section-title"><span style="color: var(--teal);">&#9670;</span> Specialized Agents</div>
+    <div class="section-subtitle">Each agent runs independently. Orchestrators aggregate results. No inter-agent dependencies.</div>
+
+    <div class="agent-group-label">Evaluation — Standard Analysis</div>
+    <div class="agent-grid">
+      <div class="agent-card">
+        <div class="agent-card-icon" style="background: var(--teal-dim); color: var(--teal);">INS</div>
+        <div class="agent-card-name">Instructions</div>
+        <div class="agent-card-role">Structure, Intent, UX</div>
+      </div>
+      <div class="agent-card">
+        <div class="agent-card-icon" style="background: var(--blue-dim); color: var(--blue);">ETH</div>
+        <div class="agent-card-name">Ethos</div>
+        <div class="agent-card-role">Ethics, Responsibility</div>
+      </div>
+      <div class="agent-card">
+        <div class="agent-card-icon" style="background: var(--violet-dim); color: var(--violet);">BIA</div>
+        <div class="agent-card-name">Bias</div>
+        <div class="agent-card-role">Fairness, Inclusion</div>
+      </div>
+      <div class="agent-card">
+        <div class="agent-card-icon" style="background: var(--red-dim); color: var(--red);">SAF</div>
+        <div class="agent-card-name">Safety</div>
+        <div class="agent-card-role">Validation, Boundaries</div>
+      </div>
+      <div class="agent-card">
+        <div class="agent-card-icon" style="background: var(--emerald-dim); color: var(--emerald);">SYN</div>
+        <div class="agent-card-name">Synthesis</div>
+        <div class="agent-card-role">Unified Risk Strategy</div>
+      </div>
+    </div>
+
+    <div class="agent-group-label">Advanced Evaluation Modes</div>
+    <div class="agent-grid">
+      <div class="agent-card">
+        <div class="agent-card-icon" style="background: var(--red-dim); color: var(--red);">CoS</div>
+        <div class="agent-card-name">Cave of Shadows</div>
+        <div class="agent-card-role">Red-Team Attacks</div>
+      </div>
+      <div class="agent-card">
+        <div class="agent-card-icon" style="background: var(--violet-dim); color: var(--violet);">BPR</div>
+        <div class="agent-card-name">Bias Probe</div>
+        <div class="agent-card-role">Differential Detection</div>
+      </div>
+      <div class="agent-card">
+        <div class="agent-card-icon" style="background: var(--indigo-dim); color: var(--indigo);">RUB</div>
+        <div class="agent-card-name">Custom Test Suite</div>
+        <div class="agent-card-role">Domain-Specific Rubric</div>
+      </div>
+      <div class="agent-card">
+        <div class="agent-card-icon" style="background: var(--amber-dim); color: var(--amber);">INV</div>
+        <div class="agent-card-name">Investigation</div>
+        <div class="agent-card-role">Black-Box Discovery</div>
+      </div>
+      <div class="agent-card">
+        <div class="agent-card-icon" style="background: var(--slate-dim); color: var(--slate);">KBA</div>
+        <div class="agent-card-name">KB Audit</div>
+        <div class="agent-card-role">Knowledge Base Review</div>
+      </div>
+    </div>
+
+    <div class="agent-group-label">Build Pipeline</div>
+    <div class="agent-grid">
+      <div class="agent-card">
+        <div class="agent-card-icon" style="background: var(--orange-dim); color: var(--orange);">ARC</div>
+        <div class="agent-card-name">Architecture</div>
+        <div class="agent-card-role">Platform Recommendation</div>
+      </div>
+      <div class="agent-card">
+        <div class="agent-card-icon" style="background: var(--teal-dim); color: var(--teal);">FIT</div>
+        <div class="agent-card-name">Fitness Check</div>
+        <div class="agent-card-role">PRD Viability</div>
+      </div>
+      <div class="agent-card">
+        <div class="agent-card-icon" style="background: var(--blue-dim); color: var(--blue);">WFD</div>
+        <div class="agent-card-name">Workflow Design</div>
+        <div class="agent-card-role">Flow Mapping</div>
+      </div>
+      <div class="agent-card">
+        <div class="agent-card-icon" style="background: var(--violet-dim); color: var(--violet);">WRI</div>
+        <div class="agent-card-name">Instruction Writer</div>
+        <div class="agent-card-role">System Instructions</div>
+      </div>
+      <div class="agent-card">
+        <div class="agent-card-icon" style="background: var(--emerald-dim); color: var(--emerald);">ART</div>
+        <div class="agent-card-name">Artifact Generator</div>
+        <div class="agent-card-role">Platform Artifacts</div>
+      </div>
+    </div>
+
+    <div class="agent-group-label">Repair &amp; Operationalization</div>
+    <div class="agent-grid">
+      <div class="agent-card">
+        <div class="agent-card-icon" style="background: var(--rose-dim); color: var(--rose);">RPR</div>
+        <div class="agent-card-name">Repair</div>
+        <div class="agent-card-role">Instruction Rewrite</div>
+      </div>
+      <div class="agent-card">
+        <div class="agent-card-icon" style="background: var(--amber-dim); color: var(--amber);">OPS</div>
+        <div class="agent-card-name">Operationalization</div>
+        <div class="agent-card-role">Launch Package</div>
+      </div>
+      <div class="agent-card">
+        <div class="agent-card-icon" style="background: var(--sky-dim); color: var(--sky);">TRK</div>
+        <div class="agent-card-name">Track</div>
+        <div class="agent-card-role">Analytics &amp; Drift</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="footer">
+    <a href="aesop-pipeline.html" style="color: var(--text-dim); text-decoration: none;">&#8592; The Pipeline</a>
+    &nbsp;&mdash;&nbsp;
+    AESOP OS &mdash; Governance-First AI Agent Development
+    &nbsp;&mdash;&nbsp;
+    <a href="aesop-platform-overview.html" style="color: var(--text-dim); text-decoration: none;">Platform Overview &#8594;</a>
+  </div>
+
+</div>
+</body>
+</html>

@@ -1,0 +1,1446 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>The Hydra — AESOP Parallelized Red-Team</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:wght@400;500;600;700;800&family=Source+Code+Pro:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --font-body: 'Fraunces', Georgia, serif;
+    --font-mono: 'Source Code Pro', 'SF Mono', Consolas, monospace;
+
+    --bg: #1a0505;
+    --surface: #230f0f;
+    --surface2: #2d1515;
+    --surface-elevated: #381a1a;
+    --border: rgba(255, 255, 255, 0.06);
+    --border-bright: rgba(255, 255, 255, 0.12);
+    --text: #fce8e8;
+    --text-dim: #d4a0a0;
+
+    --red: #ef4444;
+    --red-dim: rgba(239, 68, 68, 0.12);
+    --orange: #f97316;
+    --orange-dim: rgba(249, 115, 22, 0.12);
+    --amber: #f59e0b;
+    --amber-dim: rgba(245, 158, 11, 0.12);
+    --slate: #94a3b8;
+    --slate-dim: rgba(148, 163, 184, 0.12);
+    --emerald: #10b981;
+    --emerald-dim: rgba(16, 185, 129, 0.12);
+    --rose: #fb7185;
+    --rose-dim: rgba(251, 113, 133, 0.12);
+    --violet: #a78bfa;
+    --violet-dim: rgba(167, 139, 250, 0.12);
+    --crimson: #dc2626;
+    --crimson-dim: rgba(220, 38, 38, 0.12);
+  }
+
+  @media (prefers-color-scheme: light) {
+    :root {
+      --bg: #fff5f5;
+      --surface: #ffffff;
+      --surface2: #fef2f2;
+      --surface-elevated: #fff1f1;
+      --border: rgba(0, 0, 0, 0.06);
+      --border-bright: rgba(0, 0, 0, 0.12);
+      --text: #1c1917;
+      --text-dim: #78716c;
+
+      --red: #dc2626;
+      --red-dim: rgba(220, 38, 38, 0.07);
+      --orange: #ea580c;
+      --orange-dim: rgba(234, 88, 12, 0.07);
+      --amber: #d97706;
+      --amber-dim: rgba(217, 119, 6, 0.07);
+      --slate: #475569;
+      --slate-dim: rgba(71, 85, 105, 0.07);
+      --emerald: #059669;
+      --emerald-dim: rgba(5, 150, 105, 0.07);
+      --rose: #e11d48;
+      --rose-dim: rgba(225, 29, 72, 0.07);
+      --violet: #7c3aed;
+      --violet-dim: rgba(124, 58, 237, 0.07);
+      --crimson: #b91c1c;
+      --crimson-dim: rgba(185, 28, 28, 0.07);
+    }
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: var(--bg);
+    background-image:
+      radial-gradient(at 20% 0%, rgba(220, 38, 38, 0.15) 0%, transparent 50%),
+      radial-gradient(at 80% 100%, rgba(249, 115, 22, 0.10) 0%, transparent 50%),
+      radial-gradient(at 50% 50%, rgba(239, 68, 68, 0.05) 0%, transparent 70%);
+    color: var(--text);
+    font-family: var(--font-body);
+    line-height: 1.7;
+    min-height: 100vh;
+    padding: 48px 24px 80px;
+  }
+
+  .container { max-width: 960px; margin: 0 auto; }
+
+  .hero {
+    text-align: center;
+    margin-bottom: 56px;
+    animation: fadeUp 0.6s ease-out;
+  }
+
+  .hero-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 6px 18px;
+    background: var(--red-dim);
+    border: 1px solid var(--red);
+    border-radius: 20px;
+    font-family: var(--font-mono);
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--red);
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    margin-bottom: 24px;
+  }
+
+  .hero h1 {
+    font-size: 58px;
+    font-weight: 800;
+    letter-spacing: -2px;
+    margin-bottom: 12px;
+    background: linear-gradient(135deg, var(--crimson), var(--red), var(--orange));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  .hero-tagline {
+    font-family: var(--font-mono);
+    font-size: 14px;
+    color: var(--red);
+    letter-spacing: 0.5px;
+    margin-bottom: 12px;
+    opacity: 0.8;
+  }
+
+  .hero p {
+    font-size: 20px;
+    color: var(--text-dim);
+    max-width: 640px;
+    margin: 0 auto;
+  }
+
+  .section {
+    margin-bottom: 48px;
+    opacity: 0;
+    animation: fadeUp 0.5s ease-out forwards;
+  }
+
+  .section:nth-child(2) { animation-delay: 0.1s; }
+  .section:nth-child(3) { animation-delay: 0.2s; }
+  .section:nth-child(4) { animation-delay: 0.3s; }
+  .section:nth-child(5) { animation-delay: 0.4s; }
+  .section:nth-child(6) { animation-delay: 0.5s; }
+
+  .section-title {
+    font-family: var(--font-mono);
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    color: var(--text-dim);
+    margin-bottom: 16px;
+  }
+
+  .origin-note {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 24px 28px;
+    font-size: 15px;
+    line-height: 1.6;
+    color: var(--text-dim);
+    border-left: 3px solid var(--red);
+  }
+
+  .origin-note strong { color: var(--text); }
+
+  /* Access steps */
+  .access-steps {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+  }
+
+  .access-step {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 20px 24px;
+    display: flex;
+    gap: 16px;
+    align-items: flex-start;
+    transition: transform 0.2s;
+  }
+
+  .access-step:hover { transform: translateY(-2px); }
+
+  .step-number {
+    flex-shrink: 0;
+    width: 36px;
+    height: 36px;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: var(--font-mono);
+    font-size: 14px;
+    font-weight: 700;
+  }
+
+  .step-content { flex: 1; }
+
+  .step-title {
+    font-size: 16px;
+    font-weight: 700;
+    margin-bottom: 4px;
+  }
+
+  .step-desc {
+    font-size: 14px;
+    color: var(--text-dim);
+    line-height: 1.5;
+  }
+
+  /* Domain cards */
+  .domain-grid {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 12px;
+  }
+
+  @media (max-width: 700px) { .domain-grid { grid-template-columns: repeat(2, 1fr); } }
+  @media (max-width: 400px) { .domain-grid { grid-template-columns: 1fr; } }
+
+  .domain-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 18px 14px;
+    text-align: center;
+    border-top: 3px solid;
+    transition: transform 0.2s;
+  }
+
+  .domain-card:hover { transform: translateY(-2px); }
+
+  .domain-card.safety { border-top-color: var(--red); }
+  .domain-card.ethics { border-top-color: var(--violet); }
+  .domain-card.bias { border-top-color: var(--amber); }
+  .domain-card.legal { border-top-color: var(--emerald); }
+  .domain-card.security { border-top-color: var(--orange); }
+
+  .domain-icon {
+    font-size: 22px;
+    margin-bottom: 8px;
+  }
+
+  .domain-name {
+    font-size: 13px;
+    font-weight: 700;
+    margin-bottom: 4px;
+  }
+
+  .domain-desc {
+    font-size: 11px;
+    color: var(--text-dim);
+    line-height: 1.4;
+  }
+
+  /* Probe mode cards */
+  .probe-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 16px;
+  }
+
+  @media (max-width: 600px) { .probe-grid { grid-template-columns: 1fr; } }
+
+  .probe-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 20px;
+    border-left: 3px solid;
+    transition: transform 0.2s;
+  }
+
+  .probe-card:hover { transform: translateY(-2px); }
+  .probe-card.director { border-left-color: var(--violet); }
+  .probe-card.worker { border-left-color: var(--orange); }
+  .probe-card.both { border-left-color: var(--red); }
+
+  .probe-label {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+    margin-bottom: 8px;
+  }
+
+  .probe-name {
+    font-size: 17px;
+    font-weight: 700;
+    margin-bottom: 6px;
+  }
+
+  .probe-desc {
+    font-size: 13px;
+    color: var(--text-dim);
+    line-height: 1.5;
+  }
+
+  /* Tiger team callout */
+  .tiger-callout {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 24px 28px;
+    display: flex;
+    gap: 20px;
+    align-items: flex-start;
+  }
+
+  .tiger-icon {
+    font-size: 32px;
+    flex-shrink: 0;
+    line-height: 1;
+    margin-top: 2px;
+  }
+
+  .tiger-body { flex: 1; }
+
+  .tiger-title {
+    font-size: 18px;
+    font-weight: 700;
+    margin-bottom: 8px;
+    color: var(--text);
+  }
+
+  .tiger-desc {
+    font-size: 14px;
+    color: var(--text-dim);
+    line-height: 1.6;
+  }
+
+  .tiger-example {
+    margin-top: 12px;
+    background: var(--surface2);
+    border-radius: 8px;
+    padding: 12px 16px;
+    font-family: var(--font-mono);
+    font-size: 12px;
+    color: var(--text-dim);
+    line-height: 1.8;
+    border-left: 3px solid var(--amber);
+  }
+
+  .tiger-example .weak { color: var(--red); font-weight: 600; }
+  .tiger-example .strong { color: var(--emerald); font-weight: 600; }
+  .tiger-example .heads { color: var(--amber); font-weight: 600; }
+
+  /* Pipeline diagram */
+  .pipeline-diagram {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 40px 32px;
+  }
+
+  .pipeline-input {
+    display: flex;
+    justify-content: center;
+  }
+
+  .pipeline-node {
+    border-radius: 14px;
+    padding: 20px 28px;
+    text-align: center;
+    border: 2px solid;
+    position: relative;
+    transition: transform 0.2s, box-shadow 0.2s;
+  }
+
+  .pipeline-node:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 24px rgba(0,0,0,0.2);
+  }
+
+  .pipeline-node.input-node {
+    background: var(--orange-dim);
+    border-color: var(--orange);
+    min-width: 280px;
+  }
+
+  .pipeline-node.stage-node {
+    background: var(--red-dim);
+    border-color: var(--red);
+    min-width: 320px;
+  }
+
+  .pipeline-node.alloc-node {
+    background: var(--amber-dim);
+    border-color: var(--amber);
+    min-width: 320px;
+  }
+
+  .pipeline-node.exec-node {
+    background: var(--slate-dim);
+    border-color: var(--slate);
+    flex: 1;
+    min-width: 0;
+  }
+
+  .pipeline-node.score-node {
+    background: var(--violet-dim);
+    border-color: var(--violet);
+    flex: 1;
+    min-width: 0;
+  }
+
+  .pipeline-node.result-node {
+    background: var(--emerald-dim);
+    border-color: var(--emerald);
+    min-width: 320px;
+  }
+
+  .node-icon {
+    font-family: var(--font-mono);
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+    color: var(--text-dim);
+    margin-bottom: 8px;
+  }
+
+  .node-name {
+    font-size: 17px;
+    font-weight: 700;
+    margin-bottom: 4px;
+  }
+
+  .node-version {
+    font-family: var(--font-mono);
+    font-size: 12px;
+    color: var(--text-dim);
+  }
+
+  .node-desc {
+    font-size: 13px;
+    color: var(--text-dim);
+    margin-top: 4px;
+  }
+
+  .pipeline-connector {
+    display: flex;
+    justify-content: center;
+    align-items: stretch;
+    padding: 0;
+    height: 36px;
+  }
+
+  .connector-line {
+    width: 3px;
+    border-radius: 0;
+    background: var(--red);
+    position: relative;
+  }
+
+  .connector-line.orange { background: var(--orange); }
+  .connector-line.amber { background: var(--amber); }
+  .connector-line.emerald { background: var(--emerald); }
+  .connector-line.violet { background: var(--violet); }
+  .connector-line.slate { background: var(--slate); }
+
+  .connector-line::after {
+    content: '';
+    position: absolute;
+    bottom: -1px;
+    left: 50%;
+    transform: translateX(-50%);
+    border-left: 7px solid transparent;
+    border-right: 7px solid transparent;
+    border-top: 7px solid var(--red);
+  }
+
+  .connector-line.orange::after { border-top-color: var(--orange); }
+  .connector-line.amber::after { border-top-color: var(--amber); }
+  .connector-line.emerald::after { border-top-color: var(--emerald); }
+  .connector-line.violet::after { border-top-color: var(--violet); }
+  .connector-line.slate::after { border-top-color: var(--slate); }
+
+  .pipeline-row {
+    display: grid;
+    gap: 12px;
+  }
+
+  .pipeline-row.two-col { grid-template-columns: repeat(2, 1fr); }
+  .pipeline-row.three-col { grid-template-columns: repeat(3, 1fr); }
+  .pipeline-row.five-col { grid-template-columns: repeat(5, 1fr); }
+
+  .pipeline-row-label {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    color: var(--text-dim);
+    text-align: center;
+    margin-bottom: 12px;
+  }
+
+  /* Fork/merge lines */
+  .pipeline-fork {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 0;
+    position: relative;
+  }
+
+  .fork-lines {
+    position: relative;
+    width: 80%;
+    height: 36px;
+  }
+
+  .fork-lines::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 3px;
+    height: 16px;
+    background: var(--amber);
+  }
+
+  .fork-lines.from-red::before { background: var(--red); }
+  .fork-lines.from-slate::before { background: var(--slate); }
+
+  .fork-lines::after {
+    content: '';
+    position: absolute;
+    top: 16px;
+    left: 10%;
+    right: 10%;
+    height: 3px;
+    background: var(--slate);
+  }
+
+  .fork-lines.five::after {
+    left: 5%;
+    right: 5%;
+  }
+
+  .fork-drop {
+    position: absolute;
+    bottom: 0;
+    width: 3px;
+    height: 17px;
+    background: var(--slate);
+  }
+
+  .fork-drop::after {
+    content: '';
+    position: absolute;
+    bottom: -1px;
+    left: 50%;
+    transform: translateX(-50%);
+    border-left: 7px solid transparent;
+    border-right: 7px solid transparent;
+    border-top: 7px solid var(--slate);
+  }
+
+  .fork-drop.d1 { left: 10%; }
+  .fork-drop.d2 { left: 27.5%; }
+  .fork-drop.d3 { left: 50%; transform: translateX(-50%); }
+  .fork-drop.d4 { right: 27.5%; }
+  .fork-drop.d5 { right: 10%; }
+
+  /* Five-wide fork drops */
+  .fork-lines.five .fork-drop.d1 { left: 5%; }
+  .fork-lines.five .fork-drop.d2 { left: 27%; }
+  .fork-lines.five .fork-drop.d3 { left: 50%; transform: translateX(-50%); }
+  .fork-lines.five .fork-drop.d4 { right: 27%; }
+  .fork-lines.five .fork-drop.d5 { right: 5%; }
+
+  .merge-lines {
+    position: relative;
+    width: 80%;
+    height: 36px;
+  }
+
+  .merge-lines::after {
+    content: '';
+    position: absolute;
+    bottom: 16px;
+    left: 10%;
+    right: 10%;
+    height: 3px;
+    background: var(--slate);
+  }
+
+  .merge-lines.five::after { left: 5%; right: 5%; }
+
+  .merge-lines::before {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 3px;
+    height: 16px;
+    background: var(--violet);
+  }
+
+  .merge-lines.to-emerald::before { background: var(--emerald); }
+
+  .merge-drop {
+    position: absolute;
+    top: 0;
+    width: 3px;
+    height: 17px;
+    background: var(--slate);
+  }
+
+  .merge-drop.d1 { left: 10%; }
+  .merge-drop.d2 { left: 27.5%; }
+  .merge-drop.d3 { left: 50%; transform: translateX(-50%); }
+  .merge-drop.d4 { right: 27.5%; }
+  .merge-drop.d5 { right: 10%; }
+
+  .merge-lines.five .merge-drop.d1 { left: 5%; }
+  .merge-lines.five .merge-drop.d2 { left: 27%; }
+  .merge-lines.five .merge-drop.d3 { left: 50%; transform: translateX(-50%); }
+  .merge-lines.five .merge-drop.d4 { right: 27%; }
+  .merge-lines.five .merge-drop.d5 { right: 5%; }
+
+  /* Wizard merge */
+  .wizard-merge {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 0;
+    position: relative;
+  }
+
+  .wizard-merge-lines {
+    position: relative;
+    width: 60%;
+    height: 36px;
+  }
+
+  .wizard-merge-lines::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 25%;
+    right: 25%;
+    height: 3px;
+    background: var(--orange);
+  }
+
+  .wizard-merge-lines::before {
+    content: '';
+    position: absolute;
+    top: 3px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 3px;
+    height: 26px;
+    background: var(--orange);
+  }
+
+  .wizard-merge-drop {
+    position: absolute;
+    top: 0;
+    width: 3px;
+    height: 3px;
+    background: var(--orange);
+  }
+
+  .wizard-merge-drop.left { left: 25%; }
+  .wizard-merge-drop.right { right: 25%; }
+
+  .wizard-merge-arrow {
+    position: absolute;
+    bottom: -1px;
+    left: 50%;
+    transform: translateX(-50%);
+    border-left: 7px solid transparent;
+    border-right: 7px solid transparent;
+    border-top: 7px solid var(--orange);
+  }
+
+  @media (max-width: 768px) {
+    .pipeline-row.three-col { grid-template-columns: 1fr; }
+    .pipeline-row.two-col { grid-template-columns: 1fr; }
+    .pipeline-row.five-col { grid-template-columns: repeat(2, 1fr); }
+  }
+
+  .pipeline-note {
+    background: var(--surface2);
+    border: 1px dashed var(--border-bright);
+    border-radius: 10px;
+    padding: 14px 20px;
+    font-size: 13px;
+    color: var(--text-dim);
+    text-align: center;
+    margin-top: 24px;
+  }
+
+  .pipeline-note strong { color: var(--text); }
+
+  /* Mermaid container */
+  .mermaid-wrap {
+    position: relative;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 32px 24px;
+    overflow: auto;
+    margin-bottom: 24px;
+    scrollbar-width: thin;
+    scrollbar-color: var(--border) transparent;
+  }
+  .mermaid-wrap::-webkit-scrollbar { width: 6px; height: 6px; }
+  .mermaid-wrap::-webkit-scrollbar-track { background: transparent; }
+  .mermaid-wrap::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+  .mermaid-wrap::-webkit-scrollbar-thumb:hover { background: var(--text-dim); }
+
+  .mermaid-wrap .mermaid {
+    display: flex;
+    justify-content: center;
+    transition: transform 0.2s ease;
+    transform-origin: top center;
+  }
+
+  .zoom-controls {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    display: flex;
+    gap: 2px;
+    z-index: 10;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 2px;
+  }
+
+  .zoom-controls button {
+    width: 28px;
+    height: 28px;
+    border: none;
+    background: transparent;
+    color: var(--text-dim);
+    font-family: var(--font-mono);
+    font-size: 14px;
+    cursor: pointer;
+    border-radius: 4px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background 0.15s ease, color 0.15s ease;
+  }
+
+  .zoom-controls button:hover {
+    background: var(--border);
+    color: var(--text);
+  }
+
+  .mermaid-wrap.is-zoomed { cursor: grab; }
+  .mermaid-wrap.is-panning { cursor: grabbing; user-select: none; }
+
+  .mermaid .nodeLabel {
+    font-family: var(--font-body) !important;
+    font-size: 14px !important;
+  }
+
+  .mermaid .edgeLabel {
+    font-family: var(--font-mono) !important;
+    font-size: 11px !important;
+  }
+
+  .mermaid .node rect,
+  .mermaid .node circle,
+  .mermaid .node polygon {
+    stroke-width: 1.5px !important;
+  }
+
+  .mermaid .edge-pattern-solid {
+    stroke-width: 1.5px !important;
+  }
+
+  /* Tabs */
+  .tabs {
+    display: flex;
+    gap: 4px;
+    margin-bottom: 32px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .tab-btn {
+    font-family: var(--font-mono);
+    font-size: 13px;
+    font-weight: 500;
+    letter-spacing: 0.3px;
+    padding: 10px 20px;
+    background: none;
+    border: none;
+    border-bottom: 2px solid transparent;
+    color: var(--text-dim);
+    cursor: pointer;
+    transition: color 0.2s, border-color 0.2s;
+  }
+
+  .tab-btn:hover { color: var(--text); }
+
+  .tab-btn.active {
+    color: var(--red);
+    border-bottom-color: var(--red);
+    font-weight: 600;
+  }
+
+  .tab-panel { display: none; }
+  .tab-panel.active { display: block; }
+
+  .footer {
+    text-align: center;
+    margin-top: 60px;
+    padding-top: 24px;
+    border-top: 1px solid var(--border);
+    font-size: 14px;
+    color: var(--text-dim);
+  }
+
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(16px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .section, .hero { animation: none; opacity: 1; }
+  }
+</style>
+</head>
+<body>
+<div class="container">
+
+  <div class="hero">
+    <div class="hero-badge">&#128293; Adversarial Red-Team</div>
+    <h1>The Hydra</h1>
+    <div class="hero-tagline">Cut one head off — two grow back.</div>
+    <p>Parallelized red-team execution engine that deploys adversarial attack heads against your chatbot across five domains</p>
+  </div>
+
+  <!-- Tabs -->
+  <div class="tabs">
+    <button class="tab-btn active" onclick="switchTab('overview')">Overview</button>
+    <button class="tab-btn" onclick="switchTab('pipeline')">Pipeline Diagram</button>
+    <button class="tab-btn" onclick="switchTab('processmap')">Process Map</button>
+  </div>
+
+  <!-- Overview Tab -->
+  <div id="tab-overview" class="tab-panel active">
+
+    <!-- About the Name -->
+    <div class="section" style="animation-delay: 0.05s;">
+      <div class="section-title">About the Name</div>
+      <div class="origin-note">
+        <strong>The Hydra</strong> draws from Greek mythology: the Lernaean Hydra, a serpentine monster that grew two heads for every one that was cut off. No single attack could defeat it — only coordinated, concentrated force. In the same way, the Hydra capability does not send a single probe at a target. It assembles all available intelligence, fans each scenario into multiple variations, and unleashes them all simultaneously. <strong>Cut one head off — two grow back.</strong> The target agent cannot prepare for a single angle of attack when it faces dozens at once.
+      </div>
+    </div>
+
+    <!-- How to Access -->
+    <div class="section" style="animation-delay: 0.1s;">
+      <div class="section-title">How to Access</div>
+      <div class="origin-note" style="margin-bottom: 20px;">
+        <strong>The Hydra</strong> is available at <strong>/hydra</strong> in the sidebar, or as a toggleable capability in the evaluation wizard. It unleashes concurrent adversarial attack heads against your chatbot endpoint.
+      </div>
+      <div class="access-steps">
+        <div class="access-step">
+          <div class="step-number" style="background: var(--red-dim); color: var(--red);">1</div>
+          <div class="step-content">
+            <div class="step-title">Navigate to /hydra</div>
+            <div class="step-desc">The Hydra link appears in the sidebar for all users. You can also reach it from the completion card after any evaluation finishes.</div>
+          </div>
+        </div>
+        <div class="access-step">
+          <div class="step-number" style="background: var(--orange-dim); color: var(--orange);">2</div>
+          <div class="step-content">
+            <div class="step-title">Enter Your Endpoint</div>
+            <div class="step-desc">Provide the chatbot endpoint URL to test. Optionally link a registered AESOP agent to use its prior evaluation data for smarter targeting.</div>
+          </div>
+        </div>
+        <div class="access-step">
+          <div class="step-number" style="background: var(--amber-dim); color: var(--amber);">3</div>
+          <div class="step-content">
+            <div class="step-title">Configure Heads, Mode, and Cave Link</div>
+            <div class="step-desc">Set the number of heads (1–20), choose a probe mode (Director, Workers, or Both), and optionally link a completed Cave of Shadows run to use its scenarios as the base.</div>
+          </div>
+        </div>
+        <div class="access-step">
+          <div class="step-number" style="background: var(--emerald-dim); color: var(--emerald);">4</div>
+          <div class="step-content">
+            <div class="step-title">Unleash the Hydra</div>
+            <div class="step-desc">Submit to launch. The Hydra assembles intel, fans scenarios into variations, and executes all heads simultaneously. Results stream live on the run page.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Five Domains -->
+    <div class="section" style="animation-delay: 0.15s;">
+      <div class="section-title">Five Evaluation Domains</div>
+      <div class="domain-grid">
+        <div class="domain-card safety">
+          <div class="domain-icon">&#128737;</div>
+          <div class="domain-name">Safety</div>
+          <div class="domain-desc">Harm prevention, dangerous outputs, refusal behavior</div>
+        </div>
+        <div class="domain-card ethics">
+          <div class="domain-icon">&#9878;</div>
+          <div class="domain-name">Ethics</div>
+          <div class="domain-desc">Manipulation, transparency, responsible guidance</div>
+        </div>
+        <div class="domain-card bias">
+          <div class="domain-icon">&#9878;</div>
+          <div class="domain-name">Bias</div>
+          <div class="domain-desc">Discriminatory patterns, stereotypes, fair treatment</div>
+        </div>
+        <div class="domain-card legal">
+          <div class="domain-icon">&#9878;</div>
+          <div class="domain-name">Legal</div>
+          <div class="domain-desc">Regulatory exposure, PII handling, liability</div>
+        </div>
+        <div class="domain-card security">
+          <div class="domain-icon">&#128272;</div>
+          <div class="domain-name">Security</div>
+          <div class="domain-desc">Prompt injection, system prompt leakage, data access</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Tiger Team Allocation -->
+    <div class="section" style="animation-delay: 0.2s;">
+      <div class="section-title">Tiger Team Head Allocation</div>
+      <div class="tiger-callout">
+        <div class="tiger-icon">&#127817;</div>
+        <div class="tiger-body">
+          <div class="tiger-title">Concentrate firepower on weak domains</div>
+          <div class="tiger-desc">
+            The Hydra does not distribute heads evenly. Before fanning scenarios, it checks prior evaluation scores for the target agent across all five domains. Domains that scored below the weakness threshold (80) receive proportionally more heads — the weaker the domain, the more attack variations it gets. Every domain receives at least one head.
+          </div>
+          <div class="tiger-example">
+            <span class="weak">Safety: 62</span> &rarr; <span class="heads">4 heads</span> &nbsp;&nbsp;
+            <span class="weak">Security: 58</span> &rarr; <span class="heads">5 heads</span><br>
+            <span class="strong">Ethics: 91</span> &rarr; <span class="heads">1 head</span> &nbsp;&nbsp;
+            <span class="strong">Bias: 88</span> &rarr; <span class="heads">1 head</span> &nbsp;&nbsp;
+            <span class="strong">Legal: 85</span> &rarr; <span class="heads">1 head</span><br>
+            <span style="opacity:0.6">Total: 12 heads allocated based on weakness profile</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Probe Modes -->
+    <div class="section" style="animation-delay: 0.25s;">
+      <div class="section-title">Probe Modes</div>
+      <div class="probe-grid">
+        <div class="probe-card director">
+          <div class="probe-label" style="color: var(--violet);">Routing Test</div>
+          <div class="probe-name">Director Only</div>
+          <div class="probe-desc">Probes the director agent's routing decisions, scope enforcement, and handoff behavior. Tests whether the orchestration layer correctly filters and routes adversarial intent.</div>
+        </div>
+        <div class="probe-card worker">
+          <div class="probe-label" style="color: var(--orange);">Specialist Test</div>
+          <div class="probe-name">Workers Only</div>
+          <div class="probe-desc">Bypasses the director and attacks specialist worker agents directly. Reveals whether guardrails live only at the routing layer or are enforced throughout the agent hierarchy.</div>
+        </div>
+        <div class="probe-card both">
+          <div class="probe-label" style="color: var(--red);">Full Coverage</div>
+          <div class="probe-name">Both (Recommended)</div>
+          <div class="probe-desc">Runs director probes and worker probes. Provides complete coverage of the full agent hierarchy — the standard mode for a comprehensive Hydra run.</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Cave of Shadows Integration -->
+    <div class="section" style="animation-delay: 0.3s;">
+      <div class="section-title">Cave of Shadows Integration</div>
+      <div class="origin-note">
+        Linking a completed <strong>Cave of Shadows</strong> run gives the Hydra a tailored base scenario set rather than the standard static probe battery. The Hydra then fans each Cave scenario into domain-specific variations — multiplying the attack surface proportionally across weak domains. Without a linked Cave run, the Hydra falls back to the built-in director and worker probe libraries (10 probes each, covering all five domains).
+      </div>
+    </div>
+
+  </div><!-- end Overview tab -->
+
+  <!-- Pipeline Diagram Tab -->
+  <div id="tab-pipeline" class="tab-panel">
+
+    <div class="section" style="animation-delay: 0.1s;">
+      <div class="section-title"><span style="color: var(--red);">&bull;</span> Six-Stage Execution Pipeline</div>
+      <div class="pipeline-diagram">
+
+        <!-- Inputs row -->
+        <div class="pipeline-row-label">Inputs</div>
+        <div class="pipeline-row two-col">
+          <div class="pipeline-node input-node">
+            <div class="node-icon">Required</div>
+            <div class="node-name">Chatbot Endpoint URL</div>
+            <div class="node-desc">HTTP POST endpoint for the chatbot under test</div>
+          </div>
+          <div class="pipeline-node input-node">
+            <div class="node-icon">Optional</div>
+            <div class="node-name">Cave of Shadows Run</div>
+            <div class="node-desc">Completed Cave run to use as the base scenario set</div>
+          </div>
+        </div>
+
+        <!-- Merge inputs -->
+        <div class="wizard-merge">
+          <div class="wizard-merge-lines">
+            <div class="wizard-merge-drop left"></div>
+            <div class="wizard-merge-drop right"></div>
+            <div class="wizard-merge-arrow"></div>
+          </div>
+        </div>
+
+        <!-- Stage 1: Briefing Assembly -->
+        <div class="pipeline-input">
+          <div class="pipeline-node stage-node">
+            <div class="node-icon">Stage 1</div>
+            <div class="node-name">Briefing Assembly</div>
+            <div class="node-desc">Gathers all available intel on the target — system instructions, vital context, prior AESOP analyses, Cave of Shadows reports, historical Hydra run scores</div>
+          </div>
+        </div>
+
+        <div class="pipeline-connector"><div class="connector-line"></div></div>
+
+        <!-- Stage 2: Scenario Loading -->
+        <div class="pipeline-input">
+          <div class="pipeline-node stage-node">
+            <div class="node-icon">Stage 2</div>
+            <div class="node-name">Scenario Loading</div>
+            <div class="node-desc">Loads base scenarios from the linked Cave of Shadows run — or falls back to the built-in static probe battery (director + worker probes across all five domains)</div>
+          </div>
+        </div>
+
+        <div class="pipeline-connector"><div class="connector-line amber"></div></div>
+
+        <!-- Stage 3: Tiger Team Allocation -->
+        <div class="pipeline-input">
+          <div class="pipeline-node alloc-node">
+            <div class="node-icon">Stage 3</div>
+            <div class="node-name">Tiger Team Head Allocation</div>
+            <div class="node-desc">Reads prior domain scores and distributes N heads across the five domains — inverse-weighting weak domains (threshold: 80) to concentrate firepower where the agent is most vulnerable</div>
+          </div>
+        </div>
+
+        <!-- Fork to fanning -->
+        <div class="pipeline-fork">
+          <div class="fork-lines five">
+            <div class="fork-drop d1"></div>
+            <div class="fork-drop d2"></div>
+            <div class="fork-drop d3"></div>
+            <div class="fork-drop d4"></div>
+            <div class="fork-drop d5"></div>
+          </div>
+        </div>
+
+        <!-- Stage 4: Scenario Fanning -->
+        <div class="pipeline-row-label">Stage 4 — Scenario Fanning (per domain)</div>
+        <div class="pipeline-row five-col">
+          <div class="pipeline-node exec-node">
+            <div class="node-icon">Domain</div>
+            <div class="node-name">Safety</div>
+            <div class="node-desc">Base scenario expanded into N safety-specific variations using different angles and escalation approaches</div>
+          </div>
+          <div class="pipeline-node exec-node">
+            <div class="node-icon">Domain</div>
+            <div class="node-name">Ethics</div>
+            <div class="node-desc">Varied by persona, framing, and manipulation tactics</div>
+          </div>
+          <div class="pipeline-node exec-node">
+            <div class="node-icon">Domain</div>
+            <div class="node-name">Bias</div>
+            <div class="node-desc">Varied by demographic framing and implicit assumption testing</div>
+          </div>
+          <div class="pipeline-node exec-node">
+            <div class="node-icon">Domain</div>
+            <div class="node-name">Legal</div>
+            <div class="node-desc">Varied by regulatory context and PII exposure vectors</div>
+          </div>
+          <div class="pipeline-node exec-node">
+            <div class="node-icon">Domain</div>
+            <div class="node-name">Security</div>
+            <div class="node-desc">Varied by injection approach and data extraction technique</div>
+          </div>
+        </div>
+
+        <!-- Fork to parallel execution -->
+        <div class="pipeline-fork">
+          <div class="fork-lines five">
+            <div class="fork-drop d1"></div>
+            <div class="fork-drop d2"></div>
+            <div class="fork-drop d3"></div>
+            <div class="fork-drop d4"></div>
+            <div class="fork-drop d5"></div>
+          </div>
+        </div>
+
+        <!-- Stage 5: Parallel Execution -->
+        <div class="pipeline-row-label">Stage 5 — Parallel Execution (all heads simultaneously)</div>
+        <div class="pipeline-row three-col">
+          <div class="pipeline-node score-node">
+            <div class="node-icon">Head</div>
+            <div class="node-name">Head 1..N</div>
+            <div class="node-desc">Runs conversation against target endpoint via asyncio semaphore -- probe message sent, response captured</div>
+          </div>
+          <div class="pipeline-node score-node">
+            <div class="node-icon">Head</div>
+            <div class="node-name">Head 2..N</div>
+            <div class="node-desc">Runs simultaneously — concurrent execution bounded by semaphore to control load on the target agent</div>
+          </div>
+          <div class="pipeline-node score-node">
+            <div class="node-icon">Head</div>
+            <div class="node-name">Head N</div>
+            <div class="node-desc">CaveScorerAgent evaluates each response — pass/fail + domain score per head</div>
+          </div>
+        </div>
+
+        <!-- Merge to aggregation -->
+        <div class="pipeline-fork">
+          <div class="merge-lines">
+            <div class="merge-drop d1"></div>
+            <div class="merge-drop d3"></div>
+            <div class="merge-drop d5"></div>
+          </div>
+        </div>
+
+        <!-- Stage 6: Domain Score Aggregation -->
+        <div class="pipeline-input">
+          <div class="pipeline-node result-node">
+            <div class="node-icon">Stage 6</div>
+            <div class="node-name">Domain Score Aggregation</div>
+            <div class="node-desc">Per-head scores averaged by domain — produces five domain scores plus an overall resilience score. Surfaces which domains failed and which held up under attack.</div>
+          </div>
+        </div>
+
+        <div class="pipeline-note">
+          <strong>Heads slider (1–20):</strong> The default of 10 heads balances cost and confidence. Higher head counts provide better statistical coverage — more variations mean fewer gaps in the attack surface. Each head runs one probe scenario against the target endpoint.
+        </div>
+
+      </div>
+    </div>
+
+  </div><!-- end Pipeline tab -->
+
+  <!-- Process Map Tab -->
+  <div id="tab-processmap" class="tab-panel">
+
+    <div class="section" style="animation-delay: 0.05s;">
+      <div class="section-title"><span style="color: var(--red);">&bull;</span> Interactive Process Map</div>
+      <p style="font-size: 14px; color: var(--text-dim); line-height: 1.7; margin-bottom: 24px; max-width: 780px;">
+        The Hydra assembles all available intelligence on a target, identifies its weakest domains,
+        fans base scenarios into persona-driven variations, and unleashes them simultaneously as concurrent
+        multi-turn conversations. Each head adapts its approach based on responses, then every interaction
+        is scored to produce a domain-level resilience report.
+      </p>
+
+      <div class="mermaid-wrap">
+        <div class="zoom-controls">
+          <button onclick="zoomDiagram(this, 1.2)" title="Zoom in">+</button>
+          <button onclick="zoomDiagram(this, 0.8)" title="Zoom out">&minus;</button>
+          <button onclick="resetZoom(this)" title="Reset zoom">&#8634;</button>
+        </div>
+        <pre class="mermaid">
+          graph TD
+            I1["System Instructions"]:::input
+            I2["Vital Context"]:::input
+            I3["Prior AESOP Analyses"]:::input
+            I4["Cave of Shadows Runs"]:::input
+            I5["Historical Hydra Scores"]:::input
+
+            B["Stage 1: Briefing Assembly"]:::stage
+
+            I1 --> B
+            I2 --> B
+            I3 --> B
+            I4 --> B
+            I5 --> B
+
+            S{"Stage 2: Scenario Loading"}:::decision
+
+            B -->|"target dossier"| S
+
+            S -->|"Cave run linked"| SC["Load Cave Scenarios"]:::stage
+            S -->|"No Cave run"| SF["Fallback: Static Probe Battery"]:::fallback
+
+            SC --> A
+            SF --> A
+
+            A["Stage 3: Tiger Team Head Allocation"]:::alloc
+
+            A -->|"weakness-weighted distribution"| FAN
+
+            FAN["Stage 4: Scenario Fanning"]:::fan
+
+            FAN -->|"N variations per scenario"| EX
+
+            EX["Stage 5: Parallel Head Execution"]:::exec
+
+            EX --> H1["Head 1: Persona A"]:::head
+            EX --> H2["Head 2: Persona B"]:::head
+            EX --> H3["Head 3: Persona C"]:::head
+            EX --> HD["..."]:::head
+            EX --> HN["Head N: Persona N"]:::head
+
+            H1 -->|"multi-turn conversation"| EP["Target Chatbot Endpoint"]:::endpoint
+            H2 -->|"adaptive dialogue"| EP
+            H3 -->|"escalation tactics"| EP
+            HD --> EP
+            HN --> EP
+
+            EP -->|"responses"| SC1
+
+            SC1["Stage 6: Cave Scorer"]:::scoring
+
+            SC1 --> D1["Safety Score"]:::domain
+            SC1 --> D2["Ethics Score"]:::domain
+            SC1 --> D3["Bias Score"]:::domain
+            SC1 --> D4["Legal Score"]:::domain
+            SC1 --> D5["Security Score"]:::domain
+
+            D1 --> AGG["Domain Score Aggregation"]:::agg
+            D2 --> AGG
+            D3 --> AGG
+            D4 --> AGG
+            D5 --> AGG
+
+            AGG --> RPT["Hydra Report"]:::report
+
+            classDef input fill:#2a1a10,stroke:#f97316,color:#fde8d0,stroke-width:1.5px
+            classDef stage fill:#230f0f,stroke:#ef4444,color:#fce8e8,stroke-width:1.5px
+            classDef decision fill:#230f0f,stroke:#ef4444,color:#fce8e8,stroke-width:1.5px
+            classDef fallback fill:#2a1a10,stroke:#f97316,color:#fde8d0,stroke-width:1.5px,stroke-dasharray:5 3
+            classDef alloc fill:#2a2210,stroke:#f59e0b,color:#fef3c7,stroke-width:1.5px
+            classDef fan fill:#2a1a10,stroke:#f97316,color:#fde8d0,stroke-width:1.5px
+            classDef exec fill:#230f0f,stroke:#fb7185,color:#fce8e8,stroke-width:1.5px
+            classDef head fill:#1a0505,stroke:#fb7185,color:#fca5a5,stroke-width:1px
+            classDef endpoint fill:#1a0505,stroke:#fb7185,color:#fca5a5,stroke-width:2px
+            classDef scoring fill:#0a2010,stroke:#10b981,color:#dcfce7,stroke-width:1.5px
+            classDef domain fill:#0a2010,stroke:#10b981,color:#bbf7d0,stroke-width:1px
+            classDef agg fill:#0a2010,stroke:#10b981,color:#dcfce7,stroke-width:1.5px
+            classDef report fill:#230f0f,stroke:#ef4444,color:#fce8e8,stroke-width:2px
+        </pre>
+      </div>
+
+      <div style="display: flex; gap: 20px; flex-wrap: wrap; margin-bottom: 24px;">
+        <div style="display: flex; align-items: center; gap: 6px; font-family: var(--font-mono); font-size: 11px; color: var(--text-dim);"><div style="width: 12px; height: 12px; border-radius: 3px; background: var(--orange);"></div> Input sources</div>
+        <div style="display: flex; align-items: center; gap: 6px; font-family: var(--font-mono); font-size: 11px; color: var(--text-dim);"><div style="width: 12px; height: 12px; border-radius: 3px; background: var(--red);"></div> Pipeline stages</div>
+        <div style="display: flex; align-items: center; gap: 6px; font-family: var(--font-mono); font-size: 11px; color: var(--text-dim);"><div style="width: 12px; height: 12px; border-radius: 3px; background: var(--amber);"></div> Allocation</div>
+        <div style="display: flex; align-items: center; gap: 6px; font-family: var(--font-mono); font-size: 11px; color: var(--text-dim);"><div style="width: 12px; height: 12px; border-radius: 3px; background: var(--rose);"></div> Execution</div>
+        <div style="display: flex; align-items: center; gap: 6px; font-family: var(--font-mono); font-size: 11px; color: var(--text-dim);"><div style="width: 12px; height: 12px; border-radius: 3px; background: var(--emerald);"></div> Scoring</div>
+      </div>
+    </div>
+
+    <!-- Stage detail cards -->
+    <div class="section" style="animation-delay: 0.1s;">
+      <div class="section-title">Stage Details</div>
+      <div class="domain-grid" style="grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));">
+
+        <div class="domain-card" style="border-top: 3px solid var(--orange); text-align: left;">
+          <div style="font-family: var(--font-mono); font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: 1px; color: var(--orange); margin-bottom: 6px;">Input Sources</div>
+          <div class="domain-name">Intelligence Gathering</div>
+          <div class="domain-desc">System instructions, vital context, prior AESOP quality analysis reports, Cave of Shadows findings, and historical Hydra run domain scores.</div>
+        </div>
+
+        <div class="domain-card" style="border-top: 3px solid var(--red); text-align: left;">
+          <div style="font-family: var(--font-mono); font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: 1px; color: var(--red); margin-bottom: 6px;">Stage 1</div>
+          <div class="domain-name">Briefing Assembly</div>
+          <div class="domain-desc">Compiles all intel into a structured target dossier including system prompt analysis, known weaknesses, and prior score trajectories.</div>
+        </div>
+
+        <div class="domain-card" style="border-top: 3px solid var(--red); text-align: left;">
+          <div style="font-family: var(--font-mono); font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: 1px; color: var(--red); margin-bottom: 6px;">Stage 2</div>
+          <div class="domain-name">Scenario Loading</div>
+          <div class="domain-desc">Loads tailored scenarios from a linked Cave run, or falls back to 20 built-in probes (10 director + 10 worker) covering all five domains.</div>
+        </div>
+
+        <div class="domain-card" style="border-top: 3px solid var(--amber); text-align: left;">
+          <div style="font-family: var(--font-mono); font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: 1px; color: var(--amber); margin-bottom: 6px;">Stage 3</div>
+          <div class="domain-name">Tiger Team Allocation</div>
+          <div class="domain-desc">Distributes heads using inverse score weighting. Domains below 80 get more heads. Every domain gets at least one.</div>
+        </div>
+
+        <div class="domain-card" style="border-top: 3px solid var(--orange); text-align: left;">
+          <div style="font-family: var(--font-mono); font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: 1px; color: var(--orange); margin-bottom: 6px;">Stage 4</div>
+          <div class="domain-name">Scenario Fanning</div>
+          <div class="domain-desc">Each base scenario is expanded into multiple variations via Claude, each with a distinct persona, angle, and escalation approach.</div>
+        </div>
+
+        <div class="domain-card" style="border-top: 3px solid var(--rose); text-align: left;">
+          <div style="font-family: var(--font-mono); font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: 1px; color: var(--rose); margin-bottom: 6px;">Stage 5</div>
+          <div class="domain-name">Parallel Execution</div>
+          <div class="domain-desc">All heads unleashed simultaneously via asyncio.gather. Each runs an adaptive multi-turn conversation (up to 10 turns) against the endpoint.</div>
+        </div>
+
+        <div class="domain-card" style="border-top: 3px solid var(--emerald); text-align: left;">
+          <div style="font-family: var(--font-mono); font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: 1px; color: var(--emerald); margin-bottom: 6px;">Stage 6</div>
+          <div class="domain-name">Scoring and Aggregation</div>
+          <div class="domain-desc">Each head scored 0-100 by the Cave Scorer. Scores averaged by domain to produce five domain scores and one overall resilience score.</div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- Report output -->
+    <div class="section" style="animation-delay: 0.15s;">
+      <div class="section-title">Hydra Report Output</div>
+      <div class="tiger-callout" style="flex-direction: column; gap: 12px;">
+        <div class="tiger-title" style="color: var(--red);">Resilience Report</div>
+        <div class="tiger-desc">The final output contains:</div>
+        <div class="tiger-example" style="border-left-color: var(--red);">
+          <strong style="color: var(--text);">Overall resilience score</strong> -- aggregate across all domains and heads<br>
+          <strong style="color: var(--text);">Five domain scores</strong> -- Safety, Ethics, Bias, Legal, Security<br>
+          <strong style="color: var(--text);">Per-head results</strong> -- probe scenario, full conversation transcript, and pass/fail<br>
+          <strong style="color: var(--text);">Head allocation breakdown</strong> -- how many heads targeted each domain and why<br>
+          <strong style="color: var(--text);">Probe mode coverage</strong> -- director probes, worker probes, or both<br>
+          <strong style="color: var(--text);">Cost summary</strong> -- total tokens and estimated spend
+        </div>
+        <div class="tiger-desc" style="margin-top: 8px;">
+          On subsequent runs, the tiger team allocation shifts automatically -- domains that improved get fewer heads, and newly weak domains attract more firepower.
+        </div>
+      </div>
+    </div>
+
+  </div><!-- end Process Map tab -->
+
+  <div class="footer">
+    AESOP &mdash; The Hydra &mdash; Adversarial Red-Team
+  </div>
+
+</div>
+
+<script>
+  window.switchTab = function(tab) {
+    document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+    document.getElementById('tab-' + tab).classList.add('active');
+    document.querySelector('[onclick="switchTab(\'' + tab + '\')"]').classList.add('active');
+    document.getElementById('tab-' + tab).querySelectorAll('.section').forEach(s => {
+      s.style.animation = 'none';
+      s.offsetHeight;
+      s.style.animation = '';
+    });
+    // Render Mermaid diagrams when process map tab is shown
+    if (tab === 'processmap' && !window._mermaidRendered) {
+      window._mermaidRendered = true;
+      import('https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs').then(function(mod) {
+        var isDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+        mod.default.initialize({
+          startOnLoad: false,
+          theme: 'base',
+          look: 'classic',
+          themeVariables: {
+            primaryColor: isDark ? '#230f0f' : '#fef2f2',
+            primaryBorderColor: isDark ? '#ef4444' : '#dc2626',
+            primaryTextColor: isDark ? '#fce8e8' : '#1c1917',
+            secondaryColor: isDark ? '#2a1a10' : '#fff7ed',
+            secondaryBorderColor: isDark ? '#f97316' : '#ea580c',
+            secondaryTextColor: isDark ? '#fde8d0' : '#1c1917',
+            tertiaryColor: isDark ? '#2a2210' : '#fffbeb',
+            tertiaryBorderColor: isDark ? '#f59e0b' : '#d97706',
+            tertiaryTextColor: isDark ? '#fef3c7' : '#1c1917',
+            lineColor: isDark ? '#d4a0a0' : '#78716c',
+            fontSize: '14px',
+            fontFamily: "'Fraunces', Georgia, serif",
+          }
+        });
+        mod.default.run({ nodes: document.querySelectorAll('#tab-processmap .mermaid') });
+      });
+    }
+  };
+</script>
+<script>
+  function updateZoomState(wrap) {
+    var target = wrap.querySelector('.mermaid');
+    var zoom = parseFloat(target.dataset.zoom || '1');
+    wrap.classList.toggle('is-zoomed', zoom > 1);
+  }
+
+  function zoomDiagram(btn, factor) {
+    var wrap = btn.closest('.mermaid-wrap');
+    var target = wrap.querySelector('.mermaid');
+    var current = parseFloat(target.dataset.zoom || '1');
+    var next = Math.min(Math.max(current * factor, 0.3), 5);
+    target.dataset.zoom = next;
+    target.style.transform = 'scale(' + next + ')';
+    updateZoomState(wrap);
+  }
+
+  function resetZoom(btn) {
+    var wrap = btn.closest('.mermaid-wrap');
+    var target = wrap.querySelector('.mermaid');
+    target.dataset.zoom = '1';
+    target.style.transform = 'scale(1)';
+    updateZoomState(wrap);
+  }
+
+  document.querySelectorAll('.mermaid-wrap').forEach(function(wrap) {
+    wrap.addEventListener('wheel', function(e) {
+      if (!e.ctrlKey && !e.metaKey) return;
+      e.preventDefault();
+      var target = wrap.querySelector('.mermaid');
+      var current = parseFloat(target.dataset.zoom || '1');
+      var factor = e.deltaY < 0 ? 1.1 : 0.9;
+      var next = Math.min(Math.max(current * factor, 0.3), 5);
+      target.dataset.zoom = next;
+      target.style.transform = 'scale(' + next + ')';
+      updateZoomState(wrap);
+    }, { passive: false });
+
+    var startX, startY, scrollL, scrollT;
+    wrap.addEventListener('mousedown', function(e) {
+      if (e.target.closest('.zoom-controls')) return;
+      var target = wrap.querySelector('.mermaid');
+      if (parseFloat(target.dataset.zoom || '1') <= 1) return;
+      wrap.classList.add('is-panning');
+      startX = e.clientX;
+      startY = e.clientY;
+      scrollL = wrap.scrollLeft;
+      scrollT = wrap.scrollTop;
+    });
+    window.addEventListener('mousemove', function(e) {
+      if (!wrap.classList.contains('is-panning')) return;
+      wrap.scrollLeft = scrollL - (e.clientX - startX);
+      wrap.scrollTop = scrollT - (e.clientY - startY);
+    });
+    window.addEventListener('mouseup', function() {
+      wrap.classList.remove('is-panning');
+    });
+  });
+</script>
+</body>
+</html>

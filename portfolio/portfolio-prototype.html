@@ -1,0 +1,949 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Charlie Fuller — AI Engineering Portfolio</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,wght@0,400;0,500;0,600;0,700;0,800;1,400;1,500&family=Source+Code+Pro:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  /* ═══════════════════════════════════════════
+     Porsche Gulf Light — from ThemeSettingsPage.tsx
+     "Gulf livery on a sun-bleached paddock"
+     ═══════════════════════════════════════════ */
+  :root {
+    --font-body: 'Fraunces', Georgia, 'Times New Roman', serif;
+    --font-mono: 'Source Code Pro', 'SF Mono', 'Fira Code', Consolas, monospace;
+
+    --color_primary:            #e8621a;
+    --color_primary_hover:      #d05510;
+    --color_secondary:          #4a90c4;
+    --color_text_on_primary:    #ffffff;
+    --color_text_on_secondary:  #0a1628;
+    --color_bg_page:            #eef4f9;
+    --color_bg_card:            #ffffff;
+    --color_bg_hover:           #ddeaf4;
+    --color_text_primary:       #0a1628;
+    --color_text_secondary:     #3d5a7a;
+    --color_text_muted:         #7a9ab8;
+    --color_border:             #c8daea;
+    --color_border_focus:       #e8621a;
+    --color_success:            #16a34a;
+    --color_warning:            #d97706;
+    --color_error:              #dc2626;
+    --color_info:               #4a90c4;
+    --color_chart:              #e8621a;
+    --header_bg_color:          #ffffff;
+    --header_title_color:       #e8621a;
+    --header_nav_color:         #3d5a7a;
+    --header_nav_active_color:  #4a90c4;
+
+    /* derived */
+    --radius-sm: 8px;
+    --radius: 12px;
+    --radius-lg: 16px;
+    --radius-xl: 20px;
+    --shadow-sm: 0 1px 2px rgba(10,22,40,0.04);
+    --shadow: 0 4px 16px rgba(10,22,40,0.05);
+    --shadow-lg: 0 12px 40px rgba(10,22,40,0.08);
+
+    /* accent dims for pills / subtle backgrounds */
+    --primary-dim:   rgba(232, 98, 26, 0.08);
+    --secondary-dim: rgba(74, 144, 196, 0.08);
+    --success-dim:   rgba(22, 163, 74, 0.08);
+    --warning-dim:   rgba(217, 119, 6, 0.08);
+    --error-dim:     rgba(220, 38, 38, 0.08);
+    --info-dim:      rgba(74, 144, 196, 0.08);
+    --teal-dim:      rgba(13, 148, 136, 0.08);
+    --muted-dim:     rgba(10, 22, 40, 0.05);
+    --accent-teal:   #0d9488;
+  }
+
+  /* ═══════════════════════════════════════════
+     Porsche Gulf Dark — from ThemeSettingsPage.tsx
+     "Legendary Gulf livery — Le Mans powder blue and orange"
+     ═══════════════════════════════════════════ */
+  :root.dark {
+    --color_primary:            #f37021;
+    --color_primary_hover:      #d95f15;
+    --color_secondary:          #6cace4;
+    --color_text_on_primary:    #0a1628;
+    --color_text_on_secondary:  #0a1628;
+    --color_bg_page:            #0a1628;
+    --color_bg_card:            #132240;
+    --color_bg_hover:           #1a2d52;
+    --color_text_primary:       #e8edf5;
+    --color_text_secondary:     #9bb0d4;
+    --color_text_muted:         #5e7aa3;
+    --color_border:             #1a2d52;
+    --color_border_focus:       #f37021;
+    --color_success:            #22c55e;
+    --color_warning:            #fbbf24;
+    --color_error:              #ef4444;
+    --color_info:               #6cace4;
+    --color_chart:              #f37021;
+    --header_bg_color:          #132240;
+    --header_title_color:       #f37021;
+    --header_nav_color:         #5e7aa3;
+    --header_nav_active_color:  #6cace4;
+
+    --primary-dim:   rgba(243, 112, 33, 0.12);
+    --secondary-dim: rgba(108, 172, 228, 0.12);
+    --success-dim:   rgba(34, 197, 94, 0.12);
+    --warning-dim:   rgba(251, 191, 36, 0.12);
+    --error-dim:     rgba(239, 68, 68, 0.12);
+    --info-dim:      rgba(108, 172, 228, 0.12);
+    --teal-dim:      rgba(45, 212, 191, 0.12);
+    --muted-dim:     rgba(232, 237, 245, 0.06);
+    --accent-teal:   #2dd4bf;
+
+    --shadow-sm: 0 1px 2px rgba(0,0,0,0.2);
+    --shadow: 0 4px 16px rgba(0,0,0,0.3);
+    --shadow-lg: 0 12px 40px rgba(0,0,0,0.4);
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  html {
+    scroll-behavior: smooth;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  body {
+    background: var(--color_bg_page);
+    background-image:
+      radial-gradient(ellipse 80% 60% at 20% 0%, var(--primary-dim) 0%, transparent 50%),
+      radial-gradient(ellipse 60% 50% at 80% 100%, var(--secondary-dim) 0%, transparent 50%);
+    color: var(--color_text_primary);
+    font-family: var(--font-body);
+    line-height: 1.7;
+    min-height: 100vh;
+    transition: background 0.3s, color 0.3s;
+  }
+
+  /* ── Navigation ── */
+  .nav {
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    background: color-mix(in srgb, var(--header_bg_color) 85%, transparent);
+    border-bottom: 1px solid var(--color_border);
+    transition: background 0.3s, border-color 0.3s;
+  }
+
+  .nav-inner {
+    max-width: 1120px;
+    margin: 0 auto;
+    padding: 16px 24px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .nav-brand {
+    font-family: var(--font-mono);
+    font-size: 13px;
+    font-weight: 600;
+    letter-spacing: 0.5px;
+    color: var(--header_title_color);
+    text-decoration: none;
+  }
+
+  .nav-brand:hover { opacity: 0.8; }
+
+  .nav-links {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+  }
+
+  .nav-link {
+    font-family: var(--font-mono);
+    font-size: 12px;
+    font-weight: 500;
+    letter-spacing: 0.4px;
+    color: var(--header_nav_color);
+    text-decoration: none;
+    transition: color 0.2s;
+  }
+
+  .nav-link:hover { color: var(--header_nav_active_color); }
+
+  .nav-cta {
+    font-family: var(--font-mono);
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 0.3px;
+    padding: 6px 16px;
+    border-radius: 8px;
+    background: var(--color_primary);
+    color: var(--color_text_on_primary);
+    text-decoration: none;
+    transition: background 0.2s;
+  }
+
+  .nav-cta:hover { background: var(--color_primary_hover); }
+
+  .theme-toggle {
+    width: 36px;
+    height: 36px;
+    border-radius: 10px;
+    border: 1px solid var(--color_border);
+    background: var(--color_bg_card);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 16px;
+    color: var(--color_text_muted);
+    transition: all 0.2s;
+  }
+
+  .theme-toggle:hover {
+    border-color: var(--color_border_focus);
+    color: var(--color_primary);
+  }
+
+  /* ── Container ── */
+  .container {
+    max-width: 1120px;
+    margin: 0 auto;
+    padding: 0 24px;
+  }
+
+  /* ── Section ── */
+  .section {
+    margin-bottom: 80px;
+  }
+
+  .section-header {
+    margin-bottom: 32px;
+  }
+
+  .section-label {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    color: var(--color_primary);
+    margin-bottom: 8px;
+  }
+
+  .section-title {
+    font-size: 32px;
+    font-weight: 700;
+    letter-spacing: -0.5px;
+  }
+
+  .section-subtitle {
+    font-size: 17px;
+    color: var(--color_text_muted);
+    margin-top: 8px;
+    max-width: 560px;
+  }
+
+  /* ── Hero ── */
+  .hero {
+    padding: 80px 0 56px;
+    text-align: center;
+  }
+
+  .hero-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 5px 16px;
+    background: var(--primary-dim);
+    border: 1px solid color-mix(in srgb, var(--color_primary) 30%, transparent);
+    border-radius: 20px;
+    font-family: var(--font-mono);
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 1.2px;
+    text-transform: uppercase;
+    color: var(--color_primary);
+    margin-bottom: 28px;
+  }
+
+  .hero h1 {
+    font-size: clamp(44px, 7vw, 68px);
+    font-weight: 800;
+    letter-spacing: -1.5px;
+    line-height: 1.1;
+    margin-bottom: 16px;
+    background: linear-gradient(135deg, var(--color_primary) 0%, var(--color_warning) 40%, var(--color_secondary) 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  .hero .tagline {
+    font-size: clamp(20px, 3vw, 26px);
+    font-weight: 500;
+    color: var(--color_text_secondary);
+    margin-bottom: 12px;
+    font-style: italic;
+  }
+
+  .hero .description {
+    font-size: 17px;
+    color: var(--color_text_muted);
+    max-width: 620px;
+    margin: 0 auto;
+    line-height: 1.7;
+  }
+
+  .hero .description strong {
+    color: var(--color_text_primary);
+    font-weight: 600;
+  }
+
+  /* ── Project cards ── */
+  .projects-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 20px;
+  }
+
+  .project-card {
+    background: var(--color_bg_card);
+    border: 1px solid var(--color_border);
+    border-radius: var(--radius-lg);
+    overflow: hidden;
+    transition: transform 0.25s, box-shadow 0.25s, border-color 0.25s;
+    text-decoration: none;
+    color: inherit;
+    display: block;
+    position: relative;
+  }
+
+  .project-card:hover {
+    transform: translateY(-3px);
+    box-shadow: var(--shadow-lg);
+    border-color: var(--color_border_focus);
+  }
+
+  .project-card-accent {
+    height: 3px;
+    width: 100%;
+  }
+
+  .project-card-body {
+    padding: 24px 28px 28px;
+  }
+
+  .project-card-name {
+    font-size: 22px;
+    font-weight: 700;
+    margin-bottom: 4px;
+    letter-spacing: -0.3px;
+  }
+
+  .project-card-tagline {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    font-weight: 500;
+    letter-spacing: 0.4px;
+    text-transform: uppercase;
+    color: var(--color_text_muted);
+    margin-bottom: 16px;
+  }
+
+  .project-card-desc {
+    font-size: 15px;
+    color: var(--color_text_secondary);
+    line-height: 1.6;
+    margin-bottom: 20px;
+  }
+
+  .project-card-stack {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-bottom: 20px;
+  }
+
+  .stack-pill {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    font-weight: 500;
+    padding: 3px 10px;
+    border-radius: 6px;
+    letter-spacing: 0.3px;
+  }
+
+  .project-card-link {
+    font-family: var(--font-mono);
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 0.3px;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    transition: gap 0.2s;
+  }
+
+  .project-card:hover .project-card-link {
+    gap: 10px;
+  }
+
+  .project-card-link svg {
+    width: 14px;
+    height: 14px;
+    transition: transform 0.2s;
+  }
+
+  .project-card:hover .project-card-link svg {
+    transform: translateX(2px);
+  }
+
+  /* ── Featured project ── */
+  .project-card.featured {
+    grid-column: 1 / -1;
+  }
+
+  .project-card.featured .project-card-body {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 32px;
+  }
+
+  .project-card.featured .project-card-desc {
+    font-size: 16px;
+  }
+
+  .featured-pipeline {
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+  }
+
+  .pipeline-stage {
+    display: flex;
+    gap: 12px;
+    align-items: flex-start;
+    padding: 10px 0;
+    border-bottom: 1px solid var(--color_border);
+  }
+
+  .pipeline-stage:last-child {
+    border-bottom: none;
+  }
+
+  .pipeline-stage-num {
+    flex-shrink: 0;
+    width: 24px;
+    height: 24px;
+    border-radius: 6px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: var(--font-mono);
+    font-size: 11px;
+    font-weight: 600;
+    color: #fff;
+  }
+
+  .pipeline-stage-label {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--color_text_primary);
+  }
+
+  .pipeline-stage-desc {
+    font-size: 12px;
+    color: var(--color_text_muted);
+    line-height: 1.4;
+  }
+
+  /* ── Client badge ── */
+  .client-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 3px 10px;
+    border-radius: 6px;
+    font-family: var(--font-mono);
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 0.4px;
+    text-transform: uppercase;
+    margin-bottom: 12px;
+    background: var(--muted-dim);
+    color: var(--color_text_muted);
+  }
+
+  /* ── Approach ── */
+  .approach-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 16px;
+  }
+
+  .approach-card {
+    background: var(--color_bg_card);
+    border: 1px solid var(--color_border);
+    border-radius: var(--radius);
+    padding: 24px;
+    border-left: 3px solid;
+    transition: transform 0.2s, box-shadow 0.2s;
+  }
+
+  .approach-card:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow);
+  }
+
+  .approach-card-icon {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+    margin-bottom: 10px;
+  }
+
+  .approach-card-title {
+    font-size: 17px;
+    font-weight: 700;
+    margin-bottom: 6px;
+  }
+
+  .approach-card-desc {
+    font-size: 14px;
+    color: var(--color_text_muted);
+    line-height: 1.5;
+  }
+
+  /* ── Contact ── */
+  .contact-section {
+    background: var(--color_bg_card);
+    border: 1px solid var(--color_border);
+    border-radius: var(--radius-xl);
+    padding: 48px;
+    text-align: center;
+  }
+
+  .contact-section h2 {
+    font-size: 28px;
+    font-weight: 700;
+    margin-bottom: 8px;
+    letter-spacing: -0.5px;
+  }
+
+  .contact-section p {
+    font-size: 16px;
+    color: var(--color_text_muted);
+    margin-bottom: 28px;
+  }
+
+  .contact-links {
+    display: flex;
+    justify-content: center;
+    gap: 12px;
+    flex-wrap: wrap;
+  }
+
+  .contact-link {
+    font-family: var(--font-mono);
+    font-size: 13px;
+    font-weight: 500;
+    padding: 10px 22px;
+    border-radius: 10px;
+    text-decoration: none;
+    transition: all 0.2s;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .contact-link.primary {
+    background: var(--color_primary);
+    color: var(--color_text_on_primary);
+  }
+
+  .contact-link.primary:hover {
+    background: var(--color_primary_hover);
+    transform: translateY(-1px);
+  }
+
+  .contact-link.secondary {
+    background: var(--color_bg_card);
+    border: 1px solid var(--color_border);
+    color: var(--color_text_primary);
+  }
+
+  .contact-link.secondary:hover {
+    border-color: var(--color_border_focus);
+    background: var(--color_bg_hover);
+  }
+
+  /* ── Footer ── */
+  .footer {
+    border-top: 1px solid var(--color_border);
+    padding: 24px 0 32px;
+    text-align: center;
+    font-family: var(--font-mono);
+    font-size: 12px;
+    color: var(--color_text_muted);
+  }
+
+  .footer a {
+    color: var(--color_text_muted);
+    text-decoration: none;
+    transition: color 0.2s;
+  }
+
+  .footer a:hover { color: var(--color_text_primary); }
+
+  /* ── Animations ── */
+  .reveal {
+    opacity: 0;
+    transform: translateY(20px);
+    transition: opacity 0.5s ease-out, transform 0.5s ease-out;
+  }
+
+  .reveal.visible {
+    opacity: 1;
+    transform: translateY(0);
+  }
+
+  .reveal-delay-1 { transition-delay: 0.05s; }
+  .reveal-delay-2 { transition-delay: 0.1s; }
+  .reveal-delay-3 { transition-delay: 0.15s; }
+  .reveal-delay-4 { transition-delay: 0.2s; }
+  .reveal-delay-5 { transition-delay: 0.25s; }
+  .reveal-delay-6 { transition-delay: 0.3s; }
+
+  @media (prefers-reduced-motion: reduce) {
+    .reveal { opacity: 1; transform: none; transition: none; }
+    .project-card { transition: none; }
+    .project-card-link svg { transition: none; }
+  }
+
+  /* ── Responsive ── */
+  @media (max-width: 900px) {
+    .projects-grid { grid-template-columns: 1fr; }
+
+    .project-card.featured .project-card-body {
+      grid-template-columns: 1fr;
+    }
+
+    .approach-grid { grid-template-columns: repeat(2, 1fr); }
+
+    .hero { padding: 56px 0 40px; }
+    .section { margin-bottom: 56px; }
+  }
+
+  @media (max-width: 540px) {
+    .approach-grid { grid-template-columns: 1fr; }
+
+    .contact-section { padding: 32px 20px; }
+
+    .project-card-body { padding: 20px; }
+
+    .section-title { font-size: 26px; }
+
+    .nav-links { gap: 12px; }
+    .nav-link { font-size: 11px; }
+  }
+</style>
+</head>
+<body>
+
+<nav class="nav">
+  <div class="nav-inner">
+    <a href="#" class="nav-brand">waifinder.org</a>
+    <div class="nav-links">
+      <a href="#projects" class="nav-link">Projects</a>
+      <a href="#approach" class="nav-link">Approach</a>
+      <a href="#contact" class="nav-link">Contact</a>
+      <a href="/auth/signup" class="nav-cta">Request access</a>
+      <button class="theme-toggle" id="themeToggle" aria-label="Toggle dark mode" title="Toggle dark mode">
+        <span class="theme-icon-light">&#9788;</span>
+        <span class="theme-icon-dark" style="display:none">&#9790;</span>
+      </button>
+    </div>
+  </div>
+</nav>
+
+<header class="hero">
+  <div class="container">
+    <div class="hero-badge">AI Engineering Portfolio</div>
+    <h1>Charlie Fuller</h1>
+    <p class="tagline">Building AI systems that work.</p>
+    <p class="description">
+      Multi-agent platforms, evaluation frameworks, and strategic tooling —
+      designed for production use, built with <strong>problem-first methodology</strong>,
+      grounded in <strong>governance as code</strong>.
+    </p>
+  </div>
+</header>
+
+<main class="container">
+
+  <section id="projects" class="section">
+    <div class="section-header">
+      <div class="section-label">Projects</div>
+      <h2 class="section-title">What I build</h2>
+      <p class="section-subtitle">From enterprise governance platforms to targeted AI tools — every project starts with the problem, not the technology.</p>
+    </div>
+
+    <div class="projects-grid">
+
+      <!-- AESOP Transformation OS — Featured (primary) -->
+      <a href="/showcase/aesop-studio" class="project-card featured reveal">
+        <div class="project-card-accent" style="background: var(--color_primary)"></div>
+        <div class="project-card-body">
+          <div>
+            <div class="project-card-name" style="color: var(--color_primary)">AESOP Transformation OS</div>
+            <div class="project-card-tagline">Enterprise AI Agent Governance &amp; Operationalization OS</div>
+            <div class="project-card-desc">
+              A governance-first operating system that takes an enterprise from "we should use AI" to governed, evaluated, deployed, and monitored agents running at portfolio scale. Ten-stage pipeline, 21 specialized agents, seven evaluation modes, and a hard safety/bias veto that makes critical failures unshippable.
+            </div>
+            <div class="project-card-stack">
+              <span class="stack-pill" style="background: var(--primary-dim); color: var(--color_primary)">Next.js 16</span>
+              <span class="stack-pill" style="background: var(--primary-dim); color: var(--color_primary)">FastAPI</span>
+              <span class="stack-pill" style="background: var(--primary-dim); color: var(--color_primary)">Supabase</span>
+              <span class="stack-pill" style="background: var(--primary-dim); color: var(--color_primary)">Claude API</span>
+              <span class="stack-pill" style="background: var(--primary-dim); color: var(--color_primary)">Voyage AI</span>
+            </div>
+            <span class="project-card-link" style="color: var(--color_primary)">
+              Explore AESOP Transformation OS
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+            </span>
+          </div>
+          <div class="featured-pipeline">
+            <div class="pipeline-stage">
+              <div class="pipeline-stage-num" style="background: var(--color_primary)">1</div>
+              <div>
+                <div class="pipeline-stage-label">Discover &amp; Validate</div>
+                <div class="pipeline-stage-desc">Structured interview, stakeholder map, GO / NO-GO triage</div>
+              </div>
+            </div>
+            <div class="pipeline-stage">
+              <div class="pipeline-stage-num" style="background: var(--color_warning)">2</div>
+              <div>
+                <div class="pipeline-stage-label">Design &amp; Build</div>
+                <div class="pipeline-stage-desc">PRD, architecture scoring, 6-phase instruction writing with HITL</div>
+              </div>
+            </div>
+            <div class="pipeline-stage">
+              <div class="pipeline-stage-num" style="background: var(--color_secondary)">3</div>
+              <div>
+                <div class="pipeline-stage-label">Evaluate &amp; Certify</div>
+                <div class="pipeline-stage-desc">Seven evaluation modes, weighted scoring, safety/bias veto</div>
+              </div>
+            </div>
+            <div class="pipeline-stage">
+              <div class="pipeline-stage-num" style="background: var(--color_success)">4</div>
+              <div>
+                <div class="pipeline-stage-label">Operationalize &amp; Monitor</div>
+                <div class="pipeline-stage-desc">Launch packages, deploy, cost tracking, drift alerts</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </a>
+
+      <!-- SuperAssistant (success) -->
+      <a href="/showcase/superassistant" class="project-card reveal reveal-delay-1">
+        <div class="project-card-accent" style="background: var(--color_success)"></div>
+        <div class="project-card-body">
+          <span class="client-badge">Client engagement</span>
+          <div class="project-card-name" style="color: var(--color_success)">SuperAssistant</div>
+          <div class="project-card-tagline">Executive AI Assistant Platform</div>
+          <div class="project-card-desc">
+            Multi-tenant AI assistant platform combining chat, voice interviews, and knowledge base integration. Full-stack architecture serving hundreds of users with role-based access and real-time streaming.
+          </div>
+          <div class="project-card-stack">
+            <span class="stack-pill" style="background: var(--success-dim); color: var(--color_success)">Next.js</span>
+            <span class="stack-pill" style="background: var(--success-dim); color: var(--color_success)">FastAPI</span>
+            <span class="stack-pill" style="background: var(--success-dim); color: var(--color_success)">Supabase</span>
+            <span class="stack-pill" style="background: var(--success-dim); color: var(--color_success)">ElevenLabs</span>
+            <span class="stack-pill" style="background: var(--success-dim); color: var(--color_success)">Railway</span>
+          </div>
+          <span class="project-card-link" style="color: var(--color_success)">
+            See how it works
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+          </span>
+        </div>
+      </a>
+
+      <!-- Contract Review (error) -->
+      <a href="/showcase/contract-review" class="project-card reveal reveal-delay-2">
+        <div class="project-card-accent" style="background: var(--color_error)"></div>
+        <div class="project-card-body">
+          <div class="project-card-name" style="color: var(--color_error)">Contract Review</div>
+          <div class="project-card-tagline">AI-Powered Legal Document Analysis</div>
+          <div class="project-card-desc">
+            Five specialized agents analyze contracts for risk, compliance, and negotiation leverage. RAG-powered with async parallel processing for complex documents — each finding links back to the specific clause.
+          </div>
+          <div class="project-card-stack">
+            <span class="stack-pill" style="background: var(--error-dim); color: var(--color_error)">Next.js</span>
+            <span class="stack-pill" style="background: var(--error-dim); color: var(--color_error)">FastAPI</span>
+            <span class="stack-pill" style="background: var(--error-dim); color: var(--color_error)">Celery</span>
+            <span class="stack-pill" style="background: var(--error-dim); color: var(--color_error)">Redis</span>
+            <span class="stack-pill" style="background: var(--error-dim); color: var(--color_error)">Voyage AI</span>
+          </div>
+          <span class="project-card-link" style="color: var(--color_error)">
+            See how it works
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+          </span>
+        </div>
+      </a>
+
+      <!-- PuRDy (teal) -->
+      <a href="/showcase/purdy" class="project-card reveal reveal-delay-3">
+        <div class="project-card-accent" style="background: var(--accent-teal)"></div>
+        <div class="project-card-body">
+          <div class="project-card-name" style="color: var(--accent-teal)">PuRDy</div>
+          <div class="project-card-tagline">AI Product Requirements Assistant</div>
+          <div class="project-card-desc">
+            Structured PRD creation through guided conversation. Problem-first methodology ensures requirements are grounded in validated user needs before solutions are proposed — it refuses to jump to features until the problem is clear.
+          </div>
+          <div class="project-card-stack">
+            <span class="stack-pill" style="background: var(--teal-dim); color: var(--accent-teal)">Claude API</span>
+            <span class="stack-pill" style="background: var(--teal-dim); color: var(--accent-teal)">Structured prompting</span>
+            <span class="stack-pill" style="background: var(--teal-dim); color: var(--accent-teal)">Anthropic SDK</span>
+          </div>
+          <span class="project-card-link" style="color: var(--accent-teal)">
+            See how it works
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+          </span>
+        </div>
+      </a>
+
+      <!-- Waifinder Assistant (info) -->
+      <a href="/showcase/waifinder-assistant" class="project-card reveal reveal-delay-4">
+        <div class="project-card-accent" style="background: var(--color_info)"></div>
+        <div class="project-card-body">
+          <div class="project-card-name" style="color: var(--color_info)">Waifinder Assistant</div>
+          <div class="project-card-tagline">AI Career Guidance System</div>
+          <div class="project-card-desc">
+            Knowledge-base driven career guidance assistant built from 6 months of practitioner transcripts, academic research, and tactical playbooks. Helps professionals navigate the transition into AI consulting with research-backed, confidence-rated guidance.
+          </div>
+          <div class="project-card-stack">
+            <span class="stack-pill" style="background: var(--info-dim); color: var(--color_info)">Claude API</span>
+            <span class="stack-pill" style="background: var(--info-dim); color: var(--color_info)">Cassidy</span>
+            <span class="stack-pill" style="background: var(--info-dim); color: var(--color_info)">Deep Research</span>
+          </div>
+          <span class="project-card-link" style="color: var(--color_info)">
+            See how it works
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+          </span>
+        </div>
+      </a>
+
+    </div>
+  </section>
+
+  <!-- Approach -->
+  <section id="approach" class="section">
+    <div class="section-header">
+      <div class="section-label">Approach</div>
+      <h2 class="section-title">How I work</h2>
+      <p class="section-subtitle">Principles that hold across every project, regardless of stack or scale.</p>
+    </div>
+
+    <div class="approach-grid">
+      <div class="approach-card reveal" style="border-left-color: var(--color_primary)">
+        <div class="approach-card-icon" style="color: var(--color_primary)">Principle 01</div>
+        <div class="approach-card-title">Problem-first, not technology-first</div>
+        <div class="approach-card-desc">Validate the problem before a single requirement is written. If the problem isn't real, costly, solvable, and ours to solve, no amount of technology fixes it.</div>
+      </div>
+
+      <div class="approach-card reveal reveal-delay-1" style="border-left-color: var(--color_secondary)">
+        <div class="approach-card-icon" style="color: var(--color_secondary)">Principle 02</div>
+        <div class="approach-card-title">Governance as code</div>
+        <div class="approach-card-desc">Ethics, safety, and bias checks aren't documentation — they're embedded in the pipeline as hard gates. Critical failures are unshippable by design, not by policy.</div>
+      </div>
+
+      <div class="approach-card reveal reveal-delay-2" style="border-left-color: var(--color_success)">
+        <div class="approach-card-icon" style="color: var(--color_success)">Principle 03</div>
+        <div class="approach-card-title">Full lifecycle thinking</div>
+        <div class="approach-card-desc">Discovery, design, build, evaluation, deployment, repair, and monitoring — all one connected pipeline. A deployed agent without operationalization is a future incident.</div>
+      </div>
+
+      <div class="approach-card reveal reveal-delay-3" style="border-left-color: var(--color_warning)">
+        <div class="approach-card-icon" style="color: var(--color_warning)">Principle 04</div>
+        <div class="approach-card-title">Human in the loop, always</div>
+        <div class="approach-card-desc">AI generates, humans approve. Every build pipeline has a checkpoint. Every evaluation shows its work. Every repair is tracked with rationale. Automation accelerates judgment — it doesn't replace it.</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Contact -->
+  <section id="contact" class="section reveal">
+    <div class="contact-section">
+      <h2>Let's talk</h2>
+      <p>If you're building AI systems and want to do it right — governed, evaluated, and built to last — reach out.</p>
+      <div class="contact-links">
+        <a href="mailto:charlie@waifinder.org" class="contact-link primary">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="M22 4L12 13 2 4"/></svg>
+          charlie@waifinder.org
+        </a>
+        <a href="https://github.com/charlie-fuller" class="contact-link secondary" target="_blank" rel="noopener">
+          GitHub
+        </a>
+        <a href="https://www.linkedin.com/in/charlie-fuller-colorado/" class="contact-link secondary" target="_blank" rel="noopener">
+          LinkedIn
+        </a>
+      </div>
+    </div>
+  </section>
+
+</main>
+
+<footer class="footer">
+  <div class="container">
+    <p>&copy; 2025&ndash;2026 Charlie Fuller &middot; waifinder.org</p>
+  </div>
+</footer>
+
+<script>
+  const html = document.documentElement;
+  const toggle = document.getElementById('themeToggle');
+  const lightIcon = toggle.querySelector('.theme-icon-light');
+  const darkIcon = toggle.querySelector('.theme-icon-dark');
+
+  function setTheme(isDark) {
+    if (isDark) {
+      html.classList.add('dark');
+      lightIcon.style.display = 'none';
+      darkIcon.style.display = 'inline';
+    } else {
+      html.classList.remove('dark');
+      lightIcon.style.display = 'inline';
+      darkIcon.style.display = 'none';
+    }
+    localStorage.setItem('theme', isDark ? 'dark' : 'light');
+  }
+
+  const saved = localStorage.getItem('theme');
+  const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+  setTheme(saved === 'dark');
+
+  toggle.addEventListener('click', () => {
+    setTheme(!html.classList.contains('dark'));
+  });
+
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        entry.target.classList.add('visible');
+        observer.unobserve(entry.target);
+      }
+    });
+  }, { threshold: 0.1, rootMargin: '0px 0px -40px 0px' });
+
+  document.querySelectorAll('.reveal').forEach(el => observer.observe(el));
+</script>
+
+</body>
+</html>

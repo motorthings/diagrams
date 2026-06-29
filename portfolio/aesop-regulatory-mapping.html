@@ -1,0 +1,577 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AESOP — Regulatory Mapping</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:wght@400;500;600;700;800&family=Source+Code+Pro:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --font-body: 'Fraunces', Georgia, serif;
+    --font-mono: 'Source Code Pro', 'SF Mono', Consolas, monospace;
+
+    --bg: #fdf6ee;
+    --surface: #ffffff;
+    --surface2: #fef8f0;
+    --surface-elevated: #fff7ed;
+    --border: rgba(0, 0, 0, 0.06);
+    --border-bright: rgba(0, 0, 0, 0.12);
+    --text: #1c1917;
+    --text-dim: #78716c;
+
+    --amber: #d97706;
+    --amber-dim: rgba(217, 119, 6, 0.07);
+    --orange: #ea580c;
+    --orange-dim: rgba(234, 88, 12, 0.07);
+    --red: #dc2626;
+    --red-dim: rgba(220, 38, 38, 0.07);
+    --slate: #475569;
+    --slate-dim: rgba(71, 85, 105, 0.07);
+    --emerald: #059669;
+    --emerald-dim: rgba(5, 150, 105, 0.07);
+    --violet: #7c3aed;
+    --violet-dim: rgba(124, 58, 237, 0.07);
+    --sky: #0284c7;
+    --sky-dim: rgba(2, 132, 199, 0.07);
+    --violet: #7c3aed;
+    --violet-dim: rgba(124, 58, 237, 0.07);
+    --rose: #e11d48;
+    --rose-dim: rgba(225, 29, 72, 0.07);
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #1a130a;
+      --surface: #231a10;
+      --surface2: #2d2015;
+      --surface-elevated: #352718;
+      --border: rgba(255, 255, 255, 0.06);
+      --border-bright: rgba(255, 255, 255, 0.12);
+      --text: #fcecd4;
+      --text-dim: #d4b896;
+
+      --amber: #fbbf24;
+      --amber-dim: rgba(251, 191, 36, 0.12);
+      --orange: #fb923c;
+      --orange-dim: rgba(251, 146, 60, 0.12);
+      --red: #f87171;
+      --red-dim: rgba(248, 113, 113, 0.12);
+      --slate: #94a3b8;
+      --slate-dim: rgba(148, 163, 184, 0.12);
+      --emerald: #34d399;
+      --emerald-dim: rgba(52, 211, 153, 0.12);
+      --violet: #a78bfa;
+      --violet-dim: rgba(167, 139, 250, 0.12);
+      --sky: #38bdf8;
+      --sky-dim: rgba(56, 189, 248, 0.12);
+      --violet: #a78bfa;
+      --violet-dim: rgba(167, 139, 250, 0.12);
+      --rose: #fb7185;
+      --rose-dim: rgba(251, 113, 133, 0.12);
+    }
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: var(--bg);
+    background-image:
+      radial-gradient(at 30% 0%, var(--slate-dim) 0%, transparent 50%),
+      radial-gradient(at 70% 100%, var(--slate-dim) 0%, transparent 50%);
+    color: var(--text);
+    font-family: var(--font-body);
+    line-height: 1.7;
+    min-height: 100vh;
+    padding: 48px 24px 80px;
+  }
+
+  .container { max-width: 960px; margin: 0 auto; }
+
+  .hero {
+    text-align: center;
+    margin-bottom: 56px;
+    animation: fadeUp 0.6s ease-out;
+  }
+
+  .hero-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 6px 18px;
+    background: var(--slate-dim);
+    border: 1px solid var(--slate);
+    border-radius: 20px;
+    font-family: var(--font-mono);
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--slate);
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    margin-bottom: 24px;
+  }
+
+  .hero h1 {
+    font-size: 52px;
+    font-weight: 800;
+    letter-spacing: -1px;
+    margin-bottom: 12px;
+    background: linear-gradient(135deg, var(--slate), var(--emerald), var(--slate));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  .hero p {
+    font-size: 20px;
+    color: var(--text-dim);
+    max-width: 640px;
+    margin: 0 auto;
+  }
+
+  .section {
+    margin-bottom: 48px;
+    opacity: 0;
+    animation: fadeUp 0.5s ease-out forwards;
+  }
+
+  .section:nth-child(2) { animation-delay: 0.1s; }
+  .section:nth-child(3) { animation-delay: 0.2s; }
+  .section:nth-child(4) { animation-delay: 0.3s; }
+  .section:nth-child(5) { animation-delay: 0.4s; }
+
+  .section-title {
+    font-family: var(--font-mono);
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    color: var(--text-dim);
+    margin-bottom: 16px;
+  }
+
+  /* Feature cards */
+  .feature-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 16px;
+  }
+
+  @media (max-width: 700px) { .feature-grid { grid-template-columns: 1fr; } }
+
+  .feature-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 20px;
+    border-left: 3px solid;
+    transition: transform 0.2s;
+  }
+
+  .feature-card:hover { transform: translateY(-2px); }
+
+  .feature-card.slate-accent { border-left-color: var(--slate); }
+  .feature-card.emerald-accent { border-left-color: var(--emerald); }
+  .feature-card.amber-accent { border-left-color: var(--amber); }
+
+  .feature-label {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+    margin-bottom: 8px;
+  }
+
+  .feature-name {
+    font-size: 17px;
+    font-weight: 700;
+    margin-bottom: 6px;
+  }
+
+  .feature-desc {
+    font-size: 14px;
+    color: var(--text-dim);
+    line-height: 1.5;
+  }
+
+  .origin-note {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 24px 28px;
+    font-size: 15px;
+    line-height: 1.6;
+    color: var(--text-dim);
+    border-left: 3px solid var(--slate);
+  }
+
+  .origin-note strong {
+    color: var(--text);
+  }
+
+  /* How to access */
+  .access-steps {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+  }
+
+  .access-step {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 20px 24px;
+    display: flex;
+    gap: 16px;
+    align-items: flex-start;
+    transition: transform 0.2s;
+  }
+
+  .access-step:hover { transform: translateY(-2px); }
+
+  .step-number {
+    flex-shrink: 0;
+    width: 36px;
+    height: 36px;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: var(--font-mono);
+    font-size: 14px;
+    font-weight: 700;
+  }
+
+  .step-content {
+    flex: 1;
+  }
+
+  .step-title {
+    font-size: 16px;
+    font-weight: 700;
+    margin-bottom: 4px;
+  }
+
+  .step-desc {
+    font-size: 14px;
+    color: var(--text-dim);
+    line-height: 1.5;
+  }
+
+  .pipeline-note {
+    background: var(--surface2);
+    border: 1px dashed var(--border-bright);
+    border-radius: 10px;
+    padding: 14px 20px;
+    font-size: 13px;
+    color: var(--text-dim);
+    text-align: center;
+    margin-top: 24px;
+  }
+
+  .pipeline-note strong {
+    color: var(--text);
+  }
+
+  .footer {
+    text-align: center;
+    margin-top: 60px;
+    padding-top: 24px;
+    border-top: 1px solid var(--border);
+    font-size: 14px;
+    color: var(--text-dim);
+  }
+
+  /* Tabs */
+  .tabs {
+    display: flex;
+    gap: 4px;
+    margin-bottom: 32px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .tab-btn {
+    font-family: var(--font-mono);
+    font-size: 13px;
+    font-weight: 500;
+    letter-spacing: 0.3px;
+    padding: 10px 20px;
+    background: none;
+    border: none;
+    border-bottom: 2px solid transparent;
+    color: var(--text-dim);
+    cursor: pointer;
+    transition: color 0.2s, border-color 0.2s;
+  }
+
+  .tab-btn:hover { color: var(--text); }
+
+  .tab-btn.active {
+    color: var(--slate);
+    border-bottom-color: var(--slate);
+    font-weight: 600;
+  }
+
+  .tab-panel { display: none; }
+  .tab-panel.active { display: block; }
+
+  /* Data sources table */
+  .data-source-list {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 24px 28px;
+    border-left: 3px solid var(--slate);
+  }
+
+  .data-source-row {
+    display: flex;
+    gap: 12px;
+    padding: 10px 0;
+    border-bottom: 1px solid var(--border);
+    font-size: 14px;
+    align-items: baseline;
+  }
+
+  .data-source-row:last-child { border-bottom: none; }
+
+  .data-source-field {
+    font-weight: 700;
+    color: var(--text);
+    min-width: 180px;
+    flex-shrink: 0;
+  }
+
+  .data-source-arrow {
+    font-family: var(--font-mono);
+    font-size: 12px;
+    color: var(--slate);
+    flex-shrink: 0;
+  }
+
+  .data-source-value {
+    color: var(--text-dim);
+  }
+
+  @media (max-width: 600px) {
+    .data-source-row { flex-direction: column; gap: 2px; }
+    .data-source-field { min-width: auto; }
+    .data-source-arrow { display: none; }
+  }
+
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(16px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .section, .hero { animation: none; opacity: 1; }
+  }
+</style>
+</head>
+<body>
+<div class="container">
+
+  <div class="hero">
+    <div class="hero-badge">Evidence Infrastructure</div>
+    <h1>Regulatory Mapping</h1>
+    <p>Populate your organization's regulatory templates with real pipeline evidence from AESOP</p>
+  </div>
+
+  <!-- Tabs -->
+  <div class="tabs">
+    <button class="tab-btn active" onclick="switchTab('overview')">Overview</button>
+    <button class="tab-btn" onclick="switchTab('process')">The Process</button>
+  </div>
+
+  <!-- Overview Tab -->
+  <div id="tab-overview" class="tab-panel active">
+
+  <!-- The Concept -->
+  <div class="section" style="animation-delay: 0.05s;">
+    <div class="section-title">The Concept</div>
+    <div class="origin-note">
+      <strong>Regulated environments require documented evidence</strong> that AI systems do what they were specified to do. Most platforms generate regulatory documents from scratch. AESOP takes a different approach: you bring your own approved templates (ISO 13485 validation protocols, change control forms, risk registers, audit SOPs). AESOP reads them, identifies the fields that need data, maps them to evidence your pipeline already generated, and produces completed documents ready for QMS filing. <strong>AESOP is evidence infrastructure, not a regulatory authority.</strong>
+    </div>
+  </div>
+
+  <!-- How to Access -->
+  <div class="section" style="animation-delay: 0.08s;">
+    <div class="section-title">How to Access</div>
+    <div class="access-steps">
+      <div class="access-step">
+        <div class="step-number" style="background: var(--slate-dim); color: var(--slate);">1</div>
+        <div class="step-content">
+          <div class="step-title">Upload Templates</div>
+          <div class="step-desc">Upload regulatory templates to the governance vault (Documents page). Tag them as Validation Protocol, Change Control, Risk Register, etc.</div>
+        </div>
+      </div>
+      <div class="access-step">
+        <div class="step-number" style="background: var(--emerald-dim); color: var(--emerald);">2</div>
+        <div class="step-content">
+          <div class="step-title">Run Your Evaluation Pipeline</div>
+          <div class="step-desc">Run your evaluation pipeline -- the data AESOP generates becomes the evidence source.</div>
+        </div>
+      </div>
+      <div class="access-step">
+        <div class="step-number" style="background: var(--amber-dim); color: var(--amber);">3</div>
+        <div class="step-content">
+          <div class="step-title">Open Regulatory Mapping</div>
+          <div class="step-desc">Open Regulatory Mapping from the project page or sidebar. Select templates, review field mappings, generate completed documents.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Evidence Mapping -->
+  <div class="section" style="animation-delay: 0.12s;">
+    <div class="section-title">Evidence Mapping</div>
+    <div class="feature-grid">
+      <div class="feature-card slate-accent">
+        <div class="feature-label" style="color: var(--slate);">Analysis</div>
+        <div class="feature-name">Template Analysis</div>
+        <div class="feature-desc">The agent reads your template, identifies every fillable field (blank lines, placeholders, empty table cells), and maps each to an AESOP data source.</div>
+      </div>
+      <div class="feature-card emerald-accent">
+        <div class="feature-label" style="color: var(--emerald);">Control</div>
+        <div class="feature-name">Human Review Gate</div>
+        <div class="feature-desc">Before any document is generated, you review every field mapping. Accept, reject, or reassign fields to different data sources. No auto-generation without your approval.</div>
+      </div>
+      <div class="feature-card amber-accent">
+        <div class="feature-label" style="color: var(--amber);">Output</div>
+        <div class="feature-name">Completed Documents</div>
+        <div class="feature-desc">Generated documents preserve your template structure exactly. Evidence fields are populated with real data. Fields needing human judgment are marked with clear placeholders.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Data Sources -->
+  <div class="section" style="animation-delay: 0.16s;">
+    <div class="section-title">Data Sources</div>
+    <div class="data-source-list">
+      <div class="data-source-row">
+        <span class="data-source-field">Intended use</span>
+        <span class="data-source-arrow">--></span>
+        <span class="data-source-value">State Change Hypothesis (Build)</span>
+      </div>
+      <div class="data-source-row">
+        <span class="data-source-field">Test protocol</span>
+        <span class="data-source-arrow">--></span>
+        <span class="data-source-value">Eval scenario library</span>
+      </div>
+      <div class="data-source-row">
+        <span class="data-source-field">Test evidence</span>
+        <span class="data-source-arrow">--></span>
+        <span class="data-source-value">Certification report + scores</span>
+      </div>
+      <div class="data-source-row">
+        <span class="data-source-field">Risk identification</span>
+        <span class="data-source-arrow">--></span>
+        <span class="data-source-value">Safety + Bias agent findings</span>
+      </div>
+      <div class="data-source-row">
+        <span class="data-source-field">Risk mitigation</span>
+        <span class="data-source-arrow">--></span>
+        <span class="data-source-value">Repair cycle output</span>
+      </div>
+      <div class="data-source-row">
+        <span class="data-source-field">Residual risk</span>
+        <span class="data-source-arrow">--></span>
+        <span class="data-source-value">Certification level (Platinum/Gold/Silver/Bronze)</span>
+      </div>
+      <div class="data-source-row">
+        <span class="data-source-field">Change description</span>
+        <span class="data-source-arrow">--></span>
+        <span class="data-source-value">Version diff from Repair</span>
+      </div>
+      <div class="data-source-row">
+        <span class="data-source-field">Change rationale</span>
+        <span class="data-source-arrow">--></span>
+        <span class="data-source-value">Repair change summary</span>
+      </div>
+      <div class="data-source-row">
+        <span class="data-source-field">Pre/post evidence</span>
+        <span class="data-source-arrow">--></span>
+        <span class="data-source-value">Score delta across cycles</span>
+      </div>
+      <div class="data-source-row">
+        <span class="data-source-field">Monitoring plan</span>
+        <span class="data-source-arrow">--></span>
+        <span class="data-source-value">Maintenance plan from Launch Package</span>
+      </div>
+    </div>
+  </div>
+
+  </div><!-- end Overview tab -->
+
+  <!-- The Process Tab -->
+  <div id="tab-process" class="tab-panel">
+
+  <div class="section" style="animation-delay: 0.05s;">
+    <div class="section-title">The Process</div>
+    <div class="access-steps">
+      <div class="access-step">
+        <div class="step-number" style="background: var(--slate-dim); color: var(--slate);">1</div>
+        <div class="step-content">
+          <div class="step-title">Upload Templates</div>
+          <div class="step-desc">Upload your org's regulatory templates to the governance vault. Use specific doc types: Validation Protocol, Change Control, Risk Register, Audit SOP.</div>
+        </div>
+      </div>
+      <div class="access-step">
+        <div class="step-number" style="background: var(--sky-dim); color: var(--sky);">2</div>
+        <div class="step-content">
+          <div class="step-title">Analyze Templates</div>
+          <div class="step-desc">Select templates and click Analyze. The agent identifies fillable fields and proposes data source mappings. Results are cached -- analyzing the same template twice uses the cached result unless you click Re-analyze.</div>
+        </div>
+      </div>
+      <div class="access-step">
+        <div class="step-number" style="background: var(--emerald-dim); color: var(--emerald);">3</div>
+        <div class="step-content">
+          <div class="step-title">Review Mappings</div>
+          <div class="step-desc">Each field shows: name, location in template, proposed AESOP source, confidence level (high/medium/low). You can accept, reject, or reassign any field to a different source via dropdown. Fields requiring signatures or subjective decisions are auto-tagged as "Requires Human Input."</div>
+        </div>
+      </div>
+      <div class="access-step">
+        <div class="step-number" style="background: var(--amber-dim); color: var(--amber);">4</div>
+        <div class="step-content">
+          <div class="step-title">Generate Documents</div>
+          <div class="step-desc">Click Approve & Generate. The agent produces a completed document preserving your template structure. Fields with unavailable data (e.g., no repair cycle has run yet) show clear placeholders explaining what's missing.</div>
+        </div>
+      </div>
+      <div class="access-step">
+        <div class="step-number" style="background: var(--violet-dim); color: var(--violet);">5</div>
+        <div class="step-content">
+          <div class="step-title">Review & File</div>
+          <div class="step-desc">Preview the completed document inline, download as markdown, and mark as reviewed. Completed documents are stored in your governance vault tagged as regulatory outputs.</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="pipeline-note">
+      <strong>Regulatory Mapping does not certify agents for regulated use.</strong> That decision belongs to your quality team. AESOP produces evidence that feeds into your QMS.
+    </div>
+  </div>
+
+  </div><!-- end Process tab -->
+
+  <div class="footer">AESOP OS -- Regulatory Mapping</div>
+
+</div>
+
+<script>
+  window.switchTab = function(tab) {
+    document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+    document.getElementById('tab-' + tab).classList.add('active');
+    document.querySelector('[onclick="switchTab(\'' + tab + '\')"]').classList.add('active');
+    document.getElementById('tab-' + tab).querySelectorAll('.section').forEach(s => {
+      s.style.animation = 'none';
+      s.offsetHeight;
+      s.style.animation = '';
+    });
+  };
+</script>
+</body>
+</html>

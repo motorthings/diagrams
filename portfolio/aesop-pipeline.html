@@ -1,0 +1,810 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AESOP OS — The Pipeline</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:wght@400;500;600;700;800&family=Source+Code+Pro:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --font-body: 'Fraunces', Georgia, serif;
+    --font-mono: 'Source Code Pro', 'SF Mono', Consolas, monospace;
+
+    --bg: #f6f7fb;
+    --surface: #ffffff;
+    --surface2: #f0f2f7;
+    --surface-elevated: #ffffff;
+    --border: rgba(0, 0, 0, 0.06);
+    --border-bright: rgba(0, 0, 0, 0.12);
+    --text: #0f172a;
+    --text-dim: #64748b;
+
+    --teal: #0d9488;
+    --teal-dim: rgba(13, 148, 136, 0.08);
+    --blue: #2563eb;
+    --blue-dim: rgba(37, 99, 235, 0.08);
+    --violet: #7c3aed;
+    --violet-dim: rgba(124, 58, 237, 0.08);
+    --orange: #ea580c;
+    --orange-dim: rgba(234, 88, 12, 0.08);
+    --red: #dc2626;
+    --red-dim: rgba(220, 38, 38, 0.08);
+    --emerald: #059669;
+    --emerald-dim: rgba(5, 150, 105, 0.08);
+    --amber: #d97706;
+    --amber-dim: rgba(217, 119, 6, 0.08);
+    --rose: #e11d48;
+    --rose-dim: rgba(225, 29, 72, 0.08);
+    --sky: #0284c7;
+    --sky-dim: rgba(2, 132, 199, 0.08);
+    --slate: #475569;
+    --slate-dim: rgba(71, 85, 105, 0.08);
+    --indigo: #4f46e5;
+    --indigo-dim: rgba(79, 70, 229, 0.08);
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #0c1222;
+      --surface: #131c31;
+      --surface2: #1a2744;
+      --surface-elevated: #1e2d4f;
+      --border: rgba(255, 255, 255, 0.06);
+      --border-bright: rgba(255, 255, 255, 0.12);
+      --text: #e2e8f0;
+      --text-dim: #94a3b8;
+
+      --teal: #2dd4bf;
+      --teal-dim: rgba(45, 212, 191, 0.12);
+      --blue: #60a5fa;
+      --blue-dim: rgba(96, 165, 250, 0.12);
+      --violet: #a78bfa;
+      --violet-dim: rgba(167, 139, 250, 0.12);
+      --orange: #fb923c;
+      --orange-dim: rgba(251, 146, 60, 0.12);
+      --red: #f87171;
+      --red-dim: rgba(248, 113, 113, 0.12);
+      --emerald: #34d399;
+      --emerald-dim: rgba(52, 211, 153, 0.12);
+      --amber: #fbbf24;
+      --amber-dim: rgba(251, 191, 36, 0.12);
+      --rose: #fb7185;
+      --rose-dim: rgba(251, 113, 133, 0.12);
+      --sky: #38bdf8;
+      --sky-dim: rgba(56, 189, 248, 0.12);
+      --slate: #94a3b8;
+      --slate-dim: rgba(148, 163, 184, 0.12);
+      --indigo: #818cf8;
+      --indigo-dim: rgba(129, 140, 248, 0.12);
+    }
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: var(--bg);
+    background-image:
+      radial-gradient(at 20% 0%, var(--violet-dim) 0%, transparent 50%),
+      radial-gradient(at 80% 100%, var(--teal-dim) 0%, transparent 50%);
+    color: var(--text);
+    font-family: var(--font-body);
+    font-size: 15px;
+    line-height: 1.7;
+    min-height: 100vh;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  .container {
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 48px 24px 80px;
+  }
+
+  /* Hero */
+  .hero {
+    text-align: center;
+    margin-bottom: 48px;
+    animation: fadeUp 0.5s ease both;
+  }
+
+  .hero h1 {
+    font-size: 38px;
+    font-weight: 800;
+    letter-spacing: -1px;
+    margin-bottom: 8px;
+    background: linear-gradient(135deg, var(--violet), var(--teal));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  .hero p {
+    font-size: 17px;
+    color: var(--text-dim);
+    max-width: 600px;
+    margin: 0 auto;
+  }
+
+  /* Sections */
+  .section {
+    margin-bottom: 32px;
+    animation: fadeUp 0.5s ease both;
+  }
+
+  .section-title {
+    font-size: 18px;
+    font-weight: 700;
+    margin-bottom: 16px;
+    letter-spacing: -0.3px;
+  }
+
+  .section-subtitle {
+    font-size: 14px;
+    color: var(--text-dim);
+    margin-top: -12px;
+    margin-bottom: 16px;
+  }
+
+  /* Pipeline Diagram */
+  .pipeline {
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+    position: relative;
+  }
+
+  .pipeline-row {
+    display: flex;
+    align-items: stretch;
+    gap: 0;
+  }
+
+  .pipeline-connector {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 36px;
+    flex-shrink: 0;
+    position: relative;
+  }
+
+  .pipeline-connector::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    left: 50%;
+    width: 2px;
+    background: var(--border-bright);
+    transform: translateX(-50%);
+  }
+
+  .pipeline-connector .dot {
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    z-index: 1;
+    flex-shrink: 0;
+    border: 2px solid var(--bg);
+  }
+
+  .pipeline-stage {
+    flex: 1;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 20px 24px;
+    margin: 6px 0;
+    display: flex;
+    gap: 16px;
+    align-items: flex-start;
+    transition: border-color 0.2s, box-shadow 0.2s;
+  }
+
+  .pipeline-stage:hover {
+    border-color: var(--border-bright);
+    box-shadow: 0 2px 12px rgba(0,0,0,0.04);
+  }
+
+  .stage-icon {
+    width: 44px;
+    height: 44px;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: var(--font-mono);
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+    flex-shrink: 0;
+  }
+
+  .stage-content {
+    flex: 1;
+    min-width: 0;
+  }
+
+  .stage-name {
+    font-size: 16px;
+    font-weight: 700;
+    margin-bottom: 2px;
+    letter-spacing: -0.2px;
+  }
+
+  .stage-label {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+    margin-bottom: 4px;
+  }
+
+  .stage-desc {
+    font-size: 14px;
+    color: var(--text-dim);
+    line-height: 1.6;
+  }
+
+  .stage-note {
+    margin-top: 8px;
+    padding: 10px 14px;
+    background: var(--bg-raised);
+    border-left: 3px solid var(--emerald);
+    border-radius: 0 6px 6px 0;
+    font-size: 13px;
+    color: var(--text-secondary);
+    line-height: 1.6;
+    font-style: italic;
+  }
+
+  .stage-outputs {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-top: 10px;
+  }
+
+  .output-chip {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    font-weight: 500;
+    padding: 3px 10px;
+    border-radius: 6px;
+    border: 1px solid var(--border);
+    background: var(--surface2);
+    color: var(--text-dim);
+  }
+
+  /* Gate marker */
+  .gate-row {
+    display: flex;
+    align-items: center;
+    gap: 0;
+    margin: 0;
+  }
+
+  .gate-line {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    padding: 0 12px;
+  }
+
+  .gate-marker {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 6px 0;
+  }
+
+  .gate-marker::before,
+  .gate-marker::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    border-top: 2px dashed var(--border-bright);
+  }
+
+  .gate-label {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    color: var(--text-dim);
+    white-space: nowrap;
+    padding: 3px 10px;
+    border-radius: 4px;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+  }
+
+  /* Data flow */
+  .flow-diagram {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 28px;
+    text-align: center;
+  }
+
+  .flow-row {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    flex-wrap: wrap;
+    margin-bottom: 12px;
+  }
+
+  .flow-row:last-child {
+    margin-bottom: 0;
+  }
+
+  .flow-box {
+    font-family: var(--font-mono);
+    font-size: 12px;
+    font-weight: 600;
+    padding: 8px 14px;
+    border-radius: 8px;
+    border: 1px solid var(--border);
+    white-space: nowrap;
+  }
+
+  .flow-arrow {
+    color: var(--text-dim);
+    font-size: 16px;
+  }
+
+  .flow-label {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+    color: var(--text-dim);
+    margin-bottom: 8px;
+  }
+
+  .flow-divider {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin: 16px 0;
+  }
+
+  .flow-divider::before,
+  .flow-divider::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: var(--border-bright);
+  }
+
+  .flow-divider-label {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+    color: var(--text-dim);
+  }
+
+  /* Tenets Preview */
+  .tenets-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+  }
+
+  .tenet-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 12px 14px;
+  }
+
+  .tenet-num {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--violet);
+    width: 20px;
+    flex-shrink: 0;
+    text-align: right;
+  }
+
+  .tenet-name {
+    font-size: 13px;
+    font-weight: 600;
+  }
+
+  /* Footer */
+  .footer {
+    text-align: center;
+    margin-top: 60px;
+    padding-top: 24px;
+    border-top: 1px solid var(--border);
+    font-size: 13px;
+    color: var(--text-dim);
+  }
+
+  /* Animations */
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(16px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .section, .hero { animation: none; opacity: 1; }
+  }
+
+  @media (max-width: 640px) {
+    .tenets-grid { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+<div class="container">
+
+  <!-- Hero -->
+  <div class="hero">
+    <h1>The Pipeline</h1>
+    <p>Every project passes through every stage. Each stage produces artifacts that feed the next.</p>
+  </div>
+
+  <!-- Full Pipeline Diagram -->
+  <div class="section" style="animation-delay: 0.05s;">
+    <div class="section-title"><span style="color: var(--violet);">&#9670;</span> Stages &amp; Gates</div>
+    <div class="section-subtitle">Projects contain all pipeline artifacts. Stages are sequential. Gates enforce human approval before continuing.</div>
+
+    <div class="pipeline">
+
+      <!-- Organization Context -->
+      <div class="pipeline-row">
+        <div class="pipeline-connector">
+          <div class="dot" style="background: var(--sky);"></div>
+        </div>
+        <div class="pipeline-stage">
+          <div class="stage-icon" style="background: var(--sky-dim); color: var(--sky);">CTX</div>
+          <div class="stage-content">
+            <div class="stage-label" style="color: var(--sky);">Foundation</div>
+            <div class="stage-name">Organization Context</div>
+            <div class="stage-desc">The grounding layer for everything below it. Captured context — authority &amp; decision rights, coordination &amp; dependencies, tacit knowledge, exposure posture, systemic blockers, plus departments and uploaded org documents — feeds the Delegation Readiness assessment, sharpens prioritization, and informs discovery. The sharper this context, the sharper every downstream judgment.</div>
+            <div class="stage-outputs">
+              <span class="output-chip">authority &amp; decision rights</span>
+              <span class="output-chip">coordination map</span>
+              <span class="output-chip">systemic blockers</span>
+              <span class="output-chip">departments</span>
+              <span class="output-chip">org documents</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Organization -->
+      <div class="pipeline-row">
+        <div class="pipeline-connector">
+          <div class="dot" style="background: var(--violet);"></div>
+        </div>
+        <div class="pipeline-stage">
+          <div class="stage-icon" style="background: var(--violet-dim); color: var(--violet);">ORG</div>
+          <div class="stage-content">
+            <div class="stage-label" style="color: var(--violet);">Organization Layer</div>
+            <div class="stage-name">Portfolio &amp; Delegation Readiness</div>
+            <div class="stage-desc">The layer above individual projects. The Portfolio coordinates every project across departments and ranks them by strategic score; Delegation Readiness assesses whether the organization can responsibly scale agent autonomy and turns gaps into tracked action items — which can be promoted straight into the portfolio.</div>
+            <div class="stage-outputs">
+              <span class="output-chip">portfolio board &amp; table</span>
+              <span class="output-chip">strategic prioritization</span>
+              <span class="output-chip">readiness verdict</span>
+              <span class="output-chip">org action items</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Projects -->
+      <div class="pipeline-row">
+        <div class="pipeline-connector">
+          <div class="dot" style="background: var(--slate);"></div>
+        </div>
+        <div class="pipeline-stage">
+          <div class="stage-icon" style="background: var(--slate-dim); color: var(--slate);">PRJ</div>
+          <div class="stage-content">
+            <div class="stage-label" style="color: var(--slate);">Container</div>
+            <div class="stage-name">Projects</div>
+            <div class="stage-desc">Top-level initiative grouping. A project wraps every artifact produced across the entire pipeline — discovery sessions, agreements, builds, evaluations, repairs — under a single entity for portfolio-level tracking.</div>
+            <div class="stage-outputs">
+              <span class="output-chip">project_id propagation</span>
+              <span class="output-chip">status tracking</span>
+              <span class="output-chip">portfolio analytics</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Working Agreement -->
+      <div class="pipeline-row">
+        <div class="pipeline-connector">
+          <div class="dot" style="background: var(--indigo);"></div>
+        </div>
+        <div class="pipeline-stage">
+          <div class="stage-icon" style="background: var(--indigo-dim); color: var(--indigo);">WA</div>
+          <div class="stage-content">
+            <div class="stage-label" style="color: var(--indigo);">Pre-Engagement Gate</div>
+            <div class="stage-name">Working Agreement</div>
+            <div class="stage-desc">A signed document establishing scope, responsibilities, and response commitments. Rendered from structured discovery data into a static template. Design is gated behind a signed agreement (with manual override for internal projects).</div>
+            <div class="stage-outputs">
+              <span class="output-chip">signed agreement</span>
+              <span class="output-chip">RACI</span>
+              <span class="output-chip">SLAs</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Gate -->
+      <div class="gate-row">
+        <div class="pipeline-connector"><div class="dot" style="background: var(--amber); width: 8px; height: 8px;"></div></div>
+        <div class="gate-line"><div class="gate-marker"><span class="gate-label">Signature Required</span></div></div>
+      </div>
+
+      <!-- Discover -->
+      <div class="pipeline-row">
+        <div class="pipeline-connector">
+          <div class="dot" style="background: var(--teal);"></div>
+        </div>
+        <div class="pipeline-stage">
+          <div class="stage-icon" style="background: var(--teal-dim); color: var(--teal);">01</div>
+          <div class="stage-content">
+            <div class="stage-label" style="color: var(--teal);">Stage 1</div>
+            <div class="stage-name">Discover</div>
+            <div class="stage-desc">Structured problem interview that captures stakeholder map, autonomy classification, and commitment readiness. Produces an Opportunity Brief with a triage verdict (GO / NO_GO / CONDITIONAL). Platform-agnostic — not locked to any implementation.</div>
+            <div class="stage-outputs">
+              <span class="output-chip">opportunity brief</span>
+              <span class="output-chip">stakeholder map</span>
+              <span class="output-chip">triage verdict</span>
+              <span class="output-chip">autonomy level</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Design -->
+      <div class="pipeline-row">
+        <div class="pipeline-connector">
+          <div class="dot" style="background: var(--blue);"></div>
+        </div>
+        <div class="pipeline-stage">
+          <div class="stage-icon" style="background: var(--blue-dim); color: var(--blue);">02</div>
+          <div class="stage-content">
+            <div class="stage-label" style="color: var(--blue);">Stage 2</div>
+            <div class="stage-name">Design</div>
+            <div class="stage-desc">Claude-powered PRD generation with multi-platform architecture recommendation. An ArchitectureAgent evaluates the PRD against platform capabilities (Glean, Claude API, OpenAI, Generic) and produces a gap analysis across 11 dimensions.</div>
+            <div class="stage-outputs">
+              <span class="output-chip">PRD</span>
+              <span class="output-chip">architecture recommendation</span>
+              <span class="output-chip">gap analysis</span>
+              <span class="output-chip">platform scores</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Build -->
+      <div class="pipeline-row">
+        <div class="pipeline-connector">
+          <div class="dot" style="background: var(--orange);"></div>
+        </div>
+        <div class="pipeline-stage">
+          <div class="stage-icon" style="background: var(--orange-dim); color: var(--orange);">03</div>
+          <div class="stage-content">
+            <div class="stage-label" style="color: var(--orange);">Stage 3</div>
+            <div class="stage-name">Build</div>
+            <div class="stage-desc">Six-phase instruction writing pipeline with a human-in-the-loop checkpoint after gap analysis. Phases: Fitness Check, Gap Analysis (HITL), Workflow Design, Write Instructions, Generate Artifacts, Summary. Real-time SSE streaming to the UI.</div>
+            <div class="stage-outputs">
+              <span class="output-chip">system instructions</span>
+              <span class="output-chip">platform artifacts</span>
+              <span class="output-chip">state change hypothesis</span>
+              <span class="output-chip">translation debt assessment</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Gate -->
+      <div class="gate-row">
+        <div class="pipeline-connector"><div class="dot" style="background: var(--amber); width: 8px; height: 8px;"></div></div>
+        <div class="gate-line"><div class="gate-marker"><span class="gate-label">HITL Approval at Phase 1</span></div></div>
+      </div>
+
+      <!-- Operationalize -->
+      <div class="pipeline-row">
+        <div class="pipeline-connector">
+          <div class="dot" style="background: var(--amber);"></div>
+        </div>
+        <div class="pipeline-stage">
+          <div class="stage-icon" style="background: var(--amber-dim); color: var(--amber);">3.5</div>
+          <div class="stage-content">
+            <div class="stage-label" style="color: var(--amber);">Stage 3.5</div>
+            <div class="stage-name">Operationalize</div>
+            <div class="stage-desc">Generates a Launch Package — four organizational artifacts from pipeline data already captured during discovery and build. No new data collection required; a generation pass over existing outputs.</div>
+            <div class="stage-outputs">
+              <span class="output-chip">RACI matrix</span>
+              <span class="output-chip">tiger team brief</span>
+              <span class="output-chip">maintenance plan</span>
+              <span class="output-chip">adoption plan</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Evaluate -->
+      <div class="pipeline-row">
+        <div class="pipeline-connector">
+          <div class="dot" style="background: var(--emerald);"></div>
+        </div>
+        <div class="pipeline-stage">
+          <div class="stage-icon" style="background: var(--emerald-dim); color: var(--emerald);">04</div>
+          <div class="stage-content">
+            <div class="stage-label" style="color: var(--emerald);">Stage 4</div>
+            <div class="stage-name">Evaluate</div>
+            <div class="stage-desc">Multi-agent scoring across 6 evaluation modes. Standard Analysis runs 5 independent agents (Instructions, Ethos, Bias, Safety, Synthesis). Advanced modes: Cave of Shadows (red-team), Custom Test Suite, Bias Probe, and KB Audit.</div>
+            <div class="stage-note">The name "Cave of Shadows" draws from Plato's Allegory of the Cave, where prisoners mistake shadows on the wall for reality. In the same way, AI systems can project confident, convincing responses that mask underlying flaws — bias, hallucination, boundary violations. The Adversarial Red-Team capability drags those shadows into the light, testing whether an AI holds up when confronted with adversarial personas and edge-case scenarios designed to expose what lurks beneath the surface.</div>
+            <div class="stage-outputs">
+              <span class="output-chip">scored reports</span>
+              <span class="output-chip">certification level</span>
+              <span class="output-chip">risk strategy</span>
+              <span class="output-chip">attack scenarios</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Trace Analysis -->
+      <div class="pipeline-row">
+        <div class="pipeline-connector">
+          <div class="dot" style="background: var(--indigo);"></div>
+        </div>
+        <div class="pipeline-stage">
+          <div class="stage-icon" style="background: var(--indigo-dim); color: var(--indigo);">4.25</div>
+          <div class="stage-content">
+            <div class="stage-label" style="color: var(--indigo);">Stage 4.25</div>
+            <div class="stage-name">Trace Analysis</div>
+            <div class="stage-desc">Human reviews conversation traces from evaluation, annotates specific failure patterns, then an agent synthesizes annotations into a ranked failure taxonomy. Produces categorized, evidence-cited repair targets instead of generic score-based feedback. Optional but dramatically improves repair quality.</div>
+            <div class="stage-outputs">
+              <span class="output-chip">failure taxonomy</span>
+              <span class="output-chip">annotated traces</span>
+              <span class="output-chip">focused repair input</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Regulatory Mapping -->
+      <div class="pipeline-row">
+        <div class="pipeline-connector">
+          <div class="dot" style="background: var(--slate);"></div>
+        </div>
+        <div class="pipeline-stage">
+          <div class="stage-icon" style="background: var(--slate-dim); color: var(--slate);">4.5</div>
+          <div class="stage-content">
+            <div class="stage-label" style="color: var(--slate);">Stage 4.5</div>
+            <div class="stage-name">Regulatory Mapping</div>
+            <div class="stage-desc">Upload your regulatory templates (ISO 13485, risk registers, change control forms). An agent identifies fillable fields, maps them to AESOP pipeline evidence, and produces completed documents for QMS filing. AESOP is evidence infrastructure, not a regulatory authority.</div>
+            <div class="stage-outputs">
+              <span class="output-chip">completed templates</span>
+              <span class="output-chip">field mappings</span>
+              <span class="output-chip">evidence traceability</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Repair -->
+      <div class="pipeline-row">
+        <div class="pipeline-connector">
+          <div class="dot" style="background: var(--rose);"></div>
+        </div>
+        <div class="pipeline-stage">
+          <div class="stage-icon" style="background: var(--rose-dim); color: var(--rose);">05</div>
+          <div class="stage-content">
+            <div class="stage-label" style="color: var(--rose);">Stage 5</div>
+            <div class="stage-name">Repair</div>
+            <div class="stage-desc">Uses extended thinking to deeply analyze evaluation failures and rewrite system instructions. Takes evaluation context, scenario results, trace analysis taxonomy, and optionally Tiger Team findings as input. Closes the loop between evaluation, stakeholder feedback, and improvement.</div>
+            <div class="stage-outputs">
+              <span class="output-chip">rewritten instructions</span>
+              <span class="output-chip">change rationale</span>
+              <span class="output-chip">diff summary</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Track -->
+      <div class="pipeline-row">
+        <div class="pipeline-connector">
+          <div class="dot" style="background: var(--sky);"></div>
+        </div>
+        <div class="pipeline-stage">
+          <div class="stage-icon" style="background: var(--sky-dim); color: var(--sky);">06</div>
+          <div class="stage-content">
+            <div class="stage-label" style="color: var(--sky);">Stage 6</div>
+            <div class="stage-name">Track</div>
+            <div class="stage-desc">Score trajectory visualization, version history with diffs, cost tracking per agent and in aggregate, portfolio-level analytics, and maintenance schedule dashboard with drift alerts.</div>
+            <div class="stage-outputs">
+              <span class="output-chip">score trajectories</span>
+              <span class="output-chip">version diffs</span>
+              <span class="output-chip">cost analytics</span>
+              <span class="output-chip">drift alerts</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- Feedback Loop -->
+  <div class="section" style="animation-delay: 0.1s;">
+    <div class="section-title"><span style="color: var(--rose);">&#9670;</span> Closed-Loop Improvement</div>
+    <div class="flow-diagram">
+      <div class="flow-label">The Evaluate-Repair-Track cycle runs continuously</div>
+      <div class="flow-row">
+        <div class="flow-box" style="background: var(--emerald-dim); color: var(--emerald);">Evaluate</div>
+        <span class="flow-arrow">&#8594;</span>
+        <div class="flow-box" style="background: var(--rose-dim); color: var(--rose);">Repair</div>
+        <span class="flow-arrow">&#8594;</span>
+        <div class="flow-box" style="background: var(--emerald-dim); color: var(--emerald);">Re-Evaluate</div>
+        <span class="flow-arrow">&#8594;</span>
+        <div class="flow-box" style="background: var(--sky-dim); color: var(--sky);">Track Delta</div>
+      </div>
+      <div class="flow-divider"><span class="flow-divider-label">Tiger Team findings feed back into Repair</span></div>
+      <div class="flow-row">
+        <div class="flow-box" style="background: var(--amber-dim); color: var(--amber);">Launch Package</div>
+        <span class="flow-arrow">&#8594;</span>
+        <div class="flow-box" style="background: var(--slate-dim); color: var(--slate);">Stakeholder Review</div>
+        <span class="flow-arrow">&#8594;</span>
+        <div class="flow-box" style="background: var(--rose-dim); color: var(--rose);">Repair</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Eleven Tenets -->
+  <div class="section" style="animation-delay: 0.15s;">
+    <div class="section-title"><span style="color: var(--amber);">&#9670;</span> The Eleven Tenets</div>
+    <div class="section-subtitle">The decision framework embedded in every pipeline stage. Not just documentation — methodology as code.</div>
+    <div class="tenets-grid">
+      <div class="tenet-item"><div class="tenet-num">1</div><div class="tenet-name">State Change</div></div>
+      <div class="tenet-item"><div class="tenet-num">2</div><div class="tenet-name">Problems Before Solutions</div></div>
+      <div class="tenet-item"><div class="tenet-num">3</div><div class="tenet-name">Evidence Over Eloquence</div></div>
+      <div class="tenet-item"><div class="tenet-num">4</div><div class="tenet-name">Know What You Need</div></div>
+      <div class="tenet-item"><div class="tenet-num">5</div><div class="tenet-name">People Are the Center</div></div>
+      <div class="tenet-item"><div class="tenet-num">6</div><div class="tenet-name">Humans Decide</div></div>
+      <div class="tenet-item"><div class="tenet-num">7</div><div class="tenet-name">Multiple Perspectives</div></div>
+      <div class="tenet-item"><div class="tenet-num">8</div><div class="tenet-name">Context and Brevity</div></div>
+      <div class="tenet-item"><div class="tenet-num">9</div><div class="tenet-name">Guardrails Not Gates</div></div>
+      <div class="tenet-item"><div class="tenet-num">10</div><div class="tenet-name">Trace the Connections</div></div>
+      <div class="tenet-item" style="grid-column: 1 / -1; justify-content: center;"><div class="tenet-num">11</div><div class="tenet-name">The Questions Stay the Same</div></div>
+    </div>
+  </div>
+
+  <div class="footer">
+    <a href="aesop-platform-overview.html" style="color: var(--text-dim); text-decoration: none;">&#8592; Platform Overview</a>
+    &nbsp;&mdash;&nbsp;
+    AESOP OS &mdash; Governance-First AI Agent Development
+    &nbsp;&mdash;&nbsp;
+    <a href="aesop-tech-agents.html" style="color: var(--text-dim); text-decoration: none;">Agents &amp; Architecture &#8594;</a>
+  </div>
+
+</div>
+</body>
+</html>

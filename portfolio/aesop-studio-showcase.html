@@ -1,0 +1,358 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AESOP Transformation OS — Project Showcase</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,wght@0,400;0,500;0,600;0,700;1,400&family=Source+Code+Pro:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --font-display: 'Fraunces', Georgia, serif;
+    --font-mono: 'Source Code Pro', 'SF Mono', Consolas, monospace;
+    --bg: #eef4f9;
+    --surface: #ffffff;
+    --surface2: #f5f8fc;
+    --border: #c8daea;
+    --border-bright: #a0bedb;
+    --heading: #0a1628;
+    --text: #0a1628;
+    --text-dim: #3d5a7a;
+    --text-muted: #7aa3bf;
+    --primary: #1a6fa8;
+    --primary-dim: rgba(26,111,168,0.08);
+    --warning: #d97706;
+    --warning-dim: rgba(217,119,6,0.08);
+    --success: #16a34a;
+    --success-dim: rgba(22,163,74,0.08);
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--bg);
+    background-image:
+      radial-gradient(ellipse at 80% 0%, var(--primary-dim) 0%, transparent 50%),
+      radial-gradient(ellipse at 20% 60%, rgba(74,144,196,0.06) 0%, transparent 40%);
+    color: var(--text);
+    font-family: var(--font-display);
+    min-height: 100vh;
+    line-height: 1.6;
+    padding-bottom: 64px;
+  }
+
+  .nav {
+    position: sticky; top: 0; z-index: 100;
+    backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px);
+    background: color-mix(in srgb, var(--surface) 85%, transparent);
+    border-bottom: 1px solid var(--border);
+  }
+  .nav-inner {
+    max-width: 900px; margin: 0 auto; padding: 12px 24px;
+    display: flex; align-items: center; justify-content: space-between;
+  }
+  .nav-brand {
+    font-family: var(--font-mono); font-size: 13px; font-weight: 600;
+    letter-spacing: 0.5px; color: var(--primary); text-decoration: none;
+  }
+
+  .container { max-width: 900px; margin: 0 auto; padding: 0 24px; }
+
+  .hero {
+    border-bottom: 1px solid var(--border);
+    background: var(--surface);
+    padding: 48px 24px;
+  }
+  .hero-inner { max-width: 900px; margin: 0 auto; }
+
+  h1 { font-family: var(--font-display); font-size: 40px; font-weight: 700; letter-spacing: -0.5px; color: var(--primary); margin-bottom: 8px; }
+  .tagline { font-size: 20px; color: var(--text-dim); margin-bottom: 24px; }
+
+  .stack-pills { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 24px; }
+  .stack-pill {
+    font-family: var(--font-mono); font-size: 11px; font-weight: 600;
+    padding: 4px 10px; border-radius: 6px;
+    background: var(--primary-dim); color: var(--primary);
+  }
+
+  .overview { font-size: 16px; line-height: 1.7; color: var(--text-dim); max-width: 700px; }
+  .overview p { margin-bottom: 16px; }
+
+  section { padding: 40px 0; }
+
+  h2 {
+    font-family: var(--font-mono); font-size: 13px; font-weight: 700;
+    letter-spacing: 0.15em; text-transform: uppercase;
+    color: var(--primary); margin-bottom: 24px;
+  }
+
+  /* Pipeline steps */
+  .steps { margin-bottom: 48px; }
+  .step {
+    display: flex; gap: 20px; padding-bottom: 28px;
+  }
+  .step-num {
+    width: 36px; height: 36px; border-radius: 50%;
+    background: var(--primary); color: #fff;
+    display: flex; align-items: center; justify-content: center;
+    font-family: var(--font-mono); font-size: 14px; font-weight: 700;
+    flex-shrink: 0;
+  }
+  .step-line {
+    width: 1px; flex-grow: 1; background: var(--border);
+    margin: 36px 0 0 17px; position: absolute;
+  }
+  .step-content { padding-top: 4px; }
+  .step-title { font-size: 17px; font-weight: 700; color: var(--heading); margin-bottom: 4px; }
+  .step-desc { font-size: 15px; line-height: 1.7; color: var(--text-dim); white-space: pre-line; }
+
+  /* Screens grid */
+  .screens { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 12px; margin-bottom: 48px; }
+  .screen-card {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 8px; padding: 16px;
+  }
+  .screen-icon {
+    width: 32px; height: 32px; border-radius: 6px;
+    background: var(--primary-dim); margin-bottom: 12px;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .screen-name { font-size: 14px; font-weight: 700; color: var(--heading); margin-bottom: 4px; }
+  .screen-desc { font-size: 13px; color: var(--text-muted); line-height: 1.5; }
+
+  /* Highlights */
+  .highlights { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 12px; }
+  .highlight-card {
+    background: var(--surface-elevated);
+    border: 1px solid var(--border); border-left: 3px solid var(--primary);
+    border-radius: 8px; padding: 16px;
+    font-size: 14px; line-height: 1.6; color: var(--text-dim);
+  }
+
+  .footer {
+    margin-top: 48px; padding-top: 16px;
+    border-top: 1px solid var(--border);
+    text-align: center; font-size: 12px; color: var(--text-muted);
+  }
+  .footer a { color: var(--primary); text-decoration: none; }
+  .footer a:hover { text-decoration: underline; }
+</style>
+</head>
+<body>
+
+<div class="nav">
+  <div class="nav-inner">
+    <a href="../index.html" class="nav-brand">Diagrams — Portfolio</a>
+  </div>
+</div>
+
+<div class="hero">
+  <div class="hero-inner">
+    <h1>AESOP Transformation OS</h1>
+    <div class="stack-pills">
+      <span class="stack-pill">Next.js 16</span>
+      <span class="stack-pill">FastAPI</span>
+      <span class="stack-pill">Supabase</span>
+      <span class="stack-pill">Claude API</span>
+      <span class="stack-pill">Voyage AI</span>
+    </div>
+    <div class="overview">
+      <p>AESOP Transformation OS is a governance-first operating system for taking an enterprise from "we should use AI" to governed, evaluated, deployed, and monitored agents running at portfolio scale.</p>
+      <p>It closes two gaps that grow critical as organizations scale their agent portfolios: quality governance — no systematic way to evaluate safety, bias, and instruction quality at scale — and operationalization — technically sound agents fail when roles, adoption, and maintenance are never defined.</p>
+      <p>Every project flows through one connected pipeline, grounded in Organization context, then Discover, Working Agreement, Design, Build, Operationalize, Evaluate, Deploy, Repair, and Monitor — with all artifacts grouped under a project container for portfolio-level learning. The decision framework, The Eleven Tenets, is embedded as code at every gate, not just documentation.</p>
+    </div>
+  </div>
+</div>
+
+<div class="container">
+
+  <section>
+    <h2>How It Works — Pipeline</h2>
+    <div class="steps">
+      <div class="step">
+        <div class="step-num">1</div>
+        <div class="step-content">
+          <div class="step-title">Organization — Ground the work in context</div>
+          <div class="step-desc">Establishes the organizational layer every agent is built against: departments, strategic priorities, and uploaded org context. From this foundation, the platform generates three context-aware reports:
+
+• Delegation of Authority Report — maps decision rights, approval hierarchies, and spending authorities across the organization
+• AI Adoption Roadmap — sequences implementation phases against business priorities and organizational readiness
+• Strategic Portfolio Kanban — ranks initiatives by impact, effort, and alignment to keep agent work tied to real business goals
+
+As new projects are added or organizational context changes, these reports can be regenerated against the updated context — so priorities, decision authority, and adoption sequencing stay current rather than going stale after the first project.</div>
+        </div>
+      </div>
+
+      <div class="step">
+        <div class="step-num">2</div>
+        <div class="step-content">
+          <div class="step-title">Discover — Validate the problem</div>
+          <div class="step-desc">A structured interview captures the problem, stakeholder map, and constraints, classifies the agent's autonomy level, and scores commitment readiness (capacity, response SLA, change appetite). It produces an Opportunity Brief and a GO / NO-GO / CONDITIONAL triage verdict before any build work begins.</div>
+        </div>
+      </div>
+
+      <div class="step">
+        <div class="step-num">3</div>
+        <div class="step-content">
+          <div class="step-title">Working Agreement — Gate the engagement</div>
+          <div class="step-desc">Before build, AESOP OS generates a signed Working Agreement from discovery data — scope, deliverables, response SLAs, and the RACI for the engagement. Design is hard-gated behind a signed agreement, with a manual override for internal projects.</div>
+        </div>
+      </div>
+
+      <div class="step">
+        <div class="step-num">4</div>
+        <div class="step-content">
+          <div class="step-title">Design — PRD and architecture recommendation</div>
+          <div class="step-desc">Generates a full PRD, then scores architecture options across platforms (Glean, Claude API, OpenAI, generic) with feasibility analysis. An 11-dimension gap analysis flags missing or infeasible requirements before build.</div>
+        </div>
+      </div>
+
+      <div class="step">
+        <div class="step-num">5</div>
+        <div class="step-content">
+          <div class="step-title">Build — 6-phase instruction writing with HITL</div>
+          <div class="step-desc">A six-phase pipeline (fitness check, gap analysis, workflow design, instruction writing, artifact export, summary) writes the system prompt with a human-in-the-loop approval checkpoint. Outputs include platform-specific artifacts plus a State Change Hypothesis, Translation Debt Assessment, and Ripple Map.</div>
+        </div>
+      </div>
+
+      <div class="step">
+        <div class="step-num">6</div>
+        <div class="step-content">
+          <div class="step-title">Operationalize — Launch package generation</div>
+          <div class="step-desc">Generates the org infrastructure to actually run the agent: a RACI matrix, a plain-language Tiger Team Brief, a Maintenance Plan tied to autonomy level, and a phased Adoption Plan calibrated to commitment readiness — all from data already captured in the pipeline.</div>
+        </div>
+      </div>
+
+      <div class="step">
+        <div class="step-num">7</div>
+        <div class="step-content">
+          <div class="step-title">Evaluate — Seven complementary evaluation modes</div>
+          <div class="step-desc">Quality is assessed through seven distinct modes, not one pass:
+(1) Standard Analysis — a 5-agent pipeline scoring Instructions, Ethos, Bias, and Safety with a Synthesis pass, where Tier-1 dimensions (Safety, Bias) carry 1.5x weight and a hard veto caps the score if either falls below threshold
+(2) Cave of Shadows — red-team adversarial testing with attack personas probing boundary violations
+(3) Custom Rubric — domain-specific weighted criteria generated from the agent's own instructions
+(4) Hydra — functional regression testing firing parallel scenarios against live endpoints
+(5) Bias Probe — differential fairness testing across demographic variations
+(6) KB Audit — knowledge-base completeness and coherence checks for retrieval agents
+(7) Trace Analysis — replays and inspects agent decision paths to verify reasoning fidelity, detect drift in judgment patterns, and surface hidden failure modes that pass output-only evaluation
+
+Certification spans Bronze through Platinum.</div>
+        </div>
+      </div>
+
+      <div class="step">
+        <div class="step-num">8</div>
+        <div class="step-content">
+          <div class="step-title">Deploy — Ship to the target platform</div>
+          <div class="step-desc">Certified agents ship to their target platform through pluggable connectors (Glean, Claude API, OpenAI, generic REST), packaged with the operationalization artifacts so the organization deploys with clear ownership, an adoption plan, and a maintenance schedule in hand.</div>
+        </div>
+      </div>
+
+      <div class="step">
+        <div class="step-num">9</div>
+        <div class="step-content">
+          <div class="step-title">Repair — Extended-thinking rewrite</div>
+          <div class="step-desc">When monitoring or evaluation surfaces issues, the Repair agent uses extended thinking to analyze failures and Tiger Team findings, then rewrites instructions with rationale and a tracked change summary — closing the loop between live feedback and improvement.</div>
+        </div>
+      </div>
+
+      <div class="step">
+        <div class="step-num">10</div>
+        <div class="step-content">
+          <div class="step-title">Monitor — Track health and drift in production</div>
+          <div class="step-desc">Continuous portfolio monitoring: score trajectories, version diffs, per-agent and aggregate cost tracking, an organization-wide agent health dashboard, and a maintenance schedule with drift alerts, stale-evaluation warnings, and scheduled re-evaluations.</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <h2>Key Screens</h2>
+    <div class="screens">
+      <div class="screen-card">
+        <div class="screen-icon">
+          <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="#1a6fa8" stroke-width="1.75"><rect x="3" y="3" width="18" height="14" rx="2"/><path d="M3 19h18"/></svg>
+        </div>
+        <div class="screen-name">Discovery Interview</div>
+        <div class="screen-desc">Guided intake with stakeholder mapping, autonomy classification, and triage verdict</div>
+      </div>
+      <div class="screen-card">
+        <div class="screen-icon">
+          <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="#1a6fa8" stroke-width="1.75"><rect x="3" y="3" width="18" height="14" rx="2"/><path d="M3 19h18"/></svg>
+        </div>
+        <div class="screen-name">Working Agreement</div>
+        <div class="screen-desc">Signed scope and RACI document gating the engagement, rendered from discovery data</div>
+      </div>
+      <div class="screen-card">
+        <div class="screen-icon">
+          <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="#1a6fa8" stroke-width="1.75"><rect x="3" y="3" width="18" height="14" rx="2"/><path d="M3 19h18"/></svg>
+        </div>
+        <div class="screen-name">PRD + Architecture</div>
+        <div class="screen-desc">Structured PRD with multi-platform recommendation and 11-dimension gap analysis</div>
+      </div>
+      <div class="screen-card">
+        <div class="screen-icon">
+          <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="#1a6fa8" stroke-width="1.75"><rect x="3" y="3" width="18" height="14" rx="2"/><path d="M3 19h18"/></svg>
+        </div>
+        <div class="screen-name">Build Pipeline</div>
+        <div class="screen-desc">6-phase progress view with HITL approval checkpoint and artifact preview</div>
+      </div>
+      <div class="screen-card">
+        <div class="screen-icon">
+          <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="#1a6fa8" stroke-width="1.75"><rect x="3" y="3" width="18" height="14" rx="2"/><path d="M3 19h18"/></svg>
+        </div>
+        <div class="screen-name">Launch Package</div>
+        <div class="screen-desc">RACI, Tiger Team Brief, Maintenance Plan, and Adoption Plan for deployment readiness</div>
+      </div>
+      <div class="screen-card">
+        <div class="screen-icon">
+          <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="#1a6fa8" stroke-width="1.75"><rect x="3" y="3" width="18" height="14" rx="2"/><path d="M3 19h18"/></svg>
+        </div>
+        <div class="screen-name">Evaluation Dashboard</div>
+        <div class="screen-desc">Six evaluation modes, per-dimension scores, weighted veto logic, and certification badge</div>
+      </div>
+      <div class="screen-card">
+        <div class="screen-icon">
+          <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="#1a6fa8" stroke-width="1.75"><rect x="3" y="3" width="18" height="14" rx="2"/><path d="M3 19h18"/></svg>
+        </div>
+        <div class="screen-name">Cave of Shadows</div>
+        <div class="screen-desc">Red-team interface — adversarial personas probe agent boundary violations</div>
+      </div>
+      <div class="screen-card">
+        <div class="screen-icon">
+          <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="#1a6fa8" stroke-width="1.75"><rect x="3" y="3" width="18" height="14" rx="2"/><path d="M3 19h18"/></svg>
+        </div>
+        <div class="screen-name">Deploy + Connectors</div>
+        <div class="screen-desc">Ship certified agents to Glean, Claude API, OpenAI, or generic REST endpoints</div>
+      </div>
+      <div class="screen-card">
+        <div class="screen-icon">
+          <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="#1a6fa8" stroke-width="1.75"><rect x="3" y="3" width="18" height="14" rx="2"/><path d="M3 19h18"/></svg>
+        </div>
+        <div class="screen-name">Monitoring Dashboard</div>
+        <div class="screen-desc">Org-wide agent health, score trajectories, cost tracking, drift alerts, and re-eval schedule</div>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <h2>Technical Highlights</h2>
+    <div class="highlights">
+      <div class="highlight-card">21 specialized agents — evaluation, orchestration, architecture, and operationalization</div>
+      <div class="highlight-card">Weighted multi-tier scoring with a hard safety/bias veto that makes critical failures unshippable</div>
+      <div class="highlight-card">Governance as code — The Eleven Tenets embedded at every gate, not just docs</div>
+      <div class="highlight-card">Operationalization layer generates org infrastructure (RACI, adoption, maintenance) from pipeline data</div>
+      <div class="highlight-card">Project container propagates through all stages for portfolio-level querying and learning</div>
+      <div class="highlight-card">Supabase RLS for per-user isolation; SSE streaming for real-time pipeline progress</div>
+    </div>
+  </section>
+
+  <div class="footer">
+    <a href="../index.html">&larr; Back to Visual Explainers</a>
+    &nbsp;&middot;&nbsp; &copy; 2025-2026 Charlie Fuller
+  </div>
+</div>
+
+</body>
+</html>
