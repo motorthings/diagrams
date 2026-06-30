@@ -1,0 +1,690 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AESOP Onboarding</title>
+<link rel="icon" href="../icon.svg" type="image/svg+xml" />
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,wght@0,400;0,500;0,600;0,700;1,400&family=Source+Code+Pro:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  /* ============ THEME ============ */
+  :root {
+    --font-display: 'Fraunces', Georgia, serif;
+    --font-body: 'Fraunces', Georgia, serif;
+    --font-mono: 'Source Code Pro', 'SF Mono', Consolas, monospace;
+
+    --bg: #eef4f9;
+    --surface: #ffffff;
+    --surface2: #f5f8fc;
+    --surface-elevated: #ffffff;
+    --border: rgba(0,0,0,0.07);
+    --border-bright: rgba(0,0,0,0.14);
+    --heading: #0a1628;
+    --text: #0a1628;
+    --text-dim: #3d5a7a;
+
+    --primary: #c84d0e;
+    --primary-dim: rgba(200,77,14,0.07);
+    --secondary: #4a90c4;
+    --secondary-dim: rgba(74,144,196,0.07);
+    --metric: #0f766e;
+    --metric-dim: rgba(15,118,110,0.06);
+    --amber: #b45309;
+    --amber-dim: rgba(180,83,9,0.06);
+
+    --stage-intake: #c84d0e;
+    --stage-intake-dim: rgba(200,77,14,0.07);
+    --stage-research: #4a90c4;
+    --stage-research-dim: rgba(74,144,196,0.07);
+    --stage-build: #0f766e;
+    --stage-build-dim: rgba(15,118,110,0.06);
+    --stage-review: #b45309;
+    --stage-review-dim: rgba(180,83,9,0.06);
+    --stage-deliver: #7c3aed;
+    --stage-deliver-dim: rgba(124,58,237,0.06);
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #0a1628;
+      --surface: #132240;
+      --surface2: #1a2d52;
+      --surface-elevated: #1a2d52;
+      --border: rgba(255,255,255,0.07);
+      --border-bright: rgba(255,255,255,0.13);
+      --heading: #e8edf5;
+      --text: #e8edf5;
+      --text-dim: #9bb0d4;
+
+      --primary: #f37021;
+      --primary-dim: rgba(243,112,33,0.12);
+      --secondary: #6cace4;
+      --secondary-dim: rgba(108,172,228,0.12);
+      --metric: #5eead4;
+      --metric-dim: rgba(94,234,212,0.08);
+      --amber: #fbbf24;
+      --amber-dim: rgba(251,191,36,0.08);
+
+      --stage-intake: #f37021;
+      --stage-intake-dim: rgba(243,112,33,0.12);
+      --stage-research: #6cace4;
+      --stage-research-dim: rgba(108,172,228,0.12);
+      --stage-build: #5eead4;
+      --stage-build-dim: rgba(94,234,212,0.08);
+      --stage-review: #fbbf24;
+      --stage-review-dim: rgba(251,191,36,0.08);
+      --stage-deliver: #c4b5fd;
+      --stage-deliver-dim: rgba(196,181,253,0.1);
+    }
+  }
+
+  /* ============ RESET + BASE ============ */
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: var(--bg);
+    background-image:
+      radial-gradient(ellipse at 80% 0%, var(--primary-dim) 0%, transparent 50%),
+      radial-gradient(ellipse at 20% 60%, var(--secondary-dim) 0%, transparent 40%);
+    color: var(--text);
+    font-family: var(--font-body);
+    padding: 40px;
+    min-height: 100vh;
+    line-height: 1.6;
+    transition: background 0.3s, color 0.3s;
+  }
+
+  /* ============ ANIMATION ============ */
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(12px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .animate {
+    animation: fadeUp 0.4s ease-out both;
+    animation-delay: calc(var(--i, 0) * 0.06s);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after {
+      animation-duration: 0.01ms !important;
+      animation-delay: 0ms !important;
+      transition-duration: 0.01ms !important;
+    }
+    .mermaid-wrap .mermaid { transition: none; }
+  }
+
+  /* ============ LAYOUT ============ */
+  .container {
+    max-width: 1100px;
+    margin: 0 auto;
+  }
+
+  .backlink {
+    font-family: var(--font-mono);
+    font-size: 12px;
+    color: var(--text-dim);
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    margin-bottom: 20px;
+    transition: color 0.15s;
+  }
+  .backlink:hover { color: var(--primary); }
+
+  h1 {
+    font-family: var(--font-display);
+    font-size: 48px;
+    font-weight: 700;
+    letter-spacing: -0.5px;
+    color: var(--heading);
+    margin-bottom: 6px;
+  }
+
+  .subtitle {
+    font-family: var(--font-mono);
+    font-size: 14px;
+    color: var(--text-dim);
+    margin-bottom: 32px;
+  }
+
+  h2 {
+    font-family: var(--font-display);
+    font-size: 28px;
+    font-weight: 600;
+    color: var(--heading);
+    margin: 40px 0 16px;
+  }
+
+  /* ============ MERMAID CONTAINER ============ */
+  .mermaid-wrap {
+    position: relative;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 32px 24px;
+    overflow: auto;
+    margin-bottom: 32px;
+  }
+
+  .mermaid-wrap .mermaid {
+    display: flex;
+    justify-content: center;
+    transition: transform 0.2s ease;
+    transform-origin: top center;
+  }
+
+  .zoom-controls {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    display: flex;
+    gap: 2px;
+    z-index: 10;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 2px;
+  }
+
+  .zoom-controls button {
+    width: 28px;
+    height: 28px;
+    border: none;
+    background: transparent;
+    color: var(--text-dim);
+    font-family: var(--font-mono);
+    font-size: 14px;
+    cursor: pointer;
+    border-radius: 4px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background 0.15s ease, color 0.15s ease;
+  }
+
+  .zoom-controls button:hover {
+    background: var(--border);
+    color: var(--text);
+  }
+
+  .mermaid-wrap {
+    scrollbar-width: thin;
+    scrollbar-color: var(--border) transparent;
+  }
+  .mermaid-wrap::-webkit-scrollbar { width: 6px; height: 6px; }
+  .mermaid-wrap::-webkit-scrollbar-track { background: transparent; }
+  .mermaid-wrap::-webkit-scrollbar-thumb {
+    background: var(--border);
+    border-radius: 3px;
+  }
+  .mermaid-wrap::-webkit-scrollbar-thumb:hover { background: var(--text-dim); }
+
+  .mermaid-wrap.is-zoomed { cursor: grab; }
+  .mermaid-wrap.is-panning { cursor: grabbing; user-select: none; }
+
+  /* ============ MERMAID SVG OVERRIDES ============ */
+  .mermaid .nodeLabel {
+    font-family: var(--font-body) !important;
+    font-size: 15px !important;
+  }
+
+  .mermaid .edgeLabel {
+    font-family: var(--font-mono) !important;
+    font-size: 12px !important;
+  }
+
+  .mermaid .node rect,
+  .mermaid .node circle,
+  .mermaid .node polygon {
+    stroke-width: 1.5px !important;
+  }
+
+  .mermaid .edge-pattern-solid {
+    stroke-width: 1.5px !important;
+  }
+
+  /* Mermaid classDef CSS overrides for theme responsiveness */
+  .mermaid g.intake rect,
+  .mermaid g.intake polygon,
+  .mermaid g.intake circle {
+    fill: var(--stage-intake-dim) !important;
+    stroke: var(--stage-intake) !important;
+  }
+
+  .mermaid g.research rect,
+  .mermaid g.research polygon,
+  .mermaid g.research circle {
+    fill: var(--stage-research-dim) !important;
+    stroke: var(--stage-research) !important;
+  }
+
+  .mermaid g.build rect,
+  .mermaid g.build polygon,
+  .mermaid g.build circle {
+    fill: var(--stage-build-dim) !important;
+    stroke: var(--stage-build) !important;
+  }
+
+  .mermaid g.review rect,
+  .mermaid g.review polygon,
+  .mermaid g.review circle {
+    fill: var(--stage-review-dim) !important;
+    stroke: var(--stage-review) !important;
+  }
+
+  .mermaid g.deliver rect,
+  .mermaid g.deliver polygon,
+  .mermaid g.deliver circle {
+    fill: var(--stage-deliver-dim) !important;
+    stroke: var(--stage-deliver) !important;
+  }
+
+  .mermaid g.gate rect,
+  .mermaid g.gate polygon,
+  .mermaid g.gate circle {
+    fill: var(--surface2) !important;
+    stroke: var(--text-dim) !important;
+    stroke-width: 2px !important;
+    stroke-dasharray: 6 3 !important;
+  }
+
+  /* ============ PHASE CARDS ============ */
+  .phase-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+    gap: 12px;
+    margin-bottom: 32px;
+  }
+
+  .phase-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 20px;
+    transition: border-color 0.15s, transform 0.15s;
+  }
+
+  .phase-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.06);
+  }
+
+  .phase-card__label {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+    margin-bottom: 10px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .phase-card__label::before {
+    content: '';
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: currentColor;
+    flex-shrink: 0;
+  }
+
+  .phase-card__title {
+    font-family: var(--font-display);
+    font-size: 20px;
+    font-weight: 600;
+    color: var(--heading);
+    margin-bottom: 8px;
+  }
+
+  .phase-card__desc {
+    font-size: 14px;
+    color: var(--text-dim);
+    line-height: 1.5;
+  }
+
+  .phase-card__time {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    color: var(--text-dim);
+    margin-top: 10px;
+    opacity: 0.7;
+  }
+
+  .label-intake { color: var(--stage-intake); }
+  .label-research { color: var(--stage-research); }
+  .label-build { color: var(--stage-build); }
+  .label-review { color: var(--stage-review); }
+  .label-deliver { color: var(--stage-deliver); }
+
+  .phase-card.intake { border-left: 3px solid var(--stage-intake); }
+  .phase-card.research { border-left: 3px solid var(--stage-research); }
+  .phase-card.build { border-left: 3px solid var(--stage-build); }
+  .phase-card.review { border-left: 3px solid var(--stage-review); }
+  .phase-card.deliver { border-left: 3px solid var(--stage-deliver); }
+
+  /* ============ DECISION TABLE ============ */
+  .table-wrap {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    overflow: hidden;
+    margin-bottom: 32px;
+  }
+
+  .data-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 14px;
+    line-height: 1.5;
+  }
+
+  .data-table thead { position: sticky; top: 0; z-index: 2; }
+
+  .data-table th {
+    background: var(--surface2);
+    font-family: var(--font-mono);
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: var(--text-dim);
+    text-align: left;
+    padding: 12px 16px;
+    border-bottom: 2px solid var(--border-bright);
+  }
+
+  .data-table td {
+    padding: 12px 16px;
+    border-bottom: 1px solid var(--border);
+    vertical-align: top;
+    color: var(--text);
+  }
+
+  .data-table tbody tr:nth-child(even) { background: var(--surface2); }
+  .data-table tbody tr:last-child td { border-bottom: none; }
+  .data-table code {
+    font-family: var(--font-mono);
+    font-size: 12px;
+    background: var(--primary-dim);
+    color: var(--primary);
+    padding: 1px 5px;
+    border-radius: 3px;
+  }
+
+  /* ============ CALLOUT ============ */
+  .callout {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-left: 3px solid var(--primary);
+    border-radius: 0 10px 10px 0;
+    padding: 16px 20px;
+    font-size: 14px;
+    line-height: 1.6;
+    color: var(--text-dim);
+    margin-bottom: 32px;
+  }
+
+  .callout strong { color: var(--text); }
+
+  /* ============ RESPONSIVE ============ */
+  @media (max-width: 768px) {
+    body { padding: 16px; }
+    h1 { font-size: 32px; }
+    .phase-grid { grid-template-columns: 1fr; }
+    .mermaid-wrap { padding: 16px 12px; }
+  }
+</style>
+</head>
+<body>
+
+<div class="container">
+
+  <a href="../portfolio/aesop-studio-overview.html" class="backlink animate" style="--i:0">&larr; AESOP Studio</a>
+
+  <h1 class="animate" style="--i:0">AESOP Onboarding</h1>
+  <p class="subtitle animate" style="--i:1">How a new client organization enters the platform &mdash; from intake to first roadmap</p>
+
+  <!-- MERMAID FLOWCHART -->
+  <div class="mermaid-wrap animate" style="--i:2">
+    <div class="zoom-controls">
+      <button onclick="zoomDiagram(this, 1.2)" title="Zoom in">+</button>
+      <button onclick="zoomDiagram(this, 0.8)" title="Zoom out">&minus;</button>
+      <button onclick="resetZoom(this)" title="Reset zoom">&#8634;</button>
+    </div>
+    <pre class="mermaid">
+      graph TD
+        A[Client Engagement] --> B[Send Intake Link]
+        B --> C[Client Fills Intake Form]
+        C --> D{Intake Type}
+        D -->|Executive| E[29-Question Form<br/>Every field optional]
+        D -->|SMB| F[Full Wizard<br/>All modules included]
+        E --> G[Intake Processing]
+        F --> G
+        G --> H[Deep Research Pipeline]
+        H --> I[Organization Profile]
+        I --> J[WORE Injection<br/>Write Once Read Everywhere]
+        J --> K[Roadmap Generation]
+        K --> L{Admin Review}
+        L -->|Approved| M[Email Notification]
+        L -->|Rejected| N[Revision Queue]
+        N --> K
+        M --> O[Client Delivery]
+        O --> P[Coaching Session]
+
+        class A,B,C,E,F,G intake
+        class H,I,J research
+        class K build
+        class L,N review
+        class M,O,P deliver
+        class D gate
+    </pre>
+  </div>
+
+  <!-- PHASE CARDS -->
+  <h2 class="animate" style="--i:3">Onboarding Phases</h2>
+
+  <div class="phase-grid">
+    <div class="phase-card intake animate" style="--i:4">
+      <div class="phase-card__label label-intake">Phase 1</div>
+      <div class="phase-card__title">Intake</div>
+      <div class="phase-card__desc">
+        Client receives a public intake link. No login required. Privacy disclosure before the form.
+        Every field is optional except business name. Executive intake has 29 fields; SMB intake
+        uses the full wizard with all modules.
+      </div>
+      <div class="phase-card__time">~20 minutes</div>
+    </div>
+
+    <div class="phase-card research animate" style="--i:5">
+      <div class="phase-card__label label-research">Phase 2</div>
+      <div class="phase-card__title">Deep Research</div>
+      <div class="phase-card__desc">
+        Five-stage research pipeline activates: Scope &rarr; Search &rarr; Fetch &rarr; Verify &rarr; Synthesize.
+        Pulls company profile, strategic goals, brand guidelines, org chart, governance policy,
+        and evaluation criteria. Enterprise only; SMB uses a lightweight profile.
+      </div>
+      <div class="phase-card__time">~2-5 minutes</div>
+    </div>
+
+    <div class="phase-card build animate" style="--i:6">
+      <div class="phase-card__label label-build">Phase 3</div>
+      <div class="phase-card__title">Organization Profile</div>
+      <div class="phase-card__desc">
+        Research results are compiled into a structured organization context profile. WORE injection
+        (Write Once Read Everywhere) ensures every downstream agent &mdash; discovery, design,
+        build, evaluation &mdash; builds against the same ground truth.
+      </div>
+      <div class="phase-card__time">Automatic</div>
+    </div>
+
+    <div class="phase-card build animate" style="--i:7">
+      <div class="phase-card__label label-build">Phase 4</div>
+      <div class="phase-card__title">Roadmap Generation</div>
+      <div class="phase-card__desc">
+        AESOP generates an AI Adoption Roadmap: maturity model level, strategic themes, phased
+        projects, what to avoid, and conditions for the next phase. Output as an interactive
+        results page and downloadable PDF.
+      </div>
+      <div class="phase-card__time">~2 minutes</div>
+    </div>
+
+    <div class="phase-card review animate" style="--i:8">
+      <div class="phase-card__label label-review">Phase 5</div>
+      <div class="phase-card__title">Admin Review</div>
+      <div class="phase-card__desc">
+        Platform admin reviews the roadmap via the admin dashboard. Status: pending_review &rarr;
+        approved or rejected. Rejected roadmaps go to the revision queue for regeneration.
+        Confidence score indicates data completeness and coherence.
+      </div>
+      <div class="phase-card__time">Manual gate</div>
+    </div>
+
+    <div class="phase-card deliver animate" style="--i:9">
+      <div class="phase-card__label label-deliver">Phase 6</div>
+      <div class="phase-card__title">Delivery &amp; Coaching</div>
+      <div class="phase-card__desc">
+        On approval, the client receives an email notification with a direct link to their
+        roadmap. Admin downloads the PDF for the client's Drive folder. The roadmap is a
+        discussion starter for 1-on-1 coaching sessions &mdash; not a prescription.
+      </div>
+      <div class="phase-card__time">Ongoing</div>
+    </div>
+  </div>
+
+  <!-- INTAKE TYPES TABLE -->
+  <h2 class="animate" style="--i:10">Intake Paths</h2>
+
+  <div class="table-wrap animate" style="--i:11">
+    <table class="data-table">
+      <thead>
+        <tr>
+          <th>Path</th>
+          <th>Form</th>
+          <th>Fields</th>
+          <th>Deep Research</th>
+          <th>Typical Client</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><code>Executive</code></td>
+          <td><code>/executive-intake</code></td>
+          <td>29 questions</td>
+          <td>Full 5-phase pipeline</td>
+          <td>Enterprise leadership teams</td>
+        </tr>
+        <tr>
+          <td><code>SMB</code></td>
+          <td><code>/smb-intake</code></td>
+          <td>Full wizard, all modules</td>
+          <td>Lightweight profile</td>
+          <td>Small &amp; mid-size businesses</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="callout animate" style="--i:12">
+    <strong>Human-in-the-loop at every gate.</strong> The admin review step is a mandatory manual approval.
+    No roadmap reaches a client without a human reviewing it first. Rejected roadmaps return to generation
+    with admin feedback. The platform automates the heavy lifting; human judgment makes the final call.
+  </div>
+
+</div>
+
+<script type="module">
+  import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs';
+  import elkLayouts from 'https://cdn.jsdelivr.net/npm/@mermaid-js/layout-elk/dist/mermaid-layout-elk.esm.min.mjs';
+
+  const isDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+
+  mermaid.registerLayoutLoaders(elkLayouts);
+  mermaid.initialize({
+    startOnLoad: true,
+    theme: 'base',
+    look: 'classic',
+    layout: 'elk',
+    themeVariables: {
+      primaryColor: isDark ? '#132240' : '#ffffff',
+      primaryBorderColor: isDark ? '#1a2d52' : '#c8daea',
+      primaryTextColor: isDark ? '#e8edf5' : '#0a1628',
+      secondaryColor: isDark ? '#132240' : '#f5f8fc',
+      secondaryBorderColor: isDark ? '#1a2d52' : '#c8daea',
+      secondaryTextColor: isDark ? '#e8edf5' : '#0a1628',
+      tertiaryColor: isDark ? '#132240' : '#ffffff',
+      tertiaryBorderColor: isDark ? '#6cace4' : '#4a90c4',
+      tertiaryTextColor: isDark ? '#e8edf5' : '#0a1628',
+      lineColor: isDark ? '#2d4570' : '#a0bedb',
+      fontSize: '15px',
+      fontFamily: "'Fraunces', Georgia, serif",
+    }
+  });
+</script>
+<script>
+  function updateZoomState(wrap) {
+    var target = wrap.querySelector('.mermaid');
+    var zoom = parseFloat(target.dataset.zoom || '1');
+    wrap.classList.toggle('is-zoomed', zoom > 1);
+  }
+
+  function zoomDiagram(btn, factor) {
+    var wrap = btn.closest('.mermaid-wrap');
+    var target = wrap.querySelector('.mermaid');
+    var current = parseFloat(target.dataset.zoom || '1');
+    var next = Math.min(Math.max(current * factor, 0.3), 5);
+    target.dataset.zoom = next;
+    target.style.transform = 'scale(' + next + ')';
+    updateZoomState(wrap);
+  }
+
+  function resetZoom(btn) {
+    var wrap = btn.closest('.mermaid-wrap');
+    var target = wrap.querySelector('.mermaid');
+    target.dataset.zoom = '1';
+    target.style.transform = 'scale(1)';
+    updateZoomState(wrap);
+  }
+
+  document.querySelectorAll('.mermaid-wrap').forEach(function(wrap) {
+    wrap.addEventListener('wheel', function(e) {
+      if (!e.ctrlKey && !e.metaKey) return;
+      e.preventDefault();
+      var target = wrap.querySelector('.mermaid');
+      var current = parseFloat(target.dataset.zoom || '1');
+      var factor = e.deltaY < 0 ? 1.1 : 0.9;
+      var next = Math.min(Math.max(current * factor, 0.3), 5);
+      target.dataset.zoom = next;
+      target.style.transform = 'scale(' + next + ')';
+      updateZoomState(wrap);
+    }, { passive: false });
+
+    var startX, startY, scrollL, scrollT;
+    wrap.addEventListener('mousedown', function(e) {
+      if (e.target.closest('.zoom-controls')) return;
+      var target = wrap.querySelector('.mermaid');
+      if (parseFloat(target.dataset.zoom || '1') <= 1) return;
+      wrap.classList.add('is-panning');
+      startX = e.clientX;
+      startY = e.clientY;
+      scrollL = wrap.scrollLeft;
+      scrollT = wrap.scrollTop;
+    });
+    window.addEventListener('mousemove', function(e) {
+      if (!wrap.classList.contains('is-panning')) return;
+      wrap.scrollLeft = scrollL - (e.clientX - startX);
+      wrap.scrollTop = scrollT - (e.clientY - startY);
+    });
+    window.addEventListener('mouseup', function() {
+      wrap.classList.remove('is-panning');
+    });
+  });
+</script>
+
+</body>
+</html>
