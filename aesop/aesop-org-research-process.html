@@ -1,0 +1,460 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AESOP — Organization Context Research Process</title>
+<link rel="icon" type="image/svg+xml" href="../icon.svg">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,wght@0,400;0,500;0,600;0,700;0,800;1,400&family=Source+Code+Pro:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --font-display: 'Fraunces', Georgia, serif;
+    --font-mono: 'Source Code Pro', 'SF Mono', Consolas, monospace;
+
+    --bg: #fdf8f0;
+    --surface: #ffffff;
+    --surface2: #fef5eb;
+    --border: rgba(0,0,0,0.06);
+    --border-bright: rgba(0,0,0,0.12);
+    --text: #1c1917;
+    --text-dim: #6b5e52;
+    --text-muted: #a89f96;
+
+    --primary: #c84d0e;
+    --primary-dim: rgba(200,77,14,0.06);
+    --amber: #b45309;
+    --amber-dim: rgba(180,83,9,0.07);
+    --indigo: #4f46e5;
+    --indigo-dim: rgba(79,70,229,0.07);
+    --emerald: #0f766e;
+    --emerald-dim: rgba(15,118,110,0.07);
+    --violet: #7c3aed;
+    --violet-dim: rgba(124,58,237,0.07);
+    --rose: #e11d48;
+    --rose-dim: rgba(225,29,72,0.07);
+    --slate: #475569;
+    --slate-dim: rgba(71,85,105,0.07);
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #1a150e;
+      --surface: #231d14;
+      --surface2: #2d2418;
+      --border: rgba(255,255,255,0.06);
+      --border-bright: rgba(255,255,255,0.12);
+      --text: #f5e6d0;
+      --text-dim: #c4b393;
+      --text-muted: #8c7b64;
+
+      --primary: #f37021;
+      --primary-dim: rgba(243,112,33,0.10);
+      --amber: #f59e0b;
+      --amber-dim: rgba(245,158,11,0.10);
+      --indigo: #818cf8;
+      --indigo-dim: rgba(129,140,248,0.10);
+      --emerald: #2dd4bf;
+      --emerald-dim: rgba(45,212,191,0.08);
+      --violet: #a78bfa;
+      --violet-dim: rgba(167,139,250,0.10);
+      --rose: #fb7185;
+      --rose-dim: rgba(251,113,133,0.10);
+      --slate: #94a3b8;
+      --slate-dim: rgba(148,163,184,0.10);
+    }
+  }
+
+  * { margin:0; padding:0; box-sizing:border-box; }
+
+  body {
+    background: var(--bg);
+    background-image:
+      radial-gradient(ellipse at 30% 0%, var(--indigo-dim) 0%, transparent 50%),
+      radial-gradient(ellipse at 70% 100%, var(--amber-dim) 0%, transparent 40%);
+    color: var(--text); font-family: var(--font-display);
+    min-height: 100vh; line-height: 1.7; padding: 40px 24px 80px;
+  }
+
+  .container { max-width: 1000px; margin: 0 auto; }
+
+  @keyframes fadeUp {
+    from { opacity:0; transform:translateY(12px); }
+    to { opacity:1; transform:translateY(0); }
+  }
+  .animate { animation: fadeUp 0.4s ease-out both; }
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after { animation-duration:0.01ms !important; animation-delay:0ms !important; }
+  }
+
+  /* ——— Hero ——— */
+  .hero {
+    text-align: center; padding: 40px 0 20px;
+    animation: fadeUp 0.5s ease-out;
+  }
+  .hero-badge {
+    display: inline-flex; align-items: center; gap: 6px;
+    padding: 5px 16px; background: var(--primary-dim);
+    border: 1px solid var(--primary); border-radius: 20px;
+    font-family: var(--font-mono); font-size: 10px; font-weight: 600;
+    color: var(--primary); letter-spacing: 1px; text-transform: uppercase;
+    margin-bottom: 20px;
+  }
+  .hero h1 {
+    font-size: 44px; font-weight: 800; letter-spacing: -0.5px;
+    margin-bottom: 10px; color: var(--text);
+  }
+  .hero .subtitle {
+    font-size: 19px; color: var(--text-dim); max-width: 600px; margin: 0 auto;
+  }
+
+  /* ——— Mermaid wrap ——— */
+  .mermaid-wrap {
+    position: relative;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 36px 24px;
+    overflow: auto;
+    margin: 32px 0;
+    animation: fadeUp 0.4s ease-out both;
+    animation-delay: 0.08s;
+  }
+  .mermaid-wrap .mermaid {
+    display: flex; justify-content: center;
+    transition: transform 0.2s ease; transform-origin: top center;
+  }
+  .mermaid-wrap.is-zoomed { cursor: grab; }
+  .mermaid-wrap.is-panning { cursor: grabbing; user-select: none; }
+
+  .zoom-controls {
+    position: absolute; top: 10px; right: 10px; z-index: 10;
+    display: flex; gap: 2px;
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 8px; padding: 3px;
+  }
+  .zoom-controls button {
+    width: 30px; height: 30px; border: none; background: transparent;
+    color: var(--text-dim); font-family: var(--font-mono); font-size: 16px;
+    cursor: pointer; border-radius: 5px;
+    display: flex; align-items: center; justify-content: center;
+    transition: background 0.15s, color 0.15s;
+  }
+  .zoom-controls button:hover { background: var(--border); color: var(--text); }
+
+  .mermaid-wrap { scrollbar-width: thin; scrollbar-color: var(--border) transparent; }
+  .mermaid-wrap::-webkit-scrollbar { width:6px; height:6px; }
+  .mermaid-wrap::-webkit-scrollbar-track { background:transparent; }
+  .mermaid-wrap::-webkit-scrollbar-thumb { background:var(--border); border-radius:3px; }
+
+  /* Mermaid SVG overrides */
+  .mermaid .nodeLabel { font-family: var(--font-display) !important; font-size: 15px !important; }
+  .mermaid .edgeLabel { font-family: var(--font-mono) !important; font-size: 11px !important; }
+  .mermaid .node rect, .mermaid .node circle, .mermaid .node polygon { stroke-width: 1.5px !important; }
+
+  /* ——— Detail cards ——— */
+  .detail-section { margin-bottom: 40px; }
+  .detail-section h2 {
+    font-family: var(--font-mono); font-size: 12px; font-weight: 700;
+    letter-spacing: 1px; text-transform: uppercase;
+    color: var(--primary); margin-bottom: 16px;
+  }
+
+  .context-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 10px;
+  }
+  .context-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-left: 3px solid;
+    border-radius: 0 10px 10px 0;
+    padding: 16px 18px;
+    font-size: 14px; line-height: 1.5;
+  }
+  .context-card .label {
+    font-family: var(--font-mono); font-size: 10px; font-weight: 600;
+    letter-spacing: 0.5px; text-transform: uppercase;
+    margin-bottom: 4px;
+  }
+  .context-card .name { font-size: 16px; font-weight: 700; margin-bottom: 4px; }
+  .context-card .desc { font-size: 13px; color: var(--text-dim); }
+
+  .context-card.amber { border-left-color: var(--amber); } .context-card.amber .label { color: var(--amber); }
+  .context-card.indigo { border-left-color: var(--indigo); } .context-card.indigo .label { color: var(--indigo); }
+  .context-card.emerald { border-left-color: var(--emerald); } .context-card.emerald .label { color: var(--emerald); }
+  .context-card.violet { border-left-color: var(--violet); } .context-card.violet .label { color: var(--violet); }
+  .context-card.rose { border-left-color: var(--rose); } .context-card.rose .label { color: var(--rose); }
+  .context-card.slate { border-left-color: var(--slate); } .context-card.slate .label { color: var(--slate); }
+
+  /* ——— Deep Research detail cards ——— */
+  .phase-grid {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 10px;
+    margin-top: 24px;
+  }
+  @media (max-width: 750px) { .phase-grid { grid-template-columns: 1fr; } }
+
+  .phase-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-top: 3px solid var(--violet);
+    border-radius: 8px;
+    padding: 16px;
+    text-align: center;
+  }
+  .phase-card .num {
+    font-family: var(--font-mono); font-size: 11px; font-weight: 700;
+    color: var(--violet); margin-bottom: 6px;
+  }
+  .phase-card .title { font-size: 15px; font-weight: 700; margin-bottom: 4px; }
+  .phase-card .desc { font-size: 12px; color: var(--text-dim); line-height: 1.5; }
+
+  /* ——— Principle callout ——— */
+  .callout {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-left: 3px solid var(--primary);
+    border-radius: 0 12px 12px 0;
+    padding: 20px 24px;
+    font-size: 15px; line-height: 1.6; color: var(--text-dim);
+    margin-top: 32px;
+  }
+  .callout strong { color: var(--text); }
+
+  /* ——— Footer ——— */
+  .footer {
+    margin-top: 56px; padding-top: 20px;
+    border-top: 1px solid var(--border);
+    text-align: center; font-size: 13px; color: var(--text-muted);
+  }
+  .footer a { color: var(--primary); text-decoration: none; }
+
+  @media (max-width: 640px) {
+    body { padding: 16px 12px 48px; }
+    .hero h1 { font-size: 28px; }
+    .context-grid { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+
+<div class="container">
+
+  <div class="hero">
+    <div class="hero-badge">Foundation Layer</div>
+    <h1>Organization Context<br>Research Process</h1>
+    <p class="subtitle">How AESOP builds the grounding layer every downstream agent decision stands on — capturing what the org already knows, researching what it doesn't, and injecting both into every pipeline stage.</p>
+  </div>
+
+  <!-- Mermaid flow -->
+  <div class="mermaid-wrap animate" style="--i:2">
+    <div class="zoom-controls">
+      <button onclick="zoomDiagram(this, 1.2)" title="Zoom in">+</button>
+      <button onclick="zoomDiagram(this, 0.8)" title="Zoom out">&minus;</button>
+      <button onclick="resetZoom(this)" title="Reset">&#8634;</button>
+    </div>
+    <pre class="mermaid">
+      flowchart TD
+        A["🔍 Org Context Input<br>13 enterprise / 6 SMB types"] --> B{Source?}
+        B -->|"Direct entry"| C["✍️ Written by org<br>Versioned, toggleable"]
+        B -->|"File upload"| D["📄 Auto-extraction<br>PDF, DOCX, CSV"]
+        C --> E["✅ Active entries selected"]
+        D --> E
+        E --> F{"Enterprise<br>license?"}
+        F -->|"Yes"| G["🔬 Deep Research<br>5-phase adversarial pipeline"]
+        F -->|"No"| H["📊 Strategic Prioritization<br>Agent"]
+        G --> G1["1. Scope"]
+        G1 --> G2["2. Search<br>Tavily + SEC EDGAR"]
+        G2 --> G3["3. Fetch"]
+        G3 --> G4["4. Verify<br>2-vote adversarial"]
+        G4 --> G5["5. Synthesize"]
+        G5 --> I{"👤 Human<br>review?"}
+        I -->|"Approve"| H
+        I -->|"Revise"| G1
+        H --> J["📋 Scored project candidates<br>Seeds portfolio + roadmap"]
+        E --> K["🧩 Dysfunctionality<br>Profile"]
+        K --> L["📐 Delegation Readiness<br>5-dimension assessment"]
+        L --> M{"Verdict?"}
+        M -->|"Ready"| N["✅ Proceed to<br>Pipeline"]
+        M -->|"Conditional"| O["⚠️ Remediation<br>plan required"]
+        M -->|"Not Ready"| P["🚫 Gate closed<br>Revisit after changes"]
+        J --> N
+        N --> Q["🔄 Write Once,<br>Read Everywhere"]
+        Q --> R["Discovery"]
+        Q --> S["Design"]
+        Q --> T["Build"]
+        Q --> U["Evaluate"]
+        Q --> V["Operationalize"]
+    </pre>
+  </div>
+
+  <!-- Context Types detail -->
+  <div class="detail-section">
+    <h2>Context Types — 13 Enterprise / 6 SMB</h2>
+    <div class="context-grid">
+      <div class="context-card amber">
+        <div class="label">Discovery</div>
+        <div class="name">Company Profile</div>
+        <div class="desc">Organizational background injected into every discovery interview.</div>
+      </div>
+      <div class="context-card indigo">
+        <div class="label">Discovery + Scoring</div>
+        <div class="name">Strategic Goals</div>
+        <div class="desc">Injected into discovery and portfolio scoring for strategic alignment.</div>
+      </div>
+      <div class="context-card emerald">
+        <div class="label">Build</div>
+        <div class="name">Brand Guidelines</div>
+        <div class="desc">Injected into build synthesis for tone and voice consistency.</div>
+      </div>
+      <div class="context-card violet">
+        <div class="label">Discovery + Design</div>
+        <div class="name">Org Chart</div>
+        <div class="desc">Who decides what. Maps authority for Delegation Readiness scoring.</div>
+      </div>
+      <div class="context-card rose">
+        <div class="label">Governance</div>
+        <div class="name">Governance Policy</div>
+        <div class="desc">Risk tolerance, compliance requirements, decision rights framework.</div>
+      </div>
+      <div class="context-card slate">
+        <div class="label">Evaluation</div>
+        <div class="name">Evaluation Criteria</div>
+        <div class="desc">Org-specific standards injected into rubric generation and scoring.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Deep Research phases -->
+  <div class="detail-section">
+    <h2>Deep Research Pipeline — Enterprise Only</h2>
+    <div class="phase-grid">
+      <div class="phase-card">
+        <div class="num">Phase 1</div>
+        <div class="title">Scope</div>
+        <div class="desc">Define research question, sources, and depth from org context gaps.</div>
+      </div>
+      <div class="phase-card">
+        <div class="num">Phase 2</div>
+        <div class="title">Search</div>
+        <div class="desc">Tavily web search + SEC EDGAR for public company data.</div>
+      </div>
+      <div class="phase-card">
+        <div class="num">Phase 3</div>
+        <div class="title">Fetch</div>
+        <div class="desc">Retrieve full source documents. Extract structured findings.</div>
+      </div>
+      <div class="phase-card">
+        <div class="num">Phase 4</div>
+        <div class="title">Verify</div>
+        <div class="desc">Two independent agents vote. Disagreement → re-examine sources.</div>
+      </div>
+      <div class="phase-card">
+        <div class="num">Phase 5</div>
+        <div class="title">Synthesize</div>
+        <div class="desc">Merged findings with provenance. Human reviews before pipeline injection.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Principles callout -->
+  <div class="callout">
+    <strong>Write once, read everywhere.</strong> Organization Context is not a stage you complete and leave behind. It is the foundation the pipeline stands on — captured once, versioned, and read continuously by discovery, design, build, evaluation, and operationalization. <strong>Human-in-the-loop early and often:</strong> every context entry and deep research finding passes through a human review gate before it touches a downstream agent.
+  </div>
+
+  <div class="footer">
+    <a href="../portfolio/aesop-studio-overview.html">&larr; AESOP Overview</a>
+    &nbsp;&middot;&nbsp;
+    <a href="../portfolio/aesop-org-context.html">Org Context Detail &rarr;</a>
+    &nbsp;&middot;&nbsp;
+    &copy; 2025-2026 Charlie Fuller
+  </div>
+
+</div>
+
+<script type="module">
+  import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs';
+  import elkLayouts from 'https://cdn.jsdelivr.net/npm/@mermaid-js/layout-elk/dist/mermaid-layout-elk.esm.min.mjs';
+
+  const isDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+
+  mermaid.registerLayoutLoaders(elkLayouts);
+  mermaid.initialize({
+    startOnLoad: true,
+    theme: 'base',
+    look: 'classic',
+    layout: 'elk',
+    themeVariables: {
+      primaryColor: isDark ? '#2d2418' : '#fef5eb',
+      primaryBorderColor: isDark ? '#f37021' : '#c84d0e',
+      primaryTextColor: isDark ? '#f5e6d0' : '#1c1917',
+      secondaryColor: isDark ? '#1e1b3a' : '#eef2ff',
+      secondaryBorderColor: isDark ? '#818cf8' : '#4f46e5',
+      secondaryTextColor: isDark ? '#f5e6d0' : '#1c1917',
+      tertiaryColor: isDark ? '#2a1f12' : '#fffbeb',
+      tertiaryBorderColor: isDark ? '#f59e0b' : '#b45309',
+      tertiaryTextColor: isDark ? '#f5e6d0' : '#1c1917',
+      lineColor: isDark ? '#8c7b64' : '#6b5e52',
+      fontSize: '15px',
+      fontFamily: "'Fraunces', Georgia, serif",
+    }
+  });
+</script>
+<script>
+  function updateZoomState(wrap) {
+    const target = wrap.querySelector('.mermaid');
+    const zoom = parseFloat(target.dataset.zoom || '1');
+    wrap.classList.toggle('is-zoomed', zoom > 1);
+  }
+  function zoomDiagram(btn, factor) {
+    const wrap = btn.closest('.mermaid-wrap');
+    const target = wrap.querySelector('.mermaid');
+    const current = parseFloat(target.dataset.zoom || '1');
+    const next = Math.min(Math.max(current * factor, 0.3), 5);
+    target.dataset.zoom = next;
+    target.style.transform = 'scale(' + next + ')';
+    updateZoomState(wrap);
+  }
+  function resetZoom(btn) {
+    const wrap = btn.closest('.mermaid-wrap');
+    const target = wrap.querySelector('.mermaid');
+    target.dataset.zoom = '1';
+    target.style.transform = 'scale(1)';
+    updateZoomState(wrap);
+  }
+  document.querySelectorAll('.mermaid-wrap').forEach(function(wrap) {
+    wrap.addEventListener('wheel', function(e) {
+      if (!e.ctrlKey && !e.metaKey) return;
+      e.preventDefault();
+      const target = wrap.querySelector('.mermaid');
+      const current = parseFloat(target.dataset.zoom || '1');
+      const factor = e.deltaY < 0 ? 1.1 : 0.9;
+      const next = Math.min(Math.max(current * factor, 0.3), 5);
+      target.dataset.zoom = next;
+      target.style.transform = 'scale(' + next + ')';
+      updateZoomState(wrap);
+    }, { passive: false });
+    let startX, startY, scrollL, scrollT;
+    wrap.addEventListener('mousedown', function(e) {
+      if (e.target.closest('.zoom-controls')) return;
+      const target = wrap.querySelector('.mermaid');
+      if (parseFloat(target.dataset.zoom || '1') <= 1) return;
+      wrap.classList.add('is-panning');
+      startX = e.clientX; startY = e.clientY;
+      scrollL = wrap.scrollLeft; scrollT = wrap.scrollTop;
+    });
+    window.addEventListener('mousemove', function(e) {
+      if (!wrap.classList.contains('is-panning')) return;
+      wrap.scrollLeft = scrollL - (e.clientX - startX);
+      wrap.scrollTop = scrollT - (e.clientY - startY);
+    });
+    window.addEventListener('mouseup', function() { wrap.classList.remove('is-panning'); });
+  });
+</script>
+
+</body>
+</html>
