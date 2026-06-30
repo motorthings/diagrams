@@ -9,31 +9,356 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,wght@0,400;0,500;0,600;0,700;1,400&family=Source+Code+Pro:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
+  /* ============ THEME ============ */
+  :root {
+    --font-display: 'Fraunces', Georgia, serif;
+    --font-body: 'Fraunces', Georgia, serif;
+    --font-mono: 'Source Code Pro', 'SF Mono', Consolas, monospace;
+
+    --bg: #eef4f9;
+    --surface: #ffffff;
+    --surface2: #f5f8fc;
+    --surface-elevated: #ffffff;
+    --border: rgba(0,0,0,0.07);
+    --border-bright: rgba(0,0,0,0.14);
+    --heading: #0a1628;
+    --text: #0a1628;
+    --text-dim: #3d5a7a;
+    --text-faint: #7a9ab8;
+
+    --primary: #c84d0e;
+    --primary-dim: rgba(200,77,14,0.07);
+    --secondary: #4a90c4;
+    --secondary-dim: rgba(74,144,196,0.07);
+    --metric: #0f766e;
+    --metric-dim: rgba(15,118,110,0.06);
+    --amber: #b45309;
+    --amber-dim: rgba(180,83,9,0.06);
+
+    --flow-admin: #fde8d8;
+    --flow-admin-stroke: #c84d0e;
+    --flow-client: #e0eef7;
+    --flow-client-stroke: #4a90c4;
+    --flow-system: #d5f0ee;
+    --flow-system-stroke: #0f766e;
+    --flow-gate: #fef0d7;
+    --flow-gate-stroke: #b45309;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #0a1628;
+      --surface: #132240;
+      --surface2: #1a2d52;
+      --surface-elevated: #1a2d52;
+      --border: rgba(255,255,255,0.07);
+      --border-bright: rgba(255,255,255,0.13);
+      --heading: #e8edf5;
+      --text: #e8edf5;
+      --text-dim: #9bb0d4;
+      --text-faint: #5a7a9e;
+
+      --primary: #f37021;
+      --primary-dim: rgba(243,112,33,0.12);
+      --secondary: #6cace4;
+      --secondary-dim: rgba(108,172,228,0.12);
+      --metric: #5eead4;
+      --metric-dim: rgba(94,234,212,0.08);
+      --amber: #fbbf24;
+      --amber-dim: rgba(251,191,36,0.08);
+
+      --flow-admin: rgba(243,112,33,0.15);
+      --flow-admin-stroke: #f37021;
+      --flow-client: rgba(108,172,228,0.15);
+      --flow-client-stroke: #6cace4;
+      --flow-system: rgba(94,234,212,0.12);
+      --flow-system-stroke: #5eead4;
+      --flow-gate: rgba(251,191,36,0.15);
+      --flow-gate-stroke: #fbbf24;
+    }
+  }
+
+  /* ============ RESET + BASE ============ */
   * { margin: 0; padding: 0; box-sizing: border-box; }
-  body { font-family: Georgia, serif; padding: 20px; max-width: 900px; margin: 0 auto; }
-  pre.mermaid { background: #f5f5f5; padding: 20px; border-radius: 8px; }
-  h1 { font-size: 32px; margin-bottom: 8px; }
-  .subtitle { color: #666; margin-bottom: 24px; }
-  .phase { margin-bottom: 20px; }
-  .phase__label { font-size: 11px; text-transform: uppercase; color: #888; margin-bottom: 8px; }
-  .phase__title { font-size: 18px; font-weight: 600; margin-bottom: 8px; }
-  .phase__steps { line-height: 1.8; }
-  .phase__steps code { background: #eee; padding: 1px 5px; border-radius: 3px; }
-  .kpi-row { display: flex; gap: 14px; margin-bottom: 24px; }
-  .kpi-card { border: 1px solid #ddd; border-radius: 8px; padding: 16px; text-align: center; }
-  .kpi-card__value { font-size: 28px; font-weight: 600; }
-  .mermaid-wrap { margin-bottom: 16px; }
-  .backlink { font-size: 12px; color: #888; text-decoration: none; }
-  .callout { background: #f9f9f9; border-left: 3px solid #c84d0e; padding: 12px 16px; margin-bottom: 16px; }
-  .table-wrap { margin-bottom: 16px; }
-  .data-table { width: 100%; border-collapse: collapse; }
-  .data-table th, .data-table td { padding: 8px 12px; border: 1px solid #ddd; text-align: left; }
-  .toc a { color: #888; text-decoration: none; font-size: 13px; display: block; padding: 4px 0; }
-  .what-if { border: 1px solid #ddd; border-radius: 8px; padding: 12px; margin-top: 12px; }
-  .client-steps { display: flex; gap: 8px; }
-  .client-step { border: 1px solid #ddd; padding: 12px; border-radius: 8px; }
+
+  body {
+    background: var(--bg);
+    background-image:
+      radial-gradient(ellipse at 80% 0%, var(--primary-dim) 0%, transparent 50%),
+      radial-gradient(ellipse at 20% 60%, var(--secondary-dim) 0%, transparent 40%);
+    color: var(--text);
+    font-family: var(--font-body);
+    padding: 48px 40px;
+    min-height: 100vh;
+    line-height: 1.6;
+    transition: background 0.3s, color 0.3s;
+  }
+
+  /* ============ ANIMATION ============ */
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(12px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  @keyframes fadeScale {
+    from { opacity: 0; transform: scale(0.95); }
+    to { opacity: 1; transform: scale(1); }
+  }
+
+  .sec-head, .phase, .flowchart, .kpi-card, .callout, .table-wrap {
+    animation: fadeUp 0.45s ease-out both;
+    animation-delay: calc(var(--i, 0) * 0.06s);
+  }
+  .kpi-card { animation-name: fadeScale; }
+
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after { animation-duration: 0.01ms !important; animation-delay: 0ms !important; transition-duration: 0.01ms !important; }
+  }
+
+  /* ============ LAYOUT ============ */
+  .container { max-width: 1100px; margin: 0 auto; }
+
+  .backlink {
+    position: fixed; top: 12px; left: 16px; z-index: 101;
+    font-family: var(--font-mono); font-size: 11px; color: var(--text-dim);
+    text-decoration: none; padding: 6px 10px; border: 1px solid var(--border);
+    border-radius: 6px; background: var(--surface);
+    transition: color 0.15s, border-color 0.15s;
+  }
+  .backlink:hover { color: var(--text); border-color: var(--border-bright); }
+
+  /* ============ TYPOGRAPHY ============ */
+  h1 {
+    font-family: var(--font-display); font-size: 44px; font-weight: 700;
+    letter-spacing: -1px; margin-bottom: 6px; color: var(--heading);
+  }
+  .subtitle {
+    color: var(--text-dim); font-size: 15px; margin-bottom: 36px; line-height: 1.5;
+  }
+  .sec-head {
+    font-family: var(--font-display); font-size: 26px; font-weight: 600;
+    color: var(--heading); margin: 40px 0 20px; padding-bottom: 10px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  /* ============ KPI ROW ============ */
+  .kpi-row {
+    display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 14px; margin-bottom: 28px;
+  }
+  .kpi-card {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 10px; padding: 20px; text-align: center;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.04);
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+  }
+  .kpi-card:hover { transform: translateY(-2px); box-shadow: 0 4px 12px rgba(0,0,0,0.08); }
+  .kpi-card__value { font-family: var(--font-display); font-size: 38px; font-weight: 600; line-height: 1.1; }
+  .kpi-card__value--primary { color: var(--primary); }
+  .kpi-card__value--secondary { color: var(--secondary); }
+  .kpi-card__value--metric { color: var(--metric); }
+  .kpi-card__label {
+    font-family: var(--font-mono); font-size: 9px; font-weight: 600;
+    text-transform: uppercase; letter-spacing: 1px; color: var(--text-dim); margin-top: 6px;
+  }
+
+  /* ============ CSS FLOWCHART ============ */
+  .flowchart {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 12px; padding: 24px 20px; margin-bottom: 32px; overflow-x: auto;
+  }
+  .flow-row {
+    display: flex; align-items: flex-start; gap: 0; min-width: fit-content;
+  }
+  .flow-node {
+    display: flex; flex-direction: column; align-items: center; gap: 6px;
+    min-width: 115px; flex-shrink: 0;
+  }
+  .flow-box {
+    border-radius: 10px; padding: 12px 14px; text-align: center;
+    font-weight: 500; font-size: 13px; line-height: 1.35;
+  }
+  .flow-box--admin { background: var(--flow-admin); border: 2px solid var(--flow-admin-stroke); color: var(--text); }
+  .flow-box--client { background: var(--flow-client); border: 2px solid var(--flow-client-stroke); color: var(--text); }
+  .flow-box--system { background: var(--flow-system); border: 2px solid var(--flow-system-stroke); color: var(--text); }
+  .flow-box--gate { background: var(--flow-gate); border: 2px dashed var(--flow-gate-stroke); color: var(--text); }
+  .flow-tag {
+    font-family: var(--font-mono); font-size: 9px; font-weight: 600;
+    text-transform: uppercase; letter-spacing: 1px;
+  }
+  .flow-tag--admin { color: var(--primary); }
+  .flow-tag--client { color: var(--secondary); }
+  .flow-tag--system { color: var(--metric); }
+  .flow-tag--gate { color: var(--amber); }
+  .flow-arrow {
+    flex-shrink: 0; padding: 14px 6px 0; font-size: 18px;
+    color: var(--text-faint); font-family: var(--font-mono);
+  }
+  .flow-legend {
+    display: flex; align-items: center; justify-content: center; gap: 18px;
+    margin-top: 14px; font-family: var(--font-mono); font-size: 10px; color: var(--text-dim);
+  }
+  .flow-legend span { display: flex; align-items: center; gap: 5px; }
+
+  /* ============ PHASE CARDS ============ */
+  .phase {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 10px; padding: 24px 28px; margin-bottom: 14px;
+    transition: transform 0.15s ease, box-shadow 0.15s ease;
+  }
+  .phase:hover { transform: translateY(-2px); box-shadow: 0 4px 12px rgba(0,0,0,0.06); }
+  .phase--admin { border-left: 3px solid var(--primary); }
+  .phase--client { border-left: 3px solid var(--secondary); }
+  .phase--system { border-left: 3px solid var(--metric); }
+  .phase--both { border-left: 3px solid var(--amber); }
+
+  .phase__label {
+    font-family: var(--font-mono); font-size: 10px; font-weight: 600;
+    text-transform: uppercase; letter-spacing: 1.5px; margin-bottom: 14px;
+    display: flex; align-items: center; gap: 8px;
+  }
+  .phase__label .dot { width: 7px; height: 7px; border-radius: 50%; display: inline-block; }
+  .label-admin { color: var(--primary); }
+  .label-client { color: var(--secondary); }
+  .label-system { color: var(--metric); }
+  .label-both { color: var(--amber); }
+
+  .phase__title { font-family: var(--font-display); font-size: 20px; font-weight: 600; color: var(--heading); margin-bottom: 12px; }
+  .phase__steps { list-style: none; font-size: 14px; line-height: 2; }
+  .phase__steps li { padding-left: 18px; position: relative; color: var(--text); }
+  .phase__steps li::before { content: '>'; color: var(--primary); font-size: 11px; font-weight: 600; position: absolute; left: 0; top: 0; }
+  .phase__steps li strong { color: var(--heading); }
+  .phase__steps code {
+    font-family: var(--font-mono); font-size: 11px; background: var(--primary-dim);
+    color: var(--primary); padding: 1px 6px; border-radius: 3px;
+  }
+  .phase__note {
+    margin-top: 12px; font-size: 13px; color: var(--text-dim); line-height: 1.6;
+    padding: 10px 14px; background: var(--surface2); border-radius: 6px;
+  }
+  .phase__note strong { color: var(--heading); }
+
+  /* ============ CLIENT STEPS ============ */
+  .client-steps {
+    display: flex; gap: 0; align-items: stretch; overflow-x: auto; padding-bottom: 4px;
+  }
+  .client-step {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 8px; padding: 14px 16px; min-width: 130px; flex-shrink: 0;
+    text-align: center; transition: border-color 0.15s, transform 0.15s;
+  }
+  .client-step:hover { border-color: var(--border-bright); transform: translateY(-2px); }
+  .client-step .step-num { font-family: var(--font-mono); font-size: 10px; font-weight: 600; margin-bottom: 4px; color: var(--secondary); }
+  .client-step .step-name { font-size: 13px; font-weight: 600; margin-bottom: 3px; color: var(--heading); }
+  .client-step .step-detail { font-size: 10px; color: var(--text-dim); line-height: 1.4; }
+  .client-arrow {
+    display: flex; align-items: center; padding: 0 4px; color: var(--border-bright);
+    font-size: 16px; flex-shrink: 0;
+  }
+
+  /* ============ WHAT IF ============ */
+  .what-if-row { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 12px; }
+  .what-if {
+    flex: 1; min-width: 240px; background: var(--surface); border: 1px solid var(--border);
+    border-radius: 8px; padding: 14px 18px;
+  }
+  .what-if .title { font-weight: 600; font-size: 13px; color: var(--heading); margin-bottom: 4px; }
+  .what-if .detail { font-size: 12px; color: var(--text-dim); line-height: 1.5; }
+  .what-if code { font-family: var(--font-mono); font-size: 10px; background: var(--primary-dim); color: var(--primary); padding: 1px 5px; border-radius: 3px; }
+
+  /* ============ TABLE ============ */
+  .table-wrap {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 10px; overflow: hidden; margin-bottom: 16px;
+  }
+  .table-scroll { overflow-x: auto; }
+  .data-table { width: 100%; border-collapse: collapse; font-size: 13px; line-height: 1.5; }
+  .data-table thead { position: sticky; top: 0; z-index: 2; }
+  .data-table th {
+    background: var(--surface2); font-family: var(--font-mono); font-size: 10px;
+    font-weight: 600; text-transform: uppercase; letter-spacing: 1px; color: var(--text-dim);
+    text-align: left; padding: 12px 16px; border-bottom: 2px solid var(--border-bright); white-space: nowrap;
+  }
+  .data-table td { padding: 12px 16px; border-bottom: 1px solid var(--border); vertical-align: top; color: var(--text); }
+  .data-table tbody tr:nth-child(even) { background: var(--surface2); }
+  .data-table tbody tr { transition: background 0.15s ease; }
+  .data-table tbody tr:hover { background: var(--border); }
+  .data-table tbody tr:last-child td { border-bottom: none; }
+  .data-table code {
+    font-family: var(--font-mono); font-size: 10px; background: var(--primary-dim);
+    color: var(--primary); padding: 1px 5px; border-radius: 3px;
+  }
+  .data-table small { display: block; color: var(--text-dim); font-size: 11px; margin-top: 2px; }
+
+  .status {
+    display: inline-flex; align-items: center; gap: 6px;
+    font-family: var(--font-mono); font-size: 10px; font-weight: 500;
+    padding: 3px 10px; border-radius: 5px; white-space: nowrap;
+  }
+  .status--yes { background: var(--metric-dim); color: var(--metric); }
+  .status--no { background: var(--primary-dim); color: var(--primary); }
+
+  /* ============ CALLOUT ============ */
+  .callout {
+    background: var(--surface); border: 1px solid var(--border);
+    border-left: 3px solid var(--primary); border-radius: 0 8px 8px 0;
+    padding: 16px 20px; font-size: 13px; line-height: 1.6; color: var(--text-dim);
+    margin-bottom: 16px;
+  }
+  .callout strong { color: var(--text); font-weight: 600; }
+
+  /* ============ TOC ============ */
+  .wrap {
+    max-width: 1200px; margin: 0 auto; display: grid;
+    grid-template-columns: 185px 1fr; gap: 0 44px;
+  }
+  .main { min-width: 0; }
+
+  .toc {
+    position: sticky; top: 32px; align-self: start; padding: 18px 0;
+    grid-row: 1 / -1; max-height: calc(100dvh - 64px); overflow-y: auto;
+  }
+  .toc::-webkit-scrollbar { width: 3px; }
+  .toc::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+
+  .toc-title {
+    font-family: var(--font-mono); font-size: 9px; font-weight: 700;
+    text-transform: uppercase; letter-spacing: 2px; color: var(--text-dim);
+    padding: 0 0 12px; margin-bottom: 10px; border-bottom: 1px solid var(--border);
+  }
+
+  .toc a {
+    display: block; font-size: 11px; font-family: var(--font-body); font-weight: 500;
+    color: var(--text-dim); text-decoration: none; padding: 6px 10px; border-radius: 5px;
+    border-left: 2px solid transparent; transition: all 0.15s; line-height: 1.4; margin-bottom: 2px;
+  }
+  .toc a:hover { color: var(--text); background: var(--surface2); }
+  .toc a.active { color: var(--text); border-left-color: var(--primary); background: var(--primary-dim); }
+
+  /* ============ RESPONSIVE ============ */
+  @media (max-width: 1000px) {
+    .wrap { grid-template-columns: 1fr; }
+    body { padding: 0 20px 40px; }
+    .toc {
+      position: sticky; top: 0; z-index: 200; max-height: none; display: flex;
+      gap: 4px; align-items: center; overflow-x: auto; background: var(--bg);
+      border-bottom: 1px solid var(--border); padding: 10px 0; margin: 0 -20px;
+      padding-left: 20px; padding-right: 20px; grid-row: auto;
+    }
+    .toc::-webkit-scrollbar { display: none; }
+    .toc-title { display: none; }
+    .toc a { white-space: nowrap; flex-shrink: 0; border-left: none; border-bottom: 2px solid transparent; border-radius: 4px 4px 0 0; padding: 6px 10px; font-size: 10px; }
+    .toc a.active { border-left: none; border-bottom-color: var(--primary); background: var(--surface); }
+    .main { padding-top: 20px; }
+    .sec-head { scroll-margin-top: 52px; }
+  }
+
   @media (max-width: 768px) {
-    body { padding: 10px; }
+    body { padding: 0 16px 32px; }
+    h1 { font-size: 32px; }
+    .sec-head { font-size: 22px; }
+    .phase { padding: 16px 18px; }
+    .client-steps { flex-wrap: wrap; gap: 6px; }
+    .client-arrow { display: none; }
   }
 </style>
 </head>
@@ -43,7 +368,6 @@
 
 <div class="wrap">
 
-  <!-- ── TOC ── -->
   <nav class="toc" id="toc">
     <div class="toc-title">Onboarding</div>
     <a href="#s1">1. Big Picture</a>
@@ -58,10 +382,10 @@
   <div class="main">
 
     <h1>AESOP Onboarding</h1>
-    <p class="subtitle">How a new client enters the platform — step by step, who does what, what the client sees, what you need to do.</p>
+    <p class="subtitle">How a new client enters the platform &mdash; step by step, who does what, what the client sees, what you need to do.</p>
 
     <!-- ═══════════ 1. BIG PICTURE ═══════════ -->
-    <div id="s1" class="sec-head" style="--i:0"><span class="num">01</span> The Big Picture</div>
+    <div id="s1" class="sec-head" style="--i:0">The Big Picture</div>
 
     <div class="kpi-row">
       <div class="kpi-card" style="--i:0">
@@ -82,105 +406,72 @@
       </div>
     </div>
 
-    <div style="margin-bottom:32px">
-    <div style="display:flex;align-items:center;gap:0;overflow-x:auto;padding:20px 0;font-family:'Fraunces',Georgia,serif;font-size:13px">
-
-      <div style="display:flex;flex-direction:column;align-items:center;gap:8px;min-width:110px;flex-shrink:0">
-        <div style="background:#fde8d8;border:2px solid #c84d0e;border-radius:10px;padding:12px 14px;text-align:center;color:#0a1628;font-weight:500;line-height:1.3">
-          Admin sends<br/>intake link
+    <div class="flowchart" style="--i:4">
+      <div class="flow-row">
+        <div class="flow-node">
+          <div class="flow-box flow-box--admin">Admin sends<br/>intake link</div>
+          <div class="flow-tag flow-tag--admin">Admin</div>
         </div>
-        <div style="font-size:10px;color:#c84d0e;font-weight:600;text-transform:uppercase;letter-spacing:1px">Admin</div>
-      </div>
-
-      <div style="flex-shrink:0;padding:0 2px;color:#a0bedb;font-size:20px;margin-top:-20px">→</div>
-
-      <div style="display:flex;flex-direction:column;align-items:center;gap:8px;min-width:110px;flex-shrink:0">
-        <div style="background:#e0eef7;border:2px solid #4a90c4;border-radius:10px;padding:12px 14px;text-align:center;color:#0a1628;font-weight:500;line-height:1.3">
-          Client fills<br/>29 questions
+        <div class="flow-arrow">&rarr;</div>
+        <div class="flow-node">
+          <div class="flow-box flow-box--client">Client fills<br/>29 questions</div>
+          <div class="flow-tag flow-tag--client">Client</div>
         </div>
-        <div style="font-size:10px;color:#4a90c4;font-weight:600;text-transform:uppercase;letter-spacing:1px">Client</div>
-      </div>
-
-      <div style="flex-shrink:0;padding:0 2px;color:#a0bedb;font-size:20px;margin-top:-20px">→</div>
-
-      <div style="display:flex;flex-direction:column;align-items:center;gap:8px;min-width:110px;flex-shrink:0">
-        <div style="background:#d5f0ee;border:2px solid #0f766e;border-radius:10px;padding:12px 14px;text-align:center;color:#0a1628;font-weight:500;line-height:1.3">
-          AESOP processes<br/>~2 min
+        <div class="flow-arrow">&rarr;</div>
+        <div class="flow-node">
+          <div class="flow-box flow-box--system">AESOP processes<br/>~2 min</div>
+          <div class="flow-tag flow-tag--system">System</div>
         </div>
-        <div style="font-size:10px;color:#0f766e;font-weight:600;text-transform:uppercase;letter-spacing:1px">System</div>
-      </div>
-
-      <div style="flex-shrink:0;padding:0 2px;color:#a0bedb;font-size:20px;margin-top:-20px">→</div>
-
-      <div style="display:flex;flex-direction:column;align-items:center;gap:8px;min-width:110px;flex-shrink:0">
-        <div style="background:#fde8d8;border:2px solid #c84d0e;border-radius:10px;padding:12px 14px;text-align:center;color:#0a1628;font-weight:500;line-height:1.3">
-          Admin reviews<br/>roadmap
+        <div class="flow-arrow">&rarr;</div>
+        <div class="flow-node">
+          <div class="flow-box flow-box--admin">Admin reviews<br/>roadmap</div>
+          <div class="flow-tag flow-tag--admin">Admin</div>
         </div>
-        <div style="font-size:10px;color:#c84d0e;font-weight:600;text-transform:uppercase;letter-spacing:1px">Admin</div>
-      </div>
-
-      <div style="flex-shrink:0;padding:0 2px;color:#b45309;font-size:20px;margin-top:-20px">→</div>
-
-      <div style="display:flex;flex-direction:column;align-items:center;gap:8px;min-width:125px;flex-shrink:0">
-        <div style="background:#fef0d7;border:2px dashed #b45309;border-radius:10px;padding:12px 14px;text-align:center;color:#0a1628;font-weight:500;line-height:1.3">
-          Approved?
+        <div class="flow-arrow">&rarr;</div>
+        <div class="flow-node">
+          <div class="flow-box flow-box--gate">Approved?</div>
+          <div class="flow-tag flow-tag--gate">Gate</div>
         </div>
-        <div style="font-size:10px;color:#b45309;font-weight:600;text-transform:uppercase;letter-spacing:1px">Gate</div>
-      </div>
-
-      <div style="flex-shrink:0;padding:0 2px;color:#a0bedb;font-size:20px;margin-top:-20px">→</div>
-
-      <div style="display:flex;flex-direction:column;align-items:center;gap:8px;min-width:110px;flex-shrink:0">
-        <div style="background:#d5f0ee;border:2px solid #0f766e;border-radius:10px;padding:12px 14px;text-align:center;color:#0a1628;font-weight:500;line-height:1.3">
-          Email to<br/>client
+        <div class="flow-arrow">&rarr;</div>
+        <div class="flow-node">
+          <div class="flow-box flow-box--system">Email to<br/>client</div>
+          <div class="flow-tag flow-tag--system">System</div>
         </div>
-        <div style="font-size:10px;color:#0f766e;font-weight:600;text-transform:uppercase;letter-spacing:1px">System</div>
-      </div>
-
-      <div style="flex-shrink:0;padding:0 2px;color:#a0bedb;font-size:20px;margin-top:-20px">→</div>
-
-      <div style="display:flex;flex-direction:column;align-items:center;gap:8px;min-width:110px;flex-shrink:0">
-        <div style="background:#fde8d8;border:2px solid #c84d0e;border-radius:10px;padding:12px 14px;text-align:center;color:#0a1628;font-weight:500;line-height:1.3">
-          Admin files<br/>PDF in Drive
+        <div class="flow-arrow">&rarr;</div>
+        <div class="flow-node">
+          <div class="flow-box flow-box--admin">Admin files<br/>PDF in Drive</div>
+          <div class="flow-tag flow-tag--admin">Admin</div>
         </div>
-        <div style="font-size:10px;color:#c84d0e;font-weight:600;text-transform:uppercase;letter-spacing:1px">Admin</div>
-      </div>
-
-      <div style="flex-shrink:0;padding:0 2px;color:#a0bedb;font-size:20px;margin-top:-20px">→</div>
-
-      <div style="display:flex;flex-direction:column;align-items:center;gap:8px;min-width:110px;flex-shrink:0">
-        <div style="background:#e0eef7;border:2px solid #4a90c4;border-radius:10px;padding:12px 14px;text-align:center;color:#0a1628;font-weight:500;line-height:1.3">
-          Coaching<br/>session
+        <div class="flow-arrow">&rarr;</div>
+        <div class="flow-node">
+          <div class="flow-box flow-box--client">Coaching<br/>session</div>
+          <div class="flow-tag flow-tag--client">Client</div>
         </div>
-        <div style="font-size:10px;color:#4a90c4;font-weight:600;text-transform:uppercase;letter-spacing:1px">Client</div>
       </div>
-
+      <div class="flow-legend">
+        <span><span style="display:inline-block;width:10px;height:10px;border-radius:2px;background:var(--flow-admin-stroke)"></span> Admin</span>
+        <span><span style="display:inline-block;width:10px;height:10px;border-radius:2px;background:var(--flow-client-stroke)"></span> Client</span>
+        <span><span style="display:inline-block;width:10px;height:10px;border-radius:2px;background:var(--flow-system-stroke)"></span> System</span>
+        <span><span style="display:inline-block;width:10px;height:10px;border-radius:2px;border:2px dashed var(--flow-gate-stroke)"></span> Gate</span>
+      </div>
     </div>
-
-    <div style="display:flex;align-items:center;justify-content:center;gap:16px;margin-top:8px;font-family:'Source Code Pro',monospace;font-size:10px">
-      <span style="display:flex;align-items:center;gap:4px"><span style="width:10px;height:10px;border-radius:2px;background:#c84d0e"></span> Admin</span>
-      <span style="display:flex;align-items:center;gap:4px"><span style="width:10px;height:10px;border-radius:2px;background:#4a90c4"></span> Client</span>
-      <span style="display:flex;align-items:center;gap:4px"><span style="width:10px;height:10px;border-radius:2px;background:#0f766e"></span> System</span>
-      <span style="display:flex;align-items:center;gap:4px"><span style="width:10px;height:10px;border-radius:2px;border:2px dashed #b45309"></span> Gate</span>
-    </div>
-  </div>
 
     <!-- ═══════════ 2. SEND THE INTAKE ═══════════ -->
-    <div id="s2" class="sec-head" style="--i:5"><span class="num">02</span> Send the Intake</div>
+    <div id="s2" class="sec-head" style="--i:5">Send the Intake</div>
 
     <div class="phase phase--admin" style="--i:6">
-      <div class="phase__label label-admin"><span class="dot" style="background:var(--admin-color)"></span> Admin Does This</div>
+      <div class="phase__label label-admin"><span class="dot" style="background:var(--primary)"></span> Admin Does This</div>
       <div class="phase__title">Send the intake link to the client</div>
       <ol class="phase__steps">
         <li>Email the client this link: <code>https://aesopstudio.com/executive-intake</code></li>
         <li>Tell them: <strong>~20 minutes, every field optional</strong> except business name. No AI knowledge needed. The more information and context they include, the more meaningful and accurate their roadmap will be.</li>
-        <li>Set expectations: <em>"This generates a personalized AI Adoption Roadmap we'll review together. Your data is confidential — you own it."</em></li>
+        <li>Set expectations: <em>"This generates a personalized AI Adoption Roadmap we'll review together. Your data is confidential &mdash; you own it."</em></li>
         <li>If the client is a smaller business, use <code>https://aesopstudio.com/smb-intake</code> instead</li>
       </ol>
     </div>
 
     <div class="phase phase--client" style="--i:7">
-      <div class="phase__label label-client"><span class="dot" style="background:var(--client-color)"></span> Client Sees This</div>
+      <div class="phase__label label-client"><span class="dot" style="background:var(--secondary)"></span> Client Sees This</div>
       <div class="phase__title">What the client experiences</div>
       <div class="client-steps">
         <div class="client-step">
@@ -188,78 +479,74 @@
           <div class="step-name">Privacy Disclosure</div>
           <div class="step-detail">How data is collected,<br/>stored, and used<br/>(~90 seconds)</div>
         </div>
-        <div class="client-arrow">></div>
+        <div class="client-arrow">&rarr;</div>
         <div class="client-step">
           <div class="step-num">STEP 2</div>
           <div class="step-name">Accept &amp; Continue</div>
           <div class="step-detail">Check "I understand<br/>and accept"<br/>checkbox</div>
         </div>
-        <div class="client-arrow">></div>
+        <div class="client-arrow">&rarr;</div>
         <div class="client-step">
           <div class="step-num">STEP 3</div>
           <div class="step-name">Fill 29 Questions</div>
           <div class="step-detail">5 sections about<br/>their business<br/>(~20 minutes)</div>
         </div>
-        <div class="client-arrow">></div>
+        <div class="client-arrow">&rarr;</div>
         <div class="client-step">
           <div class="step-num">STEP 4</div>
           <div class="step-name">Submit</div>
-          <div class="step-detail">Click "Generate My<br/>Roadmap" — sees<br/>confirmation page</div>
+          <div class="step-detail">Click "Generate My<br/>Roadmap" &mdash; sees<br/>confirmation page</div>
         </div>
-      </div>
-      <div class="phase__note">
-        <strong>Privacy consent is recorded</strong> with timestamp, IP address, and browser info for audit trail.<br/>
-        This builds trust before the client types a single answer.
       </div>
     </div>
 
     <!-- ═══════════ 3. BEHIND THE SCENES ═══════════ -->
-    <div id="s3" class="sec-head" style="--i:8"><span class="num">03</span> Behind the Scenes</div>
+    <div id="s3" class="sec-head" style="--i:8">Behind the Scenes</div>
 
     <div class="phase phase--system" style="--i:9">
-      <div class="phase__label label-system"><span class="dot" style="background:var(--system-color)"></span> System Does This</div>
+      <div class="phase__label label-system"><span class="dot" style="background:var(--metric)"></span> System Does This</div>
       <div class="phase__title">What happens after the client clicks submit</div>
       <ol class="phase__steps">
-        <li><strong>Intake processed.</strong> AESOP validates the submission — confidence score calculated based on data completeness and coherence</li>
-        <li><strong>Deep Research pipeline activates</strong> (if enabled for this intake type). Five stages: Scope > Search > Fetch > Verify > Synthesize. Pulls company profile, strategic goals, brand guidelines, org chart, governance policy, and evaluation criteria. Enterprise path only; SMB uses a lightweight profile.</li>
+        <li><strong>Intake processed.</strong> AESOP validates the submission &mdash; confidence score calculated based on data completeness and coherence</li>
+        <li><strong>Deep Research pipeline activates</strong> (if enabled for this intake type). Five stages: Scope &rarr; Search &rarr; Fetch &rarr; Verify &rarr; Synthesize. Pulls company profile, strategic goals, brand guidelines, org chart, governance policy, and evaluation criteria. Enterprise path only; SMB uses a lightweight profile.</li>
         <li><strong>Organization context profile</strong> is compiled. WORE injection (Write Once Read Everywhere) ensures every downstream agent builds against the same ground truth.</li>
         <li><strong>AI Adoption Roadmap generated.</strong> Includes maturity model level, strategic themes, phased projects, what to avoid, and conditions for the next phase.</li>
-        <li><strong>Admin notified.</strong> Email sent: "Executive Intake: [Business Name] — Roadmap Ready" with a direct link to the results page.</li>
+        <li><strong>Admin notified.</strong> Email sent: "Executive Intake: [Business Name] &mdash; Roadmap Ready" with a direct link to the results page.</li>
       </ol>
       <div class="phase__note">
-        <strong>~2–5 minutes total.</strong> The client sees a confirmation page while this runs.<br/>
-        Status is visible in the admin dashboard at <code>/admin/platform</code> > Intake Submissions tab: <code>processing</code> > <code>completed</code>.
+        <strong>~2&ndash;5 minutes total.</strong> The client sees a confirmation page while this runs.<br/>
+        Status is visible in the admin dashboard at <code>/admin/platform</code> &rarr; Intake Submissions tab: <code>processing</code> &rarr; <code>completed</code>.
       </div>
     </div>
 
     <!-- ═══════════ 4. REVIEW & DELIVERY ═══════════ -->
-    <div id="s4" class="sec-head" style="--i:10"><span class="num">04</span> Review &amp; Delivery</div>
+    <div id="s4" class="sec-head" style="--i:10">Review &amp; Delivery</div>
 
     <div class="phase phase--admin" style="--i:11">
-      <div class="phase__label label-admin"><span class="dot" style="background:var(--admin-color)"></span> Admin Does This</div>
+      <div class="phase__label label-admin"><span class="dot" style="background:var(--primary)"></span> Admin Does This</div>
       <div class="phase__title">When the roadmap is ready</div>
       <ol class="phase__steps">
-        <li><strong>Open the email notification.</strong> Click <strong>View Roadmap</strong> > opens the results page</li>
+        <li><strong>Open the email notification.</strong> Click <strong>View Roadmap</strong> &rarr; opens the results page</li>
         <li><strong>Review the roadmap.</strong> Check: maturity level assessment, strategic themes, phased projects, what to avoid. Does it read as accurate and useful?</li>
         <li><strong>Approve or reject.</strong> If approved, the client gets their notification. If rejected, the roadmap goes to the revision queue with your feedback and regenerates.</li>
         <li><strong>Download the PDF.</strong> Save to the client's folder: <code>Clients / [Client Name] / AI Adoption Roadmap.pdf</code></li>
-        <li><strong>Prep for the session.</strong> Review the roadmap before the 1-on-1. It's a discussion starter — your coaching makes it actionable.</li>
+        <li><strong>Prep for the session.</strong> Review the roadmap before the 1-on-1. It's a discussion starter &mdash; your coaching makes it actionable.</li>
       </ol>
       <div class="phase__note">
         <strong>Human-in-the-loop at every gate.</strong> No roadmap reaches a client without a human reviewing it first.<br/>
         The platform automates the heavy lifting; your judgment makes the final call.
       </div>
 
-      <div style="display:flex; flex-wrap:wrap; gap:12px; margin-top:12px;">
-        <div class="what-if" style="flex:1; min-width: 240px;">
+      <div class="what-if-row">
+        <div class="what-if">
           <div class="title">Roadmap didn't generate?</div>
-          <div class="detail">Check the admin dashboard — status may be <code>failed</code>. Click into the submission for error details. Charlie investigates if backend issue.</div>
+          <div class="detail">Check the admin dashboard &mdash; status may be <code>failed</code>. Click into the submission for error details. Charlie investigates if backend issue.</div>
         </div>
-        <div class="what-if" style="flex:1; min-width: 240px;">
+        <div class="what-if">
           <div class="title">Client didn't get their email?</div>
-          <div class="detail">Their roadmap is still accessible. Send them the token URL directly: <code>https://aesopstudio.com/executive-intake/results/{token}</code>. Find the token in the admin dashboard.</div>
+          <div class="detail">Their roadmap is still accessible. Send them the token URL directly: <code>/executive-intake/results/{token}</code>. Find the token in the admin dashboard.</div>
         </div>
-        <div class="what-if" style="flex:1; min-width: 240px;">
+        <div class="what-if">
           <div class="title">Client wants data deleted?</div>
           <div class="detail">Email <code>privacy@waifinder.org</code>. Deleted within 7 business days. Confirmation sent to requester.</div>
         </div>
@@ -267,31 +554,31 @@
     </div>
 
     <!-- ═══════════ 5. CLIENT DELIVERY ═══════════ -->
-    <div id="s5" class="sec-head" style="--i:12"><span class="num">05</span> Client Delivery</div>
+    <div id="s5" class="sec-head" style="--i:12">Client Delivery</div>
 
     <div class="phase phase--client" style="--i:13">
-      <div class="phase__label label-client"><span class="dot" style="background:var(--client-color)"></span> Client Receives</div>
+      <div class="phase__label label-client"><span class="dot" style="background:var(--secondary)"></span> Client Receives</div>
       <div class="phase__title">What the client gets after approval</div>
       <ol class="phase__steps">
-        <li><strong>Email notification.</strong> "Your AI Adoption Roadmap is ready" — includes a token-secured link to their results page. No login required.</li>
+        <li><strong>Email notification.</strong> "Your AI Adoption Roadmap is ready" &mdash; includes a token-secured link to their results page. No login required.</li>
         <li><strong>Interactive results page.</strong> Full roadmap: maturity model level, strategic themes, phased projects, what to avoid, conditions for next phase. Downloadable PDF.</li>
         <li><strong>The roadmap is theirs.</strong> They own the data. They can download the PDF, share it, reference it anytime via their token link.</li>
       </ol>
     </div>
 
     <div class="phase phase--both" style="--i:14">
-      <div class="phase__label label-both"><span class="dot" style="background:var(--both-color)"></span> Admin &amp; Client Together</div>
+      <div class="phase__label label-both"><span class="dot" style="background:var(--amber)"></span> Admin &amp; Client Together</div>
       <div class="phase__title">In the coaching session</div>
       <ol class="phase__steps">
-        <li>Walk through the roadmap together — it's a <strong>discussion starter, not a prescription</strong></li>
+        <li>Walk through the roadmap together &mdash; it's a <strong>discussion starter, not a prescription</strong></li>
         <li>Use the maturity model level to frame the conversation: "Here's where you are, here's what's next"</li>
-        <li>The phased projects are a suggestion — your expertise adapts them to the client's reality</li>
+        <li>The phased projects are a suggestion &mdash; your expertise adapts them to the client's reality</li>
         <li>The "what to avoid" section prevents common missteps for organizations at that maturity level</li>
       </ol>
     </div>
 
     <!-- ═══════════ 6. SELF-SERVICE GUIDE ═══════════ -->
-    <div id="s6" class="sec-head" style="--i:15"><span class="num">06</span> Self-Service Guide</div>
+    <div id="s6" class="sec-head" style="--i:15">Self-Service Guide</div>
 
     <div class="table-wrap" style="--i:16">
       <div class="table-scroll">
@@ -332,12 +619,12 @@
             <tr>
               <td>Check if a submission is processing</td>
               <td><span class="status status--yes">Admin</span></td>
-              <td>Admin dashboard > Intake Submissions tab</td>
+              <td>Admin dashboard &rarr; Intake Submissions tab</td>
             </tr>
             <tr>
               <td>Find a lost client link</td>
               <td><span class="status status--yes">Admin</span></td>
-              <td>Admin dashboard > copy token URL</td>
+              <td>Admin dashboard &rarr; copy token URL</td>
             </tr>
             <tr>
               <td>Add a new admin user</td>
@@ -365,11 +652,11 @@
     </div>
 
     <div class="callout" style="--i:17">
-      <strong>Goal:</strong> Everything the client touches is self-service. The admin review gate is the only required human step — and it's there by design. Over time, more items move to self-service as the platform matures.
+      <strong>Goal:</strong> Everything the client touches is self-service. The admin review gate is the only required human step &mdash; and it's there by design. Over time, more items move to self-service as the platform matures.
     </div>
 
     <!-- ═══════════ 7. KEY URLS ═══════════ -->
-    <div id="s7" class="sec-head" style="--i:18"><span class="num">07</span> Key URLs</div>
+    <div id="s7" class="sec-head" style="--i:18">Key URLs</div>
 
     <div class="table-wrap" style="--i:19">
       <div class="table-scroll">
@@ -410,8 +697,45 @@
   </div><!-- /main -->
 </div><!-- /wrap -->
 
-<!-- ── Mermaid ── -->
-<script type="module">
-  import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs';
-  mermaid.initialize({ startOnLoad: true, theme: 'base' });
+<!-- ── Scroll Spy ── -->
+<script>
+(function() {
+  var toc = document.getElementById('toc');
+  var links = toc.querySelectorAll('a');
+  var sections = [];
+  links.forEach(function(link) {
+    var id = link.getAttribute('href').slice(1);
+    var el = document.getElementById(id);
+    if (el) sections.push({ id: id, el: el, link: link });
+  });
+  var observer = new IntersectionObserver(function(entries) {
+    entries.forEach(function(entry) {
+      if (entry.isIntersecting) {
+        links.forEach(function(l) { l.classList.remove('active'); });
+        var match = sections.find(function(s) { return s.el === entry.target; });
+        if (match) {
+          match.link.classList.add('active');
+          if (window.innerWidth <= 1000) {
+            match.link.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
+          }
+        }
+      }
+    });
+  }, { rootMargin: '-10% 0px -80% 0px' });
+  sections.forEach(function(s) { observer.observe(s.el); });
+  links.forEach(function(link) {
+    link.addEventListener('click', function(e) {
+      e.preventDefault();
+      var id = link.getAttribute('href').slice(1);
+      var el = document.getElementById(id);
+      if (el) {
+        el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        history.replaceState(null, '', '#' + id);
+      }
+    });
+  });
+})();
 </script>
+
+</body>
+</html>
