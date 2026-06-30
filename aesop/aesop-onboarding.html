@@ -951,106 +951,13 @@ flowchart LR
       secondaryBorderColor: isDark ? '#6cace4' : '#4a90c4',
       secondaryTextColor: isDark ? '#e8edf5' : '#0a1628',
       tertiaryColor: isDark ? '#132240' : '#ffffff',
-      tertiaryBorderColor: isDark ? '#5eead4' : '#0f766e',
+      tertiaryBorderColor: isDark ? '#2dd4bf' : '#0f766e',
       tertiaryTextColor: isDark ? '#e8edf5' : '#0a1628',
       lineColor: isDark ? '#5e7aa3' : '#7a9ab8',
       fontSize: '15px',
       fontFamily: "'Fraunces', Georgia, serif",
     }
   });
-</script>
-
-<!-- ── Zoom + Pan ── -->
-<script>
-function updateZoomState(wrap) {
-  var t = wrap.querySelector('.mermaid');
-  var z = parseFloat(t.dataset.zoom || '1');
-  wrap.classList.toggle('is-zoomed', z > 1);
-}
-function zoomDiagram(btn, f) {
-  var w = btn.closest('.mermaid-wrap');
-  var t = w.querySelector('.mermaid');
-  var c = parseFloat(t.dataset.zoom || '1');
-  var n = Math.min(Math.max(c * f, 0.3), 5);
-  t.dataset.zoom = n;
-  t.style.transform = 'scale(' + n + ')';
-  updateZoomState(w);
-}
-function resetZoom(btn) {
-  var w = btn.closest('.mermaid-wrap');
-  var t = w.querySelector('.mermaid');
-  t.dataset.zoom = '1';
-  t.style.transform = 'scale(1)';
-  updateZoomState(w);
-}
-document.querySelectorAll('.mermaid-wrap').forEach(function(w) {
-  w.addEventListener('wheel', function(e) {
-    if (!e.ctrlKey && !e.metaKey) return;
-    e.preventDefault();
-    var t = w.querySelector('.mermaid');
-    var c = parseFloat(t.dataset.zoom || '1');
-    var f = e.deltaY < 0 ? 1.1 : 0.9;
-    var n = Math.min(Math.max(c * f, 0.3), 5);
-    t.dataset.zoom = n;
-    t.style.transform = 'scale(' + n + ')';
-    updateZoomState(w);
-  }, { passive: false });
-  var sx, sy, sl, st;
-  w.addEventListener('mousedown', function(e) {
-    if (e.target.closest('.zoom-controls')) return;
-    var t = w.querySelector('.mermaid');
-    if (parseFloat(t.dataset.zoom || '1') <= 1) return;
-    w.classList.add('is-panning');
-    sx = e.clientX; sy = e.clientY;
-    sl = w.scrollLeft; st = w.scrollTop;
-  });
-  window.addEventListener('mousemove', function(e) {
-    if (!w.classList.contains('is-panning')) return;
-    w.scrollLeft = sl - (e.clientX - sx);
-    w.scrollTop = st - (e.clientY - sy);
-  });
-  window.addEventListener('mouseup', function() { w.classList.remove('is-panning'); });
-});
-</script>
-
-<!-- ── Scroll Spy ── -->
-<script>
-(function() {
-  var toc = document.getElementById('toc');
-  var links = toc.querySelectorAll('a');
-  var sections = [];
-  links.forEach(function(link) {
-    var id = link.getAttribute('href').slice(1);
-    var el = document.getElementById(id);
-    if (el) sections.push({ id: id, el: el, link: link });
-  });
-  var observer = new IntersectionObserver(function(entries) {
-    entries.forEach(function(entry) {
-      if (entry.isIntersecting) {
-        links.forEach(function(l) { l.classList.remove('active'); });
-        var match = sections.find(function(s) { return s.el === entry.target; });
-        if (match) {
-          match.link.classList.add('active');
-          if (window.innerWidth <= 1000) {
-            match.link.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
-          }
-        }
-      }
-    });
-  }, { rootMargin: '-10% 0px -80% 0px' });
-  sections.forEach(function(s) { observer.observe(s.el); });
-  links.forEach(function(link) {
-    link.addEventListener('click', function(e) {
-      e.preventDefault();
-      var id = link.getAttribute('href').slice(1);
-      var el = document.getElementById(id);
-      if (el) {
-        el.scrollIntoView({ behavior: 'smooth', block: 'start' });
-        history.replaceState(null, '', '#' + id);
-      }
-    });
-  });
-})();
 </script>
 
 </body>
