@@ -1,0 +1,1058 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AESOP — TBG Onboarding Guide</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500&family=Space+Mono:ital,wght@0,400;0,700;1,400&family=Work+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&display=swap" rel="stylesheet">
+<style>
+  /* ============ THEME ============ */
+  :root {
+    --font-heading: 'Cormorant Garamond', 'Georgia', 'Times New Roman', serif;
+    --font-body: 'Work Sans', system-ui, -apple-system, sans-serif;
+    --font-mono: 'Space Mono', 'SF Mono', Consolas, monospace;
+
+    /* Light-first editorial palette */
+    --bg: #f9f7f4;
+    --surface: #ffffff;
+    --surface2: #f3f0eb;
+    --surface-elevated: #fefcf9;
+    --border: rgba(0,0,0,0.07);
+    --border-bright: rgba(0,0,0,0.13);
+    --text: #2d2418;
+    --text-dim: #8a7e6e;
+    --text-faint: #b8ae9e;
+
+    --gold: #b8860b;
+    --gold-dim: rgba(184,134,11,0.08);
+    --gold-bright: #d4a017;
+
+    --teal: #0f766e;
+    --teal-dim: rgba(15,118,110,0.08);
+
+    --slate: #475569;
+    --slate-dim: rgba(71,85,105,0.07);
+
+    --plum: #9f1239;
+    --plum-dim: rgba(159,18,57,0.07);
+
+    --sage: #4d7c0f;
+    --sage-dim: rgba(77,124,15,0.07);
+
+    --blue: #1e40af;
+    --blue-dim: rgba(30,64,175,0.07);
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #1a1714;
+      --surface: #24211c;
+      --surface2: #2e2a24;
+      --surface-elevated: #302c26;
+      --border: rgba(255,255,255,0.06);
+      --border-bright: rgba(255,255,255,0.11);
+      --text: #ede5d8;
+      --text-dim: #a69882;
+      --text-faint: #6e6358;
+
+      --gold: #d4a017;
+      --gold-dim: rgba(212,160,23,0.12);
+      --gold-bright: #f0c040;
+
+      --teal: #5eead4;
+      --teal-dim: rgba(94,234,212,0.1);
+
+      --slate: #94a3b8;
+      --slate-dim: rgba(148,163,184,0.1);
+
+      --plum: #fda4af;
+      --plum-dim: rgba(253,164,175,0.1);
+
+      --sage: #a3e635;
+      --sage-dim: rgba(163,230,53,0.1);
+
+      --blue: #60a5fa;
+      --blue-dim: rgba(96,165,250,0.1);
+    }
+  }
+
+  /* ============ RESET + BASE ============ */
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: var(--bg);
+    background-image:
+      radial-gradient(ellipse at 15% 0%, var(--gold-dim) 0%, transparent 55%),
+      radial-gradient(ellipse at 85% 60%, var(--teal-dim) 0%, transparent 45%);
+    color: var(--text);
+    font-family: var(--font-body);
+    padding: 48px 40px;
+    min-height: 100vh;
+    line-height: 1.6;
+  }
+
+  /* ============ ANIMATION ============ */
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(12px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  @keyframes fadeScale {
+    from { opacity: 0; transform: scale(0.95); }
+    to { opacity: 1; transform: scale(1); }
+  }
+  @keyframes drawIn {
+    from { stroke-dashoffset: 1; }
+    to { stroke-dashoffset: 0; }
+  }
+
+  .sec-head, .section, .flow-arrow, .mermaid-wrap {
+    animation: fadeUp 0.45s ease-out both;
+    animation-delay: calc(var(--i, 0) * 0.06s);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after {
+      animation-duration: 0.01ms !important;
+      animation-delay: 0ms !important;
+      transition-duration: 0.01ms !important;
+    }
+  }
+
+  /* ============ LAYOUT ============ */
+  .wrap {
+    max-width: 1300px;
+    margin: 0 auto;
+    display: grid;
+    grid-template-columns: 185px 1fr;
+    gap: 0 44px;
+  }
+  .main { min-width: 0; }
+
+  /* ============ TOC — Desktop ============ */
+  .toc {
+    position: sticky;
+    top: 32px;
+    align-self: start;
+    padding: 18px 0;
+    grid-row: 1 / -1;
+    max-height: calc(100dvh - 64px);
+    overflow-y: auto;
+  }
+  .toc::-webkit-scrollbar { width: 3px; }
+  .toc::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+
+  .toc-title {
+    font-family: var(--font-mono);
+    font-size: 9px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    color: var(--text-dim);
+    padding: 0 0 12px;
+    margin-bottom: 10px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .toc a {
+    display: block;
+    font-size: 11px;
+    font-family: var(--font-body);
+    font-weight: 500;
+    color: var(--text-dim);
+    text-decoration: none;
+    padding: 6px 10px;
+    border-radius: 5px;
+    border-left: 2px solid transparent;
+    transition: all 0.15s;
+    line-height: 1.4;
+    margin-bottom: 2px;
+  }
+  .toc a:hover { color: var(--text); background: var(--surface2); }
+  .toc a.active { color: var(--text); border-left-color: var(--gold); background: var(--gold-dim); }
+
+  /* ============ TOC — Mobile ============ */
+  @media (max-width: 1000px) {
+    .wrap { grid-template-columns: 1fr; }
+    body { padding: 0 20px 40px; }
+
+    .toc {
+      position: sticky;
+      top: 0;
+      z-index: 200;
+      max-height: none;
+      display: flex;
+      gap: 4px;
+      align-items: center;
+      overflow-x: auto;
+      -webkit-overflow-scrolling: touch;
+      background: var(--bg);
+      border-bottom: 1px solid var(--border);
+      padding: 10px 0;
+      margin: 0 -20px;
+      padding-left: 20px;
+      padding-right: 20px;
+      grid-row: auto;
+    }
+    .toc::-webkit-scrollbar { display: none; }
+    .toc-title { display: none; }
+
+    .toc a {
+      white-space: nowrap;
+      flex-shrink: 0;
+      border-left: none;
+      border-bottom: 2px solid transparent;
+      border-radius: 4px 4px 0 0;
+      padding: 6px 10px;
+      font-size: 10px;
+    }
+    .toc a.active {
+      border-left: none;
+      border-bottom-color: var(--gold);
+      background: var(--surface);
+    }
+    .main { padding-top: 20px; }
+    .sec-head { scroll-margin-top: 52px; }
+  }
+
+  /* ============ TYPOGRAPHY ============ */
+  h1 {
+    font-family: var(--font-heading);
+    font-size: 44px;
+    font-weight: 600;
+    letter-spacing: -1px;
+    margin-bottom: 6px;
+    text-wrap: balance;
+    line-height: 1.15;
+  }
+  h1 em { font-style: italic; font-weight: 500; color: var(--gold); }
+
+  .subtitle {
+    color: var(--text-dim);
+    font-size: 15px;
+    margin-bottom: 40px;
+    font-weight: 400;
+    line-height: 1.5;
+  }
+
+  /* ============ SECTION HEAD ============ */
+  .sec-head {
+    font-family: var(--font-heading);
+    font-size: 26px;
+    font-weight: 600;
+    color: var(--text);
+    margin: 40px 0 20px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: baseline;
+    gap: 12px;
+  }
+  .sec-head:first-of-type { margin-top: 0; }
+  .sec-head .num {
+    font-family: var(--font-mono);
+    font-size: 12px;
+    font-weight: 400;
+    color: var(--gold);
+    letter-spacing: 0.5px;
+  }
+
+  /* ============ SECTION CARD ============ */
+  .section {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 24px 28px;
+    margin-bottom: 16px;
+  }
+
+  .section--accent { border-color: var(--gold-dim); }
+  .section--teal { border-color: var(--teal-dim); }
+  .section--slate { border-color: var(--slate-dim); }
+  .section--plum { border-color: var(--plum-dim); }
+
+  .section-label {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+    color: var(--text-dim);
+    margin-bottom: 14px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .section-label .dot {
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    display: inline-block;
+    background: var(--text-dim);
+  }
+
+  /* ============ MERMAID WRAP ============ */
+  .mermaid-wrap {
+    position: relative;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 28px 24px;
+    overflow: auto;
+    scrollbar-width: thin;
+    scrollbar-color: var(--border) transparent;
+    margin-bottom: 16px;
+  }
+  .mermaid-wrap::-webkit-scrollbar { width: 6px; height: 6px; }
+  .mermaid-wrap::-webkit-scrollbar-track { background: transparent; }
+  .mermaid-wrap::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+  .mermaid-wrap::-webkit-scrollbar-thumb:hover { background: var(--text-dim); }
+
+  .mermaid-wrap .mermaid {
+    transition: transform 0.2s ease;
+    transform-origin: top center;
+  }
+
+  .zoom-controls {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    display: flex;
+    gap: 2px;
+    z-index: 10;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 2px;
+  }
+  .zoom-controls button {
+    width: 28px;
+    height: 28px;
+    border: none;
+    background: transparent;
+    color: var(--text-dim);
+    font-family: var(--font-mono);
+    font-size: 14px;
+    cursor: pointer;
+    border-radius: 4px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background 0.15s ease, color 0.15s ease;
+  }
+  .zoom-controls button:hover { background: var(--border); color: var(--text); }
+
+  .mermaid-wrap.is-zoomed { cursor: grab; }
+  .mermaid-wrap.is-panning { cursor: grabbing; user-select: none; }
+
+  /* ============ INNER GRID ============ */
+  .inner-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  .inner-grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; }
+
+  .inner-card {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 14px 18px;
+  }
+  .inner-card .title {
+    font-weight: 600;
+    font-size: 13px;
+    margin-bottom: 4px;
+    color: var(--text);
+  }
+  .inner-card .desc {
+    color: var(--text-dim);
+    font-size: 12px;
+    line-height: 1.55;
+  }
+  .inner-card code {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    background: var(--gold-dim);
+    color: var(--gold);
+    padding: 1px 5px;
+    border-radius: 3px;
+  }
+
+  /* ============ FLOW ARROW ============ */
+  .flow-arrow {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 8px;
+    color: var(--text-faint);
+    font-family: var(--font-mono);
+    font-size: 11px;
+    padding: 6px 0;
+    margin-bottom: 8px;
+  }
+  .flow-arrow svg {
+    width: 20px;
+    height: 20px;
+    fill: none;
+    stroke: var(--border-bright);
+    stroke-width: 2;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+  }
+
+  /* ============ PIPELINE ============ */
+  .pipeline {
+    display: flex;
+    gap: 0;
+    align-items: stretch;
+    overflow-x: auto;
+    padding-bottom: 4px;
+  }
+  .pipeline-step {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 12px 14px;
+    min-width: 120px;
+    flex-shrink: 0;
+    text-align: center;
+    transition: border-color 0.15s, transform 0.15s;
+  }
+  .pipeline-step:hover { border-color: var(--border-bright); transform: translateY(-2px); }
+  .pipeline-step .step-num {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    font-weight: 600;
+    margin-bottom: 4px;
+  }
+  .pipeline-step .step-name { font-size: 12px; font-weight: 600; margin-bottom: 3px; }
+  .pipeline-step .step-detail { font-size: 10px; color: var(--text-dim); line-height: 1.4; }
+
+  .pipeline-step--gold { border-color: var(--gold-dim); }
+  .pipeline-step--gold .step-num { color: var(--gold); }
+  .pipeline-step--teal { border-color: var(--teal-dim); }
+  .pipeline-step--teal .step-num { color: var(--teal); }
+  .pipeline-step--slate { border-color: var(--slate-dim); }
+  .pipeline-step--slate .step-num { color: var(--slate); }
+  .pipeline-step--plum { border-color: var(--plum-dim); }
+  .pipeline-step--plum .step-num { color: var(--plum); }
+  .pipeline-step--sage { border-color: var(--sage-dim); }
+  .pipeline-step--sage .step-num { color: var(--sage); }
+  .pipeline-step--blue { border-color: var(--blue-dim); }
+  .pipeline-step--blue .step-num { color: var(--blue); }
+
+  .pipeline-arrow {
+    display: flex;
+    align-items: center;
+    padding: 0 3px;
+    color: var(--border-bright);
+    font-size: 16px;
+    flex-shrink: 0;
+  }
+
+  /* ============ THREE COL ============ */
+  .three-col { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px; }
+
+  /* ============ TABLE ============ */
+  .table-wrap {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    overflow: hidden;
+  }
+  .table-scroll { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+
+  .data-table { width: 100%; border-collapse: collapse; font-size: 13px; line-height: 1.5; }
+  .data-table thead { position: sticky; top: 0; z-index: 2; }
+  .data-table th {
+    background: var(--surface2);
+    font-family: var(--font-mono);
+    font-size: 10px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: var(--text-dim);
+    text-align: left;
+    padding: 12px 16px;
+    border-bottom: 2px solid var(--border-bright);
+    white-space: nowrap;
+  }
+  .data-table td {
+    padding: 12px 16px;
+    border-bottom: 1px solid var(--border);
+    vertical-align: top;
+  }
+  .data-table tbody tr:nth-child(even) { background: var(--gold-dim); }
+  .data-table tbody tr { transition: background 0.15s ease; }
+  .data-table tbody tr:hover { background: var(--border); }
+  .data-table tbody tr:last-child td { border-bottom: none; }
+  .data-table code {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    background: var(--slate-dim);
+    color: var(--slate);
+    padding: 1px 5px;
+    border-radius: 3px;
+  }
+  .data-table small { display: block; color: var(--text-dim); font-size: 11px; margin-top: 2px; }
+
+  /* Status indicators */
+  .status {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-family: var(--font-mono);
+    font-size: 10px;
+    font-weight: 500;
+    padding: 3px 10px;
+    border-radius: 5px;
+    white-space: nowrap;
+  }
+  .status--yes { background: var(--sage-dim); color: var(--sage); }
+  .status--no { background: var(--plum-dim); color: var(--plum); }
+
+  /* ============ CALLOUT ============ */
+  .callout {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-left: 3px solid var(--gold);
+    border-radius: 0 8px 8px 0;
+    padding: 16px 20px;
+    font-size: 13px;
+    line-height: 1.6;
+    color: var(--text-dim);
+    margin-bottom: 16px;
+  }
+  .callout strong { color: var(--text); font-weight: 600; }
+  .callout code {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    background: var(--gold-dim);
+    color: var(--gold);
+    padding: 1px 5px;
+    border-radius: 3px;
+  }
+
+  /* ============ LIST ============ */
+  .node-list { list-style: none; font-size: 13px; line-height: 1.8; }
+  .node-list li { padding-left: 16px; position: relative; }
+  .node-list li::before {
+    content: '→';
+    color: var(--gold);
+    font-size: 11px;
+    position: absolute;
+    left: 0;
+    top: 0;
+  }
+  .node-list code {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    background: var(--gold-dim);
+    color: var(--gold);
+    padding: 1px 5px;
+    border-radius: 3px;
+  }
+
+  /* ============ KPI ROW ============ */
+  .kpi-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 14px; margin-bottom: 16px; }
+  .kpi-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 20px;
+    text-align: center;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.04);
+    animation: fadeScale 0.4s ease-out both;
+    animation-delay: calc(var(--i, 0) * 0.07s);
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+  }
+  .kpi-card:hover { transform: translateY(-2px); box-shadow: 0 4px 12px rgba(0,0,0,0.08); }
+  .kpi-card__value {
+    font-family: var(--font-heading);
+    font-size: 38px;
+    font-weight: 600;
+    line-height: 1.1;
+    font-variant-numeric: tabular-nums;
+  }
+  .kpi-card__value--gold { color: var(--gold); }
+  .kpi-card__value--teal { color: var(--teal); }
+  .kpi-card__label {
+    font-family: var(--font-mono);
+    font-size: 9px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: var(--text-dim);
+    margin-top: 6px;
+  }
+
+  /* ============ RESPONSIVE ============ */
+  @media (max-width: 768px) {
+    body { padding: 0 16px 32px; }
+    .inner-grid, .inner-grid-3, .three-col { grid-template-columns: 1fr; }
+    .pipeline { flex-wrap: wrap; gap: 6px; }
+    .pipeline-arrow { display: none; }
+    h1 { font-size: 32px; }
+    .sec-head { font-size: 22px; }
+  }
+</style>
+</head>
+<body>
+
+<div class="wrap">
+
+  <!-- ── TOC ── -->
+  <nav class="toc" id="toc">
+    <div class="toc-title">Onboarding Guide</div>
+    <a href="#s1">1. The Big Picture</a>
+    <a href="#s2">2. Sending the Intake</a>
+    <a href="#s3">3. Roadmap Ready</a>
+    <a href="#s4">4. Day-to-Day</a>
+    <a href="#s5">5. Self-Service Guide</a>
+    <a href="#s6">6. Key URLs</a>
+  </nav>
+
+  <div class="main">
+
+    <h1>AESOP for <em>TBG</em></h1>
+    <p class="subtitle">How to generate AI Adoption Roadmaps for your executive clients. A practical guide for Paige &amp; Aparna.</p>
+
+    <!-- ═══════════ 1. THE BIG PICTURE ═══════════ -->
+    <div id="s1" class="sec-head" style="--i:0"><span class="num">01</span> The Big Picture</div>
+
+    <div class="kpi-row">
+      <div class="kpi-card" style="--i:0">
+        <div class="kpi-card__value kpi-card__value--gold">29</div>
+        <div class="kpi-card__label">Questions in the intake</div>
+      </div>
+      <div class="kpi-card" style="--i:1">
+        <div class="kpi-card__value kpi-card__value--teal">~20</div>
+        <div class="kpi-card__label">Minutes to complete</div>
+      </div>
+      <div class="kpi-card" style="--i:2">
+        <div class="kpi-card__value kpi-card__value--gold">~2</div>
+        <div class="kpi-card__label">Minutes to generate roadmap</div>
+      </div>
+      <div class="kpi-card" style="--i:3">
+        <div class="kpi-card__value kpi-card__value--teal">~15s</div>
+        <div class="kpi-card__label">Your time per report (download + file)</div>
+      </div>
+    </div>
+
+    <div class="mermaid-wrap" style="--i:4">
+      <div class="zoom-controls">
+        <button onclick="zoomDiagram(this,1.2)" title="Zoom in">+</button>
+        <button onclick="zoomDiagram(this,0.8)" title="Zoom out">&minus;</button>
+        <button onclick="resetZoom(this)" title="Reset">&#8634;</button>
+      </div>
+      <pre class="mermaid">
+flowchart LR
+    A["✉️ TBG sends<br/>intake link"] --> B["📝 Client fills<br/>29 questions"]
+    B --> C["⚙️ AESOP generates<br/>roadmap (~2 min)"]
+    C --> D["📧 Charlie gets<br/>email notification"]
+    D --> E["📄 Download PDF<br/>from results page"]
+    E --> F["📁 File in client<br/>Drive folder"]
+    F --> G["🤝 Use in 1-on-1<br/>coaching session"]
+
+    style A fill:none,stroke:#b8860b,color:#2d2418
+    style B fill:none,stroke:#475569,color:#2d2418
+    style C fill:none,stroke:#0f766e,color:#2d2418
+    style D fill:none,stroke:#b8860b,color:#2d2418
+    style E fill:none,stroke:#475569,color:#2d2418
+    style F fill:none,stroke:#0f766e,color:#2d2418
+    style G fill:none,stroke:#b8860b,color:#2d2418
+      </pre>
+    </div>
+
+    <!-- ═══════════ 2. SENDING THE INTAKE ═══════════ -->
+    <div id="s2" class="sec-head" style="--i:1"><span class="num">02</span> Sending the Intake</div>
+
+    <div class="section section--accent" style="--i:2">
+      <div class="section-label"><span class="dot" style="background:var(--gold)"></span> What TBG Does</div>
+      <div class="inner-grid">
+        <div class="inner-card">
+          <div class="title">1. Email the link</div>
+          <div class="desc">Send client <code>https://aesopstudio.com/executive-intake</code>. Tell them: ~20 minutes, no AI knowledge needed, every field optional except business name.</div>
+        </div>
+        <div class="inner-card">
+          <div class="title">2. Set expectations</div>
+          <div class="desc">"This generates a personalized AI Adoption Roadmap we'll review together in our next session. Your answers are confidential — you own the data."</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="flow-arrow" style="--i:3">
+      <svg viewBox="0 0 20 20"><path d="M10 4 L10 16 M6 12 L10 16 L14 12"/></svg>
+      then the client sees
+    </div>
+
+    <div class="section section--slate" style="--i:4">
+      <div class="section-label"><span class="dot" style="background:var(--slate)"></span> What the Client Experiences</div>
+      <div class="pipeline">
+        <div class="pipeline-step pipeline-step--gold">
+          <div class="step-num">STEP 1</div>
+          <div class="step-name">Privacy Disclosure</div>
+          <div class="step-detail">Read how data<br/>is handled<br/>(~90 seconds)</div>
+        </div>
+        <div class="pipeline-arrow">→</div>
+        <div class="pipeline-step pipeline-step--slate">
+          <div class="step-num">STEP 2</div>
+          <div class="step-name">Accept &amp; Continue</div>
+          <div class="step-detail">Check "I understand<br/>and accept"<br/>checkbox</div>
+        </div>
+        <div class="pipeline-arrow">→</div>
+        <div class="pipeline-step pipeline-step--teal">
+          <div class="step-num">STEP 3</div>
+          <div class="step-name">Fill 29 Questions</div>
+          <div class="step-detail">5 sections<br/>about their business<br/>(~20 minutes)</div>
+        </div>
+        <div class="pipeline-arrow">→</div>
+        <div class="pipeline-step pipeline-step--blue">
+          <div class="step-num">STEP 4</div>
+          <div class="step-name">Submit</div>
+          <div class="step-detail">Click "Generate<br/>My Roadmap"<br/>→ confirmation page</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="callout" style="--i:5">
+      <strong>The privacy disclosure is critical.</strong> Clients are told how their data is collected, stored, and used before they type a single answer. Consent is recorded with timestamp, IP address, and browser info for audit trail. This builds trust before the engagement begins.
+    </div>
+
+    <!-- ═══════════ 3. ROADMAP READY ═══════════ -->
+    <div id="s3" class="sec-head" style="--i:6"><span class="num">03</span> Roadmap Ready</div>
+
+    <div class="section section--teal" style="--i:7">
+      <div class="section-label"><span class="dot" style="background:var(--teal)"></span> What Happens When a Client Submits</div>
+      <div class="pipeline">
+        <div class="pipeline-step pipeline-step--teal">
+          <div class="step-num">MOMENT</div>
+          <div class="step-name">Client Submits</div>
+          <div class="step-detail">AESOP begins<br/>generating roadmap<br/>in background</div>
+        </div>
+        <div class="pipeline-arrow">→</div>
+        <div class="pipeline-step pipeline-step--gold">
+          <div class="step-num">~2 MIN</div>
+          <div class="step-name">Roadmap Ready</div>
+          <div class="step-detail">Charlie receives<br/>email notification<br/>with direct link</div>
+        </div>
+        <div class="pipeline-arrow">→</div>
+        <div class="pipeline-step pipeline-step--slate">
+          <div class="step-num">IMMEDIATE</div>
+          <div class="step-name">Review + File</div>
+          <div class="step-detail">Open results page<br/>→ download PDF<br/>→ file in Drive</div>
+        </div>
+        <div class="pipeline-arrow">→</div>
+        <div class="pipeline-step pipeline-step--sage">
+          <div class="step-num">WHEN READY</div>
+          <div class="step-name">Coach</div>
+          <div class="step-detail">Review roadmap<br/>before 1-on-1<br/>→ discuss with client</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="three-col" style="--i:8">
+      <div class="section section--accent">
+        <div class="section-label"><span class="dot" style="background:var(--gold)"></span> The Email You Get</div>
+        <ul class="node-list">
+          <li>Subject: "Executive Intake: [Business Name] — Roadmap Ready"</li>
+          <li>Confidence score</li>
+          <li><strong>View Roadmap</strong> button</li>
+          <li>Note: "Download PDF and file in client Drive folder"</li>
+        </ul>
+      </div>
+      <div class="section section--teal">
+        <div class="section-label"><span class="dot" style="background:var(--teal)"></span> The Results Page</div>
+        <ul class="node-list">
+          <li>Full adoption roadmap</li>
+          <li>Maturity model + current level</li>
+          <li>Phased project recommendations</li>
+          <li>What to avoid / risk signals</li>
+          <li>Executive insights summary</li>
+          <li><strong>Download PDF</strong> button</li>
+        </ul>
+      </div>
+      <div class="section section--slate">
+        <div class="section-label"><span class="dot" style="background:var(--slate)"></span> What the Client Gets</div>
+        <ul class="node-list">
+          <li>If they provided email: "Your roadmap is ready" notification with token link</li>
+          <li>Same results page (self-serve)</li>
+          <li>Roadmap is theirs to keep</li>
+        </ul>
+      </div>
+    </div>
+
+    <!-- ═══════════ 4. DAY-TO-DAY ═══════════ -->
+    <div id="s4" class="sec-head" style="--i:9"><span class="num">04</span> Day-to-Day</div>
+
+    <div class="section section--slate" style="--i:10">
+      <div class="section-label"><span class="dot" style="background:var(--slate)"></span> Your Workflow</div>
+      <ol style="font-size:14px; line-height:2.2; padding-left:20px;">
+        <li><strong>Send link.</strong> Email the intake URL to a new client before their coaching engagement.</li>
+        <li><strong>Wait for notification.</strong> Charlie forwards the "Roadmap Ready" email when it arrives (or you get it directly once admin access is set up).</li>
+        <li><strong>Open results page.</strong> Click the link in the email. Review the roadmap — maturity model, strategic themes, phased projects.</li>
+        <li><strong>Download PDF.</strong> Use the download button on the results page.</li>
+        <li><strong>File in Drive.</strong> Save to <code>TBG > Clients > [Client Name] > AI Adoption Roadmap.pdf</code>.</li>
+        <li><strong>Prep for 1-on-1.</strong> Review before the session. The roadmap is a discussion starter — your coaching makes it actionable.</li>
+      </ol>
+    </div>
+
+    <div class="inner-grid" style="--i:11">
+      <div class="section section--accent">
+        <div class="section-label"><span class="dot" style="background:var(--gold)"></span> If the Client Loses Their Link</div>
+        <p style="font-size:13px; color:var(--text-dim); line-height:1.6;">
+          Find their submission in the <strong>admin dashboard</strong> at <code>/admin/platform</code> (Intake Submissions tab). Copy the token URL: <code>https://aesopstudio.com/executive-intake/results/{token}</code>. Send it to the client.
+        </p>
+      </div>
+      <div class="section section--plum">
+        <div class="section-label"><span class="dot" style="background:var(--plum)"></span> If Something Goes Wrong</div>
+        <p style="font-size:13px; color:var(--text-dim); line-height:1.6;">
+          <strong>Roadmap didn't generate?</strong> Check admin dashboard — status may be <code>failed</code>. Charlie investigates.<br><br>
+          <strong>Client wants data deleted?</strong> Forward to Charlie or email <code>privacy@waifinder.org</code>. Deleted within 7 business days.
+        </p>
+      </div>
+    </div>
+
+    <!-- ═══════════ 5. SELF-SERVICE GUIDE ═══════════ -->
+    <div id="s5" class="sec-head" style="--i:12"><span class="num">05</span> Self-Service Guide</div>
+
+    <div class="table-wrap" style="--i:13">
+      <div class="table-scroll">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>Task</th>
+              <th>You can do this?</th>
+              <th>How</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>Send intake link to client</td>
+              <td><span class="status status--yes">Yes</span></td>
+              <td>Email <code>https://aesopstudio.com/executive-intake</code></td>
+            </tr>
+            <tr>
+              <td>View completed roadmap</td>
+              <td><span class="status status--yes">Yes</span></td>
+              <td>Click link in email notification</td>
+            </tr>
+            <tr>
+              <td>Download PDF</td>
+              <td><span class="status status--yes">Yes</span></td>
+              <td>Download button on results page</td>
+            </tr>
+            <tr>
+              <td>File PDF in client Drive folder</td>
+              <td><span class="status status--yes">Yes</span></td>
+              <td>Drag downloaded PDF to Drive</td>
+            </tr>
+            <tr>
+              <td>Check if a submission is done</td>
+              <td><span class="status status--yes">Yes</span></td>
+              <td>Admin dashboard → Intake Submissions tab</td>
+            </tr>
+            <tr>
+              <td>Find a lost client link</td>
+              <td><span class="status status--yes">Yes</span></td>
+              <td>Admin dashboard → copy token URL</td>
+            </tr>
+            <tr>
+              <td>Resend roadmap to client</td>
+              <td><span class="status status--yes">Yes</span></td>
+              <td>Forward token URL from admin dashboard</td>
+            </tr>
+            <tr>
+              <td>Add a new admin user</td>
+              <td><span class="status status--no">Charlie</span></td>
+              <td><small>Requires platform admin access</small></td>
+            </tr>
+            <tr>
+              <td>Fix a failed roadmap generation</td>
+              <td><span class="status status--no">Charlie</span></td>
+              <td><small>Requires backend investigation</small></td>
+            </tr>
+            <tr>
+              <td>Change the intake form questions</td>
+              <td><span class="status status--no">Charlie</span></td>
+              <td><small>Requires code change + deploy</small></td>
+            </tr>
+            <tr>
+              <td>Handle a data deletion request</td>
+              <td><span class="status status--no">Charlie</span></td>
+              <td><small>Via email to privacy@waifinder.org</small></td>
+            </tr>
+            <tr>
+              <td>Deploy updates</td>
+              <td><span class="status status--no">Charlie</span></td>
+              <td><small>Fly.io (backend) + Vercel (frontend)</small></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="callout" style="--i:14">
+      <strong>Goal:</strong> Move more items to the "Yes" column over time. The current split keeps Charlie as the technical backstop while TBG handles every client-facing step independently.
+    </div>
+
+    <!-- ═══════════ 6. KEY URLS ═══════════ -->
+    <div id="s6" class="sec-head" style="--i:15"><span class="num">06</span> Key URLs</div>
+
+    <div class="table-wrap" style="--i:16">
+      <div class="table-scroll">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>What</th>
+              <th>URL</th>
+              <th>Who uses it</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>Executive intake form</td>
+              <td><code>https://aesopstudio.com/executive-intake</code></td>
+              <td>TBG clients</td>
+            </tr>
+            <tr>
+              <td>SMB intake form</td>
+              <td><code>https://aesopstudio.com/smb-intake</code></td>
+              <td>Broader audience</td>
+            </tr>
+            <tr>
+              <td>Admin dashboard</td>
+              <td><code>https://aesopstudio.com/admin/platform</code></td>
+              <td>Charlie (TBG pending)</td>
+            </tr>
+            <tr>
+              <td>Privacy / deletion requests</td>
+              <td><code>privacy@waifinder.org</code></td>
+              <td>Anyone</td>
+            </tr>
+            <tr>
+              <td>Security posture doc</td>
+              <td><code>TBG/AESOP-security-posture.md</code></td>
+              <td>TBG internal</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+  </div><!-- /main -->
+</div><!-- /wrap -->
+
+<!-- ── Mermaid ── -->
+<script type="module">
+  import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs';
+  mermaid.initialize({
+    startOnLoad: true,
+    theme: 'base',
+    themeVariables: {
+      fontFamily: '"Work Sans", system-ui, sans-serif',
+      fontSize: '13px',
+      primaryColor: '#fefcf9',
+      primaryBorderColor: '#b8860b',
+      primaryTextColor: '#2d2418',
+      lineColor: '#b8ae9e',
+      secondaryColor: '#f3f0eb',
+      tertiaryColor: '#f9f7f4',
+    },
+    flowchart: { useMaxWidth: true, htmlLabels: true, curve: 'basis', padding: 16 },
+  });
+</script>
+
+<!-- ── Zoom + Pan ── -->
+<script>
+function updateZoomState(wrap) {
+  var t = wrap.querySelector('.mermaid');
+  var z = parseFloat(t.dataset.zoom || '1');
+  wrap.classList.toggle('is-zoomed', z > 1);
+}
+function zoomDiagram(btn, f) {
+  var w = btn.closest('.mermaid-wrap');
+  var t = w.querySelector('.mermaid');
+  var c = parseFloat(t.dataset.zoom || '1');
+  var n = Math.min(Math.max(c * f, 0.3), 5);
+  t.dataset.zoom = n;
+  t.style.transform = 'scale(' + n + ')';
+  updateZoomState(w);
+}
+function resetZoom(btn) {
+  var w = btn.closest('.mermaid-wrap');
+  var t = w.querySelector('.mermaid');
+  t.dataset.zoom = '1';
+  t.style.transform = 'scale(1)';
+  updateZoomState(w);
+}
+document.querySelectorAll('.mermaid-wrap').forEach(function(w) {
+  w.addEventListener('wheel', function(e) {
+    if (!e.ctrlKey && !e.metaKey) return;
+    e.preventDefault();
+    var t = w.querySelector('.mermaid');
+    var c = parseFloat(t.dataset.zoom || '1');
+    var f = e.deltaY < 0 ? 1.1 : 0.9;
+    var n = Math.min(Math.max(c * f, 0.3), 5);
+    t.dataset.zoom = n;
+    t.style.transform = 'scale(' + n + ')';
+    updateZoomState(w);
+  }, { passive: false });
+  var sx, sy, sl, st;
+  w.addEventListener('mousedown', function(e) {
+    if (e.target.closest('.zoom-controls')) return;
+    var t = w.querySelector('.mermaid');
+    if (parseFloat(t.dataset.zoom || '1') <= 1) return;
+    w.classList.add('is-panning');
+    sx = e.clientX; sy = e.clientY;
+    sl = w.scrollLeft; st = w.scrollTop;
+  });
+  window.addEventListener('mousemove', function(e) {
+    if (!w.classList.contains('is-panning')) return;
+    w.scrollLeft = sl - (e.clientX - sx);
+    w.scrollTop = st - (e.clientY - sy);
+  });
+  window.addEventListener('mouseup', function() { w.classList.remove('is-panning'); });
+});
+</script>
+
+<!-- ── Scroll Spy ── -->
+<script>
+(function() {
+  var toc = document.getElementById('toc');
+  var links = toc.querySelectorAll('a');
+  var sections = [];
+  links.forEach(function(link) {
+    var id = link.getAttribute('href').slice(1);
+    var el = document.getElementById(id);
+    if (el) sections.push({ id: id, el: el, link: link });
+  });
+  var observer = new IntersectionObserver(function(entries) {
+    entries.forEach(function(entry) {
+      if (entry.isIntersecting) {
+        links.forEach(function(l) { l.classList.remove('active'); });
+        var match = sections.find(function(s) { return s.el === entry.target; });
+        if (match) {
+          match.link.classList.add('active');
+          if (window.innerWidth <= 1000) {
+            match.link.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
+          }
+        }
+      }
+    });
+  }, { rootMargin: '-10% 0px -80% 0px' });
+  sections.forEach(function(s) { observer.observe(s.el); });
+  links.forEach(function(link) {
+    link.addEventListener('click', function(e) {
+      e.preventDefault();
+      var id = link.getAttribute('href').slice(1);
+      var el = document.getElementById(id);
+      if (el) {
+        el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        history.replaceState(null, '', '#' + id);
+      }
+    });
+  });
+})();
+</script>
+
+</body>
+</html>
