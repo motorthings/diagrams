@@ -1,0 +1,1799 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AESOP Transformation OS — Charlie Fuller</title>
+<meta name="description" content="AI agent governance and operationalization consulting. I help organizations move from 'we should use AI' to governed, evaluated, deployed agents at portfolio scale.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,wght@0,400;0,500;0,600;0,700;0,800;1,400;1,500&family=Source+Code+Pro:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  /* ═══════════════════════════════════════════
+     Gulf — powder blue and orange
+     ═══════════════════════════════════════════ */
+  :root {
+    --font-body: 'Fraunces', Georgia, 'Times New Roman', serif;
+    --font-mono: 'Source Code Pro', 'SF Mono', 'Fira Code', Consolas, monospace;
+
+    --color_primary:            #e8621a;
+    --color_primary_hover:      #d05510;
+    --color_secondary:          #4a90c4;
+    --color_text_on_primary:    #ffffff;
+    --color_text_on_secondary:  #0a1628;
+    --color_bg_page:            #eef4f9;
+    --color_bg_card:            #ffffff;
+    --color_bg_hover:           #ddeaf4;
+    --color_text_primary:       #0a1628;
+    --color_text_secondary:     #3d5a7a;
+    --color_text_muted:         #7a9ab8;
+    --color_border:             #c8daea;
+    --color_border_focus:       #e8621a;
+    --color_success:            #16a34a;
+    --color_warning:            #d97706;
+    --color_error:              #dc2626;
+    --color_info:               #4a90c4;
+    --color_chart:              #e8621a;
+    --header_bg_color:          #ffffff;
+    --header_title_color:       #e8621a;
+    --header_nav_color:         #3d5a7a;
+    --header_nav_active_color:  #4a90c4;
+
+    --radius-sm: 8px;
+    --radius: 12px;
+    --radius-lg: 16px;
+    --radius-xl: 20px;
+    --shadow-sm: 0 1px 2px rgba(10,22,40,0.04);
+    --shadow: 0 4px 16px rgba(10,22,40,0.05);
+    --shadow-lg: 0 12px 40px rgba(10,22,40,0.08);
+
+    --primary-dim:   rgba(232, 98, 26, 0.08);
+    --secondary-dim: rgba(74, 144, 196, 0.08);
+    --success-dim:   rgba(22, 163, 74, 0.08);
+    --warning-dim:   rgba(217, 119, 6, 0.08);
+    --error-dim:     rgba(220, 38, 38, 0.08);
+    --info-dim:      rgba(74, 144, 196, 0.08);
+    --muted-dim:     rgba(10, 22, 40, 0.05);
+    --accent-teal:   #0d9488;
+    --teal-dim:      rgba(13, 148, 136, 0.08);
+  }
+
+  :root.dark {
+    --color_primary:            #f37021;
+    --color_primary_hover:      #d95f15;
+    --color_secondary:          #6cace4;
+    --color_text_on_primary:    #0a1628;
+    --color_text_on_secondary:  #0a1628;
+    --color_bg_page:            #0a1628;
+    --color_bg_card:            #132240;
+    --color_bg_hover:           #1a2d52;
+    --color_text_primary:       #e8edf5;
+    --color_text_secondary:     #9bb0d4;
+    --color_text_muted:         #5e7aa3;
+    --color_border:             #1a2d52;
+    --color_border_focus:       #f37021;
+    --color_success:            #22c55e;
+    --color_warning:            #fbbf24;
+    --color_error:              #ef4444;
+    --color_info:               #6cace4;
+    --color_chart:              #f37021;
+    --header_bg_color:          #132240;
+    --header_title_color:       #f37021;
+    --header_nav_color:         #5e7aa3;
+    --header_nav_active_color:  #6cace4;
+
+    --primary-dim:   rgba(243, 112, 33, 0.12);
+    --secondary-dim: rgba(108, 172, 228, 0.12);
+    --success-dim:   rgba(34, 197, 94, 0.12);
+    --warning-dim:   rgba(251, 191, 36, 0.12);
+    --error-dim:     rgba(239, 68, 68, 0.12);
+    --info-dim:      rgba(108, 172, 228, 0.12);
+    --teal-dim:      rgba(45, 212, 191, 0.12);
+    --muted-dim:     rgba(232, 237, 245, 0.06);
+
+    --shadow-sm: 0 1px 2px rgba(0,0,0,0.2);
+    --shadow: 0 4px 16px rgba(0,0,0,0.3);
+    --shadow-lg: 0 12px 40px rgba(0,0,0,0.4);
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  html {
+    scroll-behavior: smooth;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  body {
+    background: var(--color_bg_page);
+    background-image:
+      radial-gradient(ellipse 80% 60% at 20% 0%, var(--primary-dim) 0%, transparent 50%),
+      radial-gradient(ellipse 60% 50% at 80% 100%, var(--secondary-dim) 0%, transparent 50%);
+    color: var(--color_text_primary);
+    font-family: var(--font-body);
+    line-height: 1.7;
+    min-height: 100vh;
+    transition: background 0.3s, color 0.3s;
+  }
+
+  /* ── Navigation ── */
+  .nav-tagline {
+    font-family: var(--font-body);
+    font-size: clamp(15px, 2vw, 20px);
+    font-weight: 800;
+    letter-spacing: -0.5px;
+    line-height: 1.15;
+    text-decoration: none;
+    color: var(--color_primary);
+    margin-right: 16px;
+  }
+
+  /* ── Persona toggle + value swap ── */
+  .persona-toggle {
+    display: inline-flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-top: 32px;
+    padding: 12px 16px;
+    border: 1px solid var(--color_border);
+    border-left: 4px solid var(--color_secondary);
+    border-radius: var(--radius);
+    background: var(--color_bg_card);
+    box-shadow: var(--shadow);
+  }
+
+  .persona-toggle-label {
+    font-family: var(--font-body);
+    font-size: 13px;
+    letter-spacing: 0.4px;
+    color: var(--color_text_secondary);
+    padding: 0 8px 0 4px;
+  }
+
+  .persona-btn {
+    font-family: var(--font-body);
+    font-size: 14px;
+    font-weight: 600;
+    letter-spacing: 0.3px;
+    padding: 12px 22px;
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--color_border);
+    background: transparent;
+    color: var(--color_text_secondary);
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+
+  .persona-btn:hover { background: var(--color_bg_hover); }
+
+  .persona-btn.active {
+    background: var(--color_primary);
+    color: var(--color_text_on_primary);
+    border-color: var(--color_primary);
+  }
+
+  .persona-link {
+    font-family: var(--font-body);
+    font-size: 14px;
+    font-weight: 600;
+    letter-spacing: 0.3px;
+    padding: 12px 22px;
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--color_border);
+    background: transparent;
+    color: var(--color_text_secondary);
+    text-decoration: none;
+    cursor: pointer;
+    transition: all 0.2s;
+    display: inline-flex;
+    align-items: center;
+    line-height: normal;
+  }
+  .persona-link:hover { background: var(--color_bg_hover); }
+
+  .persona-value {
+    margin: 24px auto 0;
+    max-width: 760px;
+  }
+
+  .persona-value-title {
+    font-family: var(--font-body);
+    font-size: 32px;
+    font-weight: 700;
+    letter-spacing: -0.5px;
+    line-height: 1.2;
+    color: var(--color_text_primary);
+    margin-bottom: 10px;
+  }
+
+  .persona-value-body {
+    font-size: 17px;
+    line-height: 1.7;
+    color: var(--color_text_muted);
+  }
+
+  /* Persona visibility — exec is default */
+  .persona-team { display: none; }
+  body[data-persona="team"] .persona-team { display: block; }
+  body[data-persona="team"] .persona-exec { display: none; }
+
+  .nav {
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    background: color-mix(in srgb, var(--header_bg_color) 85%, transparent);
+    border-bottom: 1px solid var(--color_border);
+    transition: background 0.3s, border-color 0.3s;
+  }
+
+  .nav-inner {
+    max-width: 1120px;
+    margin: 0 auto;
+    padding: 16px 24px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .nav-brand {
+    font-family: var(--font-mono);
+    font-size: 13px;
+    font-weight: 600;
+    letter-spacing: 0.5px;
+    color: var(--header_title_color);
+    text-decoration: none;
+  }
+
+  .nav-brand:hover { opacity: 0.8; }
+
+  .nav-links {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+  }
+
+  .nav-link {
+    font-family: var(--font-mono);
+    font-size: 12px;
+    font-weight: 500;
+    letter-spacing: 0.4px;
+    color: var(--header_nav_color);
+    text-decoration: none;
+    transition: color 0.2s;
+  }
+
+  .nav-link:hover { color: var(--header_nav_active_color); }
+
+  .nav-cta {
+    font-family: var(--font-mono);
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 0.3px;
+    padding: 6px 16px;
+    border-radius: 8px;
+    background: var(--color_primary);
+    color: var(--color_text_on_primary);
+    text-decoration: none;
+    transition: background 0.2s;
+  }
+
+  .nav-cta:hover { background: var(--color_primary_hover); }
+
+  .theme-toggle {
+    width: 36px;
+    height: 36px;
+    border-radius: 10px;
+    border: 1px solid var(--color_border);
+    background: var(--color_bg_card);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 16px;
+    color: var(--color_text_muted);
+    transition: all 0.2s;
+  }
+
+  .theme-toggle:hover {
+    border-color: var(--color_border_focus);
+    color: var(--color_primary);
+  }
+
+  /* ── Hamburger ── */
+  .hamburger {
+    display: none;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    gap: 5px;
+    width: 44px;
+    height: 44px;
+    border-radius: 10px;
+    border: 1px solid var(--color_border);
+    background: var(--color_bg_card);
+    cursor: pointer;
+    padding: 0;
+    z-index: 110;
+    transition: border-color 0.2s;
+  }
+
+  .hamburger span {
+    display: block;
+    width: 20px;
+    height: 2px;
+    border-radius: 2px;
+    background: var(--color_text_primary);
+    transition: transform 0.25s, opacity 0.25s;
+  }
+
+  .hamburger.active span:nth-child(1) {
+    transform: translateY(7px) rotate(45deg);
+  }
+
+  .hamburger.active span:nth-child(2) {
+    opacity: 0;
+  }
+
+  .hamburger.active span:nth-child(3) {
+    transform: translateY(-7px) rotate(-45deg);
+  }
+
+  /* ── Nav backdrop (hidden by default, shown on mobile) ── */
+  .nav-backdrop { display: none; }
+
+  /* ── Container ── */
+  .container {
+    max-width: 1120px;
+    margin: 0 auto;
+    padding: 0 24px;
+  }
+
+  /* ── Section ── */
+  .section {
+    margin-bottom: 80px;
+  }
+
+  .section-header {
+    margin-bottom: 32px;
+  }
+
+  .section-label {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    color: var(--color_primary);
+    margin-bottom: 8px;
+  }
+
+  .section-title {
+    font-size: 32px;
+    font-weight: 700;
+    letter-spacing: -0.5px;
+  }
+
+  .proof-name-link {
+    color: var(--color_secondary);
+    text-decoration: none;
+    border-bottom: 2px solid transparent;
+    transition: border-color 0.2s;
+  }
+
+  .proof-name-link:hover { border-bottom-color: var(--color_secondary); }
+
+  .section-subtitle {
+    font-size: 17px;
+    color: var(--color_text_muted);
+    margin-top: 8px;
+    max-width: 560px;
+  }
+
+  /* ── Hero ── */
+  .hero {
+    padding: 80px 0 64px;
+    text-align: center;
+  }
+
+  .hero-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 5px 16px;
+    background: var(--primary-dim);
+    border: 1px solid color-mix(in srgb, var(--color_primary) 30%, transparent);
+    border-radius: 20px;
+    font-family: var(--font-mono);
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 1.2px;
+    text-transform: uppercase;
+    color: var(--color_primary);
+    margin-bottom: 28px;
+  }
+
+  .hero h1 {
+    font-size: clamp(44px, 7vw, 68px);
+    font-weight: 800;
+    letter-spacing: -1.5px;
+    line-height: 1.1;
+    margin-bottom: 16px;
+    background: linear-gradient(135deg, var(--color_primary) 0%, var(--color_warning) 40%, var(--color_secondary) 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  .hero h2 {
+    font-size: clamp(20px, 3vw, 26px);
+    font-weight: 500;
+    color: var(--color_text_secondary);
+    margin-bottom: 12px;
+    font-style: italic;
+  }
+
+  .hero .description {
+    font-size: 17px;
+    color: var(--color_text_muted);
+    max-width: 760px;
+    margin: 0 auto 32px;
+    line-height: 1.7;
+  }
+
+  .hero-points {
+    list-style: none;
+    text-align: left;
+    padding: 0;
+  }
+
+  .hero-points li {
+    position: relative;
+    padding-left: 28px;
+    margin-bottom: 12px;
+  }
+
+  .hero-points li:last-child { margin-bottom: 0; }
+
+  .hero-points li::before {
+    content: "\203A";
+    position: absolute;
+    left: 6px;
+    top: -1px;
+    color: var(--color_secondary);
+    font-weight: 700;
+  }
+
+  .hero .description strong {
+    color: var(--color_text_primary);
+    font-weight: 600;
+  }
+
+  .hero-cta {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    font-family: var(--font-mono);
+    font-size: 14px;
+    font-weight: 600;
+    letter-spacing: 0.3px;
+    padding: 14px 32px;
+    border-radius: 12px;
+    background: var(--color_primary);
+    color: var(--color_text_on_primary);
+    text-decoration: none;
+    transition: all 0.2s;
+  }
+
+  .hero-cta:hover {
+    background: var(--color_primary_hover);
+    transform: translateY(-1px);
+    box-shadow: var(--shadow-lg);
+  }
+
+  /* ── Pipeline ── */
+  .pipeline {
+    background: var(--color_bg_card);
+    border: 1px solid var(--color_border);
+    border-radius: var(--radius-xl);
+    padding: 48px;
+  }
+
+  .pipeline-stages {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 0;
+    position: relative;
+  }
+
+  .pipeline-stage {
+    text-align: center;
+    position: relative;
+    padding: 0 8px;
+  }
+
+  .pipeline-stage::after {
+    content: '';
+    position: absolute;
+    top: 28px;
+    right: -4px;
+    width: 8px;
+    height: 8px;
+    border-top: 2px solid var(--color_border);
+    border-right: 2px solid var(--color_border);
+    transform: rotate(45deg);
+  }
+
+  .pipeline-stage:last-child::after {
+    display: none;
+  }
+
+  .pipeline-stage-icon {
+    width: 56px;
+    height: 56px;
+    border-radius: 14px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: var(--font-mono);
+    font-size: 13px;
+    font-weight: 700;
+    color: #fff;
+    margin: 0 auto 12px;
+  }
+
+  .pipeline-stage-name {
+    font-size: 15px;
+    font-weight: 700;
+    margin-bottom: 4px;
+  }
+
+  .pipeline-stage-desc {
+    font-size: 12px;
+    color: var(--color_text_muted);
+    line-height: 1.4;
+  }
+
+  .pipeline-divider {
+    grid-column: 1 / -1;
+    height: 1px;
+    background: var(--color_border);
+    margin: 32px 0;
+  }
+
+  .pipeline-detail {
+    grid-column: 1 / -1;
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 12px;
+  }
+
+  .pipeline-detail-item {
+    display: flex;
+    gap: 12px;
+    align-items: flex-start;
+    padding: 12px;
+    border-radius: var(--radius-sm);
+    transition: background 0.2s;
+  }
+
+  .pipeline-detail-item:hover {
+    background: var(--color_bg_hover);
+  }
+
+  .pipeline-detail-num {
+    flex-shrink: 0;
+    width: 28px;
+    height: 28px;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: var(--font-mono);
+    font-size: 12px;
+    font-weight: 600;
+    color: #fff;
+  }
+
+  .pipeline-detail-label {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--color_text_primary);
+    margin-bottom: 2px;
+  }
+
+  .pipeline-detail-desc {
+    font-size: 12px;
+    color: var(--color_text_muted);
+    line-height: 1.4;
+  }
+
+  /* ── Deliverables ── */
+  .deliverables-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 20px;
+  }
+
+  .deliverable-card {
+    background: var(--color_bg_card);
+    border: 1px solid var(--color_border);
+    border-radius: var(--radius);
+    padding: 28px;
+    border-top: 3px solid;
+    transition: transform 0.2s, box-shadow 0.2s;
+  }
+
+  .deliverable-card:hover {
+    transform: translateY(-3px);
+    box-shadow: var(--shadow-lg);
+    border-color: var(--color_secondary);
+  }
+
+  .deliverable-card-title::after {
+    content: " \2192";
+    color: var(--color_secondary);
+    font-weight: 700;
+    display: inline-block;
+    transition: transform 0.2s;
+  }
+
+  .deliverable-card:hover .deliverable-card-title {
+    color: var(--color_secondary);
+  }
+
+  .deliverable-card:hover .deliverable-card-title::after {
+    transform: translateX(5px);
+  }
+
+  .deliverable-card-icon {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+    margin-bottom: 10px;
+  }
+
+  .deliverable-card-title {
+    font-size: 18px;
+    font-weight: 700;
+    margin-bottom: 8px;
+  }
+
+  .deliverable-card-desc {
+    font-size: 14px;
+    color: var(--color_text_muted);
+    line-height: 1.5;
+  }
+
+  /* ── For Who ── */
+  .for-who-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 16px;
+  }
+
+  .for-who-card {
+    background: var(--color_bg_card);
+    border: 1px solid var(--color_border);
+    border-radius: var(--radius);
+    padding: 24px;
+    display: flex;
+    gap: 16px;
+    align-items: flex-start;
+    transition: transform 0.2s;
+  }
+
+  .for-who-card:hover {
+    transform: translateY(-2px);
+  }
+
+  .for-who-icon {
+    flex-shrink: 0;
+    width: 44px;
+    height: 44px;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 18px;
+  }
+
+  .for-who-label {
+    font-size: 16px;
+    font-weight: 700;
+    margin-bottom: 4px;
+  }
+
+  .for-who-desc {
+    font-size: 14px;
+    color: var(--color_text_muted);
+    line-height: 1.5;
+  }
+
+  /* ── Approach ── */
+  .approach-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 16px;
+  }
+
+  .approach-card {
+    background: var(--color_bg_card);
+    border: 1px solid var(--color_border);
+    border-radius: var(--radius);
+    padding: 24px;
+    border-left: 3px solid;
+    transition: transform 0.2s, box-shadow 0.2s;
+  }
+
+  .approach-card:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow);
+  }
+
+  .approach-card-icon {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+    margin-bottom: 10px;
+  }
+
+  .approach-card-title {
+    font-size: 17px;
+    font-weight: 700;
+    margin-bottom: 6px;
+  }
+
+  .approach-card-desc {
+    font-size: 14px;
+    color: var(--color_text_muted);
+    line-height: 1.5;
+  }
+
+  /* ── Proof ── */
+  .proof-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 16px;
+  }
+
+  .proof-stat {
+    background: var(--color_bg_card);
+    border: 1px solid var(--color_border);
+    border-radius: var(--radius);
+    padding: 24px;
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+  }
+
+  .proof-stat-value {
+    font-size: 36px;
+    font-weight: 800;
+    letter-spacing: -1px;
+    margin-bottom: 4px;
+  }
+
+  .proof-stat-label {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    font-weight: 500;
+    color: var(--color_text_muted);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+
+  /* ── Contact ── */
+  .contact-section {
+    background: var(--color_bg_card);
+    border: 1px solid var(--color_border);
+    border-radius: var(--radius-xl);
+    padding: 48px;
+    text-align: center;
+  }
+
+  .contact-section h2 {
+    font-size: 28px;
+    font-weight: 700;
+    margin-bottom: 8px;
+    letter-spacing: -0.5px;
+  }
+
+  .contact-section p {
+    font-size: 16px;
+    color: var(--color_text_muted);
+    margin-bottom: 28px;
+  }
+
+  .contact-links {
+    display: flex;
+    justify-content: center;
+    gap: 12px;
+    flex-wrap: wrap;
+  }
+
+  .contact-link {
+    font-family: var(--font-mono);
+    font-size: 13px;
+    font-weight: 500;
+    padding: 10px 22px;
+    border-radius: 10px;
+    text-decoration: none;
+    transition: all 0.2s;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .contact-link.primary {
+    background: var(--color_primary);
+    color: var(--color_text_on_primary);
+  }
+
+  .contact-link.primary:hover {
+    background: var(--color_primary_hover);
+    transform: translateY(-1px);
+  }
+
+  .contact-link.secondary {
+    background: var(--color_bg_card);
+    border: 1px solid var(--color_border);
+    color: var(--color_text_primary);
+  }
+
+  .contact-link.secondary:hover {
+    border-color: var(--color_border_focus);
+    background: var(--color_bg_hover);
+  }
+
+  .contact-link.github {
+    background: #24292e;
+    color: #ffffff;
+    border-color: #24292e;
+  }
+
+  .contact-link.github:hover {
+    background: #1a1f23;
+    border-color: #1a1f23;
+    color: #ffffff;
+  }
+
+  .contact-link.linkedin {
+    background: #0A66C2;
+    color: #ffffff;
+    border-color: #0A66C2;
+  }
+
+  .contact-link.linkedin:hover {
+    background: #084e96;
+    border-color: #084e96;
+    color: #ffffff;
+  }
+
+  /* ── Footer ── */
+  .footer {
+    border-top: 1px solid var(--color_border);
+    padding: 24px 0 32px;
+    text-align: center;
+    font-family: var(--font-mono);
+    font-size: 12px;
+    color: var(--color_text_muted);
+  }
+
+  .footer a {
+    color: var(--color_text_muted);
+    text-decoration: none;
+    transition: color 0.2s;
+  }
+
+  .footer a:hover { color: var(--color_text_primary); }
+
+  /* ── Animations ── */
+  .reveal {
+    opacity: 0;
+    transform: translateY(20px);
+    transition: opacity 0.5s ease-out, transform 0.5s ease-out;
+  }
+
+  .reveal.visible {
+    opacity: 1;
+    transform: translateY(0);
+  }
+
+  .reveal-delay-1 { transition-delay: 0.05s; }
+  .reveal-delay-2 { transition-delay: 0.1s; }
+  .reveal-delay-3 { transition-delay: 0.15s; }
+  .reveal-delay-4 { transition-delay: 0.2s; }
+  .reveal-delay-5 { transition-delay: 0.25s; }
+
+  @media (prefers-reduced-motion: reduce) {
+    .reveal { opacity: 1; transform: none; transition: none; }
+  }
+
+  /* ── Responsive: Tablet + Mobile Nav ── */
+  /* ── Hamburger nav at ALL widths ── */
+  .hamburger { display: flex; }
+
+  .nav-actions {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .nav-links {
+    position: fixed;
+    top: 0;
+    right: 0;
+    width: 280px;
+    height: 100vh;
+    height: 100dvh;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 4px;
+    background: var(--color_bg_card);
+    border-left: 1px solid var(--color_border);
+    padding: 80px 20px 24px;
+    transform: translateX(100%);
+    transition: transform 0.3s ease;
+    z-index: 105;
+    box-shadow: var(--shadow-lg);
+  }
+
+  .nav-links.open { transform: translateX(0); }
+
+  .nav-link {
+    font-size: 15px;
+    padding: 12px 16px;
+    border-radius: var(--radius-sm);
+    display: block;
+    transition: background 0.15s, color 0.15s;
+  }
+
+  .nav-link:hover { background: var(--color_bg_hover); }
+
+  @media (max-width: 900px) {
+    /* Grid adjustments */
+    .pipeline-stages {
+      grid-template-columns: repeat(5, 1fr);
+      gap: 4px;
+    }
+
+    .pipeline-stage { padding: 0 4px; }
+    .pipeline-stage-icon { width: 44px; height: 44px; font-size: 11px; }
+    .pipeline-stage-name { font-size: 13px; }
+    .pipeline-stage-desc { font-size: 11px; }
+    .pipeline-stage::after { display: none; }
+
+    .pipeline-detail { grid-template-columns: 1fr; }
+
+    .deliverables-grid { grid-template-columns: repeat(2, 1fr); }
+    .for-who-grid { grid-template-columns: 1fr; }
+    .approach-grid { grid-template-columns: repeat(2, 1fr); }
+    .proof-grid { grid-template-columns: repeat(2, 1fr); }
+
+    .hero { padding: 56px 0 40px; }
+    .section { margin-bottom: 56px; }
+
+    /* Hamburger nav — slide-out from right */
+    .hamburger { display: flex; }
+
+    .nav-links {
+      position: fixed;
+      top: 0;
+      right: 0;
+      width: 280px;
+      height: 100vh;
+      height: 100dvh;
+      flex-direction: column;
+      align-items: stretch;
+      gap: 4px;
+      background: var(--color_bg_card);
+      border-left: 1px solid var(--color_border);
+      padding: 80px 20px 24px;
+      transform: translateX(100%);
+      transition: transform 0.3s ease;
+      z-index: 105;
+      box-shadow: var(--shadow-lg);
+    }
+
+    .nav-links.open {
+      transform: translateX(0);
+    }
+
+    .nav-link {
+      font-size: 15px;
+      padding: 12px 16px;
+      border-radius: var(--radius-sm);
+      display: block;
+      transition: background 0.15s, color 0.15s;
+    }
+
+    .nav-link:hover {
+      background: var(--color_bg_hover);
+    }
+
+    .theme-toggle {
+      margin-top: auto;
+      align-self: flex-end;
+    }
+
+    .nav-backdrop {
+      display: none;
+      position: fixed;
+      inset: 0;
+      z-index: 99;
+      background: rgba(10, 22, 40, 0.5);
+    }
+
+    .nav-backdrop.open { display: block; }
+  }
+
+  /* ── Phone ── */
+  @media (max-width: 768px) {
+    .hero { padding: 48px 0 36px; }
+    .hero h1 { font-size: clamp(36px, 10vw, 56px); }
+    .hero h2 { font-size: clamp(17px, 4vw, 22px); }
+    .hero .description { font-size: 15px; }
+
+    .section-title { font-size: 26px; }
+    .section-subtitle { font-size: 15px; }
+    .container { padding: 0 20px; }
+
+    .pipeline { padding: 32px 20px; }
+    .pipeline-stages { grid-template-columns: 1fr; gap: 16px; }
+    .pipeline-stage {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      text-align: left;
+      padding: 12px;
+      border-radius: var(--radius-sm);
+      background: var(--color_bg_page);
+    }
+    .pipeline-stage-icon {
+      margin: 0;
+      flex-shrink: 0;
+      width: 48px;
+      height: 48px;
+      font-size: 15px;
+      border-radius: 12px;
+    }
+    .pipeline-stage::after { display: none; }
+    .pipeline-divider { margin: 20px 0; }
+
+    .contact-section { padding: 36px 24px; }
+    .contact-section h2 { font-size: 24px; }
+
+    .modal-overlay { padding: 0; align-items: stretch; }
+    .modal {
+      border-radius: 0;
+      max-width: none;
+      min-height: 100vh;
+      min-height: 100dvh;
+    }
+    .modal-header { padding: 32px 24px 0; }
+    .modal-body { padding: 20px 24px 40px; }
+    .modal-header h2 { font-size: 24px; }
+    .modal-close { top: 12px; right: 12px; }
+  }
+
+  @media (max-width: 540px) {
+    .deliverables-grid { grid-template-columns: 1fr; }
+    .approach-grid { grid-template-columns: 1fr; }
+    .proof-grid { grid-template-columns: 1fr; }
+    .contact-section { padding: 28px 16px; }
+    .section-title { font-size: 24px; }
+    .section { margin-bottom: 48px; }
+    .hero { padding: 40px 0 28px; }
+    .hero h1 { font-size: clamp(28px, 11vw, 42px); }
+    .pipeline { padding: 20px 12px; }
+    .pipeline-stage { gap: 12px; padding: 10px; }
+    .pipeline-stage-icon { width: 40px; height: 40px; font-size: 13px; }
+    .pipeline-stage-name { font-size: 14px; }
+    .pipeline-stage-desc { font-size: 12px; }
+    .deliverable-card { padding: 20px; }
+    .approach-card { padding: 20px; }
+    .for-who-card { padding: 20px; }
+    .proof-stat { padding: 20px; }
+    .proof-stat-value { font-size: 28px; }
+    .footer { font-size: 11px; }
+    .email-display { flex-direction: column; gap: 8px; }
+  }
+
+  /* ── Modal ── */
+  .modal-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    z-index: 200;
+    background: rgba(10, 22, 40, 0.7);
+    backdrop-filter: blur(4px);
+    -webkit-backdrop-filter: blur(4px);
+    align-items: flex-start;
+    justify-content: center;
+    padding: 48px 24px;
+    overflow-y: auto;
+  }
+
+  .modal-overlay.open {
+    display: flex;
+  }
+
+  .modal {
+    background: var(--color_bg_card);
+    border: 1px solid var(--color_border);
+    border-radius: var(--radius-xl);
+    width: 100%;
+    max-width: 820px;
+    position: relative;
+    animation: modalIn 0.25s ease-out;
+    box-shadow: var(--shadow-lg);
+  }
+
+  @keyframes modalIn {
+    from { opacity: 0; transform: translateY(12px) scale(0.98); }
+    to { opacity: 1; transform: translateY(0) scale(1); }
+  }
+
+  .modal-close {
+    position: absolute;
+    top: 16px;
+    right: 16px;
+    width: 36px;
+    height: 36px;
+    border-radius: 10px;
+    border: 1px solid var(--color_border);
+    background: var(--color_bg_card);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 18px;
+    color: var(--color_text_muted);
+    z-index: 10;
+    transition: all 0.2s;
+  }
+
+  .modal-close:hover {
+    border-color: var(--color_border_focus);
+    color: var(--color_text_primary);
+  }
+
+  .modal-header {
+    padding: 40px 40px 0;
+  }
+
+  .modal-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 4px 14px;
+    background: var(--primary-dim);
+    border: 1px solid color-mix(in srgb, var(--color_primary) 30%, transparent);
+    border-radius: 20px;
+    font-family: var(--font-mono);
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    color: var(--color_primary);
+    margin-bottom: 16px;
+  }
+
+  .modal-header h2 {
+    font-size: 28px;
+    font-weight: 700;
+    letter-spacing: -0.5px;
+    margin-bottom: 8px;
+  }
+
+  .modal-header p {
+    font-size: 16px;
+    color: var(--color_text_muted);
+    line-height: 1.6;
+    max-width: 600px;
+  }
+
+  .modal-body {
+    padding: 24px 40px 40px;
+    text-align: center;
+  }
+
+  .email-display {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    margin-bottom: 20px;
+    padding: 16px 20px;
+    background: var(--color_bg_page);
+    border: 1px solid var(--color_border);
+    border-radius: 10px;
+  }
+
+  .email-address {
+    font-family: var(--font-mono);
+    font-size: 17px;
+    font-weight: 600;
+    color: var(--color_text_primary);
+  }
+
+  .copy-btn {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    font-weight: 600;
+    padding: 6px 14px;
+    border-radius: 6px;
+    border: 1px solid var(--color_border);
+    background: var(--color_bg_card);
+    color: var(--color_text_secondary);
+    cursor: pointer;
+    transition: all 0.2s;
+    white-space: nowrap;
+  }
+
+  .copy-btn:hover {
+    border-color: var(--color_border_focus);
+    color: var(--color_primary);
+  }
+
+  .form-submit {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    font-family: var(--font-mono);
+    font-size: 14px;
+    font-weight: 600;
+    padding: 12px 28px;
+    border-radius: 10px;
+    border: none;
+    background: var(--color_primary);
+    color: var(--color_text_on_primary);
+    cursor: pointer;
+    transition: background 0.2s;
+    text-decoration: none;
+  }
+
+  .form-submit:hover {
+    background: var(--color_primary_hover);
+  }
+
+  @media (max-width: 600px) {
+    .modal-overlay { padding: 16px; }
+    .modal-header { padding: 28px 24px 0; }
+    .modal-body { padding: 20px 24px 32px; }
+    .email-display { flex-direction: column; gap: 8px; }
+  }
+</style>
+</head>
+<body data-persona="exec">
+
+<nav class="nav">
+  <div class="nav-inner">
+    <a href="#" class="nav-tagline" aria-label="waifinder.org home">Closing the gap between AI ambition and AI operation</a>
+    <div class="nav-actions">
+      <a href="#" class="nav-cta" id="navCta">Request access</a>
+      <button class="hamburger" id="hamburger" aria-label="Menu">
+        <span></span>
+        <span></span>
+        <span></span>
+      </button>
+    </div>
+    <div class="nav-links" id="navLinks">
+      <a href="#what" class="nav-link">How it works</a>
+      <a href="#proof" class="nav-link">Proof</a>
+      <a href="#approach" class="nav-link">Approach</a>
+      <a href="#dig-deeper" class="nav-link">Dig deeper</a>
+      <a href="#contact" class="nav-link">Contact</a>
+      <button class="theme-toggle" id="themeToggle" aria-label="Toggle dark mode">
+        <span class="theme-icon-light">&#9788;</span>
+        <span class="theme-icon-dark" style="display:none">&#9790;</span>
+      </button>
+    </div>
+  </div>
+</nav>
+
+<div class="nav-backdrop" id="navBackdrop"></div>
+
+<header class="hero">
+  <div class="container">
+
+    <h1>AESOP Transformation OS</h1>
+    <ul class="description hero-points">
+      <li>Most teams start in the middle and build, neglecting both ends.</li>
+      <li>AESOP owns the full lifecycle — discovery upstream, governance and monitoring downstream.</li>
+      <li>It is a <strong>holistic operating model</strong> so no blind spot survives contact with production.</li>
+    </ul>
+
+    <div class="persona-toggle" role="tablist" aria-label="Choose your role">
+      <span class="persona-toggle-label">I'm&hellip;</span>
+      <button class="persona-btn" data-persona="exec" role="tab">leading the org</button>
+      <button class="persona-btn" data-persona="team" role="tab">running this on a team</button>
+      <a class="persona-link" href="consultant-offer.html">an AI consultant</a>
+    </div>
+
+    <div class="persona-value">
+      <div class="persona-exec">
+        <h3 class="persona-value-title">You committed to AI. Now it has to land.</h3>
+        <ul class="persona-value-body hero-points">
+          <li>You set the direction. Now it has to survive production — governed, measurable, board-defensible.</li>
+          <li>AESOP turns the mandate into shipped, monitored systems — with ROI you can point to and risk you controlled.</li>
+        </ul>
+      </div>
+      <div class="persona-team">
+        <h3 class="persona-value-title">You were told to &ldquo;Do AI!!!&rdquo;</h3>
+        <ul class="persona-value-body hero-points">
+          <li>No playbook, high expectations, real deadlines.</li>
+          <li>AESOP gives you the structure — discovery that proves the problem is worth solving, a build pipeline with human checkpoints, and evaluation gates so nothing ships broken.</li>
+          <li>A repeatable method instead of a blank page.</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</header>
+
+<main class="container">
+
+  <!-- What it is -->
+  <section id="what" class="section">
+    <div class="section-header">
+      <div class="section-label">What AESOP does</div>
+      <h2 class="section-title">The full lifecycle, connected</h2>
+      <p class="section-subtitle persona-exec">Most AI governance is a policy nobody follows. AESOP builds the controls into the pipeline — critical failures unshippable by design, and provable to the board.</p>
+      <p class="section-subtitle persona-team">Most AI governance stops at a policy document that nobody reads after week one. AESOP is different — governance, evaluation, and monitoring are embedded in the pipeline itself, with hard gates that make critical failures unshippable by design, not by policy.</p>
+    </div>
+
+    <div class="pipeline reveal">
+      <div class="pipeline-stages">
+        <div class="pipeline-stage">
+          <div class="pipeline-stage-icon" style="background: var(--color_primary)">1</div>
+          <div class="pipeline-stage-name">Discover</div>
+          <div class="pipeline-stage-desc">Structured interview, stakeholder map, GO / NO-GO triage</div>
+        </div>
+        <div class="pipeline-stage">
+          <div class="pipeline-stage-icon" style="background: var(--color_warning)">2</div>
+          <div class="pipeline-stage-name">Design</div>
+          <div class="pipeline-stage-desc">PRD generation, architecture scoring, six-phase instruction writing</div>
+        </div>
+        <div class="pipeline-stage">
+          <div class="pipeline-stage-icon" style="background: var(--color_secondary)">3</div>
+          <div class="pipeline-stage-name">Build</div>
+          <div class="pipeline-stage-desc">HITL checkpoints, platform-abstracted pipeline, version control</div>
+        </div>
+        <div class="pipeline-stage">
+          <div class="pipeline-stage-icon" style="background: var(--color_success)">4</div>
+          <div class="pipeline-stage-name">Evaluate</div>
+          <div class="pipeline-stage-desc">Seven evaluation modes, weighted scoring, safety &amp; bias veto</div>
+        </div>
+        <div class="pipeline-stage">
+          <div class="pipeline-stage-icon" style="background: var(--color_info)">5</div>
+          <div class="pipeline-stage-name">Operate</div>
+          <div class="pipeline-stage-desc">Launch packages, cost tracking, drift alerts, repair cycles</div>
+        </div>
+      </div>
+
+      <div class="persona-team">
+      <div class="pipeline-divider"></div>
+
+      <div class="pipeline-detail">
+        <div class="pipeline-detail-item reveal">
+          <div class="pipeline-detail-num" style="background: var(--color_primary)">01</div>
+          <div>
+            <div class="pipeline-detail-label">Problem validation before solution design</div>
+            <div class="pipeline-detail-desc">Discovery interviews validate that the problem is real, costly, solvable, and yours to solve — before a single requirement is written.</div>
+          </div>
+        </div>
+        <div class="pipeline-detail-item reveal reveal-delay-1">
+          <div class="pipeline-detail-num" style="background: var(--color_warning)">02</div>
+          <div>
+            <div class="pipeline-detail-label">Architecture scoring with trade-off visibility</div>
+            <div class="pipeline-detail-desc">Every design decision is scored against criteria — latency, cost, safety, and platform fit — with rationale recorded.</div>
+          </div>
+        </div>
+        <div class="pipeline-detail-item reveal reveal-delay-2">
+          <div class="pipeline-detail-num" style="background: var(--color_secondary)">03</div>
+          <div>
+            <div class="pipeline-detail-label">Six-phase build with human checkpoints</div>
+            <div class="pipeline-detail-desc">System instructions, tool definitions, knowledge base, and evaluation harness built in sequence — each phase requires human approval to proceed.</div>
+          </div>
+        </div>
+        <div class="pipeline-detail-item reveal reveal-delay-3">
+          <div class="pipeline-detail-num" style="background: var(--color_success)">04</div>
+          <div>
+            <div class="pipeline-detail-label">Seven evaluation modes with hard veto</div>
+            <div class="pipeline-detail-desc">Safety, bias, legal, information security, instructions, ethos, and adversarial red-teaming. A critical failure blocks deployment — by design, not by policy.</div>
+          </div>
+        </div>
+        <div class="pipeline-detail-item reveal reveal-delay-4">
+          <div class="pipeline-detail-num" style="background: var(--color_info)">05</div>
+          <div>
+            <div class="pipeline-detail-label">Portfolio-level tracking and monitoring</div>
+            <div class="pipeline-detail-desc">Kanban board, strategic scoring, cost analytics, and drift detection across every deployed agent — one pane of glass for the whole program.</div>
+          </div>
+        </div>
+        <div class="pipeline-detail-item reveal reveal-delay-5">
+          <div class="pipeline-detail-num" style="background: var(--color_error)">06</div>
+          <div>
+            <div class="pipeline-detail-label">Repair engine with tracked rationale</div>
+            <div class="pipeline-detail-desc">When an evaluation fails or drift is detected, the repair agent proposes fixes with linked evidence — every change is auditable.</div>
+          </div>
+        </div>
+      </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- What sets it apart -->
+  <section id="differentiator" class="section">
+    <div class="section-header">
+      <div class="section-label">What sets AESOP apart</div>
+      <h2 class="section-title">Rigor that survives contact with reality</h2>
+      <p class="section-subtitle persona-exec">Most AI tools give you a dashboard. AESOP gives you an operating model — one accountable system from idea to production, with ROI you can report.</p>
+      <p class="section-subtitle persona-team">Most AI governance tools give you a dashboard. AESOP gives you an operating model — the connective tissue between discovery, metrics, governance, and ongoing iteration.</p>
+    </div>
+    <div class="for-who-grid">
+      <div class="for-who-card reveal">
+        <div class="for-who-icon" style="background: var(--primary-dim); color: var(--color_primary);">&#9733;</div>
+        <div>
+          <div class="for-who-label">Discovery that earns its keep</div>
+          <div class="for-who-desc">Structured interviews, stakeholder mapping, and GO / NO-GO triage ensure the full context is captured before resources are committed. The problem gets validated; the team gets aligned.</div>
+        </div>
+      </div>
+      <div class="for-who-card reveal reveal-delay-1">
+        <div class="for-who-icon" style="background: var(--secondary-dim); color: var(--color_secondary);">&#9776;</div>
+        <div>
+          <div class="for-who-label">Metrics that actually detect issues</div>
+          <div class="for-who-desc">Not generic scores. Evaluation modes mapped to what matters for your use case — safety, bias, instruction quality, legal exposure. Weighted, transparent, and auditable.</div>
+        </div>
+      </div>
+      <div class="for-who-card reveal reveal-delay-2">
+        <div class="for-who-icon" style="background: var(--success-dim); color: var(--color_success);">&#8635;</div>
+        <div>
+          <div class="for-who-label">Iteration loop, not fire-and-forget</div>
+          <div class="for-who-desc">Monitoring feeds drift detection. Drift triggers repair. Repair creates a new version with tracked rationale. The pipeline doesn't end at deploy — it loops.</div>
+        </div>
+      </div>
+      <div class="for-who-card reveal reveal-delay-3">
+        <div class="for-who-icon" style="background: var(--warning-dim); color: var(--color_warning);">&#9776;</div>
+        <div>
+          <div class="for-who-label">Built for the team, not just the tool</div>
+          <div class="for-who-desc">Every stage has human checkpoints. Subject matter experts review evaluations. Domain knowledge gets captured and reused. AESOP amplifies your team's judgment — it doesn't sideline it.</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Who it's for -->
+  <section id="who" class="section">
+    <div class="section-header">
+      <div class="section-label">Who it's for</div>
+      <h2 class="section-title persona-exec">Built for leaders who can't afford guesswork</h2>
+      <h2 class="section-title persona-team">Built for teams that can't afford guesswork</h2>
+      <p class="section-subtitle persona-exec">For leaders accountable for AI outcomes — who need it running across the org, not a chatbot that stalls after the demo.</p>
+      <p class="section-subtitle persona-team">For teams on the hook to deliver AI — who need a complete method across discovery, governance, metrics, deployment, and iteration, not just ship a chatbot.</p>
+    </div>
+    <div class="for-who-grid">
+      <div class="for-who-card reveal">
+        <div class="for-who-icon" style="background: var(--primary-dim); color: var(--color_primary);">&#9878;</div>
+        <div>
+          <div class="for-who-label">Enterprise AI teams</div>
+          <div class="for-who-desc">Running a portfolio of agents across departments. Need visibility into what's deployed, what's stuck, and what's highest leverage.</div>
+        </div>
+      </div>
+      <div class="for-who-card reveal reveal-delay-1">
+        <div class="for-who-icon" style="background: var(--secondary-dim); color: var(--color_secondary);">&#9733;</div>
+        <div>
+          <div class="for-who-label">Compliance &amp; risk leaders</div>
+          <div class="for-who-desc">Need auditable evidence that AI systems were evaluated for safety, bias, and legal risk before they touched customers or employees.</div>
+        </div>
+      </div>
+      <div class="for-who-card reveal reveal-delay-2">
+        <div class="for-who-icon" style="background: var(--success-dim); color: var(--color_success);">&#9998;</div>
+        <div>
+          <div class="for-who-label">Agencies &amp; consultancies</div>
+          <div class="for-who-desc">Building AI solutions for clients. Need a repeatable methodology that produces consistent quality and defensible evaluation reports.</div>
+        </div>
+      </div>
+      <div class="for-who-card reveal reveal-delay-3">
+        <div class="for-who-icon" style="background: var(--warning-dim); color: var(--color_warning);">&#9881;</div>
+        <div>
+          <div class="for-who-label">Platform &amp; product teams</div>
+          <div class="for-who-desc">Embedding AI into existing products. Need evaluation harnesses and safety gates that work in CI/CD, not just in a document.</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Why listen to me -->
+  <section id="proof" class="section">
+    <div class="section-header">
+      <div class="section-label">Proof</div>
+      <h2 class="section-title">I'm <a href="https://www.linkedin.com/in/charlie-fuller-colorado/" target="_blank" rel="noopener" class="proof-name-link">Charlie Fuller</a>. I've seen it from the inside.</h2>
+      <p class="section-subtitle">Fifteen-plus years inside the operations of hundreds of companies — from seed-stage startups to the Fortune 500 — gave me a clear view of what separates AI that ships from AI that's theater. I've run thousands of agent evaluations inside live enterprise operations. AESOP is that experience, made into a system.</p>
+    </div>
+
+    <div class="proof-grid">
+      <div class="proof-stat reveal">
+        <div class="proof-stat-value" style="color: var(--color_primary)">200+</div>
+        <div class="proof-stat-label">Company operations observed</div>
+      </div>
+      <div class="proof-stat reveal reveal-delay-1">
+        <div class="proof-stat-value" style="color: var(--color_secondary)">15+</div>
+        <div class="proof-stat-label">Years in enterprise operations</div>
+      </div>
+      <div class="proof-stat reveal reveal-delay-2">
+        <div class="proof-stat-value" style="color: var(--color_success)">Fortune 500</div>
+        <div class="proof-stat-label">To seed-stage, full spectrum</div>
+      </div>
+      <div class="proof-stat reveal reveal-delay-3">
+        <div class="proof-stat-value" style="color: var(--color_warning)">1,000+</div>
+        <div class="proof-stat-label">Agent evaluations run</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- How I work -->
+  <section id="approach" class="section">
+    <div class="section-header">
+      <div class="section-label">Approach</div>
+      <h2 class="section-title">The operating philosophy</h2>
+      <p class="section-subtitle">I won't pretend this is easy.</p>
+    </div>
+
+    <div class="approach-grid">
+      <div class="approach-card reveal" style="border-left-color: var(--color_primary)">
+        <div class="approach-card-icon" style="color: var(--color_primary)">Principle 01</div>
+        <div class="approach-card-title">Context before code</div>
+        <div class="approach-card-desc persona-exec">Full context, stakeholders, and success metrics captured before anything's built. No building blind.</div>
+        <div class="approach-card-desc persona-team">Rigorous discovery captures the full organizational context, stakeholder map, and success metrics before anything gets built. If you don't understand the system the agent is entering, you're building blind.</div>
+      </div>
+
+      <div class="approach-card reveal reveal-delay-1" style="border-left-color: var(--color_secondary)">
+        <div class="approach-card-icon" style="color: var(--color_secondary)">Principle 02</div>
+        <div class="approach-card-title">Governance at runtime, not in a doc</div>
+        <div class="approach-card-desc persona-exec">Safety, ethics, and bias enforced as hard gates in the pipeline — every time, with an audit trail.</div>
+        <div class="approach-card-desc persona-team">Safety, ethics, and bias checks are embedded as hard gates in the pipeline itself. Not a policy someone reads once — enforcement that runs every time, with auditable rationale at every checkpoint.</div>
+      </div>
+
+      <div class="approach-card reveal reveal-delay-2" style="border-left-color: var(--color_success)">
+        <div class="approach-card-icon" style="color: var(--color_success)">Principle 03</div>
+        <div class="approach-card-title">Full lifecycle, connected</div>
+        <div class="approach-card-desc persona-exec">Discovery to deployment to monitoring to iteration — one unbroken pipeline that loops, not a one-way ship.</div>
+        <div class="approach-card-desc persona-team">Discovery through deployment through monitoring through iteration — one unbroken pipeline. An agent that ships without operationalization is an incident waiting to happen. Monitoring feeds back into discovery.</div>
+      </div>
+
+      <div class="approach-card reveal reveal-delay-3" style="border-left-color: var(--color_warning)">
+        <div class="approach-card-icon" style="color: var(--color_warning)">Principle 04</div>
+        <div class="approach-card-title">Amplifies judgment, doesn't replace it</div>
+        <div class="approach-card-desc persona-exec">The system handles rigor and traceability. Your people make the decisions — at every checkpoint.</div>
+        <div class="approach-card-desc persona-team">The system handles rigor, traceability, and enforcement. Humans make the decisions. Every stage has a checkpoint. Every evaluation shows its work. The goal is to leverage the skills of your team, not automate them away.</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Dig Deeper -->
+  <section id="dig-deeper" class="section">
+    <div class="section-header">
+      <div class="section-label">Dig deeper</div>
+      <h2 class="section-title">Explore the full platform</h2>
+      <p class="section-subtitle persona-exec">Documentation for every AESOP capability.</p>
+      <p class="section-subtitle persona-team">Detailed documentation for every AESOP capability — from architecture to operationalization.</p>
+    </div>
+    <div class="deliverables-grid">
+      <a href="https://aesop-studio.sickofancy.ai/guides/aesop-platform-overview.html" class="deliverable-card reveal" style="border-top-color: var(--color_primary); text-decoration: none; color: inherit;">
+        <div class="deliverable-card-icon" style="color: var(--color_primary);">Overview</div>
+        <div class="deliverable-card-title">Platform Overview</div>
+        <div class="deliverable-card-desc persona-exec">What AESOP is and how the pieces fit.</div>
+        <div class="deliverable-card-desc persona-team">The full AESOP OS — what it is, how the pieces fit together, and the operating philosophy.</div>
+      </a>
+      <a href="https://aesop-studio.sickofancy.ai/guides/aesop-pipeline.html" class="deliverable-card reveal reveal-delay-1" style="border-top-color: var(--color_warning); text-decoration: none; color: inherit;">
+        <div class="deliverable-card-icon" style="color: var(--color_warning);">Pipeline</div>
+        <div class="deliverable-card-title">The Pipeline</div>
+        <div class="deliverable-card-desc persona-exec">Ten stages, embedded governance, hard evaluation gates.</div>
+        <div class="deliverable-card-desc persona-team">Ten-stage lifecycle with embedded governance, human checkpoints, and hard evaluation gates.</div>
+      </a>
+      <a href="https://aesop-studio.sickofancy.ai/guides/aesop-org-context.html" class="deliverable-card reveal reveal-delay-2" style="border-top-color: var(--color_secondary); text-decoration: none; color: inherit;">
+        <div class="deliverable-card-icon" style="color: var(--color_secondary);">Setup</div>
+        <div class="deliverable-card-title">Organization Context</div>
+        <div class="deliverable-card-desc persona-exec">Your org's structure and priorities, grounding every evaluation.</div>
+        <div class="deliverable-card-desc persona-team">How AESOP captures your org's structure, priorities, and constraints to ground every evaluation.</div>
+      </a>
+      <a href="https://aesop-studio.sickofancy.ai/guides/aesop-architecture.html" class="deliverable-card reveal" style="border-top-color: var(--color_info); text-decoration: none; color: inherit;">
+        <div class="deliverable-card-icon" style="color: var(--color_info);">Architecture</div>
+        <div class="deliverable-card-title">Agentic Architecture</div>
+        <div class="deliverable-card-desc persona-exec">Deterministic and probabilistic tools orchestrated into real workflows.</div>
+        <div class="deliverable-card-desc persona-team">Orchestrating deterministic and probabilistic tools into valuable workflows — coordination that surfaces decisions and drives state change.</div>
+      </a>
+      <a href="https://aesop-studio.sickofancy.ai/guides/aesop-cave-of-shadows.html" class="deliverable-card reveal reveal-delay-1" style="border-top-color: var(--color_error); text-decoration: none; color: inherit;">
+        <div class="deliverable-card-icon" style="color: var(--color_error);">Evaluation</div>
+        <div class="deliverable-card-title">Evaluation Harness</div>
+        <div class="deliverable-card-desc persona-exec">Safety, bias, fidelity, and red-team modes — each with human review.</div>
+        <div class="deliverable-card-desc persona-team">A spectrum of evaluation modes — safety, bias, instruction fidelity, adversarial red-teaming, and more — each with human-in-the-loop review to ensure nothing slips through.</div>
+      </a>
+      <a href="https://aesop-studio.sickofancy.ai/guides/aesop-operationalization.html" class="deliverable-card reveal reveal-delay-2" style="border-top-color: var(--color_success); text-decoration: none; color: inherit;">
+        <div class="deliverable-card-icon" style="color: var(--color_success);">Launch</div>
+        <div class="deliverable-card-title">Operationalization</div>
+        <div class="deliverable-card-desc persona-exec">Sponsorship, training, and adoption — the real work after shipping.</div>
+        <div class="deliverable-card-desc persona-team">Management sponsorship, training, and adoption work is essential to moving the metrics — shipping the agent is table stakes; organizational readiness is the real work.</div>
+      </a>
+    </div>
+  </section>
+
+  <!-- Contact -->
+  <section id="contact" class="section reveal">
+    <div class="contact-section">
+      <div class="persona-exec">
+        <h2>See what operationalized AI looks like</h2>
+        <p>We'll map AESOP to your org, your risk, and the outcomes you own.</p>
+      </div>
+      <div class="persona-team">
+        <h2>Get the method, not just the mandate</h2>
+        <p>We'll walk through how AESOP takes your team from idea to shipped, evaluated system — repeatably.</p>
+      </div>
+      <div class="contact-links">
+        <a href="mailto:charlie@waifinder.org" class="contact-link primary">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="M22 4L12 13 2 4"/></svg>
+          charlie@waifinder.org
+        </a>
+        <a href="https://www.linkedin.com/in/charlie-fuller-colorado/" class="contact-link linkedin" target="_blank" rel="noopener">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433c-1.144 0-2.063-.926-2.063-2.065 0-1.138.92-2.063 2.063-2.063 1.14 0 2.064.925 2.064 2.063 0 1.139-.925 2.065-2.064 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/></svg>
+          LinkedIn
+        </a>
+        <a href="https://github.com/motorthings" class="contact-link github" target="_blank" rel="noopener">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/></svg>
+          GitHub
+        </a>
+      </div>
+    </div>
+  </section>
+
+</main>
+
+<footer class="footer">
+  <div class="container">
+    <p>&copy; 2025&ndash;2026 Charlie Fuller &middot; waifinder.org</p>
+  </div>
+</footer>
+
+<!-- Contact Modal -->
+<div class="modal-overlay" id="contactModal">
+  <div class="modal">
+    <button class="modal-close" id="modalClose">&times;</button>
+
+    <div class="modal-header">
+      <div class="modal-badge">Get in touch</div>
+      <h2>See AESOP in action</h2>
+      <p>We'll walk through how AESOP fits your organization.</p>
+    </div>
+
+    <div class="modal-body">
+      <div class="email-display">
+        <span class="email-address">charlie@waifinder.org</span>
+        <button id="copyEmail" class="copy-btn">Copy</button>
+      </div>
+      <a href="mailto:charlie@waifinder.org" class="form-submit" style="display:inline-flex;align-items:center;justify-content:center;gap:8px;text-decoration:none;width:100%;">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="M22 4L12 13 2 4"/></svg>
+        Open in email client
+      </a>
+    </div>
+  </div>
+</div>
+
+<script>
+  const html = document.documentElement;
+  const toggle = document.getElementById('themeToggle');
+  const lightIcon = toggle.querySelector('.theme-icon-light');
+  const darkIcon = toggle.querySelector('.theme-icon-dark');
+
+  function setTheme(isDark) {
+    if (isDark) {
+      html.classList.add('dark');
+      lightIcon.style.display = 'none';
+      darkIcon.style.display = 'inline';
+    } else {
+      html.classList.remove('dark');
+      lightIcon.style.display = 'inline';
+      darkIcon.style.display = 'none';
+    }
+    localStorage.setItem('theme', isDark ? 'dark' : 'light');
+  }
+
+  setTheme(false);
+
+  toggle.addEventListener('click', () => {
+    setTheme(!html.classList.contains('dark'));
+  });
+
+  /* ── Mobile nav ── */
+  const hamburger = document.getElementById('hamburger');
+  const navLinks = document.getElementById('navLinks');
+  const navBackdrop = document.getElementById('navBackdrop');
+
+  function openNav() {
+    hamburger.classList.add('active');
+    navLinks.classList.add('open');
+    navBackdrop.classList.add('open');
+    document.body.style.overflow = 'hidden';
+  }
+
+  function closeNav() {
+    hamburger.classList.remove('active');
+    navLinks.classList.remove('open');
+    navBackdrop.classList.remove('open');
+    document.body.style.overflow = '';
+  }
+
+  hamburger.addEventListener('click', () => {
+    if (navLinks.classList.contains('open')) {
+      closeNav();
+    } else {
+      openNav();
+    }
+  });
+
+  navBackdrop.addEventListener('click', closeNav);
+
+  navLinks.querySelectorAll('.nav-link').forEach(link => {
+    link.addEventListener('click', closeNav);
+  });
+
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        entry.target.classList.add('visible');
+        observer.unobserve(entry.target);
+      }
+    });
+  }, { threshold: 0.1, rootMargin: '0px 0px -40px 0px' });
+
+  document.querySelectorAll('.reveal').forEach(el => observer.observe(el));
+
+  /* ── Modal ── */
+  const modal = document.getElementById('contactModal');
+  const modalClose = document.getElementById('modalClose');
+  const copyBtn = document.getElementById('copyEmail');
+
+  function openModal() {
+    modal.classList.add('open');
+    document.body.style.overflow = 'hidden';
+  }
+
+  function closeModal() {
+    modal.classList.remove('open');
+    document.body.style.overflow = '';
+  }
+
+  document.getElementById('navCta').addEventListener('click', (e) => { e.preventDefault(); openModal(); });
+
+  // Persona toggle
+  const personaBtns = document.querySelectorAll('.persona-btn');
+  function setPersona(persona) {
+    document.body.setAttribute('data-persona', persona);
+    personaBtns.forEach(b => b.classList.toggle('active', b.dataset.persona === persona));
+    try { localStorage.setItem('persona', persona); } catch (e) {}
+  }
+  personaBtns.forEach(btn => btn.addEventListener('click', () => setPersona(btn.dataset.persona)));
+  let savedPersona = 'exec';
+  try { savedPersona = localStorage.getItem('persona') || 'exec'; } catch (e) {}
+  setPersona(savedPersona);
+  modalClose.addEventListener('click', closeModal);
+  modal.addEventListener('click', (e) => { if (e.target === modal) closeModal(); });
+  document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && modal.classList.contains('open')) closeModal(); });
+
+  copyBtn.addEventListener('click', () => {
+    navigator.clipboard.writeText('charlie@waifinder.org').then(() => {
+      copyBtn.textContent = 'Copied!';
+      setTimeout(() => { copyBtn.textContent = 'Copy'; }, 2000);
+    });
+  });
+</script>
+
+</body>
+</html>
