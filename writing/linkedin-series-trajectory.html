@@ -1,0 +1,307 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AESOP LinkedIn Series — Post Trajectory</title>
+<link rel="icon" type="image/svg+xml" href="../icon.svg">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,wght@0,400;0,500;0,600;0,700;1,400&family=Source+Code+Pro:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --font-body: 'Fraunces', Georgia, serif;
+    --font-mono: 'Source Code Pro', 'SF Mono', Consolas, monospace;
+    --bg: #eef4f9; --surface: #ffffff; --surface2: #f5f8fc;
+    --border: rgba(0,0,0,0.07); --border-bright: rgba(0,0,0,0.13);
+    --text: #0a1628; --text-dim: #3d5a7a; --text-muted: #7a9ab8;
+    --primary: #c84d0e; --primary-dim: rgba(200,77,14,0.08);
+    --secondary: #4a90c4; --secondary-dim: rgba(74,144,196,0.08);
+    --warm: #d97706; --warm-dim: rgba(217,119,6,0.08);
+    --teal: #0d9488; --teal-dim: rgba(13,148,136,0.08);
+    --violet: #7c3aed; --violet-dim: rgba(124,58,237,0.08);
+    --rose: #e11d48; --rose-dim: rgba(225,29,72,0.08);
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #0a1628; --surface: #132240; --surface2: #1a2d52;
+      --border: rgba(255,255,255,0.07); --border-bright: rgba(255,255,255,0.13);
+      --text: #e8edf5; --text-dim: #9bb0d4; --text-muted: #5e7aa3;
+      --primary: #f37021; --secondary: #6cace4;
+      --warm: #f59e0b; --teal: #2dd4bf; --violet: #a78bfa; --rose: #fb7185;
+    }
+  }
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body {
+    background: var(--bg);
+    background-image: radial-gradient(ellipse at 80% 0%, var(--primary-dim) 0%, transparent 50%), radial-gradient(ellipse at 20% 60%, var(--secondary-dim) 0%, transparent 40%);
+    color: var(--text); font-family: var(--font-body);
+    min-height: 100vh; padding: 32px 24px 64px; line-height: 1.6;
+  }
+  .backlink{position:fixed;top:12px;left:16px;z-index:101;font-family:var(--font-mono);font-size:12px;color:var(--text-dim);text-decoration:none;padding:6px 10px;border:1px solid var(--border);border-radius:6px;background:var(--surface);transition:color .15s,border-color .15s}
+  .backlink:hover{color:var(--text);border-color:var(--border-bright)}
+  .container { max-width:900px; margin:0 auto; }
+
+  h1 { font-size:40px; font-weight:700; letter-spacing:-0.5px; margin-bottom:6px; }
+  .subtitle { font-size:16px; color:var(--text-dim); margin-bottom:36px; }
+
+  /* Arc bar */
+  .arc-bar {
+    display:flex; gap:0; margin-bottom:40px; border-radius:10px; overflow:hidden;
+    border:1px solid var(--border);
+  }
+  .arc-seg {
+    flex:1; padding:10px 8px; text-align:center; font-size:12px; font-weight:600;
+    font-family:var(--font-mono); letter-spacing:-0.3px;
+    color:var(--text-dim); background:var(--surface2);
+    border-right:1px solid var(--border);
+  }
+  .arc-seg:last-child { border-right:none; }
+  .arc-seg.active { background:var(--primary); color:#fff; }
+
+  /* Cards */
+  .post-card {
+    background:var(--surface); border:1px solid var(--border); border-radius:12px;
+    padding:24px 28px; margin-bottom:16px;
+    position:relative;
+  }
+  .post-num {
+    position:absolute; top:24px; right:28px;
+    width:32px;height:32px;border-radius:50%;
+    display:flex;align-items:center;justify-content:center;
+    font-family:var(--font-mono);font-size:14px;font-weight:700;color:#fff;
+  }
+  .post-title { font-size:22px; font-weight:700; margin-bottom:4px; }
+  .post-function { font-size:13px; font-family:var(--font-mono); color:var(--text-muted); margin-bottom:14px; }
+  .post-body { font-size:15px; color:var(--text-dim); line-height:1.65; margin-bottom:14px; }
+  .post-body p { margin-bottom:8px; }
+  .post-body p:last-child { margin-bottom:0; }
+
+  .tags { display:flex; flex-wrap:wrap; gap:6px; }
+  .tag { font-family:var(--font-mono);font-size:11px;padding:3px 10px;border-radius:4px; }
+
+  /* Colors per post */
+  .c1 { background:var(--warm); }
+  .c2 { background:var(--secondary); }
+  .c3 { background:var(--rose); }
+  .c4 { background:var(--violet); }
+  .c5 { background:var(--primary); }
+  .c6 { background:var(--teal); }
+  .c7 { background:var(--text-dim); }
+
+  .tag-c1 { background:var(--warm-dim); color:var(--warm); }
+  .tag-c2 { background:var(--secondary-dim); color:var(--secondary); }
+  .tag-c3 { background:var(--rose-dim); color:var(--rose); }
+  .tag-c4 { background:var(--violet-dim); color:var(--violet); }
+  .tag-c5 { background:var(--primary-dim); color:var(--primary); }
+  .tag-c6 { background:var(--teal-dim); color:var(--teal); }
+  .tag-c7 { background:var(--surface2); color:var(--text-dim); }
+
+  /* Trajectory line */
+  .trajectory {
+    display:flex; align-items:flex-start; gap:0;
+    margin-bottom:40px; position:relative; padding:20px 0;
+  }
+  .traj-step {
+    flex:1; text-align:center; position:relative;
+  }
+  .traj-dot {
+    width:14px;height:14px;border-radius:50%;margin:0 auto 8px;
+  }
+  .traj-line {
+    position:absolute; top:27px; left:50%; width:100%; height:2px;
+    z-index:-1;
+  }
+  .traj-step:last-child .traj-line { display:none; }
+  .traj-label { font-size:13px; font-weight:600; color:var(--text); margin-bottom:2px; }
+  .traj-sub { font-size:11px; font-family:var(--font-mono); color:var(--text-muted); }
+
+  /* Two-column */
+  .two-col { display:grid; grid-template-columns:1fr 1fr; gap:16px; margin-bottom:40px; }
+  @media(max-width:640px){ .two-col{grid-template-columns:1fr;} }
+
+  .info-card {
+    background:var(--surface); border:1px solid var(--border); border-radius:10px;
+    padding:20px 24px;
+  }
+  .info-card h2 { font-size:18px; font-weight:700; margin-bottom:10px; }
+  .info-card p, .info-card li { font-size:14px; color:var(--text-dim); line-height:1.6; }
+  .info-card ul { padding-left:18px; }
+  .info-card li { margin-bottom:4px; }
+
+  /* Emotional curve */
+  .emotion-bar {
+    display:flex; align-items:flex-end; gap:8px; height:120px; margin-bottom:40px;
+  }
+  .emotion-col {
+    flex:1; display:flex; flex-direction:column; align-items:center; justify-content:flex-end;
+  }
+  .emotion-fill {
+    width:100%; border-radius:6px 6px 0 0; transition:height .3s;
+    opacity:0.85;
+  }
+  .emotion-label { font-size:10px; font-family:var(--font-mono); color:var(--text-muted); margin-top:6px; text-align:center; }
+  .emotion-val { font-size:11px; font-weight:600; color:var(--text-dim); margin-bottom:4px; }
+</style>
+</head>
+<body>
+<a class="backlink" href="../">&larr; diagrams</a>
+<div class="container">
+
+<h1>LinkedIn Series — Trajectory &amp; Goal</h1>
+<p class="subtitle">AESOP Transformation OS drip rollout. 7 posts. Diagnosis first, solution last.</p>
+
+<!-- Arc bar -->
+<div class="arc-bar">
+  <div class="arc-seg active">Scene</div>
+  <div class="arc-seg active">Crash</div>
+  <div class="arc-seg active">Crash</div>
+  <div class="arc-seg active">Diagnosis</div>
+  <div class="arc-seg active">Category</div>
+  <div class="arc-seg active">Architecture</div>
+  <div class="arc-seg active">Credibility</div>
+</div>
+
+<!-- Emotional trajectory -->
+<div class="emotion-bar">
+  <div class="emotion-col">
+    <div class="emotion-val">high</div>
+    <div class="emotion-fill" style="height:90px;background:var(--warm);"></div>
+    <div class="emotion-label">1. Kickoff</div>
+  </div>
+  <div class="emotion-col">
+    <div class="emotion-val">rush</div>
+    <div class="emotion-fill" style="height:78px;background:var(--secondary);"></div>
+    <div class="emotion-label">2. Tool Flood</div>
+  </div>
+  <div class="emotion-col">
+    <div class="emotion-val">crash</div>
+    <div class="emotion-fill" style="height:35px;background:var(--rose);"></div>
+    <div class="emotion-label">3. Graveyard</div>
+  </div>
+  <div class="emotion-col">
+    <div class="emotion-val">turn</div>
+    <div class="emotion-fill" style="height:55px;background:var(--violet);"></div>
+    <div class="emotion-label">4. Mirror</div>
+  </div>
+  <div class="emotion-col">
+    <div class="emotion-val">names it</div>
+    <div class="emotion-fill" style="height:70px;background:var(--primary);"></div>
+    <div class="emotion-label">5. The Gap</div>
+  </div>
+  <div class="emotion-col">
+    <div class="emotion-val">shows it</div>
+    <div class="emotion-fill" style="height:82px;background:var(--teal);"></div>
+    <div class="emotion-label">6. The Line</div>
+  </div>
+  <div class="emotion-col">
+    <div class="emotion-val">earns it</div>
+    <div class="emotion-fill" style="height:96px;background:var(--text-dim);"></div>
+    <div class="emotion-label">7. Scar Tissue</div>
+  </div>
+</div>
+
+<!-- Post cards -->
+<div class="post-card">
+  <div class="post-num c1">1</div>
+  <div class="post-title">The Kickoff</div>
+  <div class="post-function">Scene. Shared experience. Hidden invoice.</div>
+  <div class="post-body">
+    <p>Conference room. Good coffee. CEO on stage. "This is the year." The language is intoxicating and completely free of meaning. The energy is real — and that's what gets lost in the retelling. Then back at your desk. What they actually asked you to do: become a process expert, business analyst, consultant, systems thinker, PRD author, root cause analyst, value stream mapper — with no training, no job description change, no acknowledgment. The hidden invoice. The fine print they forgot to put on the slide.</p>
+    <p>And more: the existential threat. Organizations are terrible at change. Always have been. But this time if you don't figure it out, your job might not exist. You cannot say that at the mic. But it's in the room. Three things held at once: excitement, invisible job description, quiet terror. The surprise is not that people froze. The surprise is that anyone moved.</p>
+  </div>
+  <div class="tags"><span class="tag tag-c1">emotional hook</span><span class="tag tag-c1">hidden invoice</span><span class="tag tag-c1">existential threat</span><span class="tag tag-c1">anchor: I built something</span></div>
+</div>
+
+<div class="post-card">
+  <div class="post-num c2">2</div>
+  <div class="post-title">The Tool Flood</div>
+  <div class="post-function">Scale of response. Access without capability.</div>
+  <div class="post-body">
+    <p>Every vendor shipped AI within six months. The timing was panic. Salesforce. Zendesk. Workday. Jira. Coupa. NetSuite. Ironclad. DocuSign. Blue sparkle icons on every interface. Enterprise bought OpenAI, Claude, Glean, Copilot — seat license spend tripled, nobody blinked. The wildfire strategy: give everyone tools, experts bubble up, it spreads organically. The strategy had a name — land and expand. The land was a text box. The expand was hope.</p>
+    <p>Same person handed access was same person never taught to write a problem statement. Tool arrived. Methodology didn't. Vendors had no incentive to say this. Access to tools does not create capability. It never has. Microsoft Word didn't make everyone a writer. The enterprise didn't buy transformation. The enterprise bought a buffet. And everyone was expected to know how to cook.</p>
+  </div>
+  <div class="tags"><span class="tag tag-c2">named tools</span><span class="tag tag-c2">wildfire strategy</span><span class="tag tag-c2">text box problem</span><span class="tag tag-c2">capability gap</span></div>
+</div>
+
+<div class="post-card">
+  <div class="post-num c3">3</div>
+  <div class="post-title">The Graveyard</div>
+  <div class="post-function">Evidence. Specific failures. The bodies.</div>
+  <div class="post-body">
+    <p>Eighteen months later. Those agents are still out there. Probably. Nobody's sure. The support agent still works, kind of, except when it doesn't. The Legal agent produced fluent contract language that was wrong — caught by a counterparty's lawyer. The Finance agent auto-approved everything under $5K, including personal expenses, for three months. The CTO's demo that got applause never left staging. Builder moved teams, API key went dead, nobody noticed for four weeks.</p>
+    <p>No list. No dashboard. No way to know what's running or drifting. The portfolio is a graveyard and nobody wants to count the bodies because the number would be a confession. The wildfire didn't spread. Sparks landed everywhere. Some caught. Most didn't. The ones that caught are burning unattended.</p>
+  </div>
+  <div class="tags"><span class="tag tag-c3">specific stories</span><span class="tag tag-c3">no inventory</span><span class="tag tag-c3">unattended risk</span><span class="tag tag-c3">credibility through honesty</span></div>
+</div>
+
+<div class="post-card">
+  <div class="post-num c4">4</div>
+  <div class="post-title">The Mirror</div>
+  <div class="post-function">The pivot. AI as diagnostic.</div>
+  <div class="post-body">
+    <p>AI didn't create the problem. It exposed what was already broken. Undefined success criteria. Missing decision rights. No repair path. The models were fine. The methodology was missing. The difference now is velocity: an undefined process executed by a human fails slowly, with someone accountable. An undefined process executed by an agent fails at machine speed, invisibly, with nobody to call. Nobody sold the methodology because nobody was asking for it.</p>
+  </div>
+  <div class="tags"><span class="tag tag-c4">blame shift</span><span class="tag tag-c4">velocity difference</span><span class="tag tag-c4">methodology gap</span><span class="tag tag-c4">not cynical — diagnostic</span></div>
+</div>
+
+<div class="post-card">
+  <div class="post-num c5">5</div>
+  <div class="post-title">The Gap</div>
+  <div class="post-function">Names the category. Introduces OS.</div>
+  <div class="post-body">
+    <p>Between the kickoff speech and a governed, evaluated, compound-improving portfolio, there is nothing. No shared methodology. No compounding knowledge. Every team invents its own. The technology commoditizes. The moat is the operating system around it — methodology, evaluation, repair loops, portfolio visibility, decision architecture. Nobody is selling that layer. The studios sold a text box. The enterprise needs an OS. That gap is where the next decade of AI value will be created or destroyed.</p>
+    <p>AESOP Transformation OS enters here — not as a product pitch, but as the logical answer to a diagnosed gap. "This is what's missing. This is what I built."</p>
+  </div>
+  <div class="tags"><span class="tag tag-c5">category creation</span><span class="tag tag-c5">OS introduced</span><span class="tag tag-c5">market gap</span><span class="tag tag-c5">consultant lever</span></div>
+</div>
+
+<div class="post-card">
+  <div class="post-num c6">6</div>
+  <div class="post-title">The Line</div>
+  <div class="post-function">Architectural thesis. Decisions, not features.</div>
+  <div class="post-body">
+    <p>The core architectural decision. Some things should never be probabilistic: the Working Agreement renderer, the scoring formula with its hard veto at 74.9, the Root Cause gate that stops the session. Deterministically rendered. Cannot be sweet-talked by fluency. Other things — six evaluation agents, Cave of Shadows adversarial testing, Forge repair, Regulatory Mapping — are precisely where AI belongs. Unbounded problem space. Infinite edge cases. The machine runs free, across multiple perspectives. Then it stops. The product is not the pipeline. The product is knowing where the line goes.</p>
+  </div>
+  <div class="tags"><span class="tag tag-c6">deterministic vs probabilistic</span><span class="tag tag-c6">architectural thinking</span><span class="tag tag-c6">veto rule</span><span class="tag tag-c6">line in the sand</span></div>
+</div>
+
+<div class="post-card">
+  <div class="post-num c7">7</div>
+  <div class="post-title">Scar Tissue, Not Ambition</div>
+  <div class="post-function">Origin story. Credibility closer.</div>
+  <div class="post-body">
+    <p>I did not set out to build an operating system. I built an evaluation tool. Nobody had anything to evaluate. Each stage grew backward and forward from the center because a real failure occurred at that exact point. The Working Agreement renderer exists because an LLM-hallucinated contract was signed. The veto rule exists because a brilliant, unsafe agent shipped. The Root Cause gate exists because someone automated a broken process and called it transformation. None of this was in the original plan. I was not cutting corners. I did not know the corner was there. The scope is not a product roadmap. It's compiled scar tissue.</p>
+  </div>
+  <div class="tags"><span class="tag tag-c7">origin stories</span><span class="tag tag-c7">specific failure → feature</span><span class="tag tag-c7">credibility</span><span class="tag tag-c7">loops back to post 1</span></div>
+</div>
+
+<!-- Two-column summary -->
+<div class="two-col">
+  <div class="info-card">
+    <h2>Trajectory</h2>
+    <ul>
+      <li><strong>Posts 1–4:</strong> Pure diagnosis. No pitch. All three audiences served equally.</li>
+      <li><strong>Post 5:</strong> Names the category. OS enters as logical answer, not product.</li>
+      <li><strong>Posts 6–7:</strong> Reveal architecture and origin. Demonstrate depth.</li>
+    </ul>
+  </div>
+  <div class="info-card">
+    <h2>Audience Goals</h2>
+    <ul>
+      <li><strong>Hiring managers (primary):</strong> "This person sees deeper than anyone we've interviewed."</li>
+      <li><strong>Consultants (secondary):</strong> "He sees what I see — and built the lever we've been missing."</li>
+      <li><strong>Enterprise buyers (tertiary):</strong> "This solves a problem our tools don't."</li>
+    </ul>
+  </div>
+</div>
+
+<div class="info-card" style="margin-bottom:16px;">
+  <h2>Emotional Arc</h2>
+  <p style="margin-bottom:8px;">The posts trace a curve: high energy (kickoff excitement) → crash (graveyard) → turn (the mirror) → rebuild (gap, line, scar tissue). The reader doesn't stay in the crash. The series earns the right to be hopeful again — not through optimism, but through demonstrated understanding and scar tissue credibility.</p>
+  <p>The call to action is implicit throughout: <em>you now know how I think. If that's the thinking you need, you know where to find me.</em></p>
+</div>
+
+</div>
+</body>
+</html>
