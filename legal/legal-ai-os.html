@@ -1,0 +1,466 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<link rel="icon" type="image/svg+xml" href="../icon.svg">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Legal AI on AESOP — Architecture & Ashurst Perkins Coie Fit</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,wght@0,400;0,500;0,600;0,700;0,800;1,400&family=Source+Code+Pro:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --font-body: 'Fraunces', Georgia, serif;
+    --font-mono: 'Source Code Pro', 'SF Mono', Consolas, monospace;
+
+    --bg: #f6f7fb;
+    --surface: #ffffff;
+    --surface2: #f0f2f7;
+    --border: rgba(0, 0, 0, 0.06);
+    --border-bright: rgba(0, 0, 0, 0.12);
+    --text: #0f172a;
+    --text-dim: #64748b;
+
+    --slate: #475569;
+    --slate-dim: rgba(71, 85, 105, 0.08);
+    --blue: #2563eb;
+    --blue-dim: rgba(37, 99, 235, 0.08);
+    --violet: #7c3aed;
+    --violet-dim: rgba(124, 58, 237, 0.08);
+    --teal: #0d9488;
+    --teal-dim: rgba(13, 148, 136, 0.08);
+    --emerald: #059669;
+    --emerald-dim: rgba(5, 150, 105, 0.08);
+    --amber: #d97706;
+    --amber-dim: rgba(217, 119, 6, 0.08);
+    --orange: #ea580c;
+    --orange-dim: rgba(234, 88, 12, 0.08);
+    --indigo: #4f46e5;
+    --indigo-dim: rgba(79, 70, 229, 0.08);
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #0c1222;
+      --surface: #131c31;
+      --surface2: #1a2744;
+      --border: rgba(255, 255, 255, 0.06);
+      --border-bright: rgba(255, 255, 255, 0.12);
+      --text: #e2e8f0;
+      --text-dim: #94a3b8;
+
+      --slate: #94a3b8;
+      --slate-dim: rgba(148, 163, 184, 0.12);
+      --blue: #60a5fa;
+      --blue-dim: rgba(96, 165, 250, 0.12);
+      --violet: #a78bfa;
+      --violet-dim: rgba(167, 139, 250, 0.12);
+      --teal: #2dd4bf;
+      --teal-dim: rgba(45, 212, 191, 0.12);
+      --emerald: #34d399;
+      --emerald-dim: rgba(52, 211, 153, 0.12);
+      --amber: #fbbf24;
+      --amber-dim: rgba(251, 191, 36, 0.12);
+      --orange: #fb923c;
+      --orange-dim: rgba(251, 146, 60, 0.12);
+      --indigo: #818cf8;
+      --indigo-dim: rgba(129, 140, 248, 0.12);
+    }
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: var(--bg);
+    background-image:
+      radial-gradient(at 20% 0%, var(--indigo-dim) 0%, transparent 50%),
+      radial-gradient(at 80% 100%, var(--teal-dim) 0%, transparent 50%);
+    color: var(--text);
+    font-family: var(--font-body);
+    font-size: 15px;
+    line-height: 1.7;
+    min-height: 100vh;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  .nav {
+    position: sticky; top: 0; z-index: 100;
+    backdrop-filter: blur(16px);
+    background: color-mix(in srgb, var(--surface) 85%, transparent);
+    border-bottom: 1px solid var(--border);
+  }
+  .nav-inner {
+    max-width: 1000px; margin: 0 auto; padding: 12px 24px;
+    display: flex; align-items: center; justify-content: space-between;
+  }
+  .nav-brand {
+    font-family: var(--font-mono); font-size: 13px; font-weight: 600;
+    color: var(--indigo); text-decoration: none;
+  }
+
+  .container { max-width: 1000px; margin: 0 auto; padding: 48px 24px 80px; }
+
+  @keyframes fadeUp { from { opacity: 0; transform: translateY(16px); } to { opacity: 1; transform: translateY(0); } }
+
+  .hero { text-align: center; margin-bottom: 48px; animation: fadeUp 0.5s ease both; }
+  .hero h1 {
+    font-size: 42px; font-weight: 800; letter-spacing: -1px; margin-bottom: 8px;
+    background: linear-gradient(135deg, var(--indigo), var(--teal));
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+  }
+  .hero p { font-size: 17px; color: var(--text-dim); max-width: 650px; margin: 0 auto; }
+
+  .section { margin-bottom: 40px; animation: fadeUp 0.5s ease both; }
+  .section-title {
+    font-family: var(--font-mono); font-size: 12px; font-weight: 700;
+    letter-spacing: 0.15em; text-transform: uppercase; color: var(--indigo);
+    margin-bottom: 16px;
+  }
+
+  /* Two-column architecture layout */
+  .arch-split {
+    display: grid; grid-template-columns: 1fr 1fr;
+    gap: 20px;
+  }
+
+  .arch-panel {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 16px; padding: 24px; position: relative;
+  }
+  .panel-badge {
+    font-family: var(--font-mono); font-size: 10px; font-weight: 700;
+    letter-spacing: 0.1em; text-transform: uppercase;
+    padding: 3px 10px; border-radius: 5px; display: inline-block; margin-bottom: 12px;
+  }
+  .badge-built { background: var(--emerald); color: #fff; }
+  .badge-domain { background: var(--indigo); color: #fff; }
+  .panel-title {
+    font-size: 18px; font-weight: 700; margin-bottom: 4px; color: var(--text);
+  }
+  .panel-sub {
+    font-size: 13px; color: var(--text-dim); margin-bottom: 18px;
+  }
+
+  .layer { margin-bottom: 14px; }
+  .layer-label {
+    font-family: var(--font-mono); font-size: 10px; font-weight: 700;
+    letter-spacing: 0.08em; text-transform: uppercase; margin-bottom: 6px;
+  }
+  .layer-tags { display: flex; flex-wrap: wrap; gap: 5px; }
+  .layer-tag {
+    font-family: var(--font-mono); font-size: 10px; font-weight: 500;
+    padding: 3px 8px; border-radius: 5px;
+  }
+
+  /* Function list in right panel */
+  .func-list { display: flex; flex-direction: column; gap: 10px; }
+  .func-row {
+    display: flex; align-items: center; gap: 12px;
+    padding: 12px 14px; border-radius: 8px; border: 1px solid var(--border);
+  }
+  .func-row.live { background: var(--emerald-dim); border-color: color-mix(in srgb, var(--emerald) 25%, transparent); }
+  .func-row.next { background: var(--amber-dim); border-color: color-mix(in srgb, var(--amber) 25%, transparent); }
+  .func-row.road { background: var(--slate-dim); border-color: color-mix(in srgb, var(--slate) 15%, transparent); }
+  .func-status {
+    font-family: var(--font-mono); font-size: 9px; font-weight: 700;
+    letter-spacing: 0.1em; text-transform: uppercase;
+    padding: 2px 7px; border-radius: 4px; flex-shrink: 0;
+  }
+  .status-live { background: var(--emerald); color: #fff; }
+  .status-next { background: var(--amber); color: #fff; }
+  .status-road { background: var(--slate); color: #fff; }
+  .func-info { flex: 1; }
+  .func-name { font-size: 14px; font-weight: 700; color: var(--text); }
+  .func-desc { font-size: 12px; color: var(--text-dim); line-height: 1.4; }
+
+  /* Arrow connecting the two panels */
+  .connector {
+    display: none; /* hidden on mobile, visible on desktop via the split grid gap */
+  }
+
+  /* Explanation text block */
+  .explain {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 12px; padding: 20px 24px; margin-bottom: 20px;
+  }
+  .explain p { font-size: 14px; color: var(--text-dim); line-height: 1.7; }
+  .explain strong { color: var(--text); }
+
+  /* JD Mapping */
+  .mapping-grid {
+    display: grid; grid-template-columns: 1fr 1fr;
+    gap: 12px;
+  }
+  .map-card {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 10px; padding: 18px;
+  }
+  .map-jd {
+    font-size: 14px; font-weight: 600; color: var(--indigo); margin-bottom: 6px;
+    line-height: 1.4;
+  }
+  .map-evidence {
+    font-size: 13px; color: var(--text-dim); line-height: 1.6;
+  }
+  .map-evidence em { font-style: italic; color: var(--text); }
+
+  /* Summary numbers */
+  .summary-grid {
+    display: grid; grid-template-columns: repeat(3, 1fr);
+    gap: 12px; margin-top: 24px;
+  }
+  .summary-card {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 10px; padding: 20px; text-align: center;
+  }
+  .summary-num {
+    font-size: 32px; font-weight: 800;
+    background: linear-gradient(135deg, var(--indigo), var(--teal));
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+  }
+  .summary-label { font-size: 13px; color: var(--text-dim); margin-top: 4px; }
+
+  .footer {
+    margin-top: 48px; padding-top: 16px;
+    border-top: 1px solid var(--border);
+    text-align: center; font-size: 12px; color: var(--text-dim);
+  }
+  .footer a { color: var(--indigo); text-decoration: none; }
+
+  @media (max-width: 768px) {
+    .arch-split, .mapping-grid, .summary-grid { grid-template-columns: 1fr; }
+    .hero h1 { font-size: 28px; }
+  }
+</style>
+</head>
+<body>
+
+<div class="nav">
+  <div class="nav-inner">
+    <a href="../index.html" class="nav-brand">← Charlie Fuller — Visual Explainers</a>
+  </div>
+</div>
+
+<div class="container">
+
+  <!-- Hero -->
+  <div class="hero">
+    <h1>AESOP + Legal Functions</h1>
+    <p>Two things already built. One clear extension path. A platform architecture that maps directly to what a law firm K&I team actually needs to deliver.</p>
+  </div>
+
+  <!-- Core explainer -->
+  <div class="explain">
+    <p><strong>AESOP Transformation OS</strong> already handles the horizontal layers every AI program needs: agent evaluation, governance, portfolio tracking, adoption planning, and lifecycle management. It is domain-agnostic — it governs any AI agent, regardless of what the agent does.</p>
+    <p style="margin-top: 10px;"><strong>The Contract Review application</strong> is the first legal-domain function built on this pattern. It proves the architecture works in a domain with the highest possible bar for accuracy, confidentiality, and explainability.</p>
+    <p style="margin-top: 10px;"><strong>The extension is straightforward:</strong> add legal-domain functions — matter intake, diligence, regulatory monitoring, knowledge management, client reporting — each inheriting AESOP's governance, portfolio tracking, and adoption infrastructure. Same OS, legal surface area.</p>
+  </div>
+
+  <!-- Two-column architecture -->
+  <div class="section">
+    <div class="section-title">Architecture</div>
+    <div class="arch-split">
+
+      <!-- LEFT: AESOP (built) -->
+      <div class="arch-panel" style="border-top: 3px solid var(--emerald);">
+        <span class="panel-badge badge-built">Built</span>
+        <div class="panel-title">AESOP Transformation OS</div>
+        <div class="panel-sub">Domain-agnostic AI governance, evaluation, and lifecycle management</div>
+
+        <div class="layer">
+          <div class="layer-label" style="color: var(--violet);">Evaluation &amp; Governance</div>
+          <div class="layer-tags">
+            <span class="layer-tag" style="background: var(--violet-dim); color: var(--violet);">Multi-agent eval</span>
+            <span class="layer-tag" style="background: var(--violet-dim); color: var(--violet);">Bias &amp; safety scoring</span>
+            <span class="layer-tag" style="background: var(--violet-dim); color: var(--violet);">Hard veto rules</span>
+            <span class="layer-tag" style="background: var(--violet-dim); color: var(--violet);">Regulatory mapping</span>
+            <span class="layer-tag" style="background: var(--violet-dim); color: var(--violet);">Drift detection</span>
+          </div>
+        </div>
+
+        <div class="layer">
+          <div class="layer-label" style="color: var(--blue);">Portfolio &amp; Lifecycle</div>
+          <div class="layer-tags">
+            <span class="layer-tag" style="background: var(--blue-dim); color: var(--blue);">Adoption dashboard</span>
+            <span class="layer-tag" style="background: var(--blue-dim); color: var(--blue);">ROI &amp; cost tracking</span>
+            <span class="layer-tag" style="background: var(--blue-dim); color: var(--blue);">Status across all agents</span>
+            <span class="layer-tag" style="background: var(--blue-dim); color: var(--blue);">Discovery → repair lifecycle</span>
+          </div>
+        </div>
+
+        <div class="layer">
+          <div class="layer-label" style="color: var(--orange);">Operationalization</div>
+          <div class="layer-tags">
+            <span class="layer-tag" style="background: var(--orange-dim); color: var(--orange);">RACI generation</span>
+            <span class="layer-tag" style="background: var(--orange-dim); color: var(--orange);">Adoption plans</span>
+            <span class="layer-tag" style="background: var(--orange-dim); color: var(--orange);">Maintenance plans</span>
+            <span class="layer-tag" style="background: var(--orange-dim); color: var(--orange);">Roadmap generation</span>
+          </div>
+        </div>
+
+        <div class="layer">
+          <div class="layer-label" style="color: var(--teal);">Multi-Platform Generation</div>
+          <div class="layer-tags">
+            <span class="layer-tag" style="background: var(--teal-dim); color: var(--teal);">Glean</span>
+            <span class="layer-tag" style="background: var(--teal-dim); color: var(--teal);">Claude API</span>
+            <span class="layer-tag" style="background: var(--teal-dim); color: var(--teal);">OpenAI</span>
+            <span class="layer-tag" style="background: var(--teal-dim); color: var(--teal);">Monday.com</span>
+            <span class="layer-tag" style="background: var(--teal-dim); color: var(--teal);">Pluggable connectors</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- RIGHT: Legal Functions (built + next) -->
+      <div class="arch-panel" style="border-top: 3px solid var(--indigo);">
+        <span class="panel-badge badge-domain">Legal Domain</span>
+        <div class="panel-title">Legal AI Functions</div>
+        <div class="panel-sub">Domain-specific agents running on AESOP infrastructure</div>
+
+        <div class="func-list">
+
+          <div class="func-row live">
+            <span class="func-status status-live">Live</span>
+            <div class="func-info">
+              <div class="func-name">Contract Review &amp; Triage</div>
+              <div class="func-desc">5 specialized agents (vendor, customer, employment, DPA, general). Classification → extraction → risk scoring → flagging. 30-standard legal library. Human-in-the-loop checkpoints. Live at contract-review-charlie-fullers-projects.vercel.app.</div>
+            </div>
+          </div>
+
+          <div class="func-row live">
+            <span class="func-status status-live">Live</span>
+            <div class="func-info">
+              <div class="func-name">Employment Legal Agents (Fortune 500)</div>
+              <div class="func-desc">Separation agreement generator across US/EMEA/Australia jurisdictions. Legal metrics agent for outside-counsel spend by firm and practice area. Built inside a real legal department with real confidentiality constraints.</div>
+            </div>
+          </div>
+
+          <div class="func-row next">
+            <span class="func-status status-next">Next</span>
+            <div class="func-info">
+              <div class="func-name">Matter Intake &amp; Triage</div>
+              <div class="func-desc">AI classifies practice area, urgency, conflict check triggers, staffing recommendation. Routes to the right partner. The highest-value next function for a law firm — every partner understands the pain of matter opening.</div>
+            </div>
+          </div>
+
+          <div class="func-row road">
+            <span class="func-status status-road">Roadmap</span>
+            <div class="func-info">
+              <div class="func-name">Due Diligence Accelerator</div>
+              <div class="func-desc">Bulk document review. Clause-level comparison against target standards. Deltas only.</div>
+            </div>
+          </div>
+
+          <div class="func-row road">
+            <span class="func-status status-road">Roadmap</span>
+            <div class="func-info">
+              <div class="func-name">Regulatory Change Monitor</div>
+              <div class="func-desc">Monitor updates → map to active matters → surface affected engagements.</div>
+            </div>
+          </div>
+
+          <div class="func-row road">
+            <span class="func-status status-road">Roadmap</span>
+            <div class="func-info">
+              <div class="func-name">Knowledge Management + Client Value Reporting</div>
+              <div class="func-desc">Precedent-aware search. Clause libraries that learn. Client-facing outcome reports as a retention asset.</div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- Summary -->
+  <div class="summary-grid">
+    <div class="summary-card">
+      <div class="summary-num">2</div>
+      <div class="summary-label">Built — AESOP OS + Contract Review</div>
+    </div>
+    <div class="summary-card">
+      <div class="summary-num">1</div>
+      <div class="summary-label">Next — Matter Intake Triage (highest law firm leverage)</div>
+    </div>
+    <div class="summary-card">
+      <div class="summary-num">4</div>
+      <div class="summary-label">Roadmap — legal function surface area identified</div>
+    </div>
+  </div>
+
+  <!-- JD Mapping -->
+  <div class="section" style="margin-top: 48px;">
+    <div class="section-title">JD Requirement → What's Already True</div>
+    <p style="font-size: 15px; color: var(--text-dim); margin-bottom: 24px; max-width: 800px;">
+      The K&I Program Manager role at Ashurst Perkins Coie asks for someone who bridges legal practice, technology, and business operations. That bridge exists. Here's the map.
+    </p>
+
+    <div class="mapping-grid">
+
+      <div class="map-card">
+        <div class="map-jd">Partner with legal teams to identify AI opportunities</div>
+        <div class="map-evidence"><em>Done.</em> Embedded in a Fortune 500 legal department: stakeholder listening sessions, workflow mapping, structured requirements before any build. The legal function roadmap above came from the same discovery pattern.</div>
+      </div>
+
+      <div class="map-card">
+        <div class="map-jd">Translate legal needs into AI solution requirements; facilitate POC development</div>
+        <div class="map-evidence"><em>Done, twice.</em> Contract Review: 5 agent types mapped to specific contract categories with domain-tailored criteria. Employment Legal: separation agreement agent, legal metrics agent — each scoped to a specific legal workflow.</div>
+      </div>
+
+      <div class="map-card">
+        <div class="map-jd">Design and deploy scalable AI tools with K&I, data, e-discovery, and technology teams</div>
+        <div class="map-evidence">Contract Review runs on Vercel + Railway + Supabase + Celery/Redis. 360 contracts/hour throughput. <em>Built for production, not demo.</em> Multi-format ingestion, RAG pipeline, row-level security — infrastructure that scales across functions.</div>
+      </div>
+
+      <div class="map-card">
+        <div class="map-jd">Ensure AI solutions align with governance, ethics, and risk standards</div>
+        <div class="map-evidence">AESOP's evaluation engine is <em>the</em> governance layer. Multi-agent scoring with hard veto rules. Regulatory mapping mode generates compliance artifacts from evaluation history. The Fortune 500 employment legal work required confidentiality walls between employment and commercial legal — AESOP's access-control architecture encodes that pattern.</div>
+      </div>
+
+      <div class="map-card">
+        <div class="map-jd">Lead end-to-end delivery of AI-enabled client projects — concept through implementation</div>
+        <div class="map-evidence">AESOP's pipeline (Discover → Design → Build → Evaluate → Deploy → Monitor → Repair) is the delivery framework. Every function follows it. For the K&I context, this means each new legal AI initiative has a repeatable path, not a reinvention.</div>
+      </div>
+
+      <div class="map-card">
+        <div class="map-jd">Develop frameworks to track AI solution performance — time saved, cost impact, quality</div>
+        <div class="map-evidence">AESOP's portfolio layer tracks every agent: cost, status, outcomes. Contract Review dashboard adds KPI cards, risk score trends, throughput analytics. The framework exists — it just needs legal-domain metrics plugged in.</div>
+      </div>
+
+      <div class="map-card">
+        <div class="map-jd">Maintain a portfolio dashboard — adoption, client outcomes, return on innovation</div>
+        <div class="map-evidence">AESOP's portfolio dashboard is cross-function by design. A K&I director would see every AI investment — contract review, matter intake, diligence — in one view with adoption rates and outcome metrics.</div>
+      </div>
+
+      <div class="map-card">
+        <div class="map-jd">Serve as strategic advisor — position AI as value-added differentiator</div>
+        <div class="map-evidence">Client Value Reporting function (roadmap) generates outcome artifacts: "here's what AI saved this quarter." The whole platform is a client-conversation asset. And the competitive research doc in the Contract Review repo demonstrates fluency in the legal AI market (Ironclad, LawGeex, Kira, Harvey, Spellbook).</div>
+      </div>
+
+      <div class="map-card">
+        <div class="map-jd">Partner with L&D to upskill lawyers and staff in AI literacy</div>
+        <div class="map-evidence"><em>This is the deepest lane.</em> 150+ professionals trained monthly at AI Build Lab. Risilience Academy: 0→300 users, 25-course curriculum. Enterprise AI literacy workshops for legal, finance, and people ops teams. AESOP's operationalization layer auto-generates training and adoption plans per agent.</div>
+      </div>
+
+      <div class="map-card">
+        <div class="map-jd">Promote a culture of experimentation, measurement, and continuous improvement</div>
+        <div class="map-evidence">The feedback loop in Contract Review turns individual reviewer corrections into systematic improvements. AESOP's drift detection monitors agent performance over time. The whole architecture is built on the premise that shipping is step one — the system gets smarter with use.</div>
+      </div>
+
+    </div>
+  </div>
+
+  <div class="footer">
+    Built for the Ashurst Perkins Coie K&I Program Manager role.
+    &nbsp;·&nbsp;
+    <a href="../portfolio/aesop-platform-overview.html">AESOP Platform Overview →</a>
+    &nbsp;·&nbsp;
+    <a href="https://contract-review-charlie-fullers-projects.vercel.app" target="_blank">Live Contract Review App →</a>
+    &nbsp;·&nbsp;
+    <a href="../index.html">All Diagrams →</a>
+  </div>
+
+</div>
+
+</body>
+</html>
