@@ -1,0 +1,523 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<link rel="icon" type="image/svg+xml" href="../icon.svg">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AESOP Control Plane — Domain Architecture</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,wght@0,400;0,500;0,600;0,700;0,800;1,400&family=Source+Code+Pro:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --font-body: 'Fraunces', Georgia, serif;
+    --font-mono: 'Source Code Pro', 'SF Mono', Consolas, monospace;
+
+    --bg: #f6f7fb;
+    --surface: #ffffff;
+    --surface2: #f0f2f7;
+    --border: rgba(0, 0, 0, 0.06);
+    --border-bright: rgba(0, 0, 0, 0.12);
+    --text: #0f172a;
+    --text-dim: #64748b;
+
+    --slate: #475569;
+    --slate-dim: rgba(71, 85, 105, 0.08);
+    --blue: #2563eb;
+    --blue-dim: rgba(37, 99, 235, 0.08);
+    --violet: #7c3aed;
+    --violet-dim: rgba(124, 58, 237, 0.08);
+    --teal: #0d9488;
+    --teal-dim: rgba(13, 148, 136, 0.08);
+    --emerald: #059669;
+    --emerald-dim: rgba(5, 150, 105, 0.08);
+    --amber: #d97706;
+    --amber-dim: rgba(217, 119, 6, 0.08);
+    --orange: #ea580c;
+    --orange-dim: rgba(234, 88, 12, 0.08);
+    --indigo: #4f46e5;
+    --indigo-dim: rgba(79, 70, 229, 0.08);
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #0c1222;
+      --surface: #131c31;
+      --surface2: #1a2744;
+      --border: rgba(255, 255, 255, 0.06);
+      --border-bright: rgba(255, 255, 255, 0.12);
+      --text: #e2e8f0;
+      --text-dim: #94a3b8;
+
+      --slate: #94a3b8;
+      --slate-dim: rgba(148, 163, 184, 0.12);
+      --blue: #60a5fa;
+      --blue-dim: rgba(96, 165, 250, 0.12);
+      --violet: #a78bfa;
+      --violet-dim: rgba(167, 139, 250, 0.12);
+      --teal: #2dd4bf;
+      --teal-dim: rgba(45, 212, 191, 0.12);
+      --emerald: #34d399;
+      --emerald-dim: rgba(52, 211, 153, 0.12);
+      --amber: #fbbf24;
+      --amber-dim: rgba(251, 191, 36, 0.12);
+      --orange: #fb923c;
+      --orange-dim: rgba(251, 146, 60, 0.12);
+      --indigo: #818cf8;
+      --indigo-dim: rgba(129, 140, 248, 0.12);
+    }
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: var(--bg);
+    background-image:
+      radial-gradient(at 10% 0%, var(--violet-dim) 0%, transparent 40%),
+      radial-gradient(at 90% 80%, var(--teal-dim) 0%, transparent 40%);
+    color: var(--text);
+    font-family: var(--font-body);
+    font-size: 15px;
+    line-height: 1.7;
+    min-height: 100vh;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  .nav {
+    position: sticky; top: 0; z-index: 100;
+    backdrop-filter: blur(16px);
+    background: color-mix(in srgb, var(--surface) 85%, transparent);
+    border-bottom: 1px solid var(--border);
+  }
+  .nav-inner {
+    max-width: 1000px; margin: 0 auto; padding: 12px 24px;
+    display: flex; align-items: center; justify-content: space-between;
+  }
+  .nav-brand {
+    font-family: var(--font-mono); font-size: 13px; font-weight: 600;
+    color: var(--indigo); text-decoration: none;
+  }
+
+  .container { max-width: 1000px; margin: 0 auto; padding: 48px 24px 80px; }
+
+  @keyframes fadeUp { from { opacity: 0; transform: translateY(16px); } to { opacity: 1; transform: translateY(0); } }
+
+  .hero { text-align: center; margin-bottom: 56px; animation: fadeUp 0.5s ease both; }
+  .hero h1 {
+    font-size: 42px; font-weight: 800; letter-spacing: -1px; margin-bottom: 8px;
+    background: linear-gradient(135deg, var(--indigo), var(--teal));
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+  }
+  .hero p { font-size: 17px; color: var(--text-dim); max-width: 650px; margin: 0 auto; }
+
+  .section { margin-bottom: 48px; animation: fadeUp 0.5s ease both; }
+  .section-title {
+    font-family: var(--font-mono); font-size: 12px; font-weight: 700;
+    letter-spacing: 0.15em; text-transform: uppercase; color: var(--indigo);
+    margin-bottom: 16px;
+  }
+
+  /* === ARCHITECTURE DIAGRAM === */
+  .arch {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 0;
+    overflow: hidden;
+  }
+
+  /* Control Plane */
+  .control-plane {
+    padding: 24px 28px 20px;
+    border-bottom: 1px solid var(--border);
+    background: var(--surface2);
+  }
+  .plane-label {
+    font-family: var(--font-mono); font-size: 10px; font-weight: 700;
+    letter-spacing: 0.15em; text-transform: uppercase;
+    color: var(--violet); margin-bottom: 14px;
+  }
+  .plane-title {
+    font-size: 20px; font-weight: 700; margin-bottom: 4px; color: var(--text);
+  }
+  .plane-sub {
+    font-size: 13px; color: var(--text-dim); margin-bottom: 16px;
+  }
+
+  /* Three AESOP columns */
+  .cp-columns {
+    display: grid; grid-template-columns: 1fr 1fr 1fr;
+    gap: 12px; margin-bottom: 16px;
+  }
+  .cp-col {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 14px;
+  }
+  .cp-col-title {
+    font-family: var(--font-mono); font-size: 10px; font-weight: 700;
+    letter-spacing: 0.08em; text-transform: uppercase; margin-bottom: 8px;
+  }
+  .cp-tags { display: flex; flex-wrap: wrap; gap: 5px; }
+  .cp-tag {
+    font-family: var(--font-mono); font-size: 10px; font-weight: 500;
+    padding: 3px 8px; border-radius: 5px;
+  }
+
+  /* Registry bar */
+  .registry {
+    display: flex; align-items: center; gap: 14px;
+    padding: 10px 18px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    margin: 0 28px;
+  }
+  .reg-label {
+    font-family: var(--font-mono); font-size: 10px; font-weight: 700;
+    letter-spacing: 0.1em; text-transform: uppercase;
+    color: var(--violet); white-space: nowrap;
+  }
+  .reg-pills { display: flex; flex-wrap: wrap; gap: 6px; }
+  .reg-pill {
+    font-family: var(--font-mono); font-size: 10px; font-weight: 600;
+    padding: 4px 10px; border-radius: 20px;
+    border: 1px solid var(--border);
+    background: var(--surface2);
+  }
+  .reg-pill.active {
+    border-color: color-mix(in srgb, var(--indigo) 30%, transparent);
+    background: var(--indigo-dim);
+    color: var(--indigo);
+  }
+
+  /* Arrow down */
+  .arrow-down {
+    text-align: center; padding: 8px 0 4px;
+    font-family: var(--font-mono); font-size: 18px; color: var(--border-bright);
+  }
+
+  /* Execution Plane */
+  .exec-plane {
+    padding: 20px 28px 28px;
+  }
+  .exec-header {
+    display: flex; align-items: center; gap: 10px; margin-bottom: 16px;
+  }
+
+  /* Function apps grid */
+  .function-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 12px;
+  }
+  .func-card {
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 16px;
+    background: var(--surface);
+  }
+  .func-card.built {
+    border-top: 3px solid var(--emerald);
+    background: var(--emerald-dim);
+  }
+  .func-card.next {
+    border-top: 3px solid var(--amber);
+    background: var(--amber-dim);
+  }
+  .func-card.road {
+    border-top: 3px solid var(--slate);
+    background: var(--slate-dim);
+  }
+  .func-status {
+    font-family: var(--font-mono); font-size: 9px; font-weight: 700;
+    letter-spacing: 0.1em; text-transform: uppercase;
+    padding: 2px 7px; border-radius: 4px; display: inline-block; margin-bottom: 8px;
+  }
+  .status-built { background: var(--emerald); color: #fff; }
+  .status-next { background: var(--amber); color: #fff; }
+  .status-road { background: var(--slate); color: #fff; }
+  .func-name {
+    font-size: 15px; font-weight: 700; color: var(--text); margin-bottom: 4px;
+  }
+  .func-desc {
+    font-size: 12px; color: var(--text-dim); line-height: 1.5; margin-bottom: 10px;
+  }
+  .func-integration {
+    font-family: var(--font-mono); font-size: 10px; color: var(--violet);
+    background: var(--violet-dim);
+    padding: 4px 8px; border-radius: 4px;
+    display: inline-block;
+  }
+
+  /* Protocol detail */
+  .protocol-section {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 24px;
+    margin-top: 20px;
+  }
+  .proto-grid {
+    display: grid; grid-template-columns: 1fr 1fr 1fr;
+    gap: 16px;
+    margin-top: 14px;
+  }
+  .proto-card {
+    padding: 14px;
+    border-radius: 8px;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+  }
+  .proto-icon {
+    font-family: var(--font-mono); font-size: 18px; margin-bottom: 6px;
+  }
+  .proto-name {
+    font-size: 14px; font-weight: 700; color: var(--text); margin-bottom: 4px;
+  }
+  .proto-desc {
+    font-size: 12px; color: var(--text-dim); line-height: 1.5;
+  }
+  .proto-tech {
+    font-family: var(--font-mono); font-size: 10px; color: var(--indigo);
+    margin-top: 6px;
+  }
+
+  .principle-callout {
+    display: grid; grid-template-columns: 1fr 1fr;
+    gap: 12px; margin-top: 24px;
+  }
+  .principle {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 18px;
+  }
+  .principle-num {
+    font-family: var(--font-mono); font-size: 11px; font-weight: 700;
+    color: var(--indigo); margin-bottom: 4px;
+  }
+  .principle-title {
+    font-size: 15px; font-weight: 700; color: var(--text); margin-bottom: 4px;
+  }
+  .principle-desc {
+    font-size: 13px; color: var(--text-dim); line-height: 1.5;
+  }
+
+  .footer {
+    margin-top: 48px; padding-top: 16px;
+    border-top: 1px solid var(--border);
+    text-align: center; font-size: 12px; color: var(--text-dim);
+  }
+  .footer a { color: var(--indigo); text-decoration: none; }
+
+  @media (max-width: 768px) {
+    .cp-columns, .function-grid, .proto-grid, .principle-callout {
+      grid-template-columns: 1fr;
+    }
+    .hero h1 { font-size: 28px; }
+  }
+</style>
+</head>
+<body>
+
+<div class="nav">
+  <div class="nav-inner">
+    <a href="../index.html" class="nav-brand">← Charlie Fuller — Visual Explainers</a>
+  </div>
+</div>
+
+<div class="container">
+
+  <div class="hero">
+    <h1>AESOP Control Plane</h1>
+    <p>AESOP governs. Domain apps execute. A thin integration protocol keeps them connected without either side getting fat.</p>
+  </div>
+
+  <!-- Main Architecture -->
+  <div class="section">
+    <div class="section-title">Architecture</div>
+    <div class="arch">
+
+      <!-- Control Plane -->
+      <div class="control-plane">
+        <div class="plane-label">Control Plane — One Instance</div>
+        <div class="plane-title">AESOP Transformation OS</div>
+        <div class="plane-sub">Domain-agnostic. Evaluates agents, tracks portfolios, generates operationalization plans. Does not render domain UIs.</div>
+
+        <div class="cp-columns">
+          <div class="cp-col">
+            <div class="cp-col-title" style="color: var(--violet);">Evaluate</div>
+            <div class="cp-tags">
+              <span class="cp-tag" style="background: var(--violet-dim); color: var(--violet);">Multi-agent scoring</span>
+              <span class="cp-tag" style="background: var(--violet-dim); color: var(--violet);">Bias & safety</span>
+              <span class="cp-tag" style="background: var(--violet-dim); color: var(--violet);">Hard veto rules</span>
+              <span class="cp-tag" style="background: var(--violet-dim); color: var(--violet);">Drift detection</span>
+              <span class="cp-tag" style="background: var(--violet-dim); color: var(--violet);">Regulatory mapping</span>
+            </div>
+          </div>
+          <div class="cp-col">
+            <div class="cp-col-title" style="color: var(--blue);">Portfolio</div>
+            <div class="cp-tags">
+              <span class="cp-tag" style="background: var(--blue-dim); color: var(--blue);">Cross-domain dashboard</span>
+              <span class="cp-tag" style="background: var(--blue-dim); color: var(--blue);">Adoption metrics</span>
+              <span class="cp-tag" style="background: var(--blue-dim); color: var(--blue);">ROI tracking</span>
+              <span class="cp-tag" style="background: var(--blue-dim); color: var(--blue);">Status across all agents</span>
+            </div>
+          </div>
+          <div class="cp-col">
+            <div class="cp-col-title" style="color: var(--orange);">Operationalize</div>
+            <div class="cp-tags">
+              <span class="cp-tag" style="background: var(--orange-dim); color: var(--orange);">RACI generation</span>
+              <span class="cp-tag" style="background: var(--orange-dim); color: var(--orange);">Adoption plans</span>
+              <span class="cp-tag" style="background: var(--orange-dim); color: var(--orange);">Maintenance plans</span>
+              <span class="cp-tag" style="background: var(--orange-dim); color: var(--orange);">Roadmap generation</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Domain Registry -->
+        <div class="registry">
+          <span class="reg-label">Domain Registry</span>
+          <div class="reg-pills">
+            <span class="reg-pill active">Legal</span>
+            <span class="reg-pill">Healthcare</span>
+            <span class="reg-pill">Finance</span>
+            <span class="reg-pill">HR</span>
+            <span class="reg-pill">Operations</span>
+          </div>
+          <span style="font-size:11px;color:var(--text-dim);margin-left:auto;">filter portfolio · scope evals · route agents</span>
+        </div>
+      </div>
+
+      <!-- Arrow -->
+      <div class="arrow-down">↓</div>
+
+      <!-- Execution Plane -->
+      <div class="exec-plane">
+        <div class="exec-header">
+          <span class="plane-label" style="margin-bottom:0;color:var(--teal);">Execution Plane — Many Apps</span>
+        </div>
+        <p style="font-size:13px;color:var(--text-dim);margin-bottom:18px;">Each domain function is its own focused app. Own UI. Own workflow. Thin integration back to AESOP for governance and portfolio tracking.</p>
+
+        <div class="function-grid">
+
+          <div class="func-card built">
+            <span class="func-status status-built">Built</span>
+            <div class="func-name">Contract Review</div>
+            <div class="func-desc">Upload → classify → extract → score → flag. 5 specialized agents. Human-in-the-loop review workflow. Legal standards library.</div>
+            <span class="func-integration">→ AESOP: eval hooks + portfolio endpoint</span>
+          </div>
+
+          <div class="func-card built">
+            <span class="func-status status-built">Built</span>
+            <div class="func-name">Employment Legal</div>
+            <div class="func-desc">Separation agreement generator (US/EMEA/Australia). Legal metrics agent for outside-counsel spend. Built inside a Fortune 500 legal department.</div>
+            <span class="func-integration">→ AESOP: portfolio registration</span>
+          </div>
+
+          <div class="func-card next">
+            <span class="func-status status-next">Next</span>
+            <div class="func-name">Matter Intake & Triage</div>
+            <div class="func-desc">Practice area classification. Urgency scoring. Conflict check triggers. Staffing recommendation. Routes to the right partner.</div>
+            <span class="func-integration">→ AESOP: eval on day 1 + portfolio</span>
+          </div>
+
+          <div class="func-card road">
+            <span class="func-status status-road">Roadmap</span>
+            <div class="func-name">Due Diligence</div>
+            <div class="func-desc">Bulk document review. Clause-level comparison against target standards. Deltas only to reviewer.</div>
+            <span class="func-integration">→ AESOP: eval + portfolio</span>
+          </div>
+
+          <div class="func-card road">
+            <span class="func-status status-road">Roadmap</span>
+            <div class="func-name">Regulatory Monitor</div>
+            <div class="func-desc">Monitors regulatory updates. Maps to active client matters. Surfaces affected engagements.</div>
+            <span class="func-integration">→ AESOP: eval + portfolio</span>
+          </div>
+
+          <div class="func-card road">
+            <span class="func-status status-road">Roadmap</span>
+            <div class="func-name">Knowledge Mgmt + Reporting</div>
+            <div class="func-desc">Precedent search. Clause libraries that learn. Client-facing outcome reports as retention asset.</div>
+            <span class="func-integration">→ AESOP: portfolio</span>
+          </div>
+
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- Integration Protocol -->
+  <div class="section">
+    <div class="section-title">Integration Protocol — The Thin Contract</div>
+    <div class="protocol-section">
+      <p style="font-size:14px;color:var(--text-dim);">Each function app exposes three endpoints. AESOP polls them. That's it. No shared database. No UI embedding. Each side stays focused.</p>
+
+      <div class="proto-grid">
+        <div class="proto-card" style="border-left: 3px solid var(--emerald);">
+          <div class="proto-icon">📊</div>
+          <div class="proto-name">Health + Status</div>
+          <div class="proto-desc">Is the agent running? What's its last evaluation score? Any drift detected? Uptime and error rate.</div>
+          <div class="proto-tech">GET /api/aesop/health</div>
+        </div>
+
+        <div class="proto-card" style="border-left: 3px solid var(--blue);">
+          <div class="proto-icon">📈</div>
+          <div class="proto-name">Metrics + Outcomes</div>
+          <div class="proto-desc">Adoption rate, throughput, time saved, cost impact, user satisfaction. Domain-specific KPIs in a standard schema.</div>
+          <div class="proto-tech">GET /api/aesop/metrics</div>
+        </div>
+
+        <div class="proto-card" style="border-left: 3px solid var(--violet);">
+          <div class="proto-icon">🔍</div>
+          <div class="proto-name">Evaluation Target</div>
+          <div class="proto-desc">AESOP hits this endpoint to run evaluation suites against the agent. Returns agent config, instructions, and test surface.</div>
+          <div class="proto-tech">POST /api/aesop/eval-target</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Design Principles -->
+  <div class="section">
+    <div class="section-title">What AESOP Never Does</div>
+    <div class="principle-callout">
+      <div class="principle">
+        <div class="principle-num">01</div>
+        <div class="principle-title">Render domain UIs</div>
+        <div class="principle-desc">AESOP doesn't show contract details, matter forms, or diligence checklists. Each function app owns its UX. AESOP shows scores, status, and trends — the governance view.</div>
+      </div>
+      <div class="principle">
+        <div class="principle-num">02</div>
+        <div class="principle-title">Execute domain workflows</div>
+        <div class="principle-desc">AESOP doesn't process contracts or triage matters. It evaluates the agents that do. The execution plane handles execution. The control plane handles oversight.</div>
+      </div>
+      <div class="principle">
+        <div class="principle-num">03</div>
+        <div class="principle-title">Store domain data</div>
+        <div class="principle-desc">Each function app owns its database. AESOP stores evaluation results, portfolio state, and operationalization plans — metadata about agents, not the agents' data.</div>
+      </div>
+      <div class="principle">
+        <div class="principle-num">04</div>
+        <div class="principle-title">Get bigger with each domain</div>
+        <div class="principle-desc">Adding a Legal function or a Healthcare function adds one entry to the domain registry and one filter to the portfolio dashboard. That's the only AESOP UI change. The complexity lives in the function app, where it belongs.</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="footer">
+    AESOP Control Plane Architecture
+    &nbsp;·&nbsp;
+    <a href="legal-ai-os.html">Legal AI on AESOP →</a>
+    &nbsp;·&nbsp;
+    <a href="../index.html">All Diagrams →</a>
+  </div>
+
+</div>
+
+</body>
+</html>
