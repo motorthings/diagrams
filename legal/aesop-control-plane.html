@@ -4,6 +4,7 @@
 <meta charset="UTF-8">
 <link rel="icon" type="image/svg+xml" href="../icon.svg">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="How AESOP governs domain apps through a thin integration protocol — control plane for evaluation and portfolio, execution plane for domain functions.">
 <title>AESOP Control Plane — Domain Architecture</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -39,8 +40,7 @@
     --indigo-dim: rgba(79, 70, 229, 0.08);
   }
 
-  @media (prefers-color-scheme: dark) {
-    :root {
+  html.dark {
       --bg: #0c1222;
       --surface: #131c31;
       --surface2: #1a2744;
@@ -66,7 +66,6 @@
       --indigo: #818cf8;
       --indigo-dim: rgba(129, 140, 248, 0.12);
     }
-  }
 
   * { margin: 0; padding: 0; box-sizing: border-box; }
 
@@ -318,6 +317,17 @@
     }
     .hero h1 { font-size: 28px; }
   }
+.theme-toggle {
+  width: 36px; height: 36px; border-radius: 10px;
+  border: 1px solid var(--border); background: var(--surface);
+  cursor: pointer; display: flex; align-items: center; justify-content: center;
+  font-size: 16px; color: var(--text-dim); transition: all 0.2s;
+}
+.theme-toggle:hover { border-color: var(--indigo); color: var(--indigo); }
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation-duration: 0.01ms !important; animation-delay: 0ms !important; }
+}
 </style>
 </head>
 <body>
@@ -325,6 +335,10 @@
 <div class="nav">
   <div class="nav-inner">
     <a href="../index.html" class="nav-brand">← Charlie Fuller — Visual Explainers</a>
+<button class="theme-toggle" id="themeToggle" aria-label="Toggle dark mode">
+  <span class="icon-light">&#9788;</span>
+  <span class="icon-dark" style="display:none">&#9790;</span>
+</button>
   </div>
 </div>
 
@@ -413,7 +427,7 @@
           <div class="func-card built">
             <span class="func-status status-built">Built</span>
             <div class="func-name">Employment Legal</div>
-            <div class="func-desc">Separation agreement generator (US/EMEA/Australia). Legal metrics agent for outside-counsel spend. Built inside a Fortune 500 legal department.</div>
+            <div class="func-desc">Separation agreement generator (US/EMEA/Australia). Legal metrics agent for outside-counsel spend. Built inside a large corporate legal department.</div>
             <span class="func-integration">→ AESOP: portfolio registration</span>
           </div>
 
@@ -512,12 +526,25 @@
   <div class="footer">
     AESOP Control Plane Architecture
     &nbsp;·&nbsp;
-    <a href="legal-ai-os.html">Legal AI on AESOP →</a>
+    <a href="legal-ai-os.html">Legal AI Functions →</a>
     &nbsp;·&nbsp;
     <a href="../index.html">All Diagrams →</a>
   </div>
 
 </div>
 
+<script>
+  const toggle = document.getElementById('themeToggle');
+  const iconLight = toggle.querySelector('.icon-light');
+  const iconDark = toggle.querySelector('.icon-dark');
+  function setTheme(d) {
+    document.documentElement.classList.toggle('dark', d);
+    iconLight.style.display = d ? 'none' : '';
+    iconDark.style.display = d ? '' : 'none';
+    try { localStorage.setItem('diagram-theme', d ? 'dark' : 'light'); } catch(e) {}
+  }
+  toggle.addEventListener('click', () => setTheme(!document.documentElement.classList.contains('dark')));
+  try { if (localStorage.getItem('diagram-theme') === 'dark') setTheme(true); } catch(e) {}
+</script>
 </body>
 </html>
