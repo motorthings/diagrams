@@ -588,19 +588,51 @@
       });
     })();
 
-    /* Remember panel open/close state */
+    /* Remember panel + subsection open/close state */
     (function() {
-      var KEY = 'diagrams-index-panels';
+      var SECTION_KEY = 'diagrams-index-panels';
+      var SUBSECTION_KEY = 'diagrams-index-subpanels';
+
       function save() {
-        var open = [];
-        document.querySelectorAll('details.section').forEach(function(d, i) { if (d.open) open.push(i); });
-        localStorage.setItem(KEY, JSON.stringify(open));
+        // Top-level sections
+        var openSections = [];
+        document.querySelectorAll('details.section').forEach(function(d, i) {
+          if (d.open) openSections.push(i);
+        });
+        localStorage.setItem(SECTION_KEY, JSON.stringify(openSections));
+
+        // Nested subsections — keyed by section index
+        var openSubs = {};
+        document.querySelectorAll('details.section').forEach(function(section, si) {
+          var subs = section.querySelectorAll('details.subsection');
+          var openIndices = [];
+          subs.forEach(function(sub, i) { if (sub.open) openIndices.push(i); });
+          if (openIndices.length) openSubs[si] = openIndices;
+        });
+        localStorage.setItem(SUBSECTION_KEY, JSON.stringify(openSubs));
       }
+
       function restore() {
-        var open = JSON.parse(localStorage.getItem(KEY) || '[0]');
-        document.querySelectorAll('details.section').forEach(function(d, i) { d.open = open.indexOf(i) !== -1; });
+        // Restore top-level sections
+        var openSections = JSON.parse(localStorage.getItem(SECTION_KEY) || '[0]');
+        document.querySelectorAll('details.section').forEach(function(d, i) {
+          d.open = openSections.indexOf(i) !== -1;
+        });
+
+        // Restore subsections
+        var openSubs = JSON.parse(localStorage.getItem(SUBSECTION_KEY) || '{}');
+        document.querySelectorAll('details.section').forEach(function(section, si) {
+          if (!openSubs[si]) return;
+          var subs = section.querySelectorAll('details.subsection');
+          subs.forEach(function(sub, i) {
+            sub.open = openSubs[si].indexOf(i) !== -1;
+          });
+        });
       }
-      document.querySelectorAll('details.section').forEach(function(d) { d.addEventListener('toggle', save); });
+
+      document.querySelectorAll('details.section, details.subsection').forEach(function(d) {
+        d.addEventListener('toggle', save);
+      });
       restore();
     })();
   </script>
