@@ -1,0 +1,733 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<link rel="icon" type="image/svg+xml" href="../icon.svg">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="Visual flow diagrams of three legal AI storage architectures — vector-only RAG, hybrid vector+BM25+rerank, and full hybrid with knowledge graph — showing how data moves through each system.">
+<title>Legal AI Storage Architecture — How Each Option Works</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,wght@0,400;0,500;0,600;0,700;0,800;1,400&family=Source+Code+Pro:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  /* ============ GULF STREAM RACING PALETTE ============ */
+  :root {
+    --font-body: 'Fraunces', Georgia, serif;
+    --font-mono: 'Source Code Pro', 'SF Mono', Consolas, monospace;
+
+    --bg: #eef4f9;
+    --surface: #ffffff;
+    --surface2: #f5f8fc;
+    --surface-elevated: #e8f0f7;
+    --border: rgba(0, 0, 0, 0.06);
+    --border-bright: rgba(0, 0, 0, 0.12);
+    --text: #0a1628;
+    --text-dim: #3d5a7a;
+    --text-muted: #7a9ab8;
+
+    --primary: #e8621a;
+    --primary-dim: rgba(232, 98, 26, 0.08);
+    --secondary: #4a90c4;
+    --secondary-dim: rgba(74, 144, 196, 0.08);
+    --metric: #0f766e;
+    --metric-dim: rgba(15, 118, 110, 0.06);
+    --amber: #b45309;
+    --amber-dim: rgba(180, 83, 9, 0.08);
+    --violet: #7c3aed;
+    --violet-dim: rgba(124, 58, 237, 0.08);
+    --rose: #e11d48;
+    --rose-dim: rgba(225, 29, 72, 0.08);
+    --slate: #475569;
+    --slate-dim: rgba(71, 85, 105, 0.08);
+    --emerald: #059669;
+    --emerald-dim: rgba(5, 150, 105, 0.08);
+  }
+
+  html.dark {
+    --bg: #0a1628;
+    --surface: #0f1f3d;
+    --surface2: #132844;
+    --surface-elevated: #162d52;
+    --border: rgba(255, 255, 255, 0.06);
+    --border-bright: rgba(255, 255, 255, 0.12);
+    --text: #e8edf5;
+    --text-dim: #9bb0d4;
+    --text-muted: #5e7aa3;
+
+    --primary: #f37021;
+    --primary-dim: rgba(243, 112, 33, 0.12);
+    --secondary: #6cace4;
+    --secondary-dim: rgba(108, 172, 228, 0.12);
+    --metric: #2dd4bf;
+    --metric-dim: rgba(45, 212, 191, 0.08);
+    --amber: #f59e0b;
+    --amber-dim: rgba(245, 158, 11, 0.12);
+    --violet: #a78bfa;
+    --violet-dim: rgba(167, 139, 250, 0.12);
+    --rose: #fb7185;
+    --rose-dim: rgba(251, 113, 133, 0.12);
+    --slate: #94a3b8;
+    --slate-dim: rgba(148, 163, 184, 0.12);
+    --emerald: #34d399;
+    --emerald-dim: rgba(52, 211, 153, 0.1);
+  }
+
+  /* ============ RESET + BASE ============ */
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: var(--bg);
+    background-image:
+      radial-gradient(ellipse at 80% 0%, var(--primary-dim) 0%, transparent 50%),
+      radial-gradient(ellipse at 20% 60%, var(--secondary-dim) 0%, transparent 40%);
+    color: var(--text);
+    font-family: var(--font-body);
+    font-size: 15px;
+    line-height: 1.7;
+    min-height: 100vh;
+    -webkit-font-smoothing: antialiased;
+    transition: background 0.3s, color 0.3s;
+  }
+
+  /* ============ NAV ============ */
+  .nav {
+    position: sticky; top: 0; z-index: 100;
+    backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px);
+    background: color-mix(in srgb, var(--surface) 85%, transparent);
+    border-bottom: 1px solid var(--border);
+    margin: 0 0 32px; padding: 0 32px;
+    transition: background 0.3s, border-color 0.3s;
+  }
+  .nav-inner {
+    max-width: 1000px; margin: 0 auto; padding: 12px 0;
+    display: flex; align-items: center; justify-content: space-between;
+  }
+  .nav-brand {
+    font-family: var(--font-mono); font-size: 13px; font-weight: 600;
+    color: var(--primary); text-decoration: none;
+  }
+  .theme-toggle {
+    width: 36px; height: 36px; border-radius: 10px;
+    border: 1px solid var(--border); background: var(--surface);
+    cursor: pointer; display: flex; align-items: center; justify-content: center;
+    font-size: 16px; color: var(--text-dim); transition: all 0.2s;
+  }
+  .theme-toggle:hover { border-color: var(--primary); color: var(--primary); }
+  .theme-toggle:focus-visible { outline: 2px solid var(--primary); outline-offset: 2px; }
+
+  /* ============ BACKLINK ============ */
+  .backlink {
+    position: fixed; top: 12px; left: 16px; z-index: 101;
+    font-family: var(--font-mono); font-size: 12px;
+    color: var(--text-dim); text-decoration: none;
+    padding: 6px 10px; border: 1px solid var(--border);
+    border-radius: 6px; background: var(--surface);
+    transition: color 0.15s, border-color 0.15s;
+  }
+  .backlink:hover { color: var(--text); border-color: var(--border-bright); }
+
+  /* ============ CONTAINER ============ */
+  .container { max-width: 1000px; margin: 0 auto; padding: 0 24px 80px; }
+
+  /* ============ ANIMATION ============ */
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(16px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  .section { animation: fadeUp 0.5s ease both; margin-bottom: 40px; }
+  .section:nth-child(1) { animation-delay: 0.05s; }
+  .section:nth-child(2) { animation-delay: 0.10s; }
+  .section:nth-child(3) { animation-delay: 0.15s; }
+  .section:nth-child(4) { animation-delay: 0.20s; }
+  .section:nth-child(5) { animation-delay: 0.25s; }
+  .section:nth-child(6) { animation-delay: 0.30s; }
+
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after {
+      animation-duration: 0.01ms !important;
+      animation-delay: 0ms !important;
+      transition-duration: 0.01ms !important;
+    }
+  }
+
+  /* ============ HERO ============ */
+  .hero { text-align: center; margin-bottom: 48px; padding: 32px 0 0; }
+  .hero-badge {
+    display: inline-block; font-family: var(--font-mono);
+    font-size: 11px; font-weight: 600; letter-spacing: 1.5px;
+    text-transform: uppercase; color: var(--secondary);
+    background: var(--secondary-dim); border: 1px solid var(--secondary);
+    border-radius: 20px; padding: 4px 14px; margin-bottom: 16px;
+  }
+  .hero h1 {
+    font-size: 44px; font-weight: 800; letter-spacing: -1px;
+    margin-bottom: 8px; color: var(--text); text-wrap: balance;
+  }
+  .hero .tagline {
+    font-size: 16px; color: var(--text-dim);
+    font-style: italic; max-width: 620px; margin: 0 auto;
+  }
+
+  /* ============ DIAGRAM SECTION HEADER ============ */
+  .diagram-header {
+    margin-bottom: 20px;
+  }
+  .diagram-header__num {
+    font-family: var(--font-mono); font-size: 10px; font-weight: 600;
+    letter-spacing: 1.5px; text-transform: uppercase; margin-bottom: 4px;
+  }
+  .diagram-header__num--rose { color: var(--rose); }
+  .diagram-header__num--secondary { color: var(--secondary); }
+  .diagram-header__num--violet { color: var(--violet); }
+
+  .diagram-header h2 {
+    font-size: 24px; font-weight: 700; letter-spacing: -0.3px; margin-bottom: 4px;
+  }
+  .diagram-header__subtitle {
+    font-family: var(--font-mono); font-size: 11px; color: var(--text-muted);
+  }
+
+  /* ============ MERMAID CONTAINER ============ */
+  .mermaid-wrap {
+    position: relative;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 28px 20px 24px;
+    overflow: auto;
+    margin-bottom: 8px;
+  }
+
+  .mermaid-wrap .mermaid {
+    display: flex;
+    justify-content: center;
+    transition: transform 0.2s ease;
+    transform-origin: top center;
+  }
+
+  /* Zoom controls */
+  .zoom-controls {
+    position: absolute;
+    top: 8px; right: 8px;
+    display: flex; gap: 2px; z-index: 10;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 6px; padding: 2px;
+  }
+  .zoom-controls button {
+    width: 28px; height: 28px;
+    border: none; background: transparent;
+    color: var(--text-dim);
+    font-family: var(--font-mono); font-size: 14px;
+    cursor: pointer; border-radius: 4px;
+    display: flex; align-items: center; justify-content: center;
+    transition: background 0.15s, color 0.15s;
+  }
+  .zoom-controls button:hover {
+    background: var(--border); color: var(--text);
+  }
+
+  /* Scrollbar */
+  .mermaid-wrap {
+    scrollbar-width: thin;
+    scrollbar-color: var(--border) transparent;
+  }
+  .mermaid-wrap::-webkit-scrollbar { width: 6px; height: 6px; }
+  .mermaid-wrap::-webkit-scrollbar-track { background: transparent; }
+  .mermaid-wrap::-webkit-scrollbar-thumb {
+    background: var(--border); border-radius: 3px;
+  }
+  .mermaid-wrap::-webkit-scrollbar-thumb:hover { background: var(--text-dim); }
+
+  .mermaid-wrap.is-zoomed { cursor: grab; }
+  .mermaid-wrap.is-panning { cursor: grabbing; user-select: none; }
+
+  /* ============ MERMAID SVG OVERRIDES ============ */
+  .mermaid .nodeLabel {
+    font-family: var(--font-mono) !important;
+    font-size: 13px !important;
+  }
+  .mermaid .edgeLabel {
+    font-family: var(--font-mono) !important;
+    font-size: 11px !important;
+  }
+  .mermaid .node rect,
+  .mermaid .node circle,
+  .mermaid .node polygon {
+    stroke-width: 1.5px !important;
+  }
+  .mermaid .edge-pattern-solid {
+    stroke-width: 1.5px !important;
+  }
+
+  /* Dark mode Mermaid overrides — Option 1 (rose) */
+  html.dark .mermaid g.roseNode rect,
+  html.dark .mermaid g.roseNode polygon,
+  html.dark .mermaid g.roseNode circle { fill: rgba(251,113,133,0.12) !important; stroke: #fb7185 !important; color: #e8edf5 !important; }
+  html.dark .mermaid g.roseStore rect,
+  html.dark .mermaid g.roseStore polygon { fill: rgba(251,113,133,0.06) !important; stroke: #fb7185 !important; color: #e8edf5 !important; }
+
+  /* Dark mode Mermaid overrides — Option 2 (blue) */
+  html.dark .mermaid g.blueNode rect,
+  html.dark .mermaid g.blueNode polygon,
+  html.dark .mermaid g.blueNode circle { fill: rgba(108,172,228,0.12) !important; stroke: #6cace4 !important; color: #e8edf5 !important; }
+  html.dark .mermaid g.blueStore rect,
+  html.dark .mermaid g.blueStore polygon { fill: rgba(108,172,228,0.06) !important; stroke: #6cace4 !important; color: #e8edf5 !important; }
+
+  /* Dark mode Mermaid overrides — Option 3 (violet) */
+  html.dark .mermaid g.violetNode rect,
+  html.dark .mermaid g.violetNode polygon,
+  html.dark .mermaid g.violetNode circle { fill: rgba(167,139,250,0.12) !important; stroke: #a78bfa !important; color: #e8edf5 !important; }
+  html.dark .mermaid g.violetStore rect,
+  html.dark .mermaid g.violetStore polygon { fill: rgba(167,139,250,0.06) !important; stroke: #a78bfa !important; color: #e8edf5 !important; }
+  html.dark .mermaid g.violetDiamond rect,
+  html.dark .mermaid g.violetDiamond polygon { fill: rgba(167,139,250,0.10) !important; stroke: #a78bfa !important; color: #e8edf5 !important; }
+
+  /* Dark mode — shared nodes */
+  html.dark .mermaid g.llmNode rect,
+  html.dark .mermaid g.llmNode polygon { fill: rgba(243,112,33,0.12) !important; stroke: #f37021 !important; color: #e8edf5 !important; }
+  html.dark .mermaid g.answerNode rect,
+  html.dark .mermaid g.answerNode polygon { fill: rgba(52,211,153,0.12) !important; stroke: #34d399 !important; color: #e8edf5 !important; }
+  html.dark .mermaid g.fusionNode rect,
+  html.dark .mermaid g.fusionNode polygon { fill: rgba(251,191,36,0.12) !important; stroke: #fbbf24 !important; color: #e8edf5 !important; }
+  html.dark .mermaid g.kgNode rect,
+  html.dark .mermaid g.kgNode polygon,
+  html.dark .mermaid g.kgNode circle { fill: rgba(167,139,250,0.14) !important; stroke: #a78bfa !important; color: #e8edf5 !important; }
+
+  /* Dark mode — edge labels */
+  html.dark .mermaid .edgeLabel span { color: #9bb0d4 !important; }
+  html.dark .mermaid .edgeLabel foreignObject { color: #9bb0d4 !important; }
+
+  /* ============ DIAGRAM LABEL BAR ============ */
+  .diagram-label {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 10px 16px;
+    margin-bottom: 32px;
+    font-family: var(--font-mono); font-size: 11px;
+    color: var(--text-dim); text-align: center;
+  }
+  .diagram-label--rose { border-left: 3px solid var(--rose); }
+  .diagram-label--secondary { border-left: 3px solid var(--secondary); }
+  .diagram-label--violet { border-left: 3px solid var(--violet); }
+
+  /* ============ SUMMARY COMPARISON ============ */
+  .summary-header {
+    text-align: center; margin-bottom: 24px;
+  }
+  .summary-header h2 {
+    font-size: 22px; font-weight: 700; letter-spacing: -0.3px; margin-bottom: 4px;
+  }
+  .summary-header p {
+    font-size: 14px; color: var(--text-dim); font-style: italic;
+  }
+
+  .summary-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 16px;
+    margin-bottom: 48px;
+  }
+
+  .summary-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 18px 20px;
+    text-align: center;
+  }
+  .summary-card__bar {
+    height: 3px; margin-bottom: 14px; border-radius: 2px;
+  }
+  .summary-card__bar--rose { background: var(--rose); }
+  .summary-card__bar--secondary { background: var(--secondary); }
+  .summary-card__bar--violet { background: var(--violet); }
+
+  .summary-card__title {
+    font-size: 14px; font-weight: 700; margin-bottom: 6px;
+  }
+  .summary-card__text {
+    font-size: 12px; color: var(--text-dim); line-height: 1.5;
+  }
+
+  /* ============ FOOTER ============ */
+  .footer {
+    text-align: center; font-family: var(--font-mono);
+    font-size: 11px; color: var(--text-muted); padding: 24px 0 0;
+  }
+
+  /* ============ RESPONSIVE ============ */
+  @media (max-width: 768px) {
+    .hero h1 { font-size: 32px; }
+    .summary-grid { grid-template-columns: 1fr; }
+    .mermaid-wrap { padding: 20px 12px; }
+    .backlink { top: 8px; left: 8px; font-size: 10px; padding: 4px 8px; }
+  }
+
+  @media (max-width: 500px) {
+    .hero h1 { font-size: 26px; }
+  }
+</style>
+</head>
+<body>
+
+<!-- Nav -->
+<div class="nav">
+  <div class="nav-inner">
+    <span class="nav-brand">Ashurst Perkins Coie</span>
+    <button class="theme-toggle" id="themeToggle" aria-label="Toggle dark mode">
+      <span class="icon-light">&#9788;</span>
+      <span class="icon-dark" style="display:none">&#9790;</span>
+    </button>
+  </div>
+</div>
+
+<!-- Backlink -->
+<a href="../index.html" class="backlink">&larr; Index</a>
+
+<div class="container">
+
+  <!-- Hero -->
+  <div class="hero section">
+    <div class="hero-badge">Ashurst Perkins Coie</div>
+    <h1>How Each Architecture Works</h1>
+    <p class="tagline">Data flow through the three options &mdash; from document to answer.</p>
+  </div>
+
+  <!-- ============ OPTION 1: VECTOR ONLY ============ -->
+  <div class="diagram-header section">
+    <div class="diagram-header__num diagram-header__num--rose">Option 1 &mdash; Not recommended</div>
+    <h2>Vector DB / RAG Only</h2>
+    <div class="diagram-header__subtitle">Pure semantic search with embeddings</div>
+  </div>
+
+  <div class="mermaid-wrap section">
+    <div class="zoom-controls">
+      <button onclick="zoomDiagram(this, 1.2)" title="Zoom in">+</button>
+      <button onclick="zoomDiagram(this, 0.8)" title="Zoom out">&minus;</button>
+      <button onclick="resetZoom(this)" title="Reset zoom">&#8634;</button>
+    </div>
+    <pre class="mermaid">
+      flowchart TD
+        docs["Documents"]
+        chunk["Chunk &amp; Embed"]
+        vector[("Vector Store
+        PGVector / LanceDB")]
+        query["User Query"]
+        embed["Embed Query"]
+        similarity["Similarity Search
+        cosine distance"]
+        retrieved["Retrieved Chunks
+        top-k"]
+        llm["LLM"]
+        answer["Answer"]
+
+        docs --> chunk
+        chunk --> vector
+        query --> embed
+        embed --> similarity
+        vector --> similarity
+        similarity --> retrieved
+        retrieved --> llm
+        llm --> answer
+
+        class docs,chunk,embed,similarity,retrieved roseNode
+        class vector roseStore
+        class query roseNode
+        class llm llmNode
+        class answer answerNode
+    </pre>
+  </div>
+
+  <div class="diagram-label diagram-label--rose section">
+    ~70% accuracy ceiling &mdash; No production legal AI system uses this alone. Embeddings fuzz out exact clause numbers, statute citations, and party names.
+  </div>
+
+  <!-- ============ OPTION 2: HYBRID ============ -->
+  <div class="diagram-header section">
+    <div class="diagram-header__num diagram-header__num--secondary">Option 2 &mdash; Production Baseline</div>
+    <h2>Hybrid Vector + BM25 + Cross-encoder Rerank</h2>
+    <div class="diagram-header__subtitle">Two parallel retrieval paths fused before the LLM</div>
+  </div>
+
+  <div class="mermaid-wrap section">
+    <div class="zoom-controls">
+      <button onclick="zoomDiagram(this, 1.2)" title="Zoom in">+</button>
+      <button onclick="zoomDiagram(this, 0.8)" title="Zoom out">&minus;</button>
+      <button onclick="resetZoom(this)" title="Reset zoom">&#8634;</button>
+    </div>
+    <pre class="mermaid">
+      flowchart TD
+        docs["Documents"]
+
+        subgraph dense["Dense Path"]
+          chunk["Chunk &amp; Embed"]
+          vector[("Vector Store")]
+        end
+
+        subgraph sparse["Sparse Path"]
+          bm25["BM25 Index"]
+          keyword[("Keyword Index")]
+        end
+
+        query["User Query"]
+        embed["Embed Query"]
+        kwquery["Keyword Query"]
+        vresults["Vector Results"]
+        kresults["Keyword Results"]
+        fusion["Fusion RRF
+        Reciprocal Rank Fusion"]
+        rerank["Cross-encoder Rerank
+        relevance scoring"]
+        llm["LLM"]
+        answer["Answer"]
+
+        docs --> chunk & bm25
+        chunk --> vector
+        bm25 --> keyword
+        query --> embed & kwquery
+        embed --> vresults
+        kwquery --> kresults
+        vector --> vresults
+        keyword --> kresults
+        vresults --> fusion
+        kresults --> fusion
+        fusion --> rerank
+        rerank --> llm
+        llm --> answer
+
+        class docs,chunk,embed,kwquery,vresults,kresults blueNode
+        class vector,keyword blueStore
+        class bm25,query blueNode
+        class fusion fusionNode
+        class rerank blueNode
+        class llm llmNode
+        class answer answerNode
+    </pre>
+  </div>
+
+  <div class="diagram-label diagram-label--secondary section">
+    The production floor. Harvey AI, Brazilian legal platform (184,895 answers), and HyPA-RAG (NAACL 2025) all use this pattern. BM25 catches exact matches (statute &sect; numbers, party names, dates). Cross-encoder reranks for relevance. Non-negotiable baseline.
+  </div>
+
+  <!-- ============ OPTION 3: FULL HYBRID + KG ============ -->
+  <div class="diagram-header section">
+    <div class="diagram-header__num diagram-header__num--violet">Option 3 &mdash; Long-term Target</div>
+    <h2>Full Hybrid with Knowledge Graph</h2>
+    <div class="diagram-header__subtitle">KG pre-filtering + retrieval + hallucination verification</div>
+  </div>
+
+  <div class="mermaid-wrap section">
+    <div class="zoom-controls">
+      <button onclick="zoomDiagram(this, 1.2)" title="Zoom in">+</button>
+      <button onclick="zoomDiagram(this, 0.8)" title="Zoom out">&minus;</button>
+      <button onclick="resetZoom(this)" title="Reset zoom">&#8634;</button>
+    </div>
+    <pre class="mermaid">
+      flowchart TD
+        docs["Documents"]
+        kg[("Knowledge Graph
+        entities &amp; relations")]
+
+        subgraph dense2["Dense Path"]
+          chunk2["Chunk &amp; Embed"]
+          vector2[("Vector Store")]
+        end
+
+        subgraph sparse2["Sparse Path"]
+          bm252["BM25 Index"]
+          keyword2[("Keyword Index")]
+        end
+
+        query2["User Query"]
+        prefilter{"KG Pre-filter
+        dates, parties,
+        jurisdictions, amounts"}
+        vfiltered["Filtered Vector
+        Results"]
+        kfiltered["Filtered Keyword
+        Results"]
+        fusion2["Fusion RRF"]
+        rerank2["Cross-encoder Rerank"]
+        llm2["LLM"]
+        answer2["Answer"]
+        verify{"KG Hallucination
+        Verification
+        entity grounding"}
+        verified["Verified Answer"]
+        escalate["Human Escalation"]
+
+        docs --> chunk2 & bm252
+        chunk2 --> vector2
+        bm252 --> keyword2
+        query2 --> prefilter
+        kg --> prefilter
+        prefilter --> vfiltered & kfiltered
+        vector2 --> vfiltered
+        keyword2 --> kfiltered
+        vfiltered --> fusion2
+        kfiltered --> fusion2
+        fusion2 --> rerank2
+        rerank2 --> llm2
+        llm2 --> answer2
+        answer2 --> verify
+        kg --> verify
+        verify -->|"passes"| verified
+        verify -->|"fails"| escalate
+
+        class docs,chunk2,bm252,query2,vfiltered,kfiltered,rerank2 violetNode
+        class vector2,keyword2 violetStore
+        class prefilter,verify violetDiamond
+        class kg kgNode
+        class fusion2 fusionNode
+        class llm2 llmNode
+        class verified answerNode
+        class escalate roseNode
+    </pre>
+  </div>
+
+  <div class="diagram-label diagram-label--violet section">
+    Adds two KG capabilities: (A) structured pre-filtering narrows candidates by metadata before vector search, and (B) post-generation entity grounding verifies citations against the KG. HalluGraph: AUC 0.94 for entity error detection vs BERTScore 0.60. But partially research-grade &mdash; build toward it, don&rsquo;t start here.
+  </div>
+
+  <!-- ============ SUMMARY ============ -->
+  <div class="summary-header section">
+    <h2>Summary</h2>
+    <p>Which architecture fits where</p>
+  </div>
+
+  <div class="summary-grid section">
+    <div class="summary-card">
+      <div class="summary-card__bar summary-card__bar--rose"></div>
+      <div class="summary-card__title">Option 1</div>
+      <div class="summary-card__text">Fastest to prototype. Not production-ready for legal. Pure semantic search misses exact citations and structured metadata.</div>
+    </div>
+    <div class="summary-card">
+      <div class="summary-card__bar summary-card__bar--secondary"></div>
+      <div class="summary-card__title">Option 2</div>
+      <div class="summary-card__text">Production baseline. Ship this now. Dual retrieval paths + reranking. Per-matter database-level isolation. Deployed in customer VPC.</div>
+    </div>
+    <div class="summary-card">
+      <div class="summary-card__bar summary-card__bar--violet"></div>
+      <div class="summary-card__title">Option 3</div>
+      <div class="summary-card__text">Long-term target. Build toward it as retrieval quality demands. KG adds structured filtering and hallucination guardrails.</div>
+    </div>
+  </div>
+
+  <!-- Footer -->
+  <div class="footer">&copy; 2025&ndash;2026 Charlie Fuller</div>
+
+</div>
+
+<!-- Mermaid import -->
+<script type="module">
+  import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs';
+
+  mermaid.initialize({
+    startOnLoad: true,
+    theme: 'base',
+    look: 'classic',
+    securityLevel: 'loose',
+    themeVariables: {
+      primaryColor: '#f5f8fc',
+      primaryBorderColor: '#c8daea',
+      primaryTextColor: '#0a1628',
+      secondaryColor: '#f5f8fc',
+      secondaryBorderColor: '#c8daea',
+      secondaryTextColor: '#0a1628',
+      tertiaryColor: '#f5f8fc',
+      tertiaryBorderColor: '#c8daea',
+      tertiaryTextColor: '#0a1628',
+      lineColor: '#a0bedb',
+      fontSize: '13px',
+      fontFamily: "'Source Code Pro', 'SF Mono', Consolas, monospace",
+    }
+  });
+</script>
+
+<!-- Zoom + pan -->
+<script>
+  function updateZoomState(wrap) {
+    var target = wrap.querySelector('.mermaid');
+    var zoom = parseFloat(target.dataset.zoom || '1');
+    wrap.classList.toggle('is-zoomed', zoom > 1);
+  }
+
+  function zoomDiagram(btn, factor) {
+    var wrap = btn.closest('.mermaid-wrap');
+    var target = wrap.querySelector('.mermaid');
+    var current = parseFloat(target.dataset.zoom || '1');
+    var next = Math.min(Math.max(current * factor, 0.3), 5);
+    target.dataset.zoom = next;
+    target.style.transform = 'scale(' + next + ')';
+    updateZoomState(wrap);
+  }
+
+  function resetZoom(btn) {
+    var wrap = btn.closest('.mermaid-wrap');
+    var target = wrap.querySelector('.mermaid');
+    target.dataset.zoom = '1';
+    target.style.transform = 'scale(1)';
+    updateZoomState(wrap);
+  }
+
+  document.querySelectorAll('.mermaid-wrap').forEach(function(wrap) {
+    wrap.addEventListener('wheel', function(e) {
+      if (!e.ctrlKey && !e.metaKey) return;
+      e.preventDefault();
+      var target = wrap.querySelector('.mermaid');
+      var current = parseFloat(target.dataset.zoom || '1');
+      var factor = e.deltaY < 0 ? 1.1 : 0.9;
+      var next = Math.min(Math.max(current * factor, 0.3), 5);
+      target.dataset.zoom = next;
+      target.style.transform = 'scale(' + next + ')';
+      updateZoomState(wrap);
+    }, { passive: false });
+
+    var startX, startY, scrollL, scrollT;
+    wrap.addEventListener('mousedown', function(e) {
+      if (e.target.closest('.zoom-controls')) return;
+      var target = wrap.querySelector('.mermaid');
+      if (parseFloat(target.dataset.zoom || '1') <= 1) return;
+      wrap.classList.add('is-panning');
+      startX = e.clientX;
+      startY = e.clientY;
+      scrollL = wrap.scrollLeft;
+      scrollT = wrap.scrollTop;
+    });
+    window.addEventListener('mousemove', function(e) {
+      if (!wrap.classList.contains('is-panning')) return;
+      wrap.scrollLeft = scrollL - (e.clientX - startX);
+      wrap.scrollTop = scrollT - (e.clientY - startY);
+    });
+    window.addEventListener('mouseup', function() {
+      wrap.classList.remove('is-panning');
+    });
+  });
+</script>
+
+<!-- Theme toggle -->
+<script>
+  const toggle = document.getElementById('themeToggle');
+  const iconLight = toggle.querySelector('.icon-light');
+  const iconDark = toggle.querySelector('.icon-dark');
+
+  function setTheme(d) {
+    document.documentElement.classList.toggle('dark', d);
+    iconLight.style.display = d ? 'none' : '';
+    iconDark.style.display = d ? '' : 'none';
+    try { localStorage.setItem('diagram-theme', d ? 'dark' : 'light'); } catch(e) {}
+  }
+
+  toggle.addEventListener('click', () =>
+    setTheme(!document.documentElement.classList.contains('dark'))
+  );
+
+  try {
+    if (localStorage.getItem('diagram-theme') === 'dark') setTheme(true);
+  } catch(e) {}
+</script>
+
+</body>
+</html>
