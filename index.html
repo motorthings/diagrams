@@ -592,8 +592,10 @@
     (function() {
       var SECTION_KEY = 'diagrams-index-panels';
       var SUBSECTION_KEY = 'diagrams-index-subpanels';
+      var restoring = false;
 
       function save() {
+        if (restoring) return;
         // Top-level sections
         var openSections = [];
         document.querySelectorAll('details.section').forEach(function(d, i) {
@@ -613,6 +615,7 @@
       }
 
       function restore() {
+        restoring = true;
         // Restore top-level sections
         var openSections = JSON.parse(localStorage.getItem(SECTION_KEY) || '[0]');
         document.querySelectorAll('details.section').forEach(function(d, i) {
@@ -628,6 +631,7 @@
             sub.open = openSubs[si].indexOf(i) !== -1;
           });
         });
+        restoring = false;
       }
 
       document.querySelectorAll('details.section, details.subsection').forEach(function(d) {
