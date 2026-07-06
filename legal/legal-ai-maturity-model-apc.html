@@ -1,0 +1,906 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Legal AI Maturity Model — Ashurst Perkins Coie</title>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,400;0,9..144,600;0,9..144,700;1,9..144,400&family=Source+Code+Pro:wght@300;400;500;600&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0f1117;
+    --surface: #1a1d27;
+    --surface2: #222633;
+    --border: #2a2e3a;
+    --text: #e1e4ed;
+    --text2: #9498a5;
+    --text3: #636878;
+    --accent: #50c8a8;
+    --accent2: #3b8bff;
+    --accent3: #f0a050;
+    --accent4: #e06090;
+    --red: #f04060;
+    --amber: #f0a850;
+    --green: #40c878;
+    --stage1: #2a3050;
+    --stage2: #2a4050;
+    --stage3: #2a4058;
+    --stage4: #1e3848;
+    --radius: 10px;
+    --radius-sm: 6px;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Inter', sans-serif;
+    line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  /* NAV */
+  .nav {
+    position: sticky; top: 0; z-index: 100;
+    background: rgba(15,17,23,0.92);
+    backdrop-filter: blur(20px);
+    border-bottom: 1px solid var(--border);
+    padding: 0 2rem;
+    display: flex; align-items: center; gap: 2rem;
+    height: 56px;
+  }
+  .nav-logo {
+    font-family: 'Fraunces', serif;
+    font-size: 1.2rem; font-weight: 600;
+    color: var(--accent);
+    white-space: nowrap;
+  }
+  .nav-links { display: flex; gap: 1.5rem; overflow-x: auto; }
+  .nav-links a {
+    color: var(--text2); text-decoration: none;
+    font-size: 0.82rem; font-weight: 500;
+    white-space: nowrap; transition: color 0.2s;
+  }
+  .nav-links a:hover { color: var(--text); }
+
+  /* LAYOUT */
+  .container { max-width: 1280px; margin: 0 auto; padding: 2rem; }
+
+  /* HERO */
+  .hero {
+    text-align: center; padding: 3rem 2rem 4rem;
+    border-bottom: 1px solid var(--border);
+    margin-bottom: 3rem;
+  }
+  .hero h1 {
+    font-family: 'Fraunces', serif;
+    font-size: 2.8rem; font-weight: 300; line-height: 1.2;
+    color: var(--text); margin-bottom: 0.75rem;
+  }
+  .hero h1 strong { font-weight: 700; color: var(--accent); }
+  .hero .sub { color: var(--text2); font-size: 1.05rem; font-weight: 400; max-width: 640px; margin: 0 auto; }
+  .hero .date { color: var(--text3); font-size: 0.78rem; margin-top: 1rem; font-family: 'Source Code Pro', monospace; }
+
+  /* SECTION HEADERS */
+  .section-title {
+    font-family: 'Fraunces', serif;
+    font-size: 1.6rem; font-weight: 600;
+    color: var(--text); margin: 3rem 0 1.5rem;
+    padding-bottom: 0.75rem; border-bottom: 2px solid var(--accent);
+    display: flex; align-items: center; gap: 0.75rem;
+  }
+  .section-title .num {
+    background: var(--accent); color: var(--bg);
+    width: 32px; height: 32px; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 0.85rem; font-weight: 700;
+    font-family: 'Inter', sans-serif;
+  }
+
+  /* HEAT MAP */
+  .heatmap-wrapper { overflow-x: auto; margin: 2rem 0; }
+  .heatmap { min-width: 900px; border-collapse: separate; border-spacing: 0; width: 100%; }
+  .heatmap th, .heatmap td {
+    padding: 14px 16px; text-align: left;
+    border: 1px solid var(--border);
+  }
+  .heatmap th {
+    font-family: 'Fraunces', serif;
+    font-size: 0.85rem; font-weight: 600;
+    color: var(--text2); background: var(--surface);
+  }
+  .heatmap th:first-child {
+    font-family: 'Inter', sans-serif; font-size: 0.7rem;
+    text-transform: uppercase; letter-spacing: 0.08em;
+    color: var(--text3); width: 140px;
+  }
+  .heatmap .dim-label {
+    font-family: 'Fraunces', serif;
+    font-size: 0.88rem; font-weight: 600;
+    color: var(--text); background: var(--surface);
+  }
+  .heatmap .dim-desc {
+    font-size: 0.72rem; color: var(--text3);
+    font-weight: 400; font-style: normal;
+  }
+
+  /* Stage cells */
+  .stage-cell {
+    font-size: 0.78rem; line-height: 1.45;
+    color: var(--text2);
+    vertical-align: top;
+  }
+  .stage-cell .signal {
+    display: block; margin-top: 6px; padding-top: 6px;
+    border-top: 1px solid rgba(255,255,255,0.06);
+    font-size: 0.7rem; color: var(--text3);
+    font-style: italic;
+  }
+
+  /* Stage colors */
+  .s1 { background: rgba(100,120,180,0.08); }
+  .s2 { background: rgba(100,150,200,0.10); }
+  .s3 { background: rgba(80,200,168,0.08); }
+  .s4 { background: rgba(80,200,168,0.14); }
+
+  /* APC overlay badges */
+  .apc-badge {
+    display: inline-block;
+    background: var(--accent3);
+    color: #1a1a1a;
+    font-size: 0.6rem; font-weight: 700;
+    padding: 2px 8px; border-radius: 10px;
+    text-transform: uppercase; letter-spacing: 0.04em;
+    margin-bottom: 6px;
+  }
+
+  /* MARKET BENCHMARK */
+  .benchmark-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(380px, 1fr));
+    gap: 1.5rem;
+    margin: 2rem 0;
+  }
+  .bench-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 1.5rem;
+  }
+  .bench-card h3 {
+    font-family: 'Fraunces', serif;
+    font-size: 1rem; font-weight: 600;
+    color: var(--text); margin-bottom: 0.75rem;
+  }
+  .bench-bar-wrap {
+    display: flex; align-items: center; gap: 0.75rem;
+    margin-bottom: 0.5rem;
+  }
+  .bench-bar-label {
+    font-size: 0.72rem; color: var(--text2);
+    width: 130px; flex-shrink: 0;
+    font-weight: 500;
+  }
+  .bench-bar-track {
+    flex: 1; height: 8px; background: var(--surface2);
+    border-radius: 4px; overflow: hidden;
+  }
+  .bench-bar-fill {
+    height: 100%; border-radius: 4px;
+    transition: width 0.6s ease;
+  }
+  .bench-bar-val {
+    font-size: 0.7rem; font-weight: 600;
+    width: 60px; text-align: right;
+    font-family: 'Source Code Pro', monospace;
+  }
+
+  .fill-s1 { background: #5570a0; }
+  .fill-s2 { background: #5588b8; }
+  .fill-s3 { background: var(--accent); }
+  .fill-s4 { background: #30e0a0; }
+
+  /* APC POSITION MAP */
+  .apc-section {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 2rem;
+    margin: 2rem 0;
+  }
+  .apc-section h2 {
+    font-family: 'Fraunces', serif;
+    font-size: 1.3rem; font-weight: 600;
+    color: var(--accent); margin-bottom: 0.5rem;
+  }
+  .apc-section .apc-sub {
+    color: var(--text2); font-size: 0.82rem;
+    margin-bottom: 1.5rem;
+  }
+  .apc-dim {
+    display: grid;
+    grid-template-columns: 180px 1fr 80px;
+    gap: 1rem; align-items: center;
+    padding: 0.85rem 0;
+    border-bottom: 1px solid rgba(255,255,255,0.05);
+  }
+  .apc-dim-name {
+    font-family: 'Fraunces', serif;
+    font-size: 0.85rem; font-weight: 600;
+    color: var(--text);
+  }
+  .apc-dim-bar-track {
+    height: 24px; background: var(--surface2);
+    border-radius: 12px; overflow: hidden;
+    position: relative;
+  }
+  .apc-dim-bar-fill {
+    height: 100%; border-radius: 12px;
+  }
+  .apc-dim-stage {
+    font-family: 'Source Code Pro', monospace;
+    font-size: 0.75rem; font-weight: 600; color: var(--accent);
+    text-align: right;
+  }
+  .apc-dim-evidence {
+    grid-column: 2 / -1;
+    font-size: 0.7rem; color: var(--text3);
+    padding-bottom: 0.85rem;
+    margin-top: -0.4rem;
+  }
+  .apc-note {
+    margin-top: 1.5rem; padding: 1rem;
+    background: rgba(240,160,80,0.08);
+    border-left: 3px solid var(--accent3);
+    border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+    font-size: 0.78rem; color: var(--text2);
+    line-height: 1.55;
+  }
+  .apc-note strong { color: var(--accent3); }
+
+  /* STUDY MAP */
+  .study-section { margin: 2rem 0; }
+  .study-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(340px, 1fr));
+    gap: 1.25rem;
+  }
+  .study-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 1.5rem;
+    transition: border-color 0.2s;
+  }
+  .study-card:hover { border-color: var(--accent); }
+  .study-card h4 {
+    font-family: 'Fraunces', serif;
+    font-size: 0.95rem; font-weight: 600;
+    color: var(--accent); margin-bottom: 0.5rem;
+  }
+  .study-card .study-dim {
+    font-size: 0.65rem; text-transform: uppercase;
+    letter-spacing: 0.06em; color: var(--text3);
+    margin-bottom: 0.75rem;
+  }
+  .study-card ul {
+    list-style: none; padding: 0;
+    font-size: 0.78rem; color: var(--text2); line-height: 1.6;
+  }
+  .study-card ul li::before {
+    content: "▸"; color: var(--accent);
+    margin-right: 0.5rem;
+  }
+
+  /* THREE YEAR ROADMAP */
+  .roadmap { margin: 2rem 0; }
+  .roadmap-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1.25rem;
+  }
+  .roadmap-year {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 1.5rem;
+  }
+  .roadmap-year h3 {
+    font-family: 'Fraunces', serif;
+    font-size: 1.1rem; font-weight: 600;
+    margin-bottom: 0.25rem;
+  }
+  .roadmap-year .yr-label {
+    font-size: 0.7rem; text-transform: uppercase;
+    letter-spacing: 0.06em; color: var(--text3);
+    margin-bottom: 1rem;
+  }
+  .roadmap-year .yr-dim {
+    font-size: 0.72rem; color: var(--text2);
+    margin-bottom: 0.5rem; line-height: 1.5;
+  }
+  .roadmap-year .yr-dim strong {
+    color: var(--text); font-weight: 600;
+    font-size: 0.74rem;
+  }
+  .yr1 h3 { color: #8899bb; }
+  .yr2 h3 { color: #88aacc; }
+  .yr3 h3 { color: var(--accent); }
+
+  /* LEGEND */
+  .legend {
+    display: flex; gap: 2rem; flex-wrap: wrap;
+    margin: 2rem 0; padding: 1rem 1.5rem;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    font-size: 0.75rem; color: var(--text2);
+  }
+  .legend-item { display: flex; align-items: center; gap: 0.5rem; }
+  .legend-dot {
+    width: 10px; height: 10px; border-radius: 50%;
+    flex-shrink: 0;
+  }
+
+  /* FOOTER */
+  .footer {
+    margin-top: 4rem; padding-top: 2rem;
+    border-top: 1px solid var(--border);
+    text-align: center; color: var(--text3);
+    font-size: 0.7rem; font-family: 'Source Code Pro', monospace;
+  }
+
+  /* RESPONSIVE */
+  @media (max-width: 768px) {
+    .hero h1 { font-size: 1.8rem; }
+    .roadmap-grid { grid-template-columns: 1fr; }
+    .benchmark-grid { grid-template-columns: 1fr; }
+    .apc-dim { grid-template-columns: 120px 1fr 60px; font-size: 0.75rem; }
+  }
+</style>
+</head>
+<body>
+
+<nav class="nav">
+  <div class="nav-logo">APC Maturity Map</div>
+  <div class="nav-links">
+    <a href="#matrix">Matrix</a>
+    <a href="#market">Market Benchmark</a>
+    <a href="#apc">APC Position</a>
+    <a href="#study">Study Map</a>
+    <a href="#mckinsey">McKinsey Lens</a>
+    <a href="#roadmap">3-Year Progression</a>
+  </div>
+</nav>
+
+<div class="container">
+
+<!-- HERO -->
+<header class="hero">
+  <h1>Legal AI <strong>Maturity Model</strong></h1>
+  <p class="sub">6 dimensions × 4 stages — a framework for understanding where large law firms are, where they're headed, and what the journey requires.</p>
+  <p class="date">Prepared for Ashurst Perkins Coie — Knowledge & Innovation Program Manager · July 2026</p>
+</header>
+
+<!-- 1. THE MATRIX -->
+<section id="matrix">
+  <div class="section-title"><span class="num">1</span> Maturity Matrix: 6 Dimensions × 4 Stages</div>
+
+  <div class="heatmap-wrapper">
+  <table class="heatmap">
+    <thead>
+      <tr>
+        <th>Dimension</th>
+        <th>Stage 1 — Ad Hoc<br><span style="font-weight:400;font-size:0.7rem;color:var(--text3)">2023–2024</span></th>
+        <th>Stage 2 — Systematic<br><span style="font-weight:400;font-size:0.7rem;color:var(--text3)">2025–2026</span></th>
+        <th>Stage 3 — Integrated<br><span style="font-weight:400;font-size:0.7rem;color:var(--accent)">2027–2028</span></th>
+        <th>Stage 4 — Transformative<br><span style="font-weight:400;font-size:0.7rem;color:var(--accent)">2028–2030+</span></th>
+      </tr>
+    </thead>
+    <tbody>
+
+      <!-- AI ADOPTION -->
+      <tr>
+        <td class="dim-label">AI Adoption<br><span class="dim-desc">How AI is used, by whom, at what scale</span></td>
+        <td class="stage-cell s1">
+          Individual use of personal ChatGPT/Claude on personal devices. No firm-provided tools. No usage tracking.
+          <span class="signal">"I use it to summarize emails sometimes."</span>
+        </td>
+        <td class="stage-cell s2">
+          Enterprise AI deployed firmwide. Basic usage dashboards. AI strategy published. 2-3 practice group pilots.
+          <span class="signal">Firmwide license. Login rates tracked. Policy published.</span>
+        </td>
+        <td class="stage-cell s3">
+          AI embedded in legal workflows. Matter-context-aware tools. Usage tracked by practice group & matter type.
+          <span class="signal">"All NDAs go through AI review before attorney review."</span>
+        </td>
+        <td class="stage-cell s4">
+          Agentic AI handles end-to-end workflows. AI-native service lines. AI is a budget line item alongside headcount.
+          <span class="signal">"Due diligence agent ran overnight, report was in my inbox."</span>
+        </td>
+      </tr>
+
+      <!-- KM -->
+      <tr>
+        <td class="dim-label">Knowledge Management<br><span class="dim-desc">How institutional knowledge is captured, structured, accessed</span></td>
+        <td class="stage-cell s1">
+          Knowledge in heads, email, local drives. DMS is a filing cabinet. Finding precedent = asking around.
+          <span class="signal">"Ask Sarah — she did one of those last year."</span>
+        </td>
+        <td class="stage-cell s2">
+          Centralized KM team. Precedent libraries. Templates in shared locations. Taxonomy projects underway.
+          <span class="signal">Standardized matter classification. KM team fields requests.</span>
+        </td>
+        <td class="stage-cell s3">
+          Semantic search across entire corpus. Vectorized precedent. Automated clause reuse. Cross-system discovery.
+          <span class="signal">"Force majeure search returned results across 4 groups, 12 jurisdictions."</span>
+        </td>
+        <td class="stage-cell s4">
+          AI identifies cross-practice patterns humans miss. Knowledge graph. Client-specific knowledge layers. Compounding advantage.
+          <span class="signal">"The system flagged a regulatory pattern match from Energy to our Tech deal."</span>
+        </td>
+      </tr>
+
+      <!-- GOVERNANCE -->
+      <tr>
+        <td class="dim-label">Governance & Risk<br><span class="dim-desc">How AI use is governed, audited, and defended</span></td>
+        <td class="stage-cell s1">
+          No AI policy. No governance. No client communication. Liability unmanaged.
+          <span class="signal">Shadow IT runs unchecked. No one knows what tools are in use.</span>
+        </td>
+        <td class="stage-cell s2">
+          Published AI principles. Governance committee. Approved tool list. Basic AI risk training. Client opt-out available.
+          <span class="signal">5 principles. Harvey approved. "No client data in ChatGPT."</span>
+        </td>
+        <td class="stage-cell s3">
+          Access controls enforce data isolation. Audit trails capture every AI interaction. Governance produces evidence.
+          <span class="signal">"Here's the audit trail showing Client A's data never touched Client B's vector space."</span>
+        </td>
+        <td class="stage-cell s4">
+          Governance engineered into architecture. Evidence on demand within 24hrs. Cryptographically verifiable boundaries. Client-facing governance as RFP differentiator.
+          <span class="signal">"Our AI governance framework was the deciding factor in the RFP."</span>
+        </td>
+      </tr>
+
+      <!-- SERVICE DELIVERY -->
+      <tr>
+        <td class="dim-label">Service Delivery<br><span class="dim-desc">How legal services are priced, packaged, delivered</span></td>
+        <td class="stage-cell s1">
+          Pure hourly billing. No ALSP. Standard rate card with ad hoc discounts. AI efficiency = revenue leakage.
+          <span class="signal">Billable hour is 100% of revenue.</span>
+        </td>
+        <td class="stage-cell s2">
+          Captive ALSP operational. Some fixed-fee for defined scopes. Pricing team models AFAs. AI gains tracked but not monetized.
+          <span class="signal">Advance division. "We know AI saved 200 hrs but we billed hourly anyway."</span>
+        </td>
+        <td class="stage-cell s3">
+          AI priced into AFAs. Fixed-fee margins healthy via AI compression. Portfolio AFA profitability tracking. Tiered delivery model.
+          <span class="signal">"Fixed-fee due diligence runs 45% margin with AI first pass."</span>
+        </td>
+        <td class="stage-cell s4">
+          Revenue model shifted. AI-enabled services = material revenue. Subscription/outcome pricing. Firm competes on AI capability.
+          <span class="signal">"Compliance monitoring subscription generates $5M ARR."</span>
+        </td>
+      </tr>
+
+      <!-- DATA INFRA -->
+      <tr>
+        <td class="dim-label">Data Infrastructure<br><span class="dim-desc">How data is stored, connected, made AI-ready</span></td>
+        <td class="stage-cell s1">
+          Fragmented across DMS, email, local drives. No unified layer. No consistent metadata.
+          <span class="signal">"The data exists somewhere." Manual extraction for analysis.</span>
+        </td>
+        <td class="stage-cell s2">
+          Centralized DMS. Consistent taxonomy. Data governance. Cloud migration underway. APIs between major systems.
+          <span class="signal">Single DMS. Metadata standards. Data warehouse for financials.</span>
+        </td>
+        <td class="stage-cell s3">
+          Unified data layer across DMS, CRM, matter mgmt, financials. Vector database. Real-time data flows to AI tools.
+          <span class="signal">"AI pulls matter context, playbook, and precedent automatically."</span>
+        </td>
+        <td class="stage-cell s4">
+          Real-time knowledge graph. Data is compounding asset. Proprietary moat. Firm-specific AI models trained.
+          <span class="signal">"The firm's data graph is worth more than its art collection."</span>
+        </td>
+      </tr>
+
+      <!-- PEOPLE -->
+      <tr>
+        <td class="dim-label">People & Culture<br><span class="dim-desc">How the workforce is enabled, incentivized, led</span></td>
+        <td class="stage-cell s1">
+          Individual curiosity. No formal training. Partners skeptical. Shadow IT only. No incentives.
+          <span class="signal">"I use ChatGPT but don't tell IT."</span>
+        </td>
+        <td class="stage-cell s2">
+          AI literacy training deployed. Champion network. Leadership communicates strategy. Adoption dashboards.
+          <span class="signal">Harvey training at 70%. AI champions per practice group. Weekly office hours.</span>
+        </td>
+        <td class="stage-cell s3">
+          AI proficiency expected. Role-specific training. AI in performance reviews. Governed tools beat shadow IT. 80%+ adoption on core workflows.
+          <span class="signal">"Show me your AI workflow" — partner to associate.</span>
+        </td>
+        <td class="stage-cell s4">
+          AI literacy = legal research. Lawyers as AI orchestrators. AI-native career paths. Partner comp reflects AI capability.
+          <span class="signal">"We have partners whose practice is built on AI-enabled delivery."</span>
+        </td>
+      </tr>
+
+    </tbody>
+  </table>
+  </div>
+
+  <!-- LEGEND -->
+  <div class="legend">
+    <div class="legend-item"><div class="legend-dot" style="background:#5570a0"></div> Stage 1: Ad Hoc</div>
+    <div class="legend-item"><div class="legend-dot" style="background:#5588b8"></div> Stage 2: Systematic</div>
+    <div class="legend-item"><div class="legend-dot" style="background:var(--accent)"></div> Stage 3: Integrated</div>
+    <div class="legend-item"><div class="legend-dot" style="background:#30e0a0"></div> Stage 4: Transformative</div>
+  </div>
+
+</section>
+
+<!-- 2. MARKET BENCHMARK -->
+<section id="market">
+  <div class="section-title"><span class="num">2</span> Where the Market Actually Is <span style="font-size:0.9rem;font-weight:400;color:var(--text3)">(AmLaw 100 / Global 50, mid-2026)</span></div>
+
+  <div class="benchmark-grid">
+    <div class="bench-card">
+      <h3>AI Adoption</h3>
+      <div class="bench-bar-wrap"><span class="bench-bar-label">Typical stage</span><div class="bench-bar-track"><div class="bench-bar-fill fill-s2" style="width:55%"></div></div><span class="bench-bar-val">2.2</span></div>
+      <div style="font-size:0.72rem;color:var(--text3);margin-top:0.5rem">Most have deployed Harvey/CoCounsel. Few have embedded AI in actual workflows. Usage data exists but is basic.</div>
+    </div>
+    <div class="bench-card">
+      <h3>Knowledge Management</h3>
+      <div class="bench-bar-wrap"><span class="bench-bar-label">Typical stage</span><div class="bench-bar-track"><div class="bench-bar-fill fill-s2" style="width:38%"></div></div><span class="bench-bar-val">1.5</span></div>
+      <div style="font-size:0.72rem;color:var(--text3);margin-top:0.5rem">Even elite firms struggle. Post-merger firms are Stage 1 by definition. Semantic search is aspirational for most.</div>
+    </div>
+    <div class="bench-card">
+      <h3>Governance & Risk</h3>
+      <div class="bench-bar-wrap"><span class="bench-bar-label">Typical stage</span><div class="bench-bar-track"><div class="bench-bar-fill fill-s2" style="width:48%"></div></div><span class="bench-bar-val">1.9</span></div>
+      <div style="font-size:0.72rem;color:var(--text3);margin-top:0.5rem">79% have policies. Client disclosure is happening. Audit infrastructure is rare. Evidence-producing governance is rare.</div>
+    </div>
+    <div class="bench-card">
+      <h3>Service Delivery</h3>
+      <div class="bench-bar-wrap"><span class="bench-bar-label">Typical stage</span><div class="bench-bar-track"><div class="bench-bar-fill fill-s2" style="width:40%"></div></div><span class="bench-bar-val">1.6</span></div>
+      <div style="font-size:0.72rem;color:var(--text3);margin-top:0.5rem">Billable hour still ~90% of revenue. ~20 firms have real captive ALSPs. Fixed-fee AI products are rare. AFAs flat at 23.5%.</div>
+    </div>
+    <div class="bench-card">
+      <h3>Data Infrastructure</h3>
+      <div class="bench-bar-wrap"><span class="bench-bar-label">Typical stage</span><div class="bench-bar-track"><div class="bench-bar-fill fill-s2" style="width:35%"></div></div><span class="bench-bar-val">1.4</span></div>
+      <div style="font-size:0.72rem;color:var(--text3);margin-top:0.5rem">Cloud migration underway at most. Unified data layers are aspirational. Vector databases in production at &lt;10% of firms.</div>
+    </div>
+    <div class="bench-card">
+      <h3>People & Culture</h3>
+      <div class="bench-bar-wrap"><span class="bench-bar-label">Typical stage</span><div class="bench-bar-track"><div class="bench-bar-fill fill-s2" style="width:50%"></div></div><span class="bench-bar-val">2.0</span></div>
+      <div style="font-size:0.72rem;color:var(--text3);margin-top:0.5rem">Training deployed at most. Shadow IT rampant (69% individual use vs 34% firm adoption). Incentive structures unchanged.</div>
+    </div>
+  </div>
+</section>
+
+<!-- 3. APC POSITION MAP -->
+<section id="apc">
+  <div class="section-title"><span class="num">3</span> APC Estimated Position <span style="font-size:0.9rem;font-weight:400;color:var(--text3)">(best assessment from public data, July 2026)</span></div>
+
+  <div class="apc-section">
+    <h2>Ashurst Perkins Coie — Estimated Maturity</h2>
+    <p class="apc-sub">Based on: firm website, published AI principles, Advance division performance, Harvey global deployment, merger timeline, ISO 27001 certification, Chambers rankings. <strong>These are directional estimates, not claims of inside knowledge.</strong></p>
+
+    <div class="apc-dim">
+      <div class="apc-dim-name">AI Adoption</div>
+      <div class="apc-dim-bar-track">
+        <div class="apc-dim-bar-fill" style="width:52%; background: linear-gradient(90deg, #5588b8, #60b0a0)"></div>
+      </div>
+      <div class="apc-dim-stage">2.1</div>
+    </div>
+    <div class="apc-dim-evidence">Harvey deployed firmwide day 1. Majority of workforce regular GenAI users. AI principles published. Workflow embedding likely early-stage.</div>
+
+    <div class="apc-dim">
+      <div class="apc-dim-name">Knowledge Mgmt</div>
+      <div class="apc-dim-bar-track">
+        <div class="apc-dim-bar-fill" style="width:35%; background: linear-gradient(90deg, #5570a0, #5580a8)"></div>
+      </div>
+      <div class="apc-dim-stage">1.4</div>
+    </div>
+    <div class="apc-dim-evidence">Two legacy KM systems not yet unified. Precedent libraries with incompatible taxonomies. This is the binding constraint post-merger.</div>
+
+    <div class="apc-dim">
+      <div class="apc-dim-name">Governance & Risk</div>
+      <div class="apc-dim-bar-track">
+        <div class="apc-dim-bar-fill" style="width:55%; background: linear-gradient(90deg, #5588b8, #65b0a5)"></div>
+      </div>
+      <div class="apc-dim-stage">2.2</div>
+    </div>
+    <div class="apc-dim-evidence">5 AI principles published June 29. ISO 27001 certified. Governance committee with senior leadership oversight. Client opt-out mechanism. Audit trail infrastructure likely not yet built.</div>
+
+    <div class="apc-dim">
+      <div class="apc-dim-name">Service Delivery</div>
+      <div class="apc-dim-bar-track">
+        <div class="apc-dim-bar-fill" style="width:58%; background: linear-gradient(90deg, #5588b8, #68b8a8)"></div>
+      </div>
+      <div class="apc-dim-stage">2.3</div>
+    </div>
+    <div class="apc-dim-evidence">Advance is a mature, Band 1 captive ALSP (6 years running). 20% revenue growth. Reach flexible resourcing. AI-enabled products advertised. Strongest dimension.</div>
+
+    <div class="apc-dim">
+      <div class="apc-dim-name">Data Infrastructure</div>
+      <div class="apc-dim-bar-track">
+        <div class="apc-dim-bar-fill" style="width:32%; background: linear-gradient(90deg, #5570a0, #5578a0)"></div>
+      </div>
+      <div class="apc-dim-stage">1.3</div>
+    </div>
+    <div class="apc-dim-evidence">Post-merger fragmentation. Two DMS platforms. Two intranets. Two AI tool stacks. No unified data layer yet. This is the technical binding constraint.</div>
+
+    <div class="apc-dim">
+      <div class="apc-dim-name">People & Culture</div>
+      <div class="apc-dim-bar-track">
+        <div class="apc-dim-bar-fill" style="width:50%; background: linear-gradient(90deg, #5588b8, #5ea8a0)"></div>
+      </div>
+      <div class="apc-dim-stage">2.0</div>
+    </div>
+    <div class="apc-dim-evidence">Harvey training deployed. AI governance includes "technological competence" principle. Shadow IT likely significant (industry 69% individual use). Champion network and adoption program being built.</div>
+
+    <div class="apc-note">
+      <strong>Reading the map:</strong> APC's strongest dimension is Service Delivery (Advance). Its binding constraints are Data Infrastructure and Knowledge Management — both directly caused by the merger. This is exactly what you'd expect 4 days post-combination. The opportunity: use AI-powered KM unification to pull both dimensions toward Stage 3 simultaneously, while extending the Advance advantage. The K&I Program Manager is the role that connects these dots.
+    </div>
+
+  </div>
+</section>
+
+<!-- 4. STUDY MAP -->
+<section id="study">
+  <div class="section-title"><span class="num">4</span> How the Crash Course Maps to Each Dimension</div>
+
+  <p style="color:var(--text2);font-size:0.85rem;margin-bottom:1.5rem">Each topic from the <em>Business of Law Crash Course</em> connects to one or more maturity dimensions. Here's the cross-reference — what you studied and why it matters for advancing each dimension.</p>
+
+  <div class="study-grid">
+
+    <div class="study-card">
+      <h4>Billable Hour & AFAs</h4>
+      <div class="study-dim">Primary: Service Delivery · Secondary: AI Adoption</div>
+      <ul>
+        <li>90% of revenue still hourly; AFAs flat at 23.5%</li>
+        <li>AI efficiency creates margin on fixed fees — the bridge from Stage 2 to Stage 3</li>
+        <li>Tiered delivery: AI → Advance → partner, priced accordingly</li>
+        <li>Interview move: "AI makes AFAs profitable. The K&I role builds the systems that make the math work."</li>
+      </ul>
+    </div>
+
+    <div class="study-card">
+      <h4>Leverage Pyramid Breaking</h4>
+      <div class="study-dim">Primary: People & Culture · Secondary: Service Delivery</div>
+      <ul>
+        <li>AI saves ~190 billable hrs/lawyer/yr; 74% of billable work automatable</li>
+        <li>Pyramid → Diamond: fewer juniors, more AI orchestrators</li>
+        <li>Competence crisis: if juniors never grind, they never develop judgment</li>
+        <li>Stage 3-4 requires AI-native career paths and new training models</li>
+      </ul>
+    </div>
+
+    <div class="study-card">
+      <h4>AI ROI Blind Spot</h4>
+      <div class="study-dim">Primary: AI Adoption · Secondary: Governance</div>
+      <ul>
+        <li>85% of firms don't track ROI; only 18% do</li>
+        <li>3 foundational metrics: adoption, time saved, profitability per matter</li>
+        <li>Portfolio dashboard = the measurement layer that enables Stage 3</li>
+        <li>Without this, AI investment is faith-based. With it, you can price AFAs confidently.</li>
+      </ul>
+    </div>
+
+    <div class="study-card">
+      <h4>Post-Merger KM Integration</h4>
+      <div class="study-dim">Primary: Knowledge Management · Secondary: Data Infrastructure</div>
+      <ul>
+        <li>Two DMS platforms, incompatible taxonomies = Stage 1 KM by definition</li>
+        <li>AI vectorization + semantic search = compress integration from years to months</li>
+        <li>Same infrastructure as contract AI, pointed internally</li>
+        <li>This is the highest-leverage KM initiative for APC right now</li>
+      </ul>
+    </div>
+
+    <div class="study-card">
+      <h4>AI Governance & ABA 512</h4>
+      <div class="study-dim">Primary: Governance & Risk · Secondary: Data Infrastructure</div>
+      <ul>
+        <li>6 duties mapped to AI: competence, confidentiality, communication, candor, supervision, fees</li>
+        <li>Central risk = data leakage between clients. This is an access-control problem.</li>
+        <li>Stage 3 governance = audit trails, data isolation, evidence on demand</li>
+        <li>APC's constitutional fight over confidentiality makes this non-negotiable</li>
+      </ul>
+    </div>
+
+    <div class="study-card">
+      <h4>ALSPs & NewLaw Competition</h4>
+      <div class="study-dim">Primary: Service Delivery · Secondary: AI Adoption</div>
+      <ul>
+        <li>$20-30B ALSP market; firm captives are fastest-growing segment</li>
+        <li>Advance (Band 1, 6 years) is the delivery engine — K&I builds the AI fuel</li>
+        <li>Big Four exert price pressure on commoditized work</li>
+        <li>Stage 3-4 = AI-enabled services as a competitive moat, not a cost play</li>
+      </ul>
+    </div>
+
+    <div class="study-card">
+      <h4>Shadow IT & Adoption Paradox</h4>
+      <div class="study-dim">Primary: People & Culture · Secondary: Governance</div>
+      <ul>
+        <li>69% use AI individually; 34% of firms adopted formally; 43% have no policy</li>
+        <li>The gap = ungoverned consumer AI on client data = walking liability</li>
+        <li>Solve: build governed tools better than shadow IT, then teach lawyers to use them</li>
+        <li>Charlie's Maven teaching background = direct capability for this dimension</li>
+      </ul>
+    </div>
+
+    <div class="study-card">
+      <h4>APC's AI Governance Framework</h4>
+      <div class="study-dim">Primary: Governance & Risk · Secondary: People & Culture</div>
+      <ul>
+        <li>5 principles published June 29, 2026: trust, responsibility, security, oversight, competence</li>
+        <li>Client opt-out mechanism for advanced AI tools</li>
+        <li>Firm reserves right to decline client-provided AI tools where risks unmanaged</li>
+        <li>Framework exists (Stage 2). The K&I role operationalizes it to Stage 3.</li>
+      </ul>
+    </div>
+
+    <div class="study-card">
+      <h4>APC's Three-Sector Strategy</h4>
+      <div class="study-dim">Primary: AI Adoption · Secondary: KM</div>
+      <ul>
+        <li>Tech + Energy + Finance convergence means legal problems cross practice boundaries</li>
+        <li>AI that can see across practices (Stage 4 KM) is the strategic enabler</li>
+        <li>K&I Program Manager builds tools for all 8 divisions — sector-specific AI, not generic</li>
+        <li>Cross-practice AI pattern recognition = the horizon opportunity</li>
+      </ul>
+    </div>
+
+    <div class="study-card" style="border-color: rgba(59,139,255,0.3); background: linear-gradient(135deg, #1a1d27 0%, #1a2330 100%)">
+      <h4 style="color: var(--accent2)">McKinsey: AI is Everywhere, the Agentic Organization Isn't — Yet <span style="font-size:0.65rem;font-weight:400;color:var(--text3)">(Apr 2026)</span></h4>
+      <div class="study-dim">Cross-cutting: All 6 dimensions</div>
+      <ul>
+        <li>80%+ of companies not seeing bottom-line impact from AI investments — the great paradox</li>
+        <li>"Near-zero marginal cost of delivery" — what happens to hourly billing when legal work approaches zero cost?</li>
+        <li>75% of roles need fundamental reshaping in next 2-3 years. L&D must move from "sidecar" to center.</li>
+        <li>"Human above the loop" not just in the loop — judgment becomes the job. Directly maps to legal competence crisis.</li>
+        <li>"The billion-dollar question": how do juniors develop judgment without the grunt work? Identical to law's apprenticeship crisis.</li>
+        <li>Change management is no longer episodic — it's a perpetual state. Maps to K&I's continuous enablement mandate.</li>
+        <li>Reimagine workflows end-to-end, not point solutions — systems thinking unlocks scale. Same discipline as legal AI program design.</li>
+      </ul>
+    </div>
+
+  </div>
+</section>
+
+<!-- McKINSEY LENS -->
+<section id="mckinsey">
+  <div class="section-title"><span class="num">5</span> McKinsey Lens: The Agentic Organization & What It Means for Legal</div>
+
+  <p style="color:var(--text2);font-size:0.85rem;margin-bottom:1.5rem">McKinsey's April 2026 research on the "agentic organization" maps strikingly well onto large law firms. Below, their key frameworks translated to a legal context — because a law firm is just an extreme case of the same structural transformation every knowledge business is facing.</p>
+
+  <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(360px, 1fr)); gap:1.5rem; margin:2rem 0;">
+
+    <!-- The Great Paradox -->
+    <div class="bench-card" style="border-left: 3px solid var(--accent2)">
+      <h3 style="color: var(--accent2)">The Great AI Paradox</h3>
+      <div style="font-size:0.85rem;color:var(--text);margin-bottom:0.75rem;font-family:'Fraunces',serif;font-style:italic">
+        "Companies expect massive transformations from AI and have invested with that mindset. Yet more than 80% say they're not yet seeing impact on the bottom line."
+      </div>
+      <div style="font-size:0.78rem;color:var(--text2);line-height:1.6">
+        <strong>Legal translation:</strong> Firms are buying Harvey, CoCounsel, and enterprise AI licenses. But 85% aren't tracking ROI, and only 18% measure returns. The gap between deployed tools and measured value is the defining challenge. This is exactly why the K&I JD asks for "frameworks to track AI solution performance, including time saved, cost impact, and quality metrics." The firm wants to be in the 20% that actually knows if AI is working.
+      </div>
+    </div>
+
+    <!-- Near-Zero Marginal Cost -->
+    <div class="bench-card" style="border-left: 3px solid var(--accent3)">
+      <h3 style="color: var(--accent3)">Near-Zero Marginal Cost of Delivery</h3>
+      <div style="font-size:0.85rem;color:var(--text);margin-bottom:0.75rem;font-family:'Fraunces',serif;font-style:italic">
+        "Suppose the world could move toward near-zero marginal cost of delivery. How would that change what you're able to bring to customers?"
+      </div>
+      <div style="font-size:0.78rem;color:var(--text2);line-height:1.6">
+        <strong>Legal translation:</strong> This is the billable hour's extinction event, in slow motion. When AI compresses due diligence from 15 hours to near-zero, the firm can't charge by the hour for it. But it <em>can</em> package it into a fixed-fee product at healthy margin, or offer it as a value-add that wins the higher-margin strategic work. The firms that figure out how to monetize near-zero-cost delivery — through AFAs, subscriptions, and tiered service models — will have a structural cost advantage competitors can't match.
+      </div>
+    </div>
+
+    <!-- Human Above the Loop -->
+    <div class="bench-card" style="border-left: 3px solid var(--accent)">
+      <h3 style="color: var(--accent)">Human Above the Loop</h3>
+      <div style="font-size:0.85rem;color:var(--text);margin-bottom:0.75rem;font-family:'Fraunces',serif;font-style:italic">
+        "Having a human above the loop suggests the human's role becomes judgment on top. You still need a human to ask, 'Do I agree with the decision the agents have come to?'"
+      </div>
+      <div style="font-size:0.78rem;color:var(--text2);line-height:1.6">
+        <strong>Legal translation:</strong> This is the governance dimension in a nutshell. ABA 512 requires human oversight of AI outputs. But the sophistication gradient matters: Stage 2 governance has a human reviewing every AI output (in the loop). Stage 3-4 governance has the human reviewing only exceptions and edge cases (above the loop), with the system producing an audit trail that proves the boundary held. The K&I role builds the architecture that makes "above the loop" ethically defensible — the AAA arbitration example McKinsey cites is structurally identical to legal document review.
+      </div>
+    </div>
+
+    <!-- The Billion-Dollar Question -->
+    <div class="bench-card" style="border-left: 3px solid var(--accent4)">
+      <h3 style="color: var(--accent4)">The Billion-Dollar Question</h3>
+      <div style="font-size:0.85rem;color:var(--text);margin-bottom:0.75rem;font-family:'Fraunces',serif;font-style:italic">
+        "If you eliminate every new software engineer, you have a very expensive model of only senior folks. Roll that forward ten years, and you're missing the next generation."
+      </div>
+      <div style="font-size:0.78rem;color:var(--text2);line-height:1.6">
+        <strong>Legal translation:</strong> This is the competence crisis — identical dynamics, higher stakes. If AI automates the grunt work (due diligence, doc review, research), first-year associates never develop the pattern recognition to spot when the AI is wrong. The 700+ court cases involving AI hallucinations prove this isn't theoretical. The solution McKinsey points to — making L&D "central to the employee journey, not a sidecar" — is exactly the K&I mandate to "partner with Learning & Development to upskill lawyers and staff in AI literacy." Charlie's Maven teaching experience = direct capability to solve this.
+      </div>
+    </div>
+
+    <!-- 75% of Roles Reshaped -->
+    <div class="bench-card" style="border-left: 3px solid var(--accent2)">
+      <h3 style="color: var(--accent2)">75% of Roles Need Fundamental Reshaping</h3>
+      <div style="font-size:0.85rem;color:var(--text);margin-bottom:0.75rem;font-family:'Fraunces',serif;font-style:italic">
+        "Just about everybody in the workforce is going to need a new job description in the next two to three years. Most roles won't go away, but they'll be reshaped."
+      </div>
+      <div style="font-size:0.78rem;color:var(--text2);line-height:1.6">
+        <strong>Legal translation:</strong> The law firm pyramid isn't just shrinking — it's being redefined. Junior associate → AI workflow supervisor. Senior associate → AI output validator. Partner → AI strategy director + client relationship owner. KM lawyer → knowledge graph curator. The K&I Program Manager sits at the intersection of this reshaping — designing the workflows, building the tools, and teaching the humans. This role isn't about deploying technology. It's about redesigning how 3,500 legal professionals do their work.
+      </div>
+    </div>
+
+    <!-- Perpetual Change Management -->
+    <div class="bench-card" style="border-left: 3px solid var(--accent3)">
+      <h3 style="color: var(--accent3)">Change Management as Perpetual State</h3>
+      <div style="font-size:0.85rem;color:var(--text);margin-bottom:0.75rem;font-family:'Fraunces',serif;font-style:italic">
+        "Change management is no longer an episodic thing. It's a perpetual state. We'll have to get really good at being comfortable in constant change without introducing chaos."
+      </div>
+      <div style="font-size:0.78rem;color:var(--text2);line-height:1.6">
+        <strong>Legal translation:</strong> The traditional law firm approach to change — form a committee, study for 18 months, roll out slowly — is dead. The K&I role's change management mandate ("build awareness and adoption programs that integrate AI into daily legal workflows," "promote a culture of experimentation, measurement, and continuous improvement") is describing perpetual change, not a one-time rollout. This is why the role requires both technology fluency AND teaching ability. You're not deploying a tool. You're building the organizational muscle for continuous adaptation.
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Key insight box -->
+  <div style="background: linear-gradient(135deg, rgba(59,139,255,0.08) 0%, rgba(80,200,168,0.06) 100%); border: 1px solid rgba(59,139,255,0.2); border-radius: var(--radius); padding: 1.5rem 2rem; margin: 2rem 0;">
+    <div style="font-family:'Fraunces',serif;font-size:1.1rem;font-weight:600;color:var(--accent2);margin-bottom:0.75rem">Why McKinsey's framework matters for this interview</div>
+    <div style="font-size:0.82rem;color:var(--text2);line-height:1.7">
+      McKinsey is describing the same transformation every large law firm is navigating — they're just describing it at the Fortune 500 level. The concepts are directly transferable: <strong>near-zero marginal cost</strong> → the billable hour crisis, <strong>human above the loop</strong> → ABA 512 compliance architecture, <strong>the billion-dollar question</strong> → the legal competence crisis, <strong>perpetual change management</strong> → the K&I enablement mandate. <br><br>
+      Dropping even one of these McKinsey concepts in the interview — framed in legal terms — signals that you understand the transformation at the systems level, not just the tool level. That's the difference between a candidate who "knows AI" and a candidate who understands what AI does to a professional services business model.
+    </div>
+  </div>
+
+</section>
+
+<!-- 6. THREE YEAR ROADMAP -->
+<section id="roadmap">
+  <div class="section-title"><span class="num">6</span> 3-Year Progression: What Forward Motion Looks Like</div>
+
+  <div class="roadmap-grid">
+    <div class="roadmap-year yr1">
+      <h3>Year 1</h3>
+      <div class="yr-label">Foundation · Late 2026 / Early 2027</div>
+      <div class="yr-dim"><strong>AI Adoption:</strong> Enterprise tool deployed. Usage baseline. 3-5 pilots running.</div>
+      <div class="yr-dim"><strong>KM:</strong> Post-merger taxonomy alignment. Semantic search pilot on unified corpus.</div>
+      <div class="yr-dim"><strong>Governance:</strong> Principles published ✓. Governance committee. Audit trail architecture designed.</div>
+      <div class="yr-dim"><strong>Service Delivery:</strong> AI efficiency tracked per pilot. First fixed-fee AI product scoped.</div>
+      <div class="yr-dim"><strong>Data:</strong> DMS consolidation roadmap. Vector DB PoC. Data quality audit.</div>
+      <div class="yr-dim"><strong>People:</strong> AI literacy program. Champion network 50+. Shadow IT survey.</div>
+    </div>
+    <div class="roadmap-year yr2">
+      <h3>Year 2</h3>
+      <div class="yr-label">Integration · 2027</div>
+      <div class="yr-dim"><strong>AI Adoption:</strong> Embedded in 3+ core workflows. Usage >60% on target workflows.</div>
+      <div class="yr-dim"><strong>KM:</strong> Semantic search live across unified corpus. Knowledge graph prototype.</div>
+      <div class="yr-dim"><strong>Governance:</strong> Access controls enforce data isolation. Audit trails capture every interaction.</div>
+      <div class="yr-dim"><strong>Service Delivery:</strong> 3+ AI-enabled fixed-fee products. AFA portfolio profitability tracked.</div>
+      <div class="yr-dim"><strong>Data:</strong> Unified data layer operational. Real-time flows to AI tools.</div>
+      <div class="yr-dim"><strong>People:</strong> AI proficiency in performance expectations. Role-specific advanced training.</div>
+    </div>
+    <div class="roadmap-year yr3">
+      <h3>Year 3</h3>
+      <div class="yr-label">Early Transformation · 2028</div>
+      <div class="yr-dim"><strong>AI Adoption:</strong> Agentic workflows in production. AI-native service lines generating revenue.</div>
+      <div class="yr-dim"><strong>KM:</strong> Knowledge graph operational. Cross-practice AI pattern recognition. Client-specific layers.</div>
+      <div class="yr-dim"><strong>Governance:</strong> Governance-by-design. Defensible evidence on demand. RFP differentiator.</div>
+      <div class="yr-dim"><strong>Service Delivery:</strong> Subscription/outcome pricing. AI-enabled revenue >15% of total.</div>
+      <div class="yr-dim"><strong>Data:</strong> Real-time knowledge graph. Proprietary data compounding. Firm-specific AI models.</div>
+      <div class="yr-dim"><strong>People:</strong> AI-native career paths. Partner comp reflects AI capability. Culture of experimentation.</div>
+    </div>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<div class="footer">
+  <p>Sources: Litify AI Maturity Scale (Mar 2026) · Advanta Maturity Stack (May 2026) · Clio Adoption Curve (May 2025) · Centari Data Maturity Model (Jun 2026) · Thomson Reuters 2026 AI in Professional Services Report · Citi/Hildebrandt 2026 Client Advisory · McKinsey "AI is Everywhere, the Agentic Organization Isn't — Yet" (Apr 2026) · Kraft Kennedy Process Automation Levels · ACC Legal Ops Maturity Model · ashurstperkinscoie.com (4,638 pages, Jul 2026)</p>
+  <p style="margin-top:0.5rem">Prepared for Charlie Fuller — Ashurst Perkins Coie, Knowledge & Innovation Program Manager interview</p>
+</div>
+
+</div>
+</body>
+</html>
