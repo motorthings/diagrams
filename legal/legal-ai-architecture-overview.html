@@ -1,0 +1,365 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<link rel="icon" type="image/svg+xml" href="../icon.svg">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="How the Legal AI OS delivers governed, measurable AI across the enterprise — the architecture explained for decision-makers who need to understand what it does, not how it is built.">
+<title>Legal AI OS — Architecture Overview</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,wght@0,400;0,500;0,600;0,700;0,800;1,400&family=Source+Code+Pro:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --font-body: 'Fraunces', Georgia, serif;
+    --font-mono: 'Source Code Pro', 'SF Mono', Consolas, monospace;
+    --bg: #eef4f9; --surface: #ffffff; --surface2: #f5f8fc; --surface-elevated: #e8f0f7;
+    --border: rgba(0, 0, 0, 0.06); --border-bright: rgba(0, 0, 0, 0.12);
+    --text: #0a1628; --text-dim: #3d5a7a; --text-muted: #7a9ab8;
+    --primary: #e8621a; --primary-dim: rgba(232, 98, 26, 0.08);
+    --secondary: #4a90c4; --secondary-dim: rgba(74, 144, 196, 0.08);
+    --metric: #0f766e; --metric-dim: rgba(15, 118, 110, 0.06);
+    --amber: #b45309; --amber-dim: rgba(180, 83, 9, 0.08);
+    --violet: #7c3aed; --violet-dim: rgba(124, 58, 237, 0.08);
+    --rose: #e11d48; --rose-dim: rgba(225, 29, 72, 0.08);
+    --slate: #475569; --slate-dim: rgba(71, 85, 105, 0.08);
+    --emerald: #059669; --emerald-dim: rgba(5, 150, 105, 0.08);
+  }
+  html.dark {
+    --bg: #0a1628; --surface: #0f1f3d; --surface2: #132844; --surface-elevated: #162d52;
+    --border: rgba(255, 255, 255, 0.06); --border-bright: rgba(255, 255, 255, 0.12);
+    --text: #e8edf5; --text-dim: #9bb0d4; --text-muted: #5e7aa3;
+    --primary: #f37021; --primary-dim: rgba(243, 112, 33, 0.12);
+    --secondary: #6cace4; --secondary-dim: rgba(108, 172, 228, 0.12);
+    --metric: #2dd4bf; --metric-dim: rgba(45, 212, 191, 0.08);
+    --amber: #f59e0b; --amber-dim: rgba(245, 158, 11, 0.12);
+    --violet: #a78bfa; --violet-dim: rgba(167, 139, 250, 0.12);
+    --rose: #fb7185; --rose-dim: rgba(251, 113, 133, 0.12);
+    --slate: #94a3b8; --slate-dim: rgba(148, 163, 184, 0.12);
+    --emerald: #34d399; --emerald-dim: rgba(52, 211, 153, 0.1);
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: var(--bg);
+    background-image:
+      radial-gradient(ellipse at 80% 0%, var(--primary-dim) 0%, transparent 50%),
+      radial-gradient(ellipse at 20% 60%, var(--secondary-dim) 0%, transparent 40%);
+    color: var(--text); font-family: var(--font-body);
+    font-size: 15px; line-height: 1.7; min-height: 100vh;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  .backlink {
+    position: fixed; top: 12px; left: 16px; z-index: 101;
+    font-family: var(--font-mono); font-size: 12px;
+    color: var(--text-dim); text-decoration: none;
+    padding: 6px 10px; border: 1px solid var(--border);
+    border-radius: 6px; background: var(--surface);
+    transition: color 0.15s, border-color 0.15s;
+  }
+  .backlink:hover { color: var(--text); border-color: var(--border-bright); }
+
+  .nav {
+    position: sticky; top: 0; z-index: 100;
+    backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px);
+    background: color-mix(in srgb, var(--surface) 85%, transparent);
+    border-bottom: 1px solid var(--border);
+    margin: 0 0 32px; padding: 0 32px;
+  }
+  .nav-inner {
+    max-width: 1100px; margin: 0 auto; padding: 12px 0;
+    display: flex; align-items: center; justify-content: space-between;
+  }
+  .nav-brand {
+    font-family: var(--font-mono); font-size: 13px; font-weight: 600;
+    color: var(--primary); text-decoration: none;
+  }
+  .theme-toggle {
+    width: 36px; height: 36px; border-radius: 10px;
+    border: 1px solid var(--border); background: var(--surface);
+    cursor: pointer; display: flex; align-items: center; justify-content: center;
+    font-size: 16px; color: var(--text-dim); transition: all 0.2s;
+  }
+  .theme-toggle:hover { border-color: var(--primary); color: var(--primary); }
+
+  .container { max-width: 920px; margin: 0 auto; padding: 0 24px 80px; }
+
+  @keyframes fadeUp { from { opacity: 0; transform: translateY(16px); } to { opacity: 1; transform: translateY(0); } }
+  .fade { animation: fadeUp 0.5s ease both; }
+  .fade:nth-child(1) { animation-delay: 0.05s; }
+  .fade:nth-child(2) { animation-delay: 0.10s; }
+  .fade:nth-child(3) { animation-delay: 0.15s; }
+  .fade:nth-child(4) { animation-delay: 0.20s; }
+  .fade:nth-child(5) { animation-delay: 0.25s; }
+  .fade:nth-child(6) { animation-delay: 0.30s; }
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after { animation-duration: 0.01ms !important; animation-delay: 0ms !important; }
+  }
+
+  .hero { text-align: center; margin-bottom: 48px; padding: 32px 0 0; }
+  .hero-kicker { font-family: var(--font-mono); font-size: 11px; font-weight: 600; letter-spacing: 0.15em; text-transform: uppercase; color: var(--primary); margin-bottom: 12px; }
+  .hero h1 { font-size: 44px; font-weight: 800; letter-spacing: -1px; color: var(--text); line-height: 1.15; margin-bottom: 10px; }
+  .hero .outcome-line { font-size: 18px; color: var(--text-dim); max-width: 640px; margin: 0 auto; font-style: italic; line-height: 1.5; }
+
+  .stage { margin-bottom: 48px; }
+  .stage-head { margin-bottom: 20px; }
+  .stage-num { font-family: var(--font-mono); font-size: 11px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; color: var(--primary); margin-bottom: 4px; }
+  .stage-title { font-size: 24px; font-weight: 700; color: var(--text); margin-bottom: 6px; }
+  .stage-why { font-size: 15px; color: var(--text-dim); line-height: 1.7; }
+
+  .subpanel-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-top: 16px; }
+  .subpanel { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 22px 24px; }
+  .subpanel h4 { font-family: var(--font-mono); font-size: 11px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; margin-bottom: 8px; }
+  .subpanel h4.what { color: var(--emerald); }
+  .subpanel h4.why { color: var(--amber); }
+  .subpanel p, .subpanel li { font-size: 13px; color: var(--text-dim); line-height: 1.65; }
+  .subpanel ul { list-style: none; padding: 0; }
+  .subpanel li { padding-left: 14px; position: relative; margin-bottom: 6px; }
+  .subpanel li::before { content: '&bull;'; color: var(--text-muted); position: absolute; left: 0; }
+
+  .metric-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; margin-top: 20px; }
+  .metric-card { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 22px 18px; text-align: center; }
+  .metric-card--emerald { border-top: 3px solid var(--emerald); }
+  .metric-card--blue { border-top: 3px solid var(--secondary); }
+  .metric-card--violet { border-top: 3px solid var(--violet); }
+  .metric-num { font-size: 28px; font-weight: 800; color: var(--primary); font-family: var(--font-mono); }
+  .metric-label { font-size: 13px; font-weight: 600; color: var(--text); margin: 6px 0 4px; }
+  .metric-desc { font-size: 12px; color: var(--text-dim); line-height: 1.5; }
+
+  .savings-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-top: 16px; }
+  .savings-card { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 20px; text-align: center; }
+  .savings-hours { font-family: var(--font-mono); font-size: 28px; font-weight: 800; color: var(--metric); }
+  .savings-func { font-size: 13px; font-weight: 600; color: var(--text); margin: 4px 0; }
+  .savings-desc { font-size: 11px; color: var(--text-dim); line-height: 1.4; }
+
+  .flow-row { display: flex; align-items: center; justify-content: center; gap: 12px; flex-wrap: wrap; margin-top: 20px; }
+  .flow-box { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 16px 20px; text-align: center; min-width: 140px; }
+  .flow-box--primary { border-top: 3px solid var(--primary); }
+  .flow-box--blue { border-top: 3px solid var(--secondary); }
+  .flow-box--metric { border-top: 3px solid var(--metric); }
+  .flow-box--amber { border-top: 3px solid var(--amber); }
+  .flow-box--emerald { border-top: 3px solid var(--emerald); }
+  .flow-box .flow-num { font-family: var(--font-mono); font-size: 9px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; color: var(--text-muted); margin-bottom: 4px; }
+  .flow-box .flow-title { font-size: 14px; font-weight: 700; color: var(--text); margin-bottom: 2px; }
+  .flow-box .flow-desc { font-size: 11px; color: var(--text-dim); line-height: 1.4; }
+  .flow-arrow { font-size: 18px; color: var(--text-muted); font-family: var(--font-mono); flex-shrink: 0; }
+  .flow-label { font-size: 10px; color: var(--text-muted); font-family: var(--font-mono); text-align: center; margin-top: 2px; }
+
+  .callout {
+    background: var(--surface2); border: 1px solid var(--border);
+    border-left: 3px solid var(--primary); border-radius: 0 10px 10px 0;
+    padding: 22px 26px; margin-top: 20px;
+    font-size: 14px; color: var(--text-dim); line-height: 1.7;
+  }
+  .callout strong { color: var(--text); }
+
+  .footer {
+    margin-top: 48px; padding-top: 20px; border-top: 1px solid var(--border);
+    text-align: center; font-size: 12px; color: var(--text-dim);
+  }
+  .footer a { color: var(--primary); text-decoration: none; }
+  .footer a:hover { text-decoration: underline; }
+
+  @media (max-width: 768px) {
+    .subpanel-grid, .metric-row, .savings-grid { grid-template-columns: 1fr; }
+    .flow-row { flex-direction: column; }
+    .flow-arrow { transform: rotate(90deg); }
+    .hero h1 { font-size: 32px; }
+    .stage-title { font-size: 20px; }
+  }
+</style>
+</head>
+<body>
+<a href="../index.html" class="backlink">&larr; Index</a>
+
+<div class="nav">
+  <div class="nav-inner">
+    <a href="../index.html" class="nav-brand">&#8592; Charlie Fuller — Visual Explainers</a>
+    <button class="theme-toggle" id="themeToggle" aria-label="Toggle dark mode">
+      <span class="icon-light">&#9788;</span>
+      <span class="icon-dark" style="display:none">&#9790;</span>
+    </button>
+  </div>
+</div>
+
+<div class="container">
+
+  <div class="hero">
+    <div class="hero-kicker">Enterprise Legal AI</div>
+    <h1>How the Platform Works</h1>
+    <p class="outcome-line">Eight functions. One governance layer. Every action measured, every decision auditable. Here is how it fits together — and what you get from it.</p>
+  </div>
+
+  <!-- Stage 1: The Architecture -->
+  <div class="stage fade">
+    <div class="stage-head">
+      <div class="stage-num">The Architecture</div>
+      <div class="stage-title">Three layers. One guarantee.</div>
+      <p class="stage-why">The platform separates what the AI does from how it is governed from how its value is measured. Each layer is independent — replace one without touching the others. This is not a monolith that breaks when you change one thing. It is an operating model that scales.</p>
+    </div>
+
+    <div class="flow-row">
+      <div class="flow-box flow-box--primary">
+        <div class="flow-num">Layer 1</div>
+        <div class="flow-title">The Functions</div>
+        <div class="flow-desc">Eight AI applications.<br/>Each does one thing well.<br/>Matter intake, contract review,<br/>due diligence, and more.</div>
+      </div>
+      <div class="flow-arrow">&rarr;</div>
+      <div class="flow-box flow-box--blue">
+        <div class="flow-num">Layer 2</div>
+        <div class="flow-title">The Governance</div>
+        <div class="flow-desc">Every function is healthy?<br/>Every function is performing?<br/>Every function is compliant?<br/>Answered automatically.</div>
+      </div>
+      <div class="flow-arrow">&rarr;</div>
+      <div class="flow-box flow-box--metric">
+        <div class="flow-num">Layer 3</div>
+        <div class="flow-title">The Measurement</div>
+        <div class="flow-desc">Time saved. Cost avoided.<br/>Adoption tracked. Value proved.<br/>Per client, per function,<br/>per practice group.</div>
+      </div>
+    </div>
+
+    <div class="callout">
+      <strong>The key insight:</strong> The governance layer does not know what a "contract" is or what a "matter" is. It knows three things: is the function running? Is it performing? Is it compliant? This means you can add new functions without rewriting governance — and you can upgrade governance without touching the functions. <strong>Decoupling is how the platform scales.</strong>
+    </div>
+  </div>
+
+  <!-- Stage 2: Governance Guarantees -->
+  <div class="stage fade">
+    <div class="stage-head">
+      <div class="stage-num">Built-In Oversight</div>
+      <div class="stage-title">Three things you never have to ask about.</div>
+      <p class="stage-why">Every function reports its own health, performance, and compliance — automatically. The dashboard shows you what is working and what needs attention. You do not need to be technical to understand it. Green means go. Amber means watch. Red means someone needs to act.</p>
+    </div>
+
+    <div class="metric-row">
+      <div class="metric-card metric-card--emerald">
+        <div class="metric-num">Health</div>
+        <div class="metric-label">Is it running?</div>
+        <div class="metric-desc">Every function reports uptime and status. If something is down, the dashboard flags it before anyone complains. Deployment history tracked per function.</div>
+      </div>
+      <div class="metric-card metric-card--blue">
+        <div class="metric-num">Performance</div>
+        <div class="metric-label">Is it working well?</div>
+        <div class="metric-desc">Adoption rate. Processing volume. Response time. Accuracy. Cost per operation. Every function quantifies its own value — measured per use, aggregated by week, month, and quarter.</div>
+      </div>
+      <div class="metric-card metric-card--violet">
+        <div class="metric-num">Compliance</div>
+        <div class="metric-label">Is it still safe?</div>
+        <div class="metric-desc">Model drift detection. Evaluation standards versioned. Any function falling below threshold triggers automatic review. The system polices itself — you do not need to schedule an audit.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Stage 3: ROI -->
+  <div class="stage fade">
+    <div class="stage-head">
+      <div class="stage-num">ROI You Can Prove</div>
+      <div class="stage-title">Not "we think AI is saving time." We know, to the minute, per client.</div>
+      <p class="stage-why">Every time one of the eight functions runs, it captures: who used it, for which client, how long it took, what the AI did, and how much human time was saved. This data rolls up into quarterly client reports, function dashboards, and practice group adoption tracking. <strong>85% of firms cannot track AI ROI. This platform makes it automatic.</strong></p>
+    </div>
+
+    <div class="subpanel-grid">
+      <div class="subpanel">
+        <h4 class="what">What you get</h4>
+        <ul>
+          <li>Time saved per function, per client, per quarter — with the math to back it up</li>
+          <li>Cost attribution: which clients benefit, what the AI costs to run for them</li>
+          <li>Adoption tracking by practice group — who is using what, and who is not</li>
+          <li>Trend analysis: is adoption growing? Is accuracy holding? Are costs in line?</li>
+        </ul>
+      </div>
+      <div class="subpanel">
+        <h4 class="why">Why it matters</h4>
+        <ul>
+          <li>When the managing partner asks "what is AI actually doing for us?" — you have the answer</li>
+          <li>When a client asks "how are you using AI on our matters?" — you send the quarterly report</li>
+          <li>When the CFO asks "what is this costing?" — you show the cost per matter, per client</li>
+          <li>When a practice group leader says "we do not need this" — you show them the group next door saving 30 minutes per matter</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="savings-grid">
+      <div class="savings-card">
+        <div class="savings-hours">~30 min</div>
+        <div class="savings-func">Matter Intake</div>
+        <div class="savings-desc">Per new matter evaluation — down from 30 minutes of attorney time to under 10 seconds</div>
+      </div>
+      <div class="savings-card">
+        <div class="savings-hours">~2 hrs</div>
+        <div class="savings-func">Contract Review</div>
+        <div class="savings-desc">Per contract — down from 2 hours of full attorney review to approximately 45 seconds</div>
+      </div>
+      <div class="savings-card">
+        <div class="savings-hours">~15 hrs</div>
+        <div class="savings-func">Due Diligence</div>
+        <div class="savings-desc">Per document set — down from 15-20 hours of manual review to approximately 2 hours</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Stage 4: Data Privacy -->
+  <div class="stage fade">
+    <div class="stage-head">
+      <div class="stage-num">Privacy by Design</div>
+      <div class="stage-title">Client data never crosses boundaries. Not by policy. By architecture.</div>
+      <p class="stage-why">The single biggest risk in legal AI is data leakage — Client A's information showing up in Client B's results. The platform prevents this at the database level, not the application level. Even a direct database connection cannot bypass these walls.</p>
+    </div>
+
+    <div class="metric-row">
+      <div class="metric-card metric-card--emerald">
+        <div class="metric-num">Client</div>
+        <div class="metric-label">Data Isolation</div>
+        <div class="metric-desc">Every row of data is tagged with the client it belongs to. The database itself enforces that Client A's data never touches Client B's queries. Same database, same tables, structural guarantee.</div>
+      </div>
+      <div class="metric-card metric-card--violet">
+        <div class="metric-num">Practice</div>
+        <div class="metric-label">Group Boundaries</div>
+        <div class="metric-desc">Employment legal is walled from commercial legal. IP sees only IP matters. Litigation sees only litigation. These walls are not configurable per request — they are built into the database structure.</div>
+      </div>
+      <div class="metric-card metric-card--blue">
+        <div class="metric-num">Audit</div>
+        <div class="metric-label">Immutable Record</div>
+        <div class="metric-desc">Every AI decision is permanently recorded. Who ran it, when, what the model said, what the system scored, whether a human overrode it. Write once, read by authorized roles. No deletion. No modification.</div>
+      </div>
+    </div>
+
+    <div class="callout">
+      <strong>Enterprise LLM:</strong> The platform assumes an enterprise-grade AI deployment — private instance or enterprise API tier. No client data is used to train models. No data is retained by the AI provider. No data leaks between clients. All data stays within the contractual trust boundary. <strong>The same legal standards that govern your document management system govern your AI.</strong>
+    </div>
+  </div>
+
+  <div class="footer">
+    Legal AI OS — Architecture Overview
+    &nbsp;&middot;&nbsp;
+    <a href="legal-ai-technical-architecture.html">Technical Deep Dive &rarr;</a>
+    &nbsp;&middot;&nbsp;
+    <a href="legal-ai-os-overview.html">Platform Overview &rarr;</a>
+    &nbsp;&middot;&nbsp;
+    <a href="legal-ai-governance.html">Governance Model &rarr;</a>
+    &nbsp;&middot;&nbsp;
+    <a href="../index.html">All Diagrams &rarr;</a>
+    <br>
+    <span style="font-size:11px;opacity:0.7;">&copy; 2025-2026 Charlie Fuller</span>
+  </div>
+
+</div>
+
+<script>
+  const toggle = document.getElementById('themeToggle');
+  const iconLight = toggle.querySelector('.icon-light');
+  const iconDark = toggle.querySelector('.icon-dark');
+  function setTheme(d) {
+    document.documentElement.classList.toggle('dark', d);
+    iconLight.style.display = d ? 'none' : '';
+    iconDark.style.display = d ? '' : 'none';
+    try { localStorage.setItem('diagram-theme', d ? 'dark' : 'light'); } catch(e) {}
+  }
+  toggle.addEventListener('click', () => setTheme(!document.documentElement.classList.contains('dark')));
+  try { if (localStorage.getItem('diagram-theme') === 'dark') setTheme(true); } catch(e) {}
+</script>
+
+</body>
+</html>
