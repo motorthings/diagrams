@@ -1,0 +1,350 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AESOP — Two-Phase Authored Discovery</title>
+<link rel="icon" type="image/svg+xml" href="../icon.svg">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,wght@0,400;0,500;0,600;0,700;1,400&family=Source+Code+Pro:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --font-body: 'Fraunces', Georgia, serif;
+    --font-mono: 'Source Code Pro', 'SF Mono', Consolas, monospace;
+    --bg: #eef4f9; --surface: #ffffff; --surface2: #f5f8fc;
+    --border: rgba(0,0,0,0.07); --border-bright: rgba(0,0,0,0.13);
+    --text: #0a1628; --text-dim: #3d5a7a; --text-muted: #7a9ab8;
+    --primary: #c84d0e; --primary-dim: rgba(200,77,14,0.08);
+    --secondary: #4a90c4; --secondary-dim: rgba(74,144,196,0.08);
+    --purple: #7c3aed; --purple-dim: rgba(124,58,237,0.08); --purple-bright: #8b5cf6;
+    --amber: #d97706; --amber-dim: rgba(217,119,6,0.08);
+    --teal: #0d9488; --teal-dim: rgba(13,148,136,0.08);
+    --rose: #e11d48; --rose-dim: rgba(225,29,72,0.06);
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #0a1628; --surface: #132240; --surface2: #1a2d52;
+      --border: rgba(255,255,255,0.07); --border-bright: rgba(255,255,255,0.13);
+      --text: #e8edf5; --text-dim: #9bb0d4; --text-muted: #5e7aa3;
+      --primary: #f37021; --primary-dim: rgba(243,112,33,0.12);
+      --secondary: #6cace4; --secondary-dim: rgba(108,172,228,0.12);
+      --purple: #a78bfa; --purple-dim: rgba(167,139,250,0.12); --purple-bright: #c4b5fd;
+    }
+  }
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body {
+    background: var(--bg);
+    background-image: radial-gradient(ellipse at 80% 0%, var(--primary-dim) 0%, transparent 50%), radial-gradient(ellipse at 20% 60%, var(--purple-dim) 0%, transparent 40%);
+    color: var(--text); font-family: var(--font-body);
+    min-height: 100vh; padding: 32px 24px 64px; line-height: 1.6;
+  }
+  .backlink{position:fixed;top:12px;left:16px;z-index:101;font-family:var(--font-mono);font-size:12px;color:var(--text-dim);text-decoration:none;padding:6px 10px;border:1px solid var(--border);border-radius:6px;background:var(--surface);transition:color .15s,border-color .15s}
+  .backlink:hover{color:var(--text);border-color:var(--border-bright)}
+  .container { max-width:1040px; margin:0 auto; }
+
+  h1 { font-size:44px; font-weight:700; letter-spacing:-0.5px; margin-bottom:8px; }
+  .subtitle { font-family:var(--font-mono); font-size:16px; color:var(--text-dim); margin-bottom:36px; line-height:1.5; }
+
+  /* Thesis callout */
+  .thesis {
+    background:var(--surface); border:1px solid var(--border); border-radius:12px;
+    padding:28px 32px; margin-bottom:36px;
+  }
+  .thesis h2 { font-size:20px; font-weight:700; color:var(--text); margin-bottom:10px; }
+  .thesis blockquote {
+    border-left:3px solid var(--purple); padding:6px 0 6px 16px; margin:10px 0;
+    font-style:italic; font-size:16px; color:var(--text-dim); line-height:1.6;
+  }
+  .thesis .attr { font-size:13px; color:var(--text-muted); font-family:var(--font-mono); margin-top:6px; }
+
+  /* Two-column comparison */
+  .comparison { display:grid; grid-template-columns:1fr 1fr; gap:16px; margin-bottom:36px; }
+  @media(max-width:700px){ .comparison{grid-template-columns:1fr;} }
+
+  .col {
+    background:var(--surface); border:1px solid var(--border); border-radius:12px;
+    padding:24px 28px;
+  }
+  .col.inherited { border-top:3px solid var(--primary); }
+  .col.authored { border-top:3px solid var(--purple); }
+  .col h3 { font-size:20px; font-weight:700; margin-bottom:4px; }
+  .col.inherited h3 { color:var(--primary); }
+  .col.authored h3 { color:var(--purple); }
+  .col .tagline { font-size:13px; color:var(--text-muted); font-family:var(--font-mono); margin-bottom:14px; }
+  .col ul { list-style:none; }
+  .col li {
+    font-size:15px; color:var(--text-dim); padding:6px 0;
+    border-bottom:1px solid var(--border); line-height:1.5;
+  }
+  .col li:last-child { border-bottom:none; }
+  .col li::before { content:'\2022'; margin-right:8px; font-weight:700; }
+  .col.inherited li::before { color:var(--primary); }
+  .col.authored li::before { color:var(--purple); }
+
+  /* Flow diagram */
+  .flow { margin-bottom:36px; }
+  .flow h2 { font-size:24px; font-weight:700; margin-bottom:20px; }
+
+  .flow-row { display:flex; align-items:stretch; gap:0; margin-bottom:0; }
+  @media(max-width:750px){ .flow-row{flex-direction:column;} }
+
+  .flow-step {
+    flex:1; background:var(--surface); border:1px solid var(--border);
+    padding:20px 18px; position:relative;
+    display:flex; flex-direction:column;
+  }
+  .flow-step:first-child { border-radius:10px 0 0 10px; }
+  .flow-step:last-child { border-radius:0 10px 10px 0; }
+  @media(max-width:750px){
+    .flow-step:first-child { border-radius:10px 10px 0 0; }
+    .flow-step:last-child { border-radius:0 0 10px 10px; }
+  }
+
+  .flow-step .phase-badge {
+    font-family:var(--font-mono); font-size:10px; font-weight:700;
+    letter-spacing:0.1em; text-transform:uppercase;
+    padding:3px 8px; border-radius:4px; display:inline-block; margin-bottom:8px; width:fit-content;
+  }
+  .flow-step.phase1 .phase-badge { background:var(--primary-dim); color:var(--primary); }
+  .flow-step.gateway .phase-badge { background:var(--amber-dim); color:var(--amber); }
+  .flow-step.phase2 .phase-badge { background:var(--purple-dim); color:var(--purple); }
+  .flow-step.output .phase-badge { background:var(--teal-dim); color:var(--teal); }
+
+  .flow-step h4 { font-size:16px; font-weight:700; color:var(--text); margin-bottom:6px; }
+  .flow-step p { font-size:14px; color:var(--text-dim); line-height:1.5; margin-bottom:8px; }
+  .flow-step .detail { font-size:12px; color:var(--text-muted); font-family:var(--font-mono); line-height:1.5; }
+
+  .flow-arrow {
+    width:32px; flex-shrink:0; display:flex; align-items:center; justify-content:center;
+    color:var(--text-muted); font-size:20px;
+  }
+  @media(max-width:750px){
+    .flow-arrow { width:100%; height:24px; transform:rotate(90deg); }
+  }
+
+  /* Gateway detail */
+  .gateway-detail {
+    background:var(--surface); border:1px solid var(--border); border-radius:10px;
+    padding:22px 28px; margin:16px 0 36px;
+  }
+  .gateway-detail h3 { font-size:18px; font-weight:700; color:var(--amber); margin-bottom:12px; }
+  .gateway-options { display:grid; grid-template-columns:1fr 1fr 1fr; gap:10px; }
+  @media(max-width:700px){ .gateway-options{grid-template-columns:1fr;} }
+  .gateway-opt {
+    background:var(--surface2); border:1px solid var(--border); border-radius:8px;
+    padding:16px 18px;
+  }
+  .gateway-opt h5 { font-size:15px; font-weight:700; color:var(--text); margin-bottom:4px; }
+  .gateway-opt p { font-size:13px; color:var(--text-dim); line-height:1.5; }
+
+  /* Why it matters */
+  .why { margin-bottom:36px; }
+  .why h2 { font-size:24px; font-weight:700; margin-bottom:16px; }
+  .replication-warning {
+    background:var(--rose-dim); border:1px solid var(--rose); border-left:3px solid var(--rose);
+    border-radius:0 8px 8px 0; padding:16px 20px; margin-bottom:16px;
+    font-size:15px; color:var(--text-dim); line-height:1.6;
+  }
+  .replication-warning strong { color:var(--rose); }
+  .why-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(300px,1fr)); gap:12px; }
+  .why-card {
+    background:var(--surface); border:1px solid var(--border); border-radius:10px; padding:20px 22px;
+  }
+  .why-card .num {
+    font-family:var(--font-mono); font-size:13px; font-weight:700; color:var(--purple);
+    margin-bottom:4px;
+  }
+  .why-card h4 { font-size:16px; font-weight:700; color:var(--text); margin-bottom:6px; }
+  .why-card p { font-size:14px; color:var(--text-dim); line-height:1.5; }
+
+  /* The diagnostic question */
+  .diagnostic {
+    background:var(--surface); border:2px solid var(--purple); border-radius:12px;
+    padding:24px 32px; margin-bottom:36px; text-align:center;
+  }
+  .diagnostic .q { font-size:22px; font-weight:700; color:var(--purple); margin-bottom:10px; }
+  .diagnostic .a { font-size:15px; color:var(--text-dim); line-height:1.6; max-width:640px; margin:0 auto; }
+
+  /* Section headers */
+  .section-h { font-family:var(--font-mono); font-size:12px; font-weight:700; letter-spacing:0.15em; text-transform:uppercase; color:var(--text-muted); margin-bottom:8px; }
+
+  /* Question panel */
+  .question-panels { display:grid; grid-template-columns:repeat(auto-fill,minmax(300px,1fr)); gap:10px; margin-bottom:36px; }
+  .qp {
+    background:var(--surface); border:1px solid var(--border); border-radius:8px;
+    padding:16px 20px; border-left:3px solid var(--purple);
+  }
+  .qp h5 { font-size:14px; font-weight:700; color:var(--text); margin-bottom:4px; }
+  .qp .n { font-size:12px; color:var(--text-muted); }
+</style>
+</head>
+<body>
+
+<a class="backlink" href="../index.html">&larr; Visual Explainers</a>
+
+<div class="container">
+
+<h1>Two-Phase Authored Discovery</h1>
+<p class="subtitle">How AESOP moves from mapping what exists to questioning what should exist —<br>before anything gets built.</p>
+
+<!-- Thesis -->
+<div class="thesis">
+  <div class="section-h">Foundation</div>
+  <h2>Organizations are compensating mechanisms for the limits of human intelligence.</h2>
+  <blockquote>
+    Departments exist because people specialise. Hierarchies exist because managers
+    cannot coordinate unlimited work. Meetings exist because context has to move
+    between human beings. Approvals exist because judgement is scarce.
+  </blockquote>
+  <p class="attr">Stuart Winter-Tear, "How Intelligent Systems Change the Design of Organisations" &mdash; July 2026</p>
+  <p style="margin-top:12px;font-size:15px;color:var(--text-dim);">
+    If context becomes cheaper to retrieve, knowledge becomes persistent rather than
+    personal, routine judgement can be delegated, and coordination costs fall — then
+    the structures built around those constraints <em>deserve to be questioned</em>.
+    Most AI deployment just pours intelligence into the existing org chart faster.
+    AESOP's two-phase discovery is designed to do the opposite.
+  </p>
+</div>
+
+<!-- The Fork: comparison -->
+<div class="section-h">The Fork in the Road</div>
+<div class="comparison">
+  <div class="col inherited">
+    <h3>Inherited Discovery</h3>
+    <p class="tagline">Phase 1 &mdash; what most platforms stop at</p>
+    <ul>
+      <li>Maps the current process step by step</li>
+      <li>Captures existing roles, approvals, meetings</li>
+      <li>Identifies pain points within the current structure</li>
+      <li>Asks: <em>"How does this work today?"</em></li>
+      <li>Produces an opportunity brief based on the inherited org chart</li>
+      <li>Fundable, demoable, LinkedIn-postable</li>
+    </ul>
+  </div>
+  <div class="col authored">
+    <h3>Authored Reframing</h3>
+    <p class="tagline">Phase 2 &mdash; what makes AESOP different</p>
+    <ul>
+      <li>Questions which roles exist because of old constraints</li>
+      <li>Maps decisions, not departments</li>
+      <li>Separates real constraints from inherited ones</li>
+      <li>Asks: <em>"What would you design from scratch?"</em></li>
+      <li>Enriches the brief with structural assumptions challenged</li>
+      <li>Scarier, slower, no clean before/after screenshot — and essential</li>
+    </ul>
+  </div>
+</div>
+
+<!-- The Flow -->
+<div class="flow">
+  <h2>How It Works</h2>
+
+  <div style="margin-bottom:20px;">
+    <div class="section-h" style="margin-bottom:12px;">Pipeline</div>
+    <div class="flow-row">
+      <div class="flow-step phase1">
+        <span class="phase-badge">Phase 1</span>
+        <h4>Inherited Discovery</h4>
+        <p>Map what currently exists. Form interview or brain dump captures the process, pain points, roles, and constraints as they are today.</p>
+        <div class="detail">Two entry modes: Structured Form Interview or AI-driven Brain Dump</div>
+      </div>
+      <div class="flow-arrow">&rarr;</div>
+      <div class="flow-step gateway">
+        <span class="phase-badge">Gateway</span>
+        <h4>Reframing Gate</h4>
+        <p>The compiled Phase 1 brief is presented alongside a choice: proceed to Design, or run the Authored Reframing pass.</p>
+        <div class="detail">This gate is the methodological differentiator. Every other platform skips it.</div>
+      </div>
+      <div class="flow-arrow">&rarr;</div>
+      <div class="flow-step phase2">
+        <span class="phase-badge">Phase 2</span>
+        <h4>Authored Reframing</h4>
+        <p>7 question sections question structural assumptions: Decision Mapping, Context Requirements, Coordination Design, Constraint Identification, Success Redefinition, Structural Assumptions Audit, Autonomy &amp; Accountability.</p>
+        <div class="detail">Each section opens with a context block referencing Phase 1 answers — "You said X. Now question whether X should exist."</div>
+      </div>
+      <div class="flow-arrow">&rarr;</div>
+      <div class="flow-step output">
+        <span class="phase-badge">Output</span>
+        <h4>Enriched Brief</h4>
+        <p>A single markdown document with two sections: Current State (the inherited map) and Authored Reframing (structural assumptions questioned).</p>
+        <div class="detail">Downstream Design &rarr; Build pipeline uses this enriched brief unchanged. No new tooling required.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Gateway detail -->
+  <div class="gateway-detail">
+    <h3>Gateway Decision Point</h3>
+    <p style="font-size:15px;color:var(--text-dim);margin-bottom:14px;">After Phase 1 compiles, the user sees their brief alongside three paths:</p>
+    <div class="gateway-options">
+      <div class="gateway-opt">
+        <h5>Authored Interview</h5>
+        <p>Structured form with 7 contextualized question sections. Each section references Phase 1 content. 22 total questions across decision mapping, context, coordination, constraints, success, structural assumptions, and autonomy.</p>
+      </div>
+      <div class="gateway-opt">
+        <h5>Authored Brain Dump</h5>
+        <p>AI-driven free-text entry. An authored gap agent reads the Phase 1 brief plus the user's brain dump and extracts structured authored answers. Gaps are identified and the user fills only what's missing.</p>
+      </div>
+      <div class="gateway-opt">
+        <h5>Skip to Design</h5>
+        <p>Proceed with Phase 1 only. The standard brief is used as-is. This is always available — not every project needs authored reframing, and forcing it would create friction. But the option is always visible.</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- The 7 Authored Question Sections -->
+<div class="section-h" style="margin-bottom:12px;">Phase 2 Question Architecture</div>
+<div class="question-panels">
+  <div class="qp"><h5>Decision Mapping</h5><p class="n">4 questions</p><p style="font-size:13px;color:var(--text-dim);margin-top:4px;">What decisions need to be made? By whom? With what information? <em>Not</em> what process steps exist today.</p></div>
+  <div class="qp"><h5>Context Requirements</h5><p class="n">3 questions</p><p style="font-size:13px;color:var(--text-dim);margin-top:4px;">What context is required for good decisions? Where does it live — or where <em>should</em> it live?</p></div>
+  <div class="qp"><h5>Coordination Design</h5><p class="n">3 questions</p><p style="font-size:13px;color:var(--text-dim);margin-top:4px;">What needs to happen between people, teams, systems? What does ideal coordination look like?</p></div>
+  <div class="qp"><h5>Constraint Identification</h5><p class="n">3 questions</p><p style="font-size:13px;color:var(--text-dim);margin-top:4px;">Which constraints are real? Which are inherited? What would it take to change each one?</p></div>
+  <div class="qp"><h5>Success Redefinition</h5><p class="n">3 questions</p><p style="font-size:13px;color:var(--text-dim);margin-top:4px;">Describe the ideal end state without current constraints. What is the minimal viable threshold?</p></div>
+  <div class="qp"><h5>Structural Assumptions Audit</h5><p class="n">3 questions</p><p style="font-size:13px;color:var(--text-dim);margin-top:4px;">Which roles, approvals, meetings exist because of tech limits? What would you eliminate?</p></div>
+  <div class="qp"><h5>Autonomy &amp; Accountability</h5><p class="n">3 questions</p><p style="font-size:13px;color:var(--text-dim);margin-top:4px;">Autonomy level per decision. Who is accountable when things go wrong? Audit &amp; feedback loop?</p></div>
+</div>
+
+<!-- Why it matters -->
+<div class="why">
+  <h2>Why This Matters</h2>
+
+  <div class="replication-warning">
+    <strong>The replication trap:</strong> Most "AI transformation" just pours intelligence into the existing org chart faster. The metric is agent count — a Taylorist instinct applied to something that isn't labor in the old sense. Nobody posts "I eliminated the approval layer that agent count would have made unnecessary." Counting agents answers "what can the technology do" — the boring question. The interesting one is what kind of organization becomes possible when judgement and context stop being scarce and personal.
+  </div>
+
+  <div class="why-grid">
+    <div class="why-card">
+      <div class="num">01</div>
+      <h4>Structure becomes an output, not an input</h4>
+      <p>Inherited discovery treats the org chart as fixed and pours intelligence into its channels. Authored discovery treats the org chart as the thing under question. The difference is what gets designed vs. what gets assumed.</p>
+    </div>
+    <div class="why-card">
+      <div class="num">02</div>
+      <h4>Replication vs. dissolution is the real fork</h4>
+      <p>Two entirely different projects hide under "transformation." If removing the agent means going back to the old slow way, you replicated. If the agent's existence makes you realize the role's justification was already gone, you dissolved.</p>
+    </div>
+    <div class="why-card">
+      <div class="num">03</div>
+      <h4>Legibility bias drives the replication trap</h4>
+      <p>Automating a standup, a report, an approval chain produces a demo. Standing outside the system and asking "why does this role exist at all" doesn't — it produces a redesign. Scarier, slower, no clean screenshot. And the only thing that's actually transformation.</p>
+    </div>
+    <div class="why-card">
+      <div class="num">04</div>
+      <h4>The diagnostic question</h4>
+      <p>Does this agent replace a person, or does it dissolve the reason the role existed in the first place? If you can't answer that, you're automating. If you can, you're transforming. AESOP's two-phase discovery is designed to force that question before a single line of code is written.</p>
+    </div>
+  </div>
+</div>
+
+<!-- The diagnostic question -->
+<div class="diagnostic">
+  <div class="q">"Does this agent replace a person, or does it dissolve the reason the role existed in the first place?"</div>
+  <div class="a">If you can answer that, you're authoring the organization. If you can't, you're automating the old one. AESOP's two-phase discovery forces this question before anything gets built.</div>
+</div>
+
+</div>
+
+</body>
+</html>
