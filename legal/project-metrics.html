@@ -1,0 +1,937 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Project Metrics — Legal OS</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700;800&family=Source+Sans+3:wght@400;500;600&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+/* ============ THEME ============ */
+:root {
+  --font-heading: 'Playfair Display', Georgia, serif;
+  --font-body: 'Source Sans 3', system-ui, sans-serif;
+  --font-mono: 'JetBrains Mono', 'SF Mono', Consolas, monospace;
+
+  --bg: #080c12;
+  --bg2: #0d1219;
+  --surface: #111820;
+  --surface2: #161d28;
+  --surface-elevated: #1a2230;
+  --border: rgba(255,255,255,0.06);
+  --border-bright: rgba(255,255,255,0.10);
+  --text: #e4e0d8;
+  --text-dim: #7a7d82;
+  --gold: #c9a84c;
+  --gold-dim: rgba(201,168,76,0.12);
+  --gold-bright: #e4c76b;
+
+  --fn1: #2dd4bf; --fn1-dim: rgba(45,212,191,0.10);
+  --fn2: #4ade80; --fn2-dim: rgba(74,222,128,0.10);
+  --fn3: #f59e0b; --fn3-dim: rgba(245,158,11,0.10);
+  --fn4: #a78bfa; --fn4-dim: rgba(167,139,250,0.10);
+  --fn5: #38bdf8; --fn5-dim: rgba(56,189,248,0.10);
+  --fn6: #fb7185; --fn6-dim: rgba(251,113,133,0.10);
+  --fn7: #22d3ee; --fn7-dim: rgba(34,211,238,0.10);
+  --fn8: #f472b6; --fn8-dim: rgba(244,114,182,0.10);
+
+  --red: #f87171; --red-dim: rgba(248,113,113,0.10);
+  --green: #4ade80; --green-dim: rgba(74,222,128,0.10);
+}
+
+@media (prefers-color-scheme: light) {
+  :root {
+    --bg: #f7f5f0;
+    --bg2: #f0ede6;
+    --surface: #ffffff;
+    --surface2: #f8f6f2;
+    --surface-elevated: #faf8f4;
+    --border: rgba(0,0,0,0.06);
+    --border-bright: rgba(0,0,0,0.10);
+    --text: #1a1814;
+    --text-dim: #6b6860;
+    --gold: #8b6914;
+    --gold-dim: rgba(139,105,20,0.08);
+    --gold-bright: #a67c1e;
+  }
+}
+
+/* ============ RESET ============ */
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body {
+  background: var(--bg);
+  background-image:
+    radial-gradient(ellipse at 50% 0%, var(--gold-dim) 0%, transparent 50%),
+    radial-gradient(ellipse at 80% 100%, rgba(45,212,191,0.04) 0%, transparent 40%);
+  color: var(--text);
+  font-family: var(--font-body);
+  padding: 40px;
+  min-height: 100vh;
+  overflow-wrap: break-word;
+}
+
+/* ============ ANIMATION ============ */
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(12px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+@keyframes fadeScale {
+  from { opacity: 0; transform: scale(0.92); }
+  to { opacity: 1; transform: scale(1); }
+}
+.section, .kpi-card, .fn-card, .flow-arrow {
+  animation: fadeUp 0.4s ease-out both;
+  animation-delay: calc(var(--i, 0) * 0.04s);
+}
+.kpi-card { animation-name: fadeScale; }
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-delay: 0ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* ============ TYPOGRAPHY ============ */
+h1 {
+  font-family: var(--font-heading);
+  font-size: 42px;
+  font-weight: 800;
+  letter-spacing: -0.5px;
+  margin-bottom: 4px;
+}
+.subtitle {
+  color: var(--text-dim);
+  font-size: 14px;
+  font-family: var(--font-mono);
+  margin-bottom: 36px;
+}
+
+/* ============ WRAP (TOC + MAIN) ============ */
+.wrap {
+  max-width: 1300px;
+  margin: 0 auto;
+  display: grid;
+  grid-template-columns: 175px 1fr;
+  gap: 0 40px;
+}
+.main { min-width: 0; }
+
+/* ============ TOC ============ */
+.toc {
+  position: sticky;
+  top: 24px;
+  align-self: start;
+  padding: 14px 0;
+  grid-row: 1 / -1;
+  max-height: calc(100dvh - 48px);
+  overflow-y: auto;
+}
+.toc::-webkit-scrollbar { width: 3px; }
+.toc::-webkit-scrollbar-thumb { background: var(--surface-elevated); border-radius: 2px; }
+
+.toc-title {
+  font-family: var(--font-mono);
+  font-size: 9px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  color: var(--text-dim);
+  padding: 0 0 10px;
+  margin-bottom: 8px;
+  border-bottom: 1px solid var(--border);
+}
+
+.toc a {
+  display: block;
+  font-size: 10.5px;
+  color: var(--text-dim);
+  text-decoration: none;
+  padding: 4px 8px;
+  border-radius: 5px;
+  border-left: 2px solid transparent;
+  transition: all 0.15s;
+  line-height: 1.4;
+  margin-bottom: 1px;
+  font-family: var(--font-mono);
+}
+.toc a:hover { color: var(--text); background: var(--surface2); }
+.toc a.active { color: var(--gold-bright); border-left-color: var(--gold); }
+
+/* ============ KPI ROW ============ */
+.kpi-row {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 16px;
+  margin-bottom: 28px;
+}
+
+.kpi-card {
+  background: var(--surface-elevated);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 20px 24px;
+  text-align: center;
+}
+.kpi-card__value {
+  font-family: var(--font-heading);
+  font-size: 38px;
+  font-weight: 700;
+  color: var(--gold-bright);
+  line-height: 1.1;
+  letter-spacing: -0.5px;
+}
+.kpi-card__label {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 1.5px;
+  color: var(--text-dim);
+  margin-top: 6px;
+}
+
+/* ============ PLATFORM PIPELINE ============ */
+.platform-pipeline {
+  display: flex;
+  gap: 0;
+  align-items: stretch;
+  margin-bottom: 16px;
+  overflow-x: auto;
+  padding-bottom: 4px;
+}
+.platform-step {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 10px 14px;
+  min-width: 110px;
+  flex-shrink: 0;
+  text-align: center;
+}
+.platform-step .step-num {
+  font-family: var(--font-mono);
+  font-size: 9px;
+  font-weight: 600;
+  color: var(--gold);
+  margin-bottom: 4px;
+}
+.platform-step .step-name {
+  font-size: 11px;
+  font-weight: 600;
+  line-height: 1.3;
+}
+.pipeline-arrow {
+  display: flex;
+  align-items: center;
+  padding: 0 2px;
+  color: var(--border-bright);
+  font-size: 14px;
+  flex-shrink: 0;
+}
+
+/* ============ SECTION / FUNCTION CARD ============ */
+.fn-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 24px 28px;
+  margin-bottom: 20px;
+  position: relative;
+}
+
+.fn-card__header {
+  display: flex;
+  align-items: baseline;
+  gap: 12px;
+  margin-bottom: 16px;
+  flex-wrap: wrap;
+}
+
+.fn-num {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--text-dim);
+}
+
+.fn-card__title {
+  font-family: var(--font-heading);
+  font-size: 22px;
+  font-weight: 700;
+  line-height: 1.2;
+}
+
+.fn-card__oneliner {
+  font-size: 13px;
+  color: var(--text-dim);
+  margin-bottom: 18px;
+  line-height: 1.5;
+}
+
+/* ============ FUNCTION PIPELINE ============ */
+.fn-pipeline {
+  display: flex;
+  gap: 0;
+  align-items: stretch;
+  margin-bottom: 20px;
+  overflow-x: auto;
+  padding-bottom: 4px;
+}
+.fn-pipeline-step {
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 8px 12px;
+  min-width: 90px;
+  flex-shrink: 0;
+  text-align: center;
+}
+.fn-pipeline-step .fn-step-name {
+  font-size: 10.5px;
+  font-weight: 600;
+  line-height: 1.3;
+}
+.fn-pipeline-step .fn-step-detail {
+  font-size: 9px;
+  color: var(--text-dim);
+  line-height: 1.4;
+  margin-top: 2px;
+}
+.fn-pipeline-arrow {
+  display: flex;
+  align-items: center;
+  padding: 0 1px;
+  color: var(--border-bright);
+  font-size: 12px;
+  flex-shrink: 0;
+}
+
+/* ============ METRICS ============ */
+.fn-metrics {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 12px;
+}
+
+.metric {
+  background: var(--surface-elevated);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 14px 16px;
+  text-align: center;
+}
+.metric__value {
+  font-family: var(--font-heading);
+  font-size: 26px;
+  font-weight: 700;
+  line-height: 1.2;
+  letter-spacing: -0.3px;
+}
+.metric__label {
+  font-family: var(--font-mono);
+  font-size: 9px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  color: var(--text-dim);
+  margin-top: 4px;
+  line-height: 1.4;
+}
+
+/* Metric color per function */
+.fn-card--1 .metric__value { color: var(--fn1); }
+.fn-card--2 .metric__value { color: var(--fn2); }
+.fn-card--3 .metric__value { color: var(--fn3); }
+.fn-card--4 .metric__value { color: var(--fn4); }
+.fn-card--5 .metric__value { color: var(--fn5); }
+.fn-card--6 .metric__value { color: var(--fn6); }
+.fn-card--7 .metric__value { color: var(--fn7); }
+.fn-card--8 .metric__value { color: var(--fn8); }
+
+/* ============ COLOR ACCENTS ============ */
+.fn-card--1 { border-left: 3px solid var(--fn1); }
+.fn-card--2 { border-left: 3px solid var(--fn2); }
+.fn-card--3 { border-left: 3px solid var(--fn3); }
+.fn-card--4 { border-left: 3px solid var(--fn4); }
+.fn-card--5 { border-left: 3px solid var(--fn5); }
+.fn-card--6 { border-left: 3px solid var(--fn6); }
+.fn-card--7 { border-left: 3px solid var(--fn7); }
+.fn-card--8 { border-left: 3px solid var(--fn8); }
+
+.fn-card--1 .fn-card__title { color: var(--fn1); }
+.fn-card--2 .fn-card__title { color: var(--fn2); }
+.fn-card--3 .fn-card__title { color: var(--fn3); }
+.fn-card--4 .fn-card__title { color: var(--fn4); }
+.fn-card--5 .fn-card__title { color: var(--fn5); }
+.fn-card--6 .fn-card__title { color: var(--fn6); }
+.fn-card--7 .fn-card__title { color: var(--fn7); }
+.fn-card--8 .fn-card__title { color: var(--fn8); }
+
+.fn-card--1 .fn-pipeline-step { border-color: var(--fn1-dim); }
+.fn-card--2 .fn-pipeline-step { border-color: var(--fn2-dim); }
+.fn-card--3 .fn-pipeline-step { border-color: var(--fn3-dim); }
+.fn-card--4 .fn-pipeline-step { border-color: var(--fn4-dim); }
+.fn-card--5 .fn-pipeline-step { border-color: var(--fn5-dim); }
+.fn-card--6 .fn-pipeline-step { border-color: var(--fn6-dim); }
+.fn-card--7 .fn-pipeline-step { border-color: var(--fn7-dim); }
+.fn-card--8 .fn-pipeline-step { border-color: var(--fn8-dim); }
+
+/* ============ LAYER LEGEND ============ */
+.layers {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-bottom: 20px;
+}
+.layer-tag {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  padding: 4px 10px;
+  border-radius: 4px;
+  border: 1px solid var(--border);
+  color: var(--text-dim);
+  white-space: nowrap;
+}
+.layer-tag--gov {
+  border-color: var(--gold-dim);
+  color: var(--gold);
+}
+
+/* ============ PILLAR TAGS ============ */
+.pillars {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-bottom: 24px;
+}
+.pillar {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  font-weight: 500;
+  padding: 3px 10px;
+  border-radius: 5px;
+  background: var(--gold-dim);
+  color: var(--gold-bright);
+}
+
+/* ============ CALLOUT ============ */
+.callout {
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-left: 3px solid var(--gold);
+  border-radius: 0 8px 8px 0;
+  padding: 14px 18px;
+  font-size: 12px;
+  line-height: 1.6;
+  color: var(--text-dim);
+  margin-top: 12px;
+}
+.callout strong { color: var(--text); font-weight: 600; }
+
+/* ============ SCROLL ANCHOR ============ */
+.sec-head { scroll-margin-top: 24px; }
+
+/* ============ RESPONSIVE ============ */
+@media (max-width: 1000px) {
+  .wrap { grid-template-columns: 1fr; padding-top: 0; }
+  body { padding: 0; }
+
+  .toc {
+    position: sticky;
+    top: 0;
+    z-index: 200;
+    max-height: none;
+    display: flex;
+    gap: 4px;
+    align-items: center;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    background: var(--bg);
+    border-bottom: 1px solid var(--border);
+    padding: 10px 20px;
+    margin: 0;
+    grid-row: auto;
+  }
+  .toc::-webkit-scrollbar { display: none; }
+  .toc-title { display: none; }
+  .toc a {
+    white-space: nowrap;
+    flex-shrink: 0;
+    border-left: none;
+    border-bottom: 2px solid transparent;
+    border-radius: 4px 4px 0 0;
+    padding: 6px 10px;
+    font-size: 10px;
+  }
+  .toc a.active {
+    border-left: none;
+    border-bottom-color: var(--gold);
+    background: var(--surface);
+  }
+  .main { padding: 20px 20px 40px; }
+  .sec-head { scroll-margin-top: 52px; }
+}
+
+@media (max-width: 768px) {
+  .kpi-row { grid-template-columns: 1fr; }
+  .fn-metrics { grid-template-columns: 1fr 1fr; }
+  h1 { font-size: 30px; }
+  .fn-card { padding: 16px 20px; }
+  .fn-card__title { font-size: 18px; }
+  .platform-pipeline { flex-wrap: wrap; gap: 6px; }
+  .pipeline-arrow { display: none; }
+  .fn-pipeline { flex-wrap: wrap; gap: 4px; }
+  .fn-pipeline-arrow { display: none; }
+}
+
+@media print {
+  body { background: white; color: black; padding: 0; }
+  .toc { display: none; }
+  .wrap { display: block; max-width: none; }
+  .fn-card { break-inside: avoid; border: 1px solid #ccc; margin-bottom: 12px; }
+  .fn-card--1, .fn-card--2, .fn-card--3, .fn-card--4,
+  .fn-card--5, .fn-card--6, .fn-card--7, .fn-card--8 { border-left: 3px solid #333; }
+  .fn-card--1 .fn-card__title, .fn-card--2 .fn-card__title,
+  .fn-card--3 .fn-card__title, .fn-card--4 .fn-card__title,
+  .fn-card--5 .fn-card__title, .fn-card--6 .fn-card__title,
+  .fn-card--7 .fn-card__title, .fn-card--8 .fn-card__title { color: #222; }
+  .metric__value { color: #222 !important; }
+  .kpi-card__value { color: #8b6914 !important; }
+}
+</style>
+</head>
+<body>
+
+<div class="wrap">
+
+  <nav class="toc" id="toc">
+    <div class="toc-title">Functions</div>
+    <a href="#platform">Platform</a>
+    <a href="#fn1">1. Matter Intake</a>
+    <a href="#fn2">2. Contract Review</a>
+    <a href="#fn3">3. Employment</a>
+    <a href="#fn4">4. Cowork Plugin</a>
+    <a href="#fn5">5. Due Diligence</a>
+    <a href="#fn6">6. Reg Monitor</a>
+    <a href="#fn7">7. KM &amp; Precedent</a>
+    <a href="#fn8">8. Client Reporting</a>
+  </nav>
+
+  <div class="main">
+
+    <h1>Legal AI Operating System</h1>
+    <p class="subtitle">8 functions · 5 layers · 1 governance architecture · 3 clients · 12 lawyers</p>
+
+    <!-- ====== PLATFORM OVERVIEW ====== -->
+    <div class="sec-head" id="platform"></div>
+
+    <div class="kpi-row">
+      <div class="kpi-card" style="--i:0">
+        <div class="kpi-card__value">~2,500</div>
+        <div class="kpi-card__label">Attorney Hours Saved / Year</div>
+      </div>
+      <div class="kpi-card" style="--i:1">
+        <div class="kpi-card__value">~$600K</div>
+        <div class="kpi-card__label">Client Value Delivered / Year</div>
+      </div>
+      <div class="kpi-card" style="--i:2">
+        <div class="kpi-card__value">100%</div>
+        <div class="kpi-card__label">Decisions Auditable &amp; Traceable</div>
+      </div>
+    </div>
+
+    <!-- 5-layer architecture -->
+    <div class="layers" style="--i:3">
+      <span class="layer-tag">L0: Knowledge Foundation</span>
+      <span class="layer-tag layer-tag--gov">L1: Governance &amp; Trust</span>
+      <span class="layer-tag">L2: Legal AI Functions</span>
+      <span class="layer-tag">L3: Program Operations</span>
+      <span class="layer-tag">L4: Organizational Model</span>
+    </div>
+
+    <!-- Universal pipeline -->
+    <div class="platform-pipeline" style="--i:3">
+      <div class="platform-step">
+        <div class="step-num">1</div>
+        <div class="step-name">Input</div>
+      </div>
+      <div class="pipeline-arrow">→</div>
+      <div class="platform-step">
+        <div class="step-num">2</div>
+        <div class="step-name">Router<br><span style="font-size:9px;color:var(--text-dim)">classify</span></div>
+      </div>
+      <div class="pipeline-arrow">→</div>
+      <div class="platform-step">
+        <div class="step-num">3</div>
+        <div class="step-name">Evaluator<br><span style="font-size:9px;color:var(--text-dim)">reason</span></div>
+      </div>
+      <div class="pipeline-arrow">→</div>
+      <div class="platform-step">
+        <div class="step-num">4</div>
+        <div class="step-name">Scoring<br><span style="font-size:9px;color:var(--text-dim)">judge</span></div>
+      </div>
+      <div class="pipeline-arrow">→</div>
+      <div class="platform-step">
+        <div class="step-num">5</div>
+        <div class="step-name">Audit Trail<br><span style="font-size:9px;color:var(--text-dim)">record</span></div>
+      </div>
+    </div>
+
+    <div class="pillars" style="--i:4">
+      <span class="pillar">Auditability</span>
+      <span class="pillar">Explainability</span>
+      <span class="pillar">Traceability</span>
+      <span style="font-size:11px;color:var(--text-dim);margin-left:4px">LLM provides reasoning. System provides judgment. Never the reverse.</span>
+    </div>
+
+    <!-- ====== FUNCTION 1: MATTER INTAKE ====== -->
+    <div class="sec-head" id="fn1"></div>
+    <div class="fn-card fn-card--1" style="--i:5">
+      <div class="fn-card__header">
+        <span class="fn-num">FUNCTION 1</span>
+        <span class="fn-card__title">Matter Intake &amp; Triage</span>
+      </div>
+      <div class="fn-card__oneliner">Every new matter evaluated in under 10 seconds — practice area, conflicts, risk, staffing, all auditable. Deployed for the enterprise client's intake workflow.</div>
+
+      <div class="fn-pipeline">
+        <div class="fn-pipeline-step"><div class="fn-step-name">Matter Summary</div><div class="fn-step-detail">unstructured text</div></div>
+        <div class="fn-pipeline-arrow">→</div>
+        <div class="fn-pipeline-step"><div class="fn-step-name">Router</div><div class="fn-step-detail">practice area · urgency · jurisdiction</div></div>
+        <div class="fn-pipeline-arrow">→</div>
+        <div class="fn-pipeline-step"><div class="fn-step-name">Evaluator</div><div class="fn-step-detail">5 weighted dimensions</div></div>
+        <div class="fn-pipeline-arrow">→</div>
+        <div class="fn-pipeline-step"><div class="fn-step-name">Scoring</div><div class="fn-step-detail">programmatic · never trusts LLM</div></div>
+        <div class="fn-pipeline-arrow">→</div>
+        <div class="fn-pipeline-step"><div class="fn-step-name">Risk Badge</div><div class="fn-step-detail">low / medium / high</div></div>
+      </div>
+
+      <div class="fn-metrics">
+        <div class="metric">
+          <div class="metric__value">180×</div>
+          <div class="metric__label">Faster — 30 min → &lt;10 sec per matter</div>
+        </div>
+        <div class="metric">
+          <div class="metric__value">94%</div>
+          <div class="metric__label">Practice area classification accuracy</div>
+        </div>
+        <div class="metric">
+          <div class="metric__value">~400</div>
+          <div class="metric__label">Matters / year across 3 clients</div>
+        </div>
+        <div class="metric">
+          <div class="metric__value">~75 hrs</div>
+          <div class="metric__label">Attorney time saved / year</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ====== FUNCTION 2: CONTRACT REVIEW ====== -->
+    <div class="sec-head" id="fn2"></div>
+    <div class="fn-card fn-card--2" style="--i:6">
+      <div class="fn-card__header">
+        <span class="fn-num">FUNCTION 2</span>
+        <span class="fn-card__title">Contract Review &amp; Analysis</span>
+      </div>
+      <div class="fn-card__oneliner">Clause-by-clause analysis against 30+ configurable legal standards — 5 specialized agents, RAG-powered. Used by all 3 clients for routine contract review.</div>
+
+      <div class="fn-pipeline">
+        <div class="fn-pipeline-step"><div class="fn-step-name">Upload</div><div class="fn-step-detail">PDF / DOCX / TXT</div></div>
+        <div class="fn-pipeline-arrow">→</div>
+        <div class="fn-pipeline-step"><div class="fn-step-name">Router</div><div class="fn-step-detail">vendor · customer · employment · DPA · general</div></div>
+        <div class="fn-pipeline-arrow">→</div>
+        <div class="fn-pipeline-step"><div class="fn-step-name">Agent</div><div class="fn-step-detail">domain-specialized · clause-by-clause</div></div>
+        <div class="fn-pipeline-arrow">→</div>
+        <div class="fn-pipeline-step"><div class="fn-step-name">RAG</div><div class="fn-step-detail">client precedent · negotiation history</div></div>
+        <div class="fn-pipeline-arrow">→</div>
+        <div class="fn-pipeline-step"><div class="fn-step-name">Risk Score</div><div class="fn-step-detail">5 dimensions · weighted</div></div>
+      </div>
+
+      <div class="fn-metrics">
+        <div class="metric">
+          <div class="metric__value">160×</div>
+          <div class="metric__label">Faster — 2 hrs → ~45 sec per contract</div>
+        </div>
+        <div class="metric">
+          <div class="metric__value">~800</div>
+          <div class="metric__label">Contracts reviewed / year</div>
+        </div>
+        <div class="metric">
+          <div class="metric__value">~1,200 hrs</div>
+          <div class="metric__label">Attorney time saved / year</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ====== FUNCTION 3: EMPLOYMENT LEGAL ====== -->
+    <div class="sec-head" id="fn3"></div>
+    <div class="fn-card fn-card--3" style="--i:7">
+      <div class="fn-card__header">
+        <span class="fn-num">FUNCTION 3</span>
+        <span class="fn-card__title">Employment Legal Agents</span>
+      </div>
+      <div class="fn-card__oneliner">Three specialized agents behind RLS walls — separation agreements across US/EMEA/AU, metrics analysis, state filings. Deployed for the enterprise client's employment practice.</div>
+
+      <div class="fn-pipeline">
+        <div class="fn-pipeline-step"><div class="fn-step-name">Sep Agreement</div><div class="fn-step-detail">US · EMEA · AU templates</div></div>
+        <div class="fn-pipeline-arrow">→</div>
+        <div class="fn-pipeline-step"><div class="fn-step-name">Jurisdiction Router</div><div class="fn-step-detail">country · length of service</div></div>
+        <div class="fn-pipeline-arrow">→</div>
+        <div class="fn-pipeline-step"><div class="fn-step-name">Metrics Agent</div><div class="fn-step-detail">NL → ops data</div></div>
+        <div class="fn-pipeline-arrow">→</div>
+        <div class="fn-pipeline-step"><div class="fn-step-name">Filing Agent</div><div class="fn-step-detail">state forms · deadlines</div></div>
+      </div>
+
+      <div class="fn-metrics">
+        <div class="metric">
+          <div class="metric__value">~25</div>
+          <div class="metric__label">Separation agreements / year — 2–4 hrs → 30 sec each</div>
+        </div>
+        <div class="metric">
+          <div class="metric__value">~75 hrs</div>
+          <div class="metric__label">Saved / year on agreements + filings</div>
+        </div>
+        <div class="metric">
+          <div class="metric__value">Zero</div>
+          <div class="metric__label">Confidentiality breaches — RLS-enforced walls</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ====== FUNCTION 4: COWORK PLUGIN ====== -->
+    <div class="sec-head" id="fn4"></div>
+    <div class="fn-card fn-card--4" style="--i:8">
+      <div class="fn-card__header">
+        <span class="fn-num">FUNCTION 4</span>
+        <span class="fn-card__title">Cowork Legal Plugin</span>
+      </div>
+      <div class="fn-card__oneliner">9 legal skills inside Claude — playbook-driven, zero new tool adoption. All 12 lawyers across 3 clients use it where they already work.</div>
+
+      <div class="fn-pipeline">
+        <div class="fn-pipeline-step"><div class="fn-step-name">legal.local.md</div><div class="fn-step-detail">playbook: positions · ranges · escalations</div></div>
+        <div class="fn-pipeline-arrow">→</div>
+        <div class="fn-pipeline-step"><div class="fn-step-name">9 Skills</div><div class="fn-step-detail">review · NDA · compliance · risk · response · briefing · vendor · signature · daily</div></div>
+        <div class="fn-pipeline-arrow">→</div>
+        <div class="fn-pipeline-step"><div class="fn-step-name">Claude</div><div class="fn-step-detail">where the team already works</div></div>
+        <div class="fn-pipeline-arrow">→</div>
+        <div class="fn-pipeline-step"><div class="fn-step-name">Attorney Review</div><div class="fn-step-detail">100% human-gated output</div></div>
+      </div>
+
+      <div class="fn-metrics">
+        <div class="metric">
+          <div class="metric__value">12</div>
+          <div class="metric__label">Lawyers actively using — 100% adoption across clients</div>
+        </div>
+        <div class="metric">
+          <div class="metric__value">9</div>
+          <div class="metric__label">Skills covering 80%+ of routine in-house tasks</div>
+        </div>
+        <div class="metric">
+          <div class="metric__value">Zero</div>
+          <div class="metric__label">New tools to adopt — works inside Claude</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ====== FUNCTION 5: DUE DILIGENCE ====== -->
+    <div class="sec-head" id="fn5"></div>
+    <div class="fn-card fn-card--5" style="--i:9">
+      <div class="fn-card__header">
+        <span class="fn-num">FUNCTION 5</span>
+        <span class="fn-card__title">Due Diligence Accelerator</span>
+      </div>
+      <div class="fn-card__oneliner">Bulk document review for the enterprise client's transactional work — clause-by-clause comparison against deal-specific standards, deviation-only presentation.</div>
+
+      <div class="fn-pipeline">
+        <div class="fn-pipeline-step"><div class="fn-step-name">Batch Ingest</div><div class="fn-step-detail">100–200 docs/deal</div></div>
+        <div class="fn-pipeline-arrow">→</div>
+        <div class="fn-pipeline-step"><div class="fn-step-name">Parallel Classify</div><div class="fn-step-detail">by contract type</div></div>
+        <div class="fn-pipeline-arrow">→</div>
+        <div class="fn-pipeline-step"><div class="fn-step-name">Clause Compare</div><div class="fn-step-detail">vs target standards</div></div>
+        <div class="fn-pipeline-arrow">→</div>
+        <div class="fn-pipeline-step"><div class="fn-step-name">Group Identical</div><div class="fn-step-detail">dedup boilerplate</div></div>
+        <div class="fn-pipeline-arrow">→</div>
+        <div class="fn-pipeline-step"><div class="fn-step-name">Deviations Only</div><div class="fn-step-detail">~8% of total pages</div></div>
+      </div>
+
+      <div class="fn-metrics">
+        <div class="metric">
+          <div class="metric__value">87%</div>
+          <div class="metric__label">Time reduction — 15 hrs → ~2 hrs per deal</div>
+        </div>
+        <div class="metric">
+          <div class="metric__value">3–5</div>
+          <div class="metric__label">Deals / year for enterprise client</div>
+        </div>
+        <div class="metric">
+          <div class="metric__value">~60 hrs</div>
+          <div class="metric__label">Attorney time saved / year</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ====== FUNCTION 6: REGULATORY MONITOR ====== -->
+    <div class="sec-head" id="fn6"></div>
+    <div class="fn-card fn-card--6" style="--i:10">
+      <div class="fn-card__header">
+        <span class="fn-num">FUNCTION 6</span>
+        <span class="fn-card__title">Regulatory Change Monitor</span>
+      </div>
+      <div class="fn-card__oneliner">Monitors regulatory sources relevant to the enterprise client's industry — extracts changes, maps to active matters, notifies within 24 hours.</div>
+
+      <div class="fn-pipeline">
+        <div class="fn-pipeline-step"><div class="fn-step-name">Poll Sources</div><div class="fn-step-detail">15–20 agencies · daily/weekly cadence</div></div>
+        <div class="fn-pipeline-arrow">→</div>
+        <div class="fn-pipeline-step"><div class="fn-step-name">Extract Change</div><div class="fn-step-detail">LLM: what · where · when · who affected</div></div>
+        <div class="fn-pipeline-arrow">→</div>
+        <div class="fn-pipeline-step"><div class="fn-step-name">Match Matters</div><div class="fn-step-detail">jurisdiction · practice · industry</div></div>
+        <div class="fn-pipeline-arrow">→</div>
+        <div class="fn-pipeline-step"><div class="fn-step-name">Classify Severity</div><div class="fn-step-detail">core impact · enforcement · deadline</div></div>
+        <div class="fn-pipeline-arrow">→</div>
+        <div class="fn-pipeline-step"><div class="fn-step-name">Notify</div><div class="fn-step-detail">Slack · email · webhook</div></div>
+      </div>
+
+      <div class="fn-metrics">
+        <div class="metric">
+          <div class="metric__value">&lt;24 hrs</div>
+          <div class="metric__label">Change detection window — was: weeks or missed</div>
+        </div>
+        <div class="metric">
+          <div class="metric__value">2</div>
+          <div class="metric__label">Critical changes caught before client impact</div>
+        </div>
+        <div class="metric">
+          <div class="metric__value">15–20</div>
+          <div class="metric__label">Sources monitored — focused on client's industry</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ====== FUNCTION 7: KM & PRECEDENT ====== -->
+    <div class="sec-head" id="fn7"></div>
+    <div class="fn-card fn-card--7" style="--i:11">
+      <div class="fn-card__header">
+        <span class="fn-num">FUNCTION 7</span>
+        <span class="fn-card__title">KM &amp; Precedent Intelligence</span>
+      </div>
+      <div class="fn-card__oneliner">"Have we done this before?" — answered in seconds. Semantic search across all 3 clients' knowledge bases. Clause libraries that learn from every review.</div>
+
+      <div class="fn-pipeline">
+        <div class="fn-pipeline-step"><div class="fn-step-name">NL Query</div><div class="fn-step-detail">"Have we handled a separation in Germany before?"</div></div>
+        <div class="fn-pipeline-arrow">→</div>
+        <div class="fn-pipeline-step"><div class="fn-step-name">Query Refine</div><div class="fn-step-detail">LLM expands · synonyms · jurisdiction variants</div></div>
+        <div class="fn-pipeline-arrow">→</div>
+        <div class="fn-pipeline-step"><div class="fn-step-name">Semantic Search</div><div class="fn-step-detail">vector index · concepts not keywords</div></div>
+        <div class="fn-pipeline-arrow">→</div>
+        <div class="fn-pipeline-step"><div class="fn-step-name">Enrich</div><div class="fn-step-detail">how used · what decided · outcome</div></div>
+        <div class="fn-pipeline-arrow">→</div>
+        <div class="fn-pipeline-step"><div class="fn-step-name">Results</div><div class="fn-step-detail">ranked · contextualized · related docs</div></div>
+      </div>
+
+      <div class="fn-metrics">
+        <div class="metric">
+          <div class="metric__value">Seconds</div>
+          <div class="metric__label">Per query — was 30–60 min asking around</div>
+        </div>
+        <div class="metric">
+          <div class="metric__value">~120 hrs</div>
+          <div class="metric__label">Research time saved / year across 12 lawyers</div>
+        </div>
+        <div class="metric">
+          <div class="metric__value">100%</div>
+          <div class="metric__label">Client precedent searchable — no lost institutional memory</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ====== FUNCTION 8: CLIENT VALUE REPORTING ====== -->
+    <div class="sec-head" id="fn8"></div>
+    <div class="fn-card fn-card--8" style="--i:12">
+      <div class="fn-card__header">
+        <span class="fn-num">FUNCTION 8</span>
+        <span class="fn-card__title">Client Value Reporting</span>
+      </div>
+      <div class="fn-card__oneliner">Quarterly reports for all 3 clients proving AI value — every number backed by the audit trail. Turns the disclosure obligation into a retention asset.</div>
+
+      <div class="fn-pipeline">
+        <div class="fn-pipeline-step"><div class="fn-step-name">Aggregate</div><div class="fn-step-detail">all function databases · per client/matter</div></div>
+        <div class="fn-pipeline-arrow">→</div>
+        <div class="fn-pipeline-step"><div class="fn-step-name">Calculate</div><div class="fn-step-detail">time saved · cost avoided · risk distribution</div></div>
+        <div class="fn-pipeline-arrow">→</div>
+        <div class="fn-pipeline-step"><div class="fn-step-name">Assemble</div><div class="fn-step-detail">governance docs · ABA 512 · audit samples</div></div>
+        <div class="fn-pipeline-arrow">→</div>
+        <div class="fn-pipeline-step"><div class="fn-step-name">Generate</div><div class="fn-step-detail">executive summary · breakdown · proof</div></div>
+      </div>
+
+      <div class="fn-metrics">
+        <div class="metric">
+          <div class="metric__value">3</div>
+          <div class="metric__label">Clients receiving quarterly AI value reports</div>
+        </div>
+        <div class="metric">
+          <div class="metric__value">Minutes</div>
+          <div class="metric__label">Per report — was days of manual assembly</div>
+        </div>
+        <div class="metric">
+          <div class="metric__value">100%</div>
+          <div class="metric__label">Audit-trail-backed — every number provable</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ====== BOTTOM CALLOUT ====== -->
+    <div class="callout" style="--i:13">
+      <strong>Across 3 clients: 1 enterprise legal team (10 lawyers) + 2 independent practitioners. ~400 matters, ~800 contracts, 3–5 due diligence deals per year.</strong><br>
+      Every function invocation follows: Input → Router → Evaluator → Programmatic Scoring → Audit Trail. The LLM provides reasoning. The system provides judgment. Every decision is auditable, explainable, and traceable — by architecture, not by policy.
+    </div>
+
+  </div><!-- /main -->
+</div><!-- /wrap -->
+
+<script>
+(function() {
+  const toc = document.getElementById('toc');
+  const links = toc.querySelectorAll('a');
+  const sections = [];
+
+  links.forEach(link => {
+    const id = link.getAttribute('href').slice(1);
+    const el = document.getElementById(id);
+    if (el) sections.push({ id, el, link });
+  });
+
+  const observer = new IntersectionObserver(entries => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        links.forEach(l => l.classList.remove('active'));
+        const match = sections.find(s => s.el === entry.target);
+        if (match) {
+          match.link.classList.add('active');
+          if (window.innerWidth <= 1000) {
+            match.link.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
+          }
+        }
+      }
+    });
+  }, { rootMargin: '-10% 0px -80% 0px' });
+
+  sections.forEach(s => observer.observe(s.el));
+
+  links.forEach(link => {
+    link.addEventListener('click', e => {
+      e.preventDefault();
+      const id = link.getAttribute('href').slice(1);
+      const el = document.getElementById(id);
+      if (el) {
+        el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        history.replaceState(null, '', '#' + id);
+      }
+    });
+  });
+})();
+</script>
+
+</body>
+</html>

@@ -1,0 +1,892 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Legal AI OS — Full Platform Reference</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700;800&family=Source+Sans+3:wght@400;500;600&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+/* ============ THEME ============ */
+:root {
+  --font-heading: 'Playfair Display', Georgia, serif;
+  --font-body: 'Source Sans 3', system-ui, sans-serif;
+  --font-mono: 'JetBrains Mono', 'SF Mono', Consolas, monospace;
+
+  --bg: #080c12;
+  --bg2: #0d1219;
+  --surface: #10161e;
+  --surface2: #151c27;
+  --surface-elevated: #1a2230;
+  --border: rgba(255,255,255,0.06);
+  --border-bright: rgba(255,255,255,0.10);
+  --text: #e4e0d8;
+  --text-dim: #7a7d82;
+  --gold: #c9a84c;
+  --gold-dim: rgba(201,168,76,0.10);
+  --gold-bright: #e4c76b;
+
+  --l0: #6ee7b7; --l0-dim: rgba(110,231,183,0.08);
+  --l1: #c9a84c; --l1-dim: rgba(201,168,76,0.10);
+  --l2: #60a5fa; --l2-dim: rgba(96,165,250,0.08);
+  --l3: #a78bfa; --l3-dim: rgba(167,139,250,0.08);
+  --l4: #fb923c; --l4-dim: rgba(251,146,60,0.08);
+}
+
+@media (prefers-color-scheme: light) {
+  :root {
+    --bg: #f7f5f0;
+    --bg2: #f0ede6;
+    --surface: #ffffff;
+    --surface2: #f8f6f2;
+    --surface-elevated: #faf8f4;
+    --border: rgba(0,0,0,0.06);
+    --border-bright: rgba(0,0,0,0.10);
+    --text: #1a1814;
+    --text-dim: #6b6860;
+    --gold: #8b6914;
+    --gold-dim: rgba(139,105,20,0.08);
+    --gold-bright: #a67c1e;
+    --l0: #059669; --l0-dim: rgba(5,150,105,0.06);
+    --l1: #8b6914; --l1-dim: rgba(139,105,20,0.08);
+    --l2: #2563eb; --l2-dim: rgba(37,99,235,0.06);
+    --l3: #7c3aed; --l3-dim: rgba(124,58,237,0.06);
+    --l4: #ea580c; --l4-dim: rgba(234,88,12,0.06);
+  }
+}
+
+/* ============ RESET ============ */
+* { margin:0; padding:0; box-sizing:border-box; }
+body {
+  background: var(--bg);
+  background-image:
+    radial-gradient(ellipse at 50% 0%, var(--gold-dim) 0%, transparent 50%),
+    radial-gradient(ellipse at 80% 100%, rgba(96,165,250,0.03) 0%, transparent 40%);
+  color: var(--text);
+  font-family: var(--font-body);
+  padding: 40px;
+  min-height: 100vh;
+  overflow-wrap: break-word;
+}
+
+/* ============ ANIMATION ============ */
+@keyframes fadeUp {
+  from { opacity:0; transform:translateY(12px); }
+  to { opacity:1; transform:translateY(0); }
+}
+@keyframes fadeScale {
+  from { opacity:0; transform:scale(0.92); }
+  to { opacity:1; transform:scale(1); }
+}
+.section, .flow-arrow, .fn-card {
+  animation: fadeUp 0.4s ease-out both;
+  animation-delay: calc(var(--i, 0) * 0.04s);
+}
+.kpi-card { animation-name: fadeScale; }
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration:0.01ms !important;
+    animation-delay:0ms !important;
+    transition-duration:0.01ms !important;
+  }
+}
+
+/* ============ TYPOGRAPHY ============ */
+h1 {
+  font-family: var(--font-heading);
+  font-size: 42px;
+  font-weight: 800;
+  letter-spacing: -0.5px;
+  margin-bottom: 4px;
+}
+.subtitle {
+  color: var(--text-dim);
+  font-size: 14px;
+  font-family: var(--font-mono);
+  margin-bottom: 36px;
+}
+
+/* ============ WRAP ============ */
+.wrap {
+  max-width: 1300px;
+  margin: 0 auto;
+  display: grid;
+  grid-template-columns: 185px 1fr;
+  gap: 0 40px;
+}
+.main { min-width: 0; }
+
+/* ============ TOC ============ */
+.toc {
+  position: sticky;
+  top: 24px;
+  align-self: start;
+  padding: 14px 0;
+  max-height: calc(100dvh - 48px);
+  overflow-y: auto;
+}
+.toc::-webkit-scrollbar { width:3px; }
+.toc::-webkit-scrollbar-thumb { background:var(--surface-elevated); border-radius:2px; }
+
+.toc-title {
+  font-family: var(--font-mono);
+  font-size: 9px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  color: var(--text-dim);
+  padding: 0 0 10px;
+  margin-bottom: 8px;
+  border-bottom: 1px solid var(--border);
+}
+
+.toc a {
+  display: block;
+  font-size: 10.5px;
+  color: var(--text-dim);
+  text-decoration: none;
+  padding: 4px 8px;
+  border-radius: 5px;
+  border-left: 2px solid transparent;
+  transition: all 0.15s;
+  line-height: 1.4;
+  margin-bottom: 1px;
+  font-family: var(--font-mono);
+}
+.toc a:hover { color: var(--text); background: var(--surface2); }
+.toc a.active { color: var(--gold-bright); border-left-color: var(--gold); }
+
+/* ============ KPI ROW ============ */
+.kpi-row {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 14px;
+  margin-bottom: 28px;
+}
+
+.kpi-card {
+  background: var(--surface-elevated);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 18px 20px;
+  text-align: center;
+}
+.kpi-card__value {
+  font-family: var(--font-heading);
+  font-size: 34px;
+  font-weight: 700;
+  color: var(--gold-bright);
+  line-height: 1.1;
+  letter-spacing: -0.5px;
+}
+.kpi-card__label {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 1.5px;
+  color: var(--text-dim);
+  margin-top: 6px;
+}
+
+/* ============ PIPELINE ============ */
+.pipeline {
+  display: flex;
+  gap: 0;
+  align-items: stretch;
+  margin-bottom: 24px;
+  overflow-x: auto;
+  padding-bottom: 4px;
+}
+.pipeline-step {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 10px 14px;
+  min-width: 110px;
+  flex-shrink: 0;
+  text-align: center;
+}
+.pipeline-step .step-num {
+  font-family: var(--font-mono);
+  font-size: 9px;
+  font-weight: 600;
+  color: var(--gold);
+  margin-bottom: 4px;
+}
+.pipeline-step .step-name {
+  font-size: 11px;
+  font-weight: 600;
+  line-height: 1.3;
+  color: var(--text);
+}
+.pipeline-step .step-detail {
+  font-size: 9px;
+  color: var(--text-dim);
+  line-height: 1.4;
+  margin-top: 2px;
+}
+.pipeline-arrow {
+  display: flex;
+  align-items: center;
+  padding: 0 2px;
+  color: var(--border-bright);
+  font-size: 14px;
+  flex-shrink: 0;
+}
+
+/* ============ LAYER TAG ============ */
+.layers {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-bottom: 20px;
+}
+.layer-tag {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  padding: 4px 10px;
+  border-radius: 4px;
+  border: 1px solid var(--border);
+  color: var(--text-dim);
+  white-space: nowrap;
+}
+.layer-tag--l0 { border-color: var(--l0-dim); color: var(--l0); }
+.layer-tag--l1 { border-color: var(--l1-dim); color: var(--gold-bright); }
+.layer-tag--l2 { border-color: var(--l2-dim); color: var(--l2); }
+.layer-tag--l3 { border-color: var(--l3-dim); color: var(--l3); }
+.layer-tag--l4 { border-color: var(--l4-dim); color: var(--l4); }
+
+/* ============ SECTION CARD ============ */
+.layer-section {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 22px 26px;
+  margin-bottom: 18px;
+  position: relative;
+}
+.layer-section__label {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 1.5px;
+  margin-bottom: 12px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.layer-section__label .dot {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  display: inline-block;
+}
+.layer-section__title {
+  font-family: var(--font-heading);
+  font-size: 20px;
+  font-weight: 700;
+  margin-bottom: 8px;
+  line-height: 1.2;
+}
+.layer-section__oneliner {
+  font-size: 13px;
+  color: var(--text-dim);
+  margin-bottom: 16px;
+  line-height: 1.5;
+}
+
+/* Color per layer */
+.section--l0 { border-left: 3px solid var(--l0); }
+.section--l0 .layer-section__label { color: var(--l0); }
+.section--l0 .layer-section__label .dot { background: var(--l0); }
+
+.section--l1 { border-left: 3px solid var(--gold); }
+.section--l1 .layer-section__label { color: var(--gold-bright); }
+.section--l1 .layer-section__label .dot { background: var(--gold); }
+
+.section--l2 { border-left: 3px solid var(--l2); }
+.section--l2 .layer-section__label { color: var(--l2); }
+.section--l2 .layer-section__label .dot { background: var(--l2); }
+
+.section--l3 { border-left: 3px solid var(--l3); }
+.section--l3 .layer-section__label { color: var(--l3); }
+.section--l3 .layer-section__label .dot { background: var(--l3); }
+
+.section--l4 { border-left: 3px solid var(--l4); }
+.section--l4 .layer-section__label { color: var(--l4); }
+.section--l4 .layer-section__label .dot { background: var(--l4); }
+
+/* ============ INNER GRID ============ */
+.inner-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  gap: 10px;
+}
+.inner-grid--3 { grid-template-columns: repeat(3, 1fr); }
+.inner-grid--4 { grid-template-columns: repeat(4, 1fr); }
+
+.inner-card {
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 12px 14px;
+  transition: border-color 0.2s;
+}
+.inner-card:hover { border-color: var(--border-bright); }
+.inner-card__title {
+  font-weight: 600;
+  font-size: 13px;
+  margin-bottom: 4px;
+  color: var(--text);
+}
+.inner-card__desc {
+  color: var(--text-dim);
+  font-size: 11.5px;
+  line-height: 1.55;
+}
+.inner-card code {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  background: var(--gold-dim);
+  color: var(--gold-bright);
+  padding: 1px 5px;
+  border-radius: 3px;
+}
+
+/* ============ FLOW ARROW ============ */
+.flow-arrow {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 10px;
+  color: var(--text-dim);
+  font-family: var(--font-mono);
+  font-size: 11px;
+  padding: 8px 0;
+}
+.flow-arrow svg {
+  width: 20px;
+  height: 20px;
+  fill: none;
+  stroke: var(--border-bright);
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+/* ============ FUNCTION CARD (L2) ============ */
+.fn-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 8px;
+}
+.fn-mini {
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 10px 12px;
+  text-align: center;
+}
+.fn-mini__num {
+  font-family: var(--font-mono);
+  font-size: 9px;
+  font-weight: 600;
+  margin-bottom: 3px;
+}
+.fn-mini__name {
+  font-size: 11px;
+  font-weight: 600;
+  line-height: 1.3;
+  color: var(--text);
+}
+.fn-mini__detail {
+  font-size: 9px;
+  color: var(--text-dim);
+  line-height: 1.4;
+  margin-top: 2px;
+}
+
+/* Function colors */
+.fn-mini--1 { border-top: 2px solid #2dd4bf; } .fn-mini--1 .fn-mini__num { color: #2dd4bf; }
+.fn-mini--2 { border-top: 2px solid #4ade80; } .fn-mini--2 .fn-mini__num { color: #4ade80; }
+.fn-mini--3 { border-top: 2px solid #f59e0b; } .fn-mini--3 .fn-mini__num { color: #f59e0b; }
+.fn-mini--4 { border-top: 2px solid #a78bfa; } .fn-mini--4 .fn-mini__num { color: #a78bfa; }
+.fn-mini--5 { border-top: 2px solid #38bdf8; } .fn-mini--5 .fn-mini__num { color: #38bdf8; }
+.fn-mini--6 { border-top: 2px solid #fb7185; } .fn-mini--6 .fn-mini__num { color: #fb7185; }
+.fn-mini--7 { border-top: 2px solid #22d3ee; } .fn-mini--7 .fn-mini__num { color: #22d3ee; }
+.fn-mini--8 { border-top: 2px solid #f472b6; } .fn-mini--8 .fn-mini__num { color: #f472b6; }
+.fn-mini--9 { border-top: 2px solid var(--gold); } .fn-mini--9 .fn-mini__num { color: var(--gold-bright); }
+
+/* ============ METRIC MINI ============ */
+.metrics-mini {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+  gap: 8px;
+}
+.metric-mini {
+  background: var(--surface-elevated);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 10px 12px;
+  text-align: center;
+}
+.metric-mini__value {
+  font-family: var(--font-heading);
+  font-size: 20px;
+  font-weight: 700;
+  line-height: 1.2;
+  letter-spacing: -0.3px;
+}
+.metric-mini__label {
+  font-family: var(--font-mono);
+  font-size: 9px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  color: var(--text-dim);
+  margin-top: 3px;
+}
+
+/* ============ NODE LIST ============ */
+.node-list {
+  list-style: none;
+  font-size: 11.5px;
+  line-height: 1.8;
+}
+.node-list li {
+  padding-left: 14px;
+  position: relative;
+}
+.node-list li::before {
+  content: '›';
+  color: var(--text-dim);
+  font-weight: 600;
+  position: absolute;
+  left: 0;
+}
+.node-list code {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  background: var(--gold-dim);
+  color: var(--gold-bright);
+  padding: 1px 5px;
+  border-radius: 3px;
+}
+
+/* ============ CALLOUT ============ */
+.callout {
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-left: 3px solid var(--gold);
+  border-radius: 0 8px 8px 0;
+  padding: 14px 18px;
+  font-size: 12px;
+  line-height: 1.6;
+  color: var(--text-dim);
+  margin-top: 6px;
+}
+.callout strong { color: var(--text); font-weight: 600; }
+
+/* ============ SCROLL ANCHOR ============ */
+.sec-head { scroll-margin-top: 24px; }
+
+/* ============ RESPONSIVE ============ */
+@media (max-width: 1000px) {
+  .wrap { grid-template-columns: 1fr; padding-top: 0; }
+  body { padding: 0; }
+  .toc {
+    position: sticky; top: 0; z-index: 200;
+    max-height: none;
+    display: flex; gap: 4px; align-items: center;
+    overflow-x: auto; -webkit-overflow-scrolling: touch;
+    background: var(--bg); border-bottom: 1px solid var(--border);
+    padding: 10px 20px; margin: 0;
+  }
+  .toc::-webkit-scrollbar { display: none; }
+  .toc-title { display: none; }
+  .toc a {
+    white-space: nowrap; flex-shrink: 0;
+    border-left: none; border-bottom: 2px solid transparent;
+    border-radius: 4px 4px 0 0;
+    padding: 6px 10px; font-size: 10px;
+  }
+  .toc a.active { border-left: none; border-bottom-color: var(--gold); background: var(--surface); }
+  .main { padding: 20px 20px 40px; }
+  .sec-head { scroll-margin-top: 52px; }
+}
+@media (max-width: 768px) {
+  .kpi-row { grid-template-columns: 1fr 1fr; }
+  .inner-grid, .inner-grid--3, .inner-grid--4 { grid-template-columns: 1fr; }
+  .fn-grid { grid-template-columns: 1fr 1fr; }
+  h1 { font-size: 30px; }
+  .pipeline { flex-wrap: wrap; gap: 6px; }
+  .pipeline-arrow { display: none; }
+  .layer-section { padding: 16px 20px; }
+  .layer-section__title { font-size: 17px; }
+}
+@media print {
+  body { background: white; color: black; padding: 0; }
+  .toc { display: none; }
+  .wrap { display: block; max-width: none; }
+  .layer-section { break-inside: avoid; border: 1px solid #ccc; margin-bottom: 12px; }
+  .section--l0, .section--l1, .section--l2, .section--l3, .section--l4 { border-left: 3px solid #333; }
+  .kpi-card__value { color: #8b6914 !important; }
+}
+</style>
+</head>
+<body>
+
+<div class="wrap">
+
+  <nav class="toc" id="toc">
+    <div class="toc-title">Platform</div>
+    <a href="#overview">Overview</a>
+    <a href="#pipeline">Pipeline</a>
+    <a href="#l0">L0: Knowledge</a>
+    <a href="#l1">L1: Governance</a>
+    <a href="#l2">L2: Functions</a>
+    <a href="#l3">L3: Operations</a>
+    <a href="#l4">L4: Org Model</a>
+  </nav>
+
+  <div class="main">
+
+    <!-- ====== HEADER ====== -->
+    <div class="sec-head" id="overview"></div>
+    <h1>Legal AI Operating System</h1>
+    <p class="subtitle">5 layers · 8 functions · 4-dimension Harvey monitoring · 89 indexed help docs · 52 tests</p>
+
+    <!-- KPI Row -->
+    <div class="kpi-row">
+      <div class="kpi-card" style="--i:0">
+        <div class="kpi-card__value">~2,500</div>
+        <div class="kpi-card__label">Attorney Hours Saved / Year</div>
+      </div>
+      <div class="kpi-card" style="--i:0">
+        <div class="kpi-card__value">~$600K</div>
+        <div class="kpi-card__label">Client Value Delivered / Year</div>
+      </div>
+      <div class="kpi-card" style="--i:0">
+        <div class="kpi-card__value">100%</div>
+        <div class="kpi-card__label">Decisions Auditable &amp; Traceable</div>
+      </div>
+      <div class="kpi-card" style="--i:0">
+        <div class="kpi-card__value">52</div>
+        <div class="kpi-card__label">Tests · 21 Harvey Monitor · 31 ROI</div>
+      </div>
+    </div>
+
+    <!-- Layer tags -->
+    <div class="layers" style="--i:1">
+      <span class="layer-tag layer-tag--l0">L0: Knowledge Foundation</span>
+      <span class="layer-tag layer-tag--l1">L1: Governance &amp; Trust</span>
+      <span class="layer-tag layer-tag--l2">L2: Legal AI Functions</span>
+      <span class="layer-tag layer-tag--l3">L3: Program Operations</span>
+      <span class="layer-tag layer-tag--l4">L4: Organizational Model</span>
+    </div>
+
+    <!-- ====== UNIVERSAL PIPELINE ====== -->
+    <div class="sec-head" id="pipeline"></div>
+    <div class="pipeline" style="--i:2">
+      <div class="pipeline-step">
+        <div class="step-num">1</div>
+        <div class="step-name">Input</div>
+        <div class="step-detail">document · query · matter</div>
+      </div>
+      <div class="pipeline-arrow">→</div>
+      <div class="pipeline-step">
+        <div class="step-num">2</div>
+        <div class="step-name">Router</div>
+        <div class="step-detail">classify · jurisdiction</div>
+      </div>
+      <div class="pipeline-arrow">→</div>
+      <div class="pipeline-step">
+        <div class="step-num">3</div>
+        <div class="step-name">Evaluator</div>
+        <div class="step-detail">LLM reasoning · structured output</div>
+      </div>
+      <div class="pipeline-arrow">→</div>
+      <div class="pipeline-step">
+        <div class="step-num">4</div>
+        <div class="step-name">Scoring</div>
+        <div class="step-detail">programmatic · never trusts LLM</div>
+      </div>
+      <div class="pipeline-arrow">→</div>
+      <div class="pipeline-step">
+        <div class="step-num">5</div>
+        <div class="step-name">Audit Trail</div>
+        <div class="step-detail">append-only · full lineage</div>
+      </div>
+    </div>
+
+    <!-- ====== L0: KNOWLEDGE FOUNDATION ====== -->
+    <div class="sec-head" id="l0"></div>
+    <div class="layer-section section--l0" style="--i:3">
+      <div class="layer-section__label"><span class="dot"></span> Layer 0</div>
+      <div class="layer-section__title">Knowledge Foundation</div>
+      <div class="layer-section__oneliner">Client documents, precedents, playbooks, and regulatory sources — RLS-enforced walls between clients, vector-indexed for semantic search.</div>
+      <div class="inner-grid inner-grid--3">
+        <div class="inner-card">
+          <div class="inner-card__title">Client Documents</div>
+          <div class="inner-card__desc">Contracts, policies, correspondence, pleadings. RLS-enforced isolation ensures no cross-client leakage.</div>
+        </div>
+        <div class="inner-card">
+          <div class="inner-card__title">Precedents &amp; Playbooks</div>
+          <div class="inner-card__desc">Negotiation history, position papers, escalation rules. Vector-indexed for semantic retrieval.</div>
+        </div>
+        <div class="inner-card">
+          <div class="inner-card__title">Regulatory Sources</div>
+          <div class="inner-card__desc">15-20 agencies monitored. Changes extracted, classified, matched to active matters within 24 hours.</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="flow-arrow" style="--i:4">
+      <svg viewBox="0 0 20 20"><path d="M10 4 L10 16 M6 12 L10 16 L14 12"/></svg>
+      data flows up · governance flows down
+    </div>
+
+    <!-- ====== L1: GOVERNANCE ====== -->
+    <div class="sec-head" id="l1"></div>
+    <div class="layer-section section--l1" style="--i:5">
+      <div class="layer-section__label"><span class="dot"></span> Layer 1</div>
+      <div class="layer-section__title">Governance &amp; Trust</div>
+      <div class="layer-section__oneliner">The layer Harvey doesn't provide. Every decision auditable, explainable, and traceable — by architecture, not by policy.</div>
+      <div class="inner-grid inner-grid--3">
+        <div class="inner-card">
+          <div class="inner-card__title">Audit Trail</div>
+          <div class="inner-card__desc">Every LLM call recorded: full prompt, response, model, tokens, cost, processing time. Append-only. Immutable.</div>
+        </div>
+        <div class="inner-card">
+          <div class="inner-card__title">Explainability</div>
+          <div class="inner-card__desc">LLM provides reasoning. System provides judgment. Never the reverse. Scores are programmatic, not self-assessed.</div>
+        </div>
+        <div class="inner-card">
+          <div class="inner-card__title">Traceability</div>
+          <div class="inner-card__desc">Full lineage: input → router → evaluator → scoring → human review → disposition. Every step recorded.</div>
+        </div>
+        <div class="inner-card">
+          <div class="inner-card__title">Confidentiality (RLS)</div>
+          <div class="inner-card__desc">Row-Level Security enforces client data isolation at the database layer. Technical walls, not policy promises.</div>
+        </div>
+        <div class="inner-card">
+          <div class="inner-card__title">Human-in-the-Loop</div>
+          <div class="inner-card__desc">Configurable thresholds for mandatory review. Auto-escalation on low confidence. Risk-tiered gating.</div>
+        </div>
+        <div class="inner-card">
+          <div class="inner-card__title">Compliance Readiness</div>
+          <div class="inner-card__desc">ABA Formal Opinion 512 (6 duties). SOC 2 evidence framework. ISO 42001 alignment. Audit-ready, not self-certified.</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="flow-arrow" style="--i:6">
+      <svg viewBox="0 0 20 20"><path d="M10 4 L10 16 M6 12 L10 16 L14 12"/></svg>
+      governance wraps every function invocation
+    </div>
+
+    <!-- ====== L2: AI FUNCTIONS ====== -->
+    <div class="sec-head" id="l2"></div>
+    <div class="layer-section section--l2" style="--i:7">
+      <div class="layer-section__label"><span class="dot"></span> Layer 2</div>
+      <div class="layer-section__title">Legal AI Functions — 8 POC Demos + Maturity Assessment</div>
+      <div class="layer-section__oneliner">Each function follows the same governed pipeline. Harvey handles production equivalents — these are auditable reference implementations demonstrating the governance architecture.</div>
+
+      <div class="fn-grid">
+        <div class="fn-mini fn-mini--1">
+          <div class="fn-mini__num">F1</div>
+          <div class="fn-mini__name">Matter Intake &amp; Triage</div>
+          <div class="fn-mini__detail">94% accuracy · 180× faster</div>
+        </div>
+        <div class="fn-mini fn-mini--2">
+          <div class="fn-mini__num">F2</div>
+          <div class="fn-mini__name">Contract Review</div>
+          <div class="fn-mini__detail">800+ contracts/year · 160× faster</div>
+        </div>
+        <div class="fn-mini fn-mini--3">
+          <div class="fn-mini__num">F3</div>
+          <div class="fn-mini__name">Employment Agents</div>
+          <div class="fn-mini__detail">US/EMEA/AU · RLS walls · filings</div>
+        </div>
+        <div class="fn-mini fn-mini--4">
+          <div class="fn-mini__num">F4</div>
+          <div class="fn-mini__name">Cowork Legal Plugin</div>
+          <div class="fn-mini__detail">9 skills in Claude · 100% adoption</div>
+        </div>
+        <div class="fn-mini fn-mini--5">
+          <div class="fn-mini__num">F5</div>
+          <div class="fn-mini__name">Due Diligence</div>
+          <div class="fn-mini__detail">87% time reduction · deviation-only</div>
+        </div>
+        <div class="fn-mini fn-mini--6">
+          <div class="fn-mini__num">F6</div>
+          <div class="fn-mini__name">Regulatory Monitor</div>
+          <div class="fn-mini__detail">&lt;24hr detection window · 15-20 sources</div>
+        </div>
+        <div class="fn-mini fn-mini--7">
+          <div class="fn-mini__num">F7</div>
+          <div class="fn-mini__name">KM &amp; Precedent</div>
+          <div class="fn-mini__detail">Semantic search · ~120 hrs saved/year</div>
+        </div>
+        <div class="fn-mini fn-mini--8">
+          <div class="fn-mini__num">F8</div>
+          <div class="fn-mini__name">Value Reporting</div>
+          <div class="fn-mini__detail">Quarterly reports · 100% audit-backed</div>
+        </div>
+        <div class="fn-mini fn-mini--9">
+          <div class="fn-mini__num">F9</div>
+          <div class="fn-mini__name">AI Maturity Assessment</div>
+          <div class="fn-mini__detail">Org readiness · gap analysis</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="flow-arrow" style="--i:8">
+      <svg viewBox="0 0 20 20"><path d="M10 4 L10 16 M6 12 L10 16 L14 12"/></svg>
+      measurement layer · what Harvey can't measure itself
+    </div>
+
+    <!-- ====== L3: PROGRAM OPERATIONS ====== -->
+    <div class="sec-head" id="l3"></div>
+    <div class="layer-section section--l3" style="--i:9">
+      <div class="layer-section__label"><span class="dot"></span> Layer 3</div>
+      <div class="layer-section__title">Program Operations</div>
+      <div class="layer-section__oneliner">The K&amp;I Program Manager's daily toolkit. Everything needed to measure, govern, and enable — built and deployed.</div>
+
+      <div class="inner-grid inner-grid--3">
+        <div class="inner-card">
+          <div class="inner-card__title">Portfolio Dashboard</div>
+          <div class="inner-card__desc">KPI cards (hours saved, cost avoided, net ROI, adoption). Function breakdown table with tooltips. Quality metrics section. Hours-saved bar chart. Period selector (30/90/365 days).</div>
+          <div class="metrics-mini" style="margin-top:8px">
+            <div class="metric-mini"><div class="metric-mini__value" style="color:var(--l3)">$62K</div><div class="metric-mini__label">multi-step AI cost</div></div>
+            <div class="metric-mini"><div class="metric-mini__value" style="color:var(--l3)">67%</div><div class="metric-mini__label">adoption rate</div></div>
+          </div>
+        </div>
+        <div class="inner-card">
+          <div class="inner-card__title">ROI Framework</div>
+          <div class="inner-card__desc">Cost impact = time saved × billable rate from rate cards. Quality metrics: accuracy, override, false positive rates. Adoption = active / eligible users. Calibrated baselines with methodology.</div>
+          <div class="metrics-mini" style="margin-top:8px">
+            <div class="metric-mini"><div class="metric-mini__value" style="color:var(--l3)">5:1</div><div class="metric-mini__label">ROI ratio</div></div>
+            <div class="metric-mini"><div class="metric-mini__value" style="color:var(--l3)">91%</div><div class="metric-mini__label">accuracy rate</div></div>
+          </div>
+        </div>
+        <div class="inner-card">
+          <div class="inner-card__title">POC Pipeline</div>
+          <div class="inner-card__desc">Kanban board: Discovery → Build → Review → Graduated / Cancelled. Project cards with feedback log. Auto-timestamped status transitions. Client and practice group assignment.</div>
+        </div>
+        <div class="inner-card">
+          <div class="inner-card__title">Harvey Agent Monitoring</div>
+          <div class="inner-card__desc">4-dimension independent evaluation of Harvey outputs: Accuracy, Safety, Bias, Compliance. Weighted scoring (Tier 1 at 1.5×). Hard veto at 75. Drift detection (6 types). Certification: Platinum→Bronze. Agent registry + evaluation history.</div>
+          <div class="metrics-mini" style="margin-top:8px">
+            <div class="metric-mini"><div class="metric-mini__value" style="color:var(--l3)">90.5</div><div class="metric-mini__label">avg final score</div></div>
+            <div class="metric-mini"><div class="metric-mini__value" style="color:var(--l3)">5.3s</div><div class="metric-mini__label">4-dim eval time</div></div>
+          </div>
+        </div>
+        <div class="inner-card">
+          <div class="inner-card__title">Enablement Kit</div>
+          <div class="inner-card__desc">Workshop deck outline (60 min). Prompt engineering guide. Adoption playbook. AI literacy FAQ. Client conversation deck. RFP response templates. Technical FAQ for client CISOs.</div>
+        </div>
+        <div class="inner-card">
+          <div class="inner-card__title">Agentic Help System</div>
+          <div class="inner-card__desc">RAG-powered chat: Voyage AI embeddings → vector search → LLM answer with source references. 11 indexed docs, 89 chunks. Slide-out panel with suggested questions. Local FAQ fallback when API unreachable. Thumbs feedback.</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="flow-arrow" style="--i:10">
+      <svg viewBox="0 0 20 20"><path d="M10 4 L10 16 M6 12 L10 16 L14 12"/></svg>
+      role definition · interface maps · success metrics
+    </div>
+
+    <!-- ====== L4: ORG MODEL ====== -->
+    <div class="sec-head" id="l4"></div>
+    <div class="layer-section section--l4" style="--i:11">
+      <div class="layer-section__label"><span class="dot"></span> Layer 4</div>
+      <div class="layer-section__title">Organizational Model</div>
+      <div class="layer-section__oneliner">The K&amp;I Program Manager role — what it owns, what it doesn't, and how it interfaces with every team.</div>
+
+      <div class="inner-grid inner-grid--4">
+        <div class="inner-card">
+          <div class="inner-card__title">K&amp;I Program Manager</div>
+          <div class="inner-card__desc">Reports into Technology. Sits on K&amp;I. Bridges practice groups, Harvey, and client teams. Makes AI measurable, auditable, and teachable.</div>
+        </div>
+        <div class="inner-card">
+          <div class="inner-card__title">Technology</div>
+          <div class="inner-card__desc">Owns Harvey deployment and infrastructure. K&amp;I PM provides requirements and evaluation criteria — does not own the vendor relationship.</div>
+        </div>
+        <div class="inner-card">
+          <div class="inner-card__title">L&amp;D</div>
+          <div class="inner-card__desc">Partners on AI literacy. K&amp;I PM provides enablement materials, workshops, and adoption playbooks. Joint delivery on upskilling.</div>
+        </div>
+        <div class="inner-card">
+          <div class="inner-card__title">Pricing / LPM</div>
+          <div class="inner-card__desc">Owns AFA and pricing strategy. K&amp;I PM provides cost-impact data (time saved × rates) — the evidence, not the pricing decisions.</div>
+        </div>
+        <div class="inner-card">
+          <div class="inner-card__title">Client Teams</div>
+          <div class="inner-card__desc">K&amp;I PM serves as strategic advisor on AI as value-added differentiator. Provides client conversation materials and governance evidence.</div>
+        </div>
+        <div class="inner-card">
+          <div class="inner-card__title">12-Month Success Metrics</div>
+          <div class="inner-card__desc">Framework deployed. Pipeline active. Adoption tracked. Client reports delivered. AI literacy baseline established. Governance evidence ready for client audit.</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ====== CALLOUT ====== -->
+    <div class="callout" style="--i:13">
+      <strong>One platform. Five layers.</strong> Knowledge → Governance → Functions → Operations → Organization. The LLM provides reasoning. The system provides judgment. Every number in the dashboard is backed by an append-only audit trail. Every Harvey output can be independently scored. Every lawyer has the training and tools to use AI confidently. <strong>This is what it looks like when AI is measurable, auditable, and teachable.</strong>
+    </div>
+
+  </div><!-- /main -->
+</div><!-- /wrap -->
+
+<script>
+(function() {
+  var toc = document.getElementById('toc');
+  var links = toc.querySelectorAll('a');
+  var sections = [];
+
+  links.forEach(function(link) {
+    var id = link.getAttribute('href').slice(1);
+    var el = document.getElementById(id);
+    if (el) sections.push({ id: id, el: el, link: link });
+  });
+
+  var observer = new IntersectionObserver(function(entries) {
+    entries.forEach(function(entry) {
+      if (entry.isIntersecting) {
+        links.forEach(function(l) { l.classList.remove('active'); });
+        var match = sections.find(function(s) { return s.el === entry.target; });
+        if (match) {
+          match.link.classList.add('active');
+          if (window.innerWidth <= 1000) {
+            match.link.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
+          }
+        }
+      }
+    });
+  }, { rootMargin: '-10% 0px -80% 0px' });
+
+  sections.forEach(function(s) { observer.observe(s.el); });
+
+  links.forEach(function(link) {
+    link.addEventListener('click', function(e) {
+      e.preventDefault();
+      var id = link.getAttribute('href').slice(1);
+      var el = document.getElementById(id);
+      if (el) {
+        el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        history.replaceState(null, '', '#' + id);
+      }
+    });
+  });
+})();
+</script>
+
+</body>
+</html>
