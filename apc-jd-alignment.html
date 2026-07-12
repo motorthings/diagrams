@@ -1,0 +1,609 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>APC K&I Program Manager — JD Alignment</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;0,6..72,600;0,6..72,700;1,6..72,400;1,6..72,500&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --font-display: 'Newsreader', Georgia, serif;
+    --font-body: 'Newsreader', Georgia, serif;
+    --font-mono: 'Space Mono', monospace;
+
+    --bg: #faf8f9;
+    --surface: #ffffff;
+    --surface-warm: #fdf8fa;
+    --border: rgba(0,0,0,0.07);
+    --border-bright: rgba(0,0,0,0.13);
+    --text: #1a1618;
+    --text-dim: #6b6066;
+    --text-faint: #a0989e;
+    --heading: #0d0a0c;
+    --accent: #8b3a6e;
+    --accent-bright: #d44a7a;
+    --accent-dim: rgba(139,58,110,0.08);
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #141114;
+      --surface: #1e1a1d;
+      --surface-warm: #241f22;
+      --border: rgba(255,255,255,0.06);
+      --border-bright: rgba(255,255,255,0.10);
+      --text: #e8e0e4;
+      --text-dim: #a0989e;
+      --text-faint: #6b6468;
+      --heading: #f5eff2;
+      --accent: #d4a0c0;
+      --accent-bright: #f070a0;
+      --accent-dim: rgba(212,160,192,0.1);
+    }
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--bg);
+    background-image:
+      radial-gradient(ellipse at 0% 0%, var(--accent-dim) 0%, transparent 40%),
+      radial-gradient(ellipse at 100% 50%, var(--accent-dim) 0%, transparent 35%);
+    color: var(--text);
+    font-family: var(--font-body);
+    font-size: 17px;
+    line-height: 1.7;
+    min-height: 100vh;
+    padding-bottom: 80px;
+  }
+
+  .container { max-width: 960px; margin: 0 auto; padding: 0 20px; }
+
+  .nav {
+    position: sticky; top: 0; z-index: 100;
+    backdrop-filter: blur(16px);
+    background: color-mix(in srgb, var(--bg) 88%, transparent);
+    border-bottom: 1px solid var(--border);
+    margin-bottom: 40px;
+    padding: 12px 20px;
+    font-family: var(--font-mono);
+    font-size: 11px;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--text-dim);
+    display: flex; align-items: center; justify-content: space-between;
+  }
+  .nav a { color: var(--text-dim); text-decoration: none; }
+  .nav a:hover { color: var(--accent-bright); }
+
+  /* HERO */
+  .hero {
+    padding: 40px 0 32px;
+    border-bottom: 1px solid var(--border);
+    margin-bottom: 48px;
+  }
+  .hero-label {
+    font-family: var(--font-mono);
+    font-size: 10px; letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--accent-bright);
+    margin-bottom: 16px;
+  }
+  .hero h1 {
+    font-family: var(--font-display);
+    font-size: 40px; font-weight: 600;
+    line-height: 1.15;
+    color: var(--heading);
+    letter-spacing: -0.01em;
+    margin-bottom: 16px;
+    max-width: 700px;
+  }
+  .hero h1 em { font-style: italic; color: var(--accent-bright); }
+  .hero-sub {
+    font-size: 18px; color: var(--text-dim);
+    max-width: 600px; line-height: 1.55;
+  }
+
+  /* SECTIONS */
+  section { margin-bottom: 48px; }
+  .section-label {
+    font-family: var(--font-mono);
+    font-size: 10px; letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--text-faint);
+    margin-bottom: 8px;
+  }
+  section h2 {
+    font-family: var(--font-display);
+    font-size: 28px; font-weight: 600;
+    color: var(--heading);
+    margin-bottom: 16px;
+    display: flex; align-items: center; gap: 10px;
+  }
+  .section-icon { width: 24px; height: 24px; color: var(--accent-bright); flex-shrink: 0; }
+  section h3 {
+    font-family: var(--font-display);
+    font-size: 20px; font-weight: 600;
+    color: var(--heading);
+    margin: 32px 0 10px;
+  }
+  section p { color: var(--text-dim); margin-bottom: 12px; max-width: 680px; }
+  section p strong { color: var(--text); }
+
+  .section-divider {
+    height: 1px;
+    background: linear-gradient(to right, var(--accent-dim), var(--border), transparent);
+    margin-bottom: 40px;
+    border: 0;
+  }
+
+  /* REQUIREMENT BLOCKS */
+  .req-block {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-left: 3px solid var(--accent-bright);
+    border-radius: 0 6px 6px 0;
+    padding: 20px 24px;
+    margin: 20px 0;
+    transition: background 0.3s;
+  }
+  .req-block .jd-need {
+    font-family: var(--font-mono);
+    font-size: 10px; letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--accent-bright);
+    margin-bottom: 6px;
+  }
+  .req-block .evidence {
+    color: var(--text-dim);
+    font-size: 15px;
+    line-height: 1.6;
+  }
+  .req-block .evidence strong { color: var(--text); }
+  .evidence-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 6px 24px;
+  }
+  .evidence-list li {
+    font-size: 14px;
+    padding-left: 16px;
+    position: relative;
+    line-height: 1.5;
+    color: var(--text-dim);
+  }
+  .evidence-list li::before {
+    content: '';
+    position: absolute;
+    left: 0; top: 7px;
+    width: 5px; height: 5px;
+    border-radius: 50%;
+    background: var(--accent-bright);
+  }
+  .evidence-list li strong { color: var(--text); }
+  @media (max-width: 640px) {
+    .evidence-list { grid-template-columns: 1fr; }
+  }
+
+  /* EVIDENCE GRID */
+  .evidence-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 12px;
+    margin: 20px 0;
+  }
+  .evidence-card {
+    background: var(--surface-warm);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 18px 20px;
+    transition: background 0.3s;
+  }
+  .evidence-card .tag {
+    display: inline-block;
+    font-family: var(--font-mono);
+    font-size: 9px; letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--accent-bright);
+    background: var(--accent-dim);
+    padding: 3px 8px;
+    border-radius: 3px;
+    margin-bottom: 8px;
+  }
+  .evidence-card .point {
+    font-size: 15px; color: var(--text-dim);
+    line-height: 1.5;
+  }
+  .evidence-card .point strong { color: var(--text); }
+
+  /* WHAT I DON'T OVERCLAIM */
+  .dont-claim {
+    background: var(--surface-warm);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 20px 24px;
+    margin: 24px 0;
+  }
+  .dont-claim h4 {
+    font-family: var(--font-display);
+    font-size: 17px; font-weight: 600;
+    color: var(--heading);
+    margin-bottom: 10px;
+  }
+  .dont-claim ul {
+    list-style: none;
+    font-size: 15px; color: var(--text-dim);
+    line-height: 1.7;
+  }
+  .dont-claim ul li::before {
+    content: '—';
+    color: var(--accent-bright);
+    margin-right: 8px;
+  }
+
+  /* FOOTER */
+  .footer {
+    border-top: 1px solid var(--border);
+    padding-top: 24px;
+    margin-top: 40px;
+    font-family: var(--font-mono);
+    font-size: 11px;
+    color: var(--text-faint);
+    letter-spacing: 0.06em;
+  }
+
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(12px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  .fade-up { animation: fadeUp 0.5s ease-out both; }
+  .fade-up:nth-child(1) { animation-delay: 0.03s; }
+  .fade-up:nth-child(2) { animation-delay: 0.08s; }
+  .fade-up:nth-child(3) { animation-delay: 0.13s; }
+  .fade-up:nth-child(4) { animation-delay: 0.18s; }
+
+  @media (prefers-reduced-motion: reduce) {
+    .fade-up { animation: none; }
+  }
+
+  @media (max-width: 640px) {
+    body { font-size: 16px; }
+    .hero h1 { font-size: 30px; }
+    section h2 { font-size: 24px; }
+    .evidence-grid { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+
+  <nav class="nav">
+    <a href="index.html">&larr; Visual Explainers</a>
+    <span>APC K&I Program Manager — JD Alignment</span>
+  </nav>
+
+  <div class="container">
+
+    <header class="hero fade-up">
+      <div class="hero-label">Application Evidence</div>
+      <h1>Every requirement in this JD maps to <em>something I have already built.</em></h1>
+      <p class="hero-sub">
+        The role bridges legal practice, business operations, and technology. It coordinates, facilitates, measures, and enables. Below is the evidence, organized by the four function areas of the JD — 8 MVPs shipped, 990 automated tests, 30+ workflows, 150+ professionals trained monthly.
+      </p>
+    </header>
+
+    <!-- ========== 1. AI STRATEGY & SOLUTION DESIGN ========== -->
+    <section>
+      <div class="section-label">Function Area 1</div>
+      <h2><svg class="section-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><polygon points="12,4 14,10 20,10 15,14 17,20 12,16 7,20 9,14 4,10 10,10"/></svg>AI Strategy &amp; Solution Design</h2>
+
+      <div class="req-block fade-up">
+        <div class="jd-need">JD: Partner with legal teams to identify AI opportunities in client workstreams</div>
+        	        <ul class="evidence-list">
+	          <li><strong>Embedded at Fortune 500 SaaS</strong> — 4 departments, discovery-first, workflow mapping before any build</li>
+	          <li><strong>Separation agreement agent</strong> — ~100 agreements/year across US, EMEA, Australia</li>
+	          <li><strong>Legal metrics agent</strong> — natural-language access to contract data and outside-counsel spend</li>
+	          <li><strong>Result:</strong> ~190 hrs/year saved. 5 agents deployed in 6 months across departments that had never used AI</li>
+	        </ul>
+      </div>
+
+      <div class="req-block fade-up">
+        <div class="jd-need">JD: Translate business and legal needs into AI solution requirements; facilitate proof-of-concept development</div>
+        	        <ul class="evidence-list">
+	          <li><strong>AESOP OS</strong> — 990 tests, 6 eval modes, 30+ workflows. Turns discovery into structured requirements and PRDs</li>
+	          <li><strong>Legal AI OS</strong> — 9 legal functions built and deployed, each started as a POC</li>
+	          <li><strong>Matter Intake Evaluator</strong> — configurable rubrics that adapt to the firm</li>
+	          <li><strong>Result:</strong> evaluation time: hours of manual review → minutes of automated scoring. 8 MVPs shipped, 7 POCs proven</li>
+	        </ul>
+      </div>
+
+      <div class="req-block fade-up">
+        <div class="jd-need">JD: Ensure AI solutions align with governance, ethics, and risk standards</div>
+        	        <ul class="evidence-list">
+	          <li><strong>4-dimension scoring engine</strong> — Safety, Bias, Accuracy, Compliance. 990 tests. Hard veto on critical failures</li>
+	          <li><strong>Independent Harvey evaluation</strong> — same engine ported to Legal AI OS. Vendor can’t grade its own homework</li>
+	          <li><strong>ABA Formal Opinion 512</strong> — 6 duties baked into compliance evaluation prompt</li>
+	          <li><strong>Result:</strong> governance: manual committee → automatic on every change. 1.4M test executions</li>
+	        </ul>
+      </div>
+
+      <div class="evidence-grid">
+        <div class="evidence-card fade-up">
+          <div class="tag">Direct Experience</div>
+          <div class="point"><strong>Employment legal agents</strong> with strict access controls walling employment data from commercial legal — the exact confidentiality gap that blocked prior tools.</div>
+        </div>
+        <div class="evidence-card fade-up">
+          <div class="tag">Direct Experience</div>
+          <div class="point"><strong>Legal metrics agent</strong> giving leadership natural-language access to contract execution data and outside-counsel spend.</div>
+        </div>
+        <div class="evidence-card fade-up">
+          <div class="tag">Platform</div>
+          <div class="point"><strong>9 legal AI functions</strong> built and deployed in Legal AI OS — Matter Intake, Contract Review, Due Diligence, Regulatory Monitor, and more.</div>
+        </div>
+        <div class="evidence-card fade-up">
+          <div class="tag">Platform</div>
+          <div class="point"><strong>AESOP authored discovery</strong> maps inherited processes then questions structural assumptions — finding where AI changes the operating model, not just speeds it up.</div>
+        </div>
+      </div>
+    </section>
+
+    <hr class="section-divider">
+
+    <!-- ========== 2. PROGRAM MANAGEMENT & EXECUTION ========== -->
+    <section>
+      <div class="section-label">Function Area 2</div>
+      <h2><svg class="section-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>Program Management &amp; Execution</h2>
+
+      <div class="req-block fade-up">
+        <div class="jd-need">JD: Lead end-to-end delivery of AI-enabled client projects from concept through implementation</div>
+        	        <ul class="evidence-list">
+	          <li><strong>AESOP OS</strong> — 10 stages, 6 evaluation modes, 30+ workflows. Each stage instrumented with structured telemetry</li>
+	          <li><strong>Legal AI OS POC pipeline</strong> — Discovery → Build → Review → Graduated/Cancelled. WIP limits, department filtering</li>
+	          <li><strong>Contentful</strong> — 5 agent engagements, 4 departments, discovery through deployment</li>
+	          <li><strong>Result:</strong> delivery cycle: months → weeks. Continuous pipeline instead of sequential handoffs</li>
+	        </ul>
+      </div>
+
+      <div class="req-block fade-up">
+        <div class="jd-need">JD: Develop frameworks to track AI performance: time saved, cost impact, quality metrics</div>
+        	        <ul class="evidence-list">
+	          <li><strong>Cost impact engine</strong> — time saved × rate card, with rate cards by practice group and client</li>
+	          <li><strong>Calibrated baselines</strong> — documented methodology, confidence levels, sample sizes</li>
+	          <li><strong>Quality metrics</strong> — tracked by override rate, not satisfaction surveys</li>
+	          <li><strong>Result:</strong> PowerPoint estimates → defensible numbers with audit trail. Moves a firm from the 85% that don’t track ROI to the 18% that do</li>
+	        </ul>
+      </div>
+
+      <div class="req-block fade-up">
+        <div class="jd-need">JD: Maintain a portfolio dashboard: adoption, client outcomes, return on innovation</div>
+        	        <ul class="evidence-list">
+	          <li><strong>Cross-client aggregation</strong> — KPI cards: functions deployed, hours saved, cost avoided, net ROI, active users</li>
+	          <li><strong>Breakdown by function, practice group</strong> — trend lines, sparklines, adoption percentages</li>
+	          <li><strong>Partners’ language</strong> — PEP, RPL, realization. Not IT metrics</li>
+	          <li><strong>Result:</strong> leadership sees at a glance what AI is deployed, who’s using it, what it’s saving</li>
+	        </ul>
+      </div>
+
+      <div class="evidence-grid">
+        <div class="evidence-card fade-up">
+          <div class="tag">Platform</div>
+          <div class="point"><strong>AESOP portfolio scoring</strong> with effort/ROI/alignment dimensions, Kanban board with drag-and-drop, WIP limits, inline scoring.</div>
+        </div>
+        <div class="evidence-card fade-up">
+          <div class="tag">Platform</div>
+          <div class="point"><strong>POC pipeline tracker</strong> in Legal OS — every AI initiative tracked from discovery through graduation, with department visibility.</div>
+        </div>
+        <div class="evidence-card fade-up">
+          <div class="tag">Direct Experience</div>
+          <div class="point"><strong>Multi-department program coordination</strong> at Contentful — ran the hub between Legal, Procurement, Finance, People Ops, and Technology.</div>
+        </div>
+        <div class="evidence-card fade-up">
+          <div class="tag">Direct Experience</div>
+          <div class="point"><strong>Decade of enterprise program delivery</strong> at Sigmaxim and Sopheon — multi-stakeholder coordination, milestone tracking, executive reporting.</div>
+        </div>
+      </div>
+    </section>
+
+    <hr class="section-divider">
+
+    <!-- ========== 3. CLIENT ENGAGEMENT & REPORTING ========== -->
+    <section>
+      <div class="section-label">Function Area 3</div>
+      <h2><svg class="section-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>Client Engagement &amp; Reporting</h2>
+
+      <div class="req-block fade-up">
+        <div class="jd-need">JD: Serve as strategic advisor to client relationship teams on AI as value-added differentiator</div>
+        	        <ul class="evidence-list">
+	          <li><strong>Contentful</strong> — bridge between legal operations and IS AI team. 5 agents in 6 months across 4 departments</li>
+	          <li><strong>Build Solutions AI</strong> — executive technical discovery, business objectives to AI architecture</li>
+	          <li><strong>Sopheon</strong> — embedded with client teams as trusted technical advisor</li>
+	          <li><strong>Result:</strong> time-to-value: 6 months → 2 months. I speak lawyer and engineer in the same meeting</li>
+	        </ul>
+      </div>
+
+      <div class="req-block fade-up">
+        <div class="jd-need">JD: Create client-facing materials and outcome reports demonstrating measurable AI value</div>
+        	        <ul class="evidence-list">
+	          <li><strong>Quarterly AI impact reports</strong> — audit-trail backing, one-click export</li>
+	          <li><strong>Governance packs for RFPs</strong> — ABA 512 compliance evidence, data handling documentation</li>
+	          <li><strong>Client conversation pack</strong> — deck outline, RFP response templates, technical FAQ for CISOs</li>
+	          <li><strong>Result:</strong> days of manual assembly across multiple systems → single-click export. Partner walks in with data, not anecdotes</li>
+	        </ul>
+      </div>
+
+      <div class="req-block fade-up">
+        <div class="jd-need">JD: Respond to client RFPs and surveys related to AI</div>
+        	        <ul class="evidence-list">
+	          <li><strong>Regulatory mapping mode</strong> — pre-populates compliance templates with cited evidence from evaluation history</li>
+	          <li><strong>Audit trail for every claim</strong> — governance, data handling, model usage</li>
+	          <li><strong>RFP responses</strong> — backed by system data, not policy documents</li>
+	          <li><strong>Result:</strong> audit preparation: weeks of manual evidence gathering → generated artifact</li>
+	        </ul>
+      </div>
+    </section>
+
+    <hr class="section-divider">
+
+    <!-- ========== 4. CHANGE MANAGEMENT & ENABLEMENT ========== -->
+    <section>
+      <div class="section-label">Function Area 4</div>
+      <h2><svg class="section-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>Change Management &amp; Enablement</h2>
+
+      <div class="req-block fade-up">
+        <div class="jd-need">JD: Partner with Learning & Development to upskill lawyers and staff in AI literacy</div>
+        	        <ul class="evidence-list">
+	          <li><strong>AI Build Lab resident</strong> — weekly live instruction, cohorts of 150–200, 1,000+ member community</li>
+	          <li><strong>Contentful</strong> — AI literacy workshops across 4 departments</li>
+	          <li><strong>Risilience</strong> — 25-course academy, 60% faster client response, $175K pipeline</li>
+	          <li><strong>Result:</strong> departments with zero AI familiarity building own agents within 3 months. Time-to-value: 6 months → 2</li>
+	        </ul>
+      </div>
+
+      <div class="req-block fade-up">
+        <div class="jd-need">JD: Build adoption programs integrating AI into daily legal workflows</div>
+        	        <ul class="evidence-list">
+	          <li><strong>Adoption &amp; maintenance plans</strong> — RACI matrix, stakeholder mapping, rollout calibrated from readiness scores</li>
+	          <li><strong>Enablement kit</strong> — workshop deck, prompt engineering guide for lawyers, adoption playbook, AI literacy FAQ</li>
+	          <li><strong>Champion network identification</strong> — deployed across 4 departments, 150+ professionals</li>
+	          <li><strong>Result:</strong> adoption planning ships with the agent, not after. Change management as pre-launch artifact</li>
+	        </ul>
+      </div>
+
+      <div class="req-block fade-up">
+        <div class="jd-need">JD: Promote a culture of experimentation, measurement, and continuous improvement</div>
+        	        <ul class="evidence-list">
+	          <li><strong>Continuous feedback loops</strong> — test, iterate, measure, repeat. Every change verified before it ships</li>
+	          <li><strong>Drift detection</strong> — 7 dimensions. Catches degradation before it becomes liability</li>
+	          <li><strong>POC pipeline</strong> — graduates what works, kills what doesn’t</li>
+	          <li><strong>Result:</strong> 1.4M test executions across the portfolio. Measurement as continuous, not quarterly</li>
+	        </ul>
+      </div>
+    </section>
+
+    <hr class="section-divider">
+
+    <!-- ========== WHAT I DON'T OVERCLAIM ========== -->
+    <section>
+      <div class="section-label">Cross-Cutting Themes</div>
+      <h2><svg class="section-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="6" cy="6" r="2"/><circle cx="18" cy="6" r="2"/><circle cx="12" cy="18" r="2"/><line x1="6" y1="8" x2="6" y2="16"/><line x1="18" y1="8" x2="18" y2="16"/><line x1="8" y1="6" x2="16" y2="6"/></svg>Privacy, Governance, Discovery</h2>
+      <p>Three themes that run through every project and map directly to the operating realities of a law firm deploying AI.</p>
+
+      <h3>Privacy &amp; Confidentiality</h3>
+      <p>
+        In a law firm, confidentiality isn't a feature — it's an <strong>existential requirement.</strong> ABA Formal Opinion 512 names it as one of six core duties. I've built confidentiality architecture into every system I've deployed.
+      </p>
+      <div class="evidence-grid">
+        <div class="evidence-card fade-up">
+          <div class="tag">Enterprise</div>
+          <div class="point"><strong>Strict access controls walling employment legal data from commercial legal</strong> at Contentful — the exact confidentiality gap that had blocked adoption of prior contract-management tools.</div>
+        </div>
+        <div class="evidence-card fade-up">
+          <div class="tag">Architecture</div>
+          <div class="point"><strong>Tenant data isolation enforced at the database level</strong> across all platforms. Not middleware. Not app logic. Client data cannot leak. The architecture guarantees it.</div>
+        </div>
+        <div class="evidence-card fade-up">
+          <div class="tag">Compliance</div>
+          <div class="point"><strong>ABA 512 compliance evaluation prompt</strong> in the Harvey monitoring system — every agent output scored against the 6 duties, with confidentiality weighted at 30% of the safety dimension.</div>
+        </div>
+        <div class="evidence-card fade-up">
+          <div class="tag">Pattern</div>
+          <div class="point"><strong>Human-above-the-loop architecture:</strong> auto-generate everything, auto-send nothing. Every automated output has a human review gate before it touches a client.</div>
+        </div>
+      </div>
+
+      <h3>Governance</h3>
+      <p>
+        The firm published its AI governance framework in June 2026 — 5 principles. <strong>I build the tools that turn principles into enforcement.</strong>
+      </p>
+      <div class="evidence-grid">
+        <div class="evidence-card fade-up">
+          <div class="tag">Evaluation</div>
+          <div class="point"><strong>4-dimension scoring engine</strong> with veto power — Safety, Bias, Accuracy, Compliance. 990 tests. Any critical failure blocks deployment. Governance as code, not committee.</div>
+        </div>
+        <div class="evidence-card fade-up">
+          <div class="tag">Monitoring</div>
+          <div class="point"><strong>Drift detection across 7 dimensions</strong> — Tone, Scope, Refusal, Instruction Erosion, Hallucination, Safety, Disclaimer. Catches degradation before it becomes liability.</div>
+        </div>
+        <div class="evidence-card fade-up">
+          <div class="tag">Audit</div>
+          <div class="point"><strong>Append-only audit trail</strong> with explainability and traceability. Every evaluation, every override, every drift alert — timestamped and immutable.</div>
+        </div>
+        <div class="evidence-card fade-up">
+          <div class="tag">Independence</div>
+          <div class="point"><strong>Harvey can't grade its own homework.</strong> The Legal AI OS provides independent evaluation of vendor-deployed agents. The evaluator is structurally separate from the evaluated.</div>
+        </div>
+      </div>
+
+      <h3>Discovery</h3>
+      <p>
+        Finding where AI creates value isn't guesswork. <strong>It's a structured process I've productized.</strong>
+      </p>
+      <div class="evidence-grid">
+        <div class="evidence-card fade-up">
+          <div class="tag">Method</div>
+          <div class="point"><strong>Two-phase authored discovery:</strong> Phase 1 maps the inherited process. Phase 2 questions structural assumptions through 7 decision-first categories. Finds the highest-value points of intervention.</div>
+        </div>
+        <div class="evidence-card fade-up">
+          <div class="tag">Enterprise</div>
+          <div class="point"><strong>Stakeholder listening sessions and workflow mapping</strong> across Legal, Procurement, Finance, and People Operations before any build. Requirements grounded in what people actually do.</div>
+        </div>
+        <div class="evidence-card fade-up">
+          <div class="tag">Output</div>
+          <div class="point"><strong>Decision surface:</strong> a structured artifact capturing what changes, who owns it, what boundaries apply, what evidence proves it worked. Executive-ready, not consultant-speak.</div>
+        </div>
+        <div class="evidence-card fade-up">
+          <div class="tag">Platform</div>
+          <div class="point"><strong>POC pipeline from discovery through graduation.</strong> Every AI initiative tracked. What's in discovery, what's in build, what's in review, what graduated, what got killed and why.</div>
+        </div>
+      </div>
+    </section>
+
+    <hr class="section-divider">
+
+    <!-- ========== WHAT I DON'T OVERCLAIM ========== -->
+    <section>
+      <div class="section-label">Honest Scope</div>
+      <h2><svg class="section-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><line x1="8" y1="8" x2="16" y2="16"/><line x1="16" y1="8" x2="8" y2="16"/></svg>What I Don't Overclaim</h2>
+      <p>The role scope document is clear about what this role does not own. I match that scope.</p>
+
+      <div class="dont-claim fade-up">
+        <ul>
+          <li><strong>Not applying as the architect who unifies post-merger DMS/KM.</strong> That belongs to IT, KM leadership, and external consultants. I build the POCs that prove what's worth unifying.</li>
+          <li><strong>Not applying as the Harvey deployment owner.</strong> Technology owns vendor relationships. I build the independent evaluation layer that proves Harvey is working — because Harvey can't grade its own homework.</li>
+          <li><strong>Not applying as the AI governance framework author.</strong> The firm published its 5 principles in June 2026. I bring the tools that operationalize them: scoring engines, drift detection, compliance mapping.</li>
+          <li><strong>Not applying as the pricing strategist.</strong> Pricing/LPM owns AFA design. I provide the time-saved data and cost-impact analysis they need to price.</li>
+          <li><strong>Not applying as the client relationship owner.</strong> I'm the technical specialist the relationship partner brings into the room. I build the deck, the FAQ, the audit trail, and the confidence.</li>
+        </ul>
+      </div>
+    </section>
+
+    <hr class="section-divider">
+
+    <!-- ========== THE ONE-LINE ANSWER ========== -->
+    <section>
+      <div class="section-label">The Narrative</div>
+      <h2><svg class="section-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18h6"/><path d="M10 21h4"/><path d="M12 2a7 7 0 0 0-7 7c0 2.4 1.2 4.5 3 5.7V17h8v-2.3c1.8-1.2 3-3.3 3-5.7a7 7 0 0 0-7-7z"/></svg>What I Carry Into the Room</h2>
+
+      <div class="req-block fade-up" style="border-left-color: var(--accent);">
+        <div class="evidence" style="font-size:17px;">
+          I understand how law firms make money and where AI creates tension with that model. I know how to find the highest-value AI use cases inside practice groups, run small POCs to prove them, track everything so we know what's working, and teach lawyers to use the tools. I've done all of this — the workflow discovery, the POC builds, the portfolio tracking, the enablement programs. I bridge the gap between what the practice groups need, what the technology team can build, and what the pricing team needs to price.
+        </div>
+      </div>
+
+      <p style="margin-top:16px;">
+        <strong>The one-line answer:</strong> 85% of firms don't track AI ROI. I've built the systems — the POC pipeline, the portfolio dashboard, the ROI framework with calibrated baselines — that put a firm in the 18% that does. Backed by 1.4 million test executions and 30+ production workflows.
+      </p>
+    </section>
+
+    <footer class="footer">
+      <span>Charlie Fuller — APC K&I Program Manager Application Evidence</span>
+      <span>July 2026</span>
+    </footer>
+
+  </div>
+</body>
+</html>
