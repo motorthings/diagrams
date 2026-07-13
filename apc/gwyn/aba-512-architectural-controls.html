@@ -1,0 +1,720 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<link rel="icon" type="image/svg+xml" href="../../icon.svg">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ABA 512 → AESOP Architectural Controls</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600;9..144,700&family=Source+Code+Pro:wght@400;500;600" rel="stylesheet">
+<style>
+  :root {
+    --font-body: 'Fraunces', Georgia, serif;
+    --font-mono: 'Source Code Pro', 'SF Mono', Consolas, monospace;
+
+    --bg: #0f0a1a;
+    --surface: #1a1128;
+    --surface2: #241a35;
+    --surface-elevated: #2a1f3d;
+    --border: rgba(255, 255, 255, 0.06);
+    --border-bright: rgba(255, 255, 255, 0.12);
+    --text: #e8e0f0;
+    --text-dim: #9b8fb8;
+
+    --cyan: #22d3ee;
+    --cyan-dim: rgba(34, 211, 238, 0.10);
+    --purple: #a78bfa;
+    --purple-dim: rgba(167, 139, 250, 0.12);
+    --amber: #fbbf24;
+    --amber-dim: rgba(251, 191, 36, 0.10);
+    --orange: #fb923c;
+    --orange-dim: rgba(251, 146, 60, 0.12);
+    --red: #f87171;
+    --red-dim: rgba(248, 113, 113, 0.10);
+    --green: #4ade80;
+    --green-dim: rgba(74, 222, 128, 0.10);
+  }
+
+  @media (prefers-color-scheme: light) {
+    :root {
+      --bg: #f5f0fa;
+      --surface: #ffffff;
+      --surface2: #ede5f7;
+      --surface-elevated: #ffffff;
+      --border: rgba(0, 0, 0, 0.07);
+      --border-bright: rgba(0, 0, 0, 0.14);
+      --text: #1a0e2e;
+      --text-dim: #6b5a8a;
+
+      --cyan: #0891b2;
+      --cyan-dim: rgba(8, 145, 178, 0.08);
+      --purple: #7c3aed;
+      --purple-dim: rgba(124, 58, 237, 0.08);
+      --amber: #d97706;
+      --amber-dim: rgba(217, 119, 6, 0.08);
+      --orange: #ea580c;
+      --orange-dim: rgba(234, 88, 12, 0.08);
+      --red: #dc2626;
+      --red-dim: rgba(220, 38, 38, 0.08);
+      --green: #16a34a;
+      --green-dim: rgba(22, 163, 74, 0.08);
+    }
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background-color: var(--bg);
+    background-image:
+      radial-gradient(ellipse at 20% 5%, var(--purple-dim) 0%, transparent 50%),
+      radial-gradient(ellipse at 80% 20%, var(--cyan-dim) 0%, transparent 40%),
+      radial-gradient(ellipse at 50% 90%, var(--green-dim) 0%, transparent 45%);
+    color: var(--text);
+    font-family: var(--font-body);
+    padding: 40px;
+    min-height: 100vh;
+    overflow-wrap: break-word;
+  }
+
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(14px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .animate {
+    animation: fadeUp 0.45s ease-out both;
+    animation-delay: calc(var(--i, 0) * 0.06s);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after {
+      animation-duration: 0.01ms !important;
+      animation-delay: 0ms !important;
+      transition-duration: 0.01ms !important;
+    }
+  }
+
+  .container { max-width: 1200px; margin: 0 auto; }
+
+  h1 {
+    font-size: 42px;
+    font-weight: 700;
+    letter-spacing: -1.5px;
+    margin-bottom: 4px;
+    text-wrap: balance;
+    color: var(--purple);
+  }
+  h2 {
+    font-size: 20px;
+    font-weight: 700;
+    letter-spacing: -0.5px;
+    margin-bottom: 16px;
+  }
+
+  .subtitle {
+    color: var(--text-dim);
+    font-family: var(--font-mono);
+    font-size: 12px;
+    margin-bottom: 24px;
+    letter-spacing: 0.5px;
+  }
+
+  .description {
+    font-size: 15px;
+    line-height: 1.75;
+    color: var(--text-dim);
+    margin-bottom: 32px;
+    max-width: 820px;
+  }
+  .description strong { color: var(--text); }
+
+  /* ============ POSITIONING CALLOUT ============ */
+  .positioning-callout {
+    background: color-mix(in srgb, var(--surface) 92%, var(--purple) 8%);
+    border: 1px solid color-mix(in srgb, var(--border) 50%, var(--purple) 50%);
+    border-left: 4px solid var(--purple);
+    border-radius: 0 12px 12px 0;
+    padding: 20px 24px;
+    margin-bottom: 32px;
+  }
+  .positioning-callout p {
+    font-size: 14px;
+    line-height: 1.7;
+    color: var(--text-dim);
+  }
+  .positioning-callout strong { color: var(--text); }
+
+  /* ============ MERMAID ============ */
+  .mermaid-wrap {
+    position: relative;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 32px 24px;
+    overflow: auto;
+    margin-bottom: 32px;
+    scrollbar-width: thin;
+    scrollbar-color: var(--border) transparent;
+  }
+  .mermaid-wrap::-webkit-scrollbar { width: 6px; height: 6px; }
+  .mermaid-wrap::-webkit-scrollbar-track { background: transparent; }
+  .mermaid-wrap::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+  .mermaid-wrap .mermaid {
+    display: flex;
+    justify-content: center;
+    transition: transform 0.2s ease;
+    transform-origin: top center;
+  }
+
+  .zoom-controls {
+    position: absolute;
+    top: 8px; right: 8px;
+    display: flex; gap: 2px; z-index: 10;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 2px;
+  }
+  .zoom-controls button {
+    width: 28px; height: 28px;
+    border: none;
+    background: transparent;
+    color: var(--text-dim);
+    font-family: var(--font-mono);
+    font-size: 14px;
+    cursor: pointer;
+    border-radius: 4px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .zoom-controls button:hover { background: var(--border); color: var(--text); }
+
+  /* ============ LEGEND ============ */
+  .legend {
+    display: flex;
+    gap: 24px;
+    flex-wrap: wrap;
+    margin-bottom: 28px;
+  }
+  .legend-item {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-family: var(--font-mono);
+    font-size: 11px;
+    color: var(--text-dim);
+  }
+  .legend-swatch {
+    width: 12px; height: 12px;
+    border-radius: 3px;
+  }
+
+  /* ============ DUTY CARDS ============ */
+  .duties-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(360px, 1fr));
+    gap: 16px;
+    margin-bottom: 32px;
+  }
+  .duties-grid > * { min-width: 0; }
+
+  .duty-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 22px 24px;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+  }
+  .duty-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.18);
+  }
+
+  .duty-card__header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 12px;
+  }
+  .duty-card__num {
+    width: 36px; height: 36px;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: var(--font-mono);
+    font-size: 14px;
+    font-weight: 700;
+    flex-shrink: 0;
+  }
+  .duty-card h3 {
+    font-size: 16px;
+    font-weight: 600;
+    letter-spacing: -0.3px;
+  }
+  .duty-card__question {
+    font-size: 11px;
+    font-family: var(--font-mono);
+    color: var(--text-dim);
+    margin-bottom: 12px;
+    padding-bottom: 12px;
+    border-bottom: 1px solid var(--border);
+  }
+  .duty-card__controls {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+  }
+  .duty-card__controls li {
+    font-size: 13px;
+    line-height: 1.7;
+    padding: 4px 0;
+    padding-left: 18px;
+    position: relative;
+    color: var(--text-dim);
+  }
+  .duty-card__controls li::before {
+    content: '→';
+    position: absolute;
+    left: 0;
+    font-family: var(--font-mono);
+    font-size: 11px;
+  }
+  .duty-card__controls li strong { color: var(--text); }
+
+  /* Color accents per duty */
+  .duty--competence { border-left: 3px solid var(--purple); }
+  .duty--competence .duty-card__num { background: var(--purple-dim); color: var(--purple); }
+  .duty--competence li::before { color: var(--purple); }
+
+  .duty--confidentiality { border-left: 3px solid var(--red); }
+  .duty--confidentiality .duty-card__num { background: var(--red-dim); color: var(--red); }
+  .duty--confidentiality li::before { color: var(--red); }
+
+  .duty--communication { border-left: 3px solid var(--cyan); }
+  .duty--communication .duty-card__num { background: var(--cyan-dim); color: var(--cyan); }
+  .duty--communication li::before { color: var(--cyan); }
+
+  .duty--candor { border-left: 3px solid var(--amber); }
+  .duty--candor .duty-card__num { background: var(--amber-dim); color: var(--amber); }
+  .duty--candor li::before { color: var(--amber); }
+
+  .duty--supervision { border-left: 3px solid var(--orange); }
+  .duty--supervision .duty-card__num { background: var(--orange-dim); color: var(--orange); }
+  .duty--supervision li::before { color: var(--orange); }
+
+  .duty--fees { border-left: 3px solid var(--green); }
+  .duty--fees .duty-card__num { background: var(--green-dim); color: var(--green); }
+  .duty--fees li::before { color: var(--green); }
+
+  /* ============ APC CALLOUT ============ */
+  .apc-callout {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 28px;
+    margin-bottom: 32px;
+  }
+  .apc-callout h2 {
+    font-size: 20px;
+    font-weight: 700;
+    letter-spacing: -0.5px;
+    margin-bottom: 12px;
+    color: var(--purple);
+  }
+  .apc-callout p {
+    font-size: 13px;
+    line-height: 1.75;
+    color: var(--text-dim);
+  }
+  .apc-callout strong { color: var(--text); }
+
+  /* ============ ENGINEERING CALLOUT ============ */
+  .engineering-callout {
+    background: color-mix(in srgb, var(--surface) 92%, var(--red) 8%);
+    border: 1px solid color-mix(in srgb, var(--border) 50%, var(--red) 50%);
+    border-left: 4px solid var(--red);
+    border-radius: 0 12px 12px 0;
+    padding: 20px 24px;
+  }
+  .engineering-callout h3 {
+    font-size: 16px;
+    font-weight: 700;
+    color: var(--red);
+    letter-spacing: -0.3px;
+    margin-bottom: 6px;
+  }
+  .engineering-callout p {
+    font-size: 13px;
+    line-height: 1.7;
+    color: var(--text-dim);
+  }
+  .engineering-callout strong { color: var(--text); }
+
+  /* ============ RESPONSIVE ============ */
+  @media (max-width: 768px) {
+    body { padding: 16px; }
+    h1 { font-size: 26px; }
+    .mermaid-wrap { padding: 16px 12px; }
+    .duties-grid { grid-template-columns: 1fr; }
+  }
+
+  .backlink{position:fixed;top:12px;left:16px;z-index:200;font-family:var(--font-mono,monospace);font-size:11px;color:var(--text-dim,#8b949e);text-decoration:none;padding:6px 10px;border:1px solid var(--border,rgba(255,255,255,0.08));border-radius:6px;background:var(--surface,#161b22);transition:color .15s,border-color .15s}.backlink:hover{color:var(--text,#e6edf3);border-color:var(--text-dim,#8b949e)}
+</style>
+</head>
+<body>
+<a href="../../index.html" class="backlink" title="Back to Index">← Index</a>
+
+<div class="container">
+
+  <h1 class="animate" style="--i:0">ABA 512 → Architectural Controls</h1>
+  <p class="subtitle animate" style="--i:1">apc/gwyn // 6 duties · engineered controls · governance as code</p>
+
+  <p class="description animate" style="--i:2">
+    ABA Formal Opinion 512 defines six duties for lawyers using AI. Most candidates can name them.
+    Almost none can map them to specific architectural controls. This map demonstrates that
+    <strong>governance isn't a policy memo — it's engineered into the system</strong>.
+    Every duty has a corresponding control that enforces compliance, not just advocates for it.
+  </p>
+
+  <!-- ============ POSITIONING ============ -->
+  <div class="positioning-callout animate" style="--i:3">
+    <p>
+      <strong>Why this separates Charlie from policy-only candidates:</strong>
+      Gwyn is a senior K&I attorney. ABA 512 is her governing ethical framework. She will evaluate
+      whether Charlie understands governance as an <strong>engineering discipline</strong>, not a
+      compliance exercise. Perkins Coie fought a constitutional battle over client confidentiality.
+      The AI program has to be built so confidentiality is structural — engineered into permissions
+      from day one, not bolted on when compliance asks. That discipline is exactly what Charlie brings.
+    </p>
+  </div>
+
+  <!-- ============ MAIN MAP ============ -->
+  <div class="mermaid-wrap animate" style="--i:4">
+    <div class="zoom-controls">
+      <button onclick="zoomDiagram(this, 1.2)" title="Zoom in">+</button>
+      <button onclick="zoomDiagram(this, 0.8)" title="Zoom out">&minus;</button>
+      <button onclick="resetZoom(this)" title="Reset zoom">&#8634;</button>
+    </div>
+    <pre class="mermaid">
+      graph LR
+        %% ABA 512 DUTIES
+        D1["ABA 512
+Competence"]:::duty1
+        D2["ABA 512
+Confidentiality"]:::duty2
+        D3["ABA 512
+Communication"]:::duty3
+        D4["ABA 512
+Candor"]:::duty4
+        D5["ABA 512
+Supervision"]:::duty5
+        D6["ABA 512
+Reasonable Fees"]:::duty6
+
+        %% AESOP CONTROLS
+        subgraph CONTROLS["AESOP Architectural Controls"]
+          C1a["Quality Analysis
+7-agent scoring"]:::ctrl
+          C1b["Drift Detection
+6-type monitoring"]:::ctrl
+          C1c["KB Audit
+pre-build validation"]:::ctrl
+
+          C2a["Access-Control Arch.
+data isolation"]:::ctrl2
+          C2b["Zero-Retention APIs
+no training on data"]:::ctrl2
+          C2c["Audit Trails
+boundary proof"]:::ctrl2
+
+          C3a["Portfolio Dashboard
+adoption tracking"]:::ctrl3
+          C3b["Evaluation Reports
+capability evidence"]:::ctrl3
+          C3c["Client Reporting
+quarterly impact"]:::ctrl3
+
+          C4a["Accuracy Scorer
+forensic verification"]:::ctrl4
+          C4b["Trace Analysis
+failure taxonomy"]:::ctrl4
+          C4c["Hallucination Drift
+production monitoring"]:::ctrl4
+
+          C5a["Human-in-the-Loop
+escalation gating"]:::ctrl5
+          C5b["Sentinel Agent
+QA test plans"]:::ctrl5
+          C5c["Custom Test Suite
+scenario generation"]:::ctrl5
+
+          C6a["Time-Saved Tracking
+per-matter metrics"]:::ctrl6
+          C6b["AFA Pricing Data
+margin confidence"]:::ctrl6
+          C6c["Cost Dashboard
+ROI per agent"]:::ctrl6
+        end
+
+        %% MAPPINGS
+        D1 --> C1a
+        D1 --> C1b
+        D1 --> C1c
+
+        D2 --> C2a
+        D2 --> C2b
+        D2 --> C2c
+
+        D3 --> C3a
+        D3 --> C3b
+        D3 --> C3c
+
+        D4 --> C4a
+        D4 --> C4b
+        D4 --> C4c
+
+        D5 --> C5a
+        D5 --> C5b
+        D5 --> C5c
+
+        D6 --> C6a
+        D6 --> C6b
+        D6 --> C6c
+
+        %% Styles
+        classDef duty1 fill:#241a35,stroke:#a78bfa,color:#e8e0f0,stroke-width:2px
+        classDef duty2 fill:#2a1a1a,stroke:#f87171,color:#fde0e0,stroke-width:2px
+        classDef duty3 fill:#1a2e3d,stroke:#22d3ee,color:#cffafe,stroke-width:2px
+        classDef duty4 fill:#2a2618,stroke:#fbbf24,color:#fef3c7,stroke-width:2px
+        classDef duty5 fill:#2a1a18,stroke:#fb923c,color:#fde8d0,stroke-width:2px
+        classDef duty6 fill:#1a2a1a,stroke:#4ade80,color:#dcfce7,stroke-width:2px
+
+        classDef ctrl fill:#1a1830,stroke:#a78bfa,color:#d8cef0,stroke-width:1px
+        classDef ctrl2 fill:#1a1830,stroke:#f87171,color:#d8cef0,stroke-width:1px
+        classDef ctrl3 fill:#1a1830,stroke:#22d3ee,color:#d8cef0,stroke-width:1px
+        classDef ctrl4 fill:#1a1830,stroke:#fbbf24,color:#d8cef0,stroke-width:1px
+        classDef ctrl5 fill:#1a1830,stroke:#fb923c,color:#d8cef0,stroke-width:1px
+        classDef ctrl6 fill:#1a1830,stroke:#4ade80,color:#d8cef0,stroke-width:1px
+
+        classDef subg fill:transparent,stroke:rgba(255,255,255,0.06),stroke-dasharray:6 4,color:var(--text-dim)
+        class CONTROLS subg
+    </pre>
+  </div>
+
+  <div class="legend animate" style="--i:5">
+    <div class="legend-item"><div class="legend-swatch" style="background:var(--purple)"></div> Competence</div>
+    <div class="legend-item"><div class="legend-swatch" style="background:var(--red)"></div> Confidentiality</div>
+    <div class="legend-item"><div class="legend-swatch" style="background:var(--cyan)"></div> Communication</div>
+    <div class="legend-item"><div class="legend-swatch" style="background:var(--amber)"></div> Candor</div>
+    <div class="legend-item"><div class="legend-swatch" style="background:var(--orange)"></div> Supervision</div>
+    <div class="legend-item"><div class="legend-swatch" style="background:var(--green)"></div> Reasonable Fees</div>
+  </div>
+
+  <!-- ============ DUTY DETAIL CARDS ============ -->
+  <h2 class="animate" style="--i:6">The Six Duties — Engineered Controls</h2>
+  <div class="duties-grid">
+
+    <!-- COMPETENCE -->
+    <div class="duty-card duty--competence animate" style="--i:7">
+      <div class="duty-card__header">
+        <div class="duty-card__num">1</div>
+        <h3>Competence</h3>
+      </div>
+      <div class="duty-card__question">"Do you understand what this AI can and cannot do — and do you stay current as it changes?"</div>
+      <ul class="duty-card__controls">
+        <li><strong>Quality Analysis</strong> — 7-agent parallel scoring on Instructions, Ethics, Bias, Safety, Functionality, Tone. 100-point scale with certification tier. Proves you know what the agent does.</li>
+        <li><strong>Drift Detection</strong> — 6-type continuous monitoring (tone, scope, refusal, instruction erosion, hallucination, safety). If the underlying model changes, you know immediately.</li>
+        <li><strong>KB Audit</strong> — 10 standardized issue types validated before any build. Proves the knowledge foundation is sound. Competence starts before the first prompt.</li>
+      </ul>
+    </div>
+
+    <!-- CONFIDENTIALITY -->
+    <div class="duty-card duty--confidentiality animate" style="--i:8">
+      <div class="duty-card__header">
+        <div class="duty-card__num">2</div>
+        <h3>Confidentiality</h3>
+      </div>
+      <div class="duty-card__question">"Does Client A's data ever surface in Client B's output? Can you prove it didn't?"</div>
+      <ul class="duty-card__controls">
+        <li><strong>Access-Control Architecture</strong> — Role-based permissions walling data at the ingestion layer. Employment legal walled from commercial legal. The exact confidentiality gap that blocked prior tools — solved architecturally.</li>
+        <li><strong>Zero-Retention API Endpoints</strong> — No training on client data. No cross-tenant leakage. Engineered, not promised.</li>
+        <li><strong>Audit Trails</strong> — Every data access logged. Every boundary crossing provably prevented. The audit trail proves the boundary held — not a policy statement, a system record.</li>
+      </ul>
+    </div>
+
+    <!-- COMMUNICATION -->
+    <div class="duty-card duty--communication animate" style="--i:9">
+      <div class="duty-card__header">
+        <div class="duty-card__num">3</div>
+        <h3>Communication</h3>
+      </div>
+      <div class="duty-card__question">"Does the client know you're using AI? Do they understand what it does and doesn't do?"</div>
+      <ul class="duty-card__controls">
+        <li><strong>Portfolio Dashboard</strong> — Shows every deployed agent, adoption rates, and outcome metrics. Gives the relationship partner data to present: "Here's what our AI did on your matters."</li>
+        <li><strong>Evaluation Reports</strong> — Per-agent scores with certification level. Transparent capability evidence. 68% of in-house counsel don't know if outside firms use AI. This flips that.</li>
+        <li><strong>Client Reporting</strong> — Quarterly impact summaries: time saved, accuracy metrics, scope of AI use. Proves value with data, not anecdotes.</li>
+      </ul>
+    </div>
+
+    <!-- CANDOR -->
+    <div class="duty-card duty--candor animate" style="--i:10">
+      <div class="duty-card__header">
+        <div class="duty-card__num">4</div>
+        <h3>Candor</h3>
+      </div>
+      <div class="duty-card__question">"Are the AI's outputs accurate? Or is it fabricating citations and presenting estimates as facts?"</div>
+      <ul class="duty-card__controls">
+        <li><strong>Accuracy Scorer</strong> — Forensic citation verification. Claim-by-claim document comparison. Decomposes responses into discrete factual claims and exhaustively searches sources. Catches cherry-picked citations, omitted conditions, approximate numbers presented as exact.</li>
+        <li><strong>Trace Analysis</strong> — Qualitative coding of failure moments. Groups errors into axial codes — hallucination patterns, fabrication signatures. Turns "the AI made something up" into categorized, fixable failure patterns.</li>
+        <li><strong>Hallucination Drift Detection</strong> — Monitors production for fabrication rate changes. If hallucination spikes after a model update, flagged before the client sees it.</li>
+      </ul>
+    </div>
+
+    <!-- SUPERVISION -->
+    <div class="duty-card duty--supervision animate" style="--i:11">
+      <div class="duty-card__header">
+        <div class="duty-card__num">5</div>
+        <h3>Supervision</h3>
+      </div>
+      <div class="duty-card__question">"Is a qualified human reviewing the AI's output? Or is the AI practicing law without a license?"</div>
+      <ul class="duty-card__controls">
+        <li><strong>Human-in-the-Loop Gating</strong> — Low-confidence outputs escalate automatically. The system flags what needs review; the lawyer decides. ABA 512 doesn't require reviewing every output — it requires knowing which outputs need review.</li>
+        <li><strong>Sentinel Agent</strong> — Generates structured QA testing plans from evaluation findings. Human-readable and machine-executable. Ensures ongoing human oversight is systematic, not ad hoc.</li>
+        <li><strong>Custom Test Suite</strong> — Generates domain-specific test scenarios. For legal: privilege boundaries, jurisdictional variation, confidentiality requirements. Supervision starts with knowing what to test.</li>
+      </ul>
+    </div>
+
+    <!-- REASONABLE FEES -->
+    <div class="duty-card duty--fees animate" style="--i:12">
+      <div class="duty-card__header">
+        <div class="duty-card__num">6</div>
+        <h3>Reasonable Fees</h3>
+      </div>
+      <div class="duty-card__question">"Are you billing AI time as attorney time? Can you prove the fee is reasonable given the AI's contribution?"</div>
+      <ul class="duty-card__controls">
+        <li><strong>Time-Saved Tracking</strong> — Hours per task before vs. after AI. Per-matter, per-client. Quantifies the efficiency gain so AFAs are priced with confidence, not guesswork.</li>
+        <li><strong>AFA Pricing Data</strong> — If a fixed-fee due diligence engagement takes 2 AI-assisted hours instead of 15, the firm can price that flat fee with margin. 85% of firms can't do this. They're guessing.</li>
+        <li><strong>Cost Dashboard</strong> — ROI per agent: build cost, run cost, time saved, margin impact. Proves the fee is reasonable because it's backed by data — not a narrative, a ledger.</li>
+      </ul>
+    </div>
+
+  </div>
+
+  <!-- ============ APC CONNECTION ============ -->
+  <div class="apc-callout animate" style="--i:13">
+    <h2>APC's Governance Framework — Operationalized</h2>
+    <p>
+      APC published its AI governance framework — <strong>5 principles</strong> — on day one of the merged firm.
+      The principles are clear. What the firm needs is the operationalization: the architectural controls
+      that prove every agent adheres to those principles before it touches a client matter.
+    </p>
+    <p style="margin-top: 10px;">
+      The evaluation pipeline (<strong>15 methods, 6 stages</strong>) feeds the ABA 512 controls. Quality Analysis
+      and Accuracy Scorer prove Competence and Candor. Access-control architecture and zero-retention endpoints
+      enforce Confidentiality. Portfolio dashboards and evaluation reports satisfy Communication. Human-in-the-loop
+      gating and Sentinel Agent fulfill Supervision. Time-saved tracking and AFA pricing data demonstrate
+      Reasonable Fees. <strong>The audit trail isn't a memo. It's a system output.</strong>
+    </p>
+  </div>
+
+  <!-- ============ BOTTOM LINE ============ -->
+  <div class="engineering-callout animate" style="--i:14">
+    <h3>Governance Is an Engineering Problem</h3>
+    <p>
+      Perkins Coie proved it will go to <strong>constitutional war</strong> to protect client confidentiality.
+      The AI program has to be built so compliance is <strong>structural</strong> — engineered into permissions,
+      audit trails, evaluation pipelines, and billing integration from day one. A policy memo doesn't stop
+      a data leak. Architecture does. That's the standard the role demands. That's the standard these
+      controls enforce.
+    </p>
+  </div>
+
+</div>
+
+<!-- ============ SCRIPTS ============ -->
+<script type="module">
+  import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs';
+
+  const isDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+
+  mermaid.initialize({
+    startOnLoad: true,
+    theme: 'base',
+    look: 'classic',
+    themeVariables: {
+      primaryColor: isDark ? '#241a35' : '#ede9fe',
+      primaryBorderColor: isDark ? '#a78bfa' : '#7c3aed',
+      primaryTextColor: isDark ? '#e8e0f0' : '#1a0e2e',
+      secondaryColor: isDark ? '#1a2e3d' : '#e0f7fa',
+      secondaryBorderColor: isDark ? '#22d3ee' : '#0891b2',
+      secondaryTextColor: isDark ? '#e0f7fa' : '#134e4a',
+      tertiaryColor: isDark ? '#2a2618' : '#fffbeb',
+      tertiaryBorderColor: isDark ? '#fbbf24' : '#d97706',
+      tertiaryTextColor: isDark ? '#fef3c7' : '#1a0e2e',
+      lineColor: isDark ? '#9b8fb8' : '#6b5a8a',
+      fontSize: '13px',
+      fontFamily: "'Fraunces', Georgia, serif",
+    }
+  });
+</script>
+<script>
+  function updateZoomState(wrap) {
+    var target = wrap.querySelector('.mermaid');
+    var zoom = parseFloat(target.dataset.zoom || '1');
+    wrap.classList.toggle('is-zoomed', zoom > 1);
+  }
+  function zoomDiagram(btn, factor) {
+    var wrap = btn.closest('.mermaid-wrap');
+    var target = wrap.querySelector('.mermaid');
+    var current = parseFloat(target.dataset.zoom || '1');
+    var next = Math.min(Math.max(current * factor, 0.3), 5);
+    target.dataset.zoom = next;
+    target.style.transform = 'scale(' + next + ')';
+    updateZoomState(wrap);
+  }
+  function resetZoom(btn) {
+    var wrap = btn.closest('.mermaid-wrap');
+    var target = wrap.querySelector('.mermaid');
+    target.dataset.zoom = '1';
+    target.style.transform = 'scale(1)';
+    updateZoomState(wrap);
+  }
+  document.querySelectorAll('.mermaid-wrap').forEach(function(wrap) {
+    wrap.addEventListener('wheel', function(e) {
+      if (!e.ctrlKey && !e.metaKey) return;
+      e.preventDefault();
+      var target = wrap.querySelector('.mermaid');
+      var current = parseFloat(target.dataset.zoom || '1');
+      var factor = e.deltaY < 0 ? 1.1 : 0.9;
+      var next = Math.min(Math.max(current * factor, 0.3), 5);
+      target.dataset.zoom = next;
+      target.style.transform = 'scale(' + next + ')';
+      updateZoomState(wrap);
+    }, { passive: false });
+    var startX, startY, scrollL, scrollT;
+    wrap.addEventListener('mousedown', function(e) {
+      if (e.target.closest('.zoom-controls')) return;
+      var target = wrap.querySelector('.mermaid');
+      if (parseFloat(target.dataset.zoom || '1') <= 1) return;
+      wrap.classList.add('is-panning');
+      startX = e.clientX;
+      startY = e.clientY;
+      scrollL = wrap.scrollLeft;
+      scrollT = wrap.scrollTop;
+    });
+    window.addEventListener('mousemove', function(e) {
+      if (!wrap.classList.contains('is-panning')) return;
+      wrap.scrollLeft = scrollL - (e.clientX - startX);
+      wrap.scrollTop = scrollT - (e.clientY - startY);
+    });
+    window.addEventListener('mouseup', function() {
+      wrap.classList.remove('is-panning');
+    });
+  });
+</script>
+
+</body>
+</html>
