@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Legal Metrics Analysis Agent — Legal AI Project</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;0,6..72,600;0,6..72,700;1,6..72,400;1,6..72,500&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --font-display: 'Newsreader', Georgia, serif; --font-body: 'Newsreader', Georgia, serif; --font-mono: 'Space Mono', monospace;
+    --bg: #faf8f9; --surface: #ffffff; --surface-warm: #fdf8fa;
+    --border: rgba(0,0,0,0.07); --border-bright: rgba(0,0,0,0.13);
+    --text: #1a1618; --text-dim: #6b6066; --text-faint: #a0989e; --heading: #0d0a0c;
+    --accent: #8b3a6e; --accent-bright: #d44a7a; --accent-dim: rgba(139,58,110,0.08);
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #141114; --surface: #1e1a1d; --surface-warm: #241f22;
+      --border: rgba(255,255,255,0.06); --border-bright: rgba(255,255,255,0.10);
+      --text: #e8e0e4; --text-dim: #a0989e; --text-faint: #6b6468; --heading: #f5eff2;
+      --accent: #d4a0c0; --accent-bright: #f070a0; --accent-dim: rgba(212,160,192,0.1);
+    }
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    background: var(--bg);
+    background-image: radial-gradient(ellipse at 0% 0%, var(--accent-dim) 0%, transparent 40%), radial-gradient(ellipse at 100% 50%, var(--accent-dim) 0%, transparent 35%);
+    color: var(--text); font-family: var(--font-body); font-size: 17px; line-height: 1.7; min-height: 100vh; padding-bottom: 80px;
+  }
+  .container { max-width: 800px; margin: 0 auto; padding: 0 20px; }
+  .nav {
+    position: sticky; top: 0; z-index: 100; backdrop-filter: blur(16px);
+    background: color-mix(in srgb, var(--bg) 88%, transparent);
+    border-bottom: 1px solid var(--border); margin-bottom: 40px; padding: 12px 20px;
+    font-family: var(--font-mono); font-size: 11px; letter-spacing: 0.06em;
+    text-transform: uppercase; color: var(--text-dim);
+    display: flex; align-items: center; justify-content: space-between;
+  }
+  .nav a { color: var(--text-dim); text-decoration: none; }
+  .nav a:hover { color: var(--accent-bright); }
+
+  .hero { padding: 40px 0 32px; border-bottom: 1px solid var(--border); margin-bottom: 40px; }
+  .hero-label { font-family: var(--font-mono); font-size: 10px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--accent-bright); margin-bottom: 16px; }
+  .hero h1 { font-family: var(--font-display); font-size: 38px; font-weight: 600; line-height: 1.15; color: var(--heading); margin-bottom: 12px; }
+  .hero-sub { font-size: 18px; color: var(--text-dim); max-width: 600px; line-height: 1.55; }
+  .hero-meta { display: flex; gap: 24px; margin-top: 20px; flex-wrap: wrap; }
+  .hero-meta .meta-item { font-family: var(--font-mono); font-size: 11px; color: var(--text-dim); }
+  .hero-meta .meta-item strong { color: var(--heading); }
+
+  section { margin-bottom: 44px; }
+  .section-label { font-family: var(--font-mono); font-size: 10px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--text-faint); margin-bottom: 8px; }
+  section h2 { font-family: var(--font-display); font-size: 26px; font-weight: 600; color: var(--heading); margin-bottom: 16px; display: flex; align-items: center; gap: 10px; }
+  .section-icon { width: 24px; height: 24px; color: var(--accent-bright); flex-shrink: 0; }
+  section p { color: var(--text-dim); margin-bottom: 12px; max-width: 680px; }
+  section p strong { color: var(--text); }
+
+  .before-after { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin: 20px 0; }
+  .ba-card { background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 20px 24px; }
+  .ba-card.before { border-left: 3px solid var(--text-faint); }
+  .ba-card.after { border-left: 3px solid var(--accent-bright); }
+  .ba-card .ba-label { font-family: var(--font-mono); font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase; margin-bottom: 8px; }
+  .ba-card.before .ba-label { color: var(--text-faint); }
+  .ba-card.after .ba-label { color: var(--accent-bright); }
+  .ba-card .ba-text { font-size: 15px; color: var(--text-dim); line-height: 1.5; }
+  .ba-card .ba-metric { font-family: var(--font-display); font-size: 28px; font-weight: 600; color: var(--heading); margin-top: 8px; }
+
+  .metric-row { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 12px; margin: 20px 0; }
+  .metric-card { background: var(--surface-warm); border: 1px solid var(--border); border-radius: 8px; padding: 16px 20px; text-align: center; }
+  .metric-card .m-value { font-family: var(--font-display); font-size: 28px; font-weight: 600; color: var(--heading); }
+  .metric-card .m-label { font-family: var(--font-mono); font-size: 10px; letter-spacing: 0.06em; color: var(--text-dim); margin-top: 4px; }
+
+  .insight { background: var(--surface-warm); border-left: 3px solid var(--accent); padding: 20px 24px; margin: 20px 0; border-radius: 0 6px 6px 0; font-size: 16px; color: var(--text-dim); line-height: 1.6; }
+  .insight strong { color: var(--text); }
+
+  .back-link { display: inline-block; margin-top: 32px; font-family: var(--font-mono); font-size: 12px; color: var(--accent-bright); text-decoration: none; }
+  .back-link:hover { text-decoration: underline; }
+
+  .footer { border-top: 1px solid var(--border); padding-top: 24px; margin-top: 40px; font-family: var(--font-mono); font-size: 11px; color: var(--text-faint); letter-spacing: 0.06em; display: flex; justify-content: space-between; }
+  @keyframes fadeUp { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: translateY(0); } }
+  .fade-up { animation: fadeUp 0.5s ease-out both; }
+  @media (prefers-reduced-motion: reduce) { .fade-up { animation: none; } }
+  @media (max-width: 640px) {
+    .before-after { grid-template-columns: 1fr; }
+    .hero h1 { font-size: 28px; }
+  }
+</style>
+</head>
+<body>
+  <nav class="nav">
+    <a href="legal-project-registry.html">&larr; Project Registry</a>
+    <span>Enterprise Engagement — Legal Metrics</span>
+  </nav>
+
+  <div class="container">
+    <header class="hero fade-up">
+      <div class="hero-label">Enterprise Legal Project</div>
+      <h1>Legal Metrics Analysis Agent</h1>
+      <p class="hero-sub">Natural-language access to procurement and revenue-contract execution data, plus outside-counsel spend by firm and practice area. The first time leadership could ask a question and get an answer without pulling data across four different systems.</p>
+      <div class="hero-meta">
+        <div class="meta-item"><strong>Status:</strong> Deployed</div>
+        <div class="meta-item"><strong>Platform:</strong> Glean + n8n</div>
+        <div class="meta-item"><strong>Department:</strong> Legal Operations</div>
+        <div class="meta-item"><strong>Data Sources:</strong> Tableau, SFDC, SAP, SimpleLegal</div>
+      </div>
+    </header>
+
+    <section>
+      <div class="section-label">The Problem</div>
+      <h2><svg class="section-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><line x1="8" y1="8" x2="16" y2="16"/><line x1="16" y1="8" x2="8" y2="16"/></svg>Why it was built</h2>
+      <p>Legal leadership needed to answer basic operational questions: <strong>how many NDAs did we execute last quarter? What are we spending with each outside counsel firm? Which practice areas drive the most contract volume?</strong></p>
+      <p>Answering any of these required manual pulls across <strong>four disconnected systems</strong> — Tableau for contract data, SFDC for revenue contracts, SAP for procurement, SimpleLegal for outside-counsel spend. Each query meant logging into a different tool, running a different report, and manually reconciling the results. A single question could consume hours of analyst time. And the answer was stale the moment it was produced.</p>
+    </section>
+
+    <div class="before-after fade-up">
+      <div class="ba-card before">
+        <div class="ba-label">Before</div>
+        <div class="ba-text">Analyst logs into 4 systems. Runs reports. Reconciles in Excel. Produces answer. Each query: hours. Answer is point-in-time, already stale. Only the analyst can do it.</div>
+        <div class="ba-metric">Hours per query</div>
+      </div>
+      <div class="ba-card after">
+        <div class="ba-label">After</div>
+        <div class="ba-text">Leader types a natural-language question. Agent queries the connected data sources and returns a structured answer with source references. Self-serve. Always current.</div>
+        <div class="ba-metric">Seconds per query</div>
+      </div>
+    </div>
+
+    <section>
+      <div class="section-label">The Solution</div>
+      <h2><svg class="section-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><polygon points="12,4 14,10 20,10 15,14 17,20 12,16 7,20 9,14 4,10 10,10"/></svg>What it does</h2>
+      <p>
+        A Glean agent connected to n8n automation workflows that pull from all four source systems. Leadership asks questions in natural language — "what did we spend with Firm X last quarter across all practice areas?" — and the agent queries the relevant sources, reconciles the data, and returns a structured answer with line-item detail.
+      </p>
+      <p>
+        Key data domains: <strong>procurement contracts</strong> (MSSA, NDA, sales orders), <strong>revenue contracts</strong> (by customer, region, type), <strong>outside-counsel spend</strong> (by firm, practice area, matter type). The agent knows which source to query based on the question — the user doesn't need to know where the data lives.
+      </p>
+      <div class="insight">
+        <strong>Why this mattered:</strong> This wasn't about saving analyst time. It was about moving legal operations from reactive reporting to self-serve intelligence. When a VP can ask "how many procurement contracts are up for renewal next quarter?" and get an answer in seconds, the legal function's relationship with the business changes. Legal stops being a bottleneck and starts being a source of operational clarity.
+      </div>
+    </section>
+
+    <section>
+      <div class="section-label">The Impact</div>
+      <h2><svg class="section-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="23,6 13,17 9,13 1,20"/><polyline points="17,6 23,6 23,12"/></svg>Metrics &amp; improvements</h2>
+      <div class="metric-row">
+        <div class="metric-card"><div class="m-value">4 → 0</div><div class="m-label">Systems to log into</div></div>
+        <div class="metric-card"><div class="m-value">~190 hrs/yr</div><div class="m-label">Analyst time saved</div></div>
+        <div class="metric-card"><div class="m-value">Self-serve</div><div class="m-label">No analyst required</div></div>
+        <div class="metric-card"><div class="m-value">Real-time</div><div class="m-label">Not point-in-time</div></div>
+      </div>
+      <p><strong>Improvement:</strong> Hours of manual data pulls and reconciliation across 4 systems → seconds-long natural-language query. The analyst role shifted from report runner to data steward. Leadership got answers while the question was still relevant. The natural-language interface meant non-technical stakeholders could self-serve for the first time.</p>
+    </section>
+
+    <a href="legal-project-registry.html" class="back-link">&larr; Back to Project Registry</a>
+
+    <footer class="footer">
+      <span>Charlie Fuller — Legal AI Project Detail</span>
+      <span>July 2026</span>
+    </footer>
+  </div>
+</body>
+</html>

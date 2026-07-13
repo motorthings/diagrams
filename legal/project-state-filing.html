@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>State Annual Report Filing Agent — Legal AI Project</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;0,6..72,600;0,6..72,700;1,6..72,400;1,6..72,500&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --font-display: 'Newsreader', Georgia, serif; --font-body: 'Newsreader', Georgia, serif; --font-mono: 'Space Mono', monospace;
+    --bg: #faf8f9; --surface: #ffffff; --surface-warm: #fdf8fa;
+    --border: rgba(0,0,0,0.07); --border-bright: rgba(0,0,0,0.13);
+    --text: #1a1618; --text-dim: #6b6066; --text-faint: #a0989e; --heading: #0d0a0c;
+    --accent: #8b3a6e; --accent-bright: #d44a7a; --accent-dim: rgba(139,58,110,0.08);
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #141114; --surface: #1e1a1d; --surface-warm: #241f22;
+      --border: rgba(255,255,255,0.06); --border-bright: rgba(255,255,255,0.10);
+      --text: #e8e0e4; --text-dim: #a0989e; --text-faint: #6b6468; --heading: #f5eff2;
+      --accent: #d4a0c0; --accent-bright: #f070a0; --accent-dim: rgba(212,160,192,0.1);
+    }
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    background: var(--bg);
+    background-image: radial-gradient(ellipse at 0% 0%, var(--accent-dim) 0%, transparent 40%), radial-gradient(ellipse at 100% 50%, var(--accent-dim) 0%, transparent 35%);
+    color: var(--text); font-family: var(--font-body); font-size: 17px; line-height: 1.7; min-height: 100vh; padding-bottom: 80px;
+  }
+  .container { max-width: 800px; margin: 0 auto; padding: 0 20px; }
+  .nav {
+    position: sticky; top: 0; z-index: 100; backdrop-filter: blur(16px);
+    background: color-mix(in srgb, var(--bg) 88%, transparent);
+    border-bottom: 1px solid var(--border); margin-bottom: 40px; padding: 12px 20px;
+    font-family: var(--font-mono); font-size: 11px; letter-spacing: 0.06em;
+    text-transform: uppercase; color: var(--text-dim);
+    display: flex; align-items: center; justify-content: space-between;
+  }
+  .nav a { color: var(--text-dim); text-decoration: none; }
+  .nav a:hover { color: var(--accent-bright); }
+
+  .hero { padding: 40px 0 32px; border-bottom: 1px solid var(--border); margin-bottom: 40px; }
+  .hero-label { font-family: var(--font-mono); font-size: 10px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--accent-bright); margin-bottom: 16px; }
+  .hero h1 { font-family: var(--font-display); font-size: 38px; font-weight: 600; line-height: 1.15; color: var(--heading); margin-bottom: 12px; }
+  .hero-sub { font-size: 18px; color: var(--text-dim); max-width: 600px; line-height: 1.55; }
+  .hero-meta { display: flex; gap: 24px; margin-top: 20px; flex-wrap: wrap; }
+  .hero-meta .meta-item { font-family: var(--font-mono); font-size: 11px; color: var(--text-dim); }
+  .hero-meta .meta-item strong { color: var(--heading); }
+
+  section { margin-bottom: 44px; }
+  .section-label { font-family: var(--font-mono); font-size: 10px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--text-faint); margin-bottom: 8px; }
+  section h2 { font-family: var(--font-display); font-size: 26px; font-weight: 600; color: var(--heading); margin-bottom: 16px; display: flex; align-items: center; gap: 10px; }
+  .section-icon { width: 24px; height: 24px; color: var(--accent-bright); flex-shrink: 0; }
+  section p { color: var(--text-dim); margin-bottom: 12px; max-width: 680px; }
+  section p strong { color: var(--text); }
+
+  .before-after { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin: 20px 0; }
+  .ba-card { background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 20px 24px; }
+  .ba-card.before { border-left: 3px solid var(--text-faint); }
+  .ba-card.after { border-left: 3px solid var(--accent-bright); }
+  .ba-card .ba-label { font-family: var(--font-mono); font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase; margin-bottom: 8px; }
+  .ba-card.before .ba-label { color: var(--text-faint); }
+  .ba-card.after .ba-label { color: var(--accent-bright); }
+  .ba-card .ba-text { font-size: 15px; color: var(--text-dim); line-height: 1.5; }
+  .ba-card .ba-metric { font-family: var(--font-display); font-size: 28px; font-weight: 600; color: var(--heading); margin-top: 8px; }
+
+  .metric-row { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 12px; margin: 20px 0; }
+  .metric-card { background: var(--surface-warm); border: 1px solid var(--border); border-radius: 8px; padding: 16px 20px; text-align: center; }
+  .metric-card .m-value { font-family: var(--font-display); font-size: 28px; font-weight: 600; color: var(--heading); }
+  .metric-card .m-label { font-family: var(--font-mono); font-size: 10px; letter-spacing: 0.06em; color: var(--text-dim); margin-top: 4px; }
+
+  .insight { background: var(--surface-warm); border-left: 3px solid var(--accent); padding: 20px 24px; margin: 20px 0; border-radius: 0 6px 6px 0; font-size: 16px; color: var(--text-dim); line-height: 1.6; }
+  .insight strong { color: var(--text); }
+
+  .back-link { display: inline-block; margin-top: 32px; font-family: var(--font-mono); font-size: 12px; color: var(--accent-bright); text-decoration: none; }
+  .back-link:hover { text-decoration: underline; }
+
+  .footer { border-top: 1px solid var(--border); padding-top: 24px; margin-top: 40px; font-family: var(--font-mono); font-size: 11px; color: var(--text-faint); letter-spacing: 0.06em; display: flex; justify-content: space-between; }
+  @keyframes fadeUp { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: translateY(0); } }
+  .fade-up { animation: fadeUp 0.5s ease-out both; }
+  @media (prefers-reduced-motion: reduce) { .fade-up { animation: none; } }
+  @media (max-width: 640px) {
+    .before-after { grid-template-columns: 1fr; }
+    .hero h1 { font-size: 28px; }
+  }
+</style>
+</head>
+<body>
+  <nav class="nav">
+    <a href="legal-project-registry.html">&larr; Project Registry</a>
+    <span>Enterprise Engagement — Corporate Legal</span>
+  </nav>
+
+  <div class="container">
+    <header class="hero fade-up">
+      <div class="hero-label">Enterprise Legal Project</div>
+      <h1>State Annual Report Filing Agent</h1>
+      <p class="hero-sub">Automates repetitive Secretary of State filings across registered states. Frees the corporate legal team from recurring manual data entry across multiple state portals with different formats, fields, and deadlines.</p>
+      <div class="hero-meta">
+        <div class="meta-item"><strong>Status:</strong> Prototyped</div>
+        <div class="meta-item"><strong>Platform:</strong> Glean</div>
+        <div class="meta-item"><strong>Department:</strong> Corporate Legal</div>
+        <div class="meta-item"><strong>States:</strong> Multiple US jurisdictions</div>
+      </div>
+    </header>
+
+    <section>
+      <div class="section-label">The Problem</div>
+      <h2><svg class="section-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><line x1="8" y1="8" x2="16" y2="16"/><line x1="16" y1="8" x2="8" y2="16"/></svg>Why it was built</h2>
+      <p>Every corporation registered in US states must file annual reports — a <strong>repetitive, low-judgment, high-consequence</strong> task. Miss a deadline and the state revokes the company's good standing. The corporate legal team managed filings across multiple states, each with its own portal, data format, fee schedule, and deadline. The work was pure data entry — pulling the same company information into different forms on different websites — but the stakes were existential.</p>
+      <p>This is the classic AI automation target: <strong>high volume, low judgment, catastrophic failure mode if missed.</strong> The team needed a way to stop spending paralegal hours on data entry without risking compliance gaps.</p>
+    </section>
+
+    <div class="before-after fade-up">
+      <div class="ba-card before">
+        <div class="ba-label">Before</div>
+        <div class="ba-text">Paralegal logs into each state portal. Pulls company data from internal systems. Enters the same information into different forms. Tracks deadlines in a spreadsheet. Each filing: repetitive data entry with compliance risk.</div>
+        <div class="ba-metric">Manual per state</div>
+      </div>
+      <div class="ba-card after">
+        <div class="ba-label">After</div>
+        <div class="ba-text">Agent pre-populates filing data for each state from a single source of truth. Flags upcoming deadlines. Generates completed forms ready for attorney review and submission. Paralegal becomes reviewer, not data entry operator.</div>
+        <div class="ba-metric">Automated generation</div>
+      </div>
+    </div>
+
+    <section>
+      <div class="section-label">The Solution</div>
+      <h2><svg class="section-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><polygon points="12,4 14,10 20,10 15,14 17,20 12,16 7,20 9,14 4,10 10,10"/></svg>What it does</h2>
+      <p>
+        A Glean agent that holds company filing data as a structured knowledge source. For each registered state, the agent pre-populates the required annual report fields — registered agent, officer names, business address, entity type — from a single source of truth. A <strong>deadline tracker</strong> surfaces upcoming filings before they're due. The output is a completed form packet ready for attorney review.
+      </p>
+      <div class="insight">
+        <strong>Why this mattered:</strong> This project proved the pattern for compliance automation. Same data, different forms, different portals, hard deadlines, catastrophic consequences for failure. The pattern applies to any regulatory filing workload — SEC filings, data privacy registrations, tax filings. The corporate team saw it as an annual-report tool. The pattern is a compliance automation architecture.
+      </div>
+    </section>
+
+    <section>
+      <div class="section-label">The Impact</div>
+      <h2><svg class="section-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="23,6 13,17 9,13 1,20"/><polyline points="17,6 23,6 23,12"/></svg>Metrics &amp; improvements</h2>
+      <div class="metric-row">
+        <div class="metric-card"><div class="m-value">Multiple</div><div class="m-label">State jurisdictions</div></div>
+        <div class="metric-card"><div class="m-value">0</div><div class="m-label">Missed deadlines (target)</div></div>
+        <div class="metric-card"><div class="m-value">Review</div><div class="m-label">Not data entry</div></div>
+        <div class="metric-card"><div class="m-value">Pattern</div><div class="m-label">Compliance automation</div></div>
+      </div>
+      <p><strong>Improvement:</strong> Paralegal shifts from data entry operator to compliance reviewer. Deadline tracking moves from a spreadsheet to an automated system. The compliance automation pattern proved here applies to any regulatory filing workload — same architecture, different data source, same risk profile. Prototyped and scoped; ready to build when the corporate team prioritizes it.</p>
+    </section>
+
+    <a href="legal-project-registry.html" class="back-link">&larr; Back to Project Registry</a>
+
+    <footer class="footer">
+      <span>Charlie Fuller — Legal AI Project Detail</span>
+      <span>July 2026</span>
+    </footer>
+  </div>
+</body>
+</html>

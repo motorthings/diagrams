@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Separation Agreement & Severance Calculator — Legal AI Project</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;0,6..72,600;0,6..72,700;1,6..72,400;1,6..72,500&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --font-display: 'Newsreader', Georgia, serif; --font-body: 'Newsreader', Georgia, serif; --font-mono: 'Space Mono', monospace;
+    --bg: #faf8f9; --surface: #ffffff; --surface-warm: #fdf8fa;
+    --border: rgba(0,0,0,0.07); --border-bright: rgba(0,0,0,0.13);
+    --text: #1a1618; --text-dim: #6b6066; --text-faint: #a0989e; --heading: #0d0a0c;
+    --accent: #8b3a6e; --accent-bright: #d44a7a; --accent-dim: rgba(139,58,110,0.08);
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #141114; --surface: #1e1a1d; --surface-warm: #241f22;
+      --border: rgba(255,255,255,0.06); --border-bright: rgba(255,255,255,0.10);
+      --text: #e8e0e4; --text-dim: #a0989e; --text-faint: #6b6468; --heading: #f5eff2;
+      --accent: #d4a0c0; --accent-bright: #f070a0; --accent-dim: rgba(212,160,192,0.1);
+    }
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    background: var(--bg);
+    background-image: radial-gradient(ellipse at 0% 0%, var(--accent-dim) 0%, transparent 40%), radial-gradient(ellipse at 100% 50%, var(--accent-dim) 0%, transparent 35%);
+    color: var(--text); font-family: var(--font-body); font-size: 17px; line-height: 1.7; min-height: 100vh; padding-bottom: 80px;
+  }
+  .container { max-width: 800px; margin: 0 auto; padding: 0 20px; }
+  .nav {
+    position: sticky; top: 0; z-index: 100; backdrop-filter: blur(16px);
+    background: color-mix(in srgb, var(--bg) 88%, transparent);
+    border-bottom: 1px solid var(--border); margin-bottom: 40px; padding: 12px 20px;
+    font-family: var(--font-mono); font-size: 11px; letter-spacing: 0.06em;
+    text-transform: uppercase; color: var(--text-dim);
+    display: flex; align-items: center; justify-content: space-between;
+  }
+  .nav a { color: var(--text-dim); text-decoration: none; }
+  .nav a:hover { color: var(--accent-bright); }
+
+  .hero { padding: 40px 0 32px; border-bottom: 1px solid var(--border); margin-bottom: 40px; }
+  .hero-label { font-family: var(--font-mono); font-size: 10px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--accent-bright); margin-bottom: 16px; }
+  .hero h1 { font-family: var(--font-display); font-size: 38px; font-weight: 600; line-height: 1.15; color: var(--heading); margin-bottom: 12px; }
+  .hero-sub { font-size: 18px; color: var(--text-dim); max-width: 600px; line-height: 1.55; }
+  .hero-meta { display: flex; gap: 24px; margin-top: 20px; flex-wrap: wrap; }
+  .hero-meta .meta-item { font-family: var(--font-mono); font-size: 11px; color: var(--text-dim); }
+  .hero-meta .meta-item strong { color: var(--heading); }
+
+  section { margin-bottom: 44px; }
+  .section-label { font-family: var(--font-mono); font-size: 10px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--text-faint); margin-bottom: 8px; }
+  section h2 { font-family: var(--font-display); font-size: 26px; font-weight: 600; color: var(--heading); margin-bottom: 16px; display: flex; align-items: center; gap: 10px; }
+  .section-icon { width: 24px; height: 24px; color: var(--accent-bright); flex-shrink: 0; }
+  section p { color: var(--text-dim); margin-bottom: 12px; max-width: 680px; }
+  section p strong { color: var(--text); }
+
+  .before-after { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin: 20px 0; }
+  .ba-card { background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 20px 24px; }
+  .ba-card.before { border-left: 3px solid var(--text-faint); }
+  .ba-card.after { border-left: 3px solid var(--accent-bright); }
+  .ba-card .ba-label { font-family: var(--font-mono); font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase; margin-bottom: 8px; }
+  .ba-card.before .ba-label { color: var(--text-faint); }
+  .ba-card.after .ba-label { color: var(--accent-bright); }
+  .ba-card .ba-text { font-size: 15px; color: var(--text-dim); line-height: 1.5; }
+  .ba-card .ba-metric { font-family: var(--font-display); font-size: 28px; font-weight: 600; color: var(--heading); margin-top: 8px; }
+
+  .metric-row { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 12px; margin: 20px 0; }
+  .metric-card { background: var(--surface-warm); border: 1px solid var(--border); border-radius: 8px; padding: 16px 20px; text-align: center; }
+  .metric-card .m-value { font-family: var(--font-display); font-size: 28px; font-weight: 600; color: var(--heading); }
+  .metric-card .m-label { font-family: var(--font-mono); font-size: 10px; letter-spacing: 0.06em; color: var(--text-dim); margin-top: 4px; }
+
+  .insight { background: var(--surface-warm); border-left: 3px solid var(--accent); padding: 20px 24px; margin: 20px 0; border-radius: 0 6px 6px 0; font-size: 16px; color: var(--text-dim); line-height: 1.6; }
+  .insight strong { color: var(--text); }
+
+  .back-link { display: inline-block; margin-top: 32px; font-family: var(--font-mono); font-size: 12px; color: var(--accent-bright); text-decoration: none; }
+  .back-link:hover { text-decoration: underline; }
+
+  .footer { border-top: 1px solid var(--border); padding-top: 24px; margin-top: 40px; font-family: var(--font-mono); font-size: 11px; color: var(--text-faint); letter-spacing: 0.06em; display: flex; justify-content: space-between; }
+  @keyframes fadeUp { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: translateY(0); } }
+  .fade-up { animation: fadeUp 0.5s ease-out both; }
+  .fade-up:nth-child(1) { animation-delay: 0.03s; } .fade-up:nth-child(2) { animation-delay: 0.08s; }
+  @media (prefers-reduced-motion: reduce) { .fade-up { animation: none; } }
+  @media (max-width: 640px) {
+    .before-after { grid-template-columns: 1fr; }
+    .hero h1 { font-size: 28px; }
+  }
+</style>
+</head>
+<body>
+  <nav class="nav">
+    <a href="legal-project-registry.html">&larr; Project Registry</a>
+    <span>Enterprise Engagement — Employment Legal</span>
+  </nav>
+
+  <div class="container">
+    <header class="hero fade-up">
+      <div class="hero-label">Enterprise Legal Project</div>
+      <h1>Separation Agreement &amp; Severance Calculator</h1>
+      <p class="hero-sub">The employment legal team's highest-priority automation target. Generates jurisdiction-specific separation agreements across US, EMEA, and Australia. Validates proposed severance against company policy before sign-off.</p>
+      <div class="hero-meta">
+        <div class="meta-item"><strong>Status:</strong> Deployed</div>
+        <div class="meta-item"><strong>Platform:</strong> Glean + n8n</div>
+        <div class="meta-item"><strong>Department:</strong> Employment Legal</div>
+        <div class="meta-item"><strong>Volume:</strong> ~100 agreements/year</div>
+      </div>
+    </header>
+
+    <section>
+      <div class="section-label">The Problem</div>
+      <h2><svg class="section-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><line x1="8" y1="8" x2="16" y2="16"/><line x1="16" y1="8" x2="8" y2="16"/></svg>Why it was built</h2>
+      <p>The employment legal team handled roughly <strong>100 separation agreements a year</strong> across three jurisdictions — US, EMEA, and Australia. Each agreement required manual drafting from templates, jurisdiction-specific language, and severance calculation validated against company policy. A single agreement took <strong>2–4 hours</strong> of attorney time. Errors in severance calculation or jurisdiction-specific clauses carried real legal and financial exposure.</p>
+      <p>This was the team's <strong>highest-priority automation target</strong> — high volume, high repetition, high consequence for error. Before AI, the only option was more headcount or accepting the risk.</p>
+    </section>
+
+    <div class="before-after fade-up">
+      <div class="ba-card before">
+        <div class="ba-label">Before</div>
+        <div class="ba-text">Manual drafting from Word templates. Attorney cross-referenced policy documents, tenure data, and jurisdiction requirements manually. Each agreement: 2–4 hours. Severance calculation errors caught in review — sometimes after sign-off.</div>
+        <div class="ba-metric">2–4 hrs each</div>
+      </div>
+      <div class="ba-card after">
+        <div class="ba-label">After</div>
+        <div class="ba-text">Agent generates complete jurisdiction-specific agreement from structured inputs. Severance validated against policy automatically. Attorney reviews output rather than drafting from scratch. Consistency across all three jurisdictions.</div>
+        <div class="ba-metric">~30 sec each</div>
+      </div>
+    </div>
+
+    <section>
+      <div class="section-label">The Solution</div>
+      <h2><svg class="section-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><polygon points="12,4 14,10 20,10 15,14 17,20 12,16 7,20 9,14 4,10 10,10"/></svg>What it does</h2>
+      <p>
+        A Glean agent backed by n8n automation workflows. The agent takes structured inputs — employee tenure, role, location, separation type, salary — and generates a <strong>jurisdiction-specific separation agreement</strong> with the correct language for US, EMEA, or Australian employment law. A parallel <strong>severance calculator</strong> validates the proposed severance package against company policy, flagging discrepancies before the agreement reaches the attorney.
+      </p>
+      <p>
+        The agent's access controls <strong>wall employment legal data off from commercial legal</strong> — the exact confidentiality gap that had blocked adoption of prior contract-management tools. This wasn't a feature add. It was the architecture requirement that made the project possible.
+      </p>
+      <div class="insight">
+        <strong>Why this mattered:</strong> The confidentiality boundary between employment and commercial legal isn't negotiable. Prior tools couldn't guarantee it, so the team stayed on manual processes. This project proved the boundary could hold while still delivering automation. The access-control architecture became the pattern for every subsequent legal AI project.
+      </div>
+    </section>
+
+    <section>
+      <div class="section-label">The Impact</div>
+      <h2><svg class="section-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="23,6 13,17 9,13 1,20"/><polyline points="17,6 23,6 23,12"/></svg>Metrics &amp; improvements</h2>
+      <div class="metric-row">
+        <div class="metric-card"><div class="m-value">~190 hrs/yr</div><div class="m-label">Attorney time saved</div></div>
+        <div class="metric-card"><div class="m-value">100%</div><div class="m-label">Policy-compliant severance</div></div>
+        <div class="metric-card"><div class="m-value">3</div><div class="m-label">Jurisdictions covered</div></div>
+        <div class="metric-card"><div class="m-value">~100</div><div class="m-label">Agreements/year</div></div>
+      </div>
+      <p><strong>Improvement:</strong> 2–4 hours of manual drafting and cross-referencing → 30 seconds of agent generation plus attorney review. The attorney's role shifted from drafter to reviewer — faster, more consistent, lower risk. The confidentiality architecture unlocked a pattern that scaled to 4 more agents across 3 additional departments within 6 months.</p>
+    </section>
+
+    <a href="legal-project-registry.html" class="back-link">&larr; Back to Project Registry</a>
+
+    <footer class="footer">
+      <span>Charlie Fuller — Legal AI Project Detail</span>
+      <span>July 2026</span>
+    </footer>
+  </div>
+</body>
+</html>
