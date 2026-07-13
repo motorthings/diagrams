@@ -1,0 +1,661 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<link rel="icon" type="image/svg+xml" href="../../icon.svg">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ROI Measurement Framework — AI in Legal Service Delivery</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600;9..144,700&family=Source+Code+Pro:wght@400;500;600" rel="stylesheet">
+<style>
+  :root {
+    --font-body: 'Fraunces', Georgia, serif;
+    --font-mono: 'Source Code Pro', 'SF Mono', Consolas, monospace;
+
+    --bg: #0f0a1a;
+    --surface: #1a1128;
+    --surface2: #241a35;
+    --surface-elevated: #2a1f3d;
+    --border: rgba(255, 255, 255, 0.06);
+    --border-bright: rgba(255, 255, 255, 0.12);
+    --text: #e8e0f0;
+    --text-dim: #9b8fb8;
+
+    --cyan: #22d3ee;
+    --cyan-dim: rgba(34, 211, 238, 0.10);
+    --purple: #a78bfa;
+    --purple-dim: rgba(167, 139, 250, 0.12);
+    --amber: #fbbf24;
+    --amber-dim: rgba(251, 191, 36, 0.10);
+    --orange: #fb923c;
+    --orange-dim: rgba(251, 146, 60, 0.12);
+    --red: #f87171;
+    --red-dim: rgba(248, 113, 113, 0.10);
+    --green: #4ade80;
+    --green-dim: rgba(74, 222, 128, 0.10);
+  }
+
+  @media (prefers-color-scheme: light) {
+    :root {
+      --bg: #f5f0fa;
+      --surface: #ffffff;
+      --surface2: #ede5f7;
+      --surface-elevated: #ffffff;
+      --border: rgba(0, 0, 0, 0.07);
+      --border-bright: rgba(0, 0, 0, 0.14);
+      --text: #1a0e2e;
+      --text-dim: #6b5a8a;
+
+      --cyan: #0891b2;
+      --cyan-dim: rgba(8, 145, 178, 0.08);
+      --purple: #7c3aed;
+      --purple-dim: rgba(124, 58, 237, 0.08);
+      --amber: #d97706;
+      --amber-dim: rgba(217, 119, 6, 0.08);
+      --orange: #ea580c;
+      --orange-dim: rgba(234, 88, 12, 0.08);
+      --red: #dc2626;
+      --red-dim: rgba(220, 38, 38, 0.08);
+      --green: #16a34a;
+      --green-dim: rgba(22, 163, 74, 0.08);
+    }
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background-color: var(--bg);
+    background-image:
+      radial-gradient(ellipse at 25% 5%, var(--green-dim) 0%, transparent 50%),
+      radial-gradient(ellipse at 75% 20%, var(--purple-dim) 0%, transparent 40%),
+      radial-gradient(ellipse at 50% 90%, var(--cyan-dim) 0%, transparent 45%);
+    color: var(--text);
+    font-family: var(--font-body);
+    padding: 40px;
+    min-height: 100vh;
+    overflow-wrap: break-word;
+  }
+
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(14px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .animate {
+    animation: fadeUp 0.45s ease-out both;
+    animation-delay: calc(var(--i, 0) * 0.06s);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after {
+      animation-duration: 0.01ms !important;
+      animation-delay: 0ms !important;
+      transition-duration: 0.01ms !important;
+    }
+  }
+
+  .container { max-width: 1100px; margin: 0 auto; }
+
+  h1 {
+    font-size: 42px;
+    font-weight: 700;
+    letter-spacing: -1.5px;
+    margin-bottom: 4px;
+    text-wrap: balance;
+    color: var(--green);
+  }
+  h2 {
+    font-size: 20px;
+    font-weight: 700;
+    letter-spacing: -0.5px;
+    margin-bottom: 16px;
+  }
+
+  .subtitle {
+    color: var(--text-dim);
+    font-family: var(--font-mono);
+    font-size: 12px;
+    margin-bottom: 24px;
+    letter-spacing: 0.5px;
+  }
+
+  .description {
+    font-size: 15px;
+    line-height: 1.75;
+    color: var(--text-dim);
+    margin-bottom: 32px;
+    max-width: 820px;
+  }
+  .description strong { color: var(--text); }
+
+  /* ============ STAT CALLOUT ============ */
+  .stat-callout {
+    background: color-mix(in srgb, var(--surface) 92%, var(--red) 8%);
+    border: 1px solid color-mix(in srgb, var(--border) 50%, var(--red) 50%);
+    border-left: 4px solid var(--red);
+    border-radius: 0 12px 12px 0;
+    padding: 20px 24px;
+    margin-bottom: 32px;
+  }
+  .stat-callout p {
+    font-size: 14px;
+    line-height: 1.7;
+    color: var(--text-dim);
+  }
+  .stat-callout strong { color: var(--text); }
+  .stat-row {
+    display: flex;
+    gap: 40px;
+    flex-wrap: wrap;
+    margin-top: 10px;
+  }
+  .stat-big {
+    font-size: 32px;
+    font-weight: 700;
+    letter-spacing: -1px;
+    color: var(--text);
+    font-variant-numeric: tabular-nums;
+  }
+  .stat-label {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    color: var(--text-dim);
+    margin-top: 2px;
+  }
+
+  /* ============ MERMAID ============ */
+  .mermaid-wrap {
+    position: relative;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 32px 24px;
+    overflow: auto;
+    margin-bottom: 32px;
+    scrollbar-width: thin;
+    scrollbar-color: var(--border) transparent;
+  }
+  .mermaid-wrap::-webkit-scrollbar { width: 6px; height: 6px; }
+  .mermaid-wrap::-webkit-scrollbar-track { background: transparent; }
+  .mermaid-wrap::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+  .mermaid-wrap .mermaid {
+    display: flex;
+    justify-content: center;
+    transition: transform 0.2s ease;
+    transform-origin: top center;
+  }
+
+  .zoom-controls {
+    position: absolute;
+    top: 8px; right: 8px;
+    display: flex; gap: 2px; z-index: 10;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 2px;
+  }
+  .zoom-controls button {
+    width: 28px; height: 28px;
+    border: none; background: transparent;
+    color: var(--text-dim);
+    font-family: var(--font-mono);
+    font-size: 14px;
+    cursor: pointer;
+    border-radius: 4px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .zoom-controls button:hover { background: var(--border); color: var(--text); }
+
+  /* ============ METRICS ROW ============ */
+  .metrics-row {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 16px;
+    margin-bottom: 32px;
+  }
+  .metrics-row > * { min-width: 0; }
+
+  .metric-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 24px;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+  }
+  .metric-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.18);
+  }
+  .metric-card__num {
+    font-family: var(--font-mono);
+    font-size: 40px;
+    font-weight: 700;
+    letter-spacing: -1px;
+    font-variant-numeric: tabular-nums;
+    margin-bottom: 4px;
+  }
+  .metric-card h3 {
+    font-size: 16px;
+    font-weight: 600;
+    letter-spacing: -0.3px;
+    margin-bottom: 8px;
+  }
+  .metric-card p {
+    font-size: 13px;
+    line-height: 1.65;
+    color: var(--text-dim);
+    margin-bottom: 10px;
+  }
+  .metric-card ul {
+    list-style: none;
+    padding: 0;
+    font-size: 12px;
+    line-height: 1.8;
+    color: var(--text-dim);
+  }
+  .metric-card li {
+    padding-left: 16px;
+    position: relative;
+  }
+  .metric-card li::before {
+    content: '→';
+    position: absolute;
+    left: 0;
+    font-family: var(--font-mono);
+    font-size: 10px;
+  }
+
+  .metric--adoption { border-top: 3px solid var(--purple); }
+  .metric--adoption .metric-card__num { color: var(--purple); }
+  .metric--adoption li::before { color: var(--purple); }
+
+  .metric--time { border-top: 3px solid var(--cyan); }
+  .metric--time .metric-card__num { color: var(--cyan); }
+  .metric--time li::before { color: var(--cyan); }
+
+  .metric--profit { border-top: 3px solid var(--green); }
+  .metric--profit .metric-card__num { color: var(--green); }
+  .metric--profit li::before { color: var(--green); }
+
+  /* ============ FLOW CARDS ============ */
+  .flow-section {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+    gap: 16px;
+    margin-bottom: 32px;
+  }
+  .flow-section > * { min-width: 0; }
+
+  .flow-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 20px;
+    text-align: center;
+  }
+  .flow-card__icon {
+    font-size: 28px;
+    margin-bottom: 8px;
+  }
+  .flow-card h4 {
+    font-size: 14px;
+    font-weight: 600;
+    letter-spacing: -0.3px;
+    margin-bottom: 6px;
+  }
+  .flow-card p {
+    font-size: 12px;
+    line-height: 1.6;
+    color: var(--text-dim);
+  }
+
+  .flow--dashboard { border-left: 3px solid var(--purple); }
+  .flow--dashboard h4 { color: var(--purple); }
+  .flow--afa { border-left: 3px solid var(--cyan); }
+  .flow--afa h4 { color: var(--cyan); }
+  .flow--client { border-left: 3px solid var(--green); }
+  .flow--client h4 { color: var(--green); }
+  .flow--evaluation { border-left: 3px solid var(--amber); }
+  .flow--evaluation h4 { color: var(--amber); }
+
+  /* ============ AFA CALLOUT ============ */
+  .afa-callout {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 28px;
+    margin-bottom: 32px;
+  }
+  .afa-callout h2 {
+    font-size: 20px;
+    font-weight: 700;
+    letter-spacing: -0.5px;
+    margin-bottom: 12px;
+    color: var(--cyan);
+  }
+  .afa-callout p {
+    font-size: 13px;
+    line-height: 1.75;
+    color: var(--text-dim);
+  }
+  .afa-callout strong { color: var(--text); }
+
+  /* ============ BOTTOM LINE ============ */
+  .bottom-line {
+    background: color-mix(in srgb, var(--surface) 92%, var(--green) 8%);
+    border: 1px solid color-mix(in srgb, var(--border) 50%, var(--green) 50%);
+    border-left: 4px solid var(--green);
+    border-radius: 0 12px 12px 0;
+    padding: 20px 24px;
+  }
+  .bottom-line p {
+    font-size: 14px;
+    line-height: 1.7;
+    color: var(--text-dim);
+  }
+  .bottom-line strong { color: var(--text); }
+
+  /* ============ RESPONSIVE ============ */
+  @media (max-width: 768px) {
+    body { padding: 16px; }
+    h1 { font-size: 26px; }
+    .mermaid-wrap { padding: 16px 12px; }
+    .metrics-row { grid-template-columns: 1fr; }
+    .flow-section { grid-template-columns: repeat(2, 1fr); }
+    .stat-row { gap: 20px; }
+    .stat-big { font-size: 24px; }
+  }
+
+  .backlink{position:fixed;top:12px;left:16px;z-index:200;font-family:var(--font-mono,monospace);font-size:11px;color:var(--text-dim,#8b949e);text-decoration:none;padding:6px 10px;border:1px solid var(--border,rgba(255,255,255,0.08));border-radius:6px;background:var(--surface,#161b22);transition:color .15s,border-color .15s}.backlink:hover{color:var(--text,#e6edf3);border-color:var(--text-dim,#8b949e)}
+</style>
+</head>
+<body>
+<a href="../../index.html" class="backlink" title="Back to Index">← Index</a>
+
+<div class="container">
+
+  <h1 class="animate" style="--i:0">ROI Measurement Framework</h1>
+  <p class="subtitle animate" style="--i:1">apc/gwyn // 3 foundational metrics → portfolio dashboard → AFA pricing → client reporting</p>
+
+  <p class="description animate" style="--i:2">
+    The JD asks Charlie to <strong>"develop frameworks to track AI solution performance"</strong> and
+    <strong>"maintain a portfolio dashboard highlighting adoption, client outcomes, and return on innovation."</strong>
+    Most candidates can talk about ROI. Charlie built the measurement system. Three foundational metrics,
+    tracked from day one, feeding decisions that partners actually care about.
+  </p>
+
+  <!-- ============ THE BLIND SPOT ============ -->
+  <div class="stat-callout animate" style="--i:3">
+    <p><strong>The AI ROI blind spot in legal:</strong></p>
+    <div class="stat-row">
+      <div>
+        <div class="stat-big">85%</div>
+        <div class="stat-label">of firms don't track AI ROI</div>
+      </div>
+      <div>
+        <div class="stat-big">18%</div>
+        <div class="stat-label">of legal professionals say their org measures returns</div>
+      </div>
+      <div>
+        <div class="stat-big">68%</div>
+        <div class="stat-label">of in-house counsel don't know if outside firms use AI</div>
+      </div>
+    </div>
+    <p style="margin-top: 12px;">APC is trying to be in the 18%. The K&I Program Manager builds the capability that gets them there.</p>
+  </div>
+
+  <!-- ============ MAIN FLOW ============ -->
+  <div class="mermaid-wrap animate" style="--i:4">
+    <div class="zoom-controls">
+      <button onclick="zoomDiagram(this, 1.2)" title="Zoom in">+</button>
+      <button onclick="zoomDiagram(this, 0.8)" title="Zoom out">&minus;</button>
+      <button onclick="resetZoom(this)" title="Reset zoom">&#8634;</button>
+    </div>
+    <pre class="mermaid">
+      graph LR
+        subgraph METRICS["Three Foundational Metrics"]
+          M1["1. Adoption
+% team logging in
+% active matters
+using AI"]:::m1
+          M2["2. Time Saved
+hours per task
+before vs. after AI
+per matter, per client"]:::m2
+          M3["3. Profitability
+total cost vs. revenue
+write-downs tracked
+margin per matter"]:::m3
+        end
+
+        subgraph DASH["Portfolio Dashboard"]
+          PD["Adoption · Outcomes
+Cost · ROI per agent
+Firm-wide view"]:::dashboard
+        end
+
+        subgraph DECISIONS["Decisions the Data Enables"]
+          AFA["AFA Pricing
+flat fees priced
+with margin confidence
+not guesswork"]:::afa
+          CR["Client Reporting
+quarterly impact:
+time saved, accuracy,
+scope of AI use"]:::client
+          EVAL["Evaluation Engine
+hard veto on safety/bias
+continuous drift detection
+audit trail proves claims"]:::eval
+        end
+
+        M1 --> PD
+        M2 --> PD
+        M3 --> PD
+        PD --> AFA
+        PD --> CR
+        PD --> EVAL
+
+        classDef m1 fill:#241a35,stroke:#a78bfa,color:#e8e0f0,stroke-width:1.5px
+        classDef m2 fill:#1a2e3d,stroke:#22d3ee,color:#cffafe,stroke-width:1.5px
+        classDef m3 fill:#1a2a1a,stroke:#4ade80,color:#dcfce7,stroke-width:1.5px
+        classDef dashboard fill:#1a1830,stroke:#a78bfa,color:#ede0ff,stroke-width:2px
+        classDef afa fill:#2a2618,stroke:#fbbf24,color:#fef3c7,stroke-width:1.5px
+        classDef client fill:#1a2a1a,stroke:#4ade80,color:#dcfce7,stroke-width:1.5px
+        classDef eval fill:#2a1a18,stroke:#fb923c,color:#fde8d0,stroke-width:1.5px
+
+        classDef subg fill:transparent,stroke:rgba(255,255,255,0.06),stroke-dasharray:6 4,color:var(--text-dim)
+        class METRICS,DASH,DECISIONS subg
+    </pre>
+  </div>
+
+  <!-- ============ THREE FOUNDATIONAL METRICS ============ -->
+  <h2 class="animate" style="--i:5">Three Foundational Metrics</h2>
+  <div class="metrics-row">
+    <div class="metric-card metric--adoption animate" style="--i:6">
+      <div class="metric-card__num">01</div>
+      <h3>Adoption / Utilization</h3>
+      <p>You can't evaluate value without understanding use. Measured from day one, per agent, per practice group.</p>
+      <ul>
+        <li>% of team logging in daily</li>
+        <li>% of active matters using the tool</li>
+        <li>Repeat usage rate (single-use vs. sustained)</li>
+        <li>Shadow IT displacement tracking</li>
+      </ul>
+    </div>
+    <div class="metric-card metric--time animate" style="--i:7">
+      <div class="metric-card__num">02</div>
+      <h3>Time Saved</h3>
+      <p>Quantifies efficiency. Supports AFA pricing. Satisfies ABA 512's reasonable-fees requirement with data, not narrative.</p>
+      <ul>
+        <li>Hours per task before vs. after AI</li>
+        <li>Per-matter, per-client granularity</li>
+        <li>Segmented by task type (review, drafting, research)</li>
+        <li>Feeds directly into AFA pricing models</li>
+      </ul>
+    </div>
+    <div class="metric-card metric--profit animate" style="--i:8">
+      <div class="metric-card__num">03</div>
+      <h3>Profitability per Matter</h3>
+      <p>Determines whether efficiency equals margin or just speed. Speaks the language partners actually care about.</p>
+      <ul>
+        <li>Total cost vs. revenue per matter</li>
+        <li>Write-downs tracked and attributed</li>
+        <li>Realization rate with vs. without AI</li>
+        <li>PEP and RPL impact projections</li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- ============ WHAT THE DATA ENABLES ============ -->
+  <h2 class="animate" style="--i:9">What the Data Enables</h2>
+  <div class="flow-section">
+    <div class="flow-card flow--dashboard animate" style="--i:10">
+      <div class="flow-card__icon">📊</div>
+      <h4>Portfolio Dashboard</h4>
+      <p>Every agent: cost tracking, operational status, adoption metrics, outcome metrics, evaluation scores. Leadership sees what's deployed, who's using it, and what it's saving. The adoption roadmap synthesizes into a prioritized sequence.</p>
+    </div>
+    <div class="flow-card flow--afa animate" style="--i:11">
+      <div class="flow-card__icon">💰</div>
+      <h4>AFA Pricing Confidence</h4>
+      <p>If a fixed-fee due diligence engagement takes 2 AI-assisted hours instead of 15, the firm can price that flat fee with margin. Without the data, it's guessing. Most firms are guessing. 85% of them.</p>
+    </div>
+    <div class="flow-card flow--client animate" style="--i:12">
+      <div class="flow-card__icon">📋</div>
+      <h4>Client Reporting</h4>
+      <p>68% of in-house counsel don't know if outside firms use AI. 85% say firms should disclose AI use. The firm that communicates clearly — and proves value with data — wins the client conversation.</p>
+    </div>
+    <div class="flow-card flow--evaluation animate" style="--i:13">
+      <div class="flow-card__icon">🛡️</div>
+      <h4>Evaluation Engine</h4>
+      <p>Every agent scored on safety, bias, accuracy, functionality — before deployment and continuously after. Hard veto rule. The audit trail that proves to a client the AI is working as claimed. Not governance theater. System output.</p>
+    </div>
+  </div>
+
+  <!-- ============ THE BILLABLE HOUR TENSION ============ -->
+  <div class="afa-callout animate" style="--i:14">
+    <h2>The Billable Hour Tension — and the Resolution</h2>
+    <p>
+      Partners profit from the spread on associate hours. AI compresses associate hours.
+      Every efficiency gain is simultaneously a <strong>win for the client</strong> and a
+      <strong>revenue question for the firm</strong>. Pretending this tension doesn't exist
+      is how AI programs lose partner support.
+    </p>
+    <p style="margin-top: 10px;">
+      The resolution: <strong>use AI-driven efficiency to make AFAs profitable.</strong>
+      ~90% of legal spend still flows through hourly arrangements. AFA revenue is flat at ~23.5%.
+      The shift is year 3 of a 10-15 year transition. The firms that track AI ROI now are the ones
+      positioned to price AFAs with confidence when the market tips. The firms that don't track —
+      they'll be guessing when the client demands a fixed fee.
+    </p>
+    <p style="margin-top: 10px;">
+      <strong>The competence pipeline dimension:</strong> tracking time saved isn't just about
+      pricing. It's about proving that junior lawyers are still developing judgment even when AI
+      handles the grunt work. If first-years never do first-pass review, they never develop the
+      pattern recognition to spot AI errors. The metrics framework has to measure learning, not
+      just efficiency — because the profession is profiting today by mortgaging the expertise of
+      tomorrow's partners.
+    </p>
+  </div>
+
+  <!-- ============ BOTTOM LINE ============ -->
+  <div class="bottom-line animate" style="--i:15">
+    <p>
+      <strong>The K&I Program Manager's ROI mandate:</strong> the JD asks Charlie to "develop
+      frameworks to track AI solution performance." That's not a reporting function. It's an
+      <strong>operational capability</strong> — instrumented before launch, feeding decisions
+      from day one, proving value with data partners trust and clients demand. Track the three
+      foundational metrics. Feed the portfolio dashboard. Enable AFA pricing confidence. Deliver
+      client reports that prove the value. 85% of firms can't do this. APC can.
+    </p>
+  </div>
+
+</div>
+
+<!-- ============ SCRIPTS ============ -->
+<script type="module">
+  import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs';
+
+  const isDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+
+  mermaid.initialize({
+    startOnLoad: true,
+    theme: 'base',
+    look: 'classic',
+    themeVariables: {
+      primaryColor: isDark ? '#241a35' : '#ede9fe',
+      primaryBorderColor: isDark ? '#a78bfa' : '#7c3aed',
+      primaryTextColor: isDark ? '#e8e0f0' : '#1a0e2e',
+      secondaryColor: isDark ? '#1a2e3d' : '#e0f7fa',
+      secondaryBorderColor: isDark ? '#22d3ee' : '#0891b2',
+      secondaryTextColor: isDark ? '#e0f7fa' : '#134e4a',
+      tertiaryColor: isDark ? '#2a2618' : '#fffbeb',
+      tertiaryBorderColor: isDark ? '#fbbf24' : '#d97706',
+      tertiaryTextColor: isDark ? '#fef3c7' : '#1a0e2e',
+      lineColor: isDark ? '#9b8fb8' : '#6b5a8a',
+      fontSize: '12px',
+      fontFamily: "'Fraunces', Georgia, serif",
+    }
+  });
+</script>
+<script>
+  function updateZoomState(wrap) {
+    var target = wrap.querySelector('.mermaid');
+    var zoom = parseFloat(target.dataset.zoom || '1');
+    wrap.classList.toggle('is-zoomed', zoom > 1);
+  }
+  function zoomDiagram(btn, factor) {
+    var wrap = btn.closest('.mermaid-wrap');
+    var target = wrap.querySelector('.mermaid');
+    var current = parseFloat(target.dataset.zoom || '1');
+    var next = Math.min(Math.max(current * factor, 0.3), 5);
+    target.dataset.zoom = next;
+    target.style.transform = 'scale(' + next + ')';
+    updateZoomState(wrap);
+  }
+  function resetZoom(btn) {
+    var wrap = btn.closest('.mermaid-wrap');
+    var target = wrap.querySelector('.mermaid');
+    target.dataset.zoom = '1';
+    target.style.transform = 'scale(1)';
+    updateZoomState(wrap);
+  }
+  document.querySelectorAll('.mermaid-wrap').forEach(function(wrap) {
+    wrap.addEventListener('wheel', function(e) {
+      if (!e.ctrlKey && !e.metaKey) return;
+      e.preventDefault();
+      var target = wrap.querySelector('.mermaid');
+      var current = parseFloat(target.dataset.zoom || '1');
+      var factor = e.deltaY < 0 ? 1.1 : 0.9;
+      var next = Math.min(Math.max(current * factor, 0.3), 5);
+      target.dataset.zoom = next;
+      target.style.transform = 'scale(' + next + ')';
+      updateZoomState(wrap);
+    }, { passive: false });
+    var startX, startY, scrollL, scrollT;
+    wrap.addEventListener('mousedown', function(e) {
+      if (e.target.closest('.zoom-controls')) return;
+      var target = wrap.querySelector('.mermaid');
+      if (parseFloat(target.dataset.zoom || '1') <= 1) return;
+      wrap.classList.add('is-panning');
+      startX = e.clientX;
+      startY = e.clientY;
+      scrollL = wrap.scrollLeft;
+      scrollT = wrap.scrollTop;
+    });
+    window.addEventListener('mousemove', function(e) {
+      if (!wrap.classList.contains('is-panning')) return;
+      wrap.scrollLeft = scrollL - (e.clientX - startX);
+      wrap.scrollTop = scrollT - (e.clientY - startY);
+    });
+    window.addEventListener('mouseup', function() {
+      wrap.classList.remove('is-panning');
+    });
+  });
+</script>
+
+</body>
+</html>
