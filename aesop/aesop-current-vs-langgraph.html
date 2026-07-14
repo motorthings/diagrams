@@ -1,0 +1,365 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AESOP Build Pipeline: Current vs LangGraph</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Libre+Baskerville:ital,wght@0,400;0,700;1,400&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --font-body: 'Libre Baskerville', Georgia, serif;
+    --font-mono: 'JetBrains Mono', 'SF Mono', Consolas, monospace;
+    --bg: #faf8f5; --surface: #ffffff; --surface2: #f5f1eb;
+    --border: rgba(0,0,0,0.07); --border-bright: rgba(0,0,0,0.14);
+    --text: #2c2416; --text-dim: #8b7e6a;
+    --amber: #c2410c; --amber-dim: rgba(194,65,12,0.07);
+    --teal: #0d7a5f; --teal-dim: rgba(13,122,95,0.07);
+    --red: #b91c1c; --red-dim: rgba(185,28,28,0.06);
+    --green: #15803d; --green-dim: rgba(21,128,61,0.07);
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #1a1814; --surface: #24211b; --surface2: #2d2922;
+      --border: rgba(255,255,255,0.06); --border-bright: rgba(255,255,255,0.11);
+      --text: #ebe5d9; --text-dim: #a3967e;
+      --amber: #f97316; --amber-dim: rgba(249,115,22,0.10);
+      --teal: #2dd4bf; --teal-dim: rgba(45,212,191,0.10);
+      --red: #f87171; --red-dim: rgba(248,113,113,0.08);
+      --green: #4ade80; --green-dim: rgba(74,222,128,0.08);
+    }
+  }
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body {
+    background: var(--bg);
+    background-image: linear-gradient(rgba(0,0,0,0.015) 1px, transparent 1px), linear-gradient(90deg, rgba(0,0,0,0.015) 1px, transparent 1px);
+    background-size: 48px 48px;
+    color: var(--text); font-family: var(--font-body);
+    padding: 56px 32px; min-height: 100vh; overflow-wrap: break-word;
+  }
+  @media (prefers-color-scheme: dark) {
+    body { background-image: linear-gradient(rgba(255,255,255,0.015) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.015) 1px, transparent 1px); }
+  }
+  @keyframes fadeUp { from { opacity:0; transform:translateY(10px); } to { opacity:1; transform:translateY(0); } }
+  .anim { animation: fadeUp 0.5s ease-out both; animation-delay: calc(var(--i,0)*0.07s); }
+  @media (prefers-reduced-motion:reduce) { *,*::before,*::after { animation-duration:0.01ms!important; animation-delay:0ms!important; } }
+
+  .container { max-width: 1080px; margin:0 auto; }
+  h1 { font-size:36px; font-weight:700; letter-spacing:-0.5px; margin-bottom:6px; }
+  .subtitle { font-family:var(--font-mono); font-size:10px; color:var(--text-dim); text-transform:uppercase; letter-spacing:2px; margin-bottom:40px; }
+
+  /* ===== COMPARISON COLUMNS ===== */
+  .comparison { display:grid; grid-template-columns:1fr 1fr; gap:24px; margin-bottom:36px; }
+  .comparison > * { min-width:0; overflow-wrap:break-word; }
+  @media (max-width:800px) { .comparison { grid-template-columns:1fr; } }
+
+  /* ===== COLUMN ===== */
+  .col { background:var(--surface); border:1px solid var(--border); border-radius:12px; overflow:hidden; }
+  .col__head { padding:28px 28px 20px; border-bottom:1px solid var(--border); }
+  .col__tag { font-family:var(--font-mono); font-size:9px; font-weight:600; text-transform:uppercase; letter-spacing:2px; margin-bottom:8px; }
+  .col__tag--current { color:var(--amber); }
+  .col__tag--proposed { color:var(--teal); }
+  .col__headline { font-size:22px; font-weight:700; letter-spacing:-0.3px; margin-bottom:10px; line-height:1.3; }
+  .col__why { font-size:13px; line-height:1.7; color:var(--text-dim); }
+
+  /* ===== VALUE PROP CARD ===== */
+  .col__vp { margin:20px 28px 0; padding:20px 22px; border-radius:8px; }
+  .col__vp--current { background:var(--amber-dim); border:1px solid rgba(194,65,12,0.12); }
+  .col__vp--proposed { background:var(--teal-dim); border:1px solid rgba(13,122,95,0.12); }
+  .col__vp-label { font-family:var(--font-mono); font-size:8px; font-weight:600; text-transform:uppercase; letter-spacing:1.5px; margin-bottom:6px; }
+  .col__vp--current .col__vp-label { color:var(--amber); }
+  .col__vp--proposed .col__vp-label { color:var(--teal); }
+  .col__vp-title { font-size:16px; font-weight:700; margin-bottom:6px; }
+  .col__vp-text { font-size:12px; line-height:1.65; color:var(--text-dim); }
+
+  /* ===== PIPELINE DIAGRAM ===== */
+  .col__diagram { padding:24px 16px 16px; }
+  .mermaid-wrap { position:relative; background:var(--surface2); border:1px solid var(--border); border-radius:8px; padding:20px 12px; overflow:auto; scrollbar-width:thin; scrollbar-color:var(--border) transparent; }
+  .mermaid-wrap::-webkit-scrollbar { width:4px; height:4px; }
+  .mermaid-wrap::-webkit-scrollbar-thumb { background:var(--border); border-radius:2px; }
+  .mermaid-wrap .mermaid { display:flex; justify-content:center; }
+  .mermaid .nodeLabel { font-family:var(--font-mono)!important; font-size:12px!important; }
+  .mermaid .edgeLabel { font-family:var(--font-mono)!important; font-size:10px!important; }
+
+  /* ===== DIAGRAM LEGEND ===== */
+  .diagram-legend { display:flex; gap:14px; flex-wrap:wrap; margin-top:12px; padding:0 4px; }
+  .diagram-legend span { display:flex; align-items:center; gap:5px; font-family:var(--font-mono); font-size:9px; color:var(--text-dim); }
+  .diagram-legend .swatch { width:10px; height:10px; border-radius:2px; flex-shrink:0; }
+  .swatch--same { background:#a3967e; border:1px solid #8b7e6a; }
+  .swatch--diff-current { background:#ea580c; }
+  .swatch--diff-proposed { background:#0d7a5f; }
+  .swatch--new { background:#0284c7; }
+  .swatch--good { background:#15803d; }
+  .swatch--bad { background:#dc2626; }
+
+  /* ===== TRADE-OFF TABLE ===== */
+  .section-head { font-size:20px; font-weight:700; letter-spacing:-0.3px; margin:40px 0 18px; }
+  .table-wrap { background:var(--surface); border:1px solid var(--border); border-radius:12px; overflow:hidden; }
+  .table-scroll { overflow-x:auto; -webkit-overflow-scrolling:touch; }
+  .data-table { width:100%; border-collapse:collapse; font-size:13px; line-height:1.5; }
+  .data-table th { background:var(--surface2); font-family:var(--font-mono); font-size:10px; font-weight:600; text-transform:uppercase; letter-spacing:1px; color:var(--text-dim); text-align:left; padding:14px 20px; border-bottom:2px solid var(--border-bright); }
+  .data-table td { padding:14px 20px; border-bottom:1px solid var(--border); vertical-align:top; }
+  .data-table tbody tr:last-child td { border-bottom:none; }
+  .badge { display:inline-flex; align-items:center; gap:5px; font-family:var(--font-mono); font-size:10px; font-weight:500; padding:3px 10px; border-radius:5px; white-space:nowrap; }
+  .badge--new { background:var(--teal-dim); color:var(--teal); }
+  .badge--same { background:var(--surface2); color:var(--text-dim); }
+  .badge--better { background:var(--green-dim); color:var(--green); }
+
+  /* ===== BOTTOM CALLOUT ===== */
+  .footnote { background:var(--surface); border:1px solid var(--border); border-left:3px solid var(--teal); border-radius:0 10px 10px 0; padding:20px 24px; font-size:13px; line-height:1.7; color:var(--text-dim); margin-top:32px; }
+  .footnote strong { color:var(--text); }
+</style>
+</head>
+<body>
+<div class="container">
+
+  <h1 class="anim" style="--i:0">AESOP Build Pipeline &mdash; Two Paths</h1>
+  <p class="subtitle anim" style="--i:1">Same outcome, different philosophy</p>
+
+  <!-- ================================================================ -->
+  <!-- SIDE-BY-SIDE -->
+  <!-- ================================================================ -->
+  <div class="comparison">
+
+    <!-- LEFT: CURRENT -->
+    <div class="col anim" style="--i:2">
+      <div class="col__head">
+        <div class="col__tag col__tag--current">Current Approach</div>
+        <div class="col__headline">Hand-built orchestration</div>
+        <div class="col__why">
+          A for-loop over 7 phases. State tracked in a Python dataclass.
+          Each phase writes its output to the database by hand. Human
+          approval gates use a database flag polled every second.
+        </div>
+      </div>
+
+      <div class="col__vp col__vp--current">
+        <div class="col__vp-label">Why we built it this way</div>
+        <div class="col__vp-title">Absolute control, zero dependencies</div>
+        <div class="col__vp-text">
+          Every line of orchestration is ours. When something breaks, the
+          stack trace points to our code&mdash;not a framework&rsquo;s internals.
+          No new concepts to learn, no dependency to track, no upgrade
+          surprises. For a small team that knows this codebase cold, that
+          means fast debugging and instant context.
+        </div>
+      </div>
+
+      <div class="col__diagram">
+        <div class="mermaid-wrap">
+          <pre class="mermaid">
+            graph TD
+              A[Build Request] --> B[Initialize State]
+              B --> C[Phase 0: Fitness]
+              C --> D{Fit?}
+              D -->|No| E[Reject Build]
+              D -->|Yes| F[Phase 1: Gap Analysis]
+              F --> G{"Approve?"
+              DB polling}
+              G -->|No| E
+              G -->|Yes| H[Phase 2: Workflow]
+              H --> I[Phase 3: Instructions]
+              I --> J[Phase 4: Artifacts]
+              J --> K[Phase 5: Summary]
+              K --> L[Phase 6: Verify]
+              L --> M[Complete]
+
+              classDef same fill:#f5f1eb,stroke:#a3967e,color:#5c5347
+              classDef diff fill:#fff7ed,stroke:#ea580c,color:#9a3412,stroke-width:2.5px
+              classDef good fill:#f0fdf4,stroke:#15803d,color:#14532d,stroke-width:2px
+              classDef bad fill:#fef2f2,stroke:#dc2626,color:#7f1d1d,stroke-width:2px
+              class A,B,C,F,H,I,J,K,L same
+              class D,G diff
+              class M good
+              class E bad
+          </pre>
+        </div>
+        <div class="diagram-legend">
+          <span><div class="swatch swatch--same"></div> Unchanged phase</span>
+          <span><div class="swatch swatch--diff-current"></div> Different: HITL gate</span>
+          <span><div class="swatch swatch--bad"></div> Failure</span>
+          <span><div class="swatch swatch--good"></div> Success</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- RIGHT: LANGGRAPH -->
+    <div class="col anim" style="--i:3">
+      <div class="col__head">
+        <div class="col__tag col__tag--proposed">Proposed Approach</div>
+        <div class="col__headline">LangGraph orchestration</div>
+        <div class="col__why">
+          A declared graph of 7 nodes connected by edges. State typed and
+          auto-saved to disk after every step. Human approval pauses the
+          graph itself&mdash;no polling. Crashes resume where they left off.
+        </div>
+      </div>
+
+      <div class="col__vp col__vp--proposed">
+        <div class="col__vp-label">Why we&rsquo;d adopt it</div>
+        <div class="col__vp-title">Resilience we don&rsquo;t have to build</div>
+        <div class="col__vp-text">
+          LangGraph solves three hard distributed-systems problems we
+          currently don&rsquo;t handle: crash recovery (a 10-minute build
+          survives a server restart), time-travel debugging (replay any
+          phase from any point in history), and auditable state (every
+          step is a typed, serialized checkpoint). These are table-stakes
+          for production AI infrastructure&mdash;and they come free with an
+          open standard backed by 32k GitHub stars and enterprise
+          deployments at Uber, LinkedIn, and Klarna.
+        </div>
+      </div>
+
+      <div class="col__diagram">
+        <div class="mermaid-wrap">
+          <pre class="mermaid">
+            graph TD
+              A2[Build Request] --> B2[Initialize State]
+              B2 --> CK["Auto-save
+              checkpoint"]
+              B2 --> C2[Phase 0: Fitness]
+              C2 --> D2{Fit?}
+              D2 -->|No| E2[Reject]
+              D2 -->|Yes| F2[Phase 1: Gap Analysis]
+              F2 --> G2{"Pause for
+              approval"}
+              G2 -->|Approve| CK2["Auto-save
+              checkpoint"]
+              G2 -->|Reject| E2
+              CK2 --> H2[Phase 2: Workflow]
+              H2 --> I2[Phase 3: Instructions]
+              I2 --> J2[Phase 4: Artifacts]
+              J2 --> K2[Phase 5: Summary]
+              K2 --> L2[Phase 6: Verify]
+              L2 --> M2[Complete]
+
+              classDef same fill:#f5f1eb,stroke:#a3967e,color:#5c5347
+              classDef newcap fill:#e0f2fe,stroke:#0284c7,color:#0c4a6e,stroke-width:2.5px
+              classDef diff fill:#ecfdf5,stroke:#0d7a5f,color:#0f766e,stroke-width:2.5px
+              classDef good fill:#f0fdf4,stroke:#15803d,color:#14532d,stroke-width:2px
+              classDef bad fill:#fef2f2,stroke:#dc2626,color:#7f1d1d,stroke-width:2px
+              class A2,B2,C2,F2,H2,I2,J2,K2,L2 same
+              class CK,CK2 newcap
+              class D2,G2 diff
+              class M2 good
+              class E2 bad
+          </pre>
+        </div>
+        <div class="diagram-legend">
+          <span><div class="swatch swatch--same"></div> Unchanged phase</span>
+          <span><div class="swatch swatch--new"></div> New: checkpoint</span>
+          <span><div class="swatch swatch--diff-proposed"></div> Different: HITL gate</span>
+          <span><div class="swatch swatch--bad"></div> Failure</span>
+          <span><div class="swatch swatch--good"></div> Success</span>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- ================================================================ -->
+  <!-- TRADE-OFF TABLE -->
+  <!-- ================================================================ -->
+  <h2 class="section-head anim" style="--i:4">What changes &mdash; and what doesn&rsquo;t</h2>
+
+  <div class="table-wrap anim" style="--i:5">
+    <div class="table-scroll">
+      <table class="data-table">
+        <thead>
+          <tr><th>Capability</th><th>Today</th><th>With LangGraph</th><th></th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong>Crash recovery</strong></td>
+            <td>Build fails. Restart from scratch.</td>
+            <td>Resumes from last saved step. No data lost.</td>
+            <td><span class="badge badge--new">New</span></td>
+          </tr>
+          <tr>
+            <td><strong>Time-travel debugging</strong></td>
+            <td>Not possible. Rerun the whole build.</td>
+            <td>Rewind to any phase, tweak inputs, replay.</td>
+            <td><span class="badge badge--new">New</span></td>
+          </tr>
+          <tr>
+            <td><strong>Human approval gates</strong></td>
+            <td>Database flag polled every second</td>
+            <td>Graph pauses. API call resumes it.</td>
+            <td><span class="badge badge--better">Simpler</span></td>
+          </tr>
+          <tr>
+            <td><strong>Audit trail</strong></td>
+            <td>DB rows, manually written</td>
+            <td>Every state transition auto-serialized</td>
+            <td><span class="badge badge--better">Stronger</span></td>
+          </tr>
+          <tr>
+            <td><strong>Parallel agent execution</strong></td>
+            <td>Manual asyncio.gather</td>
+            <td>Declarative fan-out with partial-failure handling</td>
+            <td><span class="badge badge--better">Robust</span></td>
+          </tr>
+          <tr style="border-top:2px solid var(--border-bright);">
+            <td><strong>Prompts &amp; evaluation logic</strong></td>
+            <td colspan="2">Unchanged. Same prompt files, same scoring formula.</td>
+            <td><span class="badge badge--same">Same</span></td>
+          </tr>
+          <tr>
+            <td><strong>LLM provider</strong></td>
+            <td colspan="2">Unchanged. Same Anthropic/OpenAI/DeepSeek abstraction.</td>
+            <td><span class="badge badge--same">Same</span></td>
+          </tr>
+          <tr>
+            <td><strong>Frontend</strong></td>
+            <td colspan="2">Unchanged. Same SSE event stream, same UI.</td>
+            <td><span class="badge badge--same">Same</span></td>
+          </tr>
+          <tr>
+            <td><strong>Database</strong></td>
+            <td colspan="2">Unchanged. Same Supabase tables, same RLS.</td>
+            <td><span class="badge badge--same">Same</span></td>
+          </tr>
+          <tr>
+            <td><strong>Toggle mechanism</strong></td>
+            <td colspan="2">Admin setting. Per-organization. Default: current.</td>
+            <td><span class="badge badge--same">Opt-in</span></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="footnote anim" style="--i:6">
+    <strong>The bet.</strong> LangGraph replaces roughly 200 lines of hand-rolled
+    orchestration code. The prompts, the evaluation logic, the LLM calls, the
+    frontend&mdash;all untouched. What we gain is infrastructure-scale resilience
+    without having to build it ourselves. The toggle means we can run both
+    pipelines side by side, compare costs and completion rates, and switch
+    only when the data says we should.
+  </div>
+
+</div>
+
+<script type="module">
+  import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs';
+  mermaid.initialize({
+    startOnLoad: true,
+    theme: 'base',
+    look: 'classic',
+    htmlLabels: true,
+    themeVariables: {
+      primaryColor: '#ffffff',
+      primaryBorderColor: '#8b7e6a',
+      primaryTextColor: '#2c2416',
+      secondaryColor: '#f5f1eb',
+      secondaryBorderColor: '#d97706',
+      secondaryTextColor: '#2c2416',
+      lineColor: '#8b7e6a',
+      fontSize: '13px',
+      fontFamily: "'JetBrains Mono', monospace",
+    }
+  });
+</script>
+</body>
+</html>
