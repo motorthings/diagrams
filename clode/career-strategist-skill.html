@@ -1,0 +1,829 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="How the career-strategist skill processes career questions through triage, file loading, three execution modes, and guardrails to produce coaching, applications, and negotiation deliverables.">
+<title>Clode &mdash; Career Strategist Skill Architecture</title>
+<link rel="icon" href="../icon.svg" type="image/svg+xml" />
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,wght@0,400;0,500;0,600;0,700;0,800;1,400&family=Source+Code+Pro:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --font-display: 'Fraunces', Georgia, serif;
+    --font-mono: 'Source Code Pro', 'SF Mono', Consolas, monospace;
+
+    --bg: #eef4f9;
+    --surface: #ffffff;
+    --surface2: #f5f8fc;
+    --border: #c8daea;
+    --border-bright: #a0bedb;
+    --text: #0a1628;
+    --text-dim: #3d5a7a;
+    --text-muted: #7a9ab8;
+    --primary: #e8621a;
+    --primary-dim: rgba(232,98,26,0.08);
+    --secondary: #4a90c4;
+    --secondary-dim: rgba(74,144,196,0.08);
+    --metric: #0f766e;
+    --metric-dim: rgba(15,118,110,0.06);
+    --amber: #b45309;
+    --amber-dim: rgba(180,83,9,0.08);
+    --violet: #7c3aed;
+    --violet-dim: rgba(124,58,237,0.08);
+    --rose: #e11d48;
+    --rose-dim: rgba(225,29,72,0.08);
+    --slate: #475569;
+    --slate-dim: rgba(71,85,105,0.08);
+  }
+
+  html.dark {
+    --bg: #0a1628;
+    --surface: #132240;
+    --surface2: #1a2d52;
+    --border: #1a2d52;
+    --border-bright: #2d4570;
+    --text: #e8edf5;
+    --text-dim: #9bb0d4;
+    --text-muted: #5e7aa3;
+    --primary: #f37021;
+    --primary-dim: rgba(243,112,33,0.12);
+    --secondary: #6cace4;
+    --secondary-dim: rgba(108,172,228,0.12);
+    --metric: #2dd4bf;
+    --metric-dim: rgba(45,212,191,0.08);
+    --amber: #f59e0b;
+    --amber-dim: rgba(245,158,11,0.12);
+    --violet: #a78bfa;
+    --violet-dim: rgba(167,139,250,0.12);
+    --rose: #fb7185;
+    --rose-dim: rgba(251,113,133,0.12);
+    --slate: #94a3b8;
+    --slate-dim: rgba(148,163,184,0.12);
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: var(--bg);
+    background-image:
+      radial-gradient(ellipse at 80% 0%, var(--primary-dim) 0%, transparent 50%),
+      radial-gradient(ellipse at 20% 60%, var(--secondary-dim) 0%, transparent 40%);
+    color: var(--text);
+    font-family: var(--font-display);
+    min-height: 100vh;
+    line-height: 1.6;
+    padding: 0 32px 80px;
+    transition: background 0.3s, color 0.3s;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after { animation-duration: 0.01ms !important; animation-delay: 0ms !important; transition-duration: 0.01ms !important; }
+  }
+
+  /* ============ BACKLINK ============ */
+  .backlink {
+    position: fixed; top: 12px; left: 16px; z-index: 101;
+    font-family: var(--font-mono); font-size: 12px;
+    color: var(--text-dim); text-decoration: none;
+    padding: 6px 10px; border: 1px solid var(--border);
+    border-radius: 6px; background: var(--surface);
+    transition: color 0.15s, border-color 0.15s;
+  }
+  .backlink:hover { color: var(--text); border-color: var(--border-bright); }
+
+  /* ============ NAV ============ */
+  .nav {
+    position: sticky; top: 0; z-index: 100;
+    backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px);
+    background: color-mix(in srgb, var(--surface) 85%, transparent);
+    border-bottom: 1px solid var(--border);
+    margin: 0 -32px 32px; padding: 0 32px;
+    transition: background 0.3s, border-color 0.3s;
+  }
+  .nav-inner {
+    max-width: 1100px; margin: 0 auto; padding: 12px 0;
+    display: flex; align-items: center; justify-content: space-between;
+  }
+  .nav-brand {
+    font-family: var(--font-mono); font-size: 12px; font-weight: 600;
+    letter-spacing: 0.5px; color: var(--primary); text-decoration: none;
+  }
+  .theme-toggle {
+    width: 36px; height: 36px; border-radius: 10px;
+    border: 1px solid var(--border); background: var(--surface);
+    cursor: pointer; display: flex; align-items: center; justify-content: center;
+    font-size: 16px; color: var(--text-dim); transition: all 0.2s;
+  }
+  .theme-toggle:hover { border-color: var(--primary); color: var(--primary); }
+
+  /* ============ CONTAINER ============ */
+  .container { max-width: 1000px; margin: 0 auto; }
+
+  /* ============ HERO ============ */
+  .hero { margin-bottom: 40px; }
+  .hero-badge {
+    display: inline-block;
+    font-family: var(--font-mono); font-size: 10px; font-weight: 600;
+    text-transform: uppercase; letter-spacing: 1.5px;
+    color: var(--primary); background: var(--primary-dim);
+    padding: 4px 10px; border-radius: 4px; margin-bottom: 12px;
+  }
+  .hero h1 { font-size: 44px; font-weight: 800; line-height: 1.15; margin-bottom: 8px; color: var(--text); }
+  .hero .subtitle {
+    font-family: var(--font-mono); font-size: 12px; color: var(--text-dim); margin-bottom: 12px;
+  }
+  .hero .desc {
+    font-size: 14px; line-height: 1.7; color: var(--text-dim); max-width: 680px;
+  }
+
+  /* ============ SECTIONS ============ */
+  section { margin-top: 40px; }
+  section h2 {
+    font-size: 26px; font-weight: 700; margin-bottom: 6px; color: var(--text);
+  }
+  .section-label {
+    font-family: var(--font-mono); font-size: 10px; font-weight: 600;
+    text-transform: uppercase; letter-spacing: 1px;
+    color: var(--primary); margin-bottom: 4px;
+  }
+  .section-desc {
+    font-size: 13px; color: var(--text-dim); margin-bottom: 20px; max-width: 640px; line-height: 1.6;
+  }
+
+  /* ============ MERMAID ============ */
+  .mermaid-wrap {
+    position: relative;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 24px 20px;
+    overflow: auto;
+    margin-bottom: 24px;
+  }
+  .mermaid-wrap .mermaid {
+    display: flex; justify-content: center;
+    transition: transform 0.2s ease; transform-origin: top center;
+  }
+  .zoom-controls {
+    position: absolute; top: 8px; right: 8px; display: flex; gap: 2px; z-index: 10;
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 6px; padding: 2px;
+  }
+  .zoom-controls button {
+    width: 28px; height: 28px; border: none; background: transparent;
+    color: var(--text-dim); font-family: var(--font-mono); font-size: 14px;
+    cursor: pointer; border-radius: 4px; display: flex;
+    align-items: center; justify-content: center; transition: background 0.15s, color 0.15s;
+  }
+  .zoom-controls button:hover { background: var(--border); color: var(--text); }
+
+  .mermaid-wrap {
+    scrollbar-width: thin; scrollbar-color: var(--border) transparent;
+  }
+  .mermaid-wrap::-webkit-scrollbar { width: 6px; height: 6px; }
+  .mermaid-wrap::-webkit-scrollbar-track { background: transparent; }
+  .mermaid-wrap::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+  .mermaid-wrap::-webkit-scrollbar-thumb:hover { background: var(--text-dim); }
+
+  .mermaid-wrap.is-zoomed { cursor: grab; }
+  .mermaid-wrap.is-panning { cursor: grabbing; user-select: none; }
+
+  /* Mermaid SVG overrides */
+  .mermaid .nodeLabel { font-family: var(--font-display) !important; font-size: 13px !important; }
+  .mermaid .edgeLabel { font-family: var(--font-mono) !important; font-size: 10px !important; }
+  .mermaid .node rect, .mermaid .node circle, .mermaid .node polygon { stroke-width: 1.5px !important; }
+  .mermaid .edge-pattern-solid { stroke-width: 1.5px !important; }
+
+  html.dark .mermaid .nodeLabel { color: #e8edf5 !important; }
+  html.dark .mermaid .edgeLabel { color: #bccde8 !important; }
+  html.dark .mermaid .edgeLabel span { color: #bccde8 !important; }
+  html.dark .mermaid text { fill: #e8edf5 !important; }
+  html.dark .mermaid .labelBkg { fill: #132240 !important; }
+
+  /* ============ CARD GRID ============ */
+  .card-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-bottom: 24px; }
+  .card-grid--2 { grid-template-columns: repeat(2, 1fr); }
+
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 20px;
+  }
+  .card__tag {
+    font-family: var(--font-mono); font-size: 9px; font-weight: 600;
+    text-transform: uppercase; letter-spacing: 1px;
+    padding: 2px 8px; border-radius: 4px;
+    display: inline-block; margin-bottom: 10px;
+  }
+  .card__tag--coach { color: var(--primary); background: var(--primary-dim); }
+  .card__tag--advisor { color: var(--secondary); background: var(--secondary-dim); }
+  .card__tag--hr { color: var(--metric); background: var(--metric-dim); }
+  .card__tag--guardrail { color: var(--rose); background: var(--rose-dim); }
+  .card__tag--tier { color: var(--violet); background: var(--violet-dim); }
+
+  .card h3 { font-size: 18px; font-weight: 700; margin-bottom: 6px; color: var(--text); }
+  .card p { font-size: 12px; line-height: 1.6; color: var(--text-dim); }
+  .card ul {
+    list-style: none; padding: 0; margin: 10px 0 0;
+    font-size: 12px; line-height: 1.7; color: var(--text-dim);
+  }
+  .card ul li::before { content: '&rarr; '; font-family: var(--font-mono); color: var(--text-muted); font-size: 10px; }
+
+  .card__frameworks {
+    margin-top: 10px; display: flex; flex-wrap: wrap; gap: 4px;
+  }
+  .card__fw {
+    font-family: var(--font-mono); font-size: 9px;
+    padding: 2px 6px; border-radius: 3px;
+    background: var(--surface2); color: var(--text-dim);
+    border: 1px solid var(--border);
+  }
+
+  /* ============ PROCESS FLOW ============ */
+  .pipeline {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 28px 24px;
+    margin-bottom: 24px;
+  }
+  .pipeline-steps {
+    display: flex; align-items: flex-start; justify-content: center;
+    gap: 0; flex-wrap: wrap;
+  }
+  .pipeline-step {
+    display: flex; flex-direction: column; align-items: center; gap: 8px;
+    min-width: 100px; flex-shrink: 0; text-align: center;
+  }
+  .pipeline-step__box {
+    border-radius: 10px; padding: 14px 16px; min-width: 90px;
+    font-weight: 600; font-size: 13px; line-height: 1.3;
+  }
+  .pipeline-step__box--entry { background: var(--primary-dim); border: 2px solid var(--primary); color: var(--primary); }
+  .pipeline-step__box--triage { background: var(--violet-dim); border: 2px solid var(--violet); color: var(--violet); }
+  .pipeline-step__box--load { background: var(--secondary-dim); border: 2px solid var(--secondary); color: var(--secondary); }
+  .pipeline-step__box--execute { background: var(--metric-dim); border: 2px solid var(--metric); color: var(--metric); }
+  .pipeline-step__box--output { background: var(--amber-dim); border: 2px solid var(--amber); color: var(--amber); }
+  .pipeline-step__box--learn { background: var(--rose-dim); border: 2px solid var(--rose); color: var(--rose); }
+  html.dark .pipeline-step__box--entry { color: #f37021; }
+  html.dark .pipeline-step__box--triage { color: #a78bfa; }
+  html.dark .pipeline-step__box--load { color: #6cace4; }
+  html.dark .pipeline-step__box--execute { color: #2dd4bf; }
+  html.dark .pipeline-step__box--output { color: #f59e0b; }
+  html.dark .pipeline-step__box--learn { color: #fb7185; }
+
+  .pipeline-step__label {
+    font-family: var(--font-mono); font-size: 9px; font-weight: 600;
+    text-transform: uppercase; letter-spacing: 0.5px; color: var(--text-muted);
+  }
+  .pipeline-arrow {
+    display: flex; align-items: center; padding: 0 4px;
+    font-size: 18px; color: var(--text-muted); font-family: var(--font-mono);
+    margin-top: 8px;
+  }
+
+  /* ============ GUARDRAIL LIST ============ */
+  .guardrail-list {
+    display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px;
+  }
+  .guardrail-item {
+    background: var(--surface); border: 1px solid var(--border);
+    border-left: 3px solid var(--rose); border-radius: 0 8px 8px 0;
+    padding: 14px 16px; font-size: 12px; line-height: 1.5; color: var(--text-dim);
+  }
+  .guardrail-item strong { color: var(--text); }
+
+  /* ============ LEGEND ============ */
+  .legend {
+    display: flex; gap: 20px; flex-wrap: wrap; margin-top: 12px;
+  }
+  .legend-item {
+    display: flex; align-items: center; gap: 6px;
+    font-family: var(--font-mono); font-size: 11px; color: var(--text-dim);
+  }
+  .legend-swatch { width: 12px; height: 12px; border-radius: 3px; }
+
+  /* ============ CALLOUT ============ */
+  .callout {
+    background: var(--surface); border: 1px solid var(--border);
+    border-left: 3px solid var(--primary); border-radius: 0 10px 10px 0;
+    padding: 16px 20px; font-size: 13px; line-height: 1.6;
+    color: var(--text-dim); margin-top: 24px;
+  }
+  .callout strong { color: var(--text); }
+  .callout code {
+    font-family: var(--font-mono); font-size: 11px;
+    background: var(--primary-dim); color: var(--primary);
+    padding: 1px 5px; border-radius: 3px;
+  }
+
+  /* ============ FOOTER ============ */
+  .footer {
+    margin-top: 48px; font-family: var(--font-mono); font-size: 10px;
+    color: var(--text-muted); text-align: center;
+  }
+
+  /* ============ RESPONSIVE ============ */
+  @media (max-width: 768px) {
+    body { padding: 0 16px 48px; }
+    .hero h1 { font-size: 28px; }
+    .card-grid { grid-template-columns: 1fr; }
+    .guardrail-list { grid-template-columns: 1fr; }
+    .pipeline-steps { flex-direction: column; align-items: center; }
+    .pipeline-arrow { transform: rotate(90deg); margin: 2px 0; }
+    .nav { margin: 0 -16px 24px; padding: 0 16px; }
+  }
+  @media (max-width: 640px) {
+    .card-grid--2 { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+
+<a href="../index.html" class="backlink">&larr; Index</a>
+
+<div class="nav">
+  <div class="nav-inner">
+    <a href="../index.html" class="nav-brand">Clode &mdash; Career Strategist</a>
+    <button class="theme-toggle" id="themeToggle" aria-label="Toggle dark mode">
+      <span class="icon-light">&#9788;</span>
+      <span class="icon-dark" style="display:none">&#9790;</span>
+    </button>
+  </div>
+</div>
+
+<div class="container">
+
+  <!-- HERO -->
+  <div class="hero">
+    <div class="hero-badge">Skill Architecture</div>
+    <h1>Career Strategist</h1>
+    <p class="subtitle">Question &rarr; Triage &rarr; Load &rarr; Execute &rarr; Output &rarr; Learn</p>
+    <p class="desc">
+      The career-strategist skill processes any career-related question through a classification triage,
+      loads the relevant vault files by tier, executes in one of three modes (Coach, Advisor, or HR/Negotiation Rep),
+      and produces structured deliverables. Every significant event writes back to <code>learnings.md</code> for cross-session memory.
+    </p>
+  </div>
+
+  <!-- END-TO-END PIPELINE -->
+  <section>
+    <div class="section-label">End-to-End Flow</div>
+    <h2>Pipeline Overview</h2>
+    <p class="section-desc">
+      Six stages from question to learning. The triage determines which mode executes; file loading is tiered by relevance.
+    </p>
+
+    <div class="pipeline">
+      <div class="pipeline-steps">
+        <div class="pipeline-step">
+          <div class="pipeline-step__box pipeline-step__box--entry">Career<br/>Question</div>
+          <div class="pipeline-step__label">Entry</div>
+        </div>
+        <div class="pipeline-arrow">&rarr;</div>
+        <div class="pipeline-step">
+          <div class="pipeline-step__box pipeline-step__box--triage">Classify<br/>Mode</div>
+          <div class="pipeline-step__label">Triage</div>
+        </div>
+        <div class="pipeline-arrow">&rarr;</div>
+        <div class="pipeline-step">
+          <div class="pipeline-step__box pipeline-step__box--load">Load Tier<br/>0 / 1 / 2</div>
+          <div class="pipeline-step__label">Vault Files</div>
+        </div>
+        <div class="pipeline-arrow">&rarr;</div>
+        <div class="pipeline-step">
+          <div class="pipeline-step__box pipeline-step__box--execute">Coach &bull; Advisor<br/>&bull; HR Rep</div>
+          <div class="pipeline-step__label">Execute</div>
+        </div>
+        <div class="pipeline-arrow">&rarr;</div>
+        <div class="pipeline-step">
+          <div class="pipeline-step__box pipeline-step__box--output">Assessment &bull; Prep<br/>Offer &bull; Scripts</div>
+          <div class="pipeline-step__label">Deliverable</div>
+        </div>
+        <div class="pipeline-arrow">&rarr;</div>
+        <div class="pipeline-step">
+          <div class="pipeline-step__box pipeline-step__box--learn">Write<br/>learnings.md</div>
+          <div class="pipeline-step__label">Feedback Loop</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- TRIAGE TREE -->
+  <section>
+    <div class="section-label">Decision Logic</div>
+    <h2>Triage Tree</h2>
+    <p class="section-desc">
+      Every career question routes through this classification tree. Branches determine which mode activates, which Tier 1/2 files to load, and which output format to use.
+    </p>
+
+    <div class="mermaid-wrap">
+      <div class="zoom-controls">
+        <button onclick="zoomDiagram(this, 1.2)" title="Zoom in">+</button>
+        <button onclick="zoomDiagram(this, 0.8)" title="Zoom out">&minus;</button>
+        <button onclick="resetZoom(this)" title="Reset zoom">&#8634;</button>
+      </div>
+      <pre class="mermaid">
+        graph TD
+          Q["Charlie's question"]
+
+          Q --> SPEC["About a specific company/role"]
+          Q --> NARR["About career strategy / narrative"]
+          Q --> COMP["About negotiation / comp"]
+          Q --> TIME["About timeline / strategy"]
+          Q --> EMOTE["About emotional state / grind"]
+          Q --> NET["About networking / pipeline"]
+          Q --> DOCS["About documentation / protection"]
+
+          SPEC --> A1["Assess role fit"]
+          SPEC --> A2["Prep for interview"]
+          SPEC --> A3["Build resume / cover letter"]
+          SPEC --> A4["Research company / person"]
+          SPEC --> A5["Evaluate offer"]
+
+          NARR --> B1["Shape narrative"]
+          NARR --> B2["Where to focus next"]
+          NARR --> B3["Am I on track?"]
+
+          COMP --> C1["Comp benchmarks + market data"]
+          COMP --> C2["Negotiation scripts"]
+          COMP --> C3["Equity assessment"]
+          COMP --> C4["Offer letter review"]
+          COMP --> C5["Decision framework"]
+
+          TIME --> D1["Hold out or take it?"]
+          TIME --> D2["Pattern synthesis"]
+          TIME --> D3["Timeline urgency check"]
+
+          EMOTE --> E1["Rejection recovery"]
+          EMOTE --> E2["Imposter identification"]
+          EMOTE --> E3["Pattern interrupt for slumps"]
+
+          NET --> F1["Informational interview prep"]
+          NET --> F2["Network tier activation"]
+          NET --> F3["Pipeline update + reconcile"]
+
+          DOCS --> G1["Documentation + CYA setup"]
+          DOCS --> G2["Contentful Rule question"]
+
+          A1 --> OUT1["Role Assessment Format"]
+          A2 --> OUT2["Interview Prep Deliverables"]
+          A3 --> OUT3["Tailored resume + cover letter"]
+          A4 --> OUT4["Company/people deep research"]
+          A5 --> OUT5["Offer Evaluation Format"]
+
+          B1 --> OUT6["Career Coach mode (GROW)"]
+          B2 --> OUT7["Win/Loss analysis + coaching"]
+          B3 --> OUT8["Evidence bank check"]
+
+          C1 --> OUT9["Comp benchmark report"]
+          C2 --> OUT10["Negotiation scripts + strategy"]
+          C3 --> OUT11["Equity benchmarks by stage"]
+          C4 --> OUT12["Offer letter review protocol"]
+          C5 --> OUT13["Decision framework + premortem"]
+
+          D1 --> OUT14["Timeline recommendation"]
+          D2 --> OUT15["Pattern synthesis memo"]
+          D3 --> OUT16["Urgency assessment"]
+
+          E1 --> OUT17["Rejection recovery protocol"]
+          E2 --> OUT18["Imposter type + evidence bank"]
+          E3 --> OUT19["Pattern interrupt actions"]
+
+          F1 --> OUT20["Informational interview script"]
+          F2 --> OUT21["Network outreach messages"]
+          F3 --> OUT22["Updated pipeline + analysis"]
+
+          G1 --> OUT23["CYA documentation plan"]
+          G2 --> OUT24["Contentful Matter Strategy script"]
+
+          classDef entry fill:#fde8d8,stroke:#e8621a,color:#b45309
+          classDef branch fill:#ede9fe,stroke:#7c3aed,color:#6d28d9
+          classDef leaf fill:#e0f2f1,stroke:#0f766e,color:#115e59
+          classDef out fill:#f5f8fc,stroke:#c8daea,color:#3d5a7a
+
+          class Q entry
+          class SPEC,NARR,COMP,TIME,EMOTE,NET,DOCS branch
+          class A1,A2,A3,A4,A5,B1,B2,B3,C1,C2,C3,C4,C5,D1,D2,D3,E1,E2,E3,F1,F2,F3,G1,G2 leaf
+          class OUT1,OUT2,OUT3,OUT4,OUT5,OUT6,OUT7,OUT8,OUT9,OUT10,OUT11,OUT12,OUT13,OUT14,OUT15,OUT16,OUT17,OUT18,OUT19,OUT20,OUT21,OUT22,OUT23,OUT24 out
+      </pre>
+    </div>
+
+    <div class="legend">
+      <div class="legend-item"><div class="legend-swatch" style="background:#e8621a"></div> Entry point</div>
+      <div class="legend-item"><div class="legend-swatch" style="background:#7c3aed"></div> Triage branch</div>
+      <div class="legend-item"><div class="legend-swatch" style="background:#0f766e"></div> Classification leaf</div>
+      <div class="legend-item"><div class="legend-swatch" style="background:#f5f8fc;border:1px solid #c8daea"></div> Output deliverable</div>
+    </div>
+  </section>
+
+  <!-- THREE MODES -->
+  <section>
+    <div class="section-label">Execution Modes</div>
+    <h2>Three Operating Modes</h2>
+    <p class="section-desc">
+      The skill shifts fluidly between modes. A single conversation may use all three. When modes conflict, the tension is surfaced explicitly.
+    </p>
+
+    <div class="card-grid">
+      <div class="card">
+        <div class="card__tag card__tag--coach">Career Coach</div>
+        <h3>Pattern Recognition</h3>
+        <p>Honest narrative work. Names the pattern before offering options. The throughline: translating technical capability into organizational adoption.</p>
+        <ul>
+          <li>GROW coaching model</li>
+          <li>Pattern synthesis memos</li>
+          <li>Imposter type identification</li>
+          <li>Evidence bank technique</li>
+        </ul>
+        <div class="card__frameworks">
+          <span class="card__fw">GROW</span>
+          <span class="card__fw">Career Construction Theory</span>
+          <span class="card__fw">Mercenary Mindset</span>
+          <span class="card__fw">Rejection Recovery</span>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card__tag card__tag--advisor">Employment Advisor</div>
+        <h3>Execution Engine</h3>
+        <p>Deep research on companies and roles. Tailored applications, interview prep, credibility artifacts, market intelligence.</p>
+        <ul>
+          <li>Role assessment (Strong/Solid/Partial/Stretch)</li>
+          <li>Stakes &rarr; Action &rarr; Outcome interview stories</li>
+          <li>Hiring manager one-pagers</li>
+          <li>Red flag detection system</li>
+        </ul>
+        <div class="card__frameworks">
+          <span class="card__fw">STAR replacement</span>
+          <span class="card__fw">5-question bank</span>
+          <span class="card__fw">Red Flag Screen</span>
+          <span class="card__fw">5-3-2 LinkedIn Rhythm</span>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card__tag card__tag--hr">HR / Negotiation Rep</div>
+        <h3>Protective Skeptic</h3>
+        <p>Compensation analysis, offer evaluation, equity assessment, scope protection. Catches what Charlie might miss in the excitement of a close.</p>
+        <ul>
+          <li>Offer evaluation with market context</li>
+          <li>Equity benchmarks by company stage</li>
+          <li>Negotiation scripts for 8 scenarios</li>
+          <li>Decision framework with premortem</li>
+        </ul>
+        <div class="card__frameworks">
+          <span class="card__fw">Comp Benchmarks</span>
+          <span class="card__fw">Decision Matrix</span>
+          <span class="card__fw">Scenario Planning</span>
+          <span class="card__fw">Offer Letter Review</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- FILE LOADING TIERS -->
+  <section>
+    <div class="section-label">Knowledge Base</div>
+    <h2>File Loading Protocol</h2>
+    <p class="section-desc">
+      The agent reads vault files in prioritized tiers. Tier 0 loads on every conversation. Tier 1 loads when working on a specific company or role. Tiers 2 and 3 load on explicit request.
+    </p>
+
+    <div class="card-grid card-grid--2">
+      <div class="card">
+        <div class="card__tag card__tag--tier">Tier 0 &mdash; Always Load</div>
+        <h3>High-Signal Context</h3>
+        <p>Small, high-signal files read on every career conversation. These establish the honest narrative, cross-session memory, and current state.</p>
+        <ul>
+          <li><code>career-background.md</code> &mdash; honest career narrative, coaching conversation</li>
+          <li><code>learnings.md</code> &mdash; cross-session memory since last conversation</li>
+          <li><code>charlie-context-memory.md</code> &mdash; guardrails, brand voice, current state</li>
+        </ul>
+      </div>
+
+      <div class="card">
+        <div class="card__tag card__tag--tier">Tier 1 &mdash; Company/Role Context</div>
+        <h3>Target-Specific Intel</h3>
+        <p>Loaded when working on a specific company or role. Match the file to the trigger.</p>
+        <ul>
+          <li>JD file + existing resume/cover letter for that company</li>
+          <li>Interview transcripts if they exist</li>
+          <li>Hiring manager research from web search</li>
+          <li>Offer letter/terms for evaluation</li>
+        </ul>
+      </div>
+
+      <div class="card">
+        <div class="card__tag card__tag--tier">Tier 2 &mdash; Application Summaries</div>
+        <h3>Deep Project Descriptions</h3>
+        <p>Six application summaries covering Charlie's major projects. Load the one matching the role orientation.</p>
+        <ul>
+          <li>AESOP Studio &mdash; Builder/Technical + Strategic</li>
+          <li>Thesis &mdash; Strategic/Transformation</li>
+          <li>Glean Agent Factory &mdash; Builder/Technical</li>
+          <li>Contract Review &mdash; Builder + Consulting</li>
+          <li>SuperAssistant &mdash; Builder + Consulting</li>
+          <li>Walter &mdash; Enablement/Program</li>
+        </ul>
+      </div>
+
+      <div class="card">
+        <div class="card__tag card__tag--tier">Tier 3 &mdash; Full Context</div>
+        <h3>On Explicit Request</h3>
+        <p>Loaded only when needed. Full resume build, pipeline check, legal strategy, or historical analysis.</p>
+        <ul>
+          <li><code>master-resume.md</code> &mdash; every experience claim</li>
+          <li><code>application-tracker.csv</code> &mdash; pipeline check</li>
+          <li><code>Contentful_Matter_Strategy_Guide.md</code> &mdash; legal strategy</li>
+          <li><code>JOB_TRACKER.md</code> &mdash; historical win/loss analysis</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <!-- MERCENARY MINDSET -->
+  <section>
+    <div class="section-label">Operating Philosophy</div>
+    <h2>Mercenary Mindset</h2>
+    <p class="section-desc">
+      Every job has an expiration date. Loyalty is to the mission, not the logo. Four operational disciplines turn the philosophy into daily practice.
+    </p>
+
+    <div class="card-grid card-grid--2">
+      <div class="card">
+        <h3>1. Know the Goal</h3>
+        <p>Define success in measurable KPIs before starting. "Deploy 3 production agents serving 200+ users within 90 days." If the organization can't articulate the mission, that's the first problem to solve.</p>
+      </div>
+      <div class="card">
+        <h3>2. Get the Work Done</h3>
+        <p>Ship. Ship again. Build credibility through output, not presence. The best defense against reorgs and budget cuts is being the person whose work everyone can point to and say "that worked."</p>
+      </div>
+      <div class="card">
+        <h3>3. Surface Blockers Early</h3>
+        <p>Don't suffer in silence. Name the obstacle, propose the fix, ask for what you need. If the organization won't unblock you, that's a data point &mdash; not a failure.</p>
+      </div>
+      <div class="card">
+        <h3>4. Be So Good They Can't Ignore You</h3>
+        <p>Build things that matter. Document the impact. Make the work undeniable. When budgets get cut, demonstrated ROI survives. When nobody knows what you did, you're a line item.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- GUARDRAILS -->
+  <section>
+    <div class="section-label">Non-Negotiable</div>
+    <h2>Guardrails</h2>
+    <p class="section-desc">
+      Rules that are enforced on every output, in every mode, without exception.
+    </p>
+
+    <div class="guardrail-list">
+      <div class="guardrail-item">
+        <strong>The Contentful Rule.</strong> Never name Contentful in writing, conversation prep, or outreach. Present as Waifinder AI consulting engagement. Use the script only if the interviewer raises it.
+      </div>
+      <div class="guardrail-item">
+        <strong>No inflation.</strong> Charlie's experience is strong enough without exaggeration. Shipped vs. designed is a bright line. Metrics must be reasoned and defensible.
+      </div>
+      <div class="guardrail-item">
+        <strong>Voice discipline.</strong> No em-dashes. No "not just X, but Y." No performative enthusiasm. Concrete nouns over adjectives. Accomplishment front-loaded, metric back-loaded. Active first person.
+      </div>
+      <div class="guardrail-item">
+        <strong>Canonical names.</strong> Waifinder AI title is "Founder & Principal." AESOP Transformation OS is the full name. "Over 100 AI agent deployments." "Trained in MEDDIC." AI Build Lab is completed.
+      </div>
+      <div class="guardrail-item">
+        <strong>Defensibility is load-bearing.</strong> No synonym drift toward terms Charlie can't defend. Terms like "machine learning" and "data science" as technical disciplines are deliberately excluded.
+      </div>
+      <div class="guardrail-item">
+        <strong>Flag, don't fix silently.</strong> If Charlie says something inconsistent with the knowledge base, surface it. He expects course correction.
+      </div>
+    </div>
+  </section>
+
+  <!-- FEEDBACK LOOP -->
+  <section>
+    <div class="section-label">Cross-Session Memory</div>
+    <h2>Feedback Loop</h2>
+    <p class="section-desc">
+      After every significant event (interview, rejection, offer, negotiation, insight), the agent writes a dated entry to <code>learnings.md</code>. This file IS the agent's memory &mdash; without it, every conversation starts from zero.
+    </p>
+
+    <div class="callout">
+      <strong>Learnings entry format:</strong><br/>
+      <code>## YYYY-MM-DD &mdash; [Event Type]: [Company or Topic]</code><br/>
+      <code>**What happened:** [1-2 sentences]</code><br/>
+      <code>**Learning:** [1 sentence]</code><br/>
+      <code>**Action:** [What changes based on this]</code><br/><br/>
+      <strong>Pattern synthesis</strong> runs every 2 weeks: what's repeating, what's improving, what's getting worse, what's the single highest-leverage action right now.
+    </div>
+  </section>
+
+  <div class="footer">&copy; 2025-2026 Charlie Fuller</div>
+
+</div>
+
+<script>
+  const toggle = document.getElementById('themeToggle');
+  const iconLight = toggle.querySelector('.icon-light');
+  const iconDark = toggle.querySelector('.icon-dark');
+  function setTheme(d) {
+    document.documentElement.classList.toggle('dark', d);
+    iconLight.style.display = d ? 'none' : '';
+    iconDark.style.display = d ? '' : 'none';
+    try { localStorage.setItem('diagram-theme', d ? 'dark' : 'light'); } catch(e) {}
+  }
+  toggle.addEventListener('click', () => setTheme(!document.documentElement.classList.contains('dark')));
+  try { if (localStorage.getItem('diagram-theme') === 'dark') setTheme(true); } catch(e) {}
+</script>
+
+<script type="module">
+  import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs';
+
+  const isDark = document.documentElement.classList.contains('dark');
+
+  mermaid.initialize({
+    startOnLoad: true,
+    theme: 'base',
+    look: 'classic',
+    themeVariables: {
+      primaryColor: isDark ? '#1a0e07' : '#fde8d8',
+      primaryBorderColor: isDark ? '#f37021' : '#e8621a',
+      primaryTextColor: isDark ? '#e8edf5' : '#0a1628',
+      secondaryColor: isDark ? '#0f0a1f' : '#ede9fe',
+      secondaryBorderColor: isDark ? '#a78bfa' : '#7c3aed',
+      secondaryTextColor: isDark ? '#e8edf5' : '#0a1628',
+      tertiaryColor: isDark ? '#0a1a1a' : '#e0f2f1',
+      tertiaryBorderColor: isDark ? '#2dd4bf' : '#0f766e',
+      tertiaryTextColor: isDark ? '#e8edf5' : '#0a1628',
+      lineColor: isDark ? '#5e7aa3' : '#7a9ab8',
+      fontSize: '13px',
+      fontFamily: "'Fraunces', Georgia, serif",
+    }
+  });
+</script>
+
+<script>
+  function updateZoomState(wrap) {
+    var target = wrap.querySelector('.mermaid');
+    var zoom = parseFloat(target.dataset.zoom || '1');
+    wrap.classList.toggle('is-zoomed', zoom > 1);
+  }
+
+  function zoomDiagram(btn, factor) {
+    var wrap = btn.closest('.mermaid-wrap');
+    var target = wrap.querySelector('.mermaid');
+    var current = parseFloat(target.dataset.zoom || '1');
+    var next = Math.min(Math.max(current * factor, 0.3), 5);
+    target.dataset.zoom = next;
+    target.style.transform = 'scale(' + next + ')';
+    updateZoomState(wrap);
+  }
+
+  function resetZoom(btn) {
+    var wrap = btn.closest('.mermaid-wrap');
+    var target = wrap.querySelector('.mermaid');
+    target.dataset.zoom = '1';
+    target.style.transform = 'scale(1)';
+    updateZoomState(wrap);
+  }
+
+  document.querySelectorAll('.mermaid-wrap').forEach(function(wrap) {
+    wrap.addEventListener('wheel', function(e) {
+      if (!e.ctrlKey && !e.metaKey) return;
+      e.preventDefault();
+      var target = wrap.querySelector('.mermaid');
+      var current = parseFloat(target.dataset.zoom || '1');
+      var factor = e.deltaY < 0 ? 1.1 : 0.9;
+      var next = Math.min(Math.max(current * factor, 0.3), 5);
+      target.dataset.zoom = next;
+      target.style.transform = 'scale(' + next + ')';
+      updateZoomState(wrap);
+    }, { passive: false });
+
+    var startX, startY, scrollL, scrollT;
+    wrap.addEventListener('mousedown', function(e) {
+      if (e.target.closest('.zoom-controls')) return;
+      var target = wrap.querySelector('.mermaid');
+      if (parseFloat(target.dataset.zoom || '1') <= 1) return;
+      wrap.classList.add('is-panning');
+      startX = e.clientX;
+      startY = e.clientY;
+      scrollL = wrap.scrollLeft;
+      scrollT = wrap.scrollTop;
+    });
+    window.addEventListener('mousemove', function(e) {
+      if (!wrap.classList.contains('is-panning')) return;
+      wrap.scrollLeft = scrollL - (e.clientX - startX);
+      wrap.scrollTop = scrollT - (e.clientY - startY);
+    });
+    window.addEventListener('mouseup', function() {
+      wrap.classList.remove('is-panning');
+    });
+  });
+</script>
+
+</body>
+</html>
