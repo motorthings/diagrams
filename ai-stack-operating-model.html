@@ -1,0 +1,470 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AI Transformation — What We're Talking About</title>
+<meta name="description" content="The three-layer AI stack: why the model is a commodity, the harness is replicable, and the organizational operating model is the real constraint.">
+<link rel="icon" href="icon.svg" type="image/svg+xml" />
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,500;0,9..144,600;0,9..144,700;0,9..144,800;1,9..144,400&family=Source+Code+Pro:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --font-display: 'Fraunces', Georgia, serif;
+    --font-mono: 'Source Code Pro', 'SF Mono', Consolas, monospace;
+    --bg: #eef4f9; --surface: #ffffff; --surface2: #f5f8fc;
+    --border: #c8daea; --border-bright: #a0bedb;
+    --text: #0a1628; --text-dim: #3d5a7a; --text-muted: #7a9ab8;
+    --primary: #e8621a; --primary-dim: rgba(232,98,26,0.08);
+    --secondary: #4a90c4; --secondary-dim: rgba(74,144,196,0.08);
+    --metric: #0f766e; --metric-dim: rgba(15,118,110,0.08);
+    --amber: #b45309; --amber-dim: rgba(180,83,9,0.08);
+    --rose: #e11d48; --rose-dim: rgba(225,29,72,0.08);
+    --model: #0f766e; --model-dim: rgba(15,118,110,0.06);
+    --harness: #b45309; --harness-dim: rgba(180,83,9,0.06);
+    --org: #e11d48; --org-dim: rgba(225,29,72,0.08);
+    --org-glow: rgba(225,29,72,0.08);
+  }
+
+  html.dark {
+    --bg: #0a1628; --surface: #132240; --surface2: #1a2d52;
+    --border: #1a2d52; --border-bright: #2d4570;
+    --text: #e8edf5; --text-dim: #9bb0d4; --text-muted: #5e7aa3;
+    --primary: #f37021; --primary-dim: rgba(243,112,33,0.12);
+    --secondary: #6cace4; --secondary-dim: rgba(108,172,228,0.12);
+    --metric: #2dd4bf; --metric-dim: rgba(45,212,191,0.08);
+    --amber: #f59e0b; --amber-dim: rgba(245,158,11,0.12);
+    --rose: #fb7185; --rose-dim: rgba(251,113,133,0.12);
+    --model: #2dd4bf; --model-dim: rgba(45,212,191,0.08);
+    --harness: #f59e0b; --harness-dim: rgba(245,158,11,0.08);
+    --org: #fb7185; --org-dim: rgba(251,113,133,0.1);
+    --org-glow: rgba(251,113,133,0.15);
+  }
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: var(--font-display);
+    background: var(--bg);
+    background-image: radial-gradient(ellipse at 80% 0%, var(--primary-dim) 0%, transparent 50%),
+                      radial-gradient(ellipse at 20% 60%, var(--secondary-dim) 0%, transparent 40%);
+    color: var(--text);
+    min-height: 100vh;
+    line-height: 1.6;
+    padding: 0 32px 48px;
+    transition: background 0.3s, color 0.3s;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  .backlink {
+    position: fixed; top: 12px; left: 16px; z-index: 101;
+    font-family: var(--font-mono); font-size: 12px;
+    color: var(--text-dim); text-decoration: none;
+    padding: 6px 10px; border: 1px solid var(--border);
+    border-radius: 6px; background: var(--surface);
+    transition: color 0.15s, border-color 0.15s;
+  }
+  .backlink:hover { color: var(--text); border-color: var(--border-bright); }
+
+  .nav {
+    position: sticky; top: 0; z-index: 100;
+    backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px);
+    background: color-mix(in srgb, var(--surface) 85%, transparent);
+    border-bottom: 1px solid var(--border);
+    margin: 0 -32px 32px; padding: 0 32px 0 100px;
+    transition: background 0.3s, border-color 0.3s;
+  }
+  .nav-inner {
+    max-width: 1400px; margin: 0 auto; padding: 12px 0;
+    display: flex; align-items: center; justify-content: space-between;
+  }
+  .nav-brand {
+    font-family: var(--font-mono); font-size: 12px; font-weight: 600;
+    letter-spacing: 0.5px; color: var(--primary); text-decoration: none;
+  }
+  .theme-toggle {
+    width: 36px; height: 36px; border-radius: 10px;
+    border: 1px solid var(--border); background: var(--surface);
+    cursor: pointer; display: flex; align-items: center; justify-content: center;
+    font-size: 16px; color: var(--text-dim); transition: all 0.2s;
+  }
+  .theme-toggle:hover { border-color: var(--primary); color: var(--primary); }
+
+  .container { max-width: 1400px; width: 100%; margin: 0 auto; }
+
+  header {
+    text-align: center;
+    margin-bottom: 64px;
+    padding-top: 16px;
+  }
+
+  h1 {
+    font-family: var(--font-display);
+    font-weight: 800;
+    font-size: clamp(32px, 5vw, 44px);
+    line-height: 1.15;
+    letter-spacing: -0.02em;
+    margin-bottom: 16px;
+  }
+
+  .subtitle {
+    font-family: var(--font-display);
+    font-style: italic;
+    font-size: 17px;
+    color: var(--text-dim);
+    max-width: 640px;
+    margin: 0 auto 0;
+    line-height: 1.6;
+    padding: 0 24px;
+  }
+
+  .stack { display: flex; flex-direction: column; gap: 0; position: relative; }
+
+  .layer {
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 36px 40px;
+    position: relative;
+    background: var(--surface);
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+  }
+  .layer:hover { transform: translateY(-2px); }
+
+  .layer--model { border-color: var(--metric); background: var(--model-dim); z-index: 1; }
+  .layer--harness { border-color: var(--amber); background: var(--harness-dim); z-index: 2; margin-top: -1px; border-top-left-radius: 0; border-top-right-radius: 0; }
+  .layer--org { border-color: var(--rose); background: var(--org-dim); z-index: 3; margin-top: -1px; border-top-left-radius: 0; border-top-right-radius: 0; box-shadow: 0 0 80px var(--org-glow), 0 0 40px rgba(225,29,72,0.04); }
+
+  .layer-label {
+    font-family: var(--font-mono); font-size: 11px; font-weight: 600;
+    text-transform: uppercase; letter-spacing: 0.12em; margin-bottom: 8px;
+  }
+  .layer--model .layer-label { color: var(--model); }
+  .layer--harness .layer-label { color: var(--harness); }
+  .layer--org .layer-label { color: var(--org); }
+
+  .layer-header { display: flex; align-items: flex-start; gap: 18px; margin-bottom: 12px; }
+
+  .layer-icon { flex-shrink: 0; width: 44px; height: 44px; margin-top: 2px; }
+
+  .layer-title {
+    font-family: var(--font-display); font-weight: 600; font-size: 24px;
+    margin-bottom: 12px; letter-spacing: -0.01em;
+  }
+
+  .layer-subtitle {
+    font-family: var(--font-display); font-size: 15px; color: var(--text-dim);
+    font-style: italic; margin-bottom: 20px; line-height: 1.5;
+  }
+
+  .layer-props {
+    display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+    gap: 8px; list-style: none;
+  }
+
+  .layer-props li {
+    font-family: var(--font-mono); font-size: 12px; color: var(--text-dim);
+    padding: 10px 14px; background: var(--surface2); border-radius: 8px;
+    border: 1px solid var(--border); border-left: 3px solid var(--border-bright);
+    line-height: 1.45; transition: border-color 0.2s ease, background 0.2s ease;
+  }
+
+  .layer-props li strong {
+    display: block; font-family: var(--font-display); font-weight: 600;
+    font-size: 13px; color: var(--text); margin-bottom: 2px; font-style: italic;
+  }
+
+  .layer--model .layer-props li { border-left-color: var(--model); background: var(--model-dim); }
+  .layer--harness .layer-props li { border-left-color: var(--harness); background: var(--harness-dim); }
+  .layer--org .layer-props li { border-left-color: var(--org); background: var(--org-dim); }
+
+  .layer--model .layer-props li:hover { border-color: var(--metric); background: rgba(15,118,110,0.1); }
+  .layer--harness .layer-props li:hover { border-color: var(--amber); background: rgba(180,83,9,0.1); }
+  .layer--org .layer-props li:hover { border-color: var(--rose); background: rgba(225,29,72,0.12); }
+
+  html.dark .layer--model .layer-props li:hover { background: rgba(45,212,191,0.12); }
+  html.dark .layer--harness .layer-props li:hover { background: rgba(245,158,11,0.12); }
+  html.dark .layer--org .layer-props li:hover { background: rgba(251,113,133,0.15); }
+
+  .constraint-row {
+    display: flex; align-items: stretch; gap: 0; padding: 0 40px;
+    position: relative; z-index: 5;
+  }
+
+  .constraint-label {
+    font-family: var(--font-mono); font-size: 12px; font-weight: 700;
+    color: var(--text); white-space: nowrap; text-transform: uppercase;
+    letter-spacing: 0.14em; writing-mode: vertical-lr; text-orientation: mixed;
+    display: flex; align-items: center; justify-content: center;
+    padding: 20px 14px; border-right: 1px solid var(--border);
+    min-width: 44px; background: var(--surface2);
+  }
+  .constraint-row:nth-of-type(1) .constraint-label { color: var(--amber); background: var(--amber-dim); }
+  .constraint-row:nth-of-type(2) .constraint-label { color: var(--rose); background: var(--rose-dim); }
+
+  .constraint-body {
+    flex: 1; display: flex; flex-direction: column; gap: 0;
+    padding: 20px 28px; background: var(--surface);
+  }
+
+  .constraint-arg { display: flex; gap: 14px; padding: 12px 0; border-bottom: 1px solid var(--border); }
+  .constraint-arg:last-child { border-bottom: none; }
+
+  .constraint-arg-icon { flex-shrink: 0; width: 24px; height: 24px; margin-top: 1px; }
+
+  .constraint-arg-text { flex: 1; }
+
+  .constraint-arg-heading {
+    font-family: var(--font-display); font-weight: 600; font-size: 14px;
+    color: var(--text); margin-bottom: 3px; letter-spacing: -0.01em;
+  }
+
+  .constraint-arg-body {
+    font-family: var(--font-display); font-size: 13px; color: var(--text-dim);
+    line-height: 1.55; font-style: italic;
+  }
+
+  .constraint-conclusion {
+    font-family: var(--font-mono); font-size: 11px; font-weight: 600;
+    color: var(--text-dim); padding: 14px 28px;
+    background: var(--surface2); border-top: 1px solid var(--border); letter-spacing: 0.02em;
+  }
+
+  .insight {
+    margin-top: 48px; padding: 32px 40px; border-radius: 12px;
+    background: var(--surface); border: 1px solid var(--border-bright); text-align: center;
+  }
+
+  .insight-title {
+    font-family: var(--font-mono); font-size: 11px; font-weight: 600;
+    text-transform: uppercase; letter-spacing: 0.12em; color: var(--amber); margin-bottom: 12px;
+  }
+
+  .insight-text {
+    font-family: var(--font-display); font-weight: 500; font-size: 20px;
+    line-height: 1.5; letter-spacing: -0.01em;
+  }
+
+  .insight-phases {
+    display: flex; gap: 24px; justify-content: center; margin-top: 20px; flex-wrap: wrap;
+  }
+
+  .insight-phase {
+    font-family: var(--font-mono); font-size: 12px; padding: 8px 18px;
+    border-radius: 20px; border: 1px solid var(--border-bright); color: var(--text-dim);
+  }
+  .insight-phase:last-child { border-color: var(--rose); color: var(--rose); background: var(--rose-dim); }
+
+  .footer {
+    text-align: center; margin-top: 48px;
+    font-family: var(--font-mono); font-size: 11px; color: var(--text-muted);
+  }
+
+  .fade-up { opacity: 0; transform: translateY(24px); animation: fadeUp 0.7s ease forwards; }
+  .fade-up:nth-child(1) { animation-delay: 0.1s; }
+  .fade-up:nth-child(2) { animation-delay: 0.25s; }
+  .fade-up:nth-child(3) { animation-delay: 0.4s; }
+  .fade-up:nth-child(4) { animation-delay: 0.55s; }
+  .fade-up:nth-child(5) { animation-delay: 0.7s; }
+
+  @keyframes fadeUp { to { opacity: 1; transform: translateY(0); } }
+
+  @media (prefers-reduced-motion: reduce) {
+    .fade-up { animation: none; opacity: 1; transform: none; }
+  }
+
+  @media (max-width: 640px) {
+    body { padding: 0 16px 48px; }
+    .nav { margin: 0 -16px 24px; padding: 0 16px 0 100px; }
+    .layer { padding: 24px; }
+    .constraint-row { padding: 16px 24px; flex-direction: column; align-items: flex-start; gap: 8px; }
+    .constraint-label { writing-mode: horizontal-tb; min-width: auto; padding: 8px 14px; border-right: none; border-bottom: 1px solid var(--border); width: 100%; text-align: center; }
+    .insight-text { font-size: 16px; }
+  }
+</style>
+</head>
+<body>
+
+<a href="index.html" class="backlink">&larr; Index</a>
+
+<div class="nav">
+  <div class="nav-inner">
+    <a href="index.html" class="nav-brand">Charlie Fuller</a>
+    <button class="theme-toggle" id="themeToggle" aria-label="Toggle dark mode">
+      <span class="icon-light">&#9788;</span>
+      <span class="icon-dark" style="display:none">&#9790;</span>
+    </button>
+  </div>
+</div>
+
+<div class="container">
+
+  <header class="fade-up">
+    <h1>What We're Talking About<br>When We Talk About AI Transformation</h1>
+    <p class="subtitle">Everyone starts at the surface — the model.<br>Then they discover the harness matters more.<br>Keep digging and you find what actually determines what either can do.</p>
+  </header>
+
+  <div class="stack">
+
+    <div class="layer layer--model fade-up">
+      <div class="layer-label">Surface &mdash; What Everyone Sees</div>
+      <div class="layer-header">
+        <svg class="layer-icon" viewBox="0 0 44 44" fill="none" stroke="var(--model)" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="14" cy="14" r="8"/><circle cx="30" cy="14" r="8"/><circle cx="22" cy="30" r="8"/>
+          <line x1="19" y1="18" x2="17" y2="24"/><line x1="25" y1="18" x2="27" y2="24"/>
+          <line x1="14" y1="22" x2="22" y2="26"/><line x1="30" y1="22" x2="22" y2="26"/>
+        </svg>
+        <div><div class="layer-title">The Model</div></div>
+      </div>
+      <p class="layer-subtitle">Foundation models are remarkable, interchangeable, and improving at the same rate for everyone. Competing on model choice is a losing strategy &mdash; your competitor has access to the same ones.</p>
+      <ul class="layer-props">
+        <li><strong>GPT, Claude, Gemini, DeepSeek</strong>All converging. All accessible via API.</li>
+        <li><strong>Switching Cost &asymp; Zero</strong>Change one line of configuration. Test. Deploy.</li>
+        <li><strong>Weekly Benchmarks</strong>Today's leader is tomorrow's second place.</li>
+        <li><strong>Price Racing to Zero</strong>Token costs halve every 6-12 months.</li>
+        <li><strong>Identical Capabilities</strong>Reasoning, tool use, structured output &mdash; table stakes now.</li>
+      </ul>
+    </div>
+
+    <div class="constraint-row fade-up">
+      <div class="constraint-label">&darr; dig deeper &darr;</div>
+      <div class="constraint-body">
+        <div class="constraint-arg">
+          <svg class="constraint-arg-icon" viewBox="0 0 24 24" fill="none" stroke="var(--harness)" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+          <div class="constraint-arg-text">
+            <div class="constraint-arg-heading">A model is a reasoning engine. It is not a system.</div>
+            <div class="constraint-arg-body">Models don't remember. They don't connect to your database. They don't know your policies, your customers, or your edge cases. A model without a harness is an incredibly capable intelligence that cannot actually do anything in your organization. The model answers questions. The harness does work.</div>
+          </div>
+        </div>
+        <div class="constraint-arg">
+          <svg class="constraint-arg-icon" viewBox="0 0 24 24" fill="none" stroke="var(--harness)" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+          <div class="constraint-arg-text">
+            <div class="constraint-arg-heading">Models are interchangeable. Your competitor has the same ones.</div>
+            <div class="constraint-arg-body">GPT, Claude, Gemini, DeepSeek &mdash; they are converging on identical capabilities at commodity prices. Whatever advantage one model gives you today will be replicated by every other model within months. If your strategy is "we picked the best model," you have no strategy.</div>
+          </div>
+        </div>
+        <div class="constraint-arg">
+          <svg class="constraint-arg-icon" viewBox="0 0 24 24" fill="none" stroke="var(--harness)" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><polyline points="4 17 10 11 14 15 20 7"/><line x1="20" y1="7" x2="16" y2="7"/><line x1="20" y1="7" x2="20" y2="11"/></svg>
+          <div class="constraint-arg-text">
+            <div class="constraint-arg-heading">The industry has already absorbed this lesson.</div>
+            <div class="constraint-arg-body">Every major implementation guide now spends more pages on orchestration, tool integration, and workflow design than on model selection. The conversation moved from "which model" to "which harness" because the people doing the work discovered that the model was never the bottleneck.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="layer layer--harness fade-up">
+      <div class="layer-label">One Level Down &mdash; Necessary, Not Sufficient</div>
+      <div class="layer-header">
+        <svg class="layer-icon" viewBox="0 0 44 44" fill="none" stroke="var(--harness)" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="22" cy="22" r="11"/><circle cx="22" cy="22" r="5"/>
+          <line x1="22" y1="7" x2="22" y2="11"/><line x1="22" y1="33" x2="22" y2="37"/>
+          <line x1="7" y1="22" x2="11" y2="22"/><line x1="33" y1="22" x2="37" y2="22"/>
+          <line x1="11.3" y1="11.3" x2="14.1" y2="14.1"/><line x1="29.9" y1="29.9" x2="32.7" y2="32.7"/>
+          <line x1="11.3" y1="32.7" x2="14.1" y2="29.9"/><line x1="29.9" y1="14.1" x2="32.7" y2="11.3"/>
+          <rect x="17" y="17" width="10" height="10" rx="2"/>
+        </svg>
+        <div><div class="layer-title">The Agent Harness</div></div>
+      </div>
+      <p class="layer-subtitle">Determines what the model can do. Orchestration, tools, memory, guardrails. An important differentiator &mdash; but replicable. Your competitor can build one too.</p>
+      <ul class="layer-props">
+        <li><strong>Orchestration</strong>Workflow engines, state machines, deterministic routing.</li>
+        <li><strong>Tool Integration</strong>APIs, databases, file systems, external services.</li>
+        <li><strong>Memory &amp; Context</strong>Vector stores, conversation history, retrieval pipelines.</li>
+        <li><strong>Guardrails</strong>Input validation, output filtering, safety boundaries.</li>
+        <li><strong>Observability</strong>Logging, monitoring, evaluation, drift detection.</li>
+        <li><strong>Multi-Agent Coordination</strong>Delegation, handoffs, parallel execution.</li>
+      </ul>
+    </div>
+
+    <div class="constraint-row fade-up">
+      <div class="constraint-label">&darr; dig deeper &darr;</div>
+      <div class="constraint-body">
+        <div class="constraint-arg">
+          <svg class="constraint-arg-icon" viewBox="0 0 24 24" fill="none" stroke="var(--rose)" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+          <div class="constraint-arg-text">
+            <div class="constraint-arg-heading">The harness inherits the organization's ambiguity. It cannot fix what the organization hasn't resolved.</div>
+            <div class="constraint-arg-body">If nobody can decide who owns a cross-functional decision, the harness can't either. If the org chart says one person decides but everyone knows someone else actually has veto power, the harness will route to the wrong person. The harness doesn't know about shadow decision-makers. It only knows what you tell it &mdash; and what you tell it is usually the documented process, not the real one.</div>
+          </div>
+        </div>
+        <div class="constraint-arg">
+          <svg class="constraint-arg-icon" viewBox="0 0 24 24" fill="none" stroke="var(--rose)" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+          <div class="constraint-arg-text">
+            <div class="constraint-arg-heading">Governance designed for quarterly reviews cannot govern agents that decide in milliseconds.</div>
+            <div class="constraint-arg-body">An agent making 10,000 decisions per day will make roughly 900,000 decisions between quarterly steering committee meetings. If governance cycle time is measured in weeks and agent decision time is measured in milliseconds, governance is not governing &mdash; it is documenting decisions already made. The harness can enforce rules. It cannot create them at the speed the agent needs them.</div>
+          </div>
+        </div>
+        <div class="constraint-arg">
+          <svg class="constraint-arg-icon" viewBox="0 0 24 24" fill="none" stroke="var(--rose)" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>
+          <div class="constraint-arg-text">
+            <div class="constraint-arg-heading">The human repair layer &mdash; undocumented, invisible work &mdash; is what actually keeps processes running.</div>
+            <div class="constraint-arg-body">Every organization has people who catch exceptions, translate between incompatible systems, remember why decisions were made, and know where "enough" is versus "perfect." This work is invisible by definition &mdash; if it were documented, it would be part of the process. When you automate the documented process without accounting for the repair layer, the repair layer becomes visible as failures, exceptions, and stalled workflows. The harness didn't break anything. It revealed what was already broken.</div>
+          </div>
+        </div>
+        <div class="constraint-arg">
+          <svg class="constraint-arg-icon" viewBox="0 0 24 24" fill="none" stroke="var(--rose)" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>
+          <div class="constraint-arg-text">
+            <div class="constraint-arg-heading">Without organizational learning loops, each deployment starts from scratch.</div>
+            <div class="constraint-arg-body">Most organizations get better at deploying technology. Almost none get better at absorbing it. The difference is whether deployment N changes how you approach deployment N+1 &mdash; or whether you start from the same assumptions every time. The harness can be refined. The learning that refines it has to come from the organization. If nobody owns capturing what each deployment taught about how work actually gets done, the organization accumulates technology without accumulating understanding.</div>
+          </div>
+        </div>
+        <div class="constraint-conclusion">
+          The harness matters more than the model. But the organization determines what the harness can do. Every unresolved ambiguity in the operating model becomes a constraint the harness cannot overcome &mdash; and a failure the model will be blamed for.
+        </div>
+      </div>
+    </div>
+
+    <div class="layer layer--org fade-up">
+      <div class="layer-label">Bedrock &mdash; The Real Constraint</div>
+      <div class="layer-header">
+        <svg class="layer-icon" viewBox="0 0 44 44" fill="none" stroke="var(--org)" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round">
+          <rect x="2" y="18" width="10" height="24" rx="1"/><rect x="14" y="10" width="10" height="32" rx="1"/>
+          <rect x="26" y="14" width="10" height="28" rx="1"/><rect x="38" y="20" width="4" height="6" rx="0.5"/>
+          <rect x="38" y="28" width="4" height="6" rx="0.5"/><line x1="7" y1="22" x2="7" y2="26"/>
+          <line x1="19" y1="14" x2="19" y2="18"/><line x1="31" y1="18" x2="31" y2="22"/>
+          <path d="M14 10 L19 4 L24 10"/><path d="M26 14 L31 8 L36 14"/>
+        </svg>
+        <div><div class="layer-title">The Organizational Operating Model</div></div>
+      </div>
+      <p class="layer-subtitle">Determines what the harness can do. This is the foundation everything else rests on. Nothing above this layer can compensate for what's missing here.</p>
+      <ul class="layer-props">
+        <li><strong>Decision Architecture</strong>Who actually decides? Who breaks ties? The org chart lies.</li>
+        <li><strong>Governance Velocity</strong>Can governance keep pace with agents that decide in milliseconds?</li>
+        <li><strong>Human Repair Layer</strong>The undocumented work that keeps processes running when formal systems fail.</li>
+        <li><strong>Learning Infrastructure</strong>Does deployment N change how you approach deployment N+1?</li>
+        <li><strong>Change Absorption</strong>Can the org redesign work while continuing to operate?</li>
+        <li><strong>Ownership &amp; Accountability</strong>Who owns the stop button? Who is accountable when the agent gets it wrong?</li>
+      </ul>
+    </div>
+
+  </div>
+
+  <div class="insight fade-up">
+    <div class="insight-title">The Lesson of the Last Two Years</div>
+    <p class="insight-text">The model is a commodity.<br>The harness is an advantage, but replicable.<br><strong style="color: var(--rose);">The operating model is the ceiling.</strong></p>
+    <div class="insight-phases">
+      <span class="insight-phase">2023&ndash;2024: We improved the model</span>
+      <span class="insight-phase">2025&ndash;2026: We improved the harness</span>
+      <span class="insight-phase">2027&rarr;: We improve the organization</span>
+    </div>
+  </div>
+
+  <div class="footer">&copy; 2025-2026 Charlie Fuller</div>
+
+</div>
+
+<script>
+  const toggle = document.getElementById('themeToggle');
+  const iconLight = toggle.querySelector('.icon-light');
+  const iconDark = toggle.querySelector('.icon-dark');
+  function setTheme(d) {
+    document.documentElement.classList.toggle('dark', d);
+    iconLight.style.display = d ? 'none' : '';
+    iconDark.style.display = d ? '' : 'none';
+    try { localStorage.setItem('diagram-theme', d ? 'dark' : 'light'); } catch(e) {}
+  }
+  toggle.addEventListener('click', () => setTheme(!document.documentElement.classList.contains('dark')));
+  try { if (localStorage.getItem('diagram-theme') === 'dark') setTheme(true); } catch(e) {}
+</script>
+</body>
+</html>
