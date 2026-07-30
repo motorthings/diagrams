@@ -1,0 +1,557 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <link rel="icon" type="image/svg+xml" href="../icon.svg">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Career — Job Search Funnel · May–Jul 2026</title>
+  <meta name="description" content="Sankey diagram of 79 job applications across LinkedIn and Indeed, tracing the funnel from application through ghosted, no-thanks, interviews, and offers.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,700&family=Source+Code+Pro:wght@400;500;600&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --font-display: 'Fraunces', Georgia, serif;
+      --font-mono: 'Source Code Pro', 'SF Mono', Consolas, monospace;
+      --bg: #eef4f9;
+      --surface: #ffffff;
+      --surface2: #f5f8fc;
+      --border: #c8daea;
+      --border-bright: #a0bedb;
+      --text: #0a1628;
+      --text-dim: #3d5a7a;
+      --text-muted: #7a9ab8;
+      --primary: #e8621a;
+      --primary-dim: rgba(232,98,26,0.08);
+      --secondary: #4a90c4;
+      --secondary-dim: rgba(74,144,196,0.08);
+      --metric: #0f766e;
+      --metric-dim: rgba(15,118,110,0.08);
+      --amber: #b45309;
+      --amber-dim: rgba(180,83,9,0.08);
+      --violet: #7c3aed;
+      --violet-dim: rgba(124,58,237,0.08);
+      --rose: #e11d48;
+      --rose-dim: rgba(225,29,72,0.08);
+      --slate: #475569;
+      --slate-dim: rgba(71,85,105,0.08);
+
+      /* Sankey-specific */
+      --sk-source-a: #e8621a;
+      --sk-source-b: #4a90c4;
+      --sk-hub: #b45309;
+      --sk-warm: #d97742;
+      --sk-hot: #ca8a04;
+      --sk-hotter: #eab308;
+      --sk-offer: #0f766e;
+      --sk-offer-bright: #14b8a6;
+      --sk-ghost: #64748b;
+      --sk-reject: #e11d48;
+      --sk-reject-dim: #94a3b8;
+      --sk-inbound: #7c3aed;
+      --sk-inbound-dim: #a78bfa;
+      --sk-muted: #78716c;
+    }
+
+    html.dark {
+      --bg: #0a1628;
+      --surface: #132240;
+      --surface2: #1a2d52;
+      --border: #1a2d52;
+      --border-bright: #2d4570;
+      --text: #e8edf5;
+      --text-dim: #9bb0d4;
+      --text-muted: #5e7aa3;
+      --primary: #f37021;
+      --primary-dim: rgba(243,112,33,0.12);
+      --secondary: #6cace4;
+      --secondary-dim: rgba(108,172,228,0.12);
+      --metric: #2dd4bf;
+      --metric-dim: rgba(45,212,191,0.08);
+      --amber: #f59e0b;
+      --amber-dim: rgba(245,158,11,0.12);
+      --violet: #a78bfa;
+      --violet-dim: rgba(167,139,250,0.12);
+      --rose: #fb7185;
+      --rose-dim: rgba(251,113,133,0.12);
+      --slate: #94a3b8;
+      --slate-dim: rgba(148,163,184,0.12);
+
+      --sk-source-a: #f37021;
+      --sk-source-b: #6cace4;
+      --sk-hub: #f59e0b;
+      --sk-warm: #f97316;
+      --sk-hot: #eab308;
+      --sk-hotter: #facc15;
+      --sk-offer: #2dd4bf;
+      --sk-offer-bright: #5eead4;
+      --sk-ghost: #64748b;
+      --sk-reject: #fb7185;
+      --sk-reject-dim: #94a3b8;
+      --sk-inbound: #a78bfa;
+      --sk-inbound-dim: #c4b5fd;
+      --sk-muted: #78716c;
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; }
+
+    body {
+      font-family: var(--font-display);
+      background: var(--bg);
+      background-image:
+        radial-gradient(ellipse at 80% 0%, var(--primary-dim) 0%, transparent 50%),
+        radial-gradient(ellipse at 20% 60%, var(--secondary-dim) 0%, transparent 40%);
+      color: var(--text);
+      min-height: 100vh;
+      line-height: 1.6;
+      overflow-wrap: break-word;
+      transition: background 0.3s, color 0.3s;
+      padding: 0 32px 48px;
+    }
+    .wrap { max-width: 1400px; margin: 0 auto; }
+
+    /* ── Nav ── */
+    .nav {
+      position: sticky; top: 0; z-index: 100;
+      backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px);
+      background: color-mix(in srgb, var(--surface) 85%, transparent);
+      border-bottom: 1px solid var(--border);
+      margin: 0 -32px 32px; padding: 0 32px;
+      transition: background 0.3s, border-color 0.3s;
+    }
+    .nav-inner {
+      max-width: 1100px; margin: 0 auto; padding: 12px 0;
+      display: flex; align-items: center; justify-content: space-between;
+    }
+    .nav-brand {
+      font-family: var(--font-mono); font-size: 12px; font-weight: 600;
+      letter-spacing: 0.5px; color: var(--primary); text-decoration: none;
+    }
+    .nav-brand:hover { color: var(--text); }
+    .theme-toggle {
+      width: 36px; height: 36px; border-radius: 10px;
+      border: 1px solid var(--border); background: var(--surface);
+      cursor: pointer; display: flex; align-items: center; justify-content: center;
+      font-size: 16px; color: var(--text-dim); transition: all 0.2s;
+    }
+    .theme-toggle:hover { border-color: var(--primary); color: var(--primary); }
+
+    /* ── Backlink ── */
+    .backlink {
+      position: fixed; top: 12px; left: 16px; z-index: 101;
+      font-family: var(--font-mono); font-size: 12px;
+      color: var(--text-dim); text-decoration: none;
+      padding: 6px 10px; border: 1px solid var(--border);
+      border-radius: 6px; background: var(--surface);
+      transition: color 0.15s, border-color 0.15s;
+    }
+    .backlink:hover { color: var(--text); border-color: var(--border-bright); }
+
+    /* ── Header ── */
+    header { text-align: center; margin-bottom: 40px; }
+    header h1 {
+      font-family: var(--font-display); font-size: clamp(2rem, 4vw, 2.75rem);
+      font-weight: 800; letter-spacing: -0.02em; color: var(--text); margin-bottom: 8px;
+    }
+    header .sub {
+      font-family: var(--font-mono); font-size: 13px; color: var(--text-dim); letter-spacing: 0.04em;
+    }
+    header .sub span { color: var(--text); font-weight: 600; }
+
+    /* ── Sankey ── */
+    #sankey-wrap {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: 14px; padding: 8px 0; margin-bottom: 40px;
+      overflow-x: auto; overflow-y: hidden;
+      -webkit-overflow-scrolling: touch;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.04); position: relative;
+    }
+    svg#sankey { display: block; min-width: 1100px; }
+    .node rect { cursor: pointer; transition: filter 0.2s; }
+    .node:hover rect { filter: brightness(1.08); }
+    .node text { font-family: var(--font-mono); font-size: 11px; font-weight: 500; pointer-events: none; fill: var(--text); }
+    .link { transition: opacity 0.2s; cursor: pointer; }
+    .link:hover { opacity: 1 !important; }
+
+    #tooltip {
+      position: absolute; pointer-events: none; background: var(--surface);
+      border: 1px solid var(--border-bright); border-radius: 8px; padding: 8px 12px;
+      font-family: var(--font-mono); font-size: 11.5px; color: var(--text);
+      box-shadow: 0 4px 12px rgba(0,0,0,0.1); opacity: 0; transition: opacity 0.15s;
+      z-index: 10; white-space: nowrap;
+    }
+
+    /* ── Stats ── */
+    .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 12px; margin-bottom: 32px; }
+    .stat-card {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: 10px; padding: 18px 20px;
+    }
+    .stat-card .num { font-family: var(--font-display); font-size: 2rem; font-weight: 700; line-height: 1; margin-bottom: 4px; }
+    .stat-card .label { font-family: var(--font-mono); font-size: 12px; color: var(--text-dim); letter-spacing: 0.03em; }
+    .stat-card.ghost { border-left: 3px solid var(--sk-ghost); }
+    .stat-card.ghost .num { color: var(--sk-ghost); }
+    .stat-card.reject { border-left: 3px solid var(--sk-reject); }
+    .stat-card.reject .num { color: var(--sk-reject); }
+    .stat-card.offer { border-left: 3px solid var(--metric); }
+    .stat-card.offer .num { color: var(--metric); }
+
+    /* ── Callouts ── */
+    .callouts { display: grid; grid-template-columns: repeat(auto-fit, minmax(340px, 1fr)); gap: 16px; margin-bottom: 48px; }
+    .callout {
+      background: var(--surface2); border: 1px solid var(--border);
+      border-radius: 10px; padding: 20px 24px;
+    }
+    .callout h3 { font-family: var(--font-display); font-size: 1.05rem; font-weight: 600; margin-bottom: 8px; color: var(--text); }
+    .callout p, .callout li { font-size: 13px; line-height: 1.6; color: var(--text-dim); }
+    .callout ul { padding-left: 18px; margin-top: 6px; }
+    .callout li { margin-bottom: 4px; }
+    .callout li strong { color: var(--text); font-weight: 600; }
+
+    /* ── Legend ── */
+    .legend { display: flex; flex-wrap: wrap; gap: 20px; justify-content: center; margin-bottom: 24px; font-family: var(--font-mono); font-size: 12px; color: var(--text-dim); }
+    .legend-item { display: flex; align-items: center; gap: 6px; }
+    .legend-swatch { width: 12px; height: 12px; border-radius: 3px; flex-shrink: 0; }
+
+    /* ── Footer ── */
+    .footer { text-align: center; font-family: var(--font-mono); font-size: 11px; color: var(--text-muted); padding-top: 32px; border-top: 1px solid var(--border); margin-top: 16px; }
+
+    @media (max-width: 768px) {
+      body { padding: 0 16px 40px; }
+      .nav { margin: 0 -16px 24px; padding: 0 16px; }
+      .callouts { grid-template-columns: 1fr; }
+      .stats-grid { grid-template-columns: repeat(2, 1fr); }
+      .backlink { top: 8px; left: 8px; font-size: 10px; padding: 4px 8px; }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      .link { transition: none; }
+    }
+  </style>
+</head>
+<body>
+
+<div class="nav">
+  <div class="nav-inner">
+    <a href="../index.html" class="nav-brand">Career &mdash; Job Search Funnel</a>
+    <button class="theme-toggle" id="themeToggle" aria-label="Toggle dark mode">
+      <span class="icon-light">&#9788;</span>
+      <span class="icon-dark" style="display:none">&#9790;</span>
+    </button>
+  </div>
+</div>
+
+<a href="../index.html" class="backlink">&larr; Index</a>
+
+<div class="wrap">
+
+  <header>
+    <h1>Job Search Funnel</h1>
+    <p class="sub">May 14 &ndash; July 30, 2026 &nbsp;&middot;&nbsp; <span>79</span> applications &nbsp;&middot;&nbsp; <span>3</span> offers &nbsp;&middot;&nbsp; <span>2</span> accepted &nbsp;&middot;&nbsp; <span>2</span> rescinded &nbsp;&middot;&nbsp; <span>1</span> active</p>
+  </header>
+
+  <div class="legend">
+    <div class="legend-item"><span class="legend-swatch" style="background:var(--primary)"></span> LinkedIn</div>
+    <div class="legend-item"><span class="legend-swatch" style="background:var(--secondary)"></span> Indeed</div>
+    <div class="legend-item"><span class="legend-swatch" style="background:var(--sk-ghost)"></span> Ghosted</div>
+    <div class="legend-item"><span class="legend-swatch" style="background:var(--sk-reject)"></span> No thanks / Rescinded</div>
+    <div class="legend-item"><span class="legend-swatch" style="background:var(--sk-hotter)"></span> Interviews</div>
+    <div class="legend-item"><span class="legend-swatch" style="background:var(--metric)"></span> Offer / Accepted</div>
+    <div class="legend-item"><span class="legend-swatch" style="background:var(--violet)"></span> LinkedIn inbound</div>
+  </div>
+
+  <div id="sankey-wrap">
+    <svg id="sankey"></svg>
+    <div id="tooltip"></div>
+  </div>
+
+  <div class="stats-grid">
+    <div class="stat-card ghost">
+      <div class="num">82.3%</div>
+      <div class="label">Ghosted &mdash; silence at some stage (65 of 79)</div>
+    </div>
+    <div class="stat-card reject">
+      <div class="num">13.9%</div>
+      <div class="label">Explicit "no thanks" (11)</div>
+    </div>
+    <div class="stat-card offer">
+      <div class="num">3.8%</div>
+      <div class="label">Resulted in an offer (3)</div>
+    </div>
+  </div>
+
+  <div class="callouts">
+    <div class="callout">
+      <h3>&#128123; The Ghosted Funnel</h3>
+      <p>65 of 79 applications ended in silence &mdash; at <strong>every stage</strong> of the funnel:</p>
+      <ul>
+        <li><strong>48</strong> never responded to the application at all &mdash; at least <strong>15 of those companies reposted</strong> the same role</li>
+        <li><strong>14</strong> acknowledged receipt, then went silent</li>
+        <li><strong>1</strong> did a recruiter screen, then ghosted (CoorsTek)</li>
+        <li><strong>1</strong> did a recruiter screen, then said "no thanks" (Deloitte)</li>
+        <li><strong>2</strong> reached hiring manager, then ghosted &mdash; <strong>Terumo</strong> even reposted the role after the HM stage</li>
+      </ul>
+      <p style="margin-top:8px;"><strong>Strategic Retail Partners</strong> reached hiring manager, then ghosted. <strong>Lumenalta</strong> went through full process &mdash; "successful" but benched: "we'll call you when we have a partner."</p>
+    </div>
+    <div class="callout">
+      <h3>&#128188; 3 Offers, 2 Accepted, 2 Rescinded, 1 Active</h3>
+      <p>Three offers. Only two were accepted. Two were rescinded:</p>
+      <ul>
+        <li><strong>Monday.com</strong> &mdash; recruiter screen &rarr; team demo with live AESOP &rarr; offer extended &rarr; told not to resign &rarr; <strong>offer rescinded 2 weeks later</strong> (never formally accepted)</li>
+        <li><strong>Melior</strong> &mdash; recruiter screen &rarr; working session with live demo &rarr; final round panel (CEO, COO, CTO) &rarr; offer accepted &rarr; <strong>rescinded 5 days later</strong></li>
+        <li><strong>Averro</strong> &mdash; LinkedIn inbound &rarr; conversations &rarr; initially declined &rarr; resumed &rarr; hiring manager review with Trey &rarr; fractional offer at $125/hr W-2 &rarr; <strong>accepted</strong> &mdash; still active</li>
+      </ul>
+    </div>
+    <div class="callout">
+      <h3>&#128279; LinkedIn Inbound</h3>
+      <p>6 people reached out directly on LinkedIn:</p>
+      <ul>
+        <li><strong>4</strong> foreign recruiters with scammy-sounding roles &rarr; ignored</li>
+        <li><strong>1</strong> EchoStar recruiter &rarr; responded, then she ghosted</li>
+        <li><strong>1</strong> Randy Burton at <strong>Averro</strong> &rarr; conversations &rarr; initially declined &rarr; resumed &rarr; hiring manager review with Trey &rarr; fractional offer at $125/hr W-2 &rarr; <strong>accepted</strong> (active)</li>
+      </ul>
+      <p style="margin-top:8px;">Inbound LinkedIn yielded one real opportunity &mdash; fractional, still active.</p>
+    </div>
+  </div>
+
+  <div class="footer">&copy; 2025-2026 Charlie Fuller</div>
+
+</div>
+
+<script src="https://d3js.org/d3.v7.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/d3-sankey@0.12.3/dist/d3-sankey.min.js"></script>
+<script>
+(() => {
+  const isDark = document.documentElement.classList.contains('dark');
+  const cssVar = (name) => getComputedStyle(document.documentElement).getPropertyValue(name).trim();
+
+  function skColor(id) {
+    const map = {
+      linkedin:      cssVar('--sk-source-a'),
+      indeed:        cssVar('--sk-source-b'),
+      applications:  cssVar('--sk-hub'),
+      acknowledged:  cssVar('--sk-warm'),
+      recruiter:     cssVar('--sk-hot'),
+      hiringMgr:     cssVar('--sk-hotter'),
+      teamDemo:      isDark ? '#facc15' : '#eab308',
+      offer:         cssVar('--sk-offer'),
+      accepted:      cssVar('--sk-offer-bright'),
+      ghosted:       cssVar('--sk-ghost'),
+      noThanks:      cssVar('--sk-reject'),
+      rescinded:     cssVar('--sk-reject'),
+      active:        cssVar('--sk-muted'),
+      pipeline:      cssVar('--sk-muted'),
+      liOutreach:    cssVar('--sk-inbound'),
+      ignoredScam:   cssVar('--sk-ghost'),
+      responded:     cssVar('--sk-inbound-dim'),
+      ghostedLi:     cssVar('--sk-ghost'),
+    };
+    return map[id] || cssVar('--text-dim');
+  }
+
+  const data = {
+    nodes: [
+      { id: "linkedin",      label: "LinkedIn",              group: "source" },
+      { id: "indeed",        label: "Indeed",                group: "source" },
+      { id: "applications",  label: "Applications\nSubmitted", group: "hub" },
+      { id: "acknowledged",  label: "Acknowledged",          group: "warm" },
+      { id: "recruiter",     label: "Recruiter\nScreen",     group: "hot" },
+      { id: "hiringMgr",     label: "Hiring\nManager",       group: "hot" },
+      { id: "teamDemo",      label: "Team /\nDemo",          group: "hot" },
+      { id: "offer",         label: "Offer",                 group: "offer" },
+      { id: "accepted",      label: "Accepted",              group: "offer" },
+      { id: "ghosted",       label: "👻 Ghosted",            group: "ghost" },
+      { id: "noThanks",      label: "\"No Thanks\"",          group: "cold" },
+      { id: "rescinded",     label: "Offer\nRescinded",      group: "cold" },
+      { id: "active",        label: "Active\n(Averro)",      group: "muted" },
+      { id: "pipeline",      label: "Still in\nPipeline (APC)", group: "muted" },
+      { id: "liOutreach",    label: "LinkedIn\nOutreach",    group: "inbound" },
+      { id: "ignoredScam",   label: "Ignored\n(scam)",       group: "ghost" },
+      { id: "responded",     label: "Responded",             group: "inbound" },
+      { id: "ghostedLi",     label: "Ghosted\n(EchoStar)",   group: "ghost" },
+    ],
+    links: [
+      { source: "linkedin",      target: "applications",  value: 59 },
+      { source: "indeed",        target: "applications",  value: 20 },
+      { source: "applications",  target: "acknowledged",  value: 31 },
+      { source: "applications",  target: "ghosted",       value: 48 },
+      { source: "acknowledged",  target: "noThanks",      value: 10 },
+      { source: "acknowledged",  target: "recruiter",     value: 7  },
+      { source: "acknowledged",  target: "ghosted",       value: 14 },
+      { source: "recruiter",     target: "hiringMgr",     value: 5  },
+      { source: "recruiter",     target: "noThanks",      value: 1  },
+      { source: "recruiter",     target: "ghosted",       value: 1  },
+      { source: "hiringMgr",     target: "teamDemo",      value: 2  },
+      { source: "hiringMgr",     target: "ghosted",       value: 2  },
+      { source: "hiringMgr",     target: "pipeline",      value: 1  },
+      { source: "teamDemo",      target: "offer",         value: 2  },
+      { source: "offer",         target: "accepted",      value: 2  },
+      { source: "offer",         target: "rescinded",     value: 1  },
+      { source: "accepted",      target: "rescinded",     value: 1  },
+      { source: "accepted",      target: "active",        value: 1  },
+      { source: "liOutreach",    target: "ignoredScam",   value: 4  },
+      { source: "liOutreach",    target: "responded",     value: 2  },
+      { source: "responded",     target: "ghostedLi",     value: 1  },
+      { source: "responded",     target: "offer",         value: 1  },
+    ]
+  };
+
+  const container = document.getElementById('sankey-wrap');
+  const width = Math.max(1200, container.clientWidth - 32);
+  const height = 720;
+  const margin = { top: 24, right: 40, bottom: 24, left: 40 };
+
+  const svg = d3.select('#sankey')
+    .attr('viewBox', `0 0 ${width} ${height}`)
+    .attr('width', width).attr('height', height);
+
+  const g = svg.append('g').attr('transform', `translate(${margin.left},${margin.top})`);
+
+  const sankey = d3.sankey()
+    .nodeId(d => d.id)
+    .nodeWidth(18)
+    .nodePadding(14)
+    .nodeAlign(d3.sankeyLeft)
+    .extent([[0, 0], [width - margin.left - margin.right, height - margin.top - margin.bottom]]);
+
+  const { nodes, links } = sankey({
+    nodes: data.nodes.map(d => ({ ...d })),
+    links: data.links.map(d => ({ ...d }))
+  });
+
+  // Link gradients
+  const defs = svg.append('defs');
+  links.forEach((l, i) => {
+    const srcColor = skColor(l.source.id);
+    const tgtColor = skColor(l.target.id);
+    const gradId = `link-grad-${i}`;
+    const grad = defs.append('linearGradient')
+      .attr('id', gradId).attr('gradientUnits', 'userSpaceOnUse')
+      .attr('x1', l.source.x1).attr('x2', l.target.x0);
+    grad.append('stop').attr('offset', '0%').attr('stop-color', srcColor).attr('stop-opacity', 0.7);
+    grad.append('stop').attr('offset', '100%').attr('stop-color', tgtColor).attr('stop-opacity', 0.7);
+    l._gradId = gradId;
+  });
+
+  // Links
+  g.append('g').selectAll('path').data(links).join('path')
+    .attr('class', 'link')
+    .attr('d', d3.sankeyLinkHorizontal())
+    .attr('fill', 'none')
+    .attr('stroke', d => `url(#${d._gradId})`)
+    .attr('stroke-width', d => Math.max(1, d.width))
+    .attr('opacity', 0.75)
+    .on('mouseenter', function(e, d) {
+      d3.select(this).attr('opacity', 1);
+      const tip = document.getElementById('tooltip');
+      tip.innerHTML = `<strong>${d.source.label.replace(/\n/g,' ')}</strong> &rarr; <strong>${d.target.label.replace(/\n/g,' ')}</strong><br>${d.value}`;
+      tip.style.opacity = 1;
+    })
+    .on('mousemove', function(e) {
+      const tip = document.getElementById('tooltip');
+      const rect = container.getBoundingClientRect();
+      tip.style.left = (e.clientX - rect.left + 14) + 'px';
+      tip.style.top = (e.clientY - rect.top - 40) + 'px';
+    })
+    .on('mouseleave', function() {
+      d3.select(this).attr('opacity', 0.75);
+      document.getElementById('tooltip').style.opacity = 0;
+    });
+
+  // Nodes
+  const node = g.append('g').selectAll('g').data(nodes).join('g')
+    .attr('class', 'node')
+    .attr('transform', d => `translate(${d.x0},${d.y0})`);
+
+  node.append('rect')
+    .attr('width', d => Math.max(1, d.x1 - d.x0))
+    .attr('height', d => Math.max(1, d.y1 - d.y0))
+    .attr('fill', d => skColor(d.id))
+    .attr('rx', 4)
+    .on('mouseenter', function(e, d) {
+      const tip = document.getElementById('tooltip');
+      const pct = d.id === 'ghosted' ? '82.3%' : ((d.value / 79) * 100).toFixed(1) + '%';
+      tip.innerHTML = `<strong>${d.label.replace(/\n/g,' ')}</strong><br>${d.value || ''} (${pct})`;
+      tip.style.opacity = 1;
+    })
+    .on('mousemove', function(e) {
+      const tip = document.getElementById('tooltip');
+      const rect = container.getBoundingClientRect();
+      tip.style.left = (e.clientX - rect.left + 14) + 'px';
+      tip.style.top = (e.clientY - rect.top - 40) + 'px';
+    })
+    .on('mouseleave', function() { document.getElementById('tooltip').style.opacity = 0; });
+
+  // Labels
+  node.append('text')
+    .attr('x', d => (d.x1 - d.x0) / 2)
+    .attr('y', -6)
+    .attr('text-anchor', 'middle')
+    .attr('font-size', d => ['ghosted','noThanks','applications'].includes(d.id) ? '12px' : '10.5px')
+    .attr('font-weight', d => ['ghosted','noThanks','applications','offer','accepted'].includes(d.id) ? '700' : '500')
+    .attr('fill', d => ['ghosted','ignoredScam','ghostedLi'].includes(d.id) ? cssVar('--sk-ghost')
+      : ['noThanks','rescinded'].includes(d.id) ? cssVar('--sk-reject')
+      : cssVar('--text'))
+    .each(function(d) {
+      const lines = d.label.split('\n');
+      const el = d3.select(this);
+      lines.forEach((line, i) => {
+        el.append('tspan').attr('x', (d.x1 - d.x0) / 2).attr('dy', i === 0 ? 0 : 14).text(line);
+      });
+    });
+
+  // Value badges
+  node.filter(d => d.value).append('text')
+    .attr('x', d => (d.x1 - d.x0) / 2)
+    .attr('y', d => (d.label.split('\n').length * 14) + 6)
+    .attr('text-anchor', 'middle')
+    .attr('font-size', '12px').attr('font-weight', '700')
+    .attr('fill', d => d.id === 'ghosted' ? cssVar('--sk-ghost')
+      : d.id === 'applications' ? '#fff' : cssVar('--text'))
+    .text(d => d.value);
+
+  // Ghosted annotation
+  const ghostNode = nodes.find(n => n.id === 'ghosted');
+  if (ghostNode) {
+    g.append('text')
+      .attr('x', ghostNode.x0 + (ghostNode.x1 - ghostNode.x0) / 2)
+      .attr('y', ghostNode.y1 + 36)
+      .attr('text-anchor', 'middle')
+      .attr('font-family', cssVar('font-mono')).attr('font-size', '10px')
+      .attr('fill', cssVar('--sk-ghost')).attr('font-style', 'italic')
+      .text('at every stage');
+  }
+
+  // Divider + LinkedIn inbound label
+  const liNode = nodes.find(n => n.id === 'liOutreach');
+  if (liNode) {
+    const divY = liNode.y0 - 18;
+    g.append('line')
+      .attr('x1', 0).attr('x2', width - margin.left - margin.right)
+      .attr('y1', divY).attr('y2', divY)
+      .attr('stroke', cssVar('--border')).attr('stroke-width', 1).attr('stroke-dasharray', '6,4');
+    g.append('text')
+      .attr('x', 12).attr('y', divY - 10)
+      .attr('font-family', cssVar('--font-display')).attr('font-size', '11px')
+      .attr('fill', cssVar('--sk-inbound-dim')).attr('font-weight', '600')
+      .text('LinkedIn Inbound');
+  }
+})();
+</script>
+
+<script>
+  // ── Theme toggle ──
+  const toggle = document.getElementById('themeToggle');
+  const iconLight = toggle.querySelector('.icon-light');
+  const iconDark = toggle.querySelector('.icon-dark');
+  function setTheme(d) {
+    document.documentElement.classList.toggle('dark', d);
+    iconLight.style.display = d ? 'none' : '';
+    iconDark.style.display = d ? '' : 'none';
+    try { localStorage.setItem('diagram-theme', d ? 'dark' : 'light'); } catch(e) {}
+  }
+  toggle.addEventListener('click', () => setTheme(!document.documentElement.classList.contains('dark')));
+  try { if (localStorage.getItem('diagram-theme') === 'dark') setTheme(true); } catch(e) {}
+</script>
+
+</body>
+</html>
