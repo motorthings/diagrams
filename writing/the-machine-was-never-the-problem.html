@@ -1,0 +1,606 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<link rel="icon" type="image/svg+xml" href="../icon.svg" />
+<title>The Machine Was Never the Problem</title>
+<meta name="description" content="Why the AI model is the easy part, what the hard part is actually made of, and which skills become valuable, told through the companies that lived it." />
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,wght@0,400;0,500;0,600;0,700;0,800;1,400;1,500&family=Source+Code+Pro:wght@400;500;600;700&display=swap" rel="stylesheet" />
+<style>
+:root {
+  --font-display: 'Fraunces', Georgia, serif;
+  --font-mono: 'Source Code Pro', 'SF Mono', Consolas, monospace;
+  --bg: #eef4f9; --surface: #ffffff; --surface2: #f5f8fc;
+  --border: #c8daea; --border-bright: #a0bedb;
+  --text: #0a1628; --text-dim: #3d5a7a; --text-muted: #7a9ab8;
+  --primary: #e8621a; --primary-dim: rgba(232,98,26,0.08);
+  --secondary: #4a90c4; --secondary-dim: rgba(74,144,196,0.08);
+  --metric: #0f766e; --metric-dim: rgba(15,118,110,0.06);
+  --amber: #b45309; --amber-dim: rgba(180,83,9,0.08);
+  --violet: #7c3aed; --violet-dim: rgba(124,58,237,0.08);
+  --rose: #e11d48; --rose-dim: rgba(225,29,72,0.08);
+  --slate: #475569; --slate-dim: rgba(71,85,105,0.08);
+}
+html.dark {
+  --bg: #0a1628; --surface: #132240; --surface2: #1a2d52;
+  --border: #1a2d52; --border-bright: #2d4570;
+  --text: #e8edf5; --text-dim: #9bb0d4; --text-muted: #5e7aa3;
+  --primary: #f37021; --primary-dim: rgba(243,112,33,0.12);
+  --secondary: #6cace4; --secondary-dim: rgba(108,172,228,0.12);
+  --metric: #2dd4bf; --metric-dim: rgba(45,212,191,0.08);
+  --amber: #f59e0b; --amber-dim: rgba(245,158,11,0.12);
+  --violet: #a78bfa; --violet-dim: rgba(167,139,250,0.12);
+  --rose: #fb7185; --rose-dim: rgba(251,113,133,0.12);
+  --slate: #94a3b8; --slate-dim: rgba(148,163,184,0.12);
+}
+* { box-sizing: border-box; }
+html { scroll-behavior: smooth; }
+body {
+  background: var(--bg);
+  background-image:
+    radial-gradient(ellipse at 80% 0%, var(--primary-dim) 0%, transparent 50%),
+    radial-gradient(ellipse at 20% 60%, var(--secondary-dim) 0%, transparent 40%);
+  color: var(--text); font-family: var(--font-display);
+  min-height: 100vh; line-height: 1.7; margin: 0; padding: 0 32px 80px;
+  transition: background 0.3s, color 0.3s;
+  font-size: 17px;
+}
+.nav {
+  position: sticky; top: 0; z-index: 100;
+  backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px);
+  background: color-mix(in srgb, var(--surface) 85%, transparent);
+  border-bottom: 1px solid var(--border);
+  margin: 0 -32px 0; padding: 0 32px;
+  transition: background 0.3s, border-color 0.3s;
+}
+.nav-inner {
+  max-width: 1400px; margin: 0 auto; padding: 12px 0 12px 92px;
+  display: flex; align-items: center; justify-content: space-between;
+}
+.nav-brand {
+  font-family: var(--font-mono); font-size: 12px; font-weight: 600;
+  letter-spacing: 0.5px; color: var(--primary); text-decoration: none;
+}
+.theme-toggle {
+  width: 36px; height: 36px; border-radius: 10px;
+  border: 1px solid var(--border); background: var(--surface);
+  cursor: pointer; display: flex; align-items: center; justify-content: center;
+  font-size: 16px; color: var(--text-dim); transition: all 0.2s;
+}
+.theme-toggle:hover, .theme-toggle:focus-visible { border-color: var(--primary); color: var(--primary); outline: none; }
+
+.wrap { max-width: 1200px; margin: 0 auto; display: grid; grid-template-columns: 210px 1fr; gap: 0 48px; }
+.main { min-width: 0; max-width: 760px; }
+.toc {
+  position: sticky; top: 72px; align-self: start; padding: 24px 0;
+  max-height: calc(100dvh - 100px); overflow-y: auto;
+  font-family: var(--font-mono); font-size: 11.5px; line-height: 1.5;
+}
+.toc-label { text-transform: uppercase; letter-spacing: 1.5px; color: var(--text-muted); font-size: 10px; margin-bottom: 12px; }
+.toc a { display: block; color: var(--text-dim); text-decoration: none; padding: 5px 0 5px 12px; border-left: 2px solid var(--border); transition: all 0.15s; }
+.toc a:hover { color: var(--text); border-left-color: var(--border-bright); }
+.toc a.active { color: var(--primary); border-left-color: var(--primary); font-weight: 600; }
+
+.hero { padding: 56px 0 24px; border-bottom: 1px solid var(--border); margin-bottom: 8px; }
+.hero-badge {
+  display: inline-block; font-family: var(--font-mono); font-size: 10.5px; font-weight: 600;
+  text-transform: uppercase; letter-spacing: 1.5px; color: var(--primary);
+  border: 1px solid var(--primary); border-radius: 20px; padding: 4px 12px; margin-bottom: 20px;
+}
+h1 { font-family: var(--font-display); font-size: 46px; font-weight: 800; line-height: 1.08; margin: 0 0 14px; letter-spacing: -0.5px; }
+.hero .dek { font-size: 20px; font-style: italic; font-weight: 400; color: var(--text-dim); line-height: 1.45; margin: 0; }
+.hero .byline { font-family: var(--font-mono); font-size: 11px; color: var(--text-muted); margin-top: 20px; letter-spacing: 0.5px; }
+
+h2 { font-family: var(--font-display); font-size: 28px; font-weight: 700; margin: 52px 0 4px; letter-spacing: -0.3px; scroll-margin-top: 72px; }
+h2 .num { font-family: var(--font-mono); font-size: 15px; font-weight: 600; color: var(--primary); margin-right: 10px; }
+h3 { font-family: var(--font-display); font-size: 20px; font-weight: 600; margin: 34px 0 2px; color: var(--text); }
+p { margin: 16px 0; }
+a.ref { text-decoration: none; color: var(--secondary); font-family: var(--font-mono); font-size: 0.7em; font-weight: 600; vertical-align: super; padding: 0 1px; }
+a.ref:hover { color: var(--primary); }
+strong { font-weight: 700; color: var(--text); }
+em { font-style: italic; }
+.lead { font-size: 19px; color: var(--text-dim); }
+
+.pull {
+  font-family: var(--font-display); font-size: 25px; font-weight: 600; font-style: italic;
+  line-height: 1.35; color: var(--text); border-left: 4px solid var(--primary);
+  padding: 6px 0 6px 24px; margin: 34px 0; letter-spacing: -0.2px;
+}
+.pull cite { display: block; font-size: 13px; font-style: normal; font-family: var(--font-mono); color: var(--text-muted); margin-top: 12px; letter-spacing: 0.3px; }
+
+.case {
+  background: var(--surface); border: 1px solid var(--border); border-left: 3px solid var(--secondary);
+  border-radius: 10px; padding: 20px 24px; margin: 28px 0;
+}
+.case .tag { font-family: var(--font-mono); font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 1.5px; color: var(--secondary); }
+.case h4 { font-family: var(--font-display); font-size: 18px; font-weight: 600; margin: 6px 0 8px; }
+.case p { margin: 10px 0; font-size: 16px; }
+.case .quote { font-style: italic; color: var(--text-dim); border-left: 2px solid var(--border-bright); padding-left: 14px; }
+
+.stats { display: flex; flex-wrap: wrap; gap: 12px; margin: 20px 0; }
+.stat { flex: 1 1 120px; background: var(--metric-dim); border: 1px solid var(--border); border-radius: 8px; padding: 12px 14px; text-align: center; }
+.stat .n { font-family: var(--font-display); font-size: 26px; font-weight: 800; color: var(--metric); line-height: 1; }
+.stat .l { font-family: var(--font-mono); font-size: 9.5px; text-transform: uppercase; letter-spacing: 0.8px; color: var(--text-muted); margin-top: 6px; }
+
+.callout {
+  background: var(--amber-dim); border: 1px solid var(--amber); border-radius: 10px;
+  padding: 16px 20px; margin: 28px 0; font-size: 16px;
+}
+.callout .k { font-family: var(--font-mono); font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 1.5px; color: var(--amber); display: block; margin-bottom: 6px; }
+
+.tablewrap { overflow-x: auto; margin: 24px 0; }
+table.data { width: 100%; border-collapse: collapse; font-size: 15px; }
+table.data th { font-family: var(--font-mono); font-size: 10.5px; text-transform: uppercase; letter-spacing: 0.8px; text-align: left; color: var(--text-muted); border-bottom: 2px solid var(--border-bright); padding: 8px 12px; }
+table.data td { padding: 9px 12px; border-bottom: 1px solid var(--border); }
+table.data tr:last-child td { border-bottom: none; }
+
+hr.sep { border: none; border-top: 1px solid var(--border); margin: 48px 0; }
+
+.notes { margin-top: 20px; }
+.notes h2 { font-size: 24px; }
+ol.footnotes { font-size: 13.5px; line-height: 1.55; color: var(--text-dim); padding-left: 22px; }
+ol.footnotes li { margin: 10px 0; padding-left: 4px; scroll-margin-top: 72px; }
+ol.footnotes li a.backref { text-decoration: none; color: var(--primary); font-family: var(--font-mono); margin-left: 4px; }
+ol.footnotes em { font-style: italic; }
+
+.prov { background: var(--surface2); border: 1px solid var(--border); border-radius: 12px; padding: 8px 28px 20px; margin-top: 40px; font-size: 15px; }
+.prov h3 { font-size: 17px; margin-top: 22px; }
+.prov h3 .dot { display: inline-block; width: 9px; height: 9px; border-radius: 2px; margin-right: 8px; vertical-align: middle; }
+.prov p { font-size: 15px; color: var(--text-dim); }
+
+.footer { max-width: 760px; margin: 56px auto 0; padding-top: 20px; border-top: 1px solid var(--border); font-family: var(--font-mono); font-size: 11px; color: var(--text-muted); text-align: center; }
+
+.sig { font-family: var(--font-display); font-style: italic; font-size: 18px; color: var(--primary); margin-top: 8px; }
+
+@media (max-width: 900px) {
+  .wrap { grid-template-columns: 1fr; }
+  .toc { display: none; }
+  .main { max-width: 100%; }
+  h1 { font-size: 32px; }
+  body { padding: 0 20px 60px; font-size: 16px; }
+  .nav { margin: 0 -20px 0; padding: 0 20px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+  *, *::before, *::after { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; }
+}
+.backlink{position:fixed;top:12px;left:16px;z-index:101;font-family:var(--font-mono);font-size:12px;color:var(--text-dim);text-decoration:none;padding:6px 10px;border:1px solid var(--border);border-radius:6px;background:var(--surface);transition:color .15s,border-color .15s}
+.backlink:hover{color:var(--text);border-color:var(--border-bright)}
+</style>
+</head>
+<body>
+<a class="backlink" href="../">&larr; diagrams</a>
+<div class="nav">
+  <div class="nav-inner">
+    <a href="#top" class="nav-brand">THE MACHINE WAS NEVER THE PROBLEM</a>
+    <button class="theme-toggle" id="themeToggle" aria-label="Toggle dark mode">
+      <span class="icon-light">&#9788;</span>
+      <span class="icon-dark" style="display:none">&#9790;</span>
+    </button>
+  </div>
+</div>
+
+<div class="wrap" id="top">
+  <nav class="toc" aria-label="Table of contents">
+    <div class="toc-label">Contents</div>
+    <a href="#noise">A word about the noise</a>
+    <a href="#graveyard">The graveyard &amp; survivors</a>
+    <a href="#invisible">The invisible work</a>
+    <a href="#redesign">Redesigning work</a>
+    <a href="#reveals">Faster doesn't fix</a>
+    <a href="#lesschecking">Less checking wins</a>
+    <a href="#resistance">Who actually fights it</a>
+    <a href="#fork">The fork in the road</a>
+    <a href="#leaves">Where this leaves you</a>
+    <a href="#skills-intro">Coda: valuable skills</a>
+    <a href="#skill-altitude">The work moves up</a>
+    <a href="#skill-newjobs">New jobs, born inside</a>
+    <a href="#skill-appreciate">What appreciates</a>
+    <a href="#skill-deskill">The deskilling fork</a>
+    <a href="#notes">Notes</a>
+    <a href="#provenance">Provenance</a>
+  </nav>
+
+  <main class="main">
+    <header class="hero">
+      <span class="hero-badge">Essay &middot; Charlie Fuller</span>
+      <h1>The Machine Was Never the Problem</h1>
+      <p class="dek">Why the model is the easy part, what the hard part is actually made of, and which skills become valuable, told through the companies that lived it.</p>
+      <p class="byline">Drawn from the Stanford Digital Economy Lab &middot; the writing of Stuart Winter-Tear, Joan Westenberg &amp; Sangeet Paul Choudary &middot; and fifteen years in the field</p>
+    </header>
+
+    <h2 id="noise"><span class="num">00</span>A word about the noise</h2>
+
+    <p>There's a scene in <em>The Empire Strikes Back</em> where Han lands the Millennium Falcon in what looks like a cave on an asteroid. Everyone climbs out to stretch. Then the ground goes soft underfoot, the walls flex, and Han gets it a beat too late: it isn't a cave. They're in the mouth of something enormous and alive, it has been closing around them the whole time, and they are already being digested.</p>
+
+    <p>That's the sound the internet makes now. If you work anywhere near this stuff you can hear it under everything: a gurgly, gassy, sucking sound, wet and digestive. A model drops and the feed convulses. A framework, an app, an &ldquo;approach,&rdquo; and within the hour a thousand posts arrive, breathless and italicized, <em>this changes everything</em>, the whole timeline evacuating at once like it got dosed with a laxative of zeroes and ones.</p>
+
+    <p>It doesn't. It almost never does. The convulsing is the product.</p>
+
+    <p>Odds are good that's where you are. You think you're standing on the AI conversation, reading it, working it. You're standing in its gut, and the rhythm you keep hearing is peristalsis.</p>
+
+    <p>So I'm spitting the hook out before it sets. This is the part where I stop nodding along. I am not impressed by how many agents you crammed into your swarm.<a class="ref" href="#fn0m" id="r0m">[m]</a> I do not care how your CLAUDE.md is structured. And I could not care less that you've stood up a digital chief of staff running a thousand operations an hour across your inbox, your calendar, and your stock portfolio, fanning out bifurcated asynchronous calls to fifty virtual employees of your virtual organization, because there is an excellent chance you have just built an exquisite, humming machine for doing the wrong thing faster. I'm not going to comment <em>GIVE ME MORE</em> so your little automation can slide into my DMs with a playbook you excreted out of ChatGPT at 11pm, some funnel cacophony you brewed up with your own clawd bot farm on your mac mini to farm views, follows, the only currency that thread was ever denominated in. It was never about the idea. It was about the reach. You know it. I know it. The engagement bait knows it.</p>
+
+    <p>The swarm-diagram guys are a case all their own. Joan Westenberg nailed it: the &ldquo;agentic swarm&rdquo; vision is comfortingly familiar, which should be an immediate red flag. You take the org chart, you swap the interns for agents, you keep the humans as supervisors, and you call it disruption. <em>&ldquo;Congratulations. You've reinvented middle management.&rdquo;</em><a class="ref" href="#fn0a" id="r0a">[a]</a> It's a sustaining innovation wearing a disruption costume, and the incumbents love it because the power structure never moves. More arrows on the diagram. Same building, on fire, faster.</p>
+
+    <p>None of it is new, either. Sangeet Paul Choudary watched this exact circus in the last cycle: <em>&ldquo;Dozens of newsletters helping you prompt better mushroomed&hellip; dozens others set up for the sole purpose of recommending products with .ai domains, some of which were mere prompt-engineering wrappers.&rdquo;</em><a class="ref" href="#fn0b" id="r0b">[b]</a> Rename the wrapper, re-shoot the carousel, relaunch the funnel. The grift has a refresh rate.</p>
+
+    <p>What actually gets me isn't the hype. Hype is weather. It blows in, it blows out. What gets me is the <strong>myopia.</strong> The blindered, nose-against-the-glass staring at the shiny object as though it were <em>news,</em> when the thing that matters has been sitting right in front of our faces the whole time, unglamorous and unposted, because you cannot farm engagement off <em>&ldquo;we deleted 600 junk invoice templates and the president showed up every Wednesday.&rdquo;</em> That doesn't trend. That just <em>works.</em> And working is quiet.</p>
+
+    <p class="pull">Judgement improves the closer you stay to what is actually there. Step too far from that and it becomes very easy to confuse motion with progress and novelty with value.<cite>Stuart Winter-Tear<a class="ref" href="#fn0c" id="r0c">[c]</a></cite></p>
+
+    <p>Motion and value are not the same thing, and the feed is engineered to make you forget it. Every &ldquo;10 prompts that will 10x your team&rdquo; carousel. Every leaderboard of models beating models on benchmarks no customer has ever felt in their life. It all points at the layer that matters least (the model, the tool, the rental car) and away from the thing that decides whether any of it lands: the operating model, the workflow, the people, the wiring underneath. That layer photographs badly. It won't fit in a hook. So it goes undiscussed while everyone argues about which brain to rent.</p>
+
+    <p>Even the productivity gospel is mostly cope. Westenberg again, on the whole Claude-Code-will-10x-you discourse: most people using these tools are just <em>&ldquo;producing more stuff faster without any clear sense of whether the stuff is good or consistent or even pointed in the right direction.&rdquo;</em><a class="ref" href="#fn0d" id="r0d">[d]</a> More slop, sooner. Call that leverage if you want. It's a firehose aimed at a sewer grate while the brush fire climbs the side of your house.</p>
+
+    <p>And if this all feels like some fresh new dystopia, it isn't. The people who spent their lives studying how media rewires minds called this shot decades ago. Aldous Huxley, in 1958, saw &ldquo;a vast mass communications industry, concerned in the main neither with the true nor the false, but with the unreal, the more or less totally irrelevant&rdquo;, built to feed what he named &ldquo;man's almost infinite appetite for distractions.&rdquo;<a class="ref" href="#fn0h" id="r0h">[h]</a> Neil Postman turned that into a whole book: Orwell feared someone would ban the truth; Huxley feared no one would care, because &ldquo;the truth would be drowned in a sea of irrelevance.&rdquo;<a class="ref" href="#fn0i" id="r0i">[i]</a> That sea is the feed. The AI discourse is just its loudest tide yet.</p>
+
+    <p>And Jaron Lanier named the machine underneath the water. These platforms aren't neutral pipes; they're engines built to modify your behavior and rent the result, attention captured, packaged, sold, and to make them run, people quietly &ldquo;degrade themselves&rdquo; to please an algorithm that cannot tell engagement from meaning.<a class="ref" href="#fn0j" id="r0j">[j]</a> The <em>GIVE ME MORE</em> in your comments isn't excitement. It's a person being operated, and the operating <em>is</em> the design.</p>
+
+    <p>And the real tell, the one that gives the whole game away, is that the loudest voices have almost never shipped a thing into a real organization and watched it break. If they had, they'd be quieter. They'd know the demo is the easy 5% and the other 95% is politics, permission, exceptions, and a repair shop in the middle of nowhere dialing in by phone. Nobody posts the rollback. Nobody posts the throttle, the exception load, the eighteen months of change management, the pilot that got quietly killed. So the timeline fills up with marketing and empties out of evidence, and a whole industry calibrates its strategy off a highlight reel of other people's demos.</p>
+
+    <p>So this piece is my small, petty, deeply felt refusal. I'm going to point at the boring thing on purpose. The thing that's been in front of us for fifteen years wearing four different acronyms. Not because it's new.</p>
+
+    <p>Because it's <em>true</em>, and true is rarer than new, and true doesn't trend.</p>
+
+    <p class="lead">So. You can tell what a company actually believes by watching where it points when things break.</p>
+
+    <p>For three years the finger pointed at the model. Not smart enough. Wrong benchmark. Wrong vendor. Buy the better brain and the trouble goes away. We ran that experiment at scale, billions of dollars of it, and the results are in, and they are almost funny in how consistent they are.</p>
+
+    <p>One comparison dismantles the whole &ldquo;it's about the technology&rdquo; story. Watch.</p>
+
+    <p>A large fintech took an AI coding agent and pointed it at millions of lines of legacy ETL code, the crufty, decades-old plumbing that moves data around inside a bank. The kind of migration that traditionally eats years and armies of engineers. It took them <strong>weeks.</strong> Their own executive: <em>&ldquo;Within weeks of the AI agent's launch, we identified a clear opportunity to accelerate the migration at a fraction of the engineering hours.&rdquo;</em><a class="ref" href="#fn1" id="r1">[1]</a></p>
+
+    <p>Now hold that against a second company. A major bank tried to stand up an AI customer-support system, a <em>simpler</em> problem than rewriting ETL plumbing. Their executive's words: <em>&ldquo;It takes us multiple years just to even stand one of these things up.&rdquo;</em><a class="ref" href="#fn2" id="r2">[2]</a></p>
+
+    <p>Same era. Same available models. One problem harder than the other, and the <em>harder</em> one shipped in weeks while the <em>easier</em> one is measured in years. The variable that moved was not the technology. It was the organization.</p>
+
+    <p class="pull">The insight here is not a median or average. It is that organizational context matters more than the technology itself.<cite>Stanford Digital Economy Lab<a class="ref" href="#fn3" id="r3">[3]</a></cite></p>
+
+    <p>That's the whole essay, really. But let me earn it.</p>
+
+    <h2 id="graveyard"><span class="num">01</span>The graveyard, and the survivors</h2>
+
+    <p>In 2025, MIT's NANDA initiative went looking for the return on all that enterprise AI spend and found that <strong>95% of generative-AI pilots produced no measurable financial impact.</strong><a class="ref" href="#fn4" id="r4">[4]</a> Not because the models were weak, because the workflows around them were never rebuilt and the incentives never aligned. Accenture, looking at the same terrain, estimated <strong>80 to 85% of companies are stuck in a &ldquo;Proof of Concept Factory&rdquo;</strong>, endlessly demoing, rarely scaling.<a class="ref" href="#fn5" id="r5">[5]</a> A lot of motion. Very little progress.</p>
+
+    <p>So Stanford ran the inverse experiment. Instead of counting corpses, they found <strong>fifty-one deployments that actually worked</strong>, live in production, relied on across functions for months, with documented dollar value, across forty-one organizations, seven countries, more than a million employees.<a class="ref" href="#fn6" id="r6">[6]</a> They asked what the winners had in common. And the sentence that ends up carrying the entire report is this:</p>
+
+    <p class="pull">The difference was never the AI model. It was always the organization. Its readiness, its processes, its leadership, its willingness to change and fail.<cite>The Enterprise AI Playbook, Foreword<a class="ref" href="#fn7" id="r7">[7]</a></cite></p>
+
+    <p>I've been saying a quieter version of that for fifteen years, before it wore an AI costume. ERP. MRP. PLM. CAD. Every one of those rollouts taught me the same brutal little lesson: the technology is almost never the thing that fails. The organization's readiness to change is the thing that fails. Spot solutions, AI or otherwise, produce shelfware. You don't get transformation by installing a capability. You get it by changing what the place is willing to become.</p>
+
+    <p>Stanford put a number on my hunch.</p>
+
+    <div class="stats">
+      <div class="stat"><div class="n">77%</div><div class="l">of hardest challenges were invisible &amp; intangible</div></div>
+      <div class="stat"><div class="n">61%</div><div class="l">of successes had a prior failure underneath</div></div>
+      <div class="stat"><div class="n">2/3</div><div class="l">of winners failed first, iteratively</div></div>
+    </div>
+
+    <p>Change management, data quality, process redesign, not the model, the wiring around the model.<a class="ref" href="#fn8" id="r8">[8]</a> The happy ending was written in the language of earlier disasters nobody published.</p>
+
+    <h2 id="invisible"><span class="num">02</span>What &ldquo;the invisible work&rdquo; actually looks like</h2>
+
+    <p>&ldquo;Invisible work&rdquo; sounds like a soft phrase. It isn't. Here's one with a weight and a smell.</p>
+
+    <div class="case">
+      <span class="tag">Case &middot; Logistics &middot; Invoice Processing</span>
+      <h4>A $1B+ refrigerated-trailer fleet, drowning in 100,000 invoices a year</h4>
+      <p>They take in over <strong>100,000 maintenance invoices a year</strong>, tire changes, sensor swaps, arriving by email, by fax, and (I'm not making this up) by phone calls from repair shops &ldquo;in the middle of nowhere&rdquo; who just dial in and say <em>hey, we did this repair.</em> Seven full-time people did nothing but wrestle that chaos into the ERP system.<a class="ref" href="#fn9" id="r9">[9]</a></p>
+      <p>Before a single line of AI touched the problem, they discovered they had <strong>750 invoice templates that mostly didn't make sense</strong>, redundant, never reviewed. That cleanup had to happen <em>first.</em> Then subject-matter experts validated thousands of AI outputs on top of their day jobs. The company president ran <strong>weekly check-ins</strong> personally. Two junior IT staff were embedded from day one so there'd be no black box.<a class="ref" href="#fn10" id="r10">[10]</a></p>
+      <div class="stats">
+        <div class="stat"><div class="n">7&rarr;2</div><div class="l">full-time staff</div></div>
+        <div class="stat"><div class="n">&lt;24h</div><div class="l">processing time</div></div>
+        <div class="stat"><div class="n">&gt;$1M</div><div class="l">value created</div></div>
+        <div class="stat"><div class="n">8 wks</div><div class="l">to production</div></div>
+      </div>
+      <p class="quote">&ldquo;It always starts with the people. There are people, process, and technology, and I know it's in that order even though I'm representing a technology company. The technology was the easiest part. We basically used a lot of open-source and off-the-shelf stuff.&rdquo;<a class="ref" href="#fn12" id="r12">[12]</a></p>
+    </div>
+
+    <p>The templates were the work. The weekly presidential attention was the work. The model was a commodity. Which, it turns out, is the general rule: Stanford found that for <strong>42% of implementations the choice of foundation model was fully interchangeable</strong>. The durable advantage lives in the <strong>orchestration layer, not the model.</strong><a class="ref" href="#fn13" id="r13">[13]</a> The brain is a rental. The nervous system you build around it is the moat.</p>
+
+    <h2 id="redesign"><span class="num">03</span>You are not deploying agents. You are redesigning work.</h2>
+
+    <p>That line is Stuart Winter-Tear's, and it's the sharpest sentence in the whole discourse, because it relocates the entire problem.<a class="ref" href="#fn14" id="r14">[14]</a> The moment AI touches live work it stops being software. It becomes <em>behavior on the organization's behalf</em>, and behavior has consequences software never had: operations, reputation, legal exposure, the 2am failure the business still expects answered by 9. You didn't buy a tool. You delegated conduct. Nobody priced that.</p>
+
+    <p>Now the cruel part. The one I keep turning over because it's almost beautiful:</p>
+
+    <p class="pull">Agents don't fix a broken organization. They inherit it.<a class="ref" href="#fn15" id="r15">[15]</a></p>
+
+    <div class="case">
+      <span class="tag">Case &middot; Translation Services &middot; Recruiting</span>
+      <h4>The same company, same goal, failed once, then worked</h4>
+      <p>Their <em>first</em> attempt at AI screening failed for two reasons: they never accounted for bias in the algorithm, and, this is the killer, <em>&ldquo;they thought AI would just fix processes instead of also stepping back and making sure everything was working as expected.&rdquo;</em><a class="ref" href="#fn16" id="r16">[16]</a> They pointed a machine at a broken workflow and the machine faithfully industrialized the brokenness.</p>
+      <p>The second attempt worked, and three things were different. The <strong>CEO took ownership</strong> instead of handing it to the CTO. They <strong>fixed the process before applying AI.</strong> And they <strong>aimed at genuine agony</strong>, not mild inconvenience:</p>
+      <p class="quote">&ldquo;This was a painkiller for those guys. It wasn't 'Hey, this would be great.' It was 'I'm drowning.'&rdquo;<a class="ref" href="#fn17" id="r17">[17]</a></p>
+      <div class="stats">
+        <div class="stat"><div class="n">3h&rarr;3m</div><div class="l">time per role</div></div>
+        <div class="stat"><div class="n">+83%</div><div class="l">intake efficiency</div></div>
+        <div class="stat"><div class="n">~1 mo</div><div class="l">to build</div></div>
+      </div>
+      <p>Same function, same goal as the failed attempt. The technology wasn't the difference. As their exec put it: AI amplifies whatever process it's applied to, <em>&ldquo;if the process is broken, AI makes it worse faster.&rdquo;</em></p>
+    </div>
+
+    <p>That's Winter-Tear's point made flesh. Every organization runs on a quiet subsidy: the human repair work at the seams. The person who knows the number's wrong in a way the spreadsheet can't explain. He calls the accumulated version <strong>AI Translation Debt</strong>: the unpriced labor of making a fragmented organization behave like one system.<a class="ref" href="#fn19" id="r19">[19]</a> For a century that debt was survivable because humans absorbed it silently. Delegate the work to something that keeps moving after your attention leaves the room, and the debt doesn't vanish. It gets <em>collected, amplified, and handed back to you as review.</em> That's why your best people feel busier, not lighter, after wave one. Not because the agent failed. Because nobody redesigned the work to carry it. You sped up one cog and the whole machine started to shake.<a class="ref" href="#fn20" id="r20">[20]</a></p>
+
+    <h2 id="reveals"><span class="num">04</span>Faster doesn't fix. It reveals.</h2>
+
+    <p>Nobody prints this on the sales deck. Automating anything <em>surfaces the broken parts.</em> It doesn't repair them. It can't. Speed is not a solvent. Take a process held together by a few experienced people quietly compensating for its gaps, pour throughput into it, and the gaps don't close. They get <em>loud.</em> The mess that was survivable at human pace becomes undeniable at machine pace.</p>
+
+    <p>We already watched it happen. The translation company's first attempt didn't fail because the AI was weak. It failed because the AI worked. It faithfully, rapidly, at scale, industrialized a broken workflow until the brokenness was too obvious to ignore. Their own words: AI amplifies whatever process it's applied to, so <em>&ldquo;if the process is broken, AI makes it worse faster.&rdquo;</em><a class="ref" href="#fn16b2" id="r16b2">[16]</a> Not a failure. A favor nobody asked for: the deployment X-rayed the org and hung the fracture up on the lightbox where everyone could finally see it.</p>
+
+    <p class="pull">AI doesn't break your processes. It reveals them.<cite>Stuart Winter-Tear<a class="ref" href="#fn0f" id="r0f">[f]</a></cite></p>
+
+    <p>Which means the diagnostic is free and the treatment is not. Revelation is the easy part. The machine hands it to you in the first week. What it cannot hand you is the <strong>discipline and the authority to actually change the thing it revealed.</strong> Someone has to be willing to delete the 600 junk templates. To rewrite the approval chain. To tell Legal the control they've clung to for a decade only existed because the work used to be slow. To move a decision right, retire a role, redraw a seam. The revelation is a gift. Most organizations refuse it, because acting on it costs political capital and acting on the shiny new model costs a press release.</p>
+
+    <p>This is why speed alone is a trap. Faster is not better. Faster is just <em>more of whatever you already were</em>, delivered sooner. A coherent org gets coherently faster. An incoherent one gets incoherently faster, and now the incoherence has a throughput rating. The point was never velocity. The point was a <strong>state change</strong>: something in the actual business is measurably different afterward. Fewer escalations, a shorter cycle, a cost that moved. Not a demo. Not a dashboard. Not applause.<a class="ref" href="#fn0g" id="r0g">[g]</a> As the UNHYPED framing puts it bluntly: <em>you do not buy AI. You buy state change.</em> If nothing in your core systems is different after the pilot, nothing happened. You paid for theatre.</p>
+
+    <p>Neil Postman spent a career insisting we ask two questions of any new technology, and they have never been more useful than right now: <em>&ldquo;What is the problem to which this is the solution? And whose problem is it?&rdquo;</em><a class="ref" href="#fn0k" id="r0k">[k]</a> Most AI initiatives can't answer either. They start from the solution (we have agents, we should be using agents) and reverse-engineer a problem grand enough to justify the budget. Postman also warned that technological change is never merely additive; it's <em>ecological.</em> A new technology &ldquo;does not add or subtract something. It changes everything.&rdquo;<a class="ref" href="#fn0k" id="r0k2">[k]</a> Drop an agent into a workflow and you don't get the old workflow plus a robot. You get a different organism: different failure modes, different power, different seams, whether you designed for that or not.</p>
+
+    <p>So there's one question I'd staple to the top of every AI initiative, above the budget, above the model choice, above the roadmap. Not <em>what can it do?</em> Not <em>how many agents?</em> Not <em>is this the best model?</em> It's Postman's question, boiled down to the plainest thing a frontline person would recognize:</p>
+
+    <p><strong>What is this in service of?</strong></p>
+
+    <p>What state change, in what part of the business, felt by whom? If you can't answer that in one sentence a frontline person would recognize as their actual problem, you don't have a strategy. You have an experiment in search of a justification, and the machine will happily, rapidly, expensively reveal that too.</p>
+
+    <h2 id="lesschecking"><span class="num">05</span>The counterintuitive part: less checking wins</h2>
+
+    <p>Now watch what happens when someone gets the redesign right. The numbers are almost rude.</p>
+
+    <p>Stanford sorted the deployments by how humans stayed involved. <strong>Approval models</strong>, a human signs off on everything, delivered a <strong>30% median productivity gain.</strong> <strong>Escalation models</strong>, the agent runs 80%+ autonomously and humans only touch the exceptions, delivered <strong>71%.</strong><a class="ref" href="#fn21" id="r21">[21]</a> More than double. The winning move is <em>not</em> the human inspecting every action. It's the human trusted to design <em>which</em> actions need inspecting, and then getting out of the way of the rest.</p>
+
+    <div class="stats">
+      <div class="stat"><div class="n">30%</div><div class="l">approval model gain</div></div>
+      <div class="stat"><div class="n">71%</div><div class="l">escalation model gain</div></div>
+      <div class="stat"><div class="n">82%</div><div class="l">ticket deflection (support redesign)</div></div>
+    </div>
+
+    <p>You can hear it in a <strong>food-delivery</strong> head of AI: <em>&ldquo;90 or 95% are now fully automated by an agent. If someone says their food didn't arrive&hellip; 90 to 95% of those are completely automated.&rdquo;</em><a class="ref" href="#fn22" id="r22">[22]</a> A tech company hit <strong>82% ticket deflection</strong>, not by bolting a chatbot onto the old process, but by <em>redesigning the workflow around AI-first resolution.</em><a class="ref" href="#fn23" id="r23">[23]</a></p>
+
+    <p>But the right amount of oversight isn't a slogan. It's a dial, set per function:</p>
+
+    <div class="tablewrap">
+    <table class="data">
+      <thead><tr><th>Function</th><th>Oversight</th><th>Why</th></tr></thead>
+      <tbody>
+        <tr><td>IT ops, support, claims</td><td>Escalation</td><td>Agent runs, humans catch exceptions. Highest gains.</td></tr>
+        <tr><td>Field service, clinical docs</td><td>Approval</td><td>A physician signs <em>every</em> note, it's a legal document.</td></tr>
+        <tr><td>Coding</td><td>Collaboration</td><td>Engineers shifted from writing code to reviewing it.</td></tr>
+      </tbody>
+    </table>
+    </div>
+
+    <p>The <strong>financial-services marketing</strong> team shows the calibration beautifully. Traditional agency workflow: <strong>seven weeks per campaign.</strong> They went to an explicit <strong>80/20 model</strong> precisely because <em>&ldquo;enterprise marketing cannot tolerate errors on customer-facing content.&rdquo;</em> The human 20% wasn't inefficiency. It was <strong>brand protection</strong> and <strong>edge-case judgment</strong>, the two things you cannot yet automate on something with your logo on it.<a class="ref" href="#fn25" id="r25">[25]</a></p>
+
+    <p>This is where the strategists and the operators finally agree from opposite ends. Sangeet Paul Choudary, mapping where value actually gets captured in the AI stack, compute, model, workflow, concluded that the durable position is <strong>workflow ownership,</strong> not the model: incumbents win precisely because &ldquo;AI can be embedded into existing workflows,&rdquo; and a wrapper of &ldquo;cute prompt engineering with UX improvements&rdquo; on top of somebody else's LLM is not a moat.<a class="ref" href="#fn0e" id="r0e">[e]</a> Same conclusion Stanford reached from the deployment side, 42% of the time the model was interchangeable. The value was never in the brain. It was in the body it was wired into.</p>
+
+    <p>The lesson threaded through all of it: the model isn't the operating unit, the <strong>governed workflow</strong> is.<a class="ref" href="#fn26" id="r26">[26]</a> Capability doesn't live in the model, and it doesn't even live in the harness you wrap around the model. It lives in the operating model of the organization the whole thing enters. <em>The harness is just that operating model turned into software.</em><a class="ref" href="#fn27" id="r27">[27]</a> Which means designing intelligent systems and designing organizations are quietly collapsing into the same act. Conway's law, come to collect.</p>
+
+    <h2 id="resistance"><span class="num">06</span>Who actually fights it (hint: not the workers)</h2>
+
+    <p>Every transformation has an immune system, and most people aim their change-management budget at the wrong antibody. The frontline workers are usually <em>desperate</em> for relief, remember &ldquo;I'm drowning.&rdquo;</p>
+
+    <p>Stanford's data says the most frequent source of fatal resistance was the <strong>staff functions, Legal, HR, Risk, Compliance, at 35%, ahead of internal end-users at 23%.</strong><a class="ref" href="#fn28" id="r28">[28]</a> The organization's own control systems attack the transplant. Which is exactly why the executive sponsors who <em>drove results</em> weren't the ones who approved budgets and left. They were the ones who <strong>cleared blockers weekly, bridged business and technical teams, tied AI to the real OKRs, and, most critically, built a culture that gave people permission to fail.</strong><a class="ref" href="#fn29" id="r29">[29]</a></p>
+
+    <div class="callout"><span class="k">Read that twice</span>Permission to fail. In a report about what <em>succeeded.</em> Two-thirds of these winners failed first, on purpose, iteratively, and the sponsors made that survivable.<a class="ref" href="#fn30" id="r30">[30]</a></div>
+
+    <h2 id="fork"><span class="num">07</span>The fork in the road, and why I won't take the cheap one</h2>
+
+    <p>I refuse the doom framing. The data won't let me.</p>
+
+    <p>Stanford names the stakes a <strong>productivity fork.</strong> The same technology can augment people and open capacity that never existed, or it can automate existing tasks, cut heads, harvest the near-term number, and hollow the place out. Two roads. The macroeconomics don't choose for you; the <strong>Productivity J-Curve</strong> just says the real gains are back-loaded, paid for up front in exactly the intangible rewiring most companies skip.<a class="ref" href="#fn31" id="r31">[31]</a> <em>You</em> choose the road.</p>
+
+    <p>Kierkegaard had a name for what happens when you stand at a fork like that and grasp that the choice is genuinely, unavoidably yours. He called it <em>the dizziness of freedom</em>. Anxiety is the vertigo you feel looking down into your own open possibility.<a class="ref" href="#fn0l" id="r0l">[l]</a> That vertigo is what an organization feels at the threshold, and it explains the gravity of the cheap road. Automate-and-cut doesn't win because it's better. It wins because it's the move that makes the dizziness <em>stop</em>: legible, fast, visible on this quarter's spreadsheet. Augment-and-create asks you to keep standing at the edge, holding the vertigo long enough to do the slower, human, uncertain work. Most flinch. Reaching for the shiny new model is a flinch too. A way to feel like you're moving so you don't have to feel the drop.</p>
+
+    <p>And a lot of organizations are already sleepwalking down the cheap one. Early payroll data shows a <strong>16% relative decline in employment for young workers in the most AI-exposed occupations. Nearly 20% for software developers aged 22 to 25.</strong><a class="ref" href="#fn32" id="r32">[32]</a> Those are the same young engineers who, in the successful shops, &ldquo;shifted from writing code to reviewing AI-generated changes.&rdquo; Except in the cheap-road version nobody redesigned the role. They just deleted the seat.</p>
+
+    <p class="pull">A cheaper version of yourself is not transformation. It's subtraction wearing a growth costume.<a class="ref" href="#fn33" id="r33">[33]</a></p>
+
+    <p>Look again at the logistics company. Seven people to two. But the president's actual words were: <em>&ldquo;we can take these folks, we can just put them in the other bottleneck.&rdquo;</em><a class="ref" href="#fn34" id="r34">[34]</a> The gain wasn't the five eliminations. It was five people <em>redeployed</em> off a soul-crushing fax-and-phone backlog onto work that used their judgment. Stanford found headcount reduction was the biggest outcome in only <strong>45% of deployments</strong>. The other <strong>55% avoided hiring, redeployed people, or cut nothing.</strong><a class="ref" href="#fn35" id="r35">[35]</a> The fork is real, and it's a choice, deployment by deployment.</p>
+
+    <h2 id="leaves"><span class="num">08</span>Where this leaves you</h2>
+
+    <p>What I actually believe hasn't moved in fifteen years. I'm just finally holding the right tool:</p>
+
+    <p>The work isn't to make the organization more artificial. It's to make it <strong>more legible to itself</strong>, so that when you hand a piece of it to a machine, the machine inherits clarity instead of chaos. The 750 templates. The mapped recruiting workflow. The 80/20 brand line drawn on purpose. The physician's signature that never comes off the note. That legibility <em>is</em> the product.</p>
+
+    <p>And you don't design that operating model in a two-year workshop and unveil it at the end. You <strong>discover</strong> it: one bounded, complete piece of real work at a time, each deployment leaving behind two things: a working capability, and something the organization now knows about itself that it didn't know yesterday.<a class="ref" href="#fn36" id="r36">[36]</a> The invoice project didn't just clear a backlog; it taught the company that 750 templates were nonsense. That second output, the self-knowledge, is the compounding asset.</p>
+
+    <p>The model was never the hard part. The model was the easy, dazzling, distracting part. Off-the-shelf. Interchangeable 42% of the time. A rental.</p>
+
+    <p>The hard part is the same as it's always been.</p>
+
+    <p>It's the people. It's the wiring under the people. It's the 750 templates nobody reviewed and the fax machine in the middle of nowhere. It's whether the place is brave enough to change the shape of its own work instead of bolting a faster engine onto a machine that was already shaking itself apart.</p>
+
+    <p>It's all one big experiment. It always was.</p>
+
+    <p><strong>The only question is whether you run it on purpose.</strong></p>
+    <p class="sig">charlie</p>
+
+    <hr class="sep" />
+
+    <header>
+      <span class="hero-badge">Coda</span>
+      <h1 id="skills-intro" style="font-size:36px; scroll-margin-top:72px;">What Becomes Valuable When the Machine Does the Task</h1>
+      <p class="dek" style="font-size:18px;">A field guide to the skills that survive, and the ones that get born.</p>
+    </header>
+
+    <p>Everyone wants the list. <em>Tell me the five skills to learn so I don't get automated.</em> I'm going to give you something better than a list, because the list changes every eighteen months and the underlying logic doesn't.</p>
+
+    <p>Start with the one sentence that reorganizes everything: <strong>AI does not remove judgment. It relocates it.</strong><a class="ref" href="#fn37" id="r37">[37]</a> Every case above is really a story about <em>where the judgment moved to.</em> Follow the judgment, and you find the valuable skills. So let's follow it.</p>
+
+    <h3 id="skill-altitude">1. The work moves up, not away, if someone builds the ramp</h3>
+
+    <div class="case">
+      <span class="tag">Case &middot; Security &middot; Alert Triage</span>
+      <h4>Six analysts drowning in alerts</h4>
+      <p>Mechanical work: triage, classify, escalate, close. No time for the actual investigation their expertise was for. They deployed AI for initial classification and false-positive filtering; it processed in seconds what took hours. The obvious fear on a six-person team: job security.<a class="ref" href="#fn2b" id="r2b">[2]</a></p>
+      <p class="quote">&ldquo;You have to have a roadmap for the people. What's in it for the individual? They should see their life gets easier. And because it gets easier, that extra bandwidth is now employed for other activities which skill them up.&rdquo;<a class="ref" href="#fn3b" id="r3b">[3]</a></p>
+      <p>The AI took the mechanical triage. The analysts <strong>kept the judgment-intensive investigation</strong>, and got <em>more</em> of it. The machine ate the floor of the job and left the ceiling.</p>
+    </div>
+
+    <p>That's the pattern under nearly every successful deployment: the routine, specifiable, high-volume layer of a role gets absorbed, and what remains, and expands, is the part that needs a human to <em>decide.</em> In coding, engineers shifted from <strong>writing</strong> to <strong>reviewing.</strong><a class="ref" href="#fn4b" id="r4b">[4]</a> In marketing, humans stopped generating and started <strong>protecting the brand.</strong><a class="ref" href="#fn5b" id="r5b">[5]</a> In recruiting, recruiters stopped screening and started doing the human parts of hiring.<a class="ref" href="#fn6b" id="r6b">[6]</a></p>
+
+    <p>So the first durable skill isn't a skill at all. It's an <strong>altitude.</strong> Can you operate at the level of <em>judgment, exception, and decision</em> rather than <em>task and throughput</em>? Because the task layer is what's getting commoditized. The bottom rung of the ladder is being sawn off. Entry-level AI-exposed roles are already declining.<a class="ref" href="#fn7b" id="r7b">[7]</a> The meta-skill of the decade is <strong>climbing the judgment ladder faster than the automation climbs it behind you</strong>, and, if you lead people, <em>building the ramp that carries your team up instead of out.</em></p>
+
+    <h3 id="skill-newjobs">2. New jobs are being born inside the workflow</h3>
+
+    <p>We keep framing this as &ldquo;which jobs die.&rdquo; The more interesting question is which jobs are being <em>created that didn't exist</em>, and they're hiding in plain sight.</p>
+
+    <p>Stuart Winter-Tear named one precisely: <strong>human-in-the-loop is a job.</strong><a class="ref" href="#fn8b" id="r8b">[8]</a> Not a checkbox. An actual role. Somebody has to decide <em>what</em> the human reviews, <em>when</em> the agent escalates, <em>what &ldquo;good&rdquo; looks like,</em> and <em>when to hit the stop button.</em> The physician approving every AI-generated clinical note isn't doing clerical work. She's the legally accountable judgment in a legal document, and that role got <em>more</em> important the moment the machine started drafting.<a class="ref" href="#fn9b" id="r9b">[9]</a></p>
+
+    <p>The second born-here role is the one I'd bet my career on, and did: the <strong>translator with operating authority.</strong><a class="ref" href="#fn11b" id="r11b">[11]</a> The person who can stand in the room with Legal, Risk, and the frontline <em>and</em> the engineers, and make the workflow legible enough that a machine can safely carry it. Remember who resisted hardest: not the workers, but Legal/HR/Risk/Compliance at 35%.<a class="ref" href="#fn12b" id="r12b">[12]</a> Someone has to metabolize that. Not a prompt engineer. Not a model picker. And note <em>operating authority</em>: a translator without the power to change the workflow is just a very well-informed spectator.</p>
+
+    <h3 id="skill-appreciate">3. The skills that appreciate, and why</h3>
+
+    <p><strong>Skills that appreciate</strong> (because they're what's left when the task layer is gone):</p>
+    <ul>
+      <li><strong>Problem framing over problem solving.</strong> The machine is a phenomenal solver of well-specified problems. The scarce act is <em>specifying.</em> The recruiting turnaround worked because someone <em>mapped the workflow and found the real bottleneck</em> before touching AI.<a class="ref" href="#fn13b" id="r13b">[13]</a></li>
+      <li><strong>Judgment on the ambiguous 20%.</strong> That 20% (brand risk, edge cases, the thing that's technically correct but contextually wrong) is where human value concentrates <em>and thickens</em> as the machine takes the other 80%.<a class="ref" href="#fn14b" id="r14b">[14]</a></li>
+      <li><strong>Taste and verification.</strong> When you shift from writing to reviewing, the valuable muscle becomes <em>knowing good from plausible.</em> AI produces fluent, confident, wrong output constantly. Catching it is a premium skill precisely because the volume of plausible-looking work is exploding.</li>
+      <li><strong>Change leadership and trust-building.</strong> Stanford's winners lived or died on sponsors who cleared blockers and gave permission to fail.<a class="ref" href="#fn15b" id="r15b">[15]</a> For every $1 of tech investment, companies spend up to <strong>$10 on the intangibles.</strong><a class="ref" href="#fn16b" id="r16b">[16]</a> Follow the money. It's flowing to the human work.</li>
+    </ul>
+
+    <p><strong>Skills that depreciate</strong> (the specifiable middle): producing routine, high-volume, well-specified output as your <em>primary</em> value: the drafting, the triage, the first-pass screening, the boilerplate. Not because it's worthless, but because it's the exact layer being absorbed. If your value is &ldquo;I do the task,&rdquo; the task is the target.</p>
+
+    <h3 id="skill-deskill">4. The uncomfortable warning: deskilling is a real fork</h3>
+
+    <p>One tension I won't paper over. Anthropic's analysis raises the possibility that AI, by covering higher-education tasks, could lead to <strong>deskilling for some roles and upskilling for others.</strong><a class="ref" href="#fn17b" id="r17b">[17]</a> Same technology, two outcomes again: the productivity fork, wearing a different mask.</p>
+
+    <p>If you let the machine do the reasoning and you become the button-pusher who rubber-stamps its output, you don't rise to judgment. You atrophy toward it and lose the ability to judge at all. The junior analyst who never learns to investigate. The engineer who can review but can no longer write, and therefore can no longer really review. Upskilling isn't automatic. It's a <em>choice you have to design for</em> (the sponsor's &ldquo;roadmap for the people&rdquo;), or the default is a workforce that looks more productive and is quietly becoming less capable.</p>
+
+    <p>So the final skill, the one under all the others, is <strong>learning velocity.</strong> Not what you know. The half-life on specific tool knowledge is brutal. It's how fast you can climb, re-frame, and re-tool when the ground moves, which it now does every couple of quarters. The generalist who can rapidly become dangerous in a new domain beats the specialist whose domain just got commoditized.</p>
+
+    <p>The machine is very good at the task. Get out of the task business. Get into the judgment business, the framing business, the trust business, the <em>deciding-what's-worth-doing</em> business.</p>
+
+    <p>This was never a hedge against the machine. It's the part of the work that was always the point.</p>
+
+    <p><strong>It's all one big experiment. Learn faster than it changes.</strong></p>
+    <p class="sig">charlie</p>
+
+    <hr class="sep" />
+
+    <section class="notes">
+      <h2 id="notes"><span class="num">&sect;</span>Notes</h2>
+      <ol class="footnotes">
+        <li id="fn0a" value="0" style="list-style:none;"><strong>[a]</strong> JA (Joan) Westenberg, &ldquo;Agentic Swarms Are an Org-Chart Delusion,&rdquo; joanwestenberg.com, February 24, 2026: the swarm vision &ldquo;is comfortingly familiar, which should be an immediate red flag&hellip; You've reinvented middle management,&rdquo; a &ldquo;sustaining innovation in the guise of disruption&rdquo; (invoking Clayton Christensen). Westenberg's further point: roles are &ldquo;a depreciable artifact of organizational scaling, not some deep universal truth about work itself.&rdquo; <a class="backref" href="#r0a">&#8617;</a></li>
+        <li id="fn0b" style="list-style:none;"><strong>[b]</strong> Sangeet Paul Choudary, &ldquo;How to Lose at Generative AI,&rdquo; <em>Platforms, AI, and the Economics of BigTech</em> (Substack), February 20, 2024. <a class="backref" href="#r0b">&#8617;</a></li>
+        <li id="fn0c" style="list-style:none;"><strong>[c]</strong> Stuart Winter-Tear, &ldquo;The Agentic Operating Model,&rdquo; <em>Unhyped AI</em>, March 13, 2026: &ldquo;judgement improves the closer you stay to what is actually there&hellip; Step too far from that and it becomes very easy to confuse motion with progress and novelty with value.&rdquo; The asymmetric-information point later in the section, &ldquo;most of what circulates is marketing, not operating evidence&hellip; nobody publishes the reversals, the throttles, the exception load&rdquo;, is from Winter-Tear, &ldquo;You Are Not Deploying Agents&rdquo; (see note 14). <a class="backref" href="#r0c">&#8617;</a></li>
+        <li id="fn0d" style="list-style:none;"><strong>[d]</strong> JA (Joan) Westenberg, &ldquo;The Coherence Premium,&rdquo; joanwestenberg.com, February 2, 2026: skeptical of &ldquo;the Claude Code productivity discourse, the idea that AI tools will let you 10x your output if you prompt them correctly&hellip; Most people using AI are producing more stuff faster without any clear sense of whether the stuff is good or consistent or even pointed in the right direction.&rdquo; Westenberg's counter-proposal, that the real edge is &ldquo;coherence as a system,&rdquo; not output multiplied, and her use of Ronald Coase's transaction-cost theory of the firm, run parallel to the operating-model argument in this essay. <a class="backref" href="#r0d">&#8617;</a></li>
+        <li id="fn0e" style="list-style:none;"><strong>[e]</strong> Choudary, &ldquo;How to Lose at Generative AI&rdquo; (see [b]): value in the GenAI stack splits across compute, model, and workflow; incumbents are favored because &ldquo;AI can be embedded into existing workflows, making incumbents' workflow ownership a huge advantage,&rdquo; while startups bundling &ldquo;cute prompt engineering with UX improvements&rdquo; on a third-party LLM capture little. <a class="backref" href="#r0e">&#8617;</a></li>
+        <li id="fn0f" style="list-style:none;"><strong>[f]</strong> Stuart Winter-Tear, &ldquo;AI Doesn't Break Processes. It Reveals Them,&rdquo; <em>Unhyped AI</em>, February 13, 2026. The empirical version of the same claim, that a broken process, once automated, simply fails faster and more visibly, comes from the recruiting case in Pereira, Graylin &amp; Brynjolfsson (note 16). <a class="backref" href="#r0f">&#8617;</a></li>
+        <li id="fn0g" style="list-style:none;"><strong>[g]</strong> Stuart Winter-Tear, <em>UNHYPED: From Hype to Hard ROI in the Age of AI</em> (2025), Ch. 1, &ldquo;State Changes, Not Theatre&rdquo;: &ldquo;You do not buy AI. You buy state change&hellip; If nothing in your core systems actually changes after an AI [initiative], nothing happened.&rdquo; Foreword by Vin Vashishta. (For the record: this is Winter-Tear's book, the &ldquo;our podcast&rdquo; framing in the front matter is Vashishta's foreword, not a co-authorship.) <a class="backref" href="#r0g">&#8617;</a></li>
+        <li id="fn0h" style="list-style:none;"><strong>[h]</strong> Aldous Huxley, <em>Brave New World Revisited</em> (1958): on &ldquo;the development of a vast mass communications industry, concerned in the main neither with the true nor the false, but with the unreal, the more or less totally irrelevant,&rdquo; and &ldquo;man's almost infinite appetite for distractions.&rdquo; <a class="backref" href="#r0h">&#8617;</a></li>
+        <li id="fn0i" style="list-style:none;"><strong>[i]</strong> Neil Postman, <em>Amusing Ourselves to Death: Public Discourse in the Age of Show Business</em> (1985), Foreword: contrasting Orwell and Huxley, &ldquo;What Orwell feared were those who would ban books. What Huxley feared was that there would be no reason to ban a book, for there would be no one who wanted to read one&hellip; Huxley feared the truth would be drowned in a sea of irrelevance.&rdquo; <a class="backref" href="#r0i">&#8617;</a></li>
+        <li id="fn0j" style="list-style:none;"><strong>[j]</strong> Jaron Lanier, <em>Ten Arguments for Deleting Your Social Media Accounts Right Now</em> (2018), the &ldquo;BUMMER&rdquo; machine (Behaviors of Users Modified, and Made into an Empire for Rent): platforms engineered for continuous behavioral manipulation and attention-rental. The &ldquo;degrade themselves&rdquo; idea echoes Lanier, <em>You Are Not a Gadget</em> (2010), on how people flatten and diminish themselves to fit machine-legible formats. <a class="backref" href="#r0j">&#8617;</a></li>
+        <li id="fn0k" style="list-style:none;"><strong>[k]</strong> Neil Postman, <em>Technopoly: The Surrender of Culture to Technology</em> (1992), and his lecture &ldquo;Five Things We Need to Know About Technological Change&rdquo; (1998): we should ask of any technology &ldquo;what is the problem to which this is the solution, and whose problem is it?&rdquo;; and &ldquo;technological change is not additive; it is ecological&hellip; a new technology does not add or subtract something. It changes everything.&rdquo; <a class="backref" href="#r0k">&#8617;</a></li>
+        <li id="fn0l" style="list-style:none;"><strong>[l]</strong> S&oslash;ren Kierkegaard, <em>The Concept of Anxiety</em> (1844): &ldquo;Anxiety is the dizziness of freedom, which emerges when the spirit wants to posit the synthesis and freedom looks down into its own possibility.&rdquo; (Also rendered &ldquo;the dizziness of freedom&rdquo; / &ldquo;the vertigo of freedom&rdquo; across translations.) <a class="backref" href="#r0l">&#8617;</a></li>
+        <li id="fn0m" style="list-style:none;"><strong>[m]</strong> The framing of an agent as &ldquo;a model using tools in a loop&rdquo; was popularized by Anthropic, notably Erik Schluntz &amp; Barry Zhang, &ldquo;Building Effective Agents&rdquo; (Anthropic, December 2024), and Barry Zhang's subsequent conference talks casting the tool-use loop as the core primitive of agentic systems. (Attribution from memory; confirm the exact speaker/source before public use.) <a class="backref" href="#r0m">&#8617;</a></li>
+        <li id="fn16b2" style="list-style:none;"><strong>[16]</strong> See note 16, Pereira, Graylin &amp; Brynjolfsson, Ch. 2 recruiting case: &ldquo;AI amplifies whatever process it is applied to. If the process is broken, AI makes it worse faster.&rdquo; <a class="backref" href="#r16b2">&#8617;</a></li>
+        <li id="fn1">Executive, Fintech, quoted in Pereira, Graylin &amp; Brynjolfsson (see note 6), Ch. 2. The legacy ETL migration (&ldquo;millions of lines&rdquo;) completed in weeks with an AI coding agent. <a class="backref" href="#r1">&#8617;</a></li>
+        <li id="fn2">Executive, Financial Services, quoted ibid. A major bank's AI customer-support stand-up &ldquo;takes multiple years.&rdquo; <a class="backref" href="#r2">&#8617;</a></li>
+        <li id="fn3">Pereira, Graylin &amp; Brynjolfsson, Ch. 2: &ldquo;The same use case, the same AI models, vastly different timelines&hellip; organizational context matters more than the technology itself.&rdquo; <a class="backref" href="#r3">&#8617;</a></li>
+        <li id="fn4">Aditya Challapally et al., <em>The GenAI Divide: State of AI in Business 2025</em>, MIT Project NANDA, 2025, origin of the &ldquo;95% of enterprise GenAI pilots show no measurable P&amp;L impact&rdquo; figure; as summarized by Pereira et al. (endnote [7]), the failures &ldquo;stem not from model quality but from poor workflow integration and misaligned organizational incentives.&rdquo; <a class="backref" href="#r4">&#8617;</a></li>
+        <li id="fn5">Accenture, cited in Pereira et al. (endnote [9]): ~80&ndash;85% of companies stuck in a &ldquo;Proof of Concept Factory.&rdquo; <a class="backref" href="#r5">&#8617;</a></li>
+        <li id="fn6">Elisa Pereira, Alvin Wang Graylin &amp; Erik Brynjolfsson, <em>The Enterprise AI Playbook: Lessons from 51 Successful Deployments</em>, Stanford Digital Economy Lab, April 2026. Sample: 51 cases / 41 organizations / 7 countries / 1M+ employees; interviews Aug 2025&ndash;Feb 2026; inclusion required live production use, 3+ months sustained adoption, quantified value, and scalability. The authors flag their own selection bias toward positive outcomes, this documents <em>what success required</em>, not how common success is. <a class="backref" href="#r6">&#8617;</a></li>
+        <li id="fn7">Ibid., Foreword. <a class="backref" href="#r7">&#8617;</a></li>
+        <li id="fn8">Ibid., Key Finding 1: &ldquo;77% of the hardest challenges were invisible and intangible costs: change management, data quality, and process redesign. 61% of successful projects included at least one prior failure.&rdquo; Two-thirds of companies had significant failed attempts before value creation (Methodology). <a class="backref" href="#r8">&#8617;</a></li>
+        <li id="fn9">Ibid., Ch. 1 Case Study, &ldquo;Invoice Processing at a Logistics Company&rdquo;, $1B+ US logistics firm, 100k+ invoices/yr across email, fax, and phone; 7 FTEs dedicated. <a class="backref" href="#r9">&#8617;</a></li>
+        <li id="fn10">Ibid., &ldquo;The Invisible Work&rdquo;: 750 redundant templates reduced before any AI could work; SME data annotation; president's weekly check-ins; two junior IT staff embedded from day one. Build: Azure Document Intelligence + Azure OpenAI, OCR + LLM semantic mapping, writing to MS Dynamics D365. <a class="backref" href="#r10">&#8617;</a></li>
+        <li id="fn12">Ibid., Senior Executive, Technology Services Company. Results: 7&rarr;2 FTEs; &lt;24h processing; &gt;$1M value; 85% accuracy; 8 weeks to production. <a class="backref" href="#r12">&#8617;</a></li>
+        <li id="fn13">Ibid., Key Finding 11: &ldquo;For 42% of implementations, model choice was fully interchangeable&hellip; The durable advantage is in the orchestration layer, not the foundation model.&rdquo; <a class="backref" href="#r13">&#8617;</a></li>
+        <li id="fn14">Stuart Winter-Tear, &ldquo;You Are Not Deploying Agents. You Are Redesigning Work,&rdquo; <em>Unhyped AI</em> (Substack), March 16, 2026. <a class="backref" href="#r14">&#8617;</a></li>
+        <li id="fn15">Stuart Winter-Tear, &ldquo;The AI Operating Model Moment,&rdquo; <em>Unhyped AI</em>, January 26, 2026: &ldquo;Agents do not invent coordination, clarity, or trust. They inherit whatever is already present&hellip; they will carry it forward, faster.&rdquo; <a class="backref" href="#r15">&#8617;</a></li>
+        <li id="fn16">Pereira et al., Ch. 2 Case Study, &ldquo;Recruiting at a Translation Services Company&rdquo;, Executive, Professional Services, on the failed first attempt. <a class="backref" href="#r16">&#8617;</a></li>
+        <li id="fn17">Ibid., same executive, on targeting genuine pain. Results: 3 hrs &rarr; 3 min per role; +79% screening efficiency; +83% intake efficiency; +75% conversion; ~1 month to build. <a class="backref" href="#r17">&#8617;</a></li>
+        <li id="fn19">Winter-Tear, &ldquo;You Are Not Deploying Agents&rdquo;: &ldquo;AI Translation Debt is the unpriced work required to make fragmented organisations function as one system&hellip; AI does not remove it. It collects it, amplifies it, and presents it back to you as 'review.'&rdquo; <a class="backref" href="#r19">&#8617;</a></li>
+        <li id="fn20">Stuart Winter-Tear, &ldquo;Speeding One Cog Breaks the Machine,&rdquo; <em>Unhyped AI</em>, March 9, 2026. <a class="backref" href="#r20">&#8617;</a></li>
+        <li id="fn21">Pereira et al., Key Finding 3 / Ch. 3: escalation models (AI &ge;80% autonomous, humans review exceptions) = 71% median productivity gain vs. 30% for approval models. The authors note this partly reflects differences in the tasks each model was applied to. <a class="backref" href="#r21">&#8617;</a></li>
+        <li id="fn22">Ibid., Ch. 3, Head of AI, Food Delivery Company. <a class="backref" href="#r22">&#8617;</a></li>
+        <li id="fn23">Ibid., Ch. 3, a technology company reaching 82% ticket deflection &ldquo;by redesigning workflows around AI first resolution.&rdquo; <a class="backref" href="#r23">&#8617;</a></li>
+        <li id="fn25">Ibid., Ch. 3 Case Study, &ldquo;Marketing Content at a Financial Services Company&rdquo;, seven-week agency campaigns; deliberate 80/20 split; human layer serving brand protection and edge-case judgment. <a class="backref" href="#r25">&#8617;</a></li>
+        <li id="fn26">Paraphrase of Winter-Tear's operating-model thesis; the sharpest &ldquo;the governed workflow is the operating unit&rdquo; phrasing appears in reader commentary on, and in the argument of, Winter-Tear, &ldquo;The Operating Model Is the Real AI Harness,&rdquo; <em>Unhyped AI</em>, July 23, 2026. <a class="backref" href="#r26">&#8617;</a></li>
+        <li id="fn27">Winter-Tear, &ldquo;The Operating Model Is the Real AI Harness&rdquo;: &ldquo;The harness is where the operating model becomes software&hellip; designing intelligent systems and designing organisations are becoming the same problem.&rdquo; (A reader's comment: &ldquo;Conway's law in action.&rdquo;) <a class="backref" href="#r27">&#8617;</a></li>
+        <li id="fn28">Pereira et al., Key Finding 5: Legal, HR, Risk, and Compliance the most frequent source of resistance at 35%, ahead of end-users at 23%. <a class="backref" href="#r28">&#8617;</a></li>
+        <li id="fn29">Ibid., Key Finding 4: effective sponsors &ldquo;clear blockers weekly, bridge business and technical teams, and tie AI adoption to corporate OKRs. Most critically, they create a culture that gives permission to fail.&rdquo; <a class="backref" href="#r29">&#8617;</a></li>
+        <li id="fn30">Ibid., Methodology (&ldquo;How we incorporated failure&rdquo;): &ldquo;Two thirds of the companies we investigated had significant failed attempts prior to achieving value creation.&rdquo; <a class="backref" href="#r30">&#8617;</a></li>
+        <li id="fn31">Ibid., &ldquo;The Macro Context,&rdquo; building on Erik Brynjolfsson, Daniel Rock &amp; Chad Syverson, &ldquo;The Productivity J-Curve: How Intangibles Complement General Purpose Technologies,&rdquo; <em>American Economic Journal: Macroeconomics</em> (2021). The &ldquo;productivity fork&rdquo; framing is the report's. <a class="backref" href="#r31">&#8617;</a></li>
+        <li id="fn32">Ibid., &ldquo;The Macro Context&rdquo;: 16% relative employment decline for early-career workers in AI-exposed occupations, ~20% for developers aged 22&ndash;25 (report endnote [5]; underlying work is the Stanford/ADP early-career-AI-exposure research, 2025). <a class="backref" href="#r32">&#8617;</a></li>
+        <li id="fn33">Stuart Winter-Tear, &ldquo;A Cheaper Version of Yourself Is Not AI Transformation,&rdquo; <em>Unhyped AI</em>, April 3, 2026. <a class="backref" href="#r33">&#8617;</a></li>
+        <li id="fn34">Pereira et al., Ch. 1 Case Study, President, Logistics Company: &ldquo;we can take these folks, we can just put them in the other bottleneck.&rdquo; <a class="backref" href="#r34">&#8617;</a></li>
+        <li id="fn35">Ibid., Key Finding 6: headcount reduction was the largest outcome in 45% of deployments; alternatives (hiring avoided, redeployment, no reduction) accounted for 55%. <a class="backref" href="#r35">&#8617;</a></li>
+        <li id="fn36">Stuart Winter-Tear, &ldquo;The AI Operating Model Is Discovered, Not Designed,&rdquo; <em>Unhyped AI</em>, July 23, 2026: &ldquo;Every implementation should produce two outputs: a working capability and organisational knowledge&hellip; The operating model isn't the prerequisite for implementation. It's the accumulated knowledge left behind by implementation.&rdquo; <a class="backref" href="#r36">&#8617;</a></li>
+      </ol>
+      <p style="font-family:var(--font-mono);font-size:11px;color:var(--text-muted);margin-top:24px;">Coda notes (renumbered locally to the coda):</p>
+      <ol class="footnotes">
+        <li id="fn37">Stuart Winter-Tear, &ldquo;AI Does Not Remove Judgement. It Relocates It,&rdquo; <em>Unhyped AI</em>, May 26, 2026. <a class="backref" href="#r37">&#8617;</a></li>
+        <li id="fn2b">Pereira et al., Ch. 5 case study, a six-person security team automating alert triage; AI handled classification and false-positive filtering, escalating only judgment-requiring alerts. <a class="backref" href="#r2b">&#8617;</a></li>
+        <li id="fn3b">Ibid., Executive, Technology Services Company: &ldquo;You have to have a roadmap for the people&hellip; that extra bandwidth is now employed for other activities which skill them up.&rdquo; Related: &ldquo;AI is not replacing the person you have. AI is replacing the person you don't need to hire.&rdquo; <a class="backref" href="#r3b">&#8617;</a></li>
+        <li id="fn4b">Ibid., Ch. 3, in coding deployments, &ldquo;engineers shifted from writing code to reviewing AI-generated changes&rdquo; (HITL model: collaboration). <a class="backref" href="#r4b">&#8617;</a></li>
+        <li id="fn5b">Ibid., Ch. 3 case study, the human 20% served brand protection and edge-case judgment. <a class="backref" href="#r5b">&#8617;</a></li>
+        <li id="fn6b">Ibid., Ch. 2 case study, &ldquo;Recruiting at a Translation Services Company.&rdquo; <a class="backref" href="#r6b">&#8617;</a></li>
+        <li id="fn7b">Ibid., &ldquo;The Macro Context&rdquo;: 16% relative employment decline for early-career workers in AI-exposed occupations, ~20% for developers aged 22&ndash;25. <a class="backref" href="#r7b">&#8617;</a></li>
+        <li id="fn8b">Stuart Winter-Tear, &ldquo;Human in the Loop Is a Job,&rdquo; <em>Unhyped AI</em>, February 27, 2026. <a class="backref" href="#r8b">&#8617;</a></li>
+        <li id="fn9b">Pereira et al., Ch. 3, clinical documentation requires physician approval on every AI-generated note (legal documents); HITL model: approval. <a class="backref" href="#r9b">&#8617;</a></li>
+        <li id="fn11b">Stuart Winter-Tear, &ldquo;AI Needs Translators With Operating Authority,&rdquo; <em>Unhyped AI</em>, May 14, 2026. <a class="backref" href="#r11b">&#8617;</a></li>
+        <li id="fn12b">Pereira et al., Key Finding 5, Legal, HR, Risk, Compliance the most frequent source of resistance at 35%, ahead of end-users at 23%. <a class="backref" href="#r12b">&#8617;</a></li>
+        <li id="fn13b">Ibid., Ch. 2, the successful second attempt &ldquo;fixed the process before applying AI&hellip; mapped the entire recruiting workflow and identified where the real pain points were.&rdquo; <a class="backref" href="#r13b">&#8617;</a></li>
+        <li id="fn14b">Ibid., Ch. 3, the deliberate 80/20 human-oversight split. <a class="backref" href="#r14b">&#8617;</a></li>
+        <li id="fn15b">Ibid., Key Finding 4, effective sponsors clear blockers weekly, tie AI to OKRs, and create a culture that gives permission to fail. <a class="backref" href="#r15b">&#8617;</a></li>
+        <li id="fn16b">Ibid., Ch. 1, &ldquo;for every $1 of tangible tech investment, companies spend up to $10 on intangibles (process redesign, reskilling, change management),&rdquo; echoing the Productivity J-Curve literature (Brynjolfsson, Rock &amp; Syverson, 2021). <a class="backref" href="#r16b">&#8617;</a></li>
+        <li id="fn17b">Ibid., referencing Anthropic's Economic Index analysis on AI task coverage and the deskilling/upskilling split (report endnote [10]). The Anthropic finding is <em>suggestive</em>, not settled. <a class="backref" href="#r17b">&#8617;</a></li>
+      </ol>
+    </section>
+
+    <section class="prov" id="provenance">
+      <h2 style="scroll-margin-top:72px;"><span class="num">&para;</span>Provenance, whose thinking is load-bearing</h2>
+      <h3><span class="dot" style="background:var(--primary)"></span>Yours (the spine + the voice)</h3>
+      <p>The through-line, <em>technology rarely fails; organizational readiness to change fails; spot solutions produce shelfware; people, then process, then technology</em>, is your own positioning and your ERP/MRP/PLM/CAD implementation history. The closing turns (&ldquo;subtraction wearing a growth costume,&rdquo; &ldquo;make the organization legible to itself,&rdquo; &ldquo;run the experiment on purpose,&rdquo; the altitude/climb-the-ladder frame, &ldquo;get out of the task business,&rdquo; learning velocity) are built on your material. Voice mechanics, tension/release, short lines against long spirals, the land-on-a-simple-line move, &ldquo;it's all one big experiment,&rdquo; the lowercase <code>,  charlie</code>, from your <code>brand-voice/</code> corpus. The translator-with-authority is <em>your own</em> career thesis.</p>
+      <h3><span class="dot" style="background:var(--secondary)"></span>Stuart Winter-Tear (the conceptual frame)</h3>
+      <p>Notes 14&ndash;20, 26&ndash;27, 33, 36, 37, 8b, 11b. <em>Redesigning work not deploying agents; AI Translation Debt; agents inherit the organization; the harness is the operating model as software; discovered not designed; judgment relocates; human-in-the-loop is a job; translators with operating authority.</em> He is an <strong>influence</strong> on your thinking and on AESOP, <strong>not a co-author.</strong> UNHYPED is his alone (&copy; 2025, foreword by Vin Vashishta).</p>
+      <h3><span class="dot" style="background:var(--violet)"></span>Other voices (so this isn't a one-source sermon)</h3>
+      <p>Notes [a], [d], <strong>Joan Westenberg</strong> (joanwestenberg.com): the agentic-swarm-as-middle-management takedown, and the &ldquo;coherence over volume&rdquo; critique of the 10x productivity discourse, with Coase's theory of the firm underneath. Notes [b], [e], <strong>Sangeet Paul Choudary</strong>: the last-cycle hype anatomy (prompt-newsletters, .ai wrappers) and the compute/model/workflow value stack that puts the moat in <em>workflow ownership.</em> Both were reached independently of Winter-Tear and land on the same place: the model is the least interesting layer.</p>
+      <h3><span class="dot" style="background:var(--slate)"></span>The humanist lineage (why the noise isn't new)</h3>
+      <p>Notes [h]&ndash;[k], <strong>Aldous Huxley</strong> (<em>Brave New World Revisited</em>), <strong>Neil Postman</strong> (<em>Amusing Ourselves to Death</em>, <em>Technopoly</em>), and <strong>Jaron Lanier</strong> (<em>Ten Arguments</em>, <em>You Are Not a Gadget</em>). They supply the deep frame: the feed as a distraction industry drowning truth in irrelevance, the platform as a behavior-modification engine, and Postman's two questions, <em>what problem is this the solution to, and whose problem is it?</em>, which are the intellectual ancestor of the essay's &ldquo;what is this in service of?&rdquo; These are cited from their published works, not from your vault; verify the exact wording against a copy before any public use. Note [l] adds <strong>S&oslash;ren Kierkegaard</strong> (<em>The Concept of Anxiety</em>, 1844) at the fork, &ldquo;the dizziness of freedom&rdquo;, to name why organizations flinch from the choice and grab the cheap road (or the shiny model) to make the vertigo stop.</p>
+      <h3><span class="dot" style="background:var(--metric)"></span>The empirical spine (every number, every named case)</h3>
+      <p>All quantified claims and case studies trace to the Stanford Digital Economy Lab's <em>Enterprise AI Playbook</em>, which itself cites MIT NANDA (95% pilot failure), Accenture (PoC Factory), McKinsey (rewiring vs. deploying), Anthropic (deskilling/upskilling), and Brynjolfsson&ndash;Rock&ndash;Syverson (Productivity J-Curve), attributed at point of use. The report anonymizes its companies, so the examples are real and documented but not publicly named.</p>
+      <h3><span class="dot" style="background:var(--amber)"></span>Honesty flags if this ever goes public</h3>
+      <p>(1) Note 26 is a paraphrase, the crispest &ldquo;governed workflow&rdquo; wording is reader commentary on SWT, not his body text. (2) The MIT-95% and Accenture-80/85% figures are quoted <em>as Stanford cites them</em>; pull the primary reports before publishing. (3) The deskilling warning (note 17b) is suggestive, not settled, phrased as a possibility on purpose.</p>
+    </section>
+
+    <div class="footer">&copy; 2026 Charlie Fuller</div>
+  </main>
+</div>
+
+<script>
+  const toggle = document.getElementById('themeToggle');
+  const iconLight = toggle.querySelector('.icon-light');
+  const iconDark = toggle.querySelector('.icon-dark');
+  function setTheme(d) {
+    document.documentElement.classList.toggle('dark', d);
+    iconLight.style.display = d ? 'none' : '';
+    iconDark.style.display = d ? '' : 'none';
+    try { localStorage.setItem('diagram-theme', d ? 'dark' : 'light'); } catch(e) {}
+  }
+  toggle.addEventListener('click', () => setTheme(!document.documentElement.classList.contains('dark')));
+  try { if (localStorage.getItem('diagram-theme') === 'dark') setTheme(true); } catch(e) {}
+
+  // TOC active-section tracking
+  const tocLinks = Array.from(document.querySelectorAll('.toc a'));
+  const targets = tocLinks.map(a => document.getElementById(a.getAttribute('href').slice(1))).filter(Boolean);
+  const byId = {};
+  tocLinks.forEach(a => byId[a.getAttribute('href').slice(1)] = a);
+  const obs = new IntersectionObserver((entries) => {
+    entries.forEach(e => {
+      if (e.isIntersecting) {
+        tocLinks.forEach(l => l.classList.remove('active'));
+        const link = byId[e.target.id];
+        if (link) link.classList.add('active');
+      }
+    });
+  }, { rootMargin: '-72px 0px -70% 0px', threshold: 0 });
+  targets.forEach(t => obs.observe(t));
+</script>
+</body>
+</html>
