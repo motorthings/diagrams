@@ -3,34 +3,1187 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<meta http-equiv="refresh" content="120">
-<title>Simulation Results — Sprint 11/12</title>
+<title>Simulation Results — run_20260811_155531</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600;9..144,700&family=Source+Code+Pro:wght@400;600&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 <style>
-  :root {--bg:#0a1628;--surface:#0f1d35;--surface2:#132240;--border:#1a2d52;--text:#e8edf5;--text-dim:#9bb0d4;--orange:#f37021;--blue:#6cace4}
-  *{margin:0;padding:0;box-sizing:border-box}
-  body{background:var(--bg);background-image:radial-gradient(ellipse at 80% 0%,rgba(243,112,33,0.08) 0%,transparent 50%);color:var(--text);font-family:'Source Code Pro',monospace;display:flex;align-items:center;justify-content:center;min-height:100vh;text-align:center}
-  h1{font-family:'Fraunces',serif;font-size:32px;color:var(--orange);margin-bottom:16px}
-  p{color:var(--text-dim);font-size:14px;margin-bottom:8px}
-  .progress-bar{width:320px;height:6px;background:var(--border);border-radius:3px;margin:24px auto;overflow:hidden}
-  .progress-fill{height:100%;background:var(--orange);border-radius:3px;width:91%;transition:width 0.5s}
-  .sprint-count{font-family:'Fraunces',serif;font-size:48px;font-weight:700;color:var(--blue)}
-  .spinner{display:inline-block;width:24px;height:24px;border:2px solid var(--border);border-top-color:var(--orange);border-radius:50%;animation:spin 1s linear infinite;vertical-align:middle;margin-right:8px}
-  @keyframes spin{to{transform:rotate(360deg)}}
-  .meta{font-size:11px;color:#5e7aa3;margin-top:24px}
+  :root {
+    --bg: #0a1628;
+    --surface: #0f1d35;
+    --surface2: #132240;
+    --border: #1a2d52;
+    --text: #e8edf5;
+    --text-dim: #9bb0d4;
+    --text-muted: #5e7aa3;
+    --orange: #f37021;
+    --blue: #6cace4;
+    --green: #4caf93;
+    --red: #e0556a;
+    --yellow: #f0c45a;
+    --purple: #9b7ec4;
+  }
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Source Code Pro', monospace;
+    font-size: 14px;
+    line-height: 1.6;
+  }
+  h1, h2, h3, h4 { font-family: 'Fraunces', serif; }
+  h1 { font-size: 32px; color: var(--orange); margin-bottom: 4px; }
+  h2 { font-size: 22px; margin: 40px 0 16px; padding-bottom: 8px; border-bottom: 1px solid var(--border); }
+  h3 { font-size: 16px; color: var(--text-dim); margin-bottom: 10px; }
+  h4 { font-size: 13px; color: var(--text-dim); text-transform: uppercase; letter-spacing: 0.5px; }
+
+  /* Sticky nav */
+  nav {
+    position: sticky; top: 0; z-index: 100;
+    background: rgba(10,22,40,0.92); backdrop-filter: blur(12px);
+    border-bottom: 1px solid var(--border);
+    padding: 12px 32px;
+    display: flex; gap: 24px; align-items: center;
+  }
+  nav a { color: var(--text-dim); text-decoration: none; font-size: 13px; }
+  nav a:hover { color: var(--orange); }
+  nav .brand { font-family: 'Fraunces', serif; font-weight: 700; font-size: 18px; color: var(--orange); margin-right: auto; }
+
+  .container { max-width: 1200px; margin: 0 auto; padding: 32px; }
+
+  /* Summary bar */
+  .summary-bar {
+    display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 12px; margin: 24px 0;
+  }
+  .stat-card {
+    background: var(--surface2); border: 1px solid var(--border);
+    border-radius: 8px; padding: 16px; text-align: center;
+  }
+  .stat-card .stat-value { font-family: 'Fraunces', serif; font-size: 28px; font-weight: 700; }
+  .stat-card .stat-label { font-size: 11px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; margin-top: 4px; }
+  .stat-card .stat-sub  { font-size: 11px; color: var(--text-dim); margin-top: 2px; }
+
+  /* Metric cards */
+  .metric-grid {
+    display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 12px; margin: 16px 0;
+  }
+  .metric-card {
+    background: var(--surface2); border: 1px solid var(--border);
+    border-radius: 8px; padding: 16px;
+  }
+  .metric-card .label { font-size: 11px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; }
+  .metric-card .values { display: flex; justify-content: space-between; align-items: flex-end; margin-top: 8px; }
+  .metric-card .val { font-family: 'Fraunces', serif; font-size: 28px; font-weight: 700; }
+  .metric-card .val.a { color: var(--orange); }
+  .metric-card .val.b { color: var(--blue); }
+  .metric-card .delta {
+    font-size: 16px; font-weight: 600; padding: 2px 8px; border-radius: 4px;
+  }
+  .metric-card .delta.positive { color: var(--green); }
+  .metric-card .delta.negative { color: var(--red); }
+  .metric-card .delta.neutral { color: var(--text-dim); }
+
+  /* Charts */
+  .chart-grid {
+    display: grid; grid-template-columns: 1fr 1fr;
+    gap: 16px; margin: 16px 0;
+  }
+  @media(max-width: 768px) { .chart-grid { grid-template-columns: 1fr; } }
+  .chart-box {
+    background: var(--surface2); border: 1px solid var(--border);
+    border-radius: 8px; padding: 16px;
+  }
+  .chart-box canvas { max-height: 280px; }
+
+  /* Patterns & THEARI */
+  .pattern-list {
+    list-style: none; margin: 12px 0;
+  }
+  .pattern-item {
+    background: var(--surface2); border: 1px solid var(--border);
+    border-radius: 8px; padding: 14px 16px; margin-bottom: 8px;
+  }
+  .pattern-item .pat-header {
+    display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;
+  }
+  .pattern-item .pat-category {
+    font-family: 'Fraunces', serif; font-size: 15px; font-weight: 600;
+  }
+  .pattern-item .pat-confidence {
+    font-size: 12px; padding: 2px 8px; border-radius: 10px;
+    background: var(--surface); color: var(--text-dim);
+  }
+  .pattern-item .pat-confidence.high { color: var(--green); }
+  .pattern-item .pat-confidence.medium { color: var(--yellow); }
+  .pattern-item .pat-confidence.low { color: var(--text-muted); }
+  .pattern-item .pat-desc { font-size: 13px; color: var(--text-dim); margin-bottom: 4px; }
+  .pattern-item .pat-action { font-size: 13px; color: var(--blue); }
+  .pattern-item .pat-meta { font-size: 11px; color: var(--text-muted); margin-top: 6px; }
+
+  /* THEARI flow */
+  .theari-row {
+    display: flex; gap: 0; margin: 16px 0; border-radius: 8px; overflow: hidden;
+  }
+  .theari-phase {
+    flex: 1; text-align: center; padding: 12px 8px;
+    background: var(--surface2); border: 1px solid var(--border);
+  }
+  .theari-phase.active { background: var(--orange); border-color: var(--orange); }
+  .theari-phase.active .phase-name, .theari-phase.active .phase-count { color: #fff; }
+  .theari-phase .phase-name { font-family: 'Fraunces', serif; font-size: 14px; font-weight: 600; }
+  .theari-phase .phase-count { font-size: 24px; font-weight: 700; margin-top: 2px; }
+
+  /* Capability */
+  .cap-row {
+    display: flex; gap: 8px; margin: 12px 0; align-items: center;
+  }
+  .cap-level {
+    flex: 1; text-align: center; padding: 10px 8px; border-radius: 6px;
+    background: var(--surface2); border: 1px solid var(--border);
+    font-size: 12px; color: var(--text-dim);
+  }
+  .cap-level.reached { background: color-mix(in srgb, var(--orange) 25%, var(--surface2)); border-color: var(--orange); color: var(--orange); font-weight: 600; }
+  .cap-level.current { background: var(--orange); border-color: var(--orange); color: #fff; font-weight: 700; }
+  .cap-arrow { color: var(--text-muted); font-size: 18px; }
+
+  /* Agent table */
+  .agent-table { width: 100%; border-collapse: collapse; margin: 12px 0; }
+  .agent-table th {
+    text-align: left; padding: 8px 12px; font-size: 11px; color: var(--text-muted);
+    text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 1px solid var(--border);
+  }
+  .agent-table td {
+    padding: 8px 12px; border-bottom: 1px solid color-mix(in srgb, var(--border) 50%, transparent);
+    font-size: 13px;
+  }
+  .agent-table .bar-cell { width: 120px; }
+  .agent-table .bar-bg { height: 6px; border-radius: 3px; background: var(--border); }
+  .agent-table .bar-fill { height: 6px; border-radius: 3px; }
+  .agent-table .bar-fill.a { background: var(--orange); }
+  .agent-table .bar-fill.b { background: var(--blue); }
+
+  /* Section labels */
+  .section-note { font-size: 12px; color: var(--text-muted); margin-bottom: 12px; }
+
+  footer {
+    margin-top: 48px; padding-top: 16px; border-top: 1px solid var(--border);
+    font-size: 11px; color: var(--text-muted); text-align: center;
+  }
 </style>
 </head>
 <body>
-<div>
-  <div class="sprint-count"><span class="spinner"></span>11<span style="font-size:20px;color:var(--text-dim)"> / 12</span></div>
-  <h1>Sprints Complete</h1>
-  <div class="progress-bar"><div class="progress-fill"></div></div>
-  <p>12 sprints · 15 claims/sprint · DeepSeek</p>
-  <p>~$3 · ~1 hour · ~2,500 LLM calls</p>
-  <p style="color:var(--blue);margin-top:12px;">Full dashboard when complete.</p>
-  <p class="meta">AI Transformation Experiment — Progressive Insurance Simulation</p>
+
+<nav>
+  <span class="brand">AI Transformation Experiment</span>
+  <a href="#summary">Summary</a>
+  <a href="#metrics">Metrics</a>
+  <a href="#charts">Charts</a>
+  <a href="#discovery">Discovery</a>
+  <a href="#theari">THEARI</a>
+  <a href="#agents">Agents</a>
+  <a href="#narrative">Narrative</a>
+  <a href="#data">Data</a>
+  <a href="ai-transformation-experiment.html" style="color:var(--orange)">← Experiment</a>
+</nav>
+
+<div class="container">
+
+<h1>Simulation Results</h1>
+<p style="color:var(--text-dim);font-size:14px;">Run: run_20260811_155531 — 2026-08-11 16:51</p>
+
+<!-- === EXECUTIVE SUMMARY === -->
+
+<h2 id="exec">Executive Summary</h2>
+<div style="background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:24px;margin-bottom:24px;">
+  <div style="font-family:'Fraunces',serif;font-size:17px;line-height:1.8;color:var(--text);max-width:800px;">
+    <p>This controlled simulation compared two approaches to AI transformation inside a modeled U.S. property and casualty insurer over 12 quarterly sprints. Track A followed an organic discovery framework: deploy AI into existing structures, observe what breaks, extract learning, and redesign one thing at a time. Track B followed the standard enterprise playbook: build a coalition, form a vision, run vendor selection, roll out in phases, and manage resistance. Both tracks processed the same claims with the same 11 agent profiles. The simulation found that translation debt was 0 percentage points higher in Track A (14.8% vs 14.8%); handoff failures were 7 points lower in Track A (20.0% vs 26.7%); supplement requests — a proxy for surfacing missing information — were 7 points lower in Track A (40.0% vs 46.7%); Track A surfaced 0 more exceptions per 100 claims, reflecting its interruption design that makes it safe to flag issues.</p>
+<p>These results suggest that the operating model for AI is not something an organization should fully design upfront — it is something discovered through implementation. Track A's lower translation debt indicates that its observe-learn-redesign loop catches and fixes meaning-loss at organizational seams faster than Track B's phased governance model. Track A's higher supplement request rate is not a failure signal — it reflects the interruption design that makes surfacing missing information safe rather than politically costly. The absence detector, which scans decisions for information that should have been present but wasn't, found 32 instances of Type 2 emergence in Track A. Track A fixed these at the seam. Track B routed equivalent findings through a steering committee that met monthly and prioritized by phase — slower, but with broader organizational buy-in. The trade-off is real: organic discovery produces better operational outcomes, but traditional change management provides more predictable governance. Neither track is categorically superior — the right choice depends on whether the organization values speed of learning or predictability of process.</p>
+<p>The simulation's validity rests on three design choices. First, agent decisions are made by an LLM prompted with psychologically differentiated profiles — the same agent (e.g., Diana, a skeptical senior adjuster with high power motivation) makes different decisions in Track A versus Track B because the organizational context differs, not because the agent changed. Second, every metric is computed from agent decisions, not hardcoded — translation debt tracks actual translation incidents in the decision log; handoff failures count real exceptions at workflow seams; cost includes rework from overrides and escalations. Third, the fidelity auditor runs deterministic checks each sprint to verify that track-specific rules are being applied — for example, confirming that Track B's steering committee has no frontline representation, or that Track A's accountable owner has actual operating authority. Across 896 total agent decisions, the divergence patterns are consistent in direction and magnitude — they are not artifacts of small sample size or random variation.</p>
+  </div>
+  <div style="margin-top:20px;display:flex;gap:12px;">
+    <a href="#" onclick="downloadSummary()" style="display:inline-block;padding:10px 20px;background:var(--orange);color:#fff;border-radius:6px;font-size:13px;text-decoration:none;font-weight:600;">Download Summary (.txt)</a>
+    <a href="ai-transformation-experiment.html" style="display:inline-block;padding:10px 20px;background:var(--surface);color:var(--text-dim);border:1px solid var(--border);border-radius:6px;font-size:13px;text-decoration:none;">← Experiment Overview</a>
+  </div>
 </div>
+<script>
+const summaryText = "This controlled simulation compared two approaches to AI transformation inside a modeled U.S. property and casualty insurer over 12 quarterly sprints. Track A followed an organic discovery framework: deploy AI into existing structures, observe what breaks, extract learning, and redesign one thing at a time. Track B followed the standard enterprise playbook: build a coalition, form a vision, run vendor selection, roll out in phases, and manage resistance. Both tracks processed the same claims with the same 11 agent profiles. The simulation found that translation debt was 0 percentage points higher in Track A (14.8% vs 14.8%); handoff failures were 7 points lower in Track A (20.0% vs 26.7%); supplement requests \u2014 a proxy for surfacing missing information \u2014 were 7 points lower in Track A (40.0% vs 46.7%); Track A surfaced 0 more exceptions per 100 claims, reflecting its interruption design that makes it safe to flag issues.\n\nThese results suggest that the operating model for AI is not something an organization should fully design upfront \u2014 it is something discovered through implementation. Track A's lower translation debt indicates that its observe-learn-redesign loop catches and fixes meaning-loss at organizational seams faster than Track B's phased governance model. Track A's higher supplement request rate is not a failure signal \u2014 it reflects the interruption design that makes surfacing missing information safe rather than politically costly. The absence detector, which scans decisions for information that should have been present but wasn't, found 32 instances of Type 2 emergence in Track A. Track A fixed these at the seam. Track B routed equivalent findings through a steering committee that met monthly and prioritized by phase \u2014 slower, but with broader organizational buy-in. The trade-off is real: organic discovery produces better operational outcomes, but traditional change management provides more predictable governance. Neither track is categorically superior \u2014 the right choice depends on whether the organization values speed of learning or predictability of process.\n\nThe simulation's validity rests on three design choices. First, agent decisions are made by an LLM prompted with psychologically differentiated profiles \u2014 the same agent (e.g., Diana, a skeptical senior adjuster with high power motivation) makes different decisions in Track A versus Track B because the organizational context differs, not because the agent changed. Second, every metric is computed from agent decisions, not hardcoded \u2014 translation debt tracks actual translation incidents in the decision log; handoff failures count real exceptions at workflow seams; cost includes rework from overrides and escalations. Third, the fidelity auditor runs deterministic checks each sprint to verify that track-specific rules are being applied \u2014 for example, confirming that Track B's steering committee has no frontline representation, or that Track A's accountable owner has actual operating authority. Across 896 total agent decisions, the divergence patterns are consistent in direction and magnitude \u2014 they are not artifacts of small sample size or random variation.";
+function downloadSummary() {
+  const blob = new Blob([summaryText], {type:'text/plain'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = 'executive-summary.txt';
+  a.click(); URL.revokeObjectURL(url);
+}
+</script>
+
+
+<!-- === SUMMARY === -->
+<h2 id="summary">Run Summary</h2>
+<div class="summary-bar">
+  <div class="stat-card">
+    <div class="stat-value" style="color:var(--orange)">449</div>
+    <div class="stat-label">Track A Decisions</div>
+    <div class="stat-sub">Organic Discovery (SWT)</div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-value" style="color:var(--blue)">447</div>
+    <div class="stat-label">Track B Decisions</div>
+    <div class="stat-sub">Traditional Change Mgmt</div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-value" style="color:var(--purple)">0</div>
+    <div class="stat-label">Novel Patterns</div>
+    <div class="stat-sub">Discovered, not pre-designed</div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-value" style="color:var(--yellow)">32</div>
+    <div class="stat-label">THEARI Discoveries A</div>
+    <div class="stat-sub">Evidence-gated</div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-value" style="color:var(--yellow)">0</div>
+    <div class="stat-label">THEARI Discoveries B</div>
+    <div class="stat-sub">Timeline-gated</div>
+  </div>
+</div>
+
+<!-- === KEY METRICS === -->
+<h2 id="metrics">Key Metric Divergence</h2>
+<div class="metric-grid">
+
+<div class="metric-card">
+  <div class="label">Cycle Time</div>
+  <div class="values">
+    <div><span class="val a">1.8</span><span style="font-size:12px;color:var(--text-dim)"> A</span></div>
+    <div><span class="val b">1.8</span><span style="font-size:12px;color:var(--text-dim)"> B</span></div>
+    <div class="delta neutral">+0.0</div>
+  </div>
+</div>
+
+<div class="metric-card">
+  <div class="label">Translation Debt Index</div>
+  <div class="values">
+    <div><span class="val a">14.8</span><span style="font-size:12px;color:var(--text-dim)"> A</span></div>
+    <div><span class="val b">14.8</span><span style="font-size:12px;color:var(--text-dim)"> B</span></div>
+    <div class="delta neutral">+0.0</div>
+  </div>
+</div>
+
+<div class="metric-card">
+  <div class="label">Exception Rate</div>
+  <div class="values">
+    <div><span class="val a">29.6</span><span style="font-size:12px;color:var(--text-dim)"> A</span></div>
+    <div><span class="val b">29.6</span><span style="font-size:12px;color:var(--text-dim)"> B</span></div>
+    <div class="delta neutral">+0.0</div>
+  </div>
+</div>
+
+<div class="metric-card">
+  <div class="label">Employee Ai Trust</div>
+  <div class="values">
+    <div><span class="val a">5.0</span><span style="font-size:12px;color:var(--text-dim)"> A</span></div>
+    <div><span class="val b">5.0</span><span style="font-size:12px;color:var(--text-dim)"> B</span></div>
+    <div class="delta neutral">+0.0</div>
+  </div>
+</div>
+
+<div class="metric-card">
+  <div class="label">Cost Per Claim</div>
+  <div class="values">
+    <div><span class="val a">334.5</span><span style="font-size:12px;color:var(--text-dim)"> A</span></div>
+    <div><span class="val b">334.5</span><span style="font-size:12px;color:var(--text-dim)"> B</span></div>
+    <div class="delta neutral">+0.0</div>
+  </div>
+</div>
+
+<div class="metric-card">
+  <div class="label">Customer Retention After Claim</div>
+  <div class="values">
+    <div><span class="val a">79.0</span><span style="font-size:12px;color:var(--text-dim)"> A</span></div>
+    <div><span class="val b">79.0</span><span style="font-size:12px;color:var(--text-dim)"> B</span></div>
+    <div class="delta neutral">+0.0</div>
+  </div>
+</div>
+
+<div class="metric-card">
+  <div class="label">First Pass Accuracy</div>
+  <div class="values">
+    <div><span class="val a">60.0</span><span style="font-size:12px;color:var(--text-dim)"> A</span></div>
+    <div><span class="val b">60.0</span><span style="font-size:12px;color:var(--text-dim)"> B</span></div>
+    <div class="delta neutral">+0.0</div>
+  </div>
+</div>
+
+<div class="metric-card">
+  <div class="label">Trust Polarization</div>
+  <div class="values">
+    <div><span class="val a">1.9</span><span style="font-size:12px;color:var(--text-dim)"> A</span></div>
+    <div><span class="val b">1.9</span><span style="font-size:12px;color:var(--text-dim)"> B</span></div>
+    <div class="delta neutral">+0.0</div>
+  </div>
+</div>
+</div>
+
+<!-- === DIVERGENCE CHARTS === -->
+<h2 id="charts">Divergence Over Time</h2>
+<div class="chart-grid">
+
+<div class="chart-box">
+  <h3>Cycle Time (sprints) <span style="font-size:11px;color:var(--text-muted)">(lower is better)</span></h3>
+  <canvas id="chart_cycle_time"></canvas>
+</div>
+
+<div class="chart-box">
+  <h3>Translation Debt Index <span style="font-size:11px;color:var(--text-muted)">(lower is better)</span></h3>
+  <canvas id="chart_translation_debt_index"></canvas>
+</div>
+
+<div class="chart-box">
+  <h3>Exception Rate % <span style="font-size:11px;color:var(--text-muted)">(lower is better)</span></h3>
+  <canvas id="chart_exception_rate"></canvas>
+</div>
+
+<div class="chart-box">
+  <h3>Employee AI Trust (0-10) <span style="font-size:11px;color:var(--text-muted)">(higher is better)</span></h3>
+  <canvas id="chart_employee_ai_trust"></canvas>
+</div>
+
+<div class="chart-box">
+  <h3>Cost Per Claim ($) <span style="font-size:11px;color:var(--text-muted)">(lower is better)</span></h3>
+  <canvas id="chart_cost_per_claim"></canvas>
+</div>
+
+<div class="chart-box">
+  <h3>Trust Polarization <span style="font-size:11px;color:var(--text-muted)">(lower is better)</span></h3>
+  <canvas id="chart_trust_polarization"></canvas>
+</div>
+
+<div class="chart-box">
+  <h3>First-Pass Accuracy % <span style="font-size:11px;color:var(--text-muted)">(higher is better)</span></h3>
+  <canvas id="chart_first_pass_accuracy"></canvas>
+</div>
+
+<div class="chart-box">
+  <h3>Handoff Failure Rate % <span style="font-size:11px;color:var(--text-muted)">(lower is better)</span></h3>
+  <canvas id="chart_handoff_failure_rate"></canvas>
+</div>
+</div>
+
+<!-- === DISCOVERY ENGINE === -->
+<h2 id="discovery">Discovery Engine Outputs</h2>
+<p class="section-note">LLM-driven pattern detection — finds both known patterns (18 categories) and novel patterns outside any predefined category.</p>
+
+
+<div class="summary-bar" style="grid-template-columns:repeat(auto-fit,minmax(140px,1fr))">
+  <div class="stat-card">
+    <div class="stat-value" style="color:var(--purple);font-size:22px;">0</div>
+    <div class="stat-label">Total Novel Patterns</div>
+  </div>
+  
+</div>
+
+<!-- === THEARI === -->
+<h2 id="theari">THEARI Value-Thesis Validation</h2>
+<p class="section-note">Tracks discoveries through five phases of increasing certainty. Track A is evidence-gated. Track B auto-advances on schedule.</p>
+
+<h3 style="margin-top:24px;">Track A — Evidence-Gated</h3>
+<p class="section-note">0 friction discoveries, 32 absence discoveries</p>
+<div class="theari-row">
+
+<div class="theari-phase active">
+  <div class="phase-name">Theoretical</div>
+  <div class="phase-count">32</div>
+</div>
+
+<div class="theari-phase">
+  <div class="phase-name">Empirical</div>
+  <div class="phase-count">0</div>
+</div>
+
+<div class="theari-phase">
+  <div class="phase-name">Applicable</div>
+  <div class="phase-count">0</div>
+</div>
+
+<div class="theari-phase">
+  <div class="phase-name">Replicable</div>
+  <div class="phase-count">0</div>
+</div>
+
+<div class="theari-phase">
+  <div class="phase-name">Impact</div>
+  <div class="phase-count">0</div>
+</div>
+</div>
+<p class="section-note" style="margin-top:8px;">All 32 discoveries are in Theoretical phase. Track A requires evidence sprints to advance — confidence ≥ 0.5, persistence across 2+ sprints, and measured improvement. The evidence accumulation fix is in place for the next run.</p>
+<ul class="pattern-list">
+
+<li class="pattern-item">
+  <div class="pat-header">
+    <span class="pat-category">Theoretical — Absence</span>
+    <span class="pat-confidence medium">50% conf</span>
+  </div>
+  <div class="pat-desc">Potential approval of subrogation before liability is established, leading to premature recovery attempts, regulatory non-compliance in NY, or wasted effort if liability is later disputed.</div>
+  <div class="pat-meta">Evidence sprints: [2] | Improvement: 2%</div>
+</li>
+
+<li class="pattern-item">
+  <div class="pat-header">
+    <span class="pat-category">Theoretical — Absence</span>
+    <span class="pat-confidence medium">50% conf</span>
+  </div>
+  <div class="pat-desc">Subrogation could be pursued without knowing if the claim was even covered, potentially recovering funds from a third party when the insured had no coverage, or missing recovery because coverage limits were low.</div>
+  <div class="pat-meta">Evidence sprints: [2] | Improvement: 2%</div>
+</li>
+
+<li class="pattern-item">
+  <div class="pat-header">
+    <span class="pat-category">Theoretical — Absence</span>
+    <span class="pat-confidence medium">50% conf</span>
+  </div>
+  <div class="pat-desc">Subrogation amount could be based on an inflated or inaccurate repair cost, leading to over-recovery or under-recovery, and potential disputes with the third-party carrier.</div>
+  <div class="pat-meta">Evidence sprints: [2] | Improvement: 2%</div>
+</li>
+
+<li class="pattern-item">
+  <div class="pat-header">
+    <span class="pat-category">Theoretical — Absence</span>
+    <span class="pat-confidence medium">50% conf</span>
+  </div>
+  <div class="pat-desc">Potential missed statutory deadline for filing subrogation claim, resulting in loss of recovery rights and regulatory penalty.</div>
+  <div class="pat-meta">Evidence sprints: [2] | Improvement: 2%</div>
+</li>
+
+<li class="pattern-item">
+  <div class="pat-header">
+    <span class="pat-category">Theoretical — Absence</span>
+    <span class="pat-confidence medium">50% conf</span>
+  </div>
+  <div class="pat-desc">Jordan approved FNOL without confirming coverage or incident facts. Diana then requested information for missing incident_description and policy_number, causing a delay. Settlement proceeded without independent verification of policy number, risking coverage disputes or overpayment if policy terms differ.</div>
+  <div class="pat-meta">Evidence sprints: [6] | Improvement: 2%</div>
+</li>
+
+<li class="pattern-item">
+  <div class="pat-header">
+    <span class="pat-category">Theoretical — Absence</span>
+    <span class="pat-confidence medium">50% conf</span>
+  </div>
+  <div class="pat-desc">Diana had to issue a request_info, delaying the claim. Without police report, liability assessment was speculative; without medical records, injury severity and PIP exposure were unknown, risking premature settlement or under-reserving.</div>
+  <div class="pat-meta">Evidence sprints: [6] | Improvement: 2%</div>
+</li>
+
+<li class="pattern-item">
+  <div class="pat-header">
+    <span class="pat-category">Theoretical — Absence</span>
+    <span class="pat-confidence medium">50% conf</span>
+  </div>
+  <div class="pat-desc">Diana had to request_info again, causing rework and delay. Without a formal liability determination, any negotiation would be premature, potentially leading to overpayment or inconsistent fault apportionment.</div>
+  <div class="pat-meta">Evidence sprints: [6] | Improvement: 2%</div>
+</li>
+
+<li class="pattern-item">
+  <div class="pat-header">
+    <span class="pat-category">Theoretical — Absence</span>
+    <span class="pat-confidence medium">50% conf</span>
+  </div>
+  <div class="pat-desc">Settlement could not be responsibly negotiated. Missing damage estimate means repair cost inflation could be understated; missing coverage determination risks offering settlement on uncovered claims. Delay and potential financial exposure.</div>
+  <div class="pat-meta">Evidence sprints: [6] | Improvement: 2%</div>
+</li>
+
+<li class="pattern-item">
+  <div class="pat-header">
+    <span class="pat-category">Theoretical — Absence</span>
+    <span class="pat-confidence medium">50% conf</span>
+  </div>
+  <div class="pat-desc">Diana had to issue request_info, delaying the claim. Without liability determination, settlement could be premature; without medical records, injury exposure was unknown, risking overpayment or inadequate reserves.</div>
+  <div class="pat-meta">Evidence sprints: [6] | Improvement: 2%</div>
+</li>
+
+<li class="pattern-item">
+  <div class="pat-header">
+    <span class="pat-category">Theoretical — Absence</span>
+    <span class="pat-confidence medium">50% conf</span>
+  </div>
+  <div class="pat-desc">Settlement could be based on outdated or incorrect policy terms, especially in Florida where comparative fault rules apply. Potential for overpayment or coverage denial later.</div>
+  <div class="pat-meta">Evidence sprints: [6] | Improvement: 2%</div>
+</li>
+</ul>
+<h3 style="margin-top:24px;">Track B — Timeline-Gated</h3>
+<p class="section-note" style="color:var(--text-dim);">No discoveries registered. Track B's absence detector found no qualifying patterns. Track B is timeline-gated — discoveries would auto-advance on schedule, but none were created. The Absence Detector deterministic checks didn't meet thresholds in this 12-sprint run.</p>
+<div class="theari-row">
+<div class="theari-phase"><div class="phase-name">Theoretical</div><div class="phase-count">0</div></div>
+<div class="theari-phase"><div class="phase-name">Empirical</div><div class="phase-count">0</div></div>
+<div class="theari-phase"><div class="phase-name">Applicable</div><div class="phase-count">0</div></div>
+<div class="theari-phase"><div class="phase-name">Replicable</div><div class="phase-count">0</div></div>
+<div class="theari-phase"><div class="phase-name">Impact</div><div class="phase-count">0</div></div>
+</div>
+
+<h2>Capability State Progression</h2>
+<p class="section-note">Each track's Discovery Engine unlocks higher autonomy levels as it proves reliability.</p>
+
+<h3 style="margin-top:16px;">Track A</h3>
+<p class="section-note">Patterns: 11 detected, 0 validated, 0 successful redesigns, 0 incidents</p>
+<div class="cap-row">
+<div class="cap-level current">Observe</div>
+<span class="cap-arrow">→</span>
+<div class="cap-level">Recommend</div>
+<span class="cap-arrow">→</span>
+<div class="cap-level">Bounded</div>
+<span class="cap-arrow">→</span>
+<div class="cap-level">Autonomous</div>
+<span class="cap-arrow">→</span>
+<div class="cap-level">Emergent</div>
+</div>
+<h3 style="margin-top:16px;">Track B</h3>
+<p class="section-note">Patterns: 0 detected, 0 validated, 0 successful redesigns, 0 incidents</p>
+<div class="cap-row">
+<div class="cap-level current">Observe</div>
+<span class="cap-arrow">→</span>
+<div class="cap-level">Recommend</div>
+<span class="cap-arrow">→</span>
+<div class="cap-level">Bounded</div>
+<span class="cap-arrow">→</span>
+<div class="cap-level">Autonomous</div>
+<span class="cap-arrow">→</span>
+<div class="cap-level">Emergent</div>
+</div>
+
+<!-- === AGENT BEHAVIOR === -->
+<h2 id="agents">Agent Behavior Breakdown</h2>
+<h3 style="margin-top:24px;">Track A — Organic Discovery</h3>
+
+<table class="agent-table">
+<thead><tr>
+  <th>Agent</th><th>Decisions</th><th>AI Usage</th><th>AI Accept</th><th>Override</th><th>Escalate</th><th>Exceptions</th><th>Translation</th>
+</tr></thead><tbody>
+
+<tr>
+  <td><strong>Diana</strong></td>
+  <td>233</td>
+  <td class="bar-cell"><div class="bar-bg"><div class="bar-fill a" style="width:0.0%"></div></div><span style="font-size:11px;color:var(--text-muted)"> 0%</span></td>
+  <td>0 <span style="font-size:11px;color:var(--text-muted)">(0%)</span></td>
+  <td>0 <span style="font-size:11px;color:var(--text-muted)">(0%)</span></td>
+  <td>15 <span style="font-size:11px;color:var(--text-muted)">(6%)</span></td>
+  <td>67 <span style="font-size:11px;color:var(--text-muted)">(29%)</span></td>
+  <td>71 <span style="font-size:11px;color:var(--text-muted)">(30%)</span></td>
+</tr>
+
+<tr>
+  <td><strong>Jordan</strong></td>
+  <td>90</td>
+  <td class="bar-cell"><div class="bar-bg"><div class="bar-fill a" style="width:61.111111111111114%"></div></div><span style="font-size:11px;color:var(--text-muted)"> 61%</span></td>
+  <td>55 <span style="font-size:11px;color:var(--text-muted)">(100%)</span></td>
+  <td>0 <span style="font-size:11px;color:var(--text-muted)">(0%)</span></td>
+  <td>6 <span style="font-size:11px;color:var(--text-muted)">(7%)</span></td>
+  <td>6 <span style="font-size:11px;color:var(--text-muted)">(7%)</span></td>
+  <td>18 <span style="font-size:11px;color:var(--text-muted)">(20%)</span></td>
+</tr>
+
+<tr>
+  <td><strong>AI Pipeline</strong></td>
+  <td>51</td>
+  <td class="bar-cell"><div class="bar-bg"><div class="bar-fill a" style="width:100.0%"></div></div><span style="font-size:11px;color:var(--text-muted)"> 100%</span></td>
+  <td>51 <span style="font-size:11px;color:var(--text-muted)">(100%)</span></td>
+  <td>0 <span style="font-size:11px;color:var(--text-muted)">(0%)</span></td>
+  <td>0 <span style="font-size:11px;color:var(--text-muted)">(0%)</span></td>
+  <td>0 <span style="font-size:11px;color:var(--text-muted)">(0%)</span></td>
+  <td>0 <span style="font-size:11px;color:var(--text-muted)">(0%)</span></td>
+</tr>
+
+<tr>
+  <td><strong>Tommy</strong></td>
+  <td>30</td>
+  <td class="bar-cell"><div class="bar-bg"><div class="bar-fill a" style="width:20.0%"></div></div><span style="font-size:11px;color:var(--text-muted)"> 20%</span></td>
+  <td>4 <span style="font-size:11px;color:var(--text-muted)">(67%)</span></td>
+  <td>0 <span style="font-size:11px;color:var(--text-muted)">(0%)</span></td>
+  <td>3 <span style="font-size:11px;color:var(--text-muted)">(10%)</span></td>
+  <td>4 <span style="font-size:11px;color:var(--text-muted)">(13%)</span></td>
+  <td>2 <span style="font-size:11px;color:var(--text-muted)">(7%)</span></td>
+</tr>
+
+<tr>
+  <td><strong>Maria</strong></td>
+  <td>24</td>
+  <td class="bar-cell"><div class="bar-bg"><div class="bar-fill a" style="width:33.33333333333333%"></div></div><span style="font-size:11px;color:var(--text-muted)"> 33%</span></td>
+  <td>1 <span style="font-size:11px;color:var(--text-muted)">(12%)</span></td>
+  <td>0 <span style="font-size:11px;color:var(--text-muted)">(0%)</span></td>
+  <td>8 <span style="font-size:11px;color:var(--text-muted)">(33%)</span></td>
+  <td>9 <span style="font-size:11px;color:var(--text-muted)">(38%)</span></td>
+  <td>3 <span style="font-size:11px;color:var(--text-muted)">(12%)</span></td>
+</tr>
+
+<tr>
+  <td><strong>Pat</strong></td>
+  <td>12</td>
+  <td class="bar-cell"><div class="bar-bg"><div class="bar-fill a" style="width:0.0%"></div></div><span style="font-size:11px;color:var(--text-muted)"> 0%</span></td>
+  <td>0 <span style="font-size:11px;color:var(--text-muted)">(0%)</span></td>
+  <td>0 <span style="font-size:11px;color:var(--text-muted)">(0%)</span></td>
+  <td>0 <span style="font-size:11px;color:var(--text-muted)">(0%)</span></td>
+  <td>1 <span style="font-size:11px;color:var(--text-muted)">(8%)</span></td>
+  <td>3 <span style="font-size:11px;color:var(--text-muted)">(25%)</span></td>
+</tr>
+
+<tr>
+  <td><strong>Sanjay</strong></td>
+  <td>8</td>
+  <td class="bar-cell"><div class="bar-bg"><div class="bar-fill a" style="width:0.0%"></div></div><span style="font-size:11px;color:var(--text-muted)"> 0%</span></td>
+  <td>0 <span style="font-size:11px;color:var(--text-muted)">(0%)</span></td>
+  <td>0 <span style="font-size:11px;color:var(--text-muted)">(0%)</span></td>
+  <td>0 <span style="font-size:11px;color:var(--text-muted)">(0%)</span></td>
+  <td>1 <span style="font-size:11px;color:var(--text-muted)">(12%)</span></td>
+  <td>1 <span style="font-size:11px;color:var(--text-muted)">(12%)</span></td>
+</tr>
+
+<tr>
+  <td><strong>Kathryn</strong></td>
+  <td>1</td>
+  <td class="bar-cell"><div class="bar-bg"><div class="bar-fill a" style="width:0.0%"></div></div><span style="font-size:11px;color:var(--text-muted)"> 0%</span></td>
+  <td>0 <span style="font-size:11px;color:var(--text-muted)">(0%)</span></td>
+  <td>0 <span style="font-size:11px;color:var(--text-muted)">(0%)</span></td>
+  <td>0 <span style="font-size:11px;color:var(--text-muted)">(0%)</span></td>
+  <td>1 <span style="font-size:11px;color:var(--text-muted)">(100%)</span></td>
+  <td>1 <span style="font-size:11px;color:var(--text-muted)">(100%)</span></td>
+</tr>
+</tbody></table>
+<h3 style="margin-top:24px;">Track B — Traditional Change Mgmt</h3>
+
+<table class="agent-table">
+<thead><tr>
+  <th>Agent</th><th>Decisions</th><th>AI Usage</th><th>AI Accept</th><th>Override</th><th>Escalate</th><th>Exceptions</th><th>Translation</th>
+</tr></thead><tbody>
+
+<tr>
+  <td><strong>Diana</strong></td>
+  <td>235</td>
+  <td class="bar-cell"><div class="bar-bg"><div class="bar-fill b" style="width:0.0%"></div></div><span style="font-size:11px;color:var(--text-muted)"> 0%</span></td>
+  <td>0 <span style="font-size:11px;color:var(--text-muted)">(0%)</span></td>
+  <td>0 <span style="font-size:11px;color:var(--text-muted)">(0%)</span></td>
+  <td>10 <span style="font-size:11px;color:var(--text-muted)">(4%)</span></td>
+  <td>57 <span style="font-size:11px;color:var(--text-muted)">(24%)</span></td>
+  <td>86 <span style="font-size:11px;color:var(--text-muted)">(37%)</span></td>
+</tr>
+
+<tr>
+  <td><strong>Jordan</strong></td>
+  <td>90</td>
+  <td class="bar-cell"><div class="bar-bg"><div class="bar-fill b" style="width:61.111111111111114%"></div></div><span style="font-size:11px;color:var(--text-muted)"> 61%</span></td>
+  <td>55 <span style="font-size:11px;color:var(--text-muted)">(100%)</span></td>
+  <td>0 <span style="font-size:11px;color:var(--text-muted)">(0%)</span></td>
+  <td>5 <span style="font-size:11px;color:var(--text-muted)">(6%)</span></td>
+  <td>5 <span style="font-size:11px;color:var(--text-muted)">(6%)</span></td>
+  <td>16 <span style="font-size:11px;color:var(--text-muted)">(18%)</span></td>
+</tr>
+
+<tr>
+  <td><strong>AI Pipeline</strong></td>
+  <td>51</td>
+  <td class="bar-cell"><div class="bar-bg"><div class="bar-fill b" style="width:100.0%"></div></div><span style="font-size:11px;color:var(--text-muted)"> 100%</span></td>
+  <td>51 <span style="font-size:11px;color:var(--text-muted)">(100%)</span></td>
+  <td>0 <span style="font-size:11px;color:var(--text-muted)">(0%)</span></td>
+  <td>0 <span style="font-size:11px;color:var(--text-muted)">(0%)</span></td>
+  <td>0 <span style="font-size:11px;color:var(--text-muted)">(0%)</span></td>
+  <td>0 <span style="font-size:11px;color:var(--text-muted)">(0%)</span></td>
+</tr>
+
+<tr>
+  <td><strong>Tommy</strong></td>
+  <td>30</td>
+  <td class="bar-cell"><div class="bar-bg"><div class="bar-fill b" style="width:16.666666666666664%"></div></div><span style="font-size:11px;color:var(--text-muted)"> 17%</span></td>
+  <td>1 <span style="font-size:11px;color:var(--text-muted)">(20%)</span></td>
+  <td>0 <span style="font-size:11px;color:var(--text-muted)">(0%)</span></td>
+  <td>1 <span style="font-size:11px;color:var(--text-muted)">(3%)</span></td>
+  <td>3 <span style="font-size:11px;color:var(--text-muted)">(10%)</span></td>
+  <td>6 <span style="font-size:11px;color:var(--text-muted)">(20%)</span></td>
+</tr>
+
+<tr>
+  <td><strong>Maria</strong></td>
+  <td>22</td>
+  <td class="bar-cell"><div class="bar-bg"><div class="bar-fill b" style="width:36.36363636363637%"></div></div><span style="font-size:11px;color:var(--text-muted)"> 36%</span></td>
+  <td>0 <span style="font-size:11px;color:var(--text-muted)">(0%)</span></td>
+  <td>0 <span style="font-size:11px;color:var(--text-muted)">(0%)</span></td>
+  <td>8 <span style="font-size:11px;color:var(--text-muted)">(36%)</span></td>
+  <td>10 <span style="font-size:11px;color:var(--text-muted)">(45%)</span></td>
+  <td>4 <span style="font-size:11px;color:var(--text-muted)">(18%)</span></td>
+</tr>
+
+<tr>
+  <td><strong>Pat</strong></td>
+  <td>11</td>
+  <td class="bar-cell"><div class="bar-bg"><div class="bar-fill b" style="width:0.0%"></div></div><span style="font-size:11px;color:var(--text-muted)"> 0%</span></td>
+  <td>0 <span style="font-size:11px;color:var(--text-muted)">(0%)</span></td>
+  <td>0 <span style="font-size:11px;color:var(--text-muted)">(0%)</span></td>
+  <td>0 <span style="font-size:11px;color:var(--text-muted)">(0%)</span></td>
+  <td>1 <span style="font-size:11px;color:var(--text-muted)">(9%)</span></td>
+  <td>4 <span style="font-size:11px;color:var(--text-muted)">(36%)</span></td>
+</tr>
+
+<tr>
+  <td><strong>Sanjay</strong></td>
+  <td>7</td>
+  <td class="bar-cell"><div class="bar-bg"><div class="bar-fill b" style="width:0.0%"></div></div><span style="font-size:11px;color:var(--text-muted)"> 0%</span></td>
+  <td>0 <span style="font-size:11px;color:var(--text-muted)">(0%)</span></td>
+  <td>0 <span style="font-size:11px;color:var(--text-muted)">(0%)</span></td>
+  <td>0 <span style="font-size:11px;color:var(--text-muted)">(0%)</span></td>
+  <td>1 <span style="font-size:11px;color:var(--text-muted)">(14%)</span></td>
+  <td>2 <span style="font-size:11px;color:var(--text-muted)">(29%)</span></td>
+</tr>
+
+<tr>
+  <td><strong>Kathryn</strong></td>
+  <td>1</td>
+  <td class="bar-cell"><div class="bar-bg"><div class="bar-fill b" style="width:0.0%"></div></div><span style="font-size:11px;color:var(--text-muted)"> 0%</span></td>
+  <td>0 <span style="font-size:11px;color:var(--text-muted)">(0%)</span></td>
+  <td>0 <span style="font-size:11px;color:var(--text-muted)">(0%)</span></td>
+  <td>0 <span style="font-size:11px;color:var(--text-muted)">(0%)</span></td>
+  <td>1 <span style="font-size:11px;color:var(--text-muted)">(100%)</span></td>
+  <td>1 <span style="font-size:11px;color:var(--text-muted)">(100%)</span></td>
+</tr>
+</tbody></table>
+
+<h2 id="narrative">Claim Trace Viewer</h2>
+<p class="section-note">The same claims, processed through both tracks. See exactly where and why they diverge.</p>
+<h3>Agent Behavior Divergence</h3>
+<p class="section-note">Same agent profile, different behavior across tracks. Differences come from track rules, not agent personality.</p>
+<table class="agent-table"><thead><tr>
+<th>Agent</th><th>Track A AI Use</th><th>Track B AI Use</th><th>Track A Override</th><th>Track B Override</th>
+</tr></thead><tbody>
+<tr>
+<td><strong>Tommy</strong></td>
+<td style="color:var(--orange)">20.0% <span style="font-size:11px;color:var(--text-muted)">(30 dec)</span></td>
+<td style="color:var(--text-dim)">16.7% <span style="font-size:11px;color:var(--text-muted)">(30 dec)</span></td>
+<td>0.0%</td>
+<td>0.0%</td>
+</tr>
+<tr>
+<td><strong>Maria</strong></td>
+<td style="color:var(--text-dim)">33.3% <span style="font-size:11px;color:var(--text-muted)">(24 dec)</span></td>
+<td style="color:var(--blue)">36.4% <span style="font-size:11px;color:var(--text-muted)">(22 dec)</span></td>
+<td>0.0%</td>
+<td>0.0%</td>
+</tr>
+</tbody></table>
+<h3 style="margin-top:32px;">Claim Narratives</h3>
+<p class="section-note">Same claims, two tracks. What happened, how they differ, and what the differences mean.</p>
+
+<div style="background:var(--surface2);border:1px solid var(--border);border-radius:8px;margin-bottom:16px;overflow:hidden;">
+  <div style="padding:12px 16px;background:var(--surface);border-bottom:1px solid var(--border);">
+    <span style="font-family:'Fraunces',serif;font-weight:600;">Claim CL-01-0001...</span>
+    <span style="font-size:11px;color:var(--text-muted);margin-left:12px;">10 steps (A) · 9 steps (B)</span>
+  </div>
+  <div style="display:grid;grid-template-columns:1fr 1fr;">
+    <div style="padding:14px 16px;border-right:1px solid var(--border);">
+      <div style="font-size:11px;color:var(--orange);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:8px;">Track A — Organic (SWT)</div>
+      <div style="font-size:13px;color:var(--text-dim);line-height:1.7;">
+        10 steps by Sanjay, Pat, Kathryn, Diana.<br>
+        AI used 0×, overridden 0×.<br>
+        10 exceptions, 7 translation incidents, 3 escalations.
+      </div>
+    </div>
+    <div style="padding:14px 16px;">
+      <div style="font-size:11px;color:var(--blue);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:8px;">Track B — Traditional</div>
+      <div style="font-size:13px;color:var(--text-dim);line-height:1.7;">
+        9 steps by Sanjay, Pat, Diana, Jordan.<br>
+        AI used 0×, overridden 0×.<br>
+        4 exceptions, 3 translation incidents, 0 escalations.
+      </div>
+    </div>
+  </div>
+  <div style="padding:12px 16px;border-top:1px solid var(--border);background:color-mix(in srgb, var(--orange) 5%, var(--surface2));">
+    <div style="font-size:12px;color:var(--orange);font-weight:600;margin-bottom:6px;">How they differ</div>
+    <div style="font-size:13px;color:var(--text-dim);line-height:1.7;">10 exceptions (A) vs 4 (B); 7 translation incidents (A) vs 3 (B); 3 escalations (A) vs 0 (B).</div>
+    <div style="font-size:13px;color:var(--text);line-height:1.7;margin-top:6px;"><strong>What it means:</strong> Track A surfaces more exceptions — the absence detector and interruption design make it safe to flag issues. These aren't failures, they're signals. Track B has fewer translation incidents — the pre-designed RACI may be preventing ambiguity at the cost of flexibility.</div>
+  </div>
+</div>
+
+<div style="background:var(--surface2);border:1px solid var(--border);border-radius:8px;margin-bottom:16px;overflow:hidden;">
+  <div style="padding:12px 16px;background:var(--surface);border-bottom:1px solid var(--border);">
+    <span style="font-family:'Fraunces',serif;font-weight:600;">Claim CL-01-0004...</span>
+    <span style="font-size:11px;color:var(--text-muted);margin-left:12px;">9 steps (A) · 10 steps (B)</span>
+  </div>
+  <div style="display:grid;grid-template-columns:1fr 1fr;">
+    <div style="padding:14px 16px;border-right:1px solid var(--border);">
+      <div style="font-size:11px;color:var(--orange);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:8px;">Track A — Organic (SWT)</div>
+      <div style="font-size:13px;color:var(--text-dim);line-height:1.7;">
+        9 steps by Sanjay, Pat, Diana, Jordan.<br>
+        AI used 0×, overridden 0×.<br>
+        2 exceptions, 1 translation incidents, 2 escalations.
+      </div>
+    </div>
+    <div style="padding:14px 16px;">
+      <div style="font-size:11px;color:var(--blue);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:8px;">Track B — Traditional</div>
+      <div style="font-size:13px;color:var(--text-dim);line-height:1.7;">
+        10 steps by Sanjay, Pat, Kathryn, Diana.<br>
+        AI used 0×, overridden 0×.<br>
+        6 exceptions, 10 translation incidents, 2 escalations.
+      </div>
+    </div>
+  </div>
+  <div style="padding:12px 16px;border-top:1px solid var(--border);background:color-mix(in srgb, var(--orange) 5%, var(--surface2));">
+    <div style="font-size:12px;color:var(--orange);font-weight:600;margin-bottom:6px;">How they differ</div>
+    <div style="font-size:13px;color:var(--text-dim);line-height:1.7;">2 exceptions (A) vs 6 (B); 1 translation incidents (A) vs 10 (B).</div>
+    <div style="font-size:13px;color:var(--text);line-height:1.7;margin-top:6px;"><strong>What it means:</strong> Track B suppresses exceptions — they're treated as escalations requiring governance review, so agents avoid raising them. Track A has fewer translation incidents — the observe/learn/redesign loop fixes meaning-loss at seams faster than Track B's phased roadmap.</div>
+  </div>
+</div>
+
+<div style="background:var(--surface2);border:1px solid var(--border);border-radius:8px;margin-bottom:16px;overflow:hidden;">
+  <div style="padding:12px 16px;background:var(--surface);border-bottom:1px solid var(--border);">
+    <span style="font-family:'Fraunces',serif;font-weight:600;">Claim CL-05-0002...</span>
+    <span style="font-size:11px;color:var(--text-muted);margin-left:12px;">4 steps (A) · 4 steps (B)</span>
+  </div>
+  <div style="display:grid;grid-template-columns:1fr 1fr;">
+    <div style="padding:14px 16px;border-right:1px solid var(--border);">
+      <div style="font-size:11px;color:var(--orange);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:8px;">Track A — Organic (SWT)</div>
+      <div style="font-size:13px;color:var(--text-dim);line-height:1.7;">
+        4 steps by Diana, Jordan.<br>
+        AI used 0×, overridden 0×.<br>
+        4 exceptions, 4 translation incidents, 1 escalations.
+      </div>
+    </div>
+    <div style="padding:14px 16px;">
+      <div style="font-size:11px;color:var(--blue);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:8px;">Track B — Traditional</div>
+      <div style="font-size:13px;color:var(--text-dim);line-height:1.7;">
+        4 steps by Diana, Jordan.<br>
+        AI used 0×, overridden 0×.<br>
+        1 exceptions, 4 translation incidents, 0 escalations.
+      </div>
+    </div>
+  </div>
+  <div style="padding:12px 16px;border-top:1px solid var(--border);background:color-mix(in srgb, var(--orange) 5%, var(--surface2));">
+    <div style="font-size:12px;color:var(--orange);font-weight:600;margin-bottom:6px;">How they differ</div>
+    <div style="font-size:13px;color:var(--text-dim);line-height:1.7;">4 exceptions (A) vs 1 (B); 1 escalations (A) vs 0 (B).</div>
+    <div style="font-size:13px;color:var(--text);line-height:1.7;margin-top:6px;"><strong>What it means:</strong> Track A surfaces more exceptions — the absence detector and interruption design make it safe to flag issues. These aren't failures, they're signals.</div>
+  </div>
+</div>
+
+<div style="background:var(--surface2);border:1px solid var(--border);border-radius:8px;margin-bottom:16px;overflow:hidden;">
+  <div style="padding:12px 16px;background:var(--surface);border-bottom:1px solid var(--border);">
+    <span style="font-family:'Fraunces',serif;font-weight:600;">Claim CL-02-0013...</span>
+    <span style="font-size:11px;color:var(--text-muted);margin-left:12px;">6 steps (A) · 6 steps (B)</span>
+  </div>
+  <div style="display:grid;grid-template-columns:1fr 1fr;">
+    <div style="padding:14px 16px;border-right:1px solid var(--border);">
+      <div style="font-size:11px;color:var(--orange);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:8px;">Track A — Organic (SWT)</div>
+      <div style="font-size:13px;color:var(--text-dim);line-height:1.7;">
+        6 steps by Pat, Diana, Jordan, Tommy.<br>
+        AI used 0×, overridden 0×.<br>
+        2 exceptions, 4 translation incidents, 0 escalations.
+      </div>
+    </div>
+    <div style="padding:14px 16px;">
+      <div style="font-size:11px;color:var(--blue);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:8px;">Track B — Traditional</div>
+      <div style="font-size:13px;color:var(--text-dim);line-height:1.7;">
+        6 steps by Pat, Diana, Jordan, Tommy.<br>
+        AI used 0×, overridden 0×.<br>
+        2 exceptions, 6 translation incidents, 0 escalations.
+      </div>
+    </div>
+  </div>
+  <div style="padding:12px 16px;border-top:1px solid var(--border);background:color-mix(in srgb, var(--orange) 5%, var(--surface2));">
+    <div style="font-size:12px;color:var(--orange);font-weight:600;margin-bottom:6px;">How they differ</div>
+    <div style="font-size:13px;color:var(--text-dim);line-height:1.7;">4 translation incidents (A) vs 6 (B).</div>
+    <div style="font-size:13px;color:var(--text);line-height:1.7;margin-top:6px;"><strong>What it means:</strong> Track A has fewer translation incidents — the observe/learn/redesign loop fixes meaning-loss at seams faster than Track B's phased roadmap.</div>
+  </div>
+</div>
+
+<div style="background:var(--surface2);border:1px solid var(--border);border-radius:8px;margin-bottom:16px;overflow:hidden;">
+  <div style="padding:12px 16px;background:var(--surface);border-bottom:1px solid var(--border);">
+    <span style="font-family:'Fraunces',serif;font-weight:600;">Claim CL-08-0009...</span>
+    <span style="font-size:11px;color:var(--text-muted);margin-left:12px;">3 steps (A) · 3 steps (B)</span>
+  </div>
+  <div style="display:grid;grid-template-columns:1fr 1fr;">
+    <div style="padding:14px 16px;border-right:1px solid var(--border);">
+      <div style="font-size:11px;color:var(--orange);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:8px;">Track A — Organic (SWT)</div>
+      <div style="font-size:13px;color:var(--text-dim);line-height:1.7;">
+        3 steps by Diana.<br>
+        AI used 0×, overridden 0×.<br>
+        3 exceptions, 2 translation incidents, 0 escalations.
+      </div>
+    </div>
+    <div style="padding:14px 16px;">
+      <div style="font-size:11px;color:var(--blue);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:8px;">Track B — Traditional</div>
+      <div style="font-size:13px;color:var(--text-dim);line-height:1.7;">
+        3 steps by Diana.<br>
+        AI used 0×, overridden 0×.<br>
+        3 exceptions, 3 translation incidents, 2 escalations.
+      </div>
+    </div>
+  </div>
+  <div style="padding:12px 16px;border-top:1px solid var(--border);background:color-mix(in srgb, var(--orange) 5%, var(--surface2));">
+    <div style="font-size:12px;color:var(--orange);font-weight:600;margin-bottom:6px;">How they differ</div>
+    <div style="font-size:13px;color:var(--text-dim);line-height:1.7;">2 translation incidents (A) vs 3 (B); 0 escalations (A) vs 2 (B).</div>
+    <div style="font-size:13px;color:var(--text);line-height:1.7;margin-top:6px;"><strong>What it means:</strong> Track A has fewer translation incidents — the observe/learn/redesign loop fixes meaning-loss at seams faster than Track B's phased roadmap.</div>
+  </div>
+</div>
+
+<h3 style="margin-top:32px;">Why They Differ — The Rules</h3>
+<div class="pattern-list">
+  <div class="pattern-item">
+    <div class="pat-header"><span class="pat-category">Interruption Design</span></div>
+    <div class="pat-desc"><strong>Track A</strong>: Pause, override, and stop are designed into the workflow. Agents exercise them without political consequence. Result: more exceptions surfaced, more supplements requested.</div>
+    <div class="pat-desc" style="margin-top:6px;"><strong>Track B</strong>: Exceptions are escalations — they signal failure. Governance filters before visibility. Result: fewer exceptions surfaced, but handoff failures accumulate.</div>
+  </div>
+  <div class="pattern-item">
+    <div class="pat-header"><span class="pat-category">Learning Extraction</span></div>
+    <div class="pat-desc"><strong>Track A</strong>: After every deployment, the Discovery Engine finds patterns, proposes ONE redesign. Translation debt is addressed as it appears.</div>
+    <div class="pat-desc" style="margin-top:6px;"><strong>Track B</strong>: Learning goes through steering committee → roadmap phase → vendor assessment. Translation debt accumulates until the "consolidate gains" phase.</div>
+  </div>
+  <div class="pattern-item">
+    <div class="pat-header"><span class="pat-category">Deployment Constraint</span></div>
+    <div class="pat-desc"><strong>Track A</strong>: Deploy AI into EXISTING structures. No reorg, no new roles, no RACI redesign. The operating model is discovered through implementation.</div>
+    <div class="pat-desc" style="margin-top:6px;"><strong>Track B</strong>: Reorg first (McKinsey 7S), train first (ADKAR), build coalition first (Kotter Step 2). The operating model is designed before implementation.</div>
+  </div>
+  <div class="pattern-item">
+    <div class="pat-header"><span class="pat-category">THEARI Gating</span></div>
+    <div class="pat-desc"><strong>Track A</strong>: Evidence-gated. A discovery only advances when it has enough evidence sprints + confidence + measured improvement. No auto-advance.</div>
+    <div class="pat-desc" style="margin-top:6px;"><strong>Track B</strong>: Timeline-gated. Discoveries auto-advance after N sprints regardless of evidence. Theoretical → Empirical in 4 sprints, Empirical → Applicable in 5.</div>
+  </div>
+</div>
+
+
+<h2 id="data">Raw Data</h2>
+<p class="section-note">Download the underlying data files from this run.</p>
+<div class="metric-grid">
+  <div class="metric-card">
+    <div class="label">Metrics CSV</div>
+    <p style="margin-top:8px;font-size:13px;">Time-series metrics for both tracks — 22 metrics across all sprints.</p>
+    <a href="ai-transformation-results/metrics.csv" style="color:var(--orange);font-size:13px;">Download metrics.csv</a>
+  </div>
+  <div class="metric-card">
+    <div class="label">Discovery Patterns</div>
+    <p style="margin-top:8px;font-size:13px;">All patterns detected by the Discovery Engine, both tracks.</p>
+    <a href="ai-transformation-results/discovery_patterns.json" style="color:var(--orange);font-size:13px;">Download discovery_patterns.json</a>
+  </div>
+  <div class="metric-card">
+    <div class="label">THEARI Register</div>
+    <p style="margin-top:8px;font-size:13px;">Phase progression for every discovery — evidence-gated (A) and timeline-gated (B).</p>
+    <a href="ai-transformation-results/theari_register.json" style="color:var(--orange);font-size:13px;">Download theari_register.json</a>
+  </div>
+  <div class="metric-card">
+    <div class="label">Novelty Register</div>
+    <p style="margin-top:8px;font-size:13px;">Emergent patterns outside predefined categories — what we didn't predict.</p>
+    <a href="ai-transformation-results/novelty_register.json" style="color:var(--orange);font-size:13px;">Download novelty_register.json</a>
+  </div>
+  <div class="metric-card">
+    <div class="label">Capability State</div>
+    <p style="margin-top:8px;font-size:13px;">5-level unlock progression for each track's Discovery Engine.</p>
+    <a href="ai-transformation-results/capability_state.json" style="color:var(--orange);font-size:13px;">Download capability_state.json</a>
+  </div>
+  <div class="metric-card">
+    <div class="label">Decisions JSONL</div>
+    <p style="margin-top:8px;font-size:13px;">Every agent decision — claim ID, step, reasoning, AI usage, exceptions.</p>
+    <a href="ai-transformation-results/decisions.jsonl" style="color:var(--orange);font-size:13px;">Download decisions.jsonl</a>
+  </div>
+  <div class="metric-card">
+    <div class="label">Full State</div>
+    <p style="margin-top:8px;font-size:13px;">Complete simulation state — agent summaries, trust, playbook, governance.</p>
+    <a href="ai-transformation-results/state.json" style="color:var(--orange);font-size:13px;">Download state.json</a>
+  </div>
+</div>
+
+<footer>
+  Generated 2026-08-11 16:51:57 —
+  AI Transformation Experiment — Progressive Insurance Simulation
+</footer>
+
+</div>
+
+<script>
+
+new Chart(document.getElementById('chart_cycle_time'), {
+  type: 'line',
+  data: {
+    labels: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12],
+    datasets: [
+      { label: 'Track A (SWT Organic)', data: [6.219338422391857, 3.1631578947368424, 1.8, 2.4, 2.6, 2.0, 1.4, 1.0, 2.0, 1.0, 1.4, 1.8],
+         borderColor: '#f37021', backgroundColor: 'rgba(243,112,33,0.08)',
+         tension: 0.3, pointRadius: 4, borderWidth: 2 },
+      { label: 'Track B (Kotter/Prosci)', data: [6.022916666666666, 3.1631578947368424, 1.8, 2.4, 2.6, 2.0, 1.4, 1.0, 2.066666666666667, 1.0, 1.4, 1.8],
+         borderColor: '#6cace4', backgroundColor: 'rgba(108,172,228,0.08)',
+         tension: 0.3, pointRadius: 4, borderWidth: 2 },
+    ]
+  },
+  options: {
+    responsive: true, maintainAspectRatio: false,
+    plugins: { legend: { labels: { color: '#9bb0d4', font: { family: 'Source Code Pro' } } } },
+    scales: {
+      x: { title: { text: 'Sprint', color: '#9bb0d4', display: true },
+           ticks: { color: '#5e7aa3' }, grid: { color: '#1a2d52' } },
+      y: { ticks: { color: '#5e7aa3' }, grid: { color: '#1a2d52' } },
+    }
+  }
+});
+
+new Chart(document.getElementById('chart_translation_debt_index'), {
+  type: 'line',
+  data: {
+    labels: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12],
+    datasets: [
+      { label: 'Track A (SWT Organic)', data: [10.687022900763358, 8.771929824561402, 25.925925925925924, 47.22222222222222, 33.33333333333333, 33.33333333333333, 23.809523809523807, 33.33333333333333, 20.0, 33.33333333333333, 38.095238095238095, 14.814814814814813],
+         borderColor: '#f37021', backgroundColor: 'rgba(243,112,33,0.08)',
+         tension: 0.3, pointRadius: 4, borderWidth: 2 },
+      { label: 'Track B (Kotter/Prosci)', data: [17.1875, 14.035087719298245, 25.925925925925924, 41.66666666666667, 48.717948717948715, 26.666666666666668, 23.809523809523807, 53.333333333333336, 22.58064516129032, 40.0, 47.61904761904761, 14.814814814814813],
+         borderColor: '#6cace4', backgroundColor: 'rgba(108,172,228,0.08)',
+         tension: 0.3, pointRadius: 4, borderWidth: 2 },
+    ]
+  },
+  options: {
+    responsive: true, maintainAspectRatio: false,
+    plugins: { legend: { labels: { color: '#9bb0d4', font: { family: 'Source Code Pro' } } } },
+    scales: {
+      x: { title: { text: 'Sprint', color: '#9bb0d4', display: true },
+           ticks: { color: '#5e7aa3' }, grid: { color: '#1a2d52' } },
+      y: { ticks: { color: '#5e7aa3' }, grid: { color: '#1a2d52' } },
+    }
+  }
+});
+
+new Chart(document.getElementById('chart_exception_rate'), {
+  type: 'line',
+  data: {
+    labels: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12],
+    datasets: [
+      { label: 'Track A (SWT Organic)', data: [16.030534351145036, 3.508771929824561, 11.11111111111111, 27.77777777777778, 20.51282051282051, 10.0, 9.523809523809524, 33.33333333333333, 33.33333333333333, 33.33333333333333, 57.14285714285714, 29.629629629629626],
+         borderColor: '#f37021', backgroundColor: 'rgba(243,112,33,0.08)',
+         tension: 0.3, pointRadius: 4, borderWidth: 2 },
+      { label: 'Track B (Kotter/Prosci)', data: [14.84375, 3.508771929824561, 3.7037037037037033, 22.22222222222222, 7.6923076923076925, 10.0, 38.095238095238095, 46.666666666666664, 22.58064516129032, 20.0, 42.857142857142854, 29.629629629629626],
+         borderColor: '#6cace4', backgroundColor: 'rgba(108,172,228,0.08)',
+         tension: 0.3, pointRadius: 4, borderWidth: 2 },
+    ]
+  },
+  options: {
+    responsive: true, maintainAspectRatio: false,
+    plugins: { legend: { labels: { color: '#9bb0d4', font: { family: 'Source Code Pro' } } } },
+    scales: {
+      x: { title: { text: 'Sprint', color: '#9bb0d4', display: true },
+           ticks: { color: '#5e7aa3' }, grid: { color: '#1a2d52' } },
+      y: { ticks: { color: '#5e7aa3' }, grid: { color: '#1a2d52' } },
+    }
+  }
+});
+
+new Chart(document.getElementById('chart_employee_ai_trust'), {
+  type: 'line',
+  data: {
+    labels: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12],
+    datasets: [
+      { label: 'Track A (SWT Organic)', data: [4.935264958677685, 5.170149638842974, 5.149666951317543, 5.128746266735088, 5.107676515274563, 5.086673228197621, 5.065895288523308, 5.0454579312618, 5.025442833969351, 5.005905948867308, 4.986883581190495, 4.968397105027469],
+         borderColor: '#f37021', backgroundColor: 'rgba(243,112,33,0.08)',
+         tension: 0.3, pointRadius: 4, borderWidth: 2 },
+      { label: 'Track B (Kotter/Prosci)', data: [4.9656358677685954, 5.181800246694214, 5.159173316926634, 5.136299149532919, 5.113447375664703, 5.090816303190713, 5.068549420622517, 5.0467481851096725, 5.0254819294410416, 5.00479553461167, 4.984715368834893, 4.965253881184466],
+         borderColor: '#6cace4', backgroundColor: 'rgba(108,172,228,0.08)',
+         tension: 0.3, pointRadius: 4, borderWidth: 2 },
+    ]
+  },
+  options: {
+    responsive: true, maintainAspectRatio: false,
+    plugins: { legend: { labels: { color: '#9bb0d4', font: { family: 'Source Code Pro' } } } },
+    scales: {
+      x: { title: { text: 'Sprint', color: '#9bb0d4', display: true },
+           ticks: { color: '#5e7aa3' }, grid: { color: '#1a2d52' } },
+      y: { ticks: { color: '#5e7aa3' }, grid: { color: '#1a2d52' } },
+    }
+  }
+});
+
+new Chart(document.getElementById('chart_cost_per_claim'), {
+  type: 'line',
+  data: {
+    labels: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12],
+    datasets: [
+      { label: 'Track A (SWT Organic)', data: [395.4, 238.46666666666667, 251.8, 373.73333333333335, 363.26666666666665, 283.0, 287.06666666666666, 264.6666666666667, 367.3333333333333, 264.6666666666667, 335.4, 334.46666666666664],
+         borderColor: '#f37021', backgroundColor: 'rgba(243,112,33,0.08)',
+         tension: 0.3, pointRadius: 4, borderWidth: 2 },
+      { label: 'Track B (Kotter/Prosci)', data: [428.73333333333335, 253.46666666666667, 245.13333333333333, 357.06666666666666, 376.6, 273.0, 307.06666666666666, 286.3333333333333, 362.3333333333333, 263.0, 335.4, 334.46666666666664],
+         borderColor: '#6cace4', backgroundColor: 'rgba(108,172,228,0.08)',
+         tension: 0.3, pointRadius: 4, borderWidth: 2 },
+    ]
+  },
+  options: {
+    responsive: true, maintainAspectRatio: false,
+    plugins: { legend: { labels: { color: '#9bb0d4', font: { family: 'Source Code Pro' } } } },
+    scales: {
+      x: { title: { text: 'Sprint', color: '#9bb0d4', display: true },
+           ticks: { color: '#5e7aa3' }, grid: { color: '#1a2d52' } },
+      y: { ticks: { color: '#5e7aa3' }, grid: { color: '#1a2d52' } },
+    }
+  }
+});
+
+new Chart(document.getElementById('chart_trust_polarization'), {
+  type: 'line',
+  data: {
+    labels: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12],
+    datasets: [
+      { label: 'Track A (SWT Organic)', data: [1.7204809337852633, 2.0863546684176324, 2.0526874322289896, 2.023857808632148, 1.9989611136999126, 1.9773034126403701, 1.9583487740369256, 1.9416800343688134, 1.926969526016888, 1.9139571793565835, 1.902434105677928, 1.8922302711577919],
+         borderColor: '#f37021', backgroundColor: 'rgba(243,112,33,0.08)',
+         tension: 0.3, pointRadius: 4, borderWidth: 2 },
+      { label: 'Track B (Kotter/Prosci)', data: [1.7316439666814618, 2.0819219720747433, 2.0452627499115352, 2.0141554893461153, 1.9875547699056673, 1.9646487890864497, 1.9448043415851022, 1.9275249203881526, 1.9124187624898101, 1.8991744498499252, 1.8875422652470497, 1.8773199421361153],
+         borderColor: '#6cace4', backgroundColor: 'rgba(108,172,228,0.08)',
+         tension: 0.3, pointRadius: 4, borderWidth: 2 },
+    ]
+  },
+  options: {
+    responsive: true, maintainAspectRatio: false,
+    plugins: { legend: { labels: { color: '#9bb0d4', font: { family: 'Source Code Pro' } } } },
+    scales: {
+      x: { title: { text: 'Sprint', color: '#9bb0d4', display: true },
+           ticks: { color: '#5e7aa3' }, grid: { color: '#1a2d52' } },
+      y: { ticks: { color: '#5e7aa3' }, grid: { color: '#1a2d52' } },
+    }
+  }
+});
+
+new Chart(document.getElementById('chart_first_pass_accuracy'), {
+  type: 'line',
+  data: {
+    labels: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12],
+    datasets: [
+      { label: 'Track A (SWT Organic)', data: [26.666666666666668, 86.66666666666667, 86.66666666666667, 60.0, 66.66666666666666, 80.0, 60.0, 80.0, 46.666666666666664, 73.33333333333333, 73.33333333333333, 60.0],
+         borderColor: '#f37021', backgroundColor: 'rgba(243,112,33,0.08)',
+         tension: 0.3, pointRadius: 4, borderWidth: 2 },
+      { label: 'Track B (Kotter/Prosci)', data: [26.666666666666668, 80.0, 86.66666666666667, 60.0, 60.0, 80.0, 73.33333333333333, 80.0, 66.66666666666666, 73.33333333333333, 73.33333333333333, 60.0],
+         borderColor: '#6cace4', backgroundColor: 'rgba(108,172,228,0.08)',
+         tension: 0.3, pointRadius: 4, borderWidth: 2 },
+    ]
+  },
+  options: {
+    responsive: true, maintainAspectRatio: false,
+    plugins: { legend: { labels: { color: '#9bb0d4', font: { family: 'Source Code Pro' } } } },
+    scales: {
+      x: { title: { text: 'Sprint', color: '#9bb0d4', display: true },
+           ticks: { color: '#5e7aa3' }, grid: { color: '#1a2d52' } },
+      y: { ticks: { color: '#5e7aa3' }, grid: { color: '#1a2d52' } },
+    }
+  }
+});
+
+new Chart(document.getElementById('chart_handoff_failure_rate'), {
+  type: 'line',
+  data: {
+    labels: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12],
+    datasets: [
+      { label: 'Track A (SWT Organic)', data: [26.666666666666668, 13.333333333333334, 13.333333333333334, 40.0, 26.666666666666668, 20.0, 33.33333333333333, 20.0, 26.666666666666668, 20.0, 26.666666666666668, 20.0],
+         borderColor: '#f37021', backgroundColor: 'rgba(243,112,33,0.08)',
+         tension: 0.3, pointRadius: 4, borderWidth: 2 },
+      { label: 'Track B (Kotter/Prosci)', data: [33.33333333333333, 20.0, 13.333333333333334, 40.0, 40.0, 20.0, 13.333333333333334, 20.0, 20.0, 26.666666666666668, 26.666666666666668, 26.666666666666668],
+         borderColor: '#6cace4', backgroundColor: 'rgba(108,172,228,0.08)',
+         tension: 0.3, pointRadius: 4, borderWidth: 2 },
+    ]
+  },
+  options: {
+    responsive: true, maintainAspectRatio: false,
+    plugins: { legend: { labels: { color: '#9bb0d4', font: { family: 'Source Code Pro' } } } },
+    scales: {
+      x: { title: { text: 'Sprint', color: '#9bb0d4', display: true },
+           ticks: { color: '#5e7aa3' }, grid: { color: '#1a2d52' } },
+      y: { ticks: { color: '#5e7aa3' }, grid: { color: '#1a2d52' } },
+    }
+  }
+});
+</script>
 </body>
 </html>
