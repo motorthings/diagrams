@@ -1,0 +1,308 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Track A — SWT Framework Alignment</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,wght@0,400;0,500;0,600;0,700;0,800;1,400&family=Source+Code+Pro:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --font-display: 'Fraunces', Georgia, serif;
+    --font-mono: 'Source Code Pro', 'SF Mono', Consolas, monospace;
+    --bg: #eef4f9; --surface: #ffffff; --surface2: #f5f8fc;
+    --border: #c8daea; --border-bright: #a0bedb;
+    --text: #0a1628; --text-dim: #3d5a7a; --text-muted: #7a9ab8;
+    --primary: #e8621a; --primary-dim: rgba(232,98,26,0.06);
+    --secondary: #4a90c4; --secondary-dim: rgba(74,144,196,0.06);
+    --metric: #0f766e; --metric-dim: rgba(15,118,110,0.06);
+    --warn: #b45309; --warn-dim: rgba(180,83,9,0.08);
+  }
+  html.dark {
+    --bg: #0a1628; --surface: #132240; --surface2: #1a2d52;
+    --border: #1a2d52; --border-bright: #2d4570;
+    --text: #e8edf5; --text-dim: #9bb0d4; --text-muted: #5e7aa3;
+    --primary: #f37021; --primary-dim: rgba(243,112,33,0.10);
+    --secondary: #6cace4; --secondary-dim: rgba(108,172,228,0.10);
+    --metric: #2dd4bf; --metric-dim: rgba(45,212,191,0.08);
+    --warn: #f59e0b; --warn-dim: rgba(245,158,11,0.12);
+  }
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body {
+    background: var(--bg);
+    color: var(--text); font-family: var(--font-display);
+    min-height: 100vh; line-height: 1.65; padding: 0 24px 64px;
+  }
+  .container { max-width: 920px; margin: 0 auto; }
+  .backlink {
+    position: fixed; top: 12px; left: 16px; z-index: 101;
+    font-family: var(--font-mono); font-size: 12px; color: var(--text-dim);
+    text-decoration: none; padding: 6px 10px;
+    border: 1px solid var(--border); border-radius: 6px;
+    background: var(--surface);
+  }
+  .nav {
+    position: sticky; top: 0; z-index: 100; backdrop-filter: blur(16px);
+    background: color-mix(in srgb, var(--surface) 85%, transparent);
+    border-bottom: 1px solid var(--border); margin: 0 -24px 28px; padding: 0 24px;
+  }
+  .nav-inner {
+    max-width: 920px; margin: 0 auto; padding: 10px 0;
+    display: flex; align-items: center; justify-content: space-between;
+  }
+  .nav-brand { font-family: var(--font-mono); font-size: 11px; font-weight: 600; letter-spacing: 0.5px; color: var(--primary); }
+  .theme-toggle {
+    width: 32px; height: 32px; border-radius: 8px; border: 1px solid var(--border);
+    background: var(--surface); cursor: pointer; font-size: 14px; color: var(--text-dim);
+  }
+  .hero { text-align: center; padding: 36px 0 28px; }
+  .hero h1 { font-size: 38px; font-weight: 700; letter-spacing: -0.5px; color: var(--primary); margin-bottom: 8px; }
+  .hero .lead { font-size: 18px; color: var(--text-dim); max-width: 600px; margin: 0 auto; }
+  h2 { font-size: 22px; font-weight: 700; margin: 40px 0 18px; color: var(--text); }
+
+  /* Flow diagram */
+  .flow { display: flex; flex-wrap: wrap; gap: 12px; justify-content: center; margin: 20px 0; }
+  .flow-node {
+    background: var(--surface); border: 2px solid var(--border);
+    border-radius: 12px; padding: 16px 20px; text-align: center;
+    min-width: 120px; flex: 1; max-width: 160px;
+  }
+  .flow-node .label { font-family: var(--font-mono); font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.4px; color: var(--primary); margin-bottom: 4px; }
+  .flow-node .desc { font-size: 13px; color: var(--text-dim); line-height: 1.45; }
+  .flow-arrow { display: flex; align-items: center; font-size: 22px; color: var(--primary); font-weight: 700; }
+
+  /* Principle card */
+  .principle {
+    background: var(--surface); border: 1px solid var(--border);
+    border-left: 3px solid var(--primary); border-radius: 0 10px 10px 0;
+    padding: 14px 18px; margin-bottom: 10px;
+  }
+  .principle .swt { font-family: var(--font-mono); font-size: 11px; font-weight: 700; color: var(--primary); text-transform: uppercase; letter-spacing: 0.4px; margin-bottom: 2px; }
+  .principle .sim { font-size: 14px; color: var(--text-dim); line-height: 1.55; }
+  .principle .sim strong { color: var(--text); }
+  .principle .source {
+    font-family: var(--font-mono); font-size: 9px; color: var(--text-muted); margin-top: 6px;
+    padding: 2px 6px; background: var(--primary-dim); display: inline-block; border-radius: 3px;
+  }
+
+  /* Gap card */
+  .gap {
+    background: var(--warn-dim); border: 1px solid var(--warn);
+    border-radius: 10px; padding: 14px 18px; margin-bottom: 10px;
+  }
+  .gap .label { font-family: var(--font-mono); font-size: 10px; font-weight: 700; color: var(--warn); text-transform: uppercase; letter-spacing: 0.4px; }
+  .gap .desc { font-size: 14px; color: var(--text-dim); line-height: 1.55; margin-top: 4px; }
+  .gap .desc strong { color: var(--text); }
+
+  /* Concern grid */
+  .concern-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 14px; }
+  @media (max-width: 600px) { .concern-grid { grid-template-columns: 1fr; } }
+  .concern {
+    background: var(--metric-dim); border: 1px solid var(--metric);
+    border-radius: 10px; padding: 14px 16px;
+  }
+  .concern .name { font-family: var(--font-mono); font-size: 10px; font-weight: 700; color: var(--metric); text-transform: uppercase; letter-spacing: 0.4px; margin-bottom: 4px; }
+  .concern .how { font-size: 13px; color: var(--text-dim); line-height: 1.5; }
+  .concern .how strong { color: var(--text); }
+
+  .footer { margin-top: 48px; padding-top: 16px; border-top: 1px solid var(--border); text-align: center; font-size: 13px; color: var(--text-muted); }
+</style>
+</head>
+<body>
+
+<a href="../index.html" class="backlink">&larr; Index</a>
+
+<div class="nav">
+  <div class="nav-inner">
+    <span class="nav-brand">SWT TRACK A — FRAMEWORK ALIGNMENT</span>
+    <button class="theme-toggle" id="themeToggle" aria-label="Toggle dark mode">&#9788;</button>
+  </div>
+</div>
+
+<div class="container">
+
+<div class="hero">
+  <h1>Track A — SWT Framework Alignment</h1>
+  <p class="lead">How each of Stuart Winter-Tear's principles maps to a concrete simulation component, and what we measure to know if we're following the framework.</p>
+</div>
+
+<h2>The Flow</h2>
+<div class="flow">
+  <div class="flow-node"><div class="label">Calibrate</div><div class="desc">Value anchoring. Choose business lever first, not AI use case.</div></div>
+  <div class="flow-arrow">&rarr;</div>
+  <div class="flow-node"><div class="label">Deploy</div><div class="desc">Bounded workflow. No reorg. AI enters existing structures.</div></div>
+  <div class="flow-arrow">&rarr;</div>
+  <div class="flow-node"><div class="label">Observe</div><div class="desc">What breaks? What shifts? Where does the bottleneck move?</div></div>
+  <div class="flow-arrow">&rarr;</div>
+  <div class="flow-node"><div class="label">Extract</div><div class="desc">Capture evidence. Update playbook, governance, frameworks.</div></div>
+  <div class="flow-arrow">&rarr;</div>
+  <div class="flow-node"><div class="label">Redesign</div><div class="desc">One change. Evidence-backed. Evaluate translation capabilities.</div></div>
+  <div class="flow-arrow">&rarr;</div>
+  <div class="flow-node"><div class="label">Compound</div><div class="desc">Next deployment starts from accumulated knowledge.</div></div>
+</div>
+
+<h2>SWT Principles &rarr; Simulation Components</h2>
+
+<div class="principle">
+  <div class="swt">Operating model is DISCOVERED, not designed</div>
+  <div class="sim"><strong>TrackAController</strong> deploys AI into unchanged org structure. No target operating model. No future-state design upfront. Structure follows evidence.</div>
+  <div class="source">Source: "The AI Operating Model Is Discovered, Not Designed" (Jul 2026)</div>
+</div>
+
+<div class="principle">
+  <div class="swt">Bounded, complete workflow — not a single task</div>
+  <div class="sim"><strong>BoundedWorkflow</strong> class: "single-vehicle auto claims under $10K, no injury, clear liability." Complete from FNOL through subrogation closure. ~30% of claim volume. Accountable owner with operating authority.</div>
+  <div class="source">Source: "The AI Operating Model Is Discovered, Not Designed" (Jul 2026)</div>
+</div>
+
+<div class="principle">
+  <div class="swt">Value anchoring: attach AI to a business lever</div>
+  <div class="sim"><strong>business_lever = "loss_ratio"</strong>. The first deployment is chosen because it connects to the #1 P&C metric, not because "AI can do estimation." Track B starts with "where can we use AI?" — Track A starts with "where does the business need better intelligence?"</div>
+  <div class="source">Source: "From AI Activity to Operating Leverage" (Jul 2026)</div>
+</div>
+
+<div class="principle">
+  <div class="swt">Deploy into existing structures — no reorg before evidence</div>
+  <div class="sim"><strong>DeployWithoutReorganizing</strong> constraint: no new roles, no reporting line changes, no RACI redesign. AI gets access to same systems the human role has. Output enters at the same handoff point. Existing roles interact with it using existing authority.</div>
+  <div class="source">Source: "The AI Operating Model Is Discovered, Not Designed," "You Are Not Deploying Agents"</div>
+</div>
+
+<div class="principle">
+  <div class="swt">Every deployment produces capability + organizational knowledge</div>
+  <div class="sim"><strong>LearningLoop</strong> captures both outputs. <strong>Playbook</strong> accumulates patterns. <strong>Governance updates</strong> harden what worked. <strong>Decision frameworks</strong> make judgment reusable. Next deployment starts from evidence, not opinion.</div>
+  <div class="source">Source: "The AI Operating Model Is Discovered, Not Designed" (Jul 2026)</div>
+</div>
+
+<div class="principle">
+  <div class="swt">Translation debt — the unpriced work of making fragmented orgs function as one system</div>
+  <div class="sim"><strong>seam_risk</strong> scores on every workflow handoff. <strong>translation_incident</strong> counter on every decision. <strong>AbsenceDetector</strong> finds information that should exist but doesn't. Diana's informal review is the canonical example, explicitly modeled.</div>
+  <div class="source">Source: "You Are Not Deploying Agents. You Are Redesigning Work" (Mar 2026)</div>
+</div>
+
+<div class="principle">
+  <div class="swt">The bottleneck always moves</div>
+  <div class="sim"><strong>Bottleneck detection</strong> in observe(): identifies which step is the constraint each sprint. Track A redesigns the seam, not the AI. Track B treats bottlenecks as "teething issues." Tracked via bottleneck_migration discovery type.</div>
+  <div class="source">Source: "Speeding One Cog Breaks the Machine" (Mar 2026)</div>
+</div>
+
+<div class="principle">
+  <div class="swt">Permission and coordination are the hard part — not intelligence</div>
+  <div class="sim"><strong>Agent psychological profiles</strong> (OCEAN, biases, motivations, relationship graphs) drive behavior more than AI capability. The same AI deployed into different organizational conditions produces different outcomes. Diana's trust cascade propagates through influence networks.</div>
+  <div class="source">Source: "The Agentic Operating Model" (Mar 2026)</div>
+</div>
+
+<div class="principle">
+  <div class="swt">Stop and adapt — don't defend the original plan</div>
+  <div class="sim"><strong>Stop conditions</strong>: no measurable business impact within 3 sprints → stop and redirect. Explicit criteria. Not framed as failure — framed as evidence that this insertion point wasn't the right one.</div>
+  <div class="source">Source: "The AI Operating Model Is Discovered, Not Designed" (Jul 2026)</div>
+</div>
+
+<div class="principle">
+  <div class="swt">Measured by outcomes, not activity</div>
+  <div class="sim"><strong>Outcome metrics</strong>: cycle time, loss ratio, cost per claim, retention. <strong>Activity metrics</strong> (licenses, training completion) tagged with SWT warnings and only enabled for Track B. Track A never measures adoption.</div>
+  <div class="source">Source: "From AI Activity to Operating Leverage" (Jul 2026)</div>
+</div>
+
+<h2>SWT's Specific Concerns — How We Measure Them</h2>
+<div class="concern-grid">
+  <div class="concern">
+    <div class="name">Translation Debt</div>
+    <div class="how"><strong>translation_debt_index</strong>: handoff failures + reconciliation incidents per 100 claims. <strong>handoff_failure_rate</strong>: % of claims with at least one translation incident. Declining over time = seams are being redesigned.</div>
+  </div>
+  <div class="concern">
+    <div class="name">Bottleneck Migration</div>
+    <div class="how"><strong>Bottleneck detection</strong> each sprint: which step is the constraint? Tracked across sprints. At least 2 migrations expected in 16 sprints. Stagnant = not enough deployment cycles.</div>
+  </div>
+  <div class="concern">
+    <div class="name">Exception Inflation</div>
+    <div class="how"><strong>exception_rate</strong>: % of decisions requiring human intervention beyond designed process. Initial spike after deployment, then decline as seams are redesigned. Flatline at zero = agents aren't producing realistic friction.</div>
+  </div>
+  <div class="concern">
+    <div class="name">Interruption Readiness</div>
+    <div class="how"><strong>interruption_readiness</strong>: 0-1. Can named individuals stop/narrow/override AI within one business day? Designed after first deployment. Autonomy widens ONLY after interruption is designed.</div>
+  </div>
+  <div class="concern">
+    <div class="name">Evidence Completeness</div>
+    <div class="how"><strong>evidence_completeness</strong>: % of AI decisions with full audit trail (what, why, authority, inputs, changes, escalation). SWT: "the receipt is the product."</div>
+  </div>
+  <div class="concern">
+    <div class="name">Agent Authority Width</div>
+    <div class="how"><strong>agent_authority_width</strong>: dollar threshold for autonomous AI decisions. Should widen with evidence. Starts at $5K, widens to $15K+ as interruption is proven. Widening without evidence = deferred risk.</div>
+  </div>
+  <div class="concern">
+    <div class="name">Learning Velocity</div>
+    <div class="how"><strong>learning_loop_closure_rate</strong>: discoveries → redesign within 2 sprints. <strong>pattern_reuse_rate</strong>: later deployments informed by earlier evidence. Flat = learning isn't compounding.</div>
+  </div>
+  <div class="concern">
+    <div class="name">Absence Detection</div>
+    <div class="how"><strong>AbsenceDetector</strong>: surfaces decisions made from incomplete information. Stale data, missing pauses, unrecognized gaps. Type 2 emergence — the system didn't know what it didn't know.</div>
+  </div>
+</div>
+
+<h2>Six Gaps We Filled</h2>
+<p style="color:var(--text-dim); margin-bottom:14px;">SWT's framework implies these capabilities but doesn't specify them operationally. We made them explicit so the simulation can implement them. These need validation.</p>
+
+<div class="gap">
+  <div class="label">Gap 1 — Interruption Design</div>
+  <div class="desc"><strong>Implementation:</strong> After first deployment, explicitly design who can pause, override, and stop the AI. Sanjay can pause, Diana can pause individual decisions, Kathryn can stop the entire deployment. Interruption is designed, not improvised.</div>
+</div>
+<div class="gap">
+  <div class="label">Gap 2 — Translation Capability Evaluation</div>
+  <div class="desc"><strong>Implementation:</strong> After each redesign, score the workflow on SWT's four translation capabilities: structure extraction, meaning portability, routing accuracy, throttling. Scored from observation data, not hardcoded.</div>
+</div>
+<div class="gap">
+  <div class="label">Gap 3 — Evidence, Receipts & Decision Dockets</div>
+  <div class="desc"><strong>Implementation:</strong> Every AI decision produces a structured audit trail as part of the workflow itself. Tracked via evidence_completeness metric. Not an after-the-fact compliance exercise.</div>
+</div>
+<div class="gap">
+  <div class="label">Gap 4 — Learning Extraction Failure Modes</div>
+  <div class="desc"><strong>Implementation:</strong> Learning extraction can fail. Busyness (stress > threshold → 50% chance of missed capture). Politics (Diana suppresses discoveries that threaten her informal authority). Recognition (low AI literacy → patterns not recognized).</div>
+</div>
+<div class="gap">
+  <div class="label">Gap 5 — Stop & Adapt Logic</div>
+  <div class="desc"><strong>Implementation:</strong> Explicit stop criteria evaluated every 2 sprints. No measurable business impact within 3 sprints → stop and redirect. Not failure — data. Move to next opportunity.</div>
+</div>
+<div class="gap">
+  <div class="label">Gap 6 — Value Anchoring vs Use-Case Brainstorming</div>
+  <div class="desc"><strong>Implementation:</strong> Track A's first decision: "which business lever needs improvement?" → then ask whether AI helps. Track B's first decision: "where can we use AI?" → then connect to business lever. This is the fork in sprint 1.</div>
+</div>
+
+<h2>What We Do NOT Do (Track A)</h2>
+<div style="display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-top:14px">
+  <div class="principle" style="border-left-color:var(--warn)">
+    <div class="swt" style="color:var(--warn)">No steering committee</div>
+    <div class="sim">Decisions made by accountable owner with bounded authority, not by monthly committee reviewing dashboards.</div>
+  </div>
+  <div class="principle" style="border-left-color:var(--warn)">
+    <div class="swt" style="color:var(--warn)">No future-state design</div>
+    <div class="sim">No target operating model designed upfront. No new roles created before evidence justifies them.</div>
+  </div>
+  <div class="principle" style="border-left-color:var(--warn)">
+    <div class="swt" style="color:var(--warn)">No adoption metrics</div>
+    <div class="sim">License activation, training completion, AI-assisted claim % — these are activity, not outcome. Track B measures them. Track A doesn't.</div>
+  </div>
+  <div class="principle" style="border-left-color:var(--warn)">
+    <div class="swt" style="color:var(--warn)">No vendor platform</div>
+    <div class="sim">No RFP process. No enterprise platform selection. AI capability is deployed into the existing tech stack within the bounded scope.</div>
+  </div>
+</div>
+
+<div class="footer">
+  Built for SWT alignment review. Every principle traced to a specific article and a specific simulation component.<br>
+  &copy; 2026 Charlie Fuller
+</div>
+
+</div>
+
+<script>
+  const toggle = document.getElementById('themeToggle');
+  toggle.addEventListener('click', () => {
+    const d = !document.documentElement.classList.contains('dark');
+    document.documentElement.classList.toggle('dark', d);
+    try { localStorage.setItem('diagram-theme', d ? 'dark' : 'light'); } catch(e) {}
+  });
+  try { if (localStorage.getItem('diagram-theme') === 'dark') document.documentElement.classList.add('dark'); } catch(e) {}
+</script>
+</body>
+</html>
