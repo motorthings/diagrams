@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Measurement & Validation — AI Transformation Experiment</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,wght@0,400;0,500;0,600;0,700;0,800;1,400&family=Source+Code+Pro:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --font-display: 'Fraunces', Georgia, serif;
+    --font-mono: 'Source Code Pro', 'SF Mono', Consolas, monospace;
+    --bg: #eef4f9; --surface: #ffffff; --surface2: #f5f8fc;
+    --border: #c8daea; --border-bright: #a0bedb;
+    --text: #0a1628; --text-dim: #3d5a7a; --text-muted: #7a9ab8;
+    --primary: #e8621a; --primary-dim: rgba(232,98,26,0.06);
+    --secondary: #4a90c4; --secondary-dim: rgba(74,144,196,0.06);
+    --metric: #0f766e; --metric-dim: rgba(15,118,110,0.06);
+    --warn: #b45309; --warn-dim: rgba(180,83,9,0.08);
+    --trackb: #7c3aed; --trackb-dim: rgba(124,58,237,0.06);
+  }
+  html.dark {
+    --bg: #0a1628; --surface: #132240; --surface2: #1a2d52;
+    --border: #1a2d52; --border-bright: #2d4570;
+    --text: #e8edf5; --text-dim: #9bb0d4; --text-muted: #5e7aa3;
+    --primary: #f37021; --primary-dim: rgba(243,112,33,0.10);
+    --secondary: #6cace4; --secondary-dim: rgba(108,172,228,0.10);
+    --metric: #2dd4bf; --metric-dim: rgba(45,212,191,0.08);
+    --warn: #f59e0b; --warn-dim: rgba(245,158,11,0.12);
+    --trackb: #a78bfa; --trackb-dim: rgba(167,139,250,0.10);
+  }
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body { background:var(--bg); color:var(--text); font-family:var(--font-display); min-height:100vh; line-height:1.65; padding:0 32px 64px; }
+  .container { max-width:1080px; margin:0 auto; }
+  .backlink { position:fixed; top:12px; left:16px; z-index:101; font-family:var(--font-mono); font-size:12px; color:var(--text-dim); text-decoration:none; padding:6px 10px; border:1px solid var(--border); border-radius:6px; background:var(--surface); }
+  .nav { position:sticky; top:0; z-index:100; backdrop-filter:blur(16px); background:color-mix(in srgb, var(--surface) 85%, transparent); border-bottom:1px solid var(--border); margin:0 -32px 28px; padding:0 32px; }
+  .nav-inner { max-width:1080px; margin:0 auto; padding:10px 0; display:flex; align-items:center; justify-content:space-between; }
+  .nav-brand { font-family:var(--font-mono); font-size:11px; font-weight:600; letter-spacing:0.5px; color:var(--metric); }
+  .theme-toggle { width:32px; height:32px; border-radius:8px; border:1px solid var(--border); background:var(--surface); cursor:pointer; font-size:14px; color:var(--text-dim); }
+  .hero { text-align:center; padding:36px 0 28px; }
+  .hero h1 { font-size:44px; font-weight:700; letter-spacing:-0.5px; color:var(--metric); margin-bottom:10px; }
+  .hero .lead { font-size:19px; color:var(--text-dim); max-width:700px; margin:0 auto; }
+  h2 { font-size:22px; font-weight:700; margin:40px 0 18px; color:var(--text); }
+
+  /* Capture stack */
+  .capture-stack { display:flex; flex-direction:column; gap:10px; margin:16px 0; }
+  .capture-row { display:flex; align-items:center; gap:14px; background:var(--surface2); border:1px solid var(--border); border-left:3px solid var(--metric); border-radius:0 10px 10px 0; padding:14px 18px; }
+  .capture-row .name { font-family:var(--font-mono); font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:0.5px; color:var(--metric); min-width:160px; }
+  .capture-row .desc { font-size:14px; color:var(--text-dim); line-height:1.5; }
+  .capture-row .arrow { font-size:14px; color:var(--text-muted); }
+
+  /* Dimension grid */
+  .dim-grid { display:flex; flex-direction:column; gap:10px; margin-top:14px; }
+  .dim-card { background:var(--surface); border:1px solid var(--border); border-left:3px solid var(--metric); border-radius:0 10px 10px 0; padding:14px 18px; }
+  .dim-card .name { font-family:var(--font-mono); font-size:10px; font-weight:700; color:var(--metric); text-transform:uppercase; letter-spacing:0.4px; margin-bottom:4px; }
+  .dim-card .metrics { font-size:13px; color:var(--text-dim); line-height:1.5; }
+  .dim-card .metrics strong { color:var(--text); }
+
+  /* Test card */
+  .test { background:var(--surface); border:1px solid var(--border); border-radius:10px; padding:14px 18px; margin-bottom:10px; }
+  .test .name { font-family:var(--font-mono); font-size:10px; font-weight:700; text-transform:uppercase; letter-spacing:0.4px; margin-bottom:4px; }
+  .test.passed .name { color:var(--metric); }
+  .test.failed .name { color:var(--warn); }
+  .test .result { font-size:14px; color:var(--text-dim); line-height:1.5; }
+  .test .result strong { color:var(--text); }
+
+  /* Audit chain */
+  .audit-chain { display:flex; align-items:center; gap:8px; flex-wrap:wrap; justify-content:center; margin:16px 0; }
+  .audit-node { background:var(--surface); border:1px solid var(--metric); border-radius:8px; padding:10px 14px; text-align:center; font-size:12px; color:var(--metric); font-family:var(--font-mono); font-weight:600; }
+  .audit-arrow { color:var(--metric); font-size:16px; }
+
+  .footer { margin-top:48px; padding-top:16px; border-top:1px solid var(--border); text-align:center; font-size:13px; color:var(--text-muted); }
+</style>
+</head>
+<body>
+<a href="../index.html" class="backlink">&larr; Index</a>
+<div class="nav"><div class="nav-inner"><span class="nav-brand">MEASUREMENT &amp; VALIDATION</span><button class="theme-toggle" id="themeToggle" aria-label="Toggle dark mode">&#9788;</button></div></div>
+<div class="container">
+
+<div class="hero">
+  <h1>Measurement &amp; Validation</h1>
+  <p class="lead">How we know the simulation captures reality, how we measure transformation, and how we prove the results are auditable.</p>
+</div>
+
+<h2>Capture Architecture</h2>
+<div class="capture-stack">
+  <div class="capture-row">
+    <div class="name">decisions.jsonl</div>
+    <div class="arrow">&rarr;</div>
+    <div class="desc">Every agent decision — role, step, reasoning, concerns, AI interaction, emotional state, translation incidents. The raw ground truth.</div>
+  </div>
+  <div class="capture-row">
+    <div class="name">metrics.csv</div>
+    <div class="arrow">&rarr;</div>
+    <div class="desc">22 metrics × 2 tracks × 16 sprints. Time series for every transformation dimension.</div>
+  </div>
+  <div class="capture-row">
+    <div class="name">state.json</div>
+    <div class="arrow">&rarr;</div>
+    <div class="desc">Full playbook, governance rules, decision frameworks, trust values, steering committee decisions, phases.</div>
+  </div>
+  <div class="capture-row">
+    <div class="name">forensic_record.json</div>
+    <div class="arrow">&rarr;</div>
+    <div class="desc">Master document — temporal timeline, causal chains, comparative analysis, alignment check, operational metadata.</div>
+  </div>
+  <div class="capture-row">
+    <div class="name">comprehensive_report.json</div>
+    <div class="arrow">&rarr;</div>
+    <div class="desc">All analyses merged: agent breakdowns, trust timeline, bottleneck log, claim traces, market projection, divergence, psych differentiation, fidelity.</div>
+  </div>
+  <div class="capture-row">
+    <div class="name">evidence_citations.json</div>
+    <div class="arrow">&rarr;</div>
+    <div class="desc">29 real-world sources grounding every simulation parameter. 34% official (SEC filings, BLS), 17% press, 14% aggregator, 21% inferred, 14% assumption.</div>
+  </div>
+  <div class="capture-row">
+    <div class="name">audit_trail.json + audit_verification.json</div>
+    <div class="arrow">&rarr;</div>
+    <div class="desc">Every derived number traceable to source data. 8/8 outputs auditable (100% score). Verification confirms evidence, derivation, and source for each output.</div>
+  </div>
+</div>
+
+<h2>Six Transformation Dimensions</h2>
+<div class="dim-grid">
+  <div class="dim-card">
+    <div class="name">1. Financial Performance</div>
+    <div class="metrics"><strong>6 metrics:</strong> Combined ratio (87.3% baseline), loss ratio (64%), expense ratio (23.3%), cost per claim, premium growth, ROI. Market model projects operational metrics &rarr; EPS, stock price, market cap.</div>
+  </div>
+  <div class="dim-card">
+    <div class="name">2. Operational Performance</div>
+    <div class="metrics"><strong>12 metrics:</strong> Cycle time, exception rate, first-pass accuracy, supplement rate, translation debt index, handoff failure rate, evidence completeness, interruption readiness, agent authority width, and 4 SWT-specific operational metrics.</div>
+  </div>
+  <div class="dim-card">
+    <div class="name">3. Organizational Health</div>
+    <div class="metrics"><strong>9 metrics:</strong> Employee AI trust, trust polarization, claims adjuster attrition, learning loop closure rate, pattern reuse rate, informal control points surfaced, playbook growth, change exhaustion trend.</div>
+  </div>
+  <div class="dim-card">
+    <div class="name">4. Customer Impact</div>
+    <div class="metrics"><strong>4 metrics:</strong> Customer retention after claim (proxy), CSAT (directional), claim error rate, time to first contact.</div>
+  </div>
+  <div class="dim-card">
+    <div class="name">5. Competitive Position</div>
+    <div class="metrics"><strong>4 metrics:</strong> Market share, competitive absorption speed, pricing accuracy, Robinsons segment growth. Benchmarked against GEICO (91.2 CR), Allstate (86.6), industry (92.0).</div>
+  </div>
+  <div class="dim-card">
+    <div class="name">6. Governance &amp; Risk</div>
+    <div class="metrics"><strong>6 metrics:</strong> Regulatory findings, AI bias incidents, audit trail completeness, intervention response time, model drift events, stop button testability.</div>
+  </div>
+</div>
+
+<h2>Audit Chain</h2>
+<div class="audit-chain">
+  <div class="audit-node">Real-world data</div>
+  <div class="audit-arrow">&rarr;</div>
+  <div class="audit-node">Evidence registry</div>
+  <div class="audit-arrow">&rarr;</div>
+  <div class="audit-node">Simulation parameter</div>
+  <div class="audit-arrow">&rarr;</div>
+  <div class="audit-node">Agent decision</div>
+  <div class="audit-arrow">&rarr;</div>
+  <div class="audit-node">Metric</div>
+  <div class="audit-arrow">&rarr;</div>
+  <div class="audit-node">Projection</div>
+  <div class="audit-arrow">&rarr;</div>
+  <div class="audit-node">Audit trail</div>
+</div>
+<p style="text-align:center; color:var(--text-dim); font-size:14px; margin-top:8px">Every output is traceable: source data → derivation → confidence → evidence IDs. Nothing asserted without origin.</p>
+
+<h2>Validity Gates — Must All Pass</h2>
+<div class="test passed"><div class="name">G1: Psychological differentiation &check;</div><div class="result">DeepSeek diagnostic: Diana uses AI 26%, Maria 81%. Different agents make different decisions on same claims. <strong>Passed.</strong></div></div>
+<div class="test passed"><div class="name">G2: Translation debt surfaces &check;</div><div class="result">DeepSeek baseline: 97 translation incidents (25.3% of decisions). Handoff friction emerges organically. <strong>Passed.</strong></div></div>
+<div class="test passed"><div class="name">G3: Bottleneck actually migrates &check;</div><div class="result">Mock 16-sprint: 35 bottleneck detections across workflow steps. Constraint moves after deployment. Will verify with DeepSeek. <strong>Passed (mock).</strong></div></div>
+<div class="test failed"><div class="name">G4: Track B produces SOME improvement</div><div class="result">Not yet tested — requires full 16-sprint DeepSeek run with both tracks active. <strong>Pending.</strong></div></div>
+<div class="test failed"><div class="name">G5: Divergence is traceable</div><div class="result">Not yet tested — requires divergence between tracks. Forensic record and claim traces provide the mechanism. <strong>Pending.</strong></div></div>
+<div class="test passed"><div class="name">G6: No zero-variance metrics &check;</div><div class="result">Mock 16-sprint: all metrics show variance across sprints. No flatlines. <strong>Passed.</strong></div></div>
+<div class="test passed"><div class="name">G7: Fidelity auditor functional &check;</div><div class="result">Mock 16-sprint: 19 findings across 2 categories. Anti-caricature checks operational. <strong>Passed.</strong></div></div>
+
+<h2>What Proof Looks Like</h2>
+<div class="dim-grid">
+  <div class="dim-card"><div class="name">1. The simulation surprises us</div><div class="metrics">Novelty in the novelty register is the single best signal. If every output confirms what we already believe, we built an echo chamber.</div></div>
+  <div class="dim-card"><div class="name">2. Practitioners recognize the behavior</div><div class="metrics">If a claims VP reads Diana's decision log and says "I've managed three of her," the model captures something real. Face validity from domain experts.</div></div>
+  <div class="dim-card"><div class="name">3. Results are robust, not fragile</div><div class="metrics">Run 5 times with different seeds. Specific discoveries vary. Structural patterns hold. Small parameter changes don't flip the results.</div></div>
+  <div class="dim-card"><div class="name">4. Track B isn't a straw man</div><div class="metrics">Track B produces SOME improvement. Steering committee makes SOME good decisions. If Track B is a punching bag, the experiment is propaganda.</div></div>
+  <div class="dim-card"><div class="name">5. The counterfactual is honest</div><div class="metrics">Can we construct conditions where Track B outperforms? If political friction is low, Diana cooperates, existing process is clean — traditional change management might win.</div></div>
+</div>
+
+<div class="footer">Built for experiment validation. Every number traceable. Every parameter sourced. Every assumption flagged.<br>&copy; 2026 Charlie Fuller</div>
+</div>
+<script>
+  const t=document.getElementById('themeToggle');
+  t.addEventListener('click',()=>{const d=!document.documentElement.classList.contains('dark');document.documentElement.classList.toggle('dark',d);try{localStorage.setItem('diagram-theme',d?'dark':'light')}catch(e){}});
+  try{if(localStorage.getItem('diagram-theme')==='dark')document.documentElement.classList.add('dark')}catch(e){}
+</script>
+</body>
+</html>
