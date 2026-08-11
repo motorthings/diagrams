@@ -1,0 +1,719 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="AESOP Governance Archetype — portfolio governance pipeline with human-in-the-loop approval gates, research, material generation, and portfolio refresh.">
+<title>Governance Archetype — AESOP Pipeline</title>
+<link rel="icon" href="../icon.svg" type="image/svg+xml" />
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,wght@0,400;0,500;0,600;0,700;0,800;1,400&family=Source+Code+Pro:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --font-display: 'Fraunces', Georgia, serif;
+    --font-mono: 'Source Code Pro', 'SF Mono', Consolas, monospace;
+
+    --bg: #eef4f9;
+    --surface: #ffffff;
+    --surface2: #f5f8fc;
+    --border: #c8daea;
+    --border-bright: #a0bedb;
+    --text: #0a1628;
+    --text-dim: #3d5a7a;
+    --text-muted: #7a9ab8;
+    --primary: #e8621a;
+    --primary-dim: rgba(232,98,26,0.08);
+    --secondary: #4a90c4;
+    --secondary-dim: rgba(74,144,196,0.08);
+    --metric: #0f766e;
+    --metric-dim: rgba(15,118,110,0.06);
+    --amber: #b45309;
+    --amber-dim: rgba(180,83,9,0.08);
+    --violet: #7c3aed;
+    --violet-dim: rgba(124,58,237,0.08);
+    --rose: #e11d48;
+    --rose-dim: rgba(225,29,72,0.08);
+    --slate: #475569;
+    --slate-dim: rgba(71,85,105,0.08);
+  }
+
+  html.dark {
+    --bg: #0a1628;
+    --surface: #132240;
+    --surface2: #1a2d52;
+    --border: #1a2d52;
+    --border-bright: #2d4570;
+    --text: #e8edf5;
+    --text-dim: #bccde8;
+    --text-muted: #7a96b8;
+    --primary: #f37021;
+    --primary-dim: rgba(243,112,33,0.12);
+    --secondary: #6cace4;
+    --secondary-dim: rgba(108,172,228,0.12);
+    --metric: #2dd4bf;
+    --metric-dim: rgba(45,212,191,0.08);
+    --amber: #f59e0b;
+    --amber-dim: rgba(245,158,11,0.12);
+    --violet: #a78bfa;
+    --violet-dim: rgba(167,139,250,0.12);
+    --rose: #fda4af;
+    --rose-dim: rgba(253,164,175,0.14);
+    --slate: #94a3b8;
+    --slate-dim: rgba(148,163,184,0.12);
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: var(--bg);
+    background-image:
+      radial-gradient(ellipse at 80% 0%, var(--primary-dim) 0%, transparent 50%),
+      radial-gradient(ellipse at 20% 60%, var(--secondary-dim) 0%, transparent 40%);
+    color: var(--text);
+    font-family: var(--font-display);
+    min-height: 100vh;
+    line-height: 1.6;
+    padding: 0 32px 80px;
+    transition: background 0.3s, color 0.3s;
+  }
+
+  .nav {
+    position: sticky; top: 0; z-index: 100;
+    backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px);
+    background: color-mix(in srgb, var(--surface) 85%, transparent);
+    border-bottom: 1px solid var(--border);
+    margin: 0 -32px 32px; padding: 0 32px 0 100px;
+    transition: background 0.3s, border-color 0.3s;
+  }
+  .nav-inner {
+    max-width: 1100px; margin: 0 auto; padding: 12px 0;
+    display: flex; align-items: center; justify-content: space-between;
+  }
+  .nav-brand {
+    font-family: var(--font-mono); font-size: 12px; font-weight: 600;
+    letter-spacing: 0.5px; color: var(--primary); text-decoration: none;
+  }
+  .theme-toggle {
+    width: 36px; height: 36px; border-radius: 10px;
+    border: 1px solid var(--border); background: var(--surface);
+    cursor: pointer; display: flex; align-items: center; justify-content: center;
+    font-size: 16px; color: var(--text-dim); transition: all 0.2s;
+  }
+  .theme-toggle:hover { border-color: var(--primary); color: var(--primary); }
+
+  .backlink {
+    position: fixed; top: 12px; left: 16px; z-index: 101;
+    font-family: var(--font-mono); font-size: 12px; color: var(--text-dim);
+    text-decoration: none; padding: 6px 10px;
+    border: 1px solid var(--border); border-radius: 6px;
+    background: var(--surface); transition: color 0.15s, border-color 0.15s;
+  }
+  .backlink:hover { color: var(--text); border-color: var(--border-bright); }
+
+  .container { max-width: 1000px; margin: 0 auto; }
+
+  .hero-badge {
+    font-family: var(--font-mono); font-size: 10px; font-weight: 700;
+    text-transform: uppercase; letter-spacing: 1.5px;
+    color: var(--primary); background: var(--primary-dim);
+    padding: 4px 10px; border-radius: 4px;
+    display: inline-block; margin-bottom: 12px;
+  }
+  h1 {
+    font-family: var(--font-display); font-size: 44px; font-weight: 800;
+    color: var(--text); letter-spacing: -0.5px;
+    margin-bottom: 8px; text-wrap: balance;
+  }
+  .hero-sub {
+    font-size: 15px; color: var(--text-dim); line-height: 1.6;
+    margin-bottom: 32px; max-width: 720px;
+  }
+
+  h2 {
+    font-family: var(--font-display); font-size: 26px; font-weight: 600;
+    color: var(--text); margin: 40px 0 16px;
+  }
+  h3 {
+    font-family: var(--font-display); font-size: 18px; font-weight: 600;
+    color: var(--text); margin-bottom: 12px;
+  }
+
+  /* ===== MERMAID ===== */
+  .mermaid-wrap {
+    position: relative;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 32px 24px;
+    overflow: auto;
+    margin-bottom: 24px;
+  }
+  .mermaid-wrap .mermaid {
+    display: flex;
+    justify-content: center;
+    transition: transform 0.2s ease;
+    transform-origin: top center;
+  }
+  .zoom-controls {
+    position: absolute; top: 8px; right: 8px; display: flex; gap: 2px; z-index: 10;
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 6px; padding: 2px;
+  }
+  .zoom-controls button {
+    width: 28px; height: 28px; border: none; background: transparent;
+    color: var(--text-dim); font-family: var(--font-mono); font-size: 14px;
+    cursor: pointer; border-radius: 4px; display: flex;
+    align-items: center; justify-content: center; transition: background 0.15s, color 0.15s;
+  }
+  .zoom-controls button:hover { background: var(--border); color: var(--text); }
+  .mermaid-wrap { scrollbar-width: thin; scrollbar-color: var(--border) transparent; }
+  .mermaid-wrap::-webkit-scrollbar { width: 6px; height: 6px; }
+  .mermaid-wrap::-webkit-scrollbar-track { background: transparent; }
+  .mermaid-wrap::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+  .mermaid-wrap.is-zoomed { cursor: grab; }
+  .mermaid-wrap.is-panning { cursor: grabbing; user-select: none; }
+
+  .mermaid .nodeLabel { font-family: var(--font-display) !important; font-size: 13px !important; }
+  .mermaid .edgeLabel { font-family: var(--font-mono) !important; font-size: 11px !important; }
+  .mermaid .node rect, .mermaid .node circle, .mermaid .node polygon { stroke-width: 1.5px !important; }
+  .mermaid .edge-pattern-solid { stroke-width: 1.5px !important; }
+
+  /* Light mode Mermaid overrides — stage nodes, gates, start/end */
+  html:not(.dark) .mermaid g.mode rect, html:not(.dark) .mermaid g.mode polygon { fill: #ffffff !important; stroke: #a0bedb !important; }
+  html:not(.dark) .mermaid g.choice rect, html:not(.dark) .mermaid g.choice polygon { fill: #fef0d7 !important; stroke: #b45309 !important; }
+  html:not(.dark) .mermaid g.action rect, html:not(.dark) .mermaid g.action polygon { fill: #d5f0ee !important; stroke: #0f766e !important; }
+  html:not(.dark) .mermaid g.rule rect, html:not(.dark) .mermaid g.rule polygon { fill: #fce7f3 !important; stroke: #e11d48 !important; }
+  html:not(.dark) .mermaid g.phase rect, html:not(.dark) .mermaid g.phase polygon { fill: #e0eef7 !important; stroke: #4a90c4 !important; }
+
+  html.dark .mermaid g.mode rect, html.dark .mermaid g.mode polygon { fill: #132240 !important; stroke: #2d4570 !important; }
+  html.dark .mermaid g.choice rect, html.dark .mermaid g.choice polygon { fill: rgba(251,191,36,0.15) !important; stroke: #fbbf24 !important; }
+  html.dark .mermaid g.action rect, html.dark .mermaid g.action polygon { fill: rgba(94,234,212,0.12) !important; stroke: #5eead4 !important; }
+  html.dark .mermaid g.rule rect, html.dark .mermaid g.rule polygon { fill: rgba(251,113,133,0.12) !important; stroke: #fb7185 !important; }
+  html.dark .mermaid g.phase rect, html.dark .mermaid g.phase polygon { fill: rgba(108,172,228,0.15) !important; stroke: #6cace4 !important; }
+
+  html.dark .mermaid .nodeLabel { color: #e8edf5 !important; }
+  html.dark .mermaid .edgeLabel { color: #bccde8 !important; }
+  html.dark .mermaid .edgeLabel span { color: #bccde8 !important; }
+  html.dark .mermaid text { fill: #e8edf5 !important; }
+  html.dark .mermaid .labelBkg { fill: #132240 !important; }
+
+  .legend {
+    display: flex; gap: 18px; flex-wrap: wrap; margin-bottom: 32px;
+  }
+  .legend-item {
+    display: flex; align-items: center; gap: 6px;
+    font-family: var(--font-mono); font-size: 11px; color: var(--text-dim);
+  }
+  .legend-swatch { width: 12px; height: 12px; border-radius: 3px; }
+
+  /* ===== TABLE ===== */
+  .table-wrap { overflow-x: auto; margin-bottom: 32px; border-radius: 10px; border: 1px solid var(--border); }
+  .table-scroll { min-width: 700px; }
+  .data-table {
+    width: 100%; border-collapse: collapse; font-size: 13px;
+  }
+  .data-table thead th {
+    font-family: var(--font-mono); font-size: 10px; font-weight: 700;
+    text-transform: uppercase; letter-spacing: 1px;
+    color: var(--text-dim); text-align: left; padding: 12px 16px;
+    background: var(--surface2); border-bottom: 1px solid var(--border);
+  }
+  .data-table tbody td {
+    padding: 10px 16px; border-bottom: 1px solid var(--border);
+    color: var(--text-dim); line-height: 1.5;
+  }
+  .data-table tbody tr:last-child td { border-bottom: none; }
+  .data-table tbody tr { background: var(--surface); transition: background 0.1s; }
+  .data-table tbody tr:hover { background: var(--surface2); }
+  .data-table code {
+    font-family: var(--font-mono); font-size: 11px; color: var(--secondary);
+    background: var(--secondary-dim); padding: 1px 5px; border-radius: 3px;
+  }
+
+  /* Gap badges */
+  .gap-exists {
+    font-family: var(--font-mono); font-size: 10px; font-weight: 600;
+    text-transform: uppercase; letter-spacing: 0.5px;
+    color: var(--metric); background: var(--metric-dim);
+    padding: 2px 8px; border-radius: 4px; display: inline-block;
+  }
+  .gap-template {
+    font-family: var(--font-mono); font-size: 10px; font-weight: 600;
+    text-transform: uppercase; letter-spacing: 0.5px;
+    color: var(--amber); background: var(--amber-dim);
+    padding: 2px 8px; border-radius: 4px; display: inline-block;
+  }
+  .gap-service {
+    font-family: var(--font-mono); font-size: 10px; font-weight: 600;
+    text-transform: uppercase; letter-spacing: 0.5px;
+    color: var(--violet); background: var(--violet-dim);
+    padding: 2px 8px; border-radius: 4px; display: inline-block;
+  }
+  .gap-phase2 {
+    font-family: var(--font-mono); font-size: 10px; font-weight: 600;
+    text-transform: uppercase; letter-spacing: 0.5px;
+    color: var(--slate); background: var(--slate-dim);
+    padding: 2px 8px; border-radius: 4px; display: inline-block;
+  }
+
+  /* ===== PHASE CARDS ===== */
+  .card-grid-3 {
+    display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; margin-bottom: 32px;
+  }
+  .phase-card {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 10px; padding: 20px;
+    transition: border-color 0.15s;
+  }
+  .phase-card:hover { border-color: var(--border-bright); }
+  .phase-number {
+    font-family: var(--font-mono); font-size: 10px; font-weight: 700;
+    text-transform: uppercase; letter-spacing: 1px;
+    color: var(--primary); margin-bottom: 8px;
+  }
+  .phase-card h3 {
+    font-family: var(--font-display); font-size: 18px; font-weight: 600;
+    color: var(--text); margin-bottom: 10px;
+  }
+  .phase-card ul {
+    list-style: none; padding: 0;
+  }
+  .phase-card li {
+    font-size: 13px; color: var(--text-dim); line-height: 1.6;
+    padding: 3px 0; padding-left: 14px; position: relative;
+  }
+  .phase-card li::before {
+    content: ''; position: absolute; left: 0; top: 10px;
+    width: 5px; height: 5px; border-radius: 50%; background: var(--border-bright);
+  }
+  .phase-timeline {
+    font-family: var(--font-mono); font-size: 10px; color: var(--text-muted);
+    margin-top: 12px; padding-top: 10px; border-top: 1px solid var(--border);
+  }
+
+  /* ===== CALLOUT ===== */
+  .callout {
+    background: var(--surface); border: 1px solid var(--border);
+    border-left: 3px solid var(--primary); border-radius: 0 10px 10px 0;
+    padding: 16px 20px; font-size: 13px; line-height: 1.6;
+    color: var(--text-dim); margin-bottom: 32px;
+  }
+  .callout strong { color: var(--text); }
+  .callout-title {
+    font-family: var(--font-mono); font-size: 10px; font-weight: 700;
+    text-transform: uppercase; letter-spacing: 1px;
+    color: var(--primary); margin-bottom: 6px;
+  }
+
+  /* ===== KEY INSIGHT ===== */
+  .insight-grid {
+    display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 32px;
+  }
+  .insight-card {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 10px; padding: 18px 20px;
+  }
+  .insight-card h4 {
+    font-family: var(--font-mono); font-size: 10px; font-weight: 700;
+    text-transform: uppercase; letter-spacing: 1px;
+    color: var(--metric); margin-bottom: 8px;
+  }
+  .insight-card p {
+    font-size: 13px; color: var(--text-dim); line-height: 1.6;
+  }
+
+  .footer {
+    font-family: var(--font-mono); font-size: 11px; color: var(--text-muted);
+    text-align: center; padding: 32px 0 16px;
+  }
+
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(12px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  .animate { animation: fadeUp 0.4s ease-out both; }
+  .animate-0 { animation-delay: 0s; }
+  .animate-1 { animation-delay: 0.06s; }
+  .animate-2 { animation-delay: 0.12s; }
+  .animate-3 { animation-delay: 0.18s; }
+  .animate-4 { animation-delay: 0.24s; }
+  .animate-5 { animation-delay: 0.3s; }
+
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after {
+      animation-duration: 0.01ms !important;
+      animation-delay: 0ms !important;
+      transition-duration: 0.01ms !important;
+    }
+    .mermaid-wrap .mermaid { transition: none; }
+  }
+
+  @media (max-width: 768px) {
+    body { padding: 0 16px 40px; }
+    .nav { margin: 0 -16px 24px; padding: 0 16px 0 72px; }
+    h1 { font-size: 28px; }
+    .card-grid-3 { grid-template-columns: 1fr; }
+    .insight-grid { grid-template-columns: 1fr; }
+    .mermaid-wrap { padding: 16px 12px; }
+  }
+</style>
+</head>
+<body>
+
+<a href="../index.html" class="backlink">&larr; Index</a>
+
+<div class="nav">
+  <div class="nav-inner">
+    <a href="../index.html" class="nav-brand">&#9679; AESOP Diagrams</a>
+    <button class="theme-toggle" id="themeToggle" aria-label="Toggle dark mode">
+      <span class="icon-light">&#9788;</span>
+      <span class="icon-dark" style="display:none">&#9790;</span>
+    </button>
+  </div>
+</div>
+
+<div class="container">
+
+  <div class="hero-badge animate animate-0">New Archetype</div>
+  <h1 class="animate animate-1">Governance Archetype &mdash; AESOP Pipeline</h1>
+  <p class="hero-sub animate animate-2">
+    Portfolio governance workflows — structured intake, human approval gates, research,
+    material generation, and post-approval portfolio refresh — built on AESOP's existing
+    pipeline engine. No new infrastructure required.
+  </p>
+
+  <!-- ===== PIPELINE DIAGRAM ===== -->
+  <h2 class="animate animate-3">Pipeline Flow</h2>
+
+  <div class="mermaid-wrap animate animate-3">
+    <div class="zoom-controls">
+      <button onclick="zoomDiagram(this, 1.2)" title="Zoom in">+</button>
+      <button onclick="zoomDiagram(this, 0.8)" title="Zoom out">&minus;</button>
+      <button onclick="resetZoom(this)" title="Reset zoom">&#8634;</button>
+    </div>
+    <pre class="mermaid">
+      graph TD
+        START((START)) --> INTAKE
+
+        subgraph S1[" "]
+          INTAKE[Intake<br/>Discovery interview + gap analysis]
+        end
+
+        INTAKE --> GATE1
+
+        subgraph G1[" "]
+          GATE1{Approver reviews<br/>intake completeness}
+        end
+
+        GATE1 -->|Approved| RESEARCH
+
+        subgraph S2[" "]
+          RESEARCH[Research<br/>Deep research + market analysis<br/>+ regulatory scan]
+        end
+
+        GATE1 -->|Rejected| REJECT1[Return for revision]
+
+        RESEARCH --> MATERIALS
+
+        subgraph S3[" "]
+          MATERIALS[Generate Materials<br/>1-pager + pro forma<br/>+ PPTX governance deck]
+        end
+
+        MATERIALS --> GATE2
+
+        subgraph G2[" "]
+          GATE2{Governance body<br/>review}
+        end
+
+        GATE2 -->|Approved| REFRESH
+
+        subgraph S4[" "]
+          REFRESH[Portfolio Refresh<br/>Update system of record<br/>+ regenerate Excel/PPTX reports]
+        end
+
+        GATE2 -->|Rejected| REJECT2[Revise materials]
+
+        REFRESH --> MONITOR
+
+        subgraph S5[" "]
+          MONITOR[Meeting Monitor<br/>Ingest Teams transcripts<br/>+ LLM extraction of updates]
+        end
+
+        MONITOR --> GATE3
+
+        subgraph G3[" "]
+          GATE3{Human reviewer<br/>approves/rejects<br/>each proposed update}
+        end
+
+        GATE3 -->|Approved| APPLY
+
+        subgraph S6[" "]
+          APPLY[Apply Updates<br/>Write approved changes<br/>to portfolio + refresh reports]
+        end
+
+        GATE3 -->|Rejected| DISCARD[Discard update]
+
+        APPLY --> TRACK
+
+        subgraph S7[" "]
+          TRACK[Track<br/>Ongoing monitoring<br/>+ status updates]
+        end
+
+        TRACK --> ENDN((END))
+
+        class INTAKE,RESEARCH,MATERIALS,REFRESH,MONITOR,APPLY,TRACK phase
+        class GATE1,GATE2,GATE3 choice
+        class REJECT1,REJECT2,DISCARD rule
+        class START,ENDN mode
+        class S1,S2,S3,S4,S5,S6,S7,G1,G2,G3 mode
+    </pre>
+  </div>
+
+  <div class="legend animate animate-4">
+    <div class="legend-item"><div class="legend-swatch" style="background:var(--secondary)"></div> Pipeline stage</div>
+    <div class="legend-item"><div class="legend-swatch" style="background:var(--amber)"></div> HITL approval gate</div>
+    <div class="legend-item"><div class="legend-swatch" style="background:var(--rose)"></div> Rejection / revision path</div>
+  </div>
+
+  <!-- ===== KEY INSIGHT ===== -->
+  <h2 class="animate animate-3">Why AESOP Already Fits</h2>
+  <div class="insight-grid animate animate-4">
+    <div class="insight-card">
+      <h4>Reuses Existing Infrastructure</h4>
+      <p>
+        The governance pipeline is the same LangGraph state machine skeleton as the
+        build pipeline. HITL gates use the existing <code>interrupt()</code> pattern.
+        Research reuses the Deep Research runner. Document generation reuses the
+        <code>generated_documents</code> table and Supabase Storage.
+      </p>
+    </div>
+    <div class="insight-card">
+      <h4>Net-New Work Is Templates + Transcripts</h4>
+      <p>
+        Three new output renderers (1-pager, pro forma PDF, PPTX deck), one Excel service,
+        and one transcript ingestion + extraction pipeline — all following existing patterns.
+        The transcript pipeline uses the same LLM extraction pattern as the existing monitor/trace
+        analyzer. Manual upload fallback means the pipeline works without Graph API approval.
+        No new data model, no new pipeline engine, no new approval system.
+      </p>
+    </div>
+  </div>
+
+  <!-- ===== PROCESS MAP TABLE ===== -->
+  <h2 class="animate animate-3">Process Mapping</h2>
+  <div class="table-wrap animate animate-4">
+    <div class="table-scroll">
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>Desired Process Step</th>
+            <th>AESOP Today</th>
+            <th>Gap</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Structured intake form</td>
+            <td>Discovery interview, <code>POST /api/projects</code>, SMB wizard, executive intake</td>
+            <td><span class="gap-exists">Exists</span></td>
+          </tr>
+          <tr>
+            <td>Validate + capture missing info</td>
+            <td>Discovery interview gap analysis, triage verdict</td>
+            <td><span class="gap-exists">Exists</span></td>
+          </tr>
+          <tr>
+            <td>Route to human approver</td>
+            <td>Working Agreement (draft &rarr; sent &rarr; signed), HITL checkpoints</td>
+            <td><span class="gap-exists">Exists</span></td>
+          </tr>
+          <tr>
+            <td>Project research</td>
+            <td>Deep Research runner, Exa, Serper, SEC Edgar, Crunchbase</td>
+            <td><span class="gap-exists">Exists</span></td>
+          </tr>
+          <tr>
+            <td>One-page project summary</td>
+            <td>Opportunity brief compilation, working agreement rendering</td>
+            <td><span class="gap-template">New template</span></td>
+          </tr>
+          <tr>
+            <td>Pro forma</td>
+            <td>Not yet — same Jinja2 render pattern as working agreement</td>
+            <td><span class="gap-template">New template</span></td>
+          </tr>
+          <tr>
+            <td>PowerPoint governance deck</td>
+            <td>Not yet — PDF generation exists via weasyprint</td>
+            <td><span class="gap-service">New service</span></td>
+          </tr>
+          <tr>
+            <td>Route for governance review</td>
+            <td>Build approval gates (approve/reject with comments)</td>
+            <td><span class="gap-template">New gate variant</span></td>
+          </tr>
+          <tr>
+            <td>Update portfolio system of record</td>
+            <td>DISCO portfolio layer: Kanban, scoring, strategic prioritization</td>
+            <td><span class="gap-exists">Exists</span></td>
+          </tr>
+          <tr>
+            <td>Refresh Excel/PowerPoint reporting</td>
+            <td>Not yet — CSV export only</td>
+            <td><span class="gap-service">New service</span></td>
+          </tr>
+          <tr>
+            <td>Meeting transcript monitoring</td>
+            <td>Not yet — no transcript integration</td>
+            <td><span class="gap-service">New service</span></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- ===== IMPLEMENTATION PHASES ===== -->
+  <h2 class="animate animate-3">Implementation Plan</h2>
+  <div class="card-grid-3 animate animate-4">
+    <div class="phase-card">
+      <div class="phase-number">Phase 1 &middot; 5&ndash;7 days</div>
+      <h3>Core Pipeline</h3>
+      <ul>
+        <li>Add <code>governance</code> archetype + DB migration</li>
+        <li>Governance intake question bank</li>
+        <li>Research node + prompt template</li>
+        <li>Material generation node (1-pager + pro forma)</li>
+        <li>Wire nodes into LangGraph graph</li>
+        <li>Governance review HITL gate</li>
+      </ul>
+      <div class="phase-timeline">All within existing AESOP infrastructure</div>
+    </div>
+    <div class="phase-card">
+      <div class="phase-number">Phase 2 &middot; 5&ndash;7 days</div>
+      <h3>Outputs + Transcripts + Frontend</h3>
+      <ul>
+        <li>PPTX generation service (python-pptx)</li>
+        <li>Excel portfolio report (openpyxl)</li>
+        <li>Transcript ingestion (Graph API + manual fallback)</li>
+        <li>Transcript extraction LLM pipeline</li>
+        <li>Meeting update review HITL gate</li>
+        <li>Governance project detail page</li>
+        <li>Governance review + meeting update interfaces</li>
+        <li>Portfolio governance dashboard view</li>
+      </ul>
+      <div class="phase-timeline">New templates + transcript pipeline + frontend</div>
+    </div>
+  </div>
+
+  <!-- ===== CALLOUT ===== -->
+  <div class="callout animate animate-5">
+    <div class="callout-title">Design Principle</div>
+    <strong>Humans approve all material decisions.</strong> The agent assists, drafts, summarizes,
+    and recommends — but every approval gate, governance decision, financial assumption,
+    budget change, timeline change, scope change, and transcript-extracted status update routes
+    through a human reviewer before anything is formally changed in the portfolio. This is the
+    same HITL pattern AESOP already enforces in the build pipeline.
+  </div>
+
+  <div class="footer">&copy; 2025&ndash;2026 Charlie Fuller</div>
+
+</div>
+
+<script type="module">
+  import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs';
+
+  const isDark = document.documentElement.classList.contains('dark');
+
+  mermaid.initialize({
+    startOnLoad: true,
+    theme: 'base',
+    look: 'classic',
+    themeVariables: {
+      primaryColor: isDark ? '#132240' : '#ffffff',
+      primaryBorderColor: isDark ? '#2d4570' : '#a0bedb',
+      primaryTextColor: isDark ? '#e8edf5' : '#0a1628',
+      secondaryColor: isDark ? '#1a2d52' : '#f5f8fc',
+      secondaryBorderColor: isDark ? '#2d4570' : '#c8daea',
+      secondaryTextColor: isDark ? '#bccde8' : '#3d5a7a',
+      tertiaryColor: isDark ? '#1a2d52' : '#e0eef7',
+      tertiaryBorderColor: isDark ? '#6cace4' : '#4a90c4',
+      tertiaryTextColor: isDark ? '#bccde8' : '#3d5a7a',
+      lineColor: isDark ? '#2d4570' : '#a0bedb',
+      fontSize: '14px',
+      fontFamily: "'Fraunces', Georgia, serif",
+    }
+  });
+</script>
+<script>
+  // Theme toggle
+  const toggle = document.getElementById('themeToggle');
+  const iconLight = toggle.querySelector('.icon-light');
+  const iconDark = toggle.querySelector('.icon-dark');
+  function setTheme(d) {
+    document.documentElement.classList.toggle('dark', d);
+    iconLight.style.display = d ? 'none' : '';
+    iconDark.style.display = d ? '' : 'none';
+    try { localStorage.setItem('diagram-theme', d ? 'dark' : 'light'); } catch(e) {}
+  }
+  toggle.addEventListener('click', () => setTheme(!document.documentElement.classList.contains('dark')));
+  try { if (localStorage.getItem('diagram-theme') === 'dark') setTheme(true); } catch(e) {}
+
+  // Zoom
+  function updateZoomState(wrap) {
+    var target = wrap.querySelector('.mermaid');
+    var zoom = parseFloat(target.dataset.zoom || '1');
+    wrap.classList.toggle('is-zoomed', zoom > 1);
+  }
+  function zoomDiagram(btn, factor) {
+    var wrap = btn.closest('.mermaid-wrap');
+    var target = wrap.querySelector('.mermaid');
+    var current = parseFloat(target.dataset.zoom || '1');
+    var next = Math.min(Math.max(current * factor, 0.3), 5);
+    target.dataset.zoom = next;
+    target.style.transform = 'scale(' + next + ')';
+    updateZoomState(wrap);
+  }
+  function resetZoom(btn) {
+    var wrap = btn.closest('.mermaid-wrap');
+    var target = wrap.querySelector('.mermaid');
+    target.dataset.zoom = '1';
+    target.style.transform = 'scale(1)';
+    updateZoomState(wrap);
+  }
+  document.querySelectorAll('.mermaid-wrap').forEach(function(wrap) {
+    wrap.addEventListener('wheel', function(e) {
+      if (!e.ctrlKey && !e.metaKey) return;
+      e.preventDefault();
+      var target = wrap.querySelector('.mermaid');
+      var current = parseFloat(target.dataset.zoom || '1');
+      var factor = e.deltaY < 0 ? 1.1 : 0.9;
+      var next = Math.min(Math.max(current * factor, 0.3), 5);
+      target.dataset.zoom = next;
+      target.style.transform = 'scale(' + next + ')';
+      updateZoomState(wrap);
+    }, { passive: false });
+    var startX, startY, scrollL, scrollT;
+    wrap.addEventListener('mousedown', function(e) {
+      if (e.target.closest('.zoom-controls')) return;
+      var target = wrap.querySelector('.mermaid');
+      if (parseFloat(target.dataset.zoom || '1') <= 1) return;
+      wrap.classList.add('is-panning');
+      startX = e.clientX;
+      startY = e.clientY;
+      scrollL = wrap.scrollLeft;
+      scrollT = wrap.scrollTop;
+    });
+    window.addEventListener('mousemove', function(e) {
+      if (!wrap.classList.contains('is-panning')) return;
+      wrap.scrollLeft = scrollL - (e.clientX - startX);
+      wrap.scrollTop = scrollT - (e.clientY - startY);
+    });
+    window.addEventListener('mouseup', function() {
+      wrap.classList.remove('is-panning');
+    });
+  });
+</script>
+
+</body>
+</html>
