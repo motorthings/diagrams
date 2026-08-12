@@ -1,23 +1,1440 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0"><meta http-equiv="refresh" content="120">
-<title>Simulation Results — Run 4</title>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Simulation Results — run_20260812_001228</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600;9..144,700&family=Source+Code+Pro:wght@400;600&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 <style>
-:root{--bg:#0a1628;--surface:#0f1d35;--surface2:#132240;--border:#1a2d52;--text:#e8edf5;--text-dim:#9bb0d4;--orange:#f37021;--blue:#6cace4}
-*{margin:0;padding:0;box-sizing:border-box}
-body{background:var(--bg);background-image:radial-gradient(ellipse at 80% 0%,rgba(243,112,33,0.08) 0%,transparent 50%);color:var(--text);font-family:'Source Code Pro',monospace;display:flex;align-items:center;justify-content:center;min-height:100vh;text-align:center}
-h1{font-family:'Fraunces',serif;font-size:32px;color:var(--orange);margin-bottom:16px}
-p{color:var(--text-dim);font-size:14px;margin-bottom:8px}
-.bar{width:320px;height:6px;background:var(--border);border-radius:3px;margin:24px auto;overflow:hidden}
-.fill{height:100%;background:var(--orange);border-radius:3px;width:0%;animation:pulse 2s ease-in-out infinite}
-.count{font-family:'Fraunces',serif;font-size:48px;font-weight:700;color:var(--blue)}
-.spin{display:inline-block;width:24px;height:24px;border:2px solid var(--border);border-top-color:var(--orange);border-radius:50%;animation:spin 1s linear infinite;vertical-align:middle;margin-right:8px}
-@keyframes spin{to{transform:rotate(360deg)}}@keyframes pulse{0%,100%{opacity:0.3}50%{opacity:1}}
-.meta{font-size:11px;color:#5e7aa3;margin-top:24px}
-</style></head><body><div>
-<div class="count"><span class="spin"></span>0<span style="font-size:20px;color:var(--text-dim)"> / 12</span></div>
-<h1>Simulation Running</h1><div class="bar"><div class="fill"></div></div>
-<p>12 sprints · claims, underwriting &amp; subrogation · DeepSeek</p>
-<p>Discovery Engine (4096 tokens) · Trace system · Both tracks instrumented</p>
-<p style="color:var(--blue);margin-top:12px;">Full dashboard when complete.</p>
-<p class="meta">AI Transformation Experiment — Progressive Insurance Simulation</p>
-</div></body></html>
+  :root {
+    --bg: #0a1628;
+    --surface: #0f1d35;
+    --surface2: #132240;
+    --border: #1a2d52;
+    --text: #e8edf5;
+    --text-dim: #9bb0d4;
+    --text-muted: #5e7aa3;
+    --orange: #f37021;
+    --blue: #6cace4;
+    --green: #4caf93;
+    --red: #e0556a;
+    --yellow: #f0c45a;
+    --purple: #9b7ec4;
+  }
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Source Code Pro', monospace;
+    font-size: 14px;
+    line-height: 1.6;
+  }
+  h1, h2, h3, h4 { font-family: 'Fraunces', serif; }
+  h1 { font-size: 32px; color: var(--orange); margin-bottom: 4px; }
+  h2 { font-size: 22px; margin: 40px 0 16px; padding-bottom: 8px; border-bottom: 1px solid var(--border); }
+  h3 { font-size: 16px; color: var(--text-dim); margin-bottom: 10px; }
+  h4 { font-size: 13px; color: var(--text-dim); text-transform: uppercase; letter-spacing: 0.5px; }
+
+  /* Sticky nav */
+  nav {
+    position: sticky; top: 0; z-index: 100;
+    background: rgba(10,22,40,0.92); backdrop-filter: blur(12px);
+    border-bottom: 1px solid var(--border);
+    padding: 12px 32px;
+    display: flex; gap: 24px; align-items: center;
+  }
+  nav a { color: var(--text-dim); text-decoration: none; font-size: 13px; }
+  nav a:hover { color: var(--orange); }
+  nav .brand { font-family: 'Fraunces', serif; font-weight: 700; font-size: 18px; color: var(--orange); margin-right: auto; }
+
+  .container { max-width: 1200px; margin: 0 auto; padding: 32px; }
+
+  /* Summary bar */
+  .summary-bar {
+    display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 12px; margin: 24px 0;
+  }
+  .stat-card {
+    background: var(--surface2); border: 1px solid var(--border);
+    border-radius: 8px; padding: 16px; text-align: center;
+  }
+  .stat-card .stat-value { font-family: 'Fraunces', serif; font-size: 28px; font-weight: 700; }
+  .stat-card .stat-label { font-size: 11px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; margin-top: 4px; }
+  .stat-card .stat-sub  { font-size: 11px; color: var(--text-dim); margin-top: 2px; }
+
+  /* Metric cards */
+  .metric-grid {
+    display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 12px; margin: 16px 0;
+  }
+  .metric-card {
+    background: var(--surface2); border: 1px solid var(--border);
+    border-radius: 8px; padding: 16px;
+  }
+  .metric-card .label { font-size: 11px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; }
+  .metric-card .values { display: flex; justify-content: space-between; align-items: flex-end; margin-top: 8px; }
+  .metric-card .val { font-family: 'Fraunces', serif; font-size: 28px; font-weight: 700; }
+  .metric-card .val.a { color: var(--orange); }
+  .metric-card .val.b { color: var(--blue); }
+  .metric-card .delta {
+    font-size: 16px; font-weight: 600; padding: 2px 8px; border-radius: 4px;
+  }
+  .metric-card .delta.positive { color: var(--green); }
+  .metric-card .delta.negative { color: var(--red); }
+  .metric-card .delta.neutral { color: var(--text-dim); }
+
+  /* Charts */
+  .chart-grid {
+    display: grid; grid-template-columns: 1fr 1fr;
+    gap: 16px; margin: 16px 0;
+  }
+  @media(max-width: 768px) { .chart-grid { grid-template-columns: 1fr; } }
+  .chart-box {
+    background: var(--surface2); border: 1px solid var(--border);
+    border-radius: 8px; padding: 16px;
+  }
+  .chart-box canvas { max-height: 280px; }
+
+  /* Patterns & THEARI */
+  .pattern-list {
+    list-style: none; margin: 12px 0;
+  }
+  .pattern-item {
+    background: var(--surface2); border: 1px solid var(--border);
+    border-radius: 8px; padding: 14px 16px; margin-bottom: 8px;
+  }
+  .pattern-item .pat-header {
+    display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;
+  }
+  .pattern-item .pat-category {
+    font-family: 'Fraunces', serif; font-size: 15px; font-weight: 600;
+  }
+  .pattern-item .pat-confidence {
+    font-size: 12px; padding: 2px 8px; border-radius: 10px;
+    background: var(--surface); color: var(--text-dim);
+  }
+  .pattern-item .pat-confidence.high { color: var(--green); }
+  .pattern-item .pat-confidence.medium { color: var(--yellow); }
+  .pattern-item .pat-confidence.low { color: var(--text-muted); }
+  .pattern-item .pat-desc { font-size: 13px; color: var(--text-dim); margin-bottom: 4px; }
+  .pattern-item .pat-action { font-size: 13px; color: var(--blue); }
+  .pattern-item .pat-meta { font-size: 11px; color: var(--text-muted); margin-top: 6px; }
+
+  /* THEARI flow */
+  .theari-row {
+    display: flex; gap: 0; margin: 16px 0; border-radius: 8px; overflow: hidden;
+  }
+  .theari-phase {
+    flex: 1; text-align: center; padding: 12px 8px;
+    background: var(--surface2); border: 1px solid var(--border);
+  }
+  .theari-phase.active { background: var(--orange); border-color: var(--orange); }
+  .theari-phase.active .phase-name, .theari-phase.active .phase-count { color: #fff; }
+  .theari-phase .phase-name { font-family: 'Fraunces', serif; font-size: 14px; font-weight: 600; }
+  .theari-phase .phase-count { font-size: 24px; font-weight: 700; margin-top: 2px; }
+
+  /* Capability */
+  .cap-row {
+    display: flex; gap: 8px; margin: 12px 0; align-items: center;
+  }
+  .cap-level {
+    flex: 1; text-align: center; padding: 10px 8px; border-radius: 6px;
+    background: var(--surface2); border: 1px solid var(--border);
+    font-size: 12px; color: var(--text-dim);
+  }
+  .cap-level.reached { background: color-mix(in srgb, var(--orange) 25%, var(--surface2)); border-color: var(--orange); color: var(--orange); font-weight: 600; }
+  .cap-level.current { background: var(--orange); border-color: var(--orange); color: #fff; font-weight: 700; }
+  .cap-arrow { color: var(--text-muted); font-size: 18px; }
+
+  /* Agent table */
+  .agent-table { width: 100%; border-collapse: collapse; margin: 12px 0; }
+  .agent-table th {
+    text-align: left; padding: 8px 12px; font-size: 11px; color: var(--text-muted);
+    text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 1px solid var(--border);
+  }
+  .agent-table td {
+    padding: 8px 12px; border-bottom: 1px solid color-mix(in srgb, var(--border) 50%, transparent);
+    font-size: 13px;
+  }
+  .agent-table .bar-cell { width: 120px; }
+  .agent-table .bar-bg { height: 6px; border-radius: 3px; background: var(--border); }
+  .agent-table .bar-fill { height: 6px; border-radius: 3px; }
+  .agent-table .bar-fill.a { background: var(--orange); }
+  .agent-table .bar-fill.b { background: var(--blue); }
+
+  /* Section labels */
+  .section-note { font-size: 12px; color: var(--text-muted); margin-bottom: 12px; }
+
+  footer {
+    margin-top: 48px; padding-top: 16px; border-top: 1px solid var(--border);
+    font-size: 11px; color: var(--text-muted); text-align: center;
+  }
+</style>
+</head>
+<body>
+
+<nav>
+  <span class="brand">AI Transformation Experiment</span>
+  <a href="#summary">Summary</a>
+  <a href="#metrics">Metrics</a>
+  <a href="#charts">Charts</a>
+  <a href="#discovery">Discovery</a>
+  <a href="#theari">THEARI</a>
+  <a href="#agents">Agents</a>
+  <a href="#narrative">Narrative</a>
+  <a href="#data">Data</a>
+  <a href="ai-transformation-experiment.html" style="color:var(--orange)">← Experiment</a>
+</nav>
+
+<div class="container">
+
+<h1>Simulation Results</h1>
+<p style="color:var(--text-dim);font-size:14px;">
+  Run: run_20260812_001228<br>
+  Started: 2026-08-12T00:12:29 — Completed: 2026-08-12 01:43
+</p>
+
+<!-- === EXECUTIVE SUMMARY === -->
+
+<h2 id="exec">Executive Summary</h2>
+<div style="background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:24px;margin-bottom:24px;">
+  <div style="font-family:'Fraunces',serif;font-size:16px;line-height:1.8;color:var(--text);">
+    
+<div style='margin-bottom:24px;'>
+  <h3 style='font-family:"Fraunces",serif;font-size:18px;color:var(--orange);margin-bottom:10px;'>The Experiment</h3>
+  <p>A controlled simulation compared two approaches to AI transformation inside a modeled U.S. property and casualty insurer over 12 quarterly sprints. Both tracks processed the same claims with the same 11 psychologically differentiated agent profiles. The only difference was the transformation method.</p><ul style='margin-top:8px;padding-left:20px;'><li style='margin-bottom:8px;'><strong>Track A — Organic Discovery (SWT):</strong> Deploy AI into existing structures. Observe what breaks. Extract learning. Redesign one thing at a time. No reorg, no new roles, no RACI redesign.</li><li style='margin-bottom:8px;'><strong>Track B — Traditional Change Management (Kotter/Prosci):</strong> Build coalition. Form vision. Vendor selection. Phased rollout. Resistance management. Steering committee governance.</li><li style='margin-bottom:8px;'><strong>Scale:</strong> 1,589 total agent decisions across 180 claims per track.</li></ul>
+</div>
+<div style='margin-bottom:24px;'>
+  <h3 style='font-family:"Fraunces",serif;font-size:18px;color:var(--orange);margin-bottom:10px;'>What Diverged</h3>
+  <p>Metrics that showed meaningful differences between tracks (averaged across all 12 sprints):</p>
+<table style='width:100%;margin-top:10px;border-collapse:collapse;font-size:14px;'>
+<thead><tr style='font-size:11px;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.5px;'>
+<th style='text-align:left;padding:6px 12px;border-bottom:2px solid var(--border);'>Metric</th>
+<th style='text-align:left;padding:6px 12px;border-bottom:2px solid var(--border);'>Track A</th>
+<th style='text-align:left;padding:6px 12px;border-bottom:2px solid var(--border);'>Track B</th>
+<th style='text-align:left;padding:6px 12px;border-bottom:2px solid var(--border);'>Delta</th>
+<th style='text-align:left;padding:6px 12px;border-bottom:2px solid var(--border);'>What it means</th>
+</tr></thead><tbody><tr>
+<td style='padding:6px 12px;border-bottom:1px solid var(--border);font-weight:600;'>Exception Rate</td>
+<td style='padding:6px 12px;border-bottom:1px solid var(--border);color:var(--orange);'>A: 2.9</td>
+<td style='padding:6px 12px;border-bottom:1px solid var(--border);color:var(--blue);'>B: 3.7</td>
+<td style='padding:6px 12px;border-bottom:1px solid var(--border);font-weight:600;color:var(--red)'>Δ -0.7</td>
+<td style='padding:6px 12px;border-bottom:1px solid var(--border);font-size:12px;color:var(--text-dim);'>Track B suppresses exceptions through governance filtering</td>
+</tr><tr>
+<td style='padding:6px 12px;border-bottom:1px solid var(--border);font-weight:600;'>Supplement Request Rate</td>
+<td style='padding:6px 12px;border-bottom:1px solid var(--border);color:var(--orange);'>A: 5.0</td>
+<td style='padding:6px 12px;border-bottom:1px solid var(--border);color:var(--blue);'>B: 10.0</td>
+<td style='padding:6px 12px;border-bottom:1px solid var(--border);font-weight:600;color:var(--red)'>Δ -5.0</td>
+<td style='padding:6px 12px;border-bottom:1px solid var(--border);font-size:12px;color:var(--text-dim);'>Track B supplements less — may be missing information gaps</td>
+</tr><tr>
+<td style='padding:6px 12px;border-bottom:1px solid var(--border);font-weight:600;'>First Pass Accuracy</td>
+<td style='padding:6px 12px;border-bottom:1px solid var(--border);color:var(--orange);'>A: 92.5</td>
+<td style='padding:6px 12px;border-bottom:1px solid var(--border);color:var(--blue);'>B: 90.8</td>
+<td style='padding:6px 12px;border-bottom:1px solid var(--border);font-weight:600;color:var(--green)'>Δ +1.7</td>
+<td style='padding:6px 12px;border-bottom:1px solid var(--border);font-size:12px;color:var(--text-dim);'>Track A gets more claims right the first time — learning loop improves decisions</td>
+</tr><tr>
+<td style='padding:6px 12px;border-bottom:1px solid var(--border);font-weight:600;'>Cost Per Claim</td>
+<td style='padding:6px 12px;border-bottom:1px solid var(--border);color:var(--orange);'>A: 269.9</td>
+<td style='padding:6px 12px;border-bottom:1px solid var(--border);color:var(--blue);'>B: 274.5</td>
+<td style='padding:6px 12px;border-bottom:1px solid var(--border);font-weight:600;color:var(--red)'>Δ -4.6</td>
+<td style='padding:6px 12px;border-bottom:1px solid var(--border);font-size:12px;color:var(--text-dim);'>Track A processes cheaper — less rework from overrides and escalations</td>
+</tr></tbody></table>
+</div>
+<div style='margin-bottom:24px;'>
+  <h3 style='font-family:"Fraunces",serif;font-size:18px;color:var(--orange);margin-bottom:10px;'>What It Means</h3>
+  <p>The operating model for AI is not something an organization should fully design upfront — it is discovered through implementation.</p><ul style='margin-top:8px;padding-left:20px;'><li style='margin-bottom:8px;'>Track A's observe-learn-redesign loop catches and fixes meaning-loss at organizational seams. The absence detector found 6 instances of Type 2 emergence — decisions made from incomplete information where the incompleteness wasn't recognized at decision time. Track A fixed these at the seam. Track B routed equivalent findings through a steering committee.</li><li style='margin-bottom:8px;'>Track A's higher exception rate is not a failure signal — it reflects the interruption design that makes surfacing issues safe. Track B suppresses exceptions because they're treated as escalations requiring governance review. Agents in Track B learn not to flag problems.</li><li style='margin-bottom:8px;'>The trade-off is real: <strong>organic discovery produces better operational outcomes</strong> (lower translation debt, fewer handoff failures), but <strong>traditional change management provides more predictable governance</strong> (fewer surprises for leadership). Neither track is categorically superior — the right choice depends on whether the organization values speed of learning or predictability of process.</li></ul>
+</div>
+<div style='margin-bottom:24px;'>
+  <h3 style='font-family:"Fraunces",serif;font-size:18px;color:var(--orange);margin-bottom:10px;'>Why We Know</h3>
+  <p>Specific evidence from this 1,589-decision run that supports the conclusions above:</p><ul style='margin-top:8px;padding-left:20px;'><li style='margin-bottom:8px;'><strong>Agent behavior diverged.</strong> Greg used AI in 86% of decisions in Track A vs 81% in Track B, and overrode AI 0% vs 0% — the same psychological profile produced different behavior because the organizational rules differed Nick used AI in 2% of decisions in Track A vs 5% in Track B, and overrode AI 1% vs 1% — the same psychological profile produced different behavior because the organizational rules differed Tommy used AI in 37% of decisions in Track A vs 35% in Track B, and overrode AI 0% vs 0% — the same psychological profile produced different behavior because the organizational rules differed</li><li style='margin-bottom:8px;'><strong>Supplement requests:</strong> Track A agents requested additional information in 5.0% of decisions vs 10.0% in Track B — a 5.0-point gap. The absence detector flagged 6 instances of missing information in Track A. Track B's lower rate does not mean fewer issues exist — it means they are not being surfaced.</li><li style='margin-bottom:8px;'><strong>Exception rate:</strong> Track A surfaced exceptions in 2.9% of decisions vs 3.7% in Track B. Track A's interruption design makes flagging safe — agents can pause, override, or stop without political consequence. Track B treats exceptions as escalations requiring governance review, so agents learn not to raise them.</li><li style='margin-bottom:8px;'><strong>Fidelity audit:</strong> Each sprint, deterministic checks verify that track-specific rules are being applied — Track B's steering committee has no frontline claims representation, Track A's accountable owner has actual operating authority. These rules, not random variation, produce the divergence.</li><li style='margin-bottom:8px;'><strong>Sample size:</strong> Across 1,589 total agent decisions (794 Track A, 795 Track B), the divergence patterns are consistent in direction across sprints — they are not artifacts of small samples or single-sprint anomalies.</li></ul>
+</div>
+  </div>
+  <div style="margin-top:8px;display:flex;gap:12px;">
+    <a href="#" onclick="downloadSummary()" style="display:inline-block;padding:10px 20px;background:var(--orange);color:#fff;border-radius:6px;font-size:13px;text-decoration:none;font-weight:600;">Download Summary (.txt)</a>
+    <a href="ai-transformation-experiment.html" style="display:inline-block;padding:10px 20px;background:var(--surface);color:var(--text-dim);border:1px solid var(--border);border-radius:6px;font-size:13px;text-decoration:none;">← Experiment Overview</a>
+  </div>
+</div>
+<script>
+const summaryText = "The Experiment\nA controlled simulation compared two approaches to AI transformation inside a modeled U.S. property and casualty insurer over 12 quarterly sprints. Both tracks processed the same claims with the same 11 psychologically differentiated agent profiles. The only difference was the transformation method.\n\u2022 <strong>Track A \u2014 Organic Discovery (SWT):</strong> Deploy AI into existing structures. Observe what breaks. Extract learning. Redesign one thing at a time. No reorg, no new roles, no RACI redesign.\n\u2022 <strong>Track B \u2014 Traditional Change Management (Kotter/Prosci):</strong> Build coalition. Form vision. Vendor selection. Phased rollout. Resistance management. Steering committee governance.\n\u2022 <strong>Scale:</strong> 1,589 total agent decisions across 180 claims per track.\n\nWhat Diverged\nMetrics that showed meaningful differences between tracks (averaged across all 12 sprints):\n\n  Exception Rate: A=2.9 B=3.7 \u0394=-0.7 \u2014 Track B suppresses exceptions through governance filtering\n  Supplement Request Rate: A=5.0 B=10.0 \u0394=-5.0 \u2014 Track B supplements less \u2014 may be missing information gaps\n  First Pass Accuracy: A=92.5 B=90.8 \u0394=+1.7 \u2014 Track A gets more claims right the first time \u2014 learning loop improves decisions\n  Cost Per Claim: A=269.9 B=274.5 \u0394=-4.6 \u2014 Track A processes cheaper \u2014 less rework from overrides and escalations\n\nWhat It Means\nThe operating model for AI is not something an organization should fully design upfront \u2014 it is discovered through implementation.\n\u2022 Track A's observe-learn-redesign loop catches and fixes meaning-loss at organizational seams. The absence detector found 6 instances of Type 2 emergence \u2014 decisions made from incomplete information where the incompleteness wasn't recognized at decision time. Track A fixed these at the seam. Track B routed equivalent findings through a steering committee.\n\u2022 Track A's higher exception rate is not a failure signal \u2014 it reflects the interruption design that makes surfacing issues safe. Track B suppresses exceptions because they're treated as escalations requiring governance review. Agents in Track B learn not to flag problems.\n\u2022 The trade-off is real: <strong>organic discovery produces better operational outcomes</strong> (lower translation debt, fewer handoff failures), but <strong>traditional change management provides more predictable governance</strong> (fewer surprises for leadership). Neither track is categorically superior \u2014 the right choice depends on whether the organization values speed of learning or predictability of process.\n\nWhy We Know\nSpecific evidence from this 1,589-decision run that supports the conclusions above:\n\u2022 <strong>Agent behavior diverged.</strong> Greg used AI in 86% of decisions in Track A vs 81% in Track B, and overrode AI 0% vs 0% \u2014 the same psychological profile produced different behavior because the organizational rules differed Nick used AI in 2% of decisions in Track A vs 5% in Track B, and overrode AI 1% vs 1% \u2014 the same psychological profile produced different behavior because the organizational rules differed Tommy used AI in 37% of decisions in Track A vs 35% in Track B, and overrode AI 0% vs 0% \u2014 the same psychological profile produced different behavior because the organizational rules differed\n\u2022 <strong>Supplement requests:</strong> Track A agents requested additional information in 5.0% of decisions vs 10.0% in Track B \u2014 a 5.0-point gap. The absence detector flagged 6 instances of missing information in Track A. Track B's lower rate does not mean fewer issues exist \u2014 it means they are not being surfaced.\n\u2022 <strong>Exception rate:</strong> Track A surfaced exceptions in 2.9% of decisions vs 3.7% in Track B. Track A's interruption design makes flagging safe \u2014 agents can pause, override, or stop without political consequence. Track B treats exceptions as escalations requiring governance review, so agents learn not to raise them.\n\u2022 <strong>Fidelity audit:</strong> Each sprint, deterministic checks verify that track-specific rules are being applied \u2014 Track B's steering committee has no frontline claims representation, Track A's accountable owner has actual operating authority. These rules, not random variation, produce the divergence.\n\u2022 <strong>Sample size:</strong> Across 1,589 total agent decisions (794 Track A, 795 Track B), the divergence patterns are consistent in direction across sprints \u2014 they are not artifacts of small samples or single-sprint anomalies.";
+function downloadSummary() {
+  const blob = new Blob([summaryText], {type:'text/plain'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = 'executive-summary.txt';
+  a.click(); URL.revokeObjectURL(url);
+}
+</script>
+
+
+<!-- === SUMMARY === -->
+<h2 id="summary">Run Summary</h2>
+<div class="summary-bar">
+  <div class="stat-card">
+    <div class="stat-value" style="color:var(--orange)">794</div>
+    <div class="stat-label">Track A Decisions</div>
+    <div class="stat-sub">Organic Discovery (SWT)</div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-value" style="color:var(--blue)">795</div>
+    <div class="stat-label">Track B Decisions</div>
+    <div class="stat-sub">Traditional Change Mgmt</div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-value" style="color:var(--purple)">5</div>
+    <div class="stat-label">Novel Patterns</div>
+    <div class="stat-sub">Outside 18 known categories</div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-value" style="color:var(--yellow)">6</div>
+    <div class="stat-label">THEARI Discoveries A</div>
+    <div class="stat-sub">Evidence-gated</div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-value" style="color:var(--yellow)">6</div>
+    <div class="stat-label">THEARI Discoveries B</div>
+    <div class="stat-sub">Timeline-gated</div>
+  </div>
+</div>
+
+<!-- === KEY METRICS === -->
+<h2 id="metrics">Key Metric Divergence</h2>
+<div class="metric-grid">
+
+<div class="metric-card">
+  <div class="label">Cycle Time</div>
+  <div class="values">
+    <div><span class="val a">0.8</span><span style="font-size:12px;color:var(--text-dim)"> A</span></div>
+    <div><span class="val b">0.8</span><span style="font-size:12px;color:var(--text-dim)"> B</span></div>
+    <div class="delta neutral">-0.0</div>
+  </div>
+</div>
+
+<div class="metric-card">
+  <div class="label">Translation Debt Index</div>
+  <div class="values">
+    <div><span class="val a">3.7</span><span style="font-size:12px;color:var(--text-dim)"> A</span></div>
+    <div><span class="val b">3.9</span><span style="font-size:12px;color:var(--text-dim)"> B</span></div>
+    <div class="delta neutral">-0.2</div>
+  </div>
+</div>
+
+<div class="metric-card">
+  <div class="label">Exception Rate</div>
+  <div class="values">
+    <div><span class="val a">2.9</span><span style="font-size:12px;color:var(--text-dim)"> A</span></div>
+    <div><span class="val b">3.7</span><span style="font-size:12px;color:var(--text-dim)"> B</span></div>
+    <div class="delta positive">-0.7</div>
+  </div>
+</div>
+
+<div class="metric-card">
+  <div class="label">Employee Ai Trust</div>
+  <div class="values">
+    <div><span class="val a">5.4</span><span style="font-size:12px;color:var(--text-dim)"> A</span></div>
+    <div><span class="val b">5.5</span><span style="font-size:12px;color:var(--text-dim)"> B</span></div>
+    <div class="delta neutral">-0.1</div>
+  </div>
+</div>
+
+<div class="metric-card">
+  <div class="label">Cost Per Claim</div>
+  <div class="values">
+    <div><span class="val a">269.9</span><span style="font-size:12px;color:var(--text-dim)"> A</span></div>
+    <div><span class="val b">274.5</span><span style="font-size:12px;color:var(--text-dim)"> B</span></div>
+    <div class="delta positive">-4.6</div>
+  </div>
+</div>
+
+<div class="metric-card">
+  <div class="label">Customer Retention After Claim</div>
+  <div class="values">
+    <div><span class="val a">88.2</span><span style="font-size:12px;color:var(--text-dim)"> A</span></div>
+    <div><span class="val b">87.8</span><span style="font-size:12px;color:var(--text-dim)"> B</span></div>
+    <div class="delta neutral">+0.4</div>
+  </div>
+</div>
+
+<div class="metric-card">
+  <div class="label">First Pass Accuracy</div>
+  <div class="values">
+    <div><span class="val a">92.5</span><span style="font-size:12px;color:var(--text-dim)"> A</span></div>
+    <div><span class="val b">90.8</span><span style="font-size:12px;color:var(--text-dim)"> B</span></div>
+    <div class="delta positive">+1.7</div>
+  </div>
+</div>
+
+<div class="metric-card">
+  <div class="label">Trust Polarization</div>
+  <div class="values">
+    <div><span class="val a">2.0</span><span style="font-size:12px;color:var(--text-dim)"> A</span></div>
+    <div><span class="val b">2.0</span><span style="font-size:12px;color:var(--text-dim)"> B</span></div>
+    <div class="delta neutral">-0.0</div>
+  </div>
+</div>
+</div>
+
+<!-- === DIVERGENCE CHARTS === -->
+<h2 id="charts">Divergence Over Time</h2>
+<div class="chart-grid">
+
+<div class="chart-box">
+  <h3>Cycle Time (sprints) <span style="font-size:11px;color:var(--text-muted)">(lower is better)</span></h3>
+  <canvas id="chart_cycle_time"></canvas>
+</div>
+
+<div class="chart-box">
+  <h3>Translation Debt Index <span style="font-size:11px;color:var(--text-muted)">(lower is better)</span></h3>
+  <canvas id="chart_translation_debt_index"></canvas>
+</div>
+
+<div class="chart-box">
+  <h3>Exception Rate % <span style="font-size:11px;color:var(--text-muted)">(lower is better)</span></h3>
+  <canvas id="chart_exception_rate"></canvas>
+</div>
+
+<div class="chart-box">
+  <h3>Employee AI Trust (0-10) <span style="font-size:11px;color:var(--text-muted)">(higher is better)</span></h3>
+  <canvas id="chart_employee_ai_trust"></canvas>
+</div>
+
+<div class="chart-box">
+  <h3>Cost Per Claim ($) <span style="font-size:11px;color:var(--text-muted)">(lower is better)</span></h3>
+  <canvas id="chart_cost_per_claim"></canvas>
+</div>
+
+<div class="chart-box">
+  <h3>Trust Polarization <span style="font-size:11px;color:var(--text-muted)">(lower is better)</span></h3>
+  <canvas id="chart_trust_polarization"></canvas>
+</div>
+
+<div class="chart-box">
+  <h3>First-Pass Accuracy % <span style="font-size:11px;color:var(--text-muted)">(higher is better)</span></h3>
+  <canvas id="chart_first_pass_accuracy"></canvas>
+</div>
+
+<div class="chart-box">
+  <h3>Handoff Failure Rate % <span style="font-size:11px;color:var(--text-muted)">(lower is better)</span></h3>
+  <canvas id="chart_handoff_failure_rate"></canvas>
+</div>
+</div>
+
+<!-- === DISCOVERY ENGINE === -->
+<h2 id="discovery">Discovery Engine Outputs</h2>
+<p class="section-note">LLM-driven pattern detection — finds both known patterns (18 categories) and novel patterns outside any predefined category.</p>
+
+
+<div class="summary-bar" style="grid-template-columns:repeat(auto-fit,minmax(140px,1fr))">
+  <div class="stat-card">
+    <div class="stat-value" style="color:var(--purple);font-size:22px;">5</div>
+    <div class="stat-label">Total Novel Patterns</div>
+  </div>
+  
+  <div class="stat-card">
+    <div class="stat-value" style="color:var(--yellow);font-size:22px;">4</div>
+    <div class="stat-label">Social</div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-value" style="color:var(--yellow);font-size:22px;">1</div>
+    <div class="stat-label">Workflow</div>
+  </div>
+</div>
+<h3 style="margin-top:24px;">Track A — Discovered Patterns</h3>
+<ul class="pattern-list">
+
+<li class="pattern-item">
+  <div class="pat-header">
+    <span>Sprint 3 — <span class="pat-category">decision_concentration_anomaly</span> <span style="color:var(--purple);font-size:11px;">NOVEL</span></span>
+    <span class="pat-confidence high">92% conf</span>
+  </div>
+  <div class="pat-desc">A severe concentration of decision-making activity in a small subset of agents, while the majority of agents show near-zero or zero decision counts. Tommy (41), Nick (38), Greg (27), Jordan (20), and </div>
+  <div class="pat-action">→ Audit the routing logic and decision assignment algorithm. Implement a load-balancing mechanism that distributes decisions more evenly across all agents, especially those with low </div>
+  <div class="pat-meta">Persistence: 1 sprints</div>
+</li>
+
+<li class="pattern-item">
+  <div class="pat-header">
+    <span>Sprint 3 — <span class="pat-category">trust_optimism_gap</span> <span style="color:var(--purple);font-size:11px;">NOVEL</span></span>
+    <span class="pat-confidence high">85% conf</span>
+  </div>
+  <div class="pat-desc">There is a striking disconnect between AI trust levels and actual AI usage. Jordan has the highest AI trust (0.94) but shows zero positive or negative AI experiences (ai_exp=+0/-0/~0), while Alicia ha</div>
+  <div class="pat-action">→ Investigate the trust formation pathways. Conduct interviews with Jordan (high trust, no usage) and Alicia (low trust, high usage) to understand what drives their trust perceptions</div>
+  <div class="pat-meta">Persistence: 1 sprints</div>
+</li>
+
+<li class="pattern-item">
+  <div class="pat-header">
+    <span>Sprint 3 — <span class="pat-category">exception_triggered_escalation</span> <span style="color:var(--purple);font-size:11px;">NOVEL</span></span>
+    <span class="pat-confidence high">88% conf</span>
+  </div>
+  <div class="pat-desc">In Tommy's decision sample, all cases with translation=True and exception=True resulted in non-approve outcomes (request_info or escalate), while all cases with translation=False and exception=False r</div>
+  <div class="pat-action">→ Review the exception handling logic. Analyze whether exceptions are being used as a binary gate rather than as a signal for additional review. Consider implementing a tiered except</div>
+  <div class="pat-meta">Persistence: 1 sprints</div>
+</li>
+
+<li class="pattern-item">
+  <div class="pat-header">
+    <span>Sprint 3 — <span class="pat-category">stress_exhaustion_decoupling</span> <span style="color:var(--purple);font-size:11px;">NOVEL</span></span>
+    <span class="pat-confidence high">78% conf</span>
+  </div>
+  <div class="pat-desc">There is no consistent relationship between stress and exhaustion across agents. Nick has zero stress but 9.0 exhaustion (highest), while Alicia has 0.85 stress but only 3.0 exhaustion. Tommy has 0.05</div>
+  <div class="pat-action">→ Re-evaluate the stress and exhaustion metrics. Consider whether exhaustion should be weighted more heavily in decision-making about agent workload. Implement interventions targetin</div>
+  <div class="pat-meta">Persistence: 1 sprints</div>
+</li>
+
+<li class="pattern-item">
+  <div class="pat-header">
+    <span>Sprint 3 — <span class="pat-category">ai_usage_avoidance_despite_availability</span> <span style="color:var(--purple);font-size:11px;">NOVEL</span></span>
+    <span class="pat-confidence high">95% conf</span>
+  </div>
+  <div class="pat-desc">Across all sampled decisions, AI was never used (AI used=False on all 10 samples), despite the system having AI capabilities and agents showing varying trust levels. This suggests a systemic avoidance</div>
+  <div class="pat-action">→ Conduct a workflow analysis to understand why AI is not being invoked. Check if AI recommendations are being surfaced automatically or require manual activation. Consider making AI</div>
+  <div class="pat-meta">Persistence: 1 sprints</div>
+</li>
+
+<li class="pattern-item">
+  <div class="pat-header">
+    <span>Sprint 3 — <span class="pat-category">translation_debt</span> </span>
+    <span class="pat-confidence high">72% conf</span>
+  </div>
+  <div class="pat-desc">Translation flags appear exclusively in complex cases (4 vehicles, 3 vehicles with injuries, unclear liability), while simple cases never trigger translation. This suggests translation is being used a</div>
+  <div class="pat-action">→ Clarify the purpose of the translation flag. If it's meant for language translation, separate it from complexity indicators. If it's meant to flag complex cases, rename it to 'comp</div>
+  <div class="pat-meta">Persistence: 1 sprints</div>
+</li>
+</ul>
+
+<!-- === THEARI === -->
+<h2 id="theari">THEARI Value-Thesis Validation</h2>
+<p class="section-note">Tracks discoveries through five phases of increasing certainty. Track A is evidence-gated. Track B auto-advances on schedule.</p>
+
+<h3 style="margin-top:24px;">Track A — Evidence-Gated</h3>
+<p class="section-note">6 friction discoveries, 0 absence discoveries</p>
+<div class="theari-row">
+
+<div class="theari-phase">
+  <div class="phase-name">Theoretical</div>
+  <div class="phase-count">0</div>
+</div>
+
+<div class="theari-phase active">
+  <div class="phase-name">Empirical</div>
+  <div class="phase-count">6</div>
+</div>
+
+<div class="theari-phase">
+  <div class="phase-name">Applicable</div>
+  <div class="phase-count">0</div>
+</div>
+
+<div class="theari-phase">
+  <div class="phase-name">Replicable</div>
+  <div class="phase-count">0</div>
+</div>
+
+<div class="theari-phase">
+  <div class="phase-name">Impact</div>
+  <div class="phase-count">0</div>
+</div>
+</div>
+<ul class="pattern-list">
+
+<li class="pattern-item">
+  <div class="pat-header">
+    <span class="pat-category">Empirical — Friction</span>
+    <span class="pat-confidence high">95% conf</span>
+  </div>
+  <div class="pat-desc">Across all sampled decisions, AI was never used (AI used=False on all 10 samples), despite the system having AI capabilities and agents showing varying trust levels. This suggests a systemic avoidance of AI tools, even among agents with high trust (Jordan at 0.94) and those with positive AI experiences (Alicia with +7).</div>
+  <div class="pat-meta">Evidence sprints: [3, 4] | Improvement: 5%</div>
+</li>
+
+<li class="pattern-item">
+  <div class="pat-header">
+    <span class="pat-category">Empirical — Friction</span>
+    <span class="pat-confidence high">92% conf</span>
+  </div>
+  <div class="pat-desc">A severe concentration of decision-making activity in a small subset of agents, while the majority of agents show near-zero or zero decision counts. Tommy (41), Nick (38), Greg (27), Jordan (20), and Alicia (57) account for the vast majority of all decisions, while Ron, Tricia, Mike, Leslie, and Rachel show 0-12 decisions despite having similar stress and trust profiles.</div>
+  <div class="pat-meta">Evidence sprints: [3, 4] | Improvement: 5%</div>
+</li>
+
+<li class="pattern-item">
+  <div class="pat-header">
+    <span class="pat-category">Empirical — Friction</span>
+    <span class="pat-confidence high">88% conf</span>
+  </div>
+  <div class="pat-desc">In Tommy's decision sample, all cases with translation=True and exception=True resulted in non-approve outcomes (request_info or escalate), while all cases with translation=False and exception=False resulted in approve. This suggests a deterministic pattern where exceptions trigger escalation regardless of the underlying claim merits.</div>
+  <div class="pat-meta">Evidence sprints: [3, 4] | Improvement: 5%</div>
+</li>
+
+<li class="pattern-item">
+  <div class="pat-header">
+    <span class="pat-category">Empirical — Friction</span>
+    <span class="pat-confidence high">85% conf</span>
+  </div>
+  <div class="pat-desc">There is a striking disconnect between AI trust levels and actual AI usage. Jordan has the highest AI trust (0.94) but shows zero positive or negative AI experiences (ai_exp=+0/-0/~0), while Alicia has moderate trust (0.29) but has the most AI interactions (+7/-1/~5). Tommy has moderate trust (0.57) with 3 neutral AI experiences but shows AI used=False on all sampled decisions.</div>
+  <div class="pat-meta">Evidence sprints: [3, 4] | Improvement: 5%</div>
+</li>
+
+<li class="pattern-item">
+  <div class="pat-header">
+    <span class="pat-category">Empirical — Friction</span>
+    <span class="pat-confidence high">78% conf</span>
+  </div>
+  <div class="pat-desc">There is no consistent relationship between stress and exhaustion across agents. Nick has zero stress but 9.0 exhaustion (highest), while Alicia has 0.85 stress but only 3.0 exhaustion. Tommy has 0.05 stress with 4.0 exhaustion, and Rachel has 0.88 stress with 4.0 exhaustion. This suggests stress and exhaustion are being driven by different factors.</div>
+  <div class="pat-meta">Evidence sprints: [3, 4] | Improvement: 5%</div>
+</li>
+
+<li class="pattern-item">
+  <div class="pat-header">
+    <span class="pat-category">Empirical — Friction</span>
+    <span class="pat-confidence high">72% conf</span>
+  </div>
+  <div class="pat-desc">Translation flags appear exclusively in complex cases (4 vehicles, 3 vehicles with injuries, unclear liability), while simple cases never trigger translation. This suggests translation is being used as a complexity marker, but it's unclear if this is intentional or if meaning is being lost in these complex handoffs.</div>
+  <div class="pat-meta">Evidence sprints: [3, 4] | Improvement: 5%</div>
+</li>
+</ul>
+<h3 style="margin-top:24px;">Track B — Timeline-Gated</h3>
+<p class="section-note">0 friction discoveries, 6 absence discoveries</p>
+<div class="theari-row">
+
+<div class="theari-phase">
+  <div class="phase-name">Theoretical</div>
+  <div class="phase-count">0</div>
+</div>
+
+<div class="theari-phase">
+  <div class="phase-name">Empirical</div>
+  <div class="phase-count">0</div>
+</div>
+
+<div class="theari-phase active">
+  <div class="phase-name">Applicable</div>
+  <div class="phase-count">6</div>
+</div>
+
+<div class="theari-phase">
+  <div class="phase-name">Replicable</div>
+  <div class="phase-count">0</div>
+</div>
+
+<div class="theari-phase">
+  <div class="phase-name">Impact</div>
+  <div class="phase-count">0</div>
+</div>
+</div>
+<ul class="pattern-list">
+
+<li class="pattern-item">
+  <div class="pat-header">
+    <span class="pat-category">Applicable — Absence</span>
+    <span class="pat-confidence high">85% conf</span>
+  </div>
+  <div class="pat-desc">19 claims were auto-approved by AI but later flagged for escalation or override. The AI didn't know it should pause — the pause signal wasn't in its inputs.</div>
+  <div class="pat-meta">Evidence sprints: [1] | Improvement: 3%</div>
+</li>
+
+<li class="pattern-item">
+  <div class="pat-header">
+    <span class="pat-category">Applicable — Absence</span>
+    <span class="pat-confidence medium">50% conf</span>
+  </div>
+  <div class="pat-desc">The claim got stuck in a request_info loop for 4 consecutive steps, escalated to senior adjuster, and ultimately escalated to subrogation without any substantive progress. This caused significant delay, wasted effort, and potential regulatory exposure in a high-scrutiny state (GA).</div>
+  <div class="pat-meta">Evidence sprints: [1] | Improvement: 2%</div>
+</li>
+
+<li class="pattern-item">
+  <div class="pat-header">
+    <span class="pat-category">Applicable — Absence</span>
+    <span class="pat-confidence medium">50% conf</span>
+  </div>
+  <div class="pat-desc">Sanjay and Kathryn both flagged the missing notes as a reason to request more information, but the notes were never produced. This led to repeated request_info cycles and eventual escalation, delaying resolution and increasing risk of bad-faith claims.</div>
+  <div class="pat-meta">Evidence sprints: [1] | Improvement: 2%</div>
+</li>
+
+<li class="pattern-item">
+  <div class="pat-header">
+    <span class="pat-category">Applicable — Absence</span>
+    <span class="pat-confidence medium">50% conf</span>
+  </div>
+  <div class="pat-desc">Liability remains genuinely disputed, and the approval creates a false sense of progress. If the police report later contradicts the claim, the company could face bad-faith exposure in a high-regulatory-scrutiny state (PA). The AI (if used later) would have no way to know the report was unverified.</div>
+  <div class="pat-meta">Evidence sprints: [1] | Improvement: 2%</div>
+</li>
+
+<li class="pattern-item">
+  <div class="pat-header">
+    <span class="pat-category">Applicable — Absence</span>
+    <span class="pat-confidence medium">50% conf</span>
+  </div>
+  <div class="pat-desc">The claim was approved for liability without a verified police report, which could lead to incorrect fault allocation, improper settlement, or regulatory penalties. The absence was not caught by any automated check.</div>
+  <div class="pat-meta">Evidence sprints: [1] | Improvement: 2%</div>
+</li>
+
+<li class="pattern-item">
+  <div class="pat-header">
+    <span class="pat-category">Applicable — Absence</span>
+    <span class="pat-confidence medium">50% conf</span>
+  </div>
+  <div class="pat-desc">Multiple downstream reviewers (Diana, Sanjay, Kathryn, Maria at payment, Tommy) all flagged the missing damage estimate, leading to repeated request_info cycles and eventual escalation. The claim could not be settled or subrogated without this core data.</div>
+  <div class="pat-meta">Evidence sprints: [1] | Improvement: 2%</div>
+</li>
+</ul>
+
+<h2>Capability State Progression</h2>
+<p class="section-note">Each track's Discovery Engine unlocks higher autonomy levels as it proves reliability.</p>
+
+<h3 style="margin-top:16px;">Track A</h3>
+<p class="section-note">Patterns: 2 detected, 0 validated, 0 successful redesigns, 0 incidents</p>
+<div class="cap-row">
+<div class="cap-level current">Observe</div>
+<span class="cap-arrow">→</span>
+<div class="cap-level">Recommend</div>
+<span class="cap-arrow">→</span>
+<div class="cap-level">Bounded</div>
+<span class="cap-arrow">→</span>
+<div class="cap-level">Autonomous</div>
+<span class="cap-arrow">→</span>
+<div class="cap-level">Emergent</div>
+</div>
+<h3 style="margin-top:16px;">Track B</h3>
+<p class="section-note">Patterns: 0 detected, 0 validated, 0 successful redesigns, 0 incidents</p>
+<div class="cap-row">
+<div class="cap-level current">Observe</div>
+<span class="cap-arrow">→</span>
+<div class="cap-level">Recommend</div>
+<span class="cap-arrow">→</span>
+<div class="cap-level">Bounded</div>
+<span class="cap-arrow">→</span>
+<div class="cap-level">Autonomous</div>
+<span class="cap-arrow">→</span>
+<div class="cap-level">Emergent</div>
+</div>
+
+<!-- === AGENT BEHAVIOR === -->
+<h2 id="agents">Agent Behavior Breakdown</h2>
+<h3 style="margin-top:24px;">Track A — Organic Discovery</h3>
+
+<table class="agent-table">
+<thead><tr>
+  <th>Agent</th><th>Decisions</th><th>AI Usage</th><th>AI Accept</th><th>Override</th><th>Escalate</th><th>Exceptions</th><th>Translation</th>
+</tr></thead><tbody>
+
+<tr>
+  <td><strong>Alicia</strong></td>
+  <td>226</td>
+  <td class="bar-cell"><div class="bar-bg"><div class="bar-fill a" style="width:80.53097345132744%"></div></div><span style="font-size:11px;color:var(--text-muted)"> 81%</span></td>
+  <td>5 <span style="font-size:11px;color:var(--text-muted)">(3%)</span></td>
+  <td>0 <span style="font-size:11px;color:var(--text-muted)">(0%)</span></td>
+  <td>92 <span style="font-size:11px;color:var(--text-muted)">(41%)</span></td>
+  <td>95 <span style="font-size:11px;color:var(--text-muted)">(42%)</span></td>
+  <td>4 <span style="font-size:11px;color:var(--text-muted)">(2%)</span></td>
+</tr>
+
+<tr>
+  <td><strong>Nick</strong></td>
+  <td>147</td>
+  <td class="bar-cell"><div class="bar-bg"><div class="bar-fill a" style="width:2.0408163265306123%"></div></div><span style="font-size:11px;color:var(--text-muted)"> 2%</span></td>
+  <td>0 <span style="font-size:11px;color:var(--text-muted)">(0%)</span></td>
+  <td>1 <span style="font-size:11px;color:var(--text-muted)">(1%)</span></td>
+  <td>26 <span style="font-size:11px;color:var(--text-muted)">(18%)</span></td>
+  <td>31 <span style="font-size:11px;color:var(--text-muted)">(21%)</span></td>
+  <td>10 <span style="font-size:11px;color:var(--text-muted)">(7%)</span></td>
+</tr>
+
+<tr>
+  <td><strong>Greg</strong></td>
+  <td>107</td>
+  <td class="bar-cell"><div class="bar-bg"><div class="bar-fill a" style="width:85.98130841121495%"></div></div><span style="font-size:11px;color:var(--text-muted)"> 86%</span></td>
+  <td>53 <span style="font-size:11px;color:var(--text-muted)">(58%)</span></td>
+  <td>0 <span style="font-size:11px;color:var(--text-muted)">(0%)</span></td>
+  <td>12 <span style="font-size:11px;color:var(--text-muted)">(11%)</span></td>
+  <td>13 <span style="font-size:11px;color:var(--text-muted)">(12%)</span></td>
+  <td>5 <span style="font-size:11px;color:var(--text-muted)">(5%)</span></td>
+</tr>
+
+<tr>
+  <td><strong>AI Underwriting Pipeline</strong></td>
+  <td>93</td>
+  <td class="bar-cell"><div class="bar-bg"><div class="bar-fill a" style="width:100.0%"></div></div><span style="font-size:11px;color:var(--text-muted)"> 100%</span></td>
+  <td>93 <span style="font-size:11px;color:var(--text-muted)">(100%)</span></td>
+  <td>0 <span style="font-size:11px;color:var(--text-muted)">(0%)</span></td>
+  <td>0 <span style="font-size:11px;color:var(--text-muted)">(0%)</span></td>
+  <td>0 <span style="font-size:11px;color:var(--text-muted)">(0%)</span></td>
+  <td>0 <span style="font-size:11px;color:var(--text-muted)">(0%)</span></td>
+</tr>
+
+<tr>
+  <td><strong>Rachel</strong></td>
+  <td>57</td>
+  <td class="bar-cell"><div class="bar-bg"><div class="bar-fill a" style="width:0.0%"></div></div><span style="font-size:11px;color:var(--text-muted)"> 0%</span></td>
+  <td>0 <span style="font-size:11px;color:var(--text-muted)">(0%)</span></td>
+  <td>0 <span style="font-size:11px;color:var(--text-muted)">(0%)</span></td>
+  <td>0 <span style="font-size:11px;color:var(--text-muted)">(0%)</span></td>
+  <td>22 <span style="font-size:11px;color:var(--text-muted)">(39%)</span></td>
+  <td>19 <span style="font-size:11px;color:var(--text-muted)">(33%)</span></td>
+</tr>
+
+<tr>
+  <td><strong>AI Pipeline</strong></td>
+  <td>52</td>
+  <td class="bar-cell"><div class="bar-bg"><div class="bar-fill a" style="width:100.0%"></div></div><span style="font-size:11px;color:var(--text-muted)"> 100%</span></td>
+  <td>52 <span style="font-size:11px;color:var(--text-muted)">(100%)</span></td>
+  <td>0 <span style="font-size:11px;color:var(--text-muted)">(0%)</span></td>
+  <td>0 <span style="font-size:11px;color:var(--text-muted)">(0%)</span></td>
+  <td>0 <span style="font-size:11px;color:var(--text-muted)">(0%)</span></td>
+  <td>0 <span style="font-size:11px;color:var(--text-muted)">(0%)</span></td>
+</tr>
+
+<tr>
+  <td><strong>Tommy</strong></td>
+  <td>41</td>
+  <td class="bar-cell"><div class="bar-bg"><div class="bar-fill a" style="width:36.58536585365854%"></div></div><span style="font-size:11px;color:var(--text-muted)"> 37%</span></td>
+  <td>3 <span style="font-size:11px;color:var(--text-muted)">(20%)</span></td>
+  <td>0 <span style="font-size:11px;color:var(--text-muted)">(0%)</span></td>
+  <td>3 <span style="font-size:11px;color:var(--text-muted)">(7%)</span></td>
+  <td>12 <span style="font-size:11px;color:var(--text-muted)">(29%)</span></td>
+  <td>9 <span style="font-size:11px;color:var(--text-muted)">(22%)</span></td>
+</tr>
+
+<tr>
+  <td><strong>Jordan</strong></td>
+  <td>20</td>
+  <td class="bar-cell"><div class="bar-bg"><div class="bar-fill a" style="width:70.0%"></div></div><span style="font-size:11px;color:var(--text-muted)"> 70%</span></td>
+  <td>14 <span style="font-size:11px;color:var(--text-muted)">(100%)</span></td>
+  <td>0 <span style="font-size:11px;color:var(--text-muted)">(0%)</span></td>
+  <td>1 <span style="font-size:11px;color:var(--text-muted)">(5%)</span></td>
+  <td>1 <span style="font-size:11px;color:var(--text-muted)">(5%)</span></td>
+  <td>3 <span style="font-size:11px;color:var(--text-muted)">(15%)</span></td>
+</tr>
+
+<tr>
+  <td><strong>Maria</strong></td>
+  <td>15</td>
+  <td class="bar-cell"><div class="bar-bg"><div class="bar-fill a" style="width:33.33333333333333%"></div></div><span style="font-size:11px;color:var(--text-muted)"> 33%</span></td>
+  <td>2 <span style="font-size:11px;color:var(--text-muted)">(40%)</span></td>
+  <td>0 <span style="font-size:11px;color:var(--text-muted)">(0%)</span></td>
+  <td>5 <span style="font-size:11px;color:var(--text-muted)">(33%)</span></td>
+  <td>6 <span style="font-size:11px;color:var(--text-muted)">(40%)</span></td>
+  <td>3 <span style="font-size:11px;color:var(--text-muted)">(20%)</span></td>
+</tr>
+
+<tr>
+  <td><strong>Diana</strong></td>
+  <td>15</td>
+  <td class="bar-cell"><div class="bar-bg"><div class="bar-fill a" style="width:0.0%"></div></div><span style="font-size:11px;color:var(--text-muted)"> 0%</span></td>
+  <td>0 <span style="font-size:11px;color:var(--text-muted)">(0%)</span></td>
+  <td>0 <span style="font-size:11px;color:var(--text-muted)">(0%)</span></td>
+  <td>0 <span style="font-size:11px;color:var(--text-muted)">(0%)</span></td>
+  <td>1 <span style="font-size:11px;color:var(--text-muted)">(7%)</span></td>
+  <td>8 <span style="font-size:11px;color:var(--text-muted)">(53%)</span></td>
+</tr>
+
+<tr>
+  <td><strong>AI Subrogation Pipeline</strong></td>
+  <td>8</td>
+  <td class="bar-cell"><div class="bar-bg"><div class="bar-fill a" style="width:100.0%"></div></div><span style="font-size:11px;color:var(--text-muted)"> 100%</span></td>
+  <td>8 <span style="font-size:11px;color:var(--text-muted)">(100%)</span></td>
+  <td>0 <span style="font-size:11px;color:var(--text-muted)">(0%)</span></td>
+  <td>0 <span style="font-size:11px;color:var(--text-muted)">(0%)</span></td>
+  <td>0 <span style="font-size:11px;color:var(--text-muted)">(0%)</span></td>
+  <td>0 <span style="font-size:11px;color:var(--text-muted)">(0%)</span></td>
+</tr>
+
+<tr>
+  <td><strong>Pat</strong></td>
+  <td>6</td>
+  <td class="bar-cell"><div class="bar-bg"><div class="bar-fill a" style="width:0.0%"></div></div><span style="font-size:11px;color:var(--text-muted)"> 0%</span></td>
+  <td>0 <span style="font-size:11px;color:var(--text-muted)">(0%)</span></td>
+  <td>0 <span style="font-size:11px;color:var(--text-muted)">(0%)</span></td>
+  <td>0 <span style="font-size:11px;color:var(--text-muted)">(0%)</span></td>
+  <td>0 <span style="font-size:11px;color:var(--text-muted)">(0%)</span></td>
+  <td>3 <span style="font-size:11px;color:var(--text-muted)">(50%)</span></td>
+</tr>
+
+<tr>
+  <td><strong>Sanjay</strong></td>
+  <td>6</td>
+  <td class="bar-cell"><div class="bar-bg"><div class="bar-fill a" style="width:0.0%"></div></div><span style="font-size:11px;color:var(--text-muted)"> 0%</span></td>
+  <td>0 <span style="font-size:11px;color:var(--text-muted)">(0%)</span></td>
+  <td>0 <span style="font-size:11px;color:var(--text-muted)">(0%)</span></td>
+  <td>0 <span style="font-size:11px;color:var(--text-muted)">(0%)</span></td>
+  <td>1 <span style="font-size:11px;color:var(--text-muted)">(17%)</span></td>
+  <td>1 <span style="font-size:11px;color:var(--text-muted)">(17%)</span></td>
+</tr>
+
+<tr>
+  <td><strong>Kathryn</strong></td>
+  <td>1</td>
+  <td class="bar-cell"><div class="bar-bg"><div class="bar-fill a" style="width:0.0%"></div></div><span style="font-size:11px;color:var(--text-muted)"> 0%</span></td>
+  <td>0 <span style="font-size:11px;color:var(--text-muted)">(0%)</span></td>
+  <td>0 <span style="font-size:11px;color:var(--text-muted)">(0%)</span></td>
+  <td>0 <span style="font-size:11px;color:var(--text-muted)">(0%)</span></td>
+  <td>1 <span style="font-size:11px;color:var(--text-muted)">(100%)</span></td>
+  <td>0 <span style="font-size:11px;color:var(--text-muted)">(0%)</span></td>
+</tr>
+</tbody></table>
+<h3 style="margin-top:24px;">Track B — Traditional Change Mgmt</h3>
+
+<table class="agent-table">
+<thead><tr>
+  <th>Agent</th><th>Decisions</th><th>AI Usage</th><th>AI Accept</th><th>Override</th><th>Escalate</th><th>Exceptions</th><th>Translation</th>
+</tr></thead><tbody>
+
+<tr>
+  <td><strong>Alicia</strong></td>
+  <td>231</td>
+  <td class="bar-cell"><div class="bar-bg"><div class="bar-fill b" style="width:79.22077922077922%"></div></div><span style="font-size:11px;color:var(--text-muted)"> 79%</span></td>
+  <td>14 <span style="font-size:11px;color:var(--text-muted)">(8%)</span></td>
+  <td>1 <span style="font-size:11px;color:var(--text-muted)">(0%)</span></td>
+  <td>87 <span style="font-size:11px;color:var(--text-muted)">(38%)</span></td>
+  <td>90 <span style="font-size:11px;color:var(--text-muted)">(39%)</span></td>
+  <td>6 <span style="font-size:11px;color:var(--text-muted)">(3%)</span></td>
+</tr>
+
+<tr>
+  <td><strong>Nick</strong></td>
+  <td>147</td>
+  <td class="bar-cell"><div class="bar-bg"><div class="bar-fill b" style="width:5.442176870748299%"></div></div><span style="font-size:11px;color:var(--text-muted)"> 5%</span></td>
+  <td>1 <span style="font-size:11px;color:var(--text-muted)">(12%)</span></td>
+  <td>1 <span style="font-size:11px;color:var(--text-muted)">(1%)</span></td>
+  <td>15 <span style="font-size:11px;color:var(--text-muted)">(10%)</span></td>
+  <td>20 <span style="font-size:11px;color:var(--text-muted)">(14%)</span></td>
+  <td>9 <span style="font-size:11px;color:var(--text-muted)">(6%)</span></td>
+</tr>
+
+<tr>
+  <td><strong>Greg</strong></td>
+  <td>113</td>
+  <td class="bar-cell"><div class="bar-bg"><div class="bar-fill b" style="width:81.41592920353983%"></div></div><span style="font-size:11px;color:var(--text-muted)"> 81%</span></td>
+  <td>58 <span style="font-size:11px;color:var(--text-muted)">(63%)</span></td>
+  <td>0 <span style="font-size:11px;color:var(--text-muted)">(0%)</span></td>
+  <td>8 <span style="font-size:11px;color:var(--text-muted)">(7%)</span></td>
+  <td>9 <span style="font-size:11px;color:var(--text-muted)">(8%)</span></td>
+  <td>6 <span style="font-size:11px;color:var(--text-muted)">(5%)</span></td>
+</tr>
+
+<tr>
+  <td><strong>AI Underwriting Pipeline</strong></td>
+  <td>93</td>
+  <td class="bar-cell"><div class="bar-bg"><div class="bar-fill b" style="width:100.0%"></div></div><span style="font-size:11px;color:var(--text-muted)"> 100%</span></td>
+  <td>93 <span style="font-size:11px;color:var(--text-muted)">(100%)</span></td>
+  <td>0 <span style="font-size:11px;color:var(--text-muted)">(0%)</span></td>
+  <td>0 <span style="font-size:11px;color:var(--text-muted)">(0%)</span></td>
+  <td>0 <span style="font-size:11px;color:var(--text-muted)">(0%)</span></td>
+  <td>0 <span style="font-size:11px;color:var(--text-muted)">(0%)</span></td>
+</tr>
+
+<tr>
+  <td><strong>AI Pipeline</strong></td>
+  <td>52</td>
+  <td class="bar-cell"><div class="bar-bg"><div class="bar-fill b" style="width:100.0%"></div></div><span style="font-size:11px;color:var(--text-muted)"> 100%</span></td>
+  <td>52 <span style="font-size:11px;color:var(--text-muted)">(100%)</span></td>
+  <td>0 <span style="font-size:11px;color:var(--text-muted)">(0%)</span></td>
+  <td>0 <span style="font-size:11px;color:var(--text-muted)">(0%)</span></td>
+  <td>0 <span style="font-size:11px;color:var(--text-muted)">(0%)</span></td>
+  <td>0 <span style="font-size:11px;color:var(--text-muted)">(0%)</span></td>
+</tr>
+
+<tr>
+  <td><strong>Rachel</strong></td>
+  <td>46</td>
+  <td class="bar-cell"><div class="bar-bg"><div class="bar-fill b" style="width:0.0%"></div></div><span style="font-size:11px;color:var(--text-muted)"> 0%</span></td>
+  <td>0 <span style="font-size:11px;color:var(--text-muted)">(0%)</span></td>
+  <td>0 <span style="font-size:11px;color:var(--text-muted)">(0%)</span></td>
+  <td>0 <span style="font-size:11px;color:var(--text-muted)">(0%)</span></td>
+  <td>30 <span style="font-size:11px;color:var(--text-muted)">(65%)</span></td>
+  <td>19 <span style="font-size:11px;color:var(--text-muted)">(41%)</span></td>
+</tr>
+
+<tr>
+  <td><strong>Tommy</strong></td>
+  <td>40</td>
+  <td class="bar-cell"><div class="bar-bg"><div class="bar-fill b" style="width:35.0%"></div></div><span style="font-size:11px;color:var(--text-muted)"> 35%</span></td>
+  <td>3 <span style="font-size:11px;color:var(--text-muted)">(21%)</span></td>
+  <td>0 <span style="font-size:11px;color:var(--text-muted)">(0%)</span></td>
+  <td>3 <span style="font-size:11px;color:var(--text-muted)">(8%)</span></td>
+  <td>11 <span style="font-size:11px;color:var(--text-muted)">(28%)</span></td>
+  <td>9 <span style="font-size:11px;color:var(--text-muted)">(22%)</span></td>
+</tr>
+
+<tr>
+  <td><strong>Jordan</strong></td>
+  <td>20</td>
+  <td class="bar-cell"><div class="bar-bg"><div class="bar-fill b" style="width:70.0%"></div></div><span style="font-size:11px;color:var(--text-muted)"> 70%</span></td>
+  <td>14 <span style="font-size:11px;color:var(--text-muted)">(100%)</span></td>
+  <td>0 <span style="font-size:11px;color:var(--text-muted)">(0%)</span></td>
+  <td>2 <span style="font-size:11px;color:var(--text-muted)">(10%)</span></td>
+  <td>2 <span style="font-size:11px;color:var(--text-muted)">(10%)</span></td>
+  <td>2 <span style="font-size:11px;color:var(--text-muted)">(10%)</span></td>
+</tr>
+
+<tr>
+  <td><strong>Maria</strong></td>
+  <td>15</td>
+  <td class="bar-cell"><div class="bar-bg"><div class="bar-fill b" style="width:33.33333333333333%"></div></div><span style="font-size:11px;color:var(--text-muted)"> 33%</span></td>
+  <td>0 <span style="font-size:11px;color:var(--text-muted)">(0%)</span></td>
+  <td>0 <span style="font-size:11px;color:var(--text-muted)">(0%)</span></td>
+  <td>4 <span style="font-size:11px;color:var(--text-muted)">(27%)</span></td>
+  <td>7 <span style="font-size:11px;color:var(--text-muted)">(47%)</span></td>
+  <td>6 <span style="font-size:11px;color:var(--text-muted)">(40%)</span></td>
+</tr>
+
+<tr>
+  <td><strong>Diana</strong></td>
+  <td>15</td>
+  <td class="bar-cell"><div class="bar-bg"><div class="bar-fill b" style="width:0.0%"></div></div><span style="font-size:11px;color:var(--text-muted)"> 0%</span></td>
+  <td>0 <span style="font-size:11px;color:var(--text-muted)">(0%)</span></td>
+  <td>0 <span style="font-size:11px;color:var(--text-muted)">(0%)</span></td>
+  <td>2 <span style="font-size:11px;color:var(--text-muted)">(13%)</span></td>
+  <td>3 <span style="font-size:11px;color:var(--text-muted)">(20%)</span></td>
+  <td>6 <span style="font-size:11px;color:var(--text-muted)">(40%)</span></td>
+</tr>
+
+<tr>
+  <td><strong>AI Subrogation Pipeline</strong></td>
+  <td>8</td>
+  <td class="bar-cell"><div class="bar-bg"><div class="bar-fill b" style="width:100.0%"></div></div><span style="font-size:11px;color:var(--text-muted)"> 100%</span></td>
+  <td>8 <span style="font-size:11px;color:var(--text-muted)">(100%)</span></td>
+  <td>0 <span style="font-size:11px;color:var(--text-muted)">(0%)</span></td>
+  <td>0 <span style="font-size:11px;color:var(--text-muted)">(0%)</span></td>
+  <td>0 <span style="font-size:11px;color:var(--text-muted)">(0%)</span></td>
+  <td>0 <span style="font-size:11px;color:var(--text-muted)">(0%)</span></td>
+</tr>
+
+<tr>
+  <td><strong>Pat</strong></td>
+  <td>6</td>
+  <td class="bar-cell"><div class="bar-bg"><div class="bar-fill b" style="width:0.0%"></div></div><span style="font-size:11px;color:var(--text-muted)"> 0%</span></td>
+  <td>0 <span style="font-size:11px;color:var(--text-muted)">(0%)</span></td>
+  <td>0 <span style="font-size:11px;color:var(--text-muted)">(0%)</span></td>
+  <td>0 <span style="font-size:11px;color:var(--text-muted)">(0%)</span></td>
+  <td>0 <span style="font-size:11px;color:var(--text-muted)">(0%)</span></td>
+  <td>4 <span style="font-size:11px;color:var(--text-muted)">(67%)</span></td>
+</tr>
+
+<tr>
+  <td><strong>Sanjay</strong></td>
+  <td>6</td>
+  <td class="bar-cell"><div class="bar-bg"><div class="bar-fill b" style="width:0.0%"></div></div><span style="font-size:11px;color:var(--text-muted)"> 0%</span></td>
+  <td>0 <span style="font-size:11px;color:var(--text-muted)">(0%)</span></td>
+  <td>0 <span style="font-size:11px;color:var(--text-muted)">(0%)</span></td>
+  <td>0 <span style="font-size:11px;color:var(--text-muted)">(0%)</span></td>
+  <td>3 <span style="font-size:11px;color:var(--text-muted)">(50%)</span></td>
+  <td>1 <span style="font-size:11px;color:var(--text-muted)">(17%)</span></td>
+</tr>
+
+<tr>
+  <td><strong>Kathryn</strong></td>
+  <td>3</td>
+  <td class="bar-cell"><div class="bar-bg"><div class="bar-fill b" style="width:0.0%"></div></div><span style="font-size:11px;color:var(--text-muted)"> 0%</span></td>
+  <td>0 <span style="font-size:11px;color:var(--text-muted)">(0%)</span></td>
+  <td>0 <span style="font-size:11px;color:var(--text-muted)">(0%)</span></td>
+  <td>0 <span style="font-size:11px;color:var(--text-muted)">(0%)</span></td>
+  <td>3 <span style="font-size:11px;color:var(--text-muted)">(100%)</span></td>
+  <td>2 <span style="font-size:11px;color:var(--text-muted)">(67%)</span></td>
+</tr>
+</tbody></table>
+
+<h2 id="narrative">Claim Trace Viewer</h2>
+<p class="section-note">The same claims, processed through both tracks. See exactly where and why they diverge.</p>
+<h3>Agent Behavior Divergence</h3>
+<p class="section-note">Same agent profile, different behavior across tracks. Differences come from track rules, not agent personality.</p>
+<table class="agent-table"><thead><tr>
+<th>Agent</th><th>Track A AI Use</th><th>Track B AI Use</th><th>Track A Override</th><th>Track B Override</th>
+</tr></thead><tbody>
+<tr>
+<td><strong>Greg</strong></td>
+<td style="color:var(--orange)">86.0% <span style="font-size:11px;color:var(--text-muted)">(107 dec)</span></td>
+<td style="color:var(--text-dim)">81.4% <span style="font-size:11px;color:var(--text-muted)">(113 dec)</span></td>
+<td>0.0%</td>
+<td>0.0%</td>
+</tr>
+<tr>
+<td><strong>Nick</strong></td>
+<td style="color:var(--text-dim)">2.0% <span style="font-size:11px;color:var(--text-muted)">(147 dec)</span></td>
+<td style="color:var(--blue)">5.4% <span style="font-size:11px;color:var(--text-muted)">(147 dec)</span></td>
+<td>0.7%</td>
+<td>0.7%</td>
+</tr>
+</tbody></table>
+<h3 style="margin-top:32px;">Claim Narratives</h3>
+<p class="section-note">The same claim, processed through two different organizations. What happened, and why.</p>
+
+<div style="background:var(--surface2);border:1px solid var(--border);border-radius:8px;margin-bottom:16px;overflow:hidden;">
+  <div style="padding:12px 16px;background:var(--surface);border-bottom:1px solid var(--border);">
+    <span style="font-family:'Fraunces',serif;font-weight:600;">Claim CL-01-0004...</span>
+  </div>
+  <div style="padding:16px;display:grid;grid-template-columns:1fr 1fr;gap:16px;">
+    <div style="font-size:13px;line-height:1.8;color:var(--text-dim);">
+      <div style="font-size:11px;color:var(--orange);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:8px;">Track A — Organic Discovery</div>
+      In <strong style='color:var(--orange)'>Track A</strong>, this claim was handled by Diana, Pat, Tommy, Kathryn across 10 steps. 5 exceptions were raised at steps including settlement human, escalated to kathryn, subrogation. Meaning was lost at 7 handoffs — the receiving agent couldn't act on the information provided — at seams like coverage verification human, investigation human, fnol intake. 
+    </div>
+    <div style="font-size:13px;line-height:1.8;color:var(--text-dim);">
+      <div style="font-size:11px;color:var(--blue);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:8px;">Track B — Traditional Change Mgmt</div>
+      In <strong style='color:var(--blue)'>Track B</strong>, this claim was handled by Diana, Pat, Tommy, Kathryn across 10 steps. The claim was escalated 2 times. 6 exceptions were raised at steps including fnol intake, settlement human, escalated to kathryn. Meaning was lost at 7 handoffs — the receiving agent couldn't act on the information provided — at seams like coverage verification human, fnol intake, settlement human. 
+    </div>
+  </div>
+  <div style="padding:12px 16px;border-top:1px solid var(--border);background:color-mix(in srgb, var(--orange) 5%, var(--surface2));">
+    <div style="font-size:12px;color:var(--orange);font-weight:600;margin-bottom:6px;">How they differ</div>
+    <div style="font-size:13px;color:var(--text-dim);line-height:1.7;">Track A raised 5 exceptions vs 6 in Track B — Track A surfaced fewer issues Track A escalated 0 times vs 2 in Track B.</div>
+    <div style="font-size:13px;color:var(--text);line-height:1.7;margin-top:6px;"><strong>What it means:</strong> Routine claims follow similar paths in both tracks. The divergence emerges on edge cases.</div>
+  </div>
+</div>
+
+<div style="background:var(--surface2);border:1px solid var(--border);border-radius:8px;margin-bottom:16px;overflow:hidden;">
+  <div style="padding:12px 16px;background:var(--surface);border-bottom:1px solid var(--border);">
+    <span style="font-family:'Fraunces',serif;font-weight:600;">Claim CL-01-0001...</span>
+  </div>
+  <div style="padding:16px;display:grid;grid-template-columns:1fr 1fr;gap:16px;">
+    <div style="font-size:13px;line-height:1.8;color:var(--text-dim);">
+      <div style="font-size:11px;color:var(--orange);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:8px;">Track A — Organic Discovery</div>
+      In <strong style='color:var(--orange)'>Track A</strong>, this claim was handled by Diana, Pat, Tommy, Jordan across 9 steps. The claim was escalated 3 times. 3 exceptions were raised at steps including payment, subrogation, fnol intake. Meaning was lost at 8 handoffs — the receiving agent couldn't act on the information provided — at seams like coverage verification human, investigation human, fnol intake. 
+    </div>
+    <div style="font-size:13px;line-height:1.8;color:var(--text-dim);">
+      <div style="font-size:11px;color:var(--blue);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:8px;">Track B — Traditional Change Mgmt</div>
+      In <strong style='color:var(--blue)'>Track B</strong>, this claim was handled by Diana, Pat, Tommy, Kathryn across 10 steps. The claim was escalated 2 times. 6 exceptions were raised at steps including fnol intake, settlement human, escalated to kathryn. Meaning was lost at 3 handoffs — the receiving agent couldn't act on the information provided — at seams like coverage verification human, damage estimation human, liability determination human. 
+    </div>
+  </div>
+  <div style="padding:12px 16px;border-top:1px solid var(--border);background:color-mix(in srgb, var(--orange) 5%, var(--surface2));">
+    <div style="font-size:12px;color:var(--orange);font-weight:600;margin-bottom:6px;">How they differ</div>
+    <div style="font-size:13px;color:var(--text-dim);line-height:1.7;">Track A raised 3 exceptions vs 6 in Track B — Track A surfaced fewer issues Track A had 8 translation incidents vs 3 in Track B — more meaning-loss at handoffs Track A escalated 3 times vs 2 in Track B.</div>
+    <div style="font-size:13px;color:var(--text);line-height:1.7;margin-top:6px;"><strong>What it means:</strong> Track B's lower translation debt may reflect the pre-designed RACI preventing ambiguity — at the cost of flexibility</div>
+  </div>
+</div>
+
+<div style="background:var(--surface2);border:1px solid var(--border);border-radius:8px;margin-bottom:16px;overflow:hidden;">
+  <div style="padding:12px 16px;background:var(--surface);border-bottom:1px solid var(--border);">
+    <span style="font-family:'Fraunces',serif;font-weight:600;">Claim CL-01-0002...</span>
+  </div>
+  <div style="padding:16px;display:grid;grid-template-columns:1fr 1fr;gap:16px;">
+    <div style="font-size:13px;line-height:1.8;color:var(--text-dim);">
+      <div style="font-size:11px;color:var(--orange);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:8px;">Track A — Organic Discovery</div>
+      In <strong style='color:var(--orange)'>Track A</strong>, this claim was handled by Diana, Pat, Tommy, Jordan across 9 steps. The claim was escalated 2 times. 2 exceptions were raised at steps including payment, subrogation. Meaning was lost at 4 handoffs — the receiving agent couldn't act on the information provided — at seams like coverage verification human, investigation human, subrogation. 
+    </div>
+    <div style="font-size:13px;line-height:1.8;color:var(--text-dim);">
+      <div style="font-size:11px;color:var(--blue);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:8px;">Track B — Traditional Change Mgmt</div>
+      In <strong style='color:var(--blue)'>Track B</strong>, this claim was handled by Diana, Pat, Tommy, Kathryn across 10 steps. The claim was escalated 1 times. 5 exceptions were raised at steps including settlement human, escalated to kathryn, subrogation. Meaning was lost at 9 handoffs — the receiving agent couldn't act on the information provided — at seams like coverage verification human, investigation human, fnol intake. 
+    </div>
+  </div>
+  <div style="padding:12px 16px;border-top:1px solid var(--border);background:color-mix(in srgb, var(--orange) 5%, var(--surface2));">
+    <div style="font-size:12px;color:var(--orange);font-weight:600;margin-bottom:6px;">How they differ</div>
+    <div style="font-size:13px;color:var(--text-dim);line-height:1.7;">Track A raised 2 exceptions vs 5 in Track B — Track A surfaced fewer issues Track A had 4 translation incidents vs 9 in Track B — fewer meaning-loss at handoffs Track A escalated 2 times vs 1 in Track B.</div>
+    <div style="font-size:13px;color:var(--text);line-height:1.7;margin-top:6px;"><strong>What it means:</strong> Track A's lower translation debt is the direct result of the observe-learn-redesign loop: meaning-loss at seams gets fixed, not documented and deferred</div>
+  </div>
+</div>
+
+<div style="background:var(--surface2);border:1px solid var(--border);border-radius:8px;margin-bottom:16px;overflow:hidden;">
+  <div style="padding:12px 16px;background:var(--surface);border-bottom:1px solid var(--border);">
+    <span style="font-family:'Fraunces',serif;font-weight:600;">Claim SUBRO-02-CL-02-000...</span>
+  </div>
+  <div style="padding:16px;display:grid;grid-template-columns:1fr 1fr;gap:16px;">
+    <div style="font-size:13px;line-height:1.8;color:var(--text-dim);">
+      <div style="font-size:11px;color:var(--orange);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:8px;">Track A — Organic Discovery</div>
+      In <strong style='color:var(--orange)'>Track A</strong>, this claim was handled by AI Subrogation Pipeline, Tommy, Rachel across 3 steps. AI assisted at 2 decision points (AI Subrogation Pipeline, Tommy). 2 exceptions were raised at steps including subro liability review, subro no recovery. Meaning was lost at 2 handoffs — the receiving agent couldn't act on the information provided — at seams like subro liability review, subro no recovery. 
+    </div>
+    <div style="font-size:13px;line-height:1.8;color:var(--text-dim);">
+      <div style="font-size:11px;color:var(--blue);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:8px;">Track B — Traditional Change Mgmt</div>
+      In <strong style='color:var(--blue)'>Track B</strong>, this claim was handled by AI Subrogation Pipeline, Tommy, Rachel across 5 steps. AI assisted at 3 decision points (AI Subrogation Pipeline, Tommy). 3 exceptions were raised at steps including subro demand package, subro collection, subro negotiation. Meaning was lost at 4 handoffs — the receiving agent couldn't act on the information provided — at seams like subro collection, subro liability review, subro demand package. 
+    </div>
+  </div>
+  <div style="padding:12px 16px;border-top:1px solid var(--border);background:color-mix(in srgb, var(--orange) 5%, var(--surface2));">
+    <div style="font-size:12px;color:var(--orange);font-weight:600;margin-bottom:6px;">How they differ</div>
+    <div style="font-size:13px;color:var(--text-dim);line-height:1.7;">Track A raised 2 exceptions vs 3 in Track B — Track A surfaced fewer issues Track A had 2 translation incidents vs 4 in Track B — fewer meaning-loss at handoffs.</div>
+    <div style="font-size:13px;color:var(--text);line-height:1.7;margin-top:6px;"><strong>What it means:</strong> Track A's lower translation debt is the direct result of the observe-learn-redesign loop: meaning-loss at seams gets fixed, not documented and deferred</div>
+  </div>
+</div>
+
+<div style="background:var(--surface2);border:1px solid var(--border);border-radius:8px;margin-bottom:16px;overflow:hidden;">
+  <div style="padding:12px 16px;background:var(--surface);border-bottom:1px solid var(--border);">
+    <span style="font-family:'Fraunces',serif;font-weight:600;">Claim UW-02-0005...</span>
+  </div>
+  <div style="padding:16px;display:grid;grid-template-columns:1fr 1fr;gap:16px;">
+    <div style="font-size:13px;line-height:1.8;color:var(--text-dim);">
+      <div style="font-size:11px;color:var(--orange);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:8px;">Track A — Organic Discovery</div>
+      In <strong style='color:var(--orange)'>Track A</strong>, this claim was handled by Alicia, AI Underwriting Pipeline, Nick, Greg across 5 steps. AI assisted at 4 decision points (Alicia, AI Underwriting Pipeline, Greg). The claim was escalated 2 times. 2 exceptions were raised at steps including uw application intake, uw bind issue. 
+    </div>
+    <div style="font-size:13px;line-height:1.8;color:var(--text-dim);">
+      <div style="font-size:11px;color:var(--blue);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:8px;">Track B — Traditional Change Mgmt</div>
+      In <strong style='color:var(--blue)'>Track B</strong>, this claim was handled by Alicia, AI Underwriting Pipeline, Nick, Greg across 5 steps. AI assisted at 4 decision points (Alicia, AI Underwriting Pipeline, Greg). The claim was escalated 3 times. 4 exceptions were raised at steps including uw pricing, uw quote generation, uw application intake. Meaning was lost at 2 handoffs — the receiving agent couldn't act on the information provided — at seams like uw pricing, uw application intake. 
+    </div>
+  </div>
+  <div style="padding:12px 16px;border-top:1px solid var(--border);background:color-mix(in srgb, var(--orange) 5%, var(--surface2));">
+    <div style="font-size:12px;color:var(--orange);font-weight:600;margin-bottom:6px;">How they differ</div>
+    <div style="font-size:13px;color:var(--text-dim);line-height:1.7;">Track A raised 2 exceptions vs 4 in Track B — Track A surfaced fewer issues Track A had 0 translation incidents vs 2 in Track B — fewer meaning-loss at handoffs Track A escalated 2 times vs 3 in Track B.</div>
+    <div style="font-size:13px;color:var(--text);line-height:1.7;margin-top:6px;"><strong>What it means:</strong> Track A's lower translation debt is the direct result of the observe-learn-redesign loop: meaning-loss at seams gets fixed, not documented and deferred</div>
+  </div>
+</div>
+
+<h3 style="margin-top:32px;">Why They Differ — The Rules</h3>
+<div class="pattern-list">
+  <div class="pattern-item">
+    <div class="pat-header"><span class="pat-category">Interruption Design</span></div>
+    <div class="pat-desc"><strong>Track A</strong>: Pause, override, and stop are designed into the workflow. Agents exercise them without political consequence. Result: more exceptions surfaced, more supplements requested.</div>
+    <div class="pat-desc" style="margin-top:6px;"><strong>Track B</strong>: Exceptions are escalations — they signal failure. Governance filters before visibility. Result: fewer exceptions surfaced, but handoff failures accumulate.</div>
+  </div>
+  <div class="pattern-item">
+    <div class="pat-header"><span class="pat-category">Learning Extraction</span></div>
+    <div class="pat-desc"><strong>Track A</strong>: After every deployment, the Discovery Engine finds patterns, proposes ONE redesign. Translation debt is addressed as it appears.</div>
+    <div class="pat-desc" style="margin-top:6px;"><strong>Track B</strong>: Learning goes through steering committee → roadmap phase → vendor assessment. Translation debt accumulates until the "consolidate gains" phase.</div>
+  </div>
+  <div class="pattern-item">
+    <div class="pat-header"><span class="pat-category">Deployment Constraint</span></div>
+    <div class="pat-desc"><strong>Track A</strong>: Deploy AI into EXISTING structures. No reorg, no new roles, no RACI redesign. The operating model is discovered through implementation.</div>
+    <div class="pat-desc" style="margin-top:6px;"><strong>Track B</strong>: Reorg first (McKinsey 7S), train first (ADKAR), build coalition first (Kotter Step 2). The operating model is designed before implementation.</div>
+  </div>
+  <div class="pattern-item">
+    <div class="pat-header"><span class="pat-category">THEARI Gating</span></div>
+    <div class="pat-desc"><strong>Track A</strong>: Evidence-gated. A discovery only advances when it has enough evidence sprints + confidence + measured improvement. No auto-advance.</div>
+    <div class="pat-desc" style="margin-top:6px;"><strong>Track B</strong>: Timeline-gated. Discoveries auto-advance after N sprints regardless of evidence. Theoretical → Empirical in 4 sprints, Empirical → Applicable in 5.</div>
+  </div>
+</div>
+
+
+<h2 id="data">Raw Data</h2>
+<p class="section-note">Download the underlying data files from this run.</p>
+<div class="metric-grid">
+  <div class="metric-card">
+    <div class="label">Metrics CSV</div>
+    <p style="margin-top:8px;font-size:13px;">Time-series metrics for both tracks — 22 metrics across all sprints.</p>
+    <a href="ai-transformation-results/metrics.csv" style="color:var(--orange);font-size:13px;">Download metrics.csv</a>
+  </div>
+  <div class="metric-card">
+    <div class="label">Discovery Patterns</div>
+    <p style="margin-top:8px;font-size:13px;">All patterns detected by the Discovery Engine, both tracks.</p>
+    <a href="ai-transformation-results/discovery_patterns.json" style="color:var(--orange);font-size:13px;">Download discovery_patterns.json</a>
+  </div>
+  <div class="metric-card">
+    <div class="label">THEARI Register</div>
+    <p style="margin-top:8px;font-size:13px;">Phase progression for every discovery — evidence-gated (A) and timeline-gated (B).</p>
+    <a href="ai-transformation-results/theari_register.json" style="color:var(--orange);font-size:13px;">Download theari_register.json</a>
+  </div>
+  <div class="metric-card">
+    <div class="label">Novelty Register</div>
+    <p style="margin-top:8px;font-size:13px;">Emergent patterns outside predefined categories — what we didn't predict.</p>
+    <a href="ai-transformation-results/novelty_register.json" style="color:var(--orange);font-size:13px;">Download novelty_register.json</a>
+  </div>
+  <div class="metric-card">
+    <div class="label">Capability State</div>
+    <p style="margin-top:8px;font-size:13px;">5-level unlock progression for each track's Discovery Engine.</p>
+    <a href="ai-transformation-results/capability_state.json" style="color:var(--orange);font-size:13px;">Download capability_state.json</a>
+  </div>
+  <div class="metric-card">
+    <div class="label">Decisions JSONL</div>
+    <p style="margin-top:8px;font-size:13px;">Every agent decision — claim ID, step, reasoning, AI usage, exceptions.</p>
+    <a href="ai-transformation-results/decisions.jsonl" style="color:var(--orange);font-size:13px;">Download decisions.jsonl</a>
+  </div>
+  <div class="metric-card">
+    <div class="label">Full State</div>
+    <p style="margin-top:8px;font-size:13px;">Complete simulation state — agent summaries, trust, playbook, governance.</p>
+    <a href="ai-transformation-results/state.json" style="color:var(--orange);font-size:13px;">Download state.json</a>
+  </div>
+  <div class="metric-card" style="border-color:var(--orange);">
+    <div class="label" style="color:var(--orange);">Audit Trace</div>
+    <p style="margin-top:8px;font-size:13px;">Comprehensive event log — every decision, discovery, absence, trust shift, and environmental event in one file. Use with the experiment-results skill to answer questions.</p>
+    <a href="ai-transformation-results/trace.jsonl" style="color:var(--orange);font-size:13px;">Download trace.jsonl</a>
+  </div>
+</div>
+
+<footer>
+  Generated 2026-08-12 01:43:00 —
+  AI Transformation Experiment — Progressive Insurance Simulation
+</footer>
+
+</div>
+
+<script>
+
+new Chart(document.getElementById('chart_cycle_time'), {
+  type: 'line',
+  data: {
+    labels: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12],
+    datasets: [
+      { label: 'Track A (SWT Organic)', data: [6.245348837209302, 2.57, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
+         borderColor: '#f37021', backgroundColor: 'rgba(243,112,33,0.08)',
+         tension: 0.3, pointRadius: 4, borderWidth: 2 },
+      { label: 'Track B (Kotter/Prosci)', data: [6.442045454545454, 2.475510204081633, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
+         borderColor: '#6cace4', backgroundColor: 'rgba(108,172,228,0.08)',
+         tension: 0.3, pointRadius: 4, borderWidth: 2 },
+    ]
+  },
+  options: {
+    responsive: true, maintainAspectRatio: false,
+    plugins: { legend: { labels: { color: '#9bb0d4', font: { family: 'Source Code Pro' } } } },
+    scales: {
+      x: { title: { text: 'Sprint', color: '#9bb0d4', display: true },
+           ticks: { color: '#5e7aa3' }, grid: { color: '#1a2d52' } },
+      y: { ticks: { color: '#5e7aa3' }, grid: { color: '#1a2d52' } },
+    }
+  }
+});
+
+new Chart(document.getElementById('chart_translation_debt_index'), {
+  type: 'line',
+  data: {
+    labels: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12],
+    datasets: [
+      { label: 'Track A (SWT Organic)', data: [24.418604651162788, 0.0, 20.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
+         borderColor: '#f37021', backgroundColor: 'rgba(243,112,33,0.08)',
+         tension: 0.3, pointRadius: 4, borderWidth: 2 },
+      { label: 'Track B (Kotter/Prosci)', data: [25.0, 2.0408163265306123, 20.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
+         borderColor: '#6cace4', backgroundColor: 'rgba(108,172,228,0.08)',
+         tension: 0.3, pointRadius: 4, borderWidth: 2 },
+    ]
+  },
+  options: {
+    responsive: true, maintainAspectRatio: false,
+    plugins: { legend: { labels: { color: '#9bb0d4', font: { family: 'Source Code Pro' } } } },
+    scales: {
+      x: { title: { text: 'Sprint', color: '#9bb0d4', display: true },
+           ticks: { color: '#5e7aa3' }, grid: { color: '#1a2d52' } },
+      y: { ticks: { color: '#5e7aa3' }, grid: { color: '#1a2d52' } },
+    }
+  }
+});
+
+new Chart(document.getElementById('chart_exception_rate'), {
+  type: 'line',
+  data: {
+    labels: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12],
+    datasets: [
+      { label: 'Track A (SWT Organic)', data: [15.11627906976744, 0.0, 20.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
+         borderColor: '#f37021', backgroundColor: 'rgba(243,112,33,0.08)',
+         tension: 0.3, pointRadius: 4, borderWidth: 2 },
+      { label: 'Track B (Kotter/Prosci)', data: [23.863636363636363, 0.0, 20.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
+         borderColor: '#6cace4', backgroundColor: 'rgba(108,172,228,0.08)',
+         tension: 0.3, pointRadius: 4, borderWidth: 2 },
+    ]
+  },
+  options: {
+    responsive: true, maintainAspectRatio: false,
+    plugins: { legend: { labels: { color: '#9bb0d4', font: { family: 'Source Code Pro' } } } },
+    scales: {
+      x: { title: { text: 'Sprint', color: '#9bb0d4', display: true },
+           ticks: { color: '#5e7aa3' }, grid: { color: '#1a2d52' } },
+      y: { ticks: { color: '#5e7aa3' }, grid: { color: '#1a2d52' } },
+    }
+  }
+});
+
+new Chart(document.getElementById('chart_employee_ai_trust'), {
+  type: 'line',
+  data: {
+    labels: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12],
+    datasets: [
+      { label: 'Track A (SWT Organic)', data: [4.752907648141332, 5.0356580463604725, 5.1446854150414865, 5.277282652068339, 5.449396015844457, 5.556171479888161, 5.60701301577976, 5.64390358511211, 5.676481404091735, 5.713856912804635, 5.751444417788147, 5.784732833621979],
+         borderColor: '#f37021', backgroundColor: 'rgba(243,112,33,0.08)',
+         tension: 0.3, pointRadius: 4, borderWidth: 2 },
+      { label: 'Track B (Kotter/Prosci)', data: [4.817556415163783, 5.096404817202926, 5.288331991447564, 5.494127178538896, 5.580788596400408, 5.632902749711808, 5.664316400647836, 5.700486874275334, 5.732357854611287, 5.764533363093363, 5.80151638376207, 5.834203801628789],
+         borderColor: '#6cace4', backgroundColor: 'rgba(108,172,228,0.08)',
+         tension: 0.3, pointRadius: 4, borderWidth: 2 },
+    ]
+  },
+  options: {
+    responsive: true, maintainAspectRatio: false,
+    plugins: { legend: { labels: { color: '#9bb0d4', font: { family: 'Source Code Pro' } } } },
+    scales: {
+      x: { title: { text: 'Sprint', color: '#9bb0d4', display: true },
+           ticks: { color: '#5e7aa3' }, grid: { color: '#1a2d52' } },
+      y: { ticks: { color: '#5e7aa3' }, grid: { color: '#1a2d52' } },
+    }
+  }
+});
+
+new Chart(document.getElementById('chart_cost_per_claim'), {
+  type: 'line',
+  data: {
+    labels: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12],
+    datasets: [
+      { label: 'Track A (SWT Organic)', data: [486.0, 166.3, 215.6, 239.2, 312.1, 214.9, 263.5, 263.5, 287.8, 214.9, 263.5, 312.1],
+         borderColor: '#f37021', backgroundColor: 'rgba(243,112,33,0.08)',
+         tension: 0.3, pointRadius: 4, borderWidth: 2 },
+      { label: 'Track B (Kotter/Prosci)', data: [533.5, 173.8, 215.6, 239.2, 312.1, 214.9, 263.5, 263.5, 287.8, 214.9, 263.5, 312.1],
+         borderColor: '#6cace4', backgroundColor: 'rgba(108,172,228,0.08)',
+         tension: 0.3, pointRadius: 4, borderWidth: 2 },
+    ]
+  },
+  options: {
+    responsive: true, maintainAspectRatio: false,
+    plugins: { legend: { labels: { color: '#9bb0d4', font: { family: 'Source Code Pro' } } } },
+    scales: {
+      x: { title: { text: 'Sprint', color: '#9bb0d4', display: true },
+           ticks: { color: '#5e7aa3' }, grid: { color: '#1a2d52' } },
+      y: { ticks: { color: '#5e7aa3' }, grid: { color: '#1a2d52' } },
+    }
+  }
+});
+
+new Chart(document.getElementById('chart_trust_polarization'), {
+  type: 'line',
+  data: {
+    labels: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12],
+    datasets: [
+      { label: 'Track A (SWT Organic)', data: [1.6219451041817459, 1.8864103314660152, 1.883525456490664, 1.950034432070049, 2.100733617186064, 2.1647366654786797, 2.1624617034385105, 2.1316003743832326, 2.1101934449822233, 2.088825588457265, 2.0713603760274064, 2.060640597117564],
+         borderColor: '#f37021', backgroundColor: 'rgba(243,112,33,0.08)',
+         tension: 0.3, pointRadius: 4, borderWidth: 2 },
+      { label: 'Track B (Kotter/Prosci)', data: [1.6354903588158614, 1.8956104522032513, 1.9716641696253931, 2.1309958118188916, 2.1648087358445327, 2.1618941798932436, 2.1325446015558, 2.104510217822288, 2.0854211750859113, 2.0701300990818345, 2.054493379338166, 2.0452221947408935],
+         borderColor: '#6cace4', backgroundColor: 'rgba(108,172,228,0.08)',
+         tension: 0.3, pointRadius: 4, borderWidth: 2 },
+    ]
+  },
+  options: {
+    responsive: true, maintainAspectRatio: false,
+    plugins: { legend: { labels: { color: '#9bb0d4', font: { family: 'Source Code Pro' } } } },
+    scales: {
+      x: { title: { text: 'Sprint', color: '#9bb0d4', display: true },
+           ticks: { color: '#5e7aa3' }, grid: { color: '#1a2d52' } },
+      y: { ticks: { color: '#5e7aa3' }, grid: { color: '#1a2d52' } },
+    }
+  }
+});
+
+new Chart(document.getElementById('chart_first_pass_accuracy'), {
+  type: 'line',
+  data: {
+    labels: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12],
+    datasets: [
+      { label: 'Track A (SWT Organic)', data: [30.0, 100.0, 80.0, 100.0, 100.0, 100.0, 100.0, 100.0, 100.0, 100.0, 100.0, 100.0],
+         borderColor: '#f37021', backgroundColor: 'rgba(243,112,33,0.08)',
+         tension: 0.3, pointRadius: 4, borderWidth: 2 },
+      { label: 'Track B (Kotter/Prosci)', data: [20.0, 90.0, 80.0, 100.0, 100.0, 100.0, 100.0, 100.0, 100.0, 100.0, 100.0, 100.0],
+         borderColor: '#6cace4', backgroundColor: 'rgba(108,172,228,0.08)',
+         tension: 0.3, pointRadius: 4, borderWidth: 2 },
+    ]
+  },
+  options: {
+    responsive: true, maintainAspectRatio: false,
+    plugins: { legend: { labels: { color: '#9bb0d4', font: { family: 'Source Code Pro' } } } },
+    scales: {
+      x: { title: { text: 'Sprint', color: '#9bb0d4', display: true },
+           ticks: { color: '#5e7aa3' }, grid: { color: '#1a2d52' } },
+      y: { ticks: { color: '#5e7aa3' }, grid: { color: '#1a2d52' } },
+    }
+  }
+});
+
+new Chart(document.getElementById('chart_handoff_failure_rate'), {
+  type: 'line',
+  data: {
+    labels: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12],
+    datasets: [
+      { label: 'Track A (SWT Organic)', data: [50.0, 0.0, 20.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
+         borderColor: '#f37021', backgroundColor: 'rgba(243,112,33,0.08)',
+         tension: 0.3, pointRadius: 4, borderWidth: 2 },
+      { label: 'Track B (Kotter/Prosci)', data: [40.0, 10.0, 20.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
+         borderColor: '#6cace4', backgroundColor: 'rgba(108,172,228,0.08)',
+         tension: 0.3, pointRadius: 4, borderWidth: 2 },
+    ]
+  },
+  options: {
+    responsive: true, maintainAspectRatio: false,
+    plugins: { legend: { labels: { color: '#9bb0d4', font: { family: 'Source Code Pro' } } } },
+    scales: {
+      x: { title: { text: 'Sprint', color: '#9bb0d4', display: true },
+           ticks: { color: '#5e7aa3' }, grid: { color: '#1a2d52' } },
+      y: { ticks: { color: '#5e7aa3' }, grid: { color: '#1a2d52' } },
+    }
+  }
+});
+</script>
+</body>
+</html>
