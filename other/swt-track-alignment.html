@@ -132,7 +132,7 @@
   <div class="flow-arrow">&rarr;</div>
   <div class="flow-node"><div class="label">Deploy</div><div class="desc">Bounded workflow. No reorg. AI enters existing structures.</div></div>
   <div class="flow-arrow">&rarr;</div>
-  <div class="flow-node"><div class="label">Observe</div><div class="desc">LLM-driven pattern detection (18 categories + novel). Hardcoded threshold fallback when the LLM is unavailable or low-confidence.</div></div>
+  <div class="flow-node"><div class="label">Observe</div><div class="desc"><strong>Working.</strong> LLM-driven pattern detection at 4096 tokens now surfaces 5+ friction patterns per sprint (was 0 on 1024 tokens). Detects translation_debt, trust_collapse, exception_inflation, informal_control_exposure, coordination_drag + novel. Hardcoded threshold fallback when the LLM is unavailable.</div></div>
   <div class="flow-arrow">&rarr;</div>
   <div class="flow-node"><div class="label">Learn</div><div class="desc">Discovery Engine + THEARI capture evidence. Update playbook, governance, frameworks. LLM heuristics, deterministic fallback.</div></div>
   <div class="flow-arrow">&rarr;</div>
@@ -141,8 +141,18 @@
   <div class="flow-node"><div class="label">Compound</div><div class="desc">Next deployment starts from accumulated knowledge.</div></div>
 </div>
 
+<div class="concern" style="margin-bottom:8px;">
+  <div class="name">Current Run — Strongest Signal</div>
+  <div class="how"><strong>Supplement request rate</strong> is the clearest divergence between tracks: Track A runs 10-12 points higher per sprint. Runs are 12 sprints, 20 claims each, ~$4, ~75 min; 5-7 of 14 metrics diverge meaningfully; 30-50 absence discoveries per run. Honest caveat: only 2/11 agent profiles diverge behaviorally, attrition never triggers, and run-to-run variation exists from LLM non-determinism.</div>
+</div>
+<div class="concern" style="margin-bottom:8px;">
+  <div class="name">Trace System</div>
+  <div class="how">Every run emits a self-contained <strong>trace.jsonl</strong> audit trail &mdash; 13 event types across all layers (agent_decision, env_event, track_action, discovery_pattern, absence_detected, theari_created, theari_advanced, trust_shift, agent_departed, political_event, fidelity_finding, capability_unlock, metric_snapshot). Schema documented in <strong>.claude/trace-schema.md</strong> for AI-assisted analysis.</div>
+</div>
+
 <h2>THEARI Value-Thesis Validation</h2>
 <p style="color:var(--text-dim); margin-bottom:8px;">Every discovery advances through five phases. Track A is <strong style="color:var(--text)">evidence-gated</strong> &mdash; it must earn each advance with sprint-log evidence before the Discovery Engine may proceed. Track B is <strong style="color:var(--text)">timeline-gated</strong> &mdash; it auto-advances on the steering-committee schedule regardless of proof. Same five phases, different key that unlocks them.</p>
+<p style="color:var(--text-dim); margin-bottom:14px;">Track B now runs <strong style="color:var(--text)">full discovery too</strong> &mdash; the Absence Detector and THEARI tracking previously ran only on Track A. Both tracks now emit absence_discovered and theari_* events; the difference is how each track is allowed to act on them.</p>
 <div class="flow">
   <div class="flow-node"><div class="label">Theoretical</div><div class="desc">Hypothesis proposed by the Discovery Engine.</div></div>
   <div class="flow-arrow">&rarr;</div>
@@ -231,6 +241,12 @@
   <div class="source">Source: "From AI Activity to Operating Leverage" (Jul 2026)</div>
 </div>
 
+<div class="principle">
+  <div class="swt">Accountable owner deploys learning, not software (Klatt 2026)</div>
+  <div class="sim"><strong>Kathryn as Forward Deployed Engineer</strong>: embedded in the work, not managing from a dashboard. Primary metric: learning velocity — patterns discovered, validated, and operationalized per sprint. The difference between a discovery driver and a project manager with a different title is whether she's in the work or above it.</div>
+  <div class="source">Source: Klatt, "Human-in-the-Lead Forward Deployment" (Jun 2026); Marampelly, "Rise of the FDE"</div>
+</div>
+
 <h2>SWT's Specific Concerns — How We Measure Them</h2>
 <div class="concern-grid">
   <div class="concern">
@@ -265,14 +281,30 @@
     <div class="name">Absence Detection</div>
     <div class="how"><strong>AbsenceDetector</strong>: surfaces decisions made from incomplete information. Stale data, missing pauses, unrecognized gaps. Type 2 emergence — the system didn't know what it didn't know.</div>
   </div>
+  <div class="concern">
+    <div class="name">Coordination Tax (Ben-Zur 2026)</div>
+    <div class="how"><strong>coordination_tax</strong>: count of handoffs + review layers + duplicate entry points + approval steps per workflow. Steps that exist only because humans served as the interface between teams. Track A eliminates them after observation; Track B preserves them in the process diagram.</div>
+  </div>
+  <div class="concern">
+    <div class="name">Decision Latency (Klatt 2026)</div>
+    <div class="how"><strong>decision_latency</strong>: mean sprints from pattern detection to action taken. Track A → same-sprint (0-1); Track B → 1-4 sprints (steering committee cadence). Operational metric behind THEARI timeline divergence.</div>
+  </div>
+  <div class="concern">
+    <div class="name">Elimination-First Check (Ben-Zur 2026)</div>
+    <div class="how"><strong>Post-observation filter</strong>: "Does this step exist only because humans were the interface between teams?" If yes → eliminate, don't redesign. Zero-based questioning grounded in deployment evidence, not upfront design. Track B doesn't ask this question.</div>
+  </div>
+  <div class="concern">
+    <div class="name">Outcome Radiators (Klatt 2026)</div>
+    <div class="how"><strong>DiscoveryFeed</strong>: continuous cross-team pattern broadcast. Empirical+ discoveries visible to all adjacent workflow owners. Mitigates Track A's local-optimization risk without central governance. Track B broadcasts through steering committee presentations (monthly, filtered).</div>
+  </div>
 </div>
 
 <h2>Six Gaps We Filled</h2>
 <p style="color:var(--text-dim); margin-bottom:14px;">SWT's framework implies these capabilities but doesn't specify them operationally. We made them explicit so the simulation can implement them. These need validation.</p>
 
 <div class="gap">
-  <div class="label">Gap 1 — Interruption Design</div>
-  <div class="desc"><strong>Implementation:</strong> After first deployment, explicitly design who can pause, override, and stop the AI. Sanjay can pause, Diana can pause individual decisions, Kathryn can stop the entire deployment. Interruption is designed, not improvised.</div>
+  <div class="label">Gap 1 — Interruption Design (Refined — Klatt 2026)</div>
+  <div class="desc"><strong>Implementation:</strong> After first deployment, explicitly design both the <strong>veto dimension</strong> (who can pause/override/stop) and the <strong>responsibility dimension</strong> (who owns purpose, judgment, and learning). Sanjay can pause, Diana can pause individual decisions, Kathryn can stop the entire deployment. Klatt: "Human-in-the-lead does not mean humans approve every AI decision. It means humans remain responsible for purpose, judgment, and learning."</div>
 </div>
 <div class="gap">
   <div class="label">Gap 2 — Translation Capability Evaluation</div>
@@ -317,6 +349,7 @@
 
 <div class="footer">
   Built for SWT alignment review. Every principle traced to a specific article and a specific simulation component.<br>
+  Extended with Ben-Zur (2026), Klatt (2026), Alexander (1975). See <code>plan-external-articles.md</code> and <code>deploy-without-reorganizing.md</code>.<br>
   &copy; 2026 Charlie Fuller
 </div>
 
