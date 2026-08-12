@@ -1,0 +1,623 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Marvell Agentic Demo — System Architecture</title>
+<meta name="description" content="How the Marvell supply chain agentic demo is built — seven agents on Kinaxis and Databricks, a split-screen demo UI, and visible agent-to-agent handoffs.">
+<link rel="icon" type="image/svg+xml" href="../icon.svg">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,wght@0,400;0,500;0,600;0,700;0,800;1,400&family=Source+Code+Pro:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --font-display: 'Fraunces', Georgia, serif;
+    --font-mono: 'Source Code Pro', 'SF Mono', Consolas, monospace;
+    --bg: #eef4f9; --surface: #ffffff; --surface2: #f5f8fc;
+    --border: #c8daea; --border-bright: #a0bedb;
+    --text: #0a1628; --text-dim: #3d5a7a; --text-muted: #7a9ab8;
+    --primary: #e8621a; --primary-dim: rgba(232,98,26,0.08);
+    --secondary: #4a90c4; --secondary-dim: rgba(74,144,196,0.08);
+    --metric: #0f766e; --metric-dim: rgba(15,118,110,0.06);
+    --amber: #b45309; --amber-dim: rgba(180,83,9,0.08);
+    --violet: #7c3aed; --violet-dim: rgba(124,58,237,0.08);
+    --rose: #e11d48; --rose-dim: rgba(225,29,72,0.08);
+    --slate: #475569; --slate-dim: rgba(71,85,105,0.08);
+  }
+  html.dark {
+    --bg: #0a1628; --surface: #132240; --surface2: #1a2d52;
+    --border: #1a2d52; --border-bright: #2d4570;
+    --text: #e8edf5; --text-dim: #9bb0d4; --text-muted: #5e7aa3;
+    --primary: #f37021; --primary-dim: rgba(243,112,33,0.12);
+    --secondary: #6cace4; --secondary-dim: rgba(108,172,228,0.12);
+    --metric: #2dd4bf; --metric-dim: rgba(45,212,191,0.08);
+    --amber: #f59e0b; --amber-dim: rgba(245,158,11,0.12);
+    --violet: #a78bfa; --violet-dim: rgba(167,139,250,0.12);
+    --rose: #fb7185; --rose-dim: rgba(251,113,133,0.12);
+    --slate: #94a3b8; --slate-dim: rgba(148,163,184,0.12);
+  }
+
+  * { margin:0; padding:0; box-sizing:border-box; }
+
+  body {
+    background: var(--bg);
+    background-image:
+      radial-gradient(ellipse at 80% 0%, var(--primary-dim) 0%, transparent 50%),
+      radial-gradient(ellipse at 20% 60%, var(--secondary-dim) 0%, transparent 40%);
+    color: var(--text); font-family: var(--font-display);
+    min-height: 100vh; line-height: 1.7; padding: 0 32px 80px;
+    transition: background 0.3s, color 0.3s;
+    overflow-wrap: break-word;
+  }
+
+  .nav {
+    position: sticky; top: 0; z-index: 100;
+    backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px);
+    background: color-mix(in srgb, var(--surface) 85%, transparent);
+    border-bottom: 1px solid var(--border);
+    margin: 0 -32px 32px; padding: 0 32px;
+    transition: background 0.3s, border-color 0.3s;
+  }
+  .nav-inner {
+    max-width: 1000px; margin: 0 auto; padding: 12px 0;
+    display: flex; align-items: center; justify-content: space-between;
+  }
+  .nav-brand {
+    font-family: var(--font-mono); font-size: 12px; font-weight: 600;
+    letter-spacing: 0.5px; color: var(--primary); text-decoration: none;
+  }
+  .theme-toggle {
+    width: 36px; height: 36px; border-radius: 10px;
+    border: 1px solid var(--border); background: var(--surface);
+    cursor: pointer; display: flex; align-items: center; justify-content: center;
+    font-size: 16px; color: var(--text-dim); transition: all 0.2s;
+  }
+  .theme-toggle:hover { border-color: var(--primary); color: var(--primary); }
+
+  .container { max-width: 1000px; margin: 0 auto; }
+
+  @keyframes fadeUp { from { opacity:0; transform:translateY(12px); } to { opacity:1; transform:translateY(0); } }
+  @keyframes fadeScale { from { opacity:0; transform:scale(0.95); } to { opacity:1; transform:scale(1); } }
+  .animate { animation: fadeUp 0.4s ease-out both; animation-delay: calc(var(--i, 0) * 0.05s); }
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after { animation-duration:0.01ms !important; animation-delay:0ms !important; }
+  }
+
+  /* Backlink */
+  .backlink{position:fixed;top:12px;left:16px;z-index:101;font-family:var(--font-mono,'Source Code Pro',monospace);font-size:12px;color:var(--text-dim);text-decoration:none;padding:6px 10px;border:1px solid var(--border);border-radius:6px;background:var(--surface);transition:color .15s,border-color .15s}
+  .backlink:hover{color:var(--text);border-color:var(--border-bright)}
+
+  /* Hero */
+  .hero { text-align: center; padding: 28px 0 12px; animation: fadeUp 0.5s ease-out; }
+  .hero-badge {
+    display: inline-flex; align-items: center; gap: 6px;
+    padding: 5px 16px; background: var(--primary-dim);
+    border: 1px solid var(--primary); border-radius: 20px;
+    font-family: var(--font-mono); font-size: 10px; font-weight: 600;
+    color: var(--primary); letter-spacing: 1px; text-transform: uppercase;
+    margin-bottom: 20px;
+  }
+  .hero h1 { font-size: 40px; font-weight: 800; letter-spacing: -0.5px; margin-bottom: 10px; color: var(--text); }
+  .hero .subtitle { font-size: 18px; color: var(--text-dim); max-width: 640px; margin: 0 auto; font-family: var(--font-mono); font-size: 13px; }
+
+  /* KPI row */
+  .kpi-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 12px; margin: 8px 0 28px; }
+  .kpi-card { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 16px 18px; text-align: center; animation: fadeScale 0.4s ease-out both; animation-delay: calc(var(--i, 0) * 0.06s); }
+  .kpi-card .value { font-size: 30px; font-weight: 800; letter-spacing: -0.5px; line-height: 1.1; color: var(--primary); font-variant-numeric: tabular-nums; }
+  .kpi-card .label { font-family: var(--font-mono); font-size: 9px; font-weight: 600; text-transform: uppercase; letter-spacing: 1px; color: var(--text-dim); margin-top: 6px; }
+
+  /* Detail section */
+  .detail-section { margin-bottom: 40px; }
+  .detail-section h2 {
+    font-family: var(--font-mono); font-size: 12px; font-weight: 700;
+    letter-spacing: 1px; text-transform: uppercase;
+    color: var(--primary); margin-bottom: 14px;
+  }
+
+  /* Mermaid container */
+  .mermaid-wrap {
+    position: relative; background: var(--surface);
+    border: 1px solid var(--border); border-radius: 14px;
+    padding: 32px 24px; overflow: auto; margin: 0 0 12px;
+    animation: fadeUp 0.4s ease-out both; animation-delay: 0.06s;
+  }
+  .mermaid-wrap .mermaid { display: flex; justify-content: center; transition: transform 0.2s ease; transform-origin: top center; }
+  .mermaid-wrap.is-zoomed { cursor: grab; }
+  .mermaid-wrap.is-panning { cursor: grabbing; user-select: none; }
+  .zoom-controls { position: absolute; top: 10px; right: 10px; z-index: 10; display: flex; gap: 2px; background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 3px; }
+  .zoom-controls button { width: 30px; height: 30px; border: none; background: transparent; color: var(--text-dim); font-family: var(--font-mono); font-size: 16px; cursor: pointer; border-radius: 5px; display: flex; align-items: center; justify-content: center; transition: background 0.15s, color 0.15s; }
+  .zoom-controls button:hover { background: var(--border); color: var(--text); }
+  .mermaid-wrap { scrollbar-width: thin; scrollbar-color: var(--border) transparent; }
+  .mermaid-wrap::-webkit-scrollbar { width:6px; height:6px; }
+  .mermaid-wrap::-webkit-scrollbar-track { background:transparent; }
+  .mermaid-wrap::-webkit-scrollbar-thumb { background:var(--border); border-radius:3px; }
+
+  /* Mermaid node typography */
+  .mermaid .nodeLabel { font-family: var(--font-display) !important; font-size: 14px !important; }
+  .mermaid .edgeLabel { font-family: var(--font-mono) !important; font-size: 10px !important; }
+  .mermaid .node rect, .mermaid .node circle, .mermaid .node polygon { stroke-width: 1.5px !important; }
+
+  /* Mermaid classDef CSS bridge — dark mode shapes */
+  .mermaid g.live rect, .mermaid g.live polygon, .mermaid g.live circle { fill: var(--metric-dim) !important; stroke: var(--metric) !important; }
+  .mermaid g.video rect, .mermaid g.video polygon, .mermaid g.video circle { fill: var(--amber-dim) !important; stroke: var(--amber) !important; }
+  .mermaid g.stretch rect, .mermaid g.stretch polygon, .mermaid g.stretch circle { fill: var(--surface2) !important; stroke: var(--border-bright) !important; }
+  .mermaid g.actions rect, .mermaid g.actions polygon, .mermaid g.actions circle { fill: var(--secondary-dim) !important; stroke: var(--secondary) !important; }
+
+  /* Dark mode text — Mermaid renders text at init time, CSS bridge must override */
+  html.dark .mermaid .nodeLabel { color: #e8edf5 !important; }
+  html.dark .mermaid .edgeLabel { color: #bccde8 !important; }
+  html.dark .mermaid .edgeLabel span { color: #bccde8 !important; }
+  html.dark .mermaid text { fill: #e8edf5 !important; }
+  html.dark .mermaid .labelBkg { fill: #132240 !important; }
+
+  /* Legend */
+  .legend { display: flex; gap: 18px; flex-wrap: wrap; margin-bottom: 4px; }
+  .legend-item { display: flex; align-items: center; gap: 6px; font-size: 11px; color: var(--text-dim); font-family: var(--font-mono); }
+  .legend-swatch { width: 11px; height: 11px; border-radius: 3px; flex-shrink: 0; }
+  .legend-swatch--outline { border: 1.5px solid; }
+
+  /* Split screen */
+  .split-screen { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin: 16px 0; }
+  .split-panel { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 20px; }
+  .split-panel--actions { border-top: 3px solid var(--metric); }
+  .split-panel--reasoning { border-top: 3px solid var(--amber); }
+  .panel-title { font-family: var(--font-mono); font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 14px; display: flex; align-items: center; gap: 8px; }
+  .split-panel--actions .panel-title { color: var(--metric); }
+  .split-panel--reasoning .panel-title { color: var(--amber); }
+  .panel-flow { display: flex; flex-direction: column; gap: 10px; }
+  .panel-step { display: flex; gap: 10px; font-size: 13px; line-height: 1.5; }
+  .panel-step .idx { font-family: var(--font-mono); font-size: 10px; color: var(--text-muted); width: 20px; flex-shrink: 0; padding-top: 2px; }
+
+  /* Data table */
+  .table-wrap { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; overflow: hidden; }
+  .table-scroll { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+  .data-table { width: 100%; border-collapse: collapse; font-size: 13px; line-height: 1.5; }
+  .data-table thead th { background: var(--surface2); font-family: var(--font-mono); font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: 1px; color: var(--text-dim); text-align: left; padding: 12px 14px; border-bottom: 2px solid var(--border-bright); white-space: nowrap; position: sticky; top: 0; }
+  .data-table td { padding: 10px 14px; border-bottom: 1px solid var(--border); vertical-align: top; }
+  .data-table tbody tr:nth-child(even) { background: var(--primary-dim); }
+  .data-table tbody tr:last-child td { border-bottom: none; }
+  .data-table code { font-family: var(--font-mono); font-size: 11px; background: var(--secondary-dim); color: var(--secondary); padding: 1px 5px; border-radius: 3px; }
+
+  /* Badges */
+  .badge { display: inline-flex; align-items: center; gap: 5px; font-family: var(--font-mono); font-size: 10px; font-weight: 600; padding: 2px 9px; border-radius: 5px; white-space: nowrap; }
+  .badge--metric { background: var(--metric-dim); color: var(--metric); }
+  .badge--amber { background: var(--amber-dim); color: var(--amber); }
+  .badge--secondary { background: var(--secondary-dim); color: var(--secondary); }
+  .badge--violet { background: var(--violet-dim); color: var(--violet); }
+  .badge--rose { background: var(--rose-dim); color: var(--rose); }
+  .badge--slate { background: var(--slate-dim); color: var(--slate); }
+
+  /* Context / inner cards */
+  .context-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 12px; }
+  .context-card { background: var(--surface); border: 1px solid var(--border); border-left: 3px solid; border-radius: 0 10px 10px 0; padding: 16px 18px; font-size: 14px; line-height: 1.5; }
+  .context-card .label { font-family: var(--font-mono); font-size: 10px; font-weight: 600; letter-spacing: 0.5px; text-transform: uppercase; margin-bottom: 4px; }
+  .context-card .name { font-size: 15px; font-weight: 700; margin-bottom: 4px; }
+  .context-card .desc { font-size: 13px; color: var(--text-dim); }
+  .context-card.metric { border-left-color: var(--metric); } .context-card.metric .label { color: var(--metric); }
+  .context-card.violet { border-left-color: var(--violet); } .context-card.violet .label { color: var(--violet); }
+  .context-card.amber { border-left-color: var(--amber); } .context-card.amber .label { color: var(--amber); }
+  .context-card.secondary { border-left-color: var(--secondary); } .context-card.secondary .label { color: var(--secondary); }
+
+  /* Callout */
+  .callout {
+    background: var(--surface); border: 1px solid var(--border);
+    border-left: 3px solid var(--primary); border-radius: 0 12px 12px 0;
+    padding: 18px 22px; font-size: 14px; line-height: 1.6;
+    color: var(--text-dim); margin-top: 16px;
+  }
+  .callout strong { color: var(--text); }
+  .callout--metric { border-left-color: var(--metric); }
+  .callout--violet { border-left-color: var(--violet); }
+  .callout--amber { border-left-color: var(--amber); }
+
+  .footer { margin-top: 56px; padding-top: 20px; border-top: 1px solid var(--border); text-align: center; font-size: 13px; color: var(--text-muted); }
+  .footer a { color: var(--primary); text-decoration: none; }
+
+  @media (max-width: 640px) {
+    body { padding: 0 12px 48px; }
+    .nav { margin: 0 -12px 24px; padding: 0 12px; }
+    .hero h1 { font-size: 28px; }
+    .split-screen { grid-template-columns: 1fr; }
+    .context-grid { grid-template-columns: 1fr; }
+    .kpi-row { grid-template-columns: repeat(2, 1fr); }
+  }
+</style>
+</head>
+<body>
+
+<a href="../index.html" class="backlink">&larr; Index</a>
+
+<div class="nav">
+  <div class="nav-inner">
+    <a href="../index.html" class="nav-brand">&larr; Marvell</a>
+    <button class="theme-toggle" id="themeToggle" aria-label="Toggle dark mode">
+      <span class="icon-light">&#9788;</span>
+      <span class="icon-dark" style="display:none">&#9790;</span>
+    </button>
+  </div>
+</div>
+
+<div class="container">
+  <div class="hero">
+    <div class="hero-badge">Trillium Digital Services &middot; Client Deliverable</div>
+    <h1>Marvell Agentic Demo</h1>
+    <p class="subtitle">System architecture for a 1-hour client session &mdash; seven supply chain agents on Kinaxis and Databricks.</p>
+  </div>
+
+  <!-- KPI row -->
+  <div class="kpi-row">
+    <div class="kpi-card" style="--i:0"><div class="value">7</div><div class="label">Agentic Use Cases</div></div>
+    <div class="kpi-card" style="--i:1"><div class="value">2</div><div class="label">Live Click-Through Demos</div></div>
+    <div class="kpi-card" style="--i:2"><div class="value">4</div><div class="label">Narrated Video Walkthroughs</div></div>
+    <div class="kpi-card" style="--i:3"><div class="value">~7d</div><div class="label">Build Timeline</div></div>
+    <div class="kpi-card" style="--i:4"><div class="value">2</div><div class="label">Platforms</div></div>
+  </div>
+
+  <!-- System flow -->
+  <div class="detail-section animate" style="--i:1">
+    <h2>System Architecture</h2>
+    <div class="mermaid-wrap">
+      <div class="zoom-controls">
+        <button onclick="zoomDiagram(this, 1.2)" title="Zoom in">+</button>
+        <button onclick="zoomDiagram(this, 0.8)" title="Zoom out">&minus;</button>
+        <button onclick="resetZoom(this)" title="Reset">&#8634;</button>
+      </div>
+      <pre class="mermaid">
+flowchart TD
+  subgraph DATA["Data Sources"]
+    KIN["Kinaxis Maestro\nlive instance"]:::source
+    SYNTH["Synthetic Data\nWIP files · yield curves\npartner portals"]:::source
+  end
+  subgraph BRIDGE["Trillium MCP Bridge"]
+    MCP["MCP Client\nKinaxis Agent Studio"]:::source
+  end
+  subgraph ENGINE["Claude API Reasoning Engine"]
+    REASON["Agent Reasoning Layer\nprompt engineering · tool definitions\nstructured outputs"]:::source
+  end
+  subgraph AGENTS["Agent Layer — 7 Use Cases"]
+    A6["UC6 · Supply Disruption\nLIVE"]:::live
+    A8["UC8 · Inventory Expiry\nLIVE"]:::live
+    A1["UC1 · WIP Recon"]:::video
+    A2["UC2 · Predictive Yield"]:::video
+    A5["UC5 · Parameter Opt"]:::video
+    A7["UC7 · Allocation"]:::video
+    A3["UC3 · NPI Phase-Gate"]:::stretch
+  end
+  subgraph UI["Demo UI — Split Screen"]
+    ACT["Agent Actions\nKinaxis screens\nMaestro scenarios"]:::actions
+    REAS["Agent Reasoning\nplain language\nevidence attached"]:::actions
+  end
+  subgraph HUMAN["Human-in-the-Loop"]
+    APPROVE["Planner Accept / Reject\ncommit · override · escalate"]:::source
+  end
+  subgraph TARGET["Marvell Systems"]
+    MAESTRO["Kinaxis Maestro\nplanning data · scenarios"]:::source
+    ORACLE["Oracle ERP\npurchase orders · items"]:::source
+  end
+
+  KIN --> MCP
+  SYNTH --> MCP
+  MCP --> REASON
+  REASON --> AGENTS
+  A6 --> ACT
+  A8 --> ACT
+  A1 --> REAS
+  A2 --> REAS
+  ACT --> APPROVE
+  REAS --> APPROVE
+  APPROVE -->|"committed"| MAESTRO
+  APPROVE -->|"committed"| ORACLE
+
+  classDef source fill:#f5f8fc,stroke:#a0bedb,stroke-width:1.5px,color:#0a1628
+  classDef live fill:#d5f0ee,stroke:#0f766e,stroke-width:2px,color:#0a1628
+  classDef video fill:#fef0d7,stroke:#b45309,stroke-width:1.5px,color:#0a1628
+  classDef stretch fill:#f5f8fc,stroke:#c8daea,stroke-width:1px,color:#3d5a7a
+  classDef actions fill:#e0eef7,stroke:#4a90c4,stroke-width:1.5px,color:#0a1628
+      </pre>
+    </div>
+    <div class="legend">
+      <div class="legend-item"><div class="legend-swatch" style="background:var(--metric)"></div>live demo</div>
+      <div class="legend-item"><div class="legend-swatch" style="background:var(--amber)"></div>video walkthrough</div>
+      <div class="legend-item"><div class="legend-swatch" style="background:var(--secondary)"></div>split-screen panel</div>
+    </div>
+  </div>
+
+  <!-- Split screen -->
+  <div class="detail-section animate" style="--i:2">
+    <h2>Split-Screen Demo UI &mdash; Build Requirement</h2>
+    <div class="callout callout--amber" style="margin:0 0 16px">
+      <strong>From the brief:</strong> &ldquo;Plan a split screen that shows the agent acting on one side and its reasoning on the other, paced for a human to follow. This is a build requirement, not a presentation trick.&rdquo;
+    </div>
+    <div class="split-screen">
+      <div class="split-panel split-panel--actions">
+        <div class="panel-title"><span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--metric)"></span> Agent Actions</div>
+        <div class="panel-flow">
+          <div class="panel-step"><span class="idx">01</span><span>Query Kinaxis for scheduled receipts, pegging, BOM data</span></div>
+          <div class="panel-step"><span class="idx">02</span><span>Detect disruption: commit date moved, inventory at risk</span></div>
+          <div class="panel-step"><span class="idx">03</span><span>Model 2&ndash;3 mitigations as Maestro what-if scenarios</span></div>
+          <div class="panel-step"><span class="idx">04</span><span>Present options with penalty arithmetic visible</span></div>
+          <div class="panel-step"><span class="idx">05</span><span>Execute chosen scenario on planner approval</span></div>
+        </div>
+      </div>
+      <div class="split-panel split-panel--reasoning">
+        <div class="panel-title"><span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--amber)"></span> Agent Reasoning</div>
+        <div class="panel-flow">
+          <div class="panel-step"><span class="idx">01</span><span>Plain-language root cause: <em>&ldquo;Commit moved because cycle time at OSAT slipped 4 days&rdquo;</em></span></div>
+          <div class="panel-step"><span class="idx">02</span><span>Named customers affected, with revenue + margin at stake per customer</span></div>
+          <div class="panel-step"><span class="idx">03</span><span>Lateness penalty arithmetic: 2 minor misses &gt; 1 severe miss</span></div>
+          <div class="panel-step"><span class="idx">04</span><span>Evidence chain: source data &rarr; analysis &rarr; recommendation</span></div>
+          <div class="panel-step"><span class="idx">05</span><span>Before-state: planner + 50 workbooks &rarr; seconds</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Agent inventory -->
+  <div class="detail-section animate" style="--i:3">
+    <h2>Agent Inventory &mdash; 7 Use Cases</h2>
+    <div class="table-wrap">
+      <div class="table-scroll">
+        <table class="data-table">
+          <thead>
+            <tr><th>Priority</th><th>#</th><th>Use Case</th><th>Platform</th><th>Type</th><th>Demo Message</th><th>Handoff</th></tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><span class="badge badge--rose">P1</span></td>
+              <td><code>6</code></td>
+              <td><strong>Supply Disruption Exception Handler</strong></td>
+              <td><span class="badge badge--secondary">Kinaxis</span></td>
+              <td><span class="badge badge--metric">LIVE</span></td>
+              <td>Why the commit moved, in plain language, in seconds</td>
+              <td>&larr; Receives from UC1</td>
+            </tr>
+            <tr>
+              <td><span class="badge badge--rose">P2</span></td>
+              <td><code>8</code></td>
+              <td><strong>Inventory Expiry &amp; Alternate BOM</strong></td>
+              <td><span class="badge badge--secondary">Kinaxis</span></td>
+              <td><span class="badge badge--metric">LIVE</span></td>
+              <td>At-risk lots converted to revenue before write-off</td>
+              <td>&mdash;</td>
+            </tr>
+            <tr>
+              <td><span class="badge badge--amber">P3</span></td>
+              <td><code>1</code></td>
+              <td><strong>Agentic WIP Reconciliation</strong></td>
+              <td><span class="badge badge--violet">Kinaxis + Databricks</span></td>
+              <td><span class="badge badge--amber">VIDEO</span></td>
+              <td>Receipt dates corrected before the miss, not after</td>
+              <td>&rarr; Feeds UC6, UC7</td>
+            </tr>
+            <tr>
+              <td><span class="badge badge--amber">P4</span></td>
+              <td><code>2</code></td>
+              <td><strong>Predictive Yield Agent</strong></td>
+              <td><span class="badge badge--violet">Databricks</span></td>
+              <td><span class="badge badge--amber">VIDEO</span></td>
+              <td>Demonstrated yield beats stated yield, with evidence</td>
+              <td>&harr; Overlaps UC5</td>
+            </tr>
+            <tr>
+              <td><span class="badge badge--amber">P5</span></td>
+              <td><code>5</code></td>
+              <td><strong>Planning Parameter Optimization</strong></td>
+              <td><span class="badge badge--secondary">Kinaxis</span></td>
+              <td><span class="badge badge--amber">VIDEO</span></td>
+              <td>Parameters self-heal inside Maestro, not in a side tool</td>
+              <td>&harr; Overlaps UC2</td>
+            </tr>
+            <tr>
+              <td><span class="badge badge--amber">P6</span></td>
+              <td><code>7</code></td>
+              <td><strong>Agentic Allocation</strong></td>
+              <td><span class="badge badge--secondary">Kinaxis</span></td>
+              <td><span class="badge badge--amber">VIDEO</span></td>
+              <td>Constrained supply reallocated with defensible rules</td>
+              <td>&larr; Receives from UC1</td>
+            </tr>
+            <tr>
+              <td><span class="badge badge--slate">P7</span></td>
+              <td><code>3</code></td>
+              <td><strong>NPI Phase-Gate Agent</strong></td>
+              <td><span class="badge badge--slate">TBD</span></td>
+              <td><span class="badge badge--amber">VIDEO</span></td>
+              <td>Agent layer over the build already in flight</td>
+              <td>&mdash;</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- Handoff map -->
+  <div class="detail-section animate" style="--i:4">
+    <h2>Agent Handoff Map</h2>
+    <div class="callout" style="margin:0 0 16px">
+      <strong>From the brief:</strong> &ldquo;Make the handoffs between agents visible. Use case 1 feeds 6 and 7, and use case 2 overlaps 5. Those connections are the reason to buy more than one.&rdquo;
+    </div>
+    <div class="mermaid-wrap">
+      <div class="zoom-controls">
+        <button onclick="zoomDiagram(this, 1.2)" title="Zoom in">+</button>
+        <button onclick="zoomDiagram(this, 0.8)" title="Zoom out">&minus;</button>
+        <button onclick="resetZoom(this)" title="Reset">&#8634;</button>
+      </div>
+      <pre class="mermaid">
+flowchart LR
+  subgraph LIVE["Live Demos — Full Click-Through"]
+    UC6["UC6\nSupply Disruption\nException Handler"]:::live
+    UC8["UC8\nInventory Expiry\nAlternate BOM"]:::live
+  end
+  subgraph VIDEO["Video Walkthroughs — ~90s Each"]
+    UC1["UC1\nAgentic WIP\nReconciliation"]:::video
+    UC2["UC2\nPredictive Yield\nAgent"]:::video
+    UC5["UC5\nPlanning Parameter\nOptimization"]:::video
+    UC7["UC7\nAgentic\nAllocation"]:::video
+    UC3["UC3\nNPI Phase-Gate\nAgent"]:::stretch
+  end
+
+  UC1 -->|"WIP flush\ntriggers exception"| UC6
+  UC1 -->|"shortfall from\nreal WIP data"| UC7
+  UC2 -.->|"yield monitor overlaps\nparameter audit"| UC5
+
+  classDef live fill:#d5f0ee,stroke:#0f766e,stroke-width:2px,color:#0a1628
+  classDef video fill:#fef0d7,stroke:#b45309,stroke-width:1.5px,color:#0a1628
+  classDef stretch fill:#f5f8fc,stroke:#c8daea,stroke-width:1px,color:#3d5a7a
+      </pre>
+    </div>
+  </div>
+
+  <!-- Data layer -->
+  <div class="detail-section animate" style="--i:5">
+    <h2>Data Layer Architecture</h2>
+    <div class="context-grid">
+      <div class="context-card metric">
+        <div class="label">Live Data</div>
+        <div class="name">Kinaxis Maestro</div>
+        <div class="desc">Via Trillium's MCP client bridge to Kinaxis Agent Studio. Real-time queries against scheduled receipts, pegging, BOM, where-used, and Maestro what-if scenarios.</div>
+      </div>
+      <div class="context-card violet">
+        <div class="label">Synthetic Data</div>
+        <div class="name">Marvell-shaped Files</div>
+        <div class="desc">Synthetic is explicitly allowed by the brief, but must mirror part number formats, bin grades, and OSAT WIP file layouts so a planner never sees data that looks fake.</div>
+      </div>
+      <div class="context-card amber">
+        <div class="label">External Signals</div>
+        <div class="name">Simulated Triggers</div>
+        <div class="desc">Pre-computed events for demo realism: supplier delay alerts, commit date changes, WIP receipt mismatches, and yield gap detection.</div>
+      </div>
+    </div>
+    <div class="callout callout--violet">
+      <strong>Databricks strategy:</strong> Live demos (UC6, UC8) run entirely on Kinaxis. Databricks-sourced data is synthetic. The Predictive Yield walkthrough (UC2) uses pre-computed yield curves with the reasoning layer on top &mdash; the concept lands without live infrastructure. If Marvell asks: &ldquo;We'd integrate Databricks in production. For the demo we prioritized the agent reasoning and planner experience.&rdquo;
+    </div>
+  </div>
+
+  <!-- Architecture decisions -->
+  <div class="detail-section animate" style="--i:6">
+    <h2>Architecture Decisions</h2>
+    <div class="context-grid">
+      <div class="context-card secondary">
+        <div class="label">Reasoning</div>
+        <div class="name">Claude API</div>
+        <div class="desc">Prompt-engineered reasoning chains with structured outputs. Evidence-attached responses &mdash; the agent shows its work, not just its answer.</div>
+      </div>
+      <div class="context-card secondary">
+        <div class="label">Kinaxis-first</div>
+        <div class="name">Not a custom UI</div>
+        <div class="desc">Anchor every demo in Kinaxis or Databricks screens. A custom UI reads as a prototype; their own systems read as a deliverable.</div>
+      </div>
+      <div class="context-card secondary">
+        <div class="label">Human-in-the-loop</div>
+        <div class="name">Proposed vs committed</div>
+        <div class="desc">Every action that changes planning data requires planner approval. The agent explores paths; the human chooses the destination.</div>
+      </div>
+      <div class="context-card secondary">
+        <div class="label">Slow motion</div>
+        <div class="name">Paced for humans</div>
+        <div class="desc">Autonomous agents are invisible on screen. Actions appear incrementally, reasoning unfolds step by step, mitigations compared before committing.</div>
+      </div>
+      <div class="context-card secondary">
+        <div class="label">Before-state</div>
+        <div class="name">In numbers</div>
+        <div class="desc">Every demo closes with the contrast: planner + 50 workbooks &rarr; seconds, 5&ndash;6 clicks &rarr; single ranked list. Speed and legibility are the message.</div>
+      </div>
+      <div class="context-card secondary">
+        <div class="label">Discovery first</div>
+        <div class="name">Marvell-specific</div>
+        <div class="desc">A short discovery pass makes demos Marvell-specific: part formats, bin grades, file layouts. Generic demos lose planners in 30 seconds.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Session format -->
+  <div class="detail-section animate" style="--i:7">
+    <h2>Client Session Format &mdash; 60 Minutes</h2>
+    <div class="context-grid">
+      <div class="context-card metric">
+        <div class="label">Live Demos · ~15 min each</div>
+        <div class="name">Full Click-Through</div>
+        <div class="desc">Real interaction and real data flow. The planner drives the experience; the agent responds in real time. Enough detail that Marvell sees the thing is close to ready.</div>
+      </div>
+      <div class="context-card amber">
+        <div class="label">Video · ~90 sec each</div>
+        <div class="name">Narrated Walkthroughs</div>
+        <div class="desc">Concept walkthroughs, recorded not driven live. Show the architecture, the agent's capabilities, and the before/after contrast. Close with proof points.</div>
+      </div>
+      <div class="context-card secondary">
+        <div class="label">The Objective</div>
+        <div class="name">Sell the Package</div>
+        <div class="desc">Not one agent. Leave Marvell wanting the package &mdash; so the follow-up is about assembling 20 of these, not commissioning a single solution.</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="footer">
+    <a href="../index.html">&larr; Index</a>
+    &nbsp;&middot;&nbsp;
+    &copy; 2025-2026 Charlie Fuller
+  </div>
+</div>
+
+<script type="module">
+  import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs';
+  const isDark = document.documentElement.classList.contains('dark');
+  mermaid.initialize({
+    startOnLoad: true, theme: 'base', look: 'classic',
+    themeVariables: {
+      primaryColor: isDark ? '#132240' : '#f5f8fc',
+      primaryBorderColor: isDark ? '#5e7aa3' : '#a0bedb',
+      primaryTextColor: isDark ? '#e8edf5' : '#0a1628',
+      secondaryColor: isDark ? '#132240' : '#ffffff',
+      secondaryBorderColor: isDark ? '#6cace4' : '#4a90c4',
+      secondaryTextColor: isDark ? '#e8edf5' : '#0a1628',
+      tertiaryColor: isDark ? '#132240' : '#ffffff',
+      tertiaryBorderColor: isDark ? '#2dd4bf' : '#0f766e',
+      tertiaryTextColor: isDark ? '#e8edf5' : '#0a1628',
+      lineColor: isDark ? '#5e7aa3' : '#7a9ab8',
+      clusterBkg: isDark ? '#132240' : '#ffffff',
+      clusterBorder: isDark ? '#2d4570' : '#a0bedb',
+      fontSize: '14px', fontFamily: "'Fraunces', Georgia, serif",
+    }
+  });
+</script>
+<script>
+  function updateZoomState(wrap) { const t = wrap.querySelector('.mermaid'); wrap.classList.toggle('is-zoomed', parseFloat(t.dataset.zoom || '1') > 1); }
+  function zoomDiagram(btn, factor) { const wrap = btn.closest('.mermaid-wrap'), t = wrap.querySelector('.mermaid'); const n = Math.min(Math.max((parseFloat(t.dataset.zoom || '1')) * factor, 0.3), 5); t.dataset.zoom = n; t.style.transform = 'scale(' + n + ')'; updateZoomState(wrap); }
+  function resetZoom(btn) { const wrap = btn.closest('.mermaid-wrap'), t = wrap.querySelector('.mermaid'); t.dataset.zoom = '1'; t.style.transform = 'scale(1)'; updateZoomState(wrap); }
+  document.querySelectorAll('.mermaid-wrap').forEach(function(wrap) {
+    wrap.addEventListener('wheel', function(e) {
+      if (!e.ctrlKey && !e.metaKey) return;
+      e.preventDefault();
+      const t = wrap.querySelector('.mermaid');
+      const n = Math.min(Math.max((parseFloat(t.dataset.zoom || '1')) * (e.deltaY < 0 ? 1.1 : 0.9), 0.3), 5);
+      t.dataset.zoom = n; t.style.transform = 'scale(' + n + ')'; updateZoomState(wrap);
+    }, { passive: false });
+    let sx, sy, sl, st;
+    wrap.addEventListener('mousedown', function(e) {
+      if (e.target.closest('.zoom-controls')) return;
+      if (parseFloat(wrap.querySelector('.mermaid').dataset.zoom || '1') <= 1) return;
+      wrap.classList.add('is-panning'); sx = e.clientX; sy = e.clientY; sl = wrap.scrollLeft; st = wrap.scrollTop;
+    });
+    window.addEventListener('mousemove', function(e) {
+      if (!wrap.classList.contains('is-panning')) return;
+      wrap.scrollLeft = sl - (e.clientX - sx); wrap.scrollTop = st - (e.clientY - sy);
+    });
+    window.addEventListener('mouseup', function() { wrap.classList.remove('is-panning'); });
+  });
+</script>
+<script>
+  const toggle = document.getElementById('themeToggle');
+  const iconLight = toggle.querySelector('.icon-light');
+  const iconDark = toggle.querySelector('.icon-dark');
+  function setTheme(d) {
+    document.documentElement.classList.toggle('dark', d);
+    iconLight.style.display = d ? 'none' : '';
+    iconDark.style.display = d ? '' : 'none';
+    try { localStorage.setItem('diagram-theme', d ? 'dark' : 'light'); } catch(e) {}
+  }
+  toggle.addEventListener('click', () => setTheme(!document.documentElement.classList.contains('dark')));
+  try { if (localStorage.getItem('diagram-theme') === 'dark') setTheme(true); } catch(e) {}
+</script>
+</body>
+</html>
