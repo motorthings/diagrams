@@ -1,0 +1,584 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="How the cite-check skill verifies every citation and quotation in a filing against Descrybe before it goes out — existence, correct cite, good-law status, and word-for-word accuracy.">
+<title>Cite-Check Skill &mdash; Authority Verification Pipeline</title>
+<link rel="icon" href="../icon.svg" type="image/svg+xml" />
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,wght@0,400;0,500;0,600;0,700;0,800;1,400&family=Source+Code+Pro:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --font-display: 'Fraunces', Georgia, serif;
+    --font-mono: 'Source Code Pro', 'SF Mono', Consolas, monospace;
+
+    --bg: #eef4f9;
+    --surface: #ffffff;
+    --surface2: #f5f8fc;
+    --border: #c8daea;
+    --border-bright: #a0bedb;
+    --text: #0a1628;
+    --text-dim: #3d5a7a;
+    --text-muted: #7a9ab8;
+    --primary: #e8621a;
+    --primary-dim: rgba(232,98,26,0.08);
+    --secondary: #4a90c4;
+    --secondary-dim: rgba(74,144,196,0.08);
+    --metric: #0f766e;
+    --metric-dim: rgba(15,118,110,0.06);
+    --amber: #b45309;
+    --amber-dim: rgba(180,83,9,0.08);
+    --violet: #7c3aed;
+    --violet-dim: rgba(124,58,237,0.08);
+    --rose: #e11d48;
+    --rose-dim: rgba(225,29,72,0.08);
+    --slate: #475569;
+    --slate-dim: rgba(71,85,105,0.08);
+  }
+
+  html.dark {
+    --bg: #0a1628;
+    --surface: #132240;
+    --surface2: #1a2d52;
+    --border: #1a2d52;
+    --border-bright: #2d4570;
+    --text: #e8edf5;
+    --text-dim: #bccde8;
+    --text-muted: #7a96b8;
+    --primary: #f37021;
+    --primary-dim: rgba(243,112,33,0.12);
+    --secondary: #6cace4;
+    --secondary-dim: rgba(108,172,228,0.12);
+    --metric: #2dd4bf;
+    --metric-dim: rgba(45,212,191,0.08);
+    --amber: #f59e0b;
+    --amber-dim: rgba(245,158,11,0.12);
+    --violet: #a78bfa;
+    --violet-dim: rgba(167,139,250,0.12);
+    --rose: #fda4af;
+    --rose-dim: rgba(253,164,175,0.14);
+    --slate: #94a3b8;
+    --slate-dim: rgba(148,163,184,0.12);
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: var(--bg);
+    background-image:
+      radial-gradient(ellipse at 80% 0%, var(--primary-dim) 0%, transparent 50%),
+      radial-gradient(ellipse at 20% 60%, var(--secondary-dim) 0%, transparent 40%);
+    color: var(--text);
+    font-family: var(--font-display);
+    min-height: 100vh;
+    line-height: 1.6;
+    padding: 0 12px 80px;
+    transition: background 0.3s, color 0.3s;
+  }
+
+  .nav {
+    position: sticky; top: 0; z-index: 100;
+    backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px);
+    background: color-mix(in srgb, var(--surface) 85%, transparent);
+    border-bottom: 1px solid var(--border);
+    margin: 0 -12px 32px; padding: 0 12px 0 100px;
+    transition: background 0.3s, border-color 0.3s;
+  }
+  .nav-inner {
+    max-width: 1100px; margin: 0 auto; padding: 12px 0;
+    display: flex; align-items: center; justify-content: space-between;
+  }
+  .nav-brand {
+    font-family: var(--font-mono); font-size: 12px; font-weight: 600;
+    letter-spacing: 0.5px; color: var(--primary); text-decoration: none;
+  }
+  .theme-toggle {
+    width: 36px; height: 36px; border-radius: 10px;
+    border: 1px solid var(--border); background: var(--surface);
+    cursor: pointer; display: flex; align-items: center; justify-content: center;
+    font-size: 16px; color: var(--text-dim); transition: all 0.2s;
+  }
+  .theme-toggle:hover { border-color: var(--primary); color: var(--primary); }
+
+  .backlink {
+    position: fixed; top: 12px; left: 16px; z-index: 101;
+    font-family: var(--font-mono); font-size: 12px; color: var(--text-dim);
+    text-decoration: none; padding: 6px 10px;
+    border: 1px solid var(--border); border-radius: 6px;
+    background: var(--surface); transition: color 0.15s, border-color 0.15s;
+  }
+  .backlink:hover { color: var(--text); border-color: var(--border-bright); }
+
+  .container { max-width: 1100px; margin: 0 auto; }
+
+  .hero-badge {
+    font-family: var(--font-mono); font-size: 10px; font-weight: 700;
+    text-transform: uppercase; letter-spacing: 1.5px;
+    color: var(--primary); background: var(--primary-dim);
+    padding: 4px 10px; border-radius: 4px;
+    display: inline-block; margin-bottom: 12px;
+  }
+  h1 {
+    font-family: var(--font-display); font-size: 44px; font-weight: 800;
+    color: var(--text); letter-spacing: -0.5px;
+    margin-bottom: 8px; text-wrap: balance;
+  }
+  .hero-sub {
+    font-size: 15px; color: var(--text-dim); line-height: 1.6;
+    margin-bottom: 32px; max-width: 720px;
+  }
+
+  h2 {
+    font-family: var(--font-display); font-size: 26px; font-weight: 600;
+    color: var(--text); margin: 40px 0 16px;
+  }
+
+  /* ===== MERMAID ===== */
+  .mermaid-wrap {
+    position: relative;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 24px 8px;
+    overflow: auto;
+    margin-bottom: 24px;
+  }
+  .mermaid-wrap .mermaid {
+    display: flex;
+    justify-content: center;
+    transition: transform 0.2s ease;
+    transform-origin: top center;
+  }
+  .zoom-controls {
+    position: absolute; top: 8px; right: 8px; display: flex; gap: 2px; z-index: 10;
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 6px; padding: 2px;
+  }
+  .zoom-controls button {
+    width: 28px; height: 28px; border: none; background: transparent;
+    color: var(--text-dim); font-family: var(--font-mono); font-size: 14px;
+    cursor: pointer; border-radius: 4px; display: flex;
+    align-items: center; justify-content: center; transition: background 0.15s, color 0.15s;
+  }
+  .zoom-controls button:hover { background: var(--border); color: var(--text); }
+  .mermaid-wrap { scrollbar-width: thin; scrollbar-color: var(--border) transparent; }
+  .mermaid-wrap::-webkit-scrollbar { width: 6px; height: 6px; }
+  .mermaid-wrap::-webkit-scrollbar-track { background: transparent; }
+  .mermaid-wrap::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+  .mermaid-wrap.is-zoomed { cursor: grab; }
+  .mermaid-wrap.is-panning { cursor: grabbing; user-select: none; }
+
+  .mermaid .nodeLabel { font-family: var(--font-display) !important; font-size: 13px !important; }
+  .mermaid .edgeLabel { font-family: var(--font-mono) !important; font-size: 11px !important; }
+  .mermaid .node rect, .mermaid .node circle, .mermaid .node polygon { stroke-width: 1.5px !important; }
+  .mermaid .edge-pattern-solid { stroke-width: 1.5px !important; }
+
+  .mermaid g.step rect, .mermaid g.step polygon { fill: #e0eef7 !important; stroke: #4a90c4 !important; }
+  .mermaid g.signal rect, .mermaid g.signal polygon { fill: #fde8d8 !important; stroke: #e8621a !important; }
+  .mermaid g.output rect, .mermaid g.output polygon { fill: #d5f0ee !important; stroke: #0f766e !important; }
+  .mermaid g.choice rect, .mermaid g.choice polygon { fill: #fef0d7 !important; stroke: #b45309 !important; }
+  .mermaid g.technique rect, .mermaid g.technique polygon { fill: #ede9fe !important; stroke: #7c3aed !important; }
+  .mermaid g.error rect, .mermaid g.error polygon { fill: #fce7f3 !important; stroke: #e11d48 !important; }
+  .mermaid g.quality rect, .mermaid g.quality polygon { fill: #ffffff !important; stroke: #a0bedb !important; stroke-dasharray: 4 2 !important; }
+
+  html.dark .mermaid g.step rect, html.dark .mermaid g.step polygon { fill: rgba(108,172,228,0.15) !important; stroke: #6cace4 !important; }
+  html.dark .mermaid g.signal rect, html.dark .mermaid g.signal polygon { fill: rgba(243,112,33,0.15) !important; stroke: #f37021 !important; }
+  html.dark .mermaid g.output rect, html.dark .mermaid g.output polygon { fill: rgba(94,234,212,0.12) !important; stroke: #5eead4 !important; }
+  html.dark .mermaid g.choice rect, html.dark .mermaid g.choice polygon { fill: rgba(251,191,36,0.15) !important; stroke: #fbbf24 !important; }
+  html.dark .mermaid g.technique rect, html.dark .mermaid g.technique polygon { fill: rgba(167,139,250,0.15) !important; stroke: #a78bfa !important; }
+  html.dark .mermaid g.error rect, html.dark .mermaid g.error polygon { fill: rgba(251,113,133,0.12) !important; stroke: #fb7185 !important; }
+  html.dark .mermaid g.quality rect, html.dark .mermaid g.quality polygon { fill: #132240 !important; stroke: #2d4570 !important; }
+
+  html.dark .mermaid .nodeLabel { color: #e8edf5 !important; }
+  html.dark .mermaid .edgeLabel { color: #bccde8 !important; }
+  html.dark .mermaid .edgeLabel span { color: #bccde8 !important; }
+  html.dark .mermaid text { fill: #e8edf5 !important; }
+  html.dark .mermaid .labelBkg { fill: #132240 !important; }
+
+  .legend {
+    display: flex; gap: 18px; flex-wrap: wrap; margin-bottom: 32px;
+  }
+  .legend-item {
+    display: flex; align-items: center; gap: 6px;
+    font-family: var(--font-mono); font-size: 11px; color: var(--text-dim);
+  }
+  .legend-swatch { width: 12px; height: 12px; border-radius: 3px; }
+  .legend-swatch.dashed { border: 1.5px dashed; background: transparent; border-radius: 0; }
+
+  /* ===== STEP CARDS ===== */
+  .step-grid {
+    display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 32px;
+  }
+  .step-card {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 10px; padding: 18px 20px;
+    border-left: 3px solid var(--secondary);
+    transition: border-color 0.15s;
+  }
+  .step-card:hover { border-color: var(--border-bright); }
+  .step-card.s2 { border-left-color: var(--primary); }
+  .step-card.s3 { border-left-color: var(--metric); }
+  .step-card.s4 { border-left-color: var(--violet); }
+  .step-header {
+    display: flex; align-items: center; gap: 10px; margin-bottom: 10px;
+  }
+  .step-num {
+    font-family: var(--font-mono); font-size: 11px; font-weight: 700;
+    color: var(--secondary); padding: 2px 8px; border-radius: 4px;
+    background: var(--secondary-dim); white-space: nowrap;
+  }
+  .step-card.s2 .step-num { color: var(--primary); background: var(--primary-dim); }
+  .step-card.s3 .step-num { color: var(--metric); background: var(--metric-dim); }
+  .step-card.s4 .step-num { color: var(--violet); background: var(--violet-dim); }
+  .step-title {
+    font-family: var(--font-display); font-size: 17px; font-weight: 600; color: var(--text);
+  }
+  .step-body {
+    font-size: 13px; color: var(--text-dim); line-height: 1.55;
+  }
+  .step-body ul {
+    list-style: none; padding: 0; margin-top: 6px;
+  }
+  .step-body ul li {
+    padding: 2px 0; padding-left: 14px; position: relative; font-size: 12px;
+  }
+  .step-body ul li::before {
+    content: ''; position: absolute; left: 0; top: 9px;
+    width: 5px; height: 5px; border-radius: 50%;
+    background: var(--border-bright);
+  }
+
+  /* ===== SIGNAL TABLE ===== */
+  .signal-grid {
+    display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 32px;
+  }
+  .signal-card {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 10px; padding: 18px 20px;
+  }
+  .signal-card h4 {
+    font-family: var(--font-mono); font-size: 10px; font-weight: 700;
+    text-transform: uppercase; letter-spacing: 1px;
+    margin-bottom: 10px;
+  }
+  .signal-card.explicit h4 { color: var(--primary); }
+  .signal-card.implicit h4 { color: var(--violet); }
+  .signal-card .signal-item {
+    font-size: 12px; color: var(--text-dim); line-height: 1.5;
+    padding: 4px 0; padding-left: 12px; position: relative;
+  }
+  .signal-card .signal-item::before {
+    content: ''; position: absolute; left: 0; top: 11px;
+    width: 4px; height: 4px; border-radius: 50%;
+  }
+  .signal-card.explicit .signal-item::before { background: var(--primary); }
+  .signal-card.implicit .signal-item::before { background: var(--violet); }
+
+  /* ===== CALLOUT ===== */
+  .callout {
+    background: var(--surface); border: 1px solid var(--border);
+    border-left: 3px solid var(--amber); border-radius: 0 10px 10px 0;
+    padding: 16px 20px; font-size: 13px; line-height: 1.6;
+    color: var(--text-dim); margin-bottom: 32px;
+  }
+  .callout strong { color: var(--text); }
+  .callout-title {
+    font-family: var(--font-mono); font-size: 10px; font-weight: 700;
+    text-transform: uppercase; letter-spacing: 1px;
+    color: var(--amber); margin-bottom: 6px;
+  }
+
+  .footer {
+    font-family: var(--font-mono); font-size: 11px; color: var(--text-muted);
+    text-align: center; padding: 32px 0 16px;
+  }
+  .footer a { color: var(--text-dim); text-decoration: none; }
+  .footer a:hover { color: var(--primary); text-decoration: underline; }
+
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(12px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  .animate { animation: fadeUp 0.4s ease-out both; }
+  .animate-1 { animation-delay: 0s; }
+  .animate-2 { animation-delay: 0.06s; }
+  .animate-3 { animation-delay: 0.12s; }
+  .animate-4 { animation-delay: 0.18s; }
+  .animate-5 { animation-delay: 0.24s; }
+
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after {
+      animation-duration: 0.01ms !important; animation-delay: 0ms !important;
+      transition-duration: 0.01ms !important;
+    }
+  }
+
+  @media (max-width: 768px) {
+    body { padding: 0 8px 48px; }
+    .nav { margin: 0 -8px 24px; padding: 0 8px 0 90px; }
+    h1 { font-size: 28px; }
+    .step-grid, .signal-grid { grid-template-columns: 1fr; }
+    .mermaid-wrap { padding: 16px 4px; }
+  }
+</style>
+</head>
+<body>
+
+<a href="../index.html" class="backlink">&larr; Index</a>
+
+<div class="nav">
+  <div class="nav-inner">
+    <a href="../index.html" class="nav-brand">&#9679; Claude Skills</a>
+    <button class="theme-toggle" id="themeToggle" aria-label="Toggle dark mode">
+      <span class="icon-light">&#9788;</span>
+      <span class="icon-dark" style="display:none">&#9790;</span>
+    </button>
+  </div>
+</div>
+
+<div class="container">
+
+  <span class="hero-badge">Claude Skill</span>
+  <h1 class="animate animate-1">Cite-Check &mdash; Authority Verification Pipeline</h1>
+  <p class="hero-sub animate animate-2">
+    How the cite-check skill verifies every authority in a filing against the Descrybe Legal
+    Engine before it goes out. Four checks per cite: does it exist, is it cited right, is it
+    still good law, and is the quote word-for-word accurate.
+  </p>
+
+  <!-- Mermaid Flowchart -->
+  <div class="mermaid-wrap animate animate-3">
+    <div class="zoom-controls">
+      <button onclick="zoomDiagram(this, 1.2)" title="Zoom in">+</button>
+      <button onclick="zoomDiagram(this, 0.8)" title="Zoom out">&minus;</button>
+      <button onclick="resetZoom(this)" title="Reset zoom">&#8634;</button>
+    </div>
+    <pre class="mermaid">
+flowchart TD
+    INPUT["Input: Filing<br/>Brief, demand, motion"]
+
+    INPUT --> S1["Step 1: Extract Authorities<br/>Case cites · statutes · quotes<br/>keep every line location"]
+
+    S1 --> S2["Step 2: Verify every authority"]
+
+    S2 --> CASE["For each CASE<br/>find_case_from_reference"]
+    CASE --> FOUND{"In Descrybe?"}
+    FOUND -->|"yes"| TREAT["check_case_status<br/>treatment · good law"]
+    FOUND -->|"no"| FABRICATED["Flag NOT FOUND<br/>fabricated or uncovered"]
+    TREAT --> HOLD["Confirm the holding<br/>supports the proposition"]
+    HOLD --> MISMATCH{"Caption / cite correct?"}
+
+    S2 --> QUOTE["For each QUOTE<br/>verify_quote"]
+    QUOTE --> QOK{"Word-for-word?"}
+    QOK -->|"yes"| QGOOD["Verified"]
+    QOK -->|"no"| QBAD["Misquote<br/>fix or paraphrase"]
+
+    S2 --> STAT["For each STATUTE<br/>search_laws_and_rules"]
+    STAT --> SCURRENT["Confirm current text<br/>renumbering · amendments"]
+
+    MISMATCH --> REPORT
+    FABRICATED --> REPORT
+    QGOOD --> REPORT
+    QBAD --> REPORT
+    SCURRENT --> REPORT
+
+    REPORT["Report<br/>authority table + action items"]
+    REPORT --> FIX["Fix the filing<br/>on approval"]
+
+    class S1,S2,FIX step
+    class CASE,TREAT,HOLD,MISMATCH signal
+    class QUOTE,QGOOD,STAT,SCURRENT output
+    class FOUND,QOK choice
+    class FABRICATED,QBAD error
+    class INPUT,REPORT quality
+    </pre>
+  </div>
+
+  <div class="legend animate animate-4">
+    <div class="legend-item"><div class="legend-swatch" style="background:var(--secondary)"></div> Workflow step</div>
+    <div class="legend-item"><div class="legend-swatch" style="background:var(--primary)"></div> Case verification</div>
+    <div class="legend-item"><div class="legend-swatch" style="background:var(--metric)"></div> Quote &amp; statute verification</div>
+    <div class="legend-item"><div class="legend-swatch" style="background:var(--amber)"></div> Decision gate</div>
+    <div class="legend-item"><div class="legend-swatch" style="background:var(--rose)"></div> Flagged &mdash; fix required</div>
+    <div class="legend-item"><div class="legend-swatch dashed" style="border-color:var(--border-bright)"></div> Input / output</div>
+  </div>
+
+  <!-- Step Detail Cards -->
+  <h2>Pipeline Steps</h2>
+  <p style="font-size:13px;color:var(--text-dim);margin-bottom:16px;">Every authority in the filing gets one of three verification paths &mdash; case, quote, or statute &mdash; then everything lands in one prioritized report.</p>
+
+  <div class="step-grid animate animate-4">
+    <div class="step-card">
+      <div class="step-header">
+        <span class="step-num">Step 1</span>
+        <span class="step-title">Extract Authorities</span>
+      </div>
+      <div class="step-body">
+        Pull every authority out of the target document, with line numbers so fixes apply everywhere.
+        <ul>
+          <li>Case citations &mdash; full cites, short-cites, and <code>Id.</code>/<code>supra</code> chains</li>
+          <li>Statutes and rules &mdash; C.R.S., U.S.C., C.R.C.P., regs</li>
+          <li>Quotations &mdash; every quoted string 20+ chars as a verify candidate</li>
+        </ul>
+      </div>
+    </div>
+    <div class="step-card s2">
+      <div class="step-header">
+        <span class="step-num">Step 2</span>
+        <span class="step-title">Verify Cases</span>
+      </div>
+      <div class="step-body">
+        Resolve each case against Descrybe, then check whether it still stands.
+        <ul>
+          <li><strong>Resolve</strong> &mdash; find_case_from_reference; flag caption, reporter, volume, page, court, year mismatches</li>
+          <li><strong>Treatment</strong> &mdash; check_case_status; drill forward cites on any caution/negative</li>
+          <li><strong>Holding</strong> &mdash; confirm the case actually supports the proposition it's cited for</li>
+        </ul>
+      </div>
+    </div>
+    <div class="step-card s3">
+      <div class="step-header">
+        <span class="step-num">Step 3</span>
+        <span class="step-title">Verify Quotes &amp; Statutes</span>
+      </div>
+      <div class="step-body">
+        The language has to be exact &mdash; a real case cited for a holding it doesn't contain is as dangerous as a fake one.
+        <ul>
+          <li><strong>Quotes</strong> &mdash; verify_quote against the resolved case; correct or paraphrase on mismatch</li>
+          <li><strong>Statutes</strong> &mdash; search_laws_and_rules; confirm current text, watch renumbering and amendments</li>
+        </ul>
+      </div>
+    </div>
+    <div class="step-card s4">
+      <div class="step-header">
+        <span class="step-num">Step 4</span>
+        <span class="step-title">Report &amp; Fix</span>
+      </div>
+      <div class="step-body">
+        One table, prioritized action items, applied on approval.
+        <ul>
+          <li>Authority table &mdash; doc cite vs. Descrybe cite, exists?, cite correct?, treatment, quote verified?</li>
+          <li>Action items ordered by risk &mdash; fabricated first, then wrong cite, negative treatment, misquotes</li>
+          <li>Fixes applied on approval, with an audit note for every correction</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <!-- What it catches -->
+  <h2>What It Catches</h2>
+  <p style="font-size:13px;color:var(--text-dim);margin-bottom:16px;">This exists because AI-drafted and human-drafted filings both ship bad cites. One fabricated case can sink credibility with an arbitrator or judge.</p>
+
+  <div class="signal-grid animate animate-5">
+    <div class="signal-card explicit">
+      <h4>What it catches</h4>
+      <div class="signal-item">Fabricated / hallucinated cases</div>
+      <div class="signal-item">Wrong reporter, volume, page, or year</div>
+      <div class="signal-item">Truncated or garbled captions</div>
+      <div class="signal-item">Overruled or negatively-treated authority</div>
+      <div class="signal-item">Quotes that appear nowhere in the opinion</div>
+      <div class="signal-item">Cases cited for a holding they don't contain</div>
+    </div>
+    <div class="signal-card implicit">
+      <h4>Operating rules</h4>
+      <div class="signal-item">Never certify a cite you couldn't verify</div>
+      <div class="signal-item">"Not in Descrybe" &ne; "doesn't exist" &mdash; escalate to a primary source</div>
+      <div class="signal-item">Run independent checks in parallel, batch the case lookups</div>
+      <div class="signal-item">Preserve an audit trail &mdash; record what was wrong and how it was verified</div>
+      <div class="signal-item">Distinguish defense-win cases &mdash; fine to cite for a standard, say so</div>
+      <div class="signal-item">Scale depth to stakes &mdash; full pass pre-filing, lighter pass for sanity checks</div>
+    </div>
+  </div>
+
+  <!-- Rule -->
+  <div class="callout animate animate-5">
+    <div class="callout-title">The rule</div>
+    <p>
+      <strong>Never certify a cite you couldn't verify.</strong> "Not in Descrybe" doesn't mean
+      "doesn't exist" &mdash; but it also doesn't mean "safe to file." Every authority either resolves
+      against primary law or gets flagged, escalated, and labeled binding vs. persuasive.
+    </p>
+  </div>
+
+  <div class="footer">&copy; 2025-2026 Charlie Fuller &nbsp;&middot;&nbsp; <a href="https://linkedin.com/in/charlie-fuller-colorado/" target="_blank" rel="noopener">LinkedIn</a></div>
+
+</div>
+
+<script type="module">
+  import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs';
+
+  mermaid.initialize({
+    startOnLoad: true,
+    theme: 'base',
+    look: 'classic',
+    securityLevel: 'loose',
+    themeVariables: {
+      primaryColor: '#f5f8fc',
+      primaryBorderColor: '#c8daea',
+      primaryTextColor: '#0a1628',
+      secondaryColor: '#f5f8fc',
+      secondaryBorderColor: '#c8daea',
+      secondaryTextColor: '#0a1628',
+      tertiaryColor: '#f5f8fc',
+      tertiaryBorderColor: '#c8daea',
+      tertiaryTextColor: '#0a1628',
+      lineColor: '#a0bedb',
+      fontSize: '14px',
+      fontFamily: "'Fraunces', Georgia, serif",
+    }
+  });
+</script>
+
+<script>
+  const toggle = document.getElementById('themeToggle');
+  const iconLight = toggle.querySelector('.icon-light');
+  const iconDark = toggle.querySelector('.icon-dark');
+  function setTheme(d) {
+    document.documentElement.classList.toggle('dark', d);
+    iconLight.style.display = d ? 'none' : '';
+    iconDark.style.display = d ? '' : 'none';
+    try { localStorage.setItem('diagram-theme', d ? 'dark' : 'light'); } catch(e) {}
+  }
+  toggle.addEventListener('click', () => setTheme(!document.documentElement.classList.contains('dark')));
+  try { if (localStorage.getItem('diagram-theme') === 'dark') setTheme(true); } catch(e) {}
+
+  function updateZoomState(wrap) {
+    var target = wrap.querySelector('.mermaid');
+    var zoom = parseFloat(target.dataset.zoom || '1');
+    wrap.classList.toggle('is-zoomed', zoom > 1);
+  }
+  function zoomDiagram(btn, factor) {
+    var wrap = btn.closest('.mermaid-wrap');
+    var target = wrap.querySelector('.mermaid');
+    var current = parseFloat(target.dataset.zoom || '1');
+    var next = Math.min(Math.max(current * factor, 0.3), 5);
+    target.dataset.zoom = next;
+    target.style.transform = 'scale(' + next + ')';
+    updateZoomState(wrap);
+  }
+  function resetZoom(btn) {
+    var wrap = btn.closest('.mermaid-wrap');
+    var target = wrap.querySelector('.mermaid');
+    target.dataset.zoom = '1';
+    target.style.transform = 'scale(1)';
+    updateZoomState(wrap);
+  }
+  document.querySelectorAll('.mermaid-wrap').forEach(function(wrap) {
+    wrap.addEventListener('wheel', function(e) {
+      if (!e.ctrlKey && !e.metaKey) return;
+      e.preventDefault();
+      var target = wrap.querySelector('.mermaid');
+      var current = parseFloat(target.dataset.zoom || '1');
+      var factor = e.deltaY < 0 ? 1.1 : 0.9;
+      var next = Math.min(Math.max(current * factor, 0.3), 5);
+      target.dataset.zoom = next;
+      target.style.transform = 'scale(' + next + ')';
+      updateZoomState(wrap);
+    }, { passive: false });
+  });
+</script>
+
+</body>
+</html>
