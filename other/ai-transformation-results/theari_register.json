@@ -1,94 +1,1191 @@
 {
   "track_a": {
     "phase_summary": {
-      "theoretical": 0,
-      "empirical": 6,
-      "applicable": 0,
-      "replicable": 0,
-      "impact": 0
+      "theoretical": 39,
+      "empirical": 5,
+      "applicable": 5,
+      "replicable": 10,
+      "impact": 28
     },
     "by_type": {
-      "friction": 6,
+      "friction": 87,
       "absence": 0
     },
     "discoveries": {
-      "A-S03-P00": {
-        "phase": "empirical",
+      "A-S02-P00": {
+        "phase": "impact",
         "type": "friction",
-        "description": "A severe concentration of decision-making activity in a small subset of agents, while the majority of agents show near-zero or zero decision counts. Tommy (41), Nick (38), Greg (27), Jordan (20), and Alicia (57) account for the vast majority of all decisions, while Ron, Tricia, Mike, Leslie, and Rachel show 0-12 decisions despite having similar stress and trust profiles.",
-        "hypothesis": "The system has developed an informal routing mechanism where certain agents (Tommy, Nick, Jordan, Alicia, Greg) are consistently selected for decision tasks, possibly due to historical performance, perceived reliability, or workflow configuration. The zero-decision agents may be systematically bypassed, creating a 'shadow queue' that only routes to a trusted few. This is not a bottleneck (work isn't piling up) but rather a concentration vortex where work is disproportionately funneled to a small set of agents.",
-        "confidence": 0.92,
-        "improvement": 5.0,
+        "description": "AI pipeline outputs are losing meaning at handoffs, causing downstream agents to escalate or request information. Two explicit translation failures occurred in the sample, both on AI-generated outputs (liability_determination_ai and settlement_ai), and both resulted in escalations. This is compounded by a specific case where a claim hit four consecutive request_info steps because handoff context was degraded.",
+        "hypothesis": "The AI pipeline is generating outputs in a format that downstream human agents cannot interpret without additional context. The 'translation' layer between AI output and human-readable workflow state is either missing or inadequate, causing meaning to be lost at each handoff. This is likely a technical integration issue where AI outputs lack the necessary explanatory metadata or structured context.",
+        "confidence": 0.85,
+        "improvement": 0.0,
+        "consequence": 0.9,
         "evidence_sprints": [
-          3,
-          4
+          2
         ],
-        "sprints_in_phase": 17
+        "sprints_in_phase": 7
+      },
+      "A-S02-P01": {
+        "phase": "theoretical",
+        "type": "friction",
+        "description": "Maria is repeatedly escalating payment decisions because claims exceed her $5,000 autonomous settlement authority, even though the AI has correctly processed the claim. This appears in at least three decisions in the sample, all involving amounts between $5,000-$5,400. The AI correctly assessed these claims, but the human agent's authority limit creates a bottleneck.",
+        "hypothesis": "The organization has set a $5,000 autonomous settlement authority for human agents, but the AI pipeline is processing claims up to that threshold and beyond. When claims exceed the threshold, Maria must escalate even though the AI has already validated the claim. This creates a redundant human-in-the-loop step that adds no value when the AI is correct, but is required by policy.",
+        "confidence": 0.9,
+        "improvement": 0.0,
+        "consequence": 0.75,
+        "evidence_sprints": [
+          2
+        ],
+        "sprints_in_phase": 11
+      },
+      "A-S02-P02": {
+        "phase": "theoretical",
+        "type": "friction",
+        "description": "Alicia shows signs of trust collapse with AI: ai_trust=0.08 (lowest in the organization), 36 decisions (highest), but ai_exp shows +6/-2/~6 (6 neutral experiences). Despite high AI usage, her trust is extremely low. This contrasts sharply with Maria (ai_trust=0.55, +23/-3/~2) and Tommy (ai_trust=0.41, +6/-6/~1) who have more balanced experiences.",
+        "hypothesis": "Alicia has high stress (1.00) and high decision volume (36), but her AI experiences are predominantly neutral (6 out of 14 total). This suggests she is being forced to use AI in situations where it provides no clear value, or where the AI output is ambiguous. The combination of high stress and neutral AI experiences may be eroding her trust, as she sees AI as adding workload without benefit.",
+        "confidence": 0.7,
+        "improvement": 0.0,
+        "consequence": 0.65,
+        "evidence_sprints": [
+          2
+        ],
+        "sprints_in_phase": 11
+      },
+      "A-S02-P03": {
+        "phase": "impact",
+        "type": "friction",
+        "description": "Work is migrating from AI pipeline steps to human agents, but not evenly. Diana (26 decisions) and Nick (25 decisions) have high decision counts with zero AI experience, while Ron, Tricia, Mike, Leslie, and Rachel have zero decisions. This suggests an uneven distribution of work where some agents are overloaded while others are underutilized.",
+        "hypothesis": "The AI pipeline is handling most simple claims automatically, but the remaining work is being funneled to a small subset of agents (Diana, Nick, Maria, Tommy). Other agents (Ron, Tricia, Mike, Leslie) are not receiving work, possibly because they are not being assigned to the claims that require human intervention, or because the workflow routing is not distributing work evenly.",
+        "confidence": 0.8,
+        "improvement": 0.0,
+        "consequence": 0.8,
+        "evidence_sprints": [
+          2
+        ],
+        "sprints_in_phase": 7
+      },
+      "A-S02-P04": {
+        "phase": "theoretical",
+        "type": "friction",
+        "description": "Diana and Nick show zero AI trust (0.03 and 0.07 respectively) but are making many decisions (26 and 25) with high exhaustion (8.0 and 9.0). They are not using AI at all (ai_exp=+0/-0/~0 for Diana, +8/-1/~0 for Nick), suggesting they are working around the AI system entirely, possibly because they don't trust it or because their workflow doesn't integrate with it.",
+        "hypothesis": "Diana and Nick are likely handling claims that the AI pipeline has already processed, but they are re-doing the work manually because they don't trust the AI output. Their low trust scores suggest they have not been convinced of AI reliability, and their high exhaustion indicates they are doing double work (AI processes, then they re-verify manually).",
+        "confidence": 0.75,
+        "improvement": 0.0,
+        "consequence": 0.7,
+        "evidence_sprints": [
+          2
+        ],
+        "sprints_in_phase": 11
+      },
+      "A-S02-P05": {
+        "phase": "impact",
+        "type": "friction",
+        "description": "Sanjay is experiencing a compounding exception problem: a single claim has hit four consecutive request_info steps because handoff context is degraded. His stress is at maximum (1.00) and his AI trust is low (0.30). This suggests that exceptions are not being resolved but are instead creating cascading failures.",
+        "hypothesis": "The handoff context degradation is causing Sanjay to repeatedly request information that should have been available from previous steps. Each request_info creates a new exception, which requires additional work to resolve, but the underlying issue (missing context) is never addressed. This creates an exception loop that consumes Sanjay's time and increases his stress.",
+        "confidence": 0.85,
+        "improvement": 0.0,
+        "consequence": 0.85,
+        "evidence_sprints": [
+          2
+        ],
+        "sprints_in_phase": 7
+      },
+      "A-S02-P06": {
+        "phase": "theoretical",
+        "type": "friction",
+        "description": "A pattern is emerging where AI pipeline decisions are being accepted without human review (accept_ai) for simple claims, but the human agents who do review (Maria, Pat) are using different language and reasoning than the AI. The AI uses standardized language ('AI auto-processed...') while humans use contextual reasoning ('This is a simple, low-exposure claim...'). This suggests a pidgin language is emerging at the human-AI interface where both sides are communicating but with different vocabularies.",
+        "hypothesis": "The AI system uses a standardized, template-based language for its outputs, while human agents use contextual, narrative language. Over time, a hybrid language is emerging where both sides understand each other's basic intent but miss nuances. This is not yet causing failures, but it could lead to misunderstandings as claims become more complex.",
+        "confidence": 0.6,
+        "improvement": 0.0,
+        "consequence": 0.5,
+        "evidence_sprints": [
+          2
+        ],
+        "sprints_in_phase": 11
+      },
+      "A-S02-P07": {
+        "phase": "replicable",
+        "type": "friction",
+        "description": "The cycle_time metric is 0.0, which is suspicious given the number of exceptions and escalations in the data. This suggests the metric is not capturing the actual time spent on claims, possibly because it only measures AI pipeline time and excludes human review time, or because the metric is being gamed by the system.",
+        "hypothesis": "The cycle_time metric is likely measuring only the AI pipeline processing time, not the total time from claim initiation to resolution. Human review steps, escalations, and request_info cycles are not being counted. This creates a false impression of efficiency and masks the true cost of exceptions and handoffs.",
+        "confidence": 0.7,
+        "improvement": 0.0,
+        "consequence": 0.8,
+        "evidence_sprints": [
+          2
+        ],
+        "sprints_in_phase": 8
+      },
+      "AGENT-GAP-A-damage_estimation_human": {
+        "phase": "theoretical",
+        "type": "friction",
+        "description": "Agents surfaced missing handoff context at damage_estimation_human (1 decisions)",
+        "hypothesis": "If we standardize the handoff into damage_estimation_human, agents will stop surfacing missing context",
+        "confidence": 0.5,
+        "improvement": 0.0,
+        "consequence": 0.5,
+        "evidence_sprints": [
+          2
+        ],
+        "sprints_in_phase": 11
+      },
+      "AGENT-GAP-A-coverage_verification_human": {
+        "phase": "impact",
+        "type": "friction",
+        "description": "Agents surfaced missing handoff context at coverage_verification_human (1 decisions)",
+        "hypothesis": "If we standardize the handoff into coverage_verification_human, agents will stop surfacing missing context",
+        "confidence": 0.8,
+        "improvement": 0.0,
+        "consequence": 1.0,
+        "evidence_sprints": [
+          2,
+          3,
+          4,
+          5,
+          6,
+          8,
+          9,
+          10,
+          11,
+          12
+        ],
+        "sprints_in_phase": 6
+      },
+      "AGENT-GAP-A-liability_determination_human": {
+        "phase": "replicable",
+        "type": "friction",
+        "description": "Agents surfaced missing handoff context at liability_determination_human (1 decisions)",
+        "hypothesis": "If we standardize the handoff into liability_determination_human, agents will stop surfacing missing context",
+        "confidence": 0.7000000000000001,
+        "improvement": 0.0,
+        "consequence": 1.0,
+        "evidence_sprints": [
+          2,
+          3,
+          4,
+          5,
+          6,
+          8,
+          9,
+          10,
+          12
+        ],
+        "sprints_in_phase": 7
+      },
+      "AGENT-GAP-A-settlement_human": {
+        "phase": "impact",
+        "type": "friction",
+        "description": "Agents surfaced missing handoff context at settlement_human (1 decisions)",
+        "hypothesis": "If we standardize the handoff into settlement_human, agents will stop surfacing missing context",
+        "confidence": 0.9,
+        "improvement": 0.0,
+        "consequence": 0.7142857142857143,
+        "evidence_sprints": [
+          2,
+          3,
+          4,
+          5,
+          6,
+          7,
+          8,
+          9,
+          10,
+          12
+        ],
+        "sprints_in_phase": 5
+      },
+      "AGENT-GAP-A-approval": {
+        "phase": "applicable",
+        "type": "friction",
+        "description": "Agents surfaced missing handoff context at approval (1 decisions)",
+        "hypothesis": "If we standardize the handoff into approval, agents will stop surfacing missing context",
+        "confidence": 0.9,
+        "improvement": 0.0,
+        "consequence": 0.5,
+        "evidence_sprints": [
+          2,
+          3,
+          4,
+          5,
+          6,
+          7,
+          8,
+          9,
+          10,
+          12
+        ],
+        "sprints_in_phase": 0
+      },
+      "AGENT-GAP-A-payment": {
+        "phase": "theoretical",
+        "type": "friction",
+        "description": "Agents surfaced missing handoff context at payment (1 decisions)",
+        "hypothesis": "If we standardize the handoff into payment, agents will stop surfacing missing context",
+        "confidence": 0.5,
+        "improvement": 0.0,
+        "consequence": 0.1,
+        "evidence_sprints": [
+          2
+        ],
+        "sprints_in_phase": 11
+      },
+      "AGENT-GAP-A-subrogation": {
+        "phase": "theoretical",
+        "type": "friction",
+        "description": "Agents surfaced missing handoff context at subrogation (1 decisions)",
+        "hypothesis": "If we standardize the handoff into subrogation, agents will stop surfacing missing context",
+        "confidence": 0.5,
+        "improvement": 0.0,
+        "consequence": 0.1,
+        "evidence_sprints": [
+          2
+        ],
+        "sprints_in_phase": 11
+      },
+      "A-S03-P00": {
+        "phase": "impact",
+        "type": "friction",
+        "description": "Work is migrating from AI pipeline steps to human agents, but not evenly. Diana (34 decisions) and Nick (38 decisions) are handling the bulk of the work, while Ron, Tricia, Mike, and Leslie have made zero decisions this sprint. The AI pipeline is auto-processing simple claims, but complex claims are funneling to a small subset of agents.",
+        "hypothesis": "The AI pipeline is effectively handling simple claims, but complex claims (multi-vehicle, injuries, disputed liability) require human judgment. The workload is being concentrated on Diana and Nick, possibly because they are the most experienced or because the routing logic is not distributing work evenly. Their exhaustion levels (8.0 and 9.0) suggest they are being overworked.",
+        "confidence": 0.85,
+        "improvement": 0.0,
+        "consequence": 0.8,
+        "evidence_sprints": [
+          3
+        ],
+        "sprints_in_phase": 6
       },
       "A-S03-P01": {
-        "phase": "empirical",
+        "phase": "theoretical",
         "type": "friction",
-        "description": "There is a striking disconnect between AI trust levels and actual AI usage. Jordan has the highest AI trust (0.94) but shows zero positive or negative AI experiences (ai_exp=+0/-0/~0), while Alicia has moderate trust (0.29) but has the most AI interactions (+7/-1/~5). Tommy has moderate trust (0.57) with 3 neutral AI experiences but shows AI used=False on all sampled decisions.",
-        "hypothesis": "Trust appears to be formed independently of direct AI experience. Jordan's high trust with zero AI usage suggests trust is being formed through indirect channels (peer influence, organizational messaging, or prior expectations). Conversely, Alicia's low trust despite positive AI experiences (+7 positive) suggests her trust is being eroded by factors outside direct AI performance, possibly the high stress (0.85) and exhaustion (3.0) she's experiencing. This indicates a decoupling between experiential learning and trust formation.",
-        "confidence": 0.85,
-        "improvement": 5.0,
+        "description": "Diana and Nick show zero AI trust (0.00 and 0.01 respectively) but are making the most decisions (34 and 38). They are actively rejecting AI outputs and requesting more information, as seen in decisions 7, 9, 12, 13, 14. This suggests they are working around the AI system, relying on their own judgment rather than the AI's recommendations.",
+        "hypothesis": "Diana and Nick have had negative experiences with AI (Diana has 4 negative AI experiences, Nick has 1). They have learned that AI outputs are unreliable for complex claims, so they bypass AI recommendations and request more information from the system. Their low trust is a rational response to observed AI failures.",
+        "confidence": 0.9,
+        "improvement": 0.0,
+        "consequence": 0.75,
         "evidence_sprints": [
-          3,
-          4
+          3
         ],
-        "sprints_in_phase": 17
+        "sprints_in_phase": 10
       },
       "A-S03-P02": {
-        "phase": "empirical",
+        "phase": "impact",
         "type": "friction",
-        "description": "In Tommy's decision sample, all cases with translation=True and exception=True resulted in non-approve outcomes (request_info or escalate), while all cases with translation=False and exception=False resulted in approve. This suggests a deterministic pattern where exceptions trigger escalation regardless of the underlying claim merits.",
-        "hypothesis": "The system appears to have a hard-coded rule or learned behavior where any exception flag automatically triggers a non-approve action, bypassing the actual claim assessment. This could be a safety mechanism that's overly conservative, or it could indicate that the exception flag is being used as a proxy for complexity that always requires human review, even when the underlying claim might be approvable.",
-        "confidence": 0.88,
-        "improvement": 5.0,
+        "description": "Sanjay is experiencing a compounding exception problem: he has 8 decisions with 13 positive AI experiences and 5 negative ones, and his stress is at 1.00 (maximum). His ai_trust is only 0.34 despite the high number of positive experiences, suggesting the negative experiences are disproportionately affecting his trust. Rachel also shows 4 negative AI experiences with 0 positive, and her trust is 0.39.",
+        "hypothesis": "Sanjay and Rachel are encountering AI failures that require escalation. The 'translation=True' flag on decisions 18 and 22 suggests that AI outputs are losing meaning at handoffs, causing downstream errors. These repeated failures are increasing stress and eroding trust, even when the AI is mostly correct.",
+        "confidence": 0.8,
+        "improvement": 0.0,
+        "consequence": 0.85,
         "evidence_sprints": [
-          3,
-          4
+          3
         ],
-        "sprints_in_phase": 17
+        "sprints_in_phase": 6
       },
       "A-S03-P03": {
-        "phase": "empirical",
+        "phase": "replicable",
         "type": "friction",
-        "description": "There is no consistent relationship between stress and exhaustion across agents. Nick has zero stress but 9.0 exhaustion (highest), while Alicia has 0.85 stress but only 3.0 exhaustion. Tommy has 0.05 stress with 4.0 exhaustion, and Rachel has 0.88 stress with 4.0 exhaustion. This suggests stress and exhaustion are being driven by different factors.",
-        "hypothesis": "Stress and exhaustion may be measuring different constructs: stress could reflect current workload pressure or emotional state, while exhaustion could reflect cumulative fatigue or resource depletion. Nick's high exhaustion with zero stress might indicate he's burned out but no longer feels pressured (learned helplessness or disengagement), while Alicia's high stress with low exhaustion suggests she's actively engaged but under pressure. This decoupling could indicate that the system's stress metric is not capturing chronic fatigue.",
-        "confidence": 0.78,
-        "improvement": 5.0,
+        "description": "A pattern is emerging where AI pipeline decisions are being accepted without human review (accept_ai) for simple claims. This is efficient, but the 'translation=True' flag on some decisions (18, 22) suggests that the AI's output is sometimes losing meaning at handoffs, yet the system still accepts it. This could lead to silent errors that are not caught.",
+        "hypothesis": "The AI pipeline is processing simple claims correctly most of the time, so the system has learned to accept these outputs without human review. However, when translation errors occur (meaning is lost at handoffs), the system still accepts the output, potentially leading to incorrect settlements that go unnoticed.",
+        "confidence": 0.7,
+        "improvement": 0.0,
+        "consequence": 0.9,
         "evidence_sprints": [
-          3,
-          4
+          3
         ],
-        "sprints_in_phase": 17
+        "sprints_in_phase": 7
       },
       "A-S03-P04": {
-        "phase": "empirical",
+        "phase": "theoretical",
         "type": "friction",
-        "description": "Across all sampled decisions, AI was never used (AI used=False on all 10 samples), despite the system having AI capabilities and agents showing varying trust levels. This suggests a systemic avoidance of AI tools, even among agents with high trust (Jordan at 0.94) and those with positive AI experiences (Alicia with +7).",
-        "hypothesis": "There appears to be a systemic barrier to AI adoption that transcends individual trust levels. This could be due to: (1) a workflow design that doesn't integrate AI into the decision path, (2) organizational policies discouraging AI use, (3) lack of AI tool accessibility in the decision interface, or (4) a cultural norm where AI use is stigmatized. The fact that even high-trust agents don't use AI suggests the barrier is structural rather than psychological.",
-        "confidence": 0.95,
-        "improvement": 5.0,
+        "description": "The cycle_time metric is 0.0, which is suspicious given the number of exceptions and escalations in the data. Diana is requesting information on multiple claims, Sanjay is escalating AI outputs, and several agents are at high stress levels. A cycle time of 0.0 suggests the metric is not capturing the actual time spent on claims.",
+        "hypothesis": "The cycle_time metric may only be measuring the time for AI auto-processed claims, not the time spent on exceptions, escalations, or human reviews. This creates a false sense of efficiency and hides the true cost of complex claims.",
+        "confidence": 0.85,
+        "improvement": 0.0,
+        "consequence": 0.7,
         "evidence_sprints": [
-          3,
-          4
+          3
         ],
-        "sprints_in_phase": 17
+        "sprints_in_phase": 10
       },
       "A-S03-P05": {
-        "phase": "empirical",
+        "phase": "impact",
         "type": "friction",
-        "description": "Translation flags appear exclusively in complex cases (4 vehicles, 3 vehicles with injuries, unclear liability), while simple cases never trigger translation. This suggests translation is being used as a complexity marker, but it's unclear if this is intentional or if meaning is being lost in these complex handoffs.",
-        "hypothesis": "Translation appears to be triggered by claim complexity rather than by language or format issues. This could mean the system is using translation as a proxy for 'needs special handling' rather than for actual translation needs. If the intent is to translate complex claims for better understanding, it may be working, but if translation is meant to handle language barriers, it's being misapplied.",
-        "confidence": 0.72,
-        "improvement": 5.0,
+        "description": "Translation errors are occurring at AI handoffs, specifically in the settlement_ai step. Decisions 18 and 22 both show 'AI processed settlement_ai but its output lost meaning at the handoff \u2014 downstre...' This is a recurring issue that is causing escalations and eroding trust.",
+        "hypothesis": "The settlement_ai step is producing output that is not being correctly interpreted by the downstream system. This could be due to a data format mismatch, a missing context field, or a bug in the handoff logic. The 'output lost meaning' message suggests the system knows the problem but is not fixing it.",
+        "confidence": 0.9,
+        "improvement": 0.0,
+        "consequence": 0.95,
+        "evidence_sprints": [
+          3
+        ],
+        "sprints_in_phase": 6
+      },
+      "A-S03-P06": {
+        "phase": "replicable",
+        "type": "friction",
+        "description": "Several agents show low AI trust despite having positive AI experiences. Sanjay has 13 positive experiences but only 0.34 trust. Rachel has 0 positive and 4 negative experiences with 0.39 trust. Leslie has 0.29 trust with no AI experiences. This suggests trust is not solely based on experience but may be influenced by organizational culture or specific negative incidents.",
+        "hypothesis": "Negative AI experiences have a disproportionate impact on trust compared to positive experiences. Agents like Diana and Rachel have had multiple negative experiences, which have overwhelmed the positive ones. Leslie's low trust with no experience may be due to observing others' struggles or a general skepticism about AI.",
+        "confidence": 0.75,
+        "improvement": 0.0,
+        "consequence": 0.8,
+        "evidence_sprints": [
+          3
+        ],
+        "sprints_in_phase": 7
+      },
+      "A-S03-P07": {
+        "phase": "theoretical",
+        "type": "friction",
+        "description": "There is a stark imbalance in decision-making across agents. Diana (34), Nick (38), and Alicia (55) are making the vast majority of decisions, while Ron, Tricia, Mike, and Leslie have made zero decisions. This is not just a bottleneck but a systemic imbalance that could indicate a lack of engagement or capability in some agents.",
+        "hypothesis": "The routing logic may be sending work to agents who have historically performed well, creating a self-reinforcing cycle where some agents are overloaded while others are underutilized. Alternatively, some agents may be avoiding work due to low confidence or lack of training.",
+        "confidence": 0.8,
+        "improvement": 0.0,
+        "consequence": 0.7,
+        "evidence_sprints": [
+          3
+        ],
+        "sprints_in_phase": 10
+      },
+      "A-S03-P08": {
+        "phase": "theoretical",
+        "type": "friction",
+        "description": "There is a clear correlation between high decision counts and high exhaustion levels. Diana (34 decisions, exhaustion=8.0), Nick (38 decisions, exhaustion=9.0), and Mike (0 decisions, exhaustion=8.0) all show high exhaustion. Interestingly, Mike has zero decisions but high exhaustion, suggesting his exhaustion may be from other tasks or a pre-existing condition. Alicia has 55 decisions but only 3.0 exhaustion, suggesting she is either more efficient or better at managing stress.",
+        "hypothesis": "High decision counts lead to exhaustion, but individual differences in resilience and efficiency play a role. Mike's high exhaustion with no decisions is puzzling and may indicate he is doing non-decision work (e.g., investigations, meetings) that is not captured in the metrics. Alicia's low exhaustion despite high decisions suggests she has developed effective workflows or is less emotionally invested.",
+        "confidence": 0.7,
+        "improvement": 0.0,
+        "consequence": 0.65,
+        "evidence_sprints": [
+          3
+        ],
+        "sprints_in_phase": 10
+      },
+      "AGENT-GAP-A-investigation_human": {
+        "phase": "impact",
+        "type": "friction",
+        "description": "Agents surfaced missing handoff context at investigation_human (2 decisions)",
+        "hypothesis": "If we standardize the handoff into investigation_human, agents will stop surfacing missing context",
+        "confidence": 0.8,
+        "improvement": 0.0,
+        "consequence": 1.0,
         "evidence_sprints": [
           3,
+          4,
+          5,
+          6,
+          8,
+          9,
+          10,
+          11,
+          12
+        ],
+        "sprints_in_phase": 6
+      },
+      "A-S04-P00": {
+        "phase": "impact",
+        "type": "friction",
+        "description": "The cycle_time metric is reported as 0.0 despite overwhelming evidence of workflow stalls, repeated request_info loops, and exceptions. The metric is actively masking operational failure.",
+        "hypothesis": "The cycle_time metric is likely calculated only for AI-processed claims (which are all simple and auto-accepted), excluding human-handled complex claims that are stuck in request_info loops. The metric is measuring the wrong population.",
+        "confidence": 0.95,
+        "improvement": 0.0,
+        "consequence": 0.9,
+        "evidence_sprints": [
           4
         ],
-        "sprints_in_phase": 17
+        "sprints_in_phase": 5
+      },
+      "A-S04-P01": {
+        "phase": "impact",
+        "type": "friction",
+        "description": "Translation errors persist at AI-to-human handoffs, and now there's evidence of a new failure mode: AI output losing meaning at the approval step, causing downstream humans to reject or escalate valid work.",
+        "hypothesis": "The translation layer between AI pipeline outputs and human-readable formats is not preserving the full context of AI decisions, particularly for approval steps where the reasoning matters. Humans are rejecting valid AI work because they can't see the rationale.",
+        "confidence": 0.85,
+        "improvement": 0.0,
+        "consequence": 0.85,
+        "evidence_sprints": [
+          4
+        ],
+        "sprints_in_phase": 5
+      },
+      "A-S04-P02": {
+        "phase": "impact",
+        "type": "friction",
+        "description": "Several agents with high positive AI experience still show very low AI trust, suggesting a systemic trust problem beyond individual experience. Sanjay has 9 positive experiences but trust is only 0.21; Pat has 6 positive but trust is 0.39.",
+        "hypothesis": "The negative experiences (especially the 9 negative for Diana and 6 for Sanjay) are outweighing positive ones. Additionally, the translation debt means even 'positive' AI experiences may not feel trustworthy because the human can't verify the AI's reasoning. The trust collapse is spreading through shared negative stories about AI failures.",
+        "confidence": 0.8,
+        "improvement": 0.0,
+        "consequence": 0.8,
+        "evidence_sprints": [
+          4
+        ],
+        "sprints_in_phase": 5
+      },
+      "A-S04-P03": {
+        "phase": "theoretical",
+        "type": "friction",
+        "description": "Workload is extremely imbalanced. Diana has 48 decisions with exhaustion 8.0, Nick has 50 with exhaustion 9.0, while Ron, Tricia, Mike, and Leslie have 0 decisions each. The high-workload agents are showing signs of burnout.",
+        "hypothesis": "The system is routing complex claims to a small set of 'reliable' agents (Diana, Nick) while others are either not assigned work or are avoiding it due to high stress. The zero-decision agents may be in a state of learned helplessness or are being bypassed by the routing algorithm.",
+        "confidence": 0.9,
+        "improvement": 0.0,
+        "consequence": 0.75,
+        "evidence_sprints": [
+          4
+        ],
+        "sprints_in_phase": 9
+      },
+      "A-S04-P04": {
+        "phase": "impact",
+        "type": "friction",
+        "description": "There's a recurring pattern of complex claims getting stuck in request_info loops, with the same claim going through 3-4 cycles without resolution. This is a systemic failure to gather required information, not a one-off issue.",
+        "hypothesis": "The request_info mechanism is not effectively communicating what information is needed. Either the requests are too vague, the system isn't tracking what's been requested, or the information source (customer, other department) is not responding. The same claim keeps getting re-requested because no one is tracking the history.",
+        "confidence": 0.9,
+        "improvement": 0.0,
+        "consequence": 0.85,
+        "evidence_sprints": [
+          4
+        ],
+        "sprints_in_phase": 5
+      },
+      "A-S04-P05": {
+        "phase": "theoretical",
+        "type": "friction",
+        "description": "There's a clear correlation between high decision counts and high exhaustion, but interestingly, some agents with zero decisions also have high exhaustion (Mike: 8.0, Ron: 6.0, Leslie: 6.0), suggesting exhaustion is not solely workload-driven.",
+        "hypothesis": "The zero-decision agents with high exhaustion may be experiencing stress from being underutilized or from watching the system fail (seeing stuck claims, AI errors). They may be doing invisible work (monitoring, worrying) that isn't captured in decision counts. Alternatively, their exhaustion is from previous sprints and hasn't recovered.",
+        "confidence": 0.7,
+        "improvement": 0.0,
+        "consequence": 0.6,
+        "evidence_sprints": [
+          4
+        ],
+        "sprints_in_phase": 9
+      },
+      "A-S04-P06": {
+        "phase": "theoretical",
+        "type": "friction",
+        "description": "There's evidence of agents using AI in ways that aren't part of the formal process. Diana, who has ai_trust=0.00, still made a decision with AI used=True (Decision 20: settlement_human \u2192 accept_ai). This suggests she's using AI but not trusting it, or the system is auto-suggesting AI outputs she accepts.",
+        "hypothesis": "The system may be auto-populating AI recommendations that agents accept without fully trusting them, possibly due to time pressure or lack of alternatives. This creates a disconnect between stated trust and actual behavior, which is dangerous because agents may accept AI outputs without proper scrutiny.",
+        "confidence": 0.65,
+        "improvement": 0.0,
+        "consequence": 0.7,
+        "evidence_sprints": [
+          4
+        ],
+        "sprints_in_phase": 9
+      },
+      "A-S04-P07": {
+        "phase": "theoretical",
+        "type": "friction",
+        "description": "There's a stark divide between agents who are effectively using AI (Alicia with 74 decisions and 12 positive AI experiences, Greg with 34 decisions and 7 positive) and those who are completely avoiding it (Ron, Tricia, Mike, Leslie with 0 decisions and 0 AI usage). This isn't just trust - it's a capability or access gap.",
+        "hypothesis": "The zero-decision agents may not have access to the AI pipeline, or they may not have been trained on how to use it. They're being excluded from the AI transformation, creating a two-tier workforce where some agents benefit from AI augmentation and others are left behind.",
+        "confidence": 0.75,
+        "improvement": 0.0,
+        "consequence": 0.7,
+        "evidence_sprints": [
+          4
+        ],
+        "sprints_in_phase": 9
+      },
+      "A-S06-P00": {
+        "phase": "impact",
+        "type": "friction",
+        "description": "Cycle time is reported as 0.0 despite a massive volume of decisions (78 for Diana, 74 for Nick, 111 for Alicia) and visible human exceptions. The metric appears to be measuring only AI pipeline throughput, completely masking the human workload and exception handling that is clearly occurring.",
+        "hypothesis": "The cycle time metric is likely only tracking AI pipeline auto-processing (which is instantaneous) and excluding human decision time. This creates a false sense of efficiency while humans are drowning in exceptions and complex claims.",
+        "confidence": 0.95,
+        "improvement": 0.0,
+        "consequence": 0.9,
+        "evidence_sprints": [
+          6
+        ],
+        "sprints_in_phase": 3
+      },
+      "A-S06-P01": {
+        "phase": "impact",
+        "type": "friction",
+        "description": "Complex claims are stuck in recurring request_info loops. Diana's decisions show multiple instances of the same claim type (complex auto injury with unclear liability) being sent back for more information repeatedly. Sanjay's decisions show claims bounced back four times for the same missing information.",
+        "hypothesis": "The AI pipeline is auto-processing simple claims but lacks the capability to handle complex claims. These complex claims fall to humans, but the information request process is not resolving the underlying ambiguity, creating an infinite loop where no one has authority to make a judgment call.",
+        "confidence": 0.92,
+        "improvement": 0.0,
+        "consequence": 0.85,
+        "evidence_sprints": [
+          6
+        ],
+        "sprints_in_phase": 3
+      },
+      "A-S06-P02": {
+        "phase": "impact",
+        "type": "friction",
+        "description": "There is a stark bimodal distribution of AI trust. Alicia (0.77) and Greg (0.73) have high trust with high decision counts (111 and 51), while Diana (0.00), Ron (0.00), Pat (0.00), Sanjay (0.00), and Tommy (0.00) have zero trust. Notably, Diana has 78 decisions but zero trust and 4 negative AI experiences.",
+        "hypothesis": "Agents who have experienced AI failures (Diana and Rachel with -4 negative experiences) have completely lost trust. Meanwhile, agents who only see AI successes (Alicia with +15) have high trust. The AI is likely being used selectively\u2014only for simple claims where it succeeds\u2014so those who handle complex claims only see failures.",
+        "confidence": 0.88,
+        "improvement": 0.0,
+        "consequence": 0.8,
+        "evidence_sprints": [
+          6
+        ],
+        "sprints_in_phase": 3
+      },
+      "A-S06-P03": {
+        "phase": "impact",
+        "type": "friction",
+        "description": "Extreme workload disparity persists. Diana (78 decisions, exhaustion 8.0) and Nick (74 decisions, exhaustion 9.0) are overloaded, while Ron (0 decisions), Tricia (0 decisions), Mike (0 decisions), and Leslie (0 decisions) are completely idle. This is a continuation of the Sprint 4 pattern.",
+        "hypothesis": "Work is being routed to known 'reliable' agents (Diana, Nick) while others are bypassed. The AI pipeline may be learning to route complex claims to specific agents based on historical success, creating a self-reinforcing bottleneck. Idle agents may not be trained or trusted for complex claims.",
+        "confidence": 0.95,
+        "improvement": 0.0,
+        "consequence": 0.9,
+        "evidence_sprints": [
+          6
+        ],
+        "sprints_in_phase": 3
+      },
+      "A-S06-P04": {
+        "phase": "theoretical",
+        "type": "friction",
+        "description": "Pat and Sanjay show AI usage patterns that don't match the formal pipeline. Pat has +7/-2 AI experiences with 24 decisions, and Sanjay has +14/-2 with 22 decisions, but their trust is 0.00. They are using AI informally (likely for complex claims) but not trusting it, suggesting they're testing it on the side.",
+        "hypothesis": "These agents are likely using AI tools unofficially to help with complex claims, seeing mixed results, but not incorporating it into their formal workflow. The formal AI pipeline doesn't support complex claims, so they're improvising with unofficial AI tools.",
+        "confidence": 0.75,
+        "improvement": 0.0,
+        "consequence": 0.7,
+        "evidence_sprints": [
+          6
+        ],
+        "sprints_in_phase": 7
+      },
+      "A-S06-P05": {
+        "phase": "impact",
+        "type": "friction",
+        "description": "Human agents are repeatedly translating complex claim contexts (Florida auto injury, Illinois multi-vehicle) into request_info actions, but this information is not being captured in a structured way that could train the AI. The same types of claims keep appearing as exceptions, indicating the AI isn't learning from these human interventions.",
+        "hypothesis": "The exception handling process doesn't feed structured feedback back into the AI training pipeline. Human agents are solving the same problems repeatedly without the AI improving, creating a translation debt where human expertise isn't being converted into AI capability.",
+        "confidence": 0.82,
+        "improvement": 0.0,
+        "consequence": 0.85,
+        "evidence_sprints": [
+          6
+        ],
+        "sprints_in_phase": 3
+      },
+      "A-S06-P06": {
+        "phase": "impact",
+        "type": "friction",
+        "description": "There's a clear divide between agents who can leverage AI effectively (Alicia with 111 decisions and 15 positive AI experiences, Greg with 51 decisions and 9 positive) and those who can't (Diana with 78 decisions but 4 negative AI experiences, Rachel with 31 decisions and 4 negative). The gap appears to be about claim complexity, not agent capability.",
+        "hypothesis": "Agents with high AI success are likely handling simple claims that the AI can process. Agents with AI failures are handling complex claims where the AI is inadequate. The capability gap is not about the agents but about the AI's limited scope and the routing system that sends complex claims to specific agents.",
+        "confidence": 0.9,
+        "improvement": 0.0,
+        "consequence": 0.8,
+        "evidence_sprints": [
+          6
+        ],
+        "sprints_in_phase": 3
+      },
+      "A-S06-P07": {
+        "phase": "theoretical",
+        "type": "friction",
+        "description": "Several agents with ZERO decisions have significant exhaustion levels: Mike (0 decisions, exhaustion 8.0), Ron (0 decisions, exhaustion 6.0), Leslie (0 decisions, exhaustion 6.0). This is paradoxical\u2014agents who aren't making decisions are still exhausted, suggesting they're doing work that isn't being tracked.",
+        "hypothesis": "These agents are likely doing non-decision work that isn't captured in the metrics: reviewing AI outputs, handling customer calls, doing administrative tasks, or being in meetings. The metric system only tracks decisions, creating a blind spot for other productive work.",
+        "confidence": 0.85,
+        "improvement": 0.0,
+        "consequence": 0.75,
+        "evidence_sprints": [
+          6
+        ],
+        "sprints_in_phase": 7
+      },
+      "A-S07-P00": {
+        "phase": "impact",
+        "type": "friction",
+        "description": "A stark divide persists between agents who effectively use AI (Alicia, Greg, Nick, Sanjay, Pat) and those who either avoid it entirely or have zero decisions despite high exhaustion. Diana (93 decisions, 0 AI interactions) and Nick (84 decisions, +10 AI experiences) represent opposite ends of the spectrum. Notably, Diana's exhaustion is 8.0 with zero AI trust, while Nick's exhaustion is 9.0 with zero AI trust despite positive AI experiences \u2014 suggesting AI usage doesn't reduce workload for either.",
+        "hypothesis": "AI is being used primarily in the automated pipeline for simple claims, but human agents handling complex claims (Diana, Nick) are not receiving AI support \u2014 they're doing manual work that exhausts them. Meanwhile, agents like Mike and Ron with zero decisions but high exhaustion may be stuck in coordination or waiting states, unable to leverage AI because they're not in the decision loop.",
+        "confidence": 0.92,
+        "improvement": 0.0,
+        "consequence": 0.85,
+        "evidence_sprints": [
+          7
+        ],
+        "sprints_in_phase": 2
+      },
+      "A-S07-P01": {
+        "phase": "replicable",
+        "type": "friction",
+        "description": "The translation failure at decision 17 is a critical single-point failure: 'AI processed approval but its output lost meaning at the handoff \u2014 downstream mu...' This is the only translation=True exception in the sample, but it represents a systemic risk. The AI pipeline auto-processes simple claims correctly (decisions 0-5, 10-11, 16, 18-19), but when a translation failure occurs, it creates an exception that requires human intervention.",
+        "hypothesis": "The AI pipeline has a fragile handoff mechanism where structured data from one stage isn't properly serialized/deserialized for the next stage. This could be a schema mismatch, encoding issue, or context loss when passing complex claim data between AI components. The fact that it's rare suggests it's triggered by specific edge cases (possibly complex claims that slip into the simple pipeline).",
+        "confidence": 0.78,
+        "improvement": 0.0,
+        "consequence": 0.9,
+        "evidence_sprints": [
+          7
+        ],
+        "sprints_in_phase": 3
+      },
+      "A-S07-P02": {
+        "phase": "impact",
+        "type": "friction",
+        "description": "Extreme workload disparity persists and is worsening. Diana (93 decisions) and Nick (84 decisions) are handling the bulk of work, while Ron (0), Tricia (0), Mike (0), Leslie (0), and Jordan (10) are nearly idle. The cycle_time of 0.0 suggests either no work is completing or the metric is broken. Diana's exhaustion at 8.0 with 93 decisions indicates she's approaching burnout.",
+        "hypothesis": "Work is being routed to experienced agents (Diana, Nick) because they're trusted, creating a self-reinforcing loop where they get more work and become more exhausted, while others are underutilized. The cycle_time of 0.0 suggests the system may be stalled or the metric isn't capturing actual throughput. Agents with zero decisions may be waiting for assignments that never come.",
+        "confidence": 0.95,
+        "improvement": 0.0,
+        "consequence": 0.95,
+        "evidence_sprints": [
+          7
+        ],
+        "sprints_in_phase": 2
+      },
+      "A-S07-P03": {
+        "phase": "theoretical",
+        "type": "friction",
+        "description": "Pat and Sanjay continue to show AI usage patterns outside the formal pipeline. Pat has +5/-0 AI experiences with 29 decisions, and Sanjay has +9/-2 with 27 decisions. Their AI experiences are not reflected in the formal AI pipeline decisions (which show AI used=True only for pipeline entries). This suggests they're using AI tools informally, possibly for complex claims where the formal pipeline doesn't apply.",
+        "hypothesis": "Pat and Sanjay are using AI tools (possibly a separate AI assistant or the same pipeline in a different mode) to help with complex claims, but this usage isn't captured in the formal pipeline metrics. They're likely copy-pasting claim data into an AI tool or using a shadow system. Their positive experiences suggest it helps, but the lack of formal integration means no quality control or learning feedback.",
+        "confidence": 0.88,
+        "improvement": 0.0,
+        "consequence": 0.7,
+        "evidence_sprints": [
+          7
+        ],
+        "sprints_in_phase": 6
+      },
+      "A-S07-P04": {
+        "phase": "impact",
+        "type": "friction",
+        "description": "Agents with ZERO decisions have significant exhaustion levels: Mike (0 decisions, exhaustion 8.0), Ron (0 decisions, exhaustion 6.0), Leslie (0 decisions, exhaustion 6.0). This is paradoxical \u2014 how can someone be exhausted without doing work? This pattern persisted from Sprint 6 and is worsening. The cycle_time of 0.0 suggests the system may be completely stalled for these agents.",
+        "hypothesis": "These agents are likely engaged in non-decision work that isn't captured in the metrics: attending meetings, responding to emails, coordinating with other teams, or waiting for approvals that never come. The exhaustion could be from 'presenteeism' \u2014 being required to be available but having no productive work. The cycle_time of 0.0 suggests their work items are stuck in a queue or they're blocked by dependencies.",
+        "confidence": 0.85,
+        "improvement": 0.0,
+        "consequence": 0.8,
+        "evidence_sprints": [
+          7
+        ],
+        "sprints_in_phase": 2
+      },
+      "A-S07-P05": {
+        "phase": "theoretical",
+        "type": "friction",
+        "description": "There's a bizarre inverse relationship between AI experience and AI trust. Nick has +10 AI experiences (all positive) but ai_trust=0.00. Greg has +8/-2 AI experiences and ai_trust=0.48. Alicia has +13/-0/~7 and ai_trust=0.30. Meanwhile, agents with zero AI experiences (Diana, Maria, Ron, Tommy, Jordan) all have ai_trust=0.00. The agents who should trust AI the most (Nick) don't, while those with mixed experiences (Greg) trust it more.",
+        "hypothesis": "Nick's zero trust despite positive experiences suggests he may have had a negative experience not captured in the metrics, or he fundamentally distrusts AI regardless of performance. Greg's higher trust with mixed experiences suggests he values the AI's help despite errors. Alicia's ~7 neutral experiences may indicate she's uncertain about AI reliability. Trust is not purely experience-driven \u2014 it's influenced by individual risk tolerance, understanding of AI limitations, and organizational culture.",
+        "confidence": 0.75,
+        "improvement": 0.0,
+        "consequence": 0.6,
+        "evidence_sprints": [
+          7
+        ],
+        "sprints_in_phase": 6
+      },
+      "A-S07-P06": {
+        "phase": "theoretical",
+        "type": "friction",
+        "description": "Exceptions are appearing in human decision paths, not just AI paths. Diana's decision 15 shows 'settlement_human \u2192 escalate' with exception=True for a $66,217.36 claim. Sanjay's decision 9 is a complex four-vehicle NY collision with injury. These are legitimate exceptions, but the pattern suggests complex claims are being routed to humans who then escalate, creating a bottleneck. The AI pipeline handles simple claims well (all correct), but complex claims create exceptions that pile up.",
+        "hypothesis": "The AI pipeline is effectively handling simple claims, but complex claims (high value, multi-vehicle, injury) are being routed to humans who lack the authority or information to resolve them, forcing escalations. The escalation path is unclear, causing delays and rework. The system may not have a clear triage mechanism for complexity.",
+        "confidence": 0.82,
+        "improvement": 0.0,
+        "consequence": 0.75,
+        "evidence_sprints": [
+          7
+        ],
+        "sprints_in_phase": 6
+      },
+      "A-S08-P00": {
+        "phase": "theoretical",
+        "type": "friction",
+        "description": "The AI Pipeline is processing an unusually high volume of simple claims end-to-end, but the human agents with the highest decision counts (Diana at 112, Nick at 98) are almost exclusively handling complex claims that require escalation. The pipeline is capturing the easy work, leaving only the hardest cases for the most experienced humans, which is creating a bifurcated workflow where humans see only the worst cases and the AI sees only the best.",
+        "hypothesis": "The AI pipeline has been optimized for simple, low-variance claims where it can achieve high accuracy. This creates a selection effect where the pipeline absorbs all the easy work, leaving humans with a skewed distribution of only the most difficult, ambiguous, and high-stakes cases. This is a form of adverse selection in task allocation.",
+        "confidence": 0.82,
+        "improvement": 0.0,
+        "consequence": 0.78,
+        "evidence_sprints": [
+          8
+        ],
+        "sprints_in_phase": 5
+      },
+      "A-S08-P01": {
+        "phase": "replicable",
+        "type": "friction",
+        "description": "Translation failures are concentrated in specific agents (Diana, Pat, Sanjay) and in specific pipeline steps (settlement_ai, coverage_verification_ai). The AI pipeline is producing outputs that lose meaning at handoffs, but this is not uniform \u2014 it's clustered in certain workflow stages, suggesting the problem is not the AI model itself but the interface between AI output and downstream human consumption.",
+        "hypothesis": "The AI pipeline's output format for settlement and coverage verification steps is not aligned with what downstream human processes expect. The 'meaning lost at handoff' suggests the AI is producing structured data that doesn't map cleanly to the narrative or contextual information humans need to make decisions, particularly for complex claims.",
+        "confidence": 0.75,
+        "improvement": 0.0,
+        "consequence": 0.85,
+        "evidence_sprints": [
+          8
+        ],
+        "sprints_in_phase": 2
+      },
+      "A-S08-P02": {
+        "phase": "theoretical",
+        "type": "friction",
+        "description": "There is a near-total absence of AI trust across all agents, even those with significant AI experience. Pat has +4/-3 AI experience but trust=0.05. Sanjay has +7/-4 but trust=0.00. Nick has +6/-2 but trust=0.00. Only Alicia (trust=0.62) and Greg (trust=0.34) show meaningful trust, and they have the highest decision counts (151 and 71). This suggests that AI experience alone does not build trust \u2014 only sustained positive exposure at scale does, and even then it's fragile.",
+        "hypothesis": "There appears to be a trust threshold effect. Agents with fewer than ~50 AI interactions (Pat, Sanjay, Nick) have not accumulated enough positive experiences to overcome initial skepticism, especially when negative experiences (errors) are salient. Alicia and Greg, with 151 and 71 decisions respectively, have crossed a threshold where the volume of positive experiences outweighs the negative ones. The negative experiences may be more memorable or impactful at lower volumes.",
+        "confidence": 0.88,
+        "improvement": 0.0,
+        "consequence": 0.72,
+        "evidence_sprints": [
+          8
+        ],
+        "sprints_in_phase": 5
+      },
+      "A-S08-P03": {
+        "phase": "theoretical",
+        "type": "friction",
+        "description": "The idle_exhaustion_paradox from Sprint 7 has worsened. Mike (0 decisions, exhaustion 8.0), Ron (0 decisions, exhaustion 6.0), Tricia (0 decisions, exhaustion 2.0), Leslie (0 decisions, exhaustion 6.0), and Kathryn (5 decisions, exhaustion 5.0) are all showing significant exhaustion despite minimal or zero decision activity. This is not just a workload issue \u2014 these agents are experiencing burnout without doing work.",
+        "hypothesis": "These agents are likely experiencing organizational exclusion or role ambiguity. They may be assigned to the team but not given meaningful work because the AI pipeline and the high-volume agents (Diana, Nick, Alicia) are absorbing all the tasks. The exhaustion may be psychological \u2014 the stress of being idle while others work, or the anxiety of not knowing their role in the AI-transformed workflow.",
+        "confidence": 0.9,
+        "improvement": 0.0,
+        "consequence": 0.65,
+        "evidence_sprints": [
+          8
+        ],
+        "sprints_in_phase": 5
+      },
+      "A-S08-P04": {
+        "phase": "impact",
+        "type": "friction",
+        "description": "Complex claims are triggering a cascade of exceptions across multiple agents. Diana's decisions 20, 22, 23 all show request_info with exception=True on the same complex NY multi-vehicle claim. Sanjay's decision 24 shows rejection on the same claim. This suggests that complex claims are not just failing at one step \u2014 they're failing at every step, creating a multi-agent exception cascade that consumes enormous human effort.",
+        "hypothesis": "The workflow is designed as a linear pipeline where each step depends on the previous step's output. For complex claims, the information needed at each step (police reports, witness statements, liability determination) is not available at the start, so each agent in the chain must request more information, creating a cascade. The AI pipeline likely rejects these claims early (due to complexity), and then humans must manually process them through every step, each time discovering missing information.",
+        "confidence": 0.85,
+        "improvement": 0.0,
+        "consequence": 0.92,
+        "evidence_sprints": [
+          8
+        ],
+        "sprints_in_phase": 1
+      },
+      "A-S08-P05": {
+        "phase": "theoretical",
+        "type": "friction",
+        "description": "AI trust is not spreading across the team. Only Alicia (0.62) and Greg (0.34) have meaningful trust, and these are the two agents with the highest decision counts. There is no evidence of trust contagion \u2014 other agents with high AI exposure (Pat, Sanjay, Nick) have near-zero trust. This suggests that trust is not being shared or modeled within the team, and the positive experiences of Alicia and Greg are not influencing others.",
+        "hypothesis": "The organization may not have a formal mechanism for sharing AI success stories or lessons learned. Alicia and Greg may be using AI effectively but not communicating their positive experiences to the team. Alternatively, the negative experiences of Pat and Sanjay (who have seen AI errors) may be more salient and shared more openly than positive experiences.",
+        "confidence": 0.7,
+        "improvement": 0.0,
+        "consequence": 0.58,
+        "evidence_sprints": [
+          8
+        ],
+        "sprints_in_phase": 5
+      },
+      "A-S08-P06": {
+        "phase": "theoretical",
+        "type": "friction",
+        "description": "There is an inverse relationship between stress and AI trust. Agents with high stress (Sanjay at 1.00, Mike at 0.80, Ron at 0.80, Leslie at 0.80) have zero or near-zero AI trust. Agents with low stress (Alicia at 0.75 but high trust, Greg at 0.05 with 0.34 trust, Kathryn at 0.20 with 0.00 trust) show more variation. This suggests that stress may be driving distrust of AI, rather than AI causing stress.",
+        "hypothesis": "Agents under high stress may be more likely to attribute their difficulties to the AI system, especially if they perceive AI as adding complexity rather than reducing it. Sanjay's stress at 1.00 with 32 decisions and +7/-4 AI experience suggests he's had enough negative experiences to blame AI for his workload. Conversely, Greg's low stress may allow him to evaluate AI more objectively.",
+        "confidence": 0.68,
+        "improvement": 0.0,
+        "consequence": 0.7,
+        "evidence_sprints": [
+          8
+        ],
+        "sprints_in_phase": 5
+      },
+      "A-S09-P00": {
+        "phase": "impact",
+        "type": "friction",
+        "description": "AI trust remains at 0.00 for 12 of 15 agents, including those with high AI exposure (Diana: 130 decisions, +0/-4; Sanjay: 38 decisions, +7/-5; Nick: 114 decisions, +4/-2). Only Alicia (0.69) and Greg (0.31) maintain meaningful trust, and Kathryn has a negligible 0.05. This is a persistent trust void that has not improved despite positive AI outcomes in the pipeline.",
+        "hypothesis": "The AI pipeline auto-processes simple claims without human visibility, so agents never see the AI's correct decisions. When they do interact with AI (via exceptions or escalations), it is often in failure modes (e.g., decision 23: 'AI processed approval but its output lost meaning at the handoff'). This creates a negative sampling bias where humans only see AI failures, not its successes.",
+        "confidence": 0.95,
+        "improvement": 0.0,
+        "consequence": 0.85,
+        "evidence_sprints": [
+          9
+        ],
+        "sprints_in_phase": 0
+      },
+      "A-S09-P01": {
+        "phase": "impact",
+        "type": "friction",
+        "description": "The idle_exhaustion_paradox persists and worsens. Mike (0 decisions, exhaustion 8.0), Ron (0 decisions, exhaustion 6.0), Tricia (0 decisions, exhaustion 2.0), and Leslie (0 decisions, exhaustion 6.0) are completely idle yet show moderate-to-high exhaustion. Meanwhile, Diana (130 decisions, exhaustion 8.0) and Nick (114 decisions, exhaustion 9.0) are overloaded. This is a severe workload distribution failure.",
+        "hypothesis": "The AI pipeline is absorbing all simple claims, leaving only complex claims for humans. However, the routing logic appears to send all complex claims to a small subset of agents (Diana, Nick) while others receive nothing. This suggests a routing algorithm that doesn't account for agent availability or capacity, creating a bottleneck at the 'trusted' agents while others are starved of work.",
+        "confidence": 0.95,
+        "improvement": 0.0,
+        "consequence": 0.9,
+        "evidence_sprints": [
+          9
+        ],
+        "sprints_in_phase": 0
+      },
+      "A-S09-P02": {
+        "phase": "impact",
+        "type": "friction",
+        "description": "Complex claims are triggering cascading exceptions across multiple agents. Diana's decisions 17 and 18 show request_info exceptions for the same complex three-vehicle claim. Sanjay's decisions 19 and 20 show conditional approvals on the same claim. This suggests that complex claims are bouncing between agents without resolution, creating a loop of exceptions and rework.",
+        "hypothesis": "Complex claims require information that is not being collected upfront. The AI pipeline handles simple claims but lacks the capability to gather additional evidence for complex cases. When humans encounter these claims, they must request more information, but the information request process may not be standardized, leading to repeated requests and conditional approvals that create ambiguity.",
+        "confidence": 0.8,
+        "improvement": 0.0,
+        "consequence": 0.8,
+        "evidence_sprints": [
+          9
+        ],
+        "sprints_in_phase": 0
+      },
+      "A-S09-P03": {
+        "phase": "theoretical",
+        "type": "friction",
+        "description": "Decision 23 shows a critical translation failure: 'AI processed approval but its output lost meaning at the handoff \u2014 downstream mu...' This is a clear case where AI output was correct but became unintelligible to downstream human consumers. This is the only AI pipeline decision that escalated, suggesting that translation failures are rare but catastrophic when they occur.",
+        "hypothesis": "The AI pipeline generates output in a structured format that is optimized for machine consumption, not human readability. When the output needs to be reviewed by a human (due to an exception or threshold), the structured data lacks the narrative context that humans need to make decisions. This is a design flaw in the AI output format, not a failure of the AI's decision-making.",
+        "confidence": 0.75,
+        "improvement": 0.0,
+        "consequence": 0.7,
+        "evidence_sprints": [
+          9
+        ],
+        "sprints_in_phase": 4
+      },
+      "A-S09-P04": {
+        "phase": "impact",
+        "type": "friction",
+        "description": "The inverse relationship between stress and AI trust persists. High-stress agents (Sanjay: 0.90 stress, 0.00 trust; Mike: 0.80 stress, 0.00 trust; Ron: 0.80 stress, 0.00 trust) show zero trust, while low-stress agents (Alicia: 0.00 stress, 0.69 trust; Greg: 0.00 stress, 0.31 trust) show meaningful trust. This suggests that stress is either causing or reinforcing AI distrust.",
+        "hypothesis": "High-stress agents are likely overwhelmed by their workload and view AI as an additional burden rather than a relief. They may not have the cognitive bandwidth to evaluate AI outputs, so they default to distrust. Conversely, low-stress agents have the capacity to engage with AI, learn its strengths and weaknesses, and develop calibrated trust.",
+        "confidence": 0.85,
+        "improvement": 0.0,
+        "consequence": 0.8,
+        "evidence_sprints": [
+          9
+        ],
+        "sprints_in_phase": 0
+      },
+      "A-S09-P05": {
+        "phase": "impact",
+        "type": "friction",
+        "description": "Sanjay has +7 positive AI experiences and -5 negative, yet his trust is 0.00. Nick has +4/-2 with 0.00 trust. Pat has +4/-3 with 0.00 trust. This is a novel pattern where positive AI experiences are NOT converting to trust, suggesting that the trust formation mechanism is broken or that negative experiences have disproportionate weight.",
+        "hypothesis": "The asymmetry between positive and negative AI experiences is extreme. Agents with any negative experiences (even a single one) show zero trust, while agents with only positive experiences (Alicia, Greg) show trust. This suggests a 'negativity bias' where one negative AI experience erases all positive ones. The organization has not provided a framework for agents to contextualize AI failures as expected and manageable.",
+        "confidence": 0.9,
+        "improvement": 0.0,
+        "consequence": 0.85,
+        "evidence_sprints": [
+          9
+        ],
+        "sprints_in_phase": 0
+      },
+      "A-S09-P06": {
+        "phase": "theoretical",
+        "type": "friction",
+        "description": "The AI pipeline is auto-processing all simple claims (decisions 0-4, 9, 13, 21-22), leaving humans with only complex claims. This is creating a situation where agents are losing practice with simple claims, which may atrophy their basic skills. Diana's decisions show she is only handling complex claims (three-vehicle collisions, contested liability), and her exhaustion (8.0) suggests she is overwhelmed by the complexity.",
+        "hypothesis": "The AI pipeline is designed to handle simple claims, which is efficient. However, this creates a 'skill atrophy' risk where human agents lose the ability to handle simple claims quickly and accurately. When AI fails on a simple claim (e.g., decision 23), humans may struggle to handle it because they've lost the muscle memory for simple claim processing.",
+        "confidence": 0.7,
+        "improvement": 0.0,
+        "consequence": 0.6,
+        "evidence_sprints": [
+          9
+        ],
+        "sprints_in_phase": 4
+      },
+      "A-S09-P07": {
+        "phase": "theoretical",
+        "type": "friction",
+        "description": "The cycle_time metric is 0.0, which is mathematically impossible given that humans are making decisions (Diana: 130, Nick: 114). This suggests either the metric is being gamed, the measurement is broken, or the metric is only tracking AI pipeline time and excluding human processing time. This is a metric integrity issue that could lead to false confidence in system performance.",
+        "hypothesis": "The cycle_time metric is likely only measuring the AI pipeline's processing time (which is near-instant for simple claims) and excluding human processing time. This creates a misleading picture of end-to-end cycle time. Alternatively, the metric is being reported as 0.0 because the system is not tracking human decision time at all.",
+        "confidence": 0.85,
+        "improvement": 0.0,
+        "consequence": 0.75,
+        "evidence_sprints": [
+          9
+        ],
+        "sprints_in_phase": 4
+      },
+      "AGENT-GAP-A-escalated_to_kathryn": {
+        "phase": "empirical",
+        "type": "friction",
+        "description": "Agents surfaced missing handoff context at escalated_to_kathryn (1 decisions)",
+        "hypothesis": "If we standardize the handoff into escalated_to_kathryn, agents will stop surfacing missing context",
+        "confidence": 0.5,
+        "improvement": 0.0,
+        "consequence": 0.5,
+        "evidence_sprints": [
+          9,
+          12
+        ],
+        "sprints_in_phase": 0
+      },
+      "A-S10-P00": {
+        "phase": "theoretical",
+        "type": "friction",
+        "description": "The AI pipeline is auto-processing simple claims, but when it encounters a complex claim, the output loses meaning at the handoff to humans. Decision 20 shows the AI processed coverage_verification_ai but its output lost meaning at the handoff, triggering a translation exception. This is the same pattern detected in Sprint 9, now persisting into Sprint 10.",
+        "hypothesis": "The AI pipeline is optimized for simple claims and lacks the semantic richness to communicate complex claim nuances to humans. When it hits a complex case, the handoff protocol fails to preserve the reasoning context, forcing humans to re-investigate from scratch.",
+        "confidence": 0.85,
+        "improvement": 0.0,
+        "consequence": 0.75,
+        "evidence_sprints": [
+          10
+        ],
+        "sprints_in_phase": 3
+      },
+      "A-S10-P01": {
+        "phase": "replicable",
+        "type": "friction",
+        "description": "The inverse relationship between stress and AI trust persists and has intensified. High-stress agents (Sanjay: 1.00, Ron: 0.80, Mike: 0.80, Leslie: 0.80) all have near-zero AI trust. Meanwhile, low-stress agents (Alicia: 0.60 stress with 1.00 trust, Greg: 0.00 stress with 0.38 trust) show higher trust. This pattern was detected in Sprint 9 and continues.",
+        "hypothesis": "Agents with high stress are likely overwhelmed by complex claims and perceive AI as an additional burden rather than a relief. The AI's failures on complex cases (which high-stress agents handle) reinforce distrust. Low-stress agents handle simpler claims where AI succeeds, building trust. This creates a self-reinforcing cycle where the agents who need AI most trust it least.",
+        "confidence": 0.9,
+        "improvement": 0.0,
+        "consequence": 0.85,
+        "evidence_sprints": [
+          10
+        ],
+        "sprints_in_phase": 0
+      },
+      "A-S10-P02": {
+        "phase": "theoretical",
+        "type": "friction",
+        "description": "Despite overwhelmingly positive AI experiences, several agents show zero trust. Sanjay has +13 positive and -3 negative AI experiences but trust=0.00. Pat has +7/-4 with trust=0.05. This pattern was detected in Sprint 9 and persists. Notably, Sanjay's positive experience count has grown from +7 to +13, yet trust remains at zero.",
+        "hypothesis": "The negative experiences (even if fewer) are weighted disproportionately in trust formation. A single AI failure on a complex claim may outweigh 10 successes on simple claims. Additionally, these agents may be experiencing AI failures at critical decision points where the cost of error is high, creating an anchoring effect on the negative outcomes.",
+        "confidence": 0.8,
+        "improvement": 0.0,
+        "consequence": 0.7,
+        "evidence_sprints": [
+          10
+        ],
+        "sprints_in_phase": 3
+      },
+      "A-S10-P03": {
+        "phase": "replicable",
+        "type": "friction",
+        "description": "The AI pipeline continues to auto-process all simple claims (decisions 6-8, 10, 12-15, 17-18, 24), leaving humans with only complex claims. This pattern was detected in Sprint 9 and persists. Diana, the most experienced agent, is handling exclusively complex multi-vehicle claims with injuries, which is likely contributing to her exhaustion=8.0.",
+        "hypothesis": "The AI pipeline is correctly identifying and processing simple claims, but this creates a 'selection effect' where humans only see the hardest 10-15% of claims. Over time, humans lose practice with routine claims, making them less efficient even on moderately complex cases. Diana's exhaustion suggests she's bearing the brunt of this complex-only workload.",
+        "confidence": 0.85,
+        "improvement": 0.0,
+        "consequence": 0.8,
+        "evidence_sprints": [
+          10
+        ],
+        "sprints_in_phase": 0
+      },
+      "A-S10-P04": {
+        "phase": "replicable",
+        "type": "friction",
+        "description": "The cycle_time metric remains at 0.0, which is mathematically impossible given the volume of human decisions (141 for Diana alone). This pattern was detected in Sprint 9 and persists. The metric appears to be either not tracked, not reported, or systematically zeroed out.",
+        "hypothesis": "The cycle_time metric is either not instrumented correctly, is being reset at each sprint boundary, or is intentionally zeroed to show perfect performance. This is a metric integrity issue that undermines the entire performance measurement system.",
+        "confidence": 0.95,
+        "improvement": 0.0,
+        "consequence": 0.9,
+        "evidence_sprints": [
+          10
+        ],
+        "sprints_in_phase": 0
+      },
+      "A-S10-P05": {
+        "phase": "replicable",
+        "type": "friction",
+        "description": "Exhaustion is highly concentrated in specific agents (Diana: 8.0, Mike: 8.0, Nick: 9.0, Sanjay: 7.0) while others are at 2.0-5.0. This concentration suggests an uneven workload distribution that is not captured by decision counts alone. Diana has 141 decisions with exhaustion 8.0, but Nick has 124 decisions with exhaustion 9.0 - suggesting different claim complexity profiles.",
+        "hypothesis": "Exhaustion is driven by a combination of decision volume, claim complexity, and non-decision work (meetings, support, escalations). The organization is not tracking non-decision work, so agents like Mike (exhaustion 8.0, 0 decisions) are invisible in the metrics but clearly overburdened. This creates a hidden bottleneck.",
+        "confidence": 0.75,
+        "improvement": 0.0,
+        "consequence": 0.8,
+        "evidence_sprints": [
+          10
+        ],
+        "sprints_in_phase": 0
+      },
+      "A-S10-P06": {
+        "phase": "theoretical",
+        "type": "friction",
+        "description": "A small group of agents (Alicia: trust=1.00, Greg: trust=0.38) has formed an 'AI trust elite' that is diverging from the rest of the organization. Alicia has 188 decisions (highest in the org) with 17 positive AI experiences and 3 neutral, while Greg has 88 decisions with 9 positive. These agents are likely becoming the de facto AI champions, but their experience may not be representative of the broader workforce.",
+        "hypothesis": "Alicia and Greg are likely handling simpler claims or have a different cognitive approach to AI. Their positive experiences are self-reinforcing - they trust AI, delegate more, see more successes, and trust more. Meanwhile, agents like Diana and Sanjay are stuck in a negative feedback loop. This creates a two-tier workforce where AI benefits are concentrated in a few agents.",
+        "confidence": 0.7,
+        "improvement": 0.0,
+        "consequence": 0.65,
+        "evidence_sprints": [
+          10
+        ],
+        "sprints_in_phase": 3
+      },
+      "A-S10-P07": {
+        "phase": "theoretical",
+        "type": "friction",
+        "description": "Every human decision on complex claims triggers a translation exception (translation=True) or an escalation exception (exception=True). Diana's decisions 0, 3, 9, 19 all show translation=True and exception=True. This suggests the exception system is being used as a standard workflow for complex claims rather than as an exception mechanism.",
+        "hypothesis": "The exception system has become the default path for complex claims because there is no formal 'complex claim' workflow. Agents are forced to use exception flags to signal that a claim requires human judgment, which inflates exception metrics and may cause management to view exceptions as a problem rather than a normal part of complex claim handling.",
+        "confidence": 0.8,
+        "improvement": 0.0,
+        "consequence": 0.7,
+        "evidence_sprints": [
+          10
+        ],
+        "sprints_in_phase": 3
+      },
+      "A-S11-P00": {
+        "phase": "applicable",
+        "type": "friction",
+        "description": "The cycle_time metric remains at 0.0 despite 156 decisions by Diana, 207 by Alicia, 135 by Nick, and 97 by Greg. This is mathematically impossible for human-involved processes, suggesting the metric is either not being measured correctly, is being gamed, or is disconnected from actual workflow.",
+        "hypothesis": "The cycle_time metric is likely being calculated only for AI-processed claims (which are instant) or is being reset/ignored for human decisions. This creates a false sense of efficiency and hides the true cost of human review, which is likely contributing to high exhaustion levels.",
+        "confidence": 0.95,
+        "improvement": 0.0,
+        "consequence": 0.9,
+        "evidence_sprints": [
+          11
+        ],
+        "sprints_in_phase": 0
+      },
+      "A-S11-P01": {
+        "phase": "applicable",
+        "type": "friction",
+        "description": "Exhaustion is dangerously concentrated in a few key agents: Diana (8.0), Nick (9.0), Mike (8.0), Sanjay (7.0). Meanwhile, other agents like Tricia (2.0), Jordan (2.0), and Alicia (3.0) have low exhaustion. This imbalance suggests work is not being distributed equitably.",
+        "hypothesis": "Diana and Nick are likely handling the most complex or high-volume claims, while Mike's high exhaustion with zero decisions suggests he is doing non-decision work (meetings, reviews, support) that isn't tracked. The workload is not balanced across the team, creating burnout risk for key personnel.",
+        "confidence": 0.9,
+        "improvement": 0.0,
+        "consequence": 0.85,
+        "evidence_sprints": [
+          11
+        ],
+        "sprints_in_phase": 0
+      },
+      "A-S11-P02": {
+        "phase": "applicable",
+        "type": "friction",
+        "description": "A clear AI trust divide exists. Alicia (trust=0.74, 207 decisions, +13/-1/~4 AI experiences) and Greg (trust=0.59, 97 decisions, +9/-0) have high trust and high AI usage. Meanwhile, Diana (trust=0.00, -2 negative AI experiences), Rachel (trust=0.00, -6 negative), and most others have zero trust. This is not spreading organically.",
+        "hypothesis": "Alicia and Greg likely had early positive AI experiences that built their trust, while Rachel's -6 negative experiences and Diana's -2 have cemented distrust. The system is not providing enough positive AI interactions to overcome early negative impressions, and there's no mechanism to share the positive experiences of Alicia and Greg with others.",
+        "confidence": 0.85,
+        "improvement": 0.0,
+        "consequence": 0.8,
+        "evidence_sprints": [
+          11
+        ],
+        "sprints_in_phase": 0
+      },
+      "A-S11-P03": {
+        "phase": "theoretical",
+        "type": "friction",
+        "description": "Complex claims consistently trigger translation exceptions. Decision 20 shows Diana handling a 'complex 4-vehicle auto claim with injuries and unclear liability' with translation=True. This pattern appeared in Sprint 10 and persists, suggesting complex claims are not being handled well by the AI pipeline.",
+        "hypothesis": "The AI pipeline is likely only trained on simple claims and cannot handle multi-vehicle, injury, or disputed liability scenarios. This forces all complex claims through human review with translation overhead, creating a bottleneck and increasing cognitive load on humans who must interpret AI output that doesn't apply.",
+        "confidence": 0.8,
+        "improvement": 0.0,
+        "consequence": 0.75,
+        "evidence_sprints": [
+          11
+        ],
+        "sprints_in_phase": 2
+      },
+      "A-S11-P04": {
+        "phase": "theoretical",
+        "type": "friction",
+        "description": "The AI pipeline continues to auto-process all simple claims (decisions 8, 14, 17, 19 show AI accepting simple claims). Meanwhile, humans like Diana are only seeing moderate and complex claims. This means humans are losing practice on simple claims, potentially degrading their ability to spot anomalies.",
+        "hypothesis": "The AI is correctly handling simple claims, which is good for efficiency. However, humans are now only exposed to complex cases, meaning they lose the 'easy wins' that build confidence and maintain baseline skills. This could lead to over-reaction to minor anomalies in complex claims.",
+        "confidence": 0.7,
+        "improvement": 0.0,
+        "consequence": 0.6,
+        "evidence_sprints": [
+          11
+        ],
+        "sprints_in_phase": 2
+      },
+      "A-S11-P05": {
+        "phase": "theoretical",
+        "type": "friction",
+        "description": "There is a striking correlation between decision volume and AI trust. Alicia (207 decisions, trust=0.74), Nick (135 decisions, trust=0.00), Diana (156 decisions, trust=0.00), and Greg (97 decisions, trust=0.59). High-volume agents either have very high trust (Alicia, Greg) or zero trust (Diana, Nick). No agent has moderate trust with high volume.",
+        "hypothesis": "High-volume agents are either fully embracing AI (Alicia, Greg) or completely rejecting it (Diana, Nick). This suggests a polarization effect where agents who try AI and have positive experiences double down, while those with negative experiences (Diana: -2, Nick: -1) completely disengage. There's no middle ground, indicating the AI system produces binary outcomes (either clearly right or clearly wrong) rather than nuanced results.",
+        "confidence": 0.75,
+        "improvement": 0.0,
+        "consequence": 0.7,
+        "evidence_sprints": [
+          11
+        ],
+        "sprints_in_phase": 2
+      },
+      "A-S11-P06": {
+        "phase": "theoretical",
+        "type": "friction",
+        "description": "Mike has exhaustion=8.0 but decisions=0. Tricia has exhaustion=2.0 and decisions=0. Ron has exhaustion=6.0 and decisions=0. These agents are contributing to exhaustion without making any decisions, suggesting they are doing significant non-decision work (meetings, reviews, support, or being blocked).",
+        "hypothesis": "These agents are likely in support roles (reviewing others' work, handling escalations, or doing administrative tasks) that don't generate decisions but consume energy. Mike's high exhaustion with zero decisions suggests he might be a bottleneck reviewer or is stuck in unproductive meetings.",
+        "confidence": 0.8,
+        "improvement": 0.0,
+        "consequence": 0.65,
+        "evidence_sprints": [
+          11
+        ],
+        "sprints_in_phase": 2
+      },
+      "A-S11-P07": {
+        "phase": "applicable",
+        "type": "friction",
+        "description": "Rachel has 6 negative AI experiences out of 61 decisions (nearly 10% failure rate), while Alicia has only 1 negative out of 207 (0.5%) and Greg has 0 out of 97. This suggests Rachel is encountering a different class of claims or the AI is failing specifically on her assigned work type.",
+        "hypothesis": "Rachel may be assigned a specific claim type (perhaps commercial or specialty lines) where the AI model performs poorly. The AI is likely trained on the most common personal auto claims, and Rachel's portfolio may be different. This is a data distribution mismatch.",
+        "confidence": 0.85,
+        "improvement": 0.0,
+        "consequence": 0.8,
+        "evidence_sprints": [
+          11
+        ],
+        "sprints_in_phase": 0
+      },
+      "A-S12-P00": {
+        "phase": "empirical",
+        "type": "friction",
+        "description": "The cycle_time metric is 0.0, which is physically impossible for a system processing 177+ decisions in a sprint. This indicates the metric is either not being measured, is being gamed, or is measuring the wrong thing entirely. The organization is flying blind on throughput and latency.",
+        "hypothesis": "The cycle_time metric was likely defined for the human-only process but was not updated when the AI pipeline was introduced. Either the metric is not being collected from the new system, or it's being reset/zeroed somewhere in the pipeline. This is a classic metric_inversion where the organization measures what's easy, not what's meaningful.",
+        "confidence": 0.95,
+        "improvement": 0.0,
+        "consequence": 0.9,
+        "evidence_sprints": [
+          12
+        ],
+        "sprints_in_phase": 0
+      },
+      "A-S12-P01": {
+        "phase": "empirical",
+        "type": "friction",
+        "description": "There is a stark divergence in AI trust between high-volume and low-volume agents. Diana (177 decisions, trust=0.00) and Nick (147 decisions, trust=0.00) have zero trust despite high exposure, while Alicia (224 decisions, trust=0.15) and Greg (104 decisions, trust=0.29) show moderate trust. The pattern suggests trust is not driven by experience volume but by the quality of AI interactions, and negative experiences are concentrated.",
+        "hypothesis": "Diana and Nick are likely handling the most complex claims that get routed to AI and fail, creating a negative feedback loop. Their zero trust despite positive experiences suggests they've learned that AI is unreliable for their specific claim types. The AI pipeline is only auto-processing simple claims, so high-volume agents see AI fail on the hard cases they handle.",
+        "confidence": 0.85,
+        "improvement": 0.0,
+        "consequence": 0.85,
+        "evidence_sprints": [
+          12
+        ],
+        "sprints_in_phase": 0
+      },
+      "A-S12-P02": {
+        "phase": "theoretical",
+        "type": "friction",
+        "description": "Several agents show high exhaustion with zero or very low decision counts. Mike (exhaustion=8.0, decisions=0), Ron (exhaustion=6.0, decisions=0), and Leslie (exhaustion=6.0, decisions=0) are exhausted despite not making any decisions this sprint. This suggests they are doing unmeasured work outside the formal decision system.",
+        "hypothesis": "These agents are likely doing shadow work: handling exceptions, answering questions, or managing the AI pipeline's edge cases that don't get logged as formal decisions. Their high stress (0.80) and exhaustion suggest they're overwhelmed by invisible workload that isn't captured in the decision metrics.",
+        "confidence": 0.8,
+        "improvement": 0.0,
+        "consequence": 0.75,
+        "evidence_sprints": [
+          12
+        ],
+        "sprints_in_phase": 1
+      },
+      "A-S12-P03": {
+        "phase": "empirical",
+        "type": "friction",
+        "description": "Rachel has 6 negative AI experiences out of 71 decisions (8.5% failure rate) and zero trust. Diana has 5 negative out of 177 (2.8% failure rate) and zero trust. Meanwhile, the AI pipeline is auto-processing simple claims with 100% success. The negative experiences are concentrated in specific agents, suggesting a systemic issue with how AI failures are distributed.",
+        "hypothesis": "The AI system is likely failing on specific claim types (complex, multi-lingual, or edge cases) that are disproportionately routed to certain agents. Rachel and Diana may be the designated handlers for these problematic claims. The AI is not failing randomly\u2014it's failing systematically on specific inputs, and the agents who receive those inputs are being poisoned against AI.",
+        "confidence": 0.9,
+        "improvement": 0.0,
+        "consequence": 0.8,
+        "evidence_sprints": [
+          12
+        ],
+        "sprints_in_phase": 0
+      },
+      "A-S12-P04": {
+        "phase": "theoretical",
+        "type": "friction",
+        "description": "The AI pipeline continues to auto-process simple claims (decisions 5, 12, 19 show AI accepting simple claims under $8K). Meanwhile, human agents handle increasingly complex claims. This creates a feedback loop where humans lose practice on simple claims, making them less efficient when they do encounter them, and more reliant on AI judgment.",
+        "hypothesis": "The AI pipeline is correctly identifying simple claims and processing them without human review. However, this means human agents are only seeing complex cases, which require more cognitive effort and produce more exceptions. Over time, their ability to quickly process simple claims will atrophy, and they'll lose the 'easy wins' that build confidence and reduce stress.",
+        "confidence": 0.75,
+        "improvement": 0.0,
+        "consequence": 0.7,
+        "evidence_sprints": [
+          12
+        ],
+        "sprints_in_phase": 1
+      },
+      "A-S12-P05": {
+        "phase": "empirical",
+        "type": "friction",
+        "description": "Complex claims consistently trigger translation exceptions and escalations. Decision 13 shows Diana escalating a $64,866.20 claim because it exceeds her $50K authority. Decision 14 shows another escalation for a complex claim. Decision 7 shows Pat requesting information due to an exception. The pattern suggests complex claims are creating a bottleneck at the approval stage.",
+        "hypothesis": "The approval authority threshold ($50K for Diana, $100K for Sanjay) is creating a funnel where complex, high-value claims pile up at the approval stage. Sanjay's low decision count (27) compared to Diana's 177 suggests he's either overloaded with escalations or not processing them efficiently. The translation exceptions on complex claims indicate the AI system can't handle multi-language or complex documentation, forcing manual review.",
+        "confidence": 0.8,
+        "improvement": 0.0,
+        "consequence": 0.85,
+        "evidence_sprints": [
+          12
+        ],
+        "sprints_in_phase": 0
+      },
+      "A-S12-P06": {
+        "phase": "theoretical",
+        "type": "friction",
+        "description": "Leslie has ai_trust=0.02 and Pat has ai_trust=0.04, but both have zero decisions this sprint. Meanwhile, agents with high decision volumes (Diana, Nick) have zero trust. This suggests trust is being formed outside the decision-making process, possibly through observation, training, or informal conversations, rather than through direct experience.",
+        "hypothesis": "Trust is being influenced by factors other than direct AI interaction. Leslie and Pat may be forming opinions based on observing others' experiences or organizational messaging. The disconnect between decision volume and trust suggests that the organization's AI communication strategy is either working (for Greg) or failing (for Diana/Nick) independently of actual AI performance.",
+        "confidence": 0.7,
+        "improvement": 0.0,
+        "consequence": 0.6,
+        "evidence_sprints": [
+          12
+        ],
+        "sprints_in_phase": 1
       }
     }
   },
@@ -96,86 +1193,201 @@
     "phase_summary": {
       "theoretical": 0,
       "empirical": 0,
-      "applicable": 6,
-      "replicable": 0,
-      "impact": 0
+      "applicable": 5,
+      "replicable": 2,
+      "impact": 3
     },
     "by_type": {
-      "friction": 0,
-      "absence": 6
+      "friction": 10,
+      "absence": 0
     },
     "discoveries": {
-      "ABS-B-S01-PAUSE": {
+      "AGENT-GAP-B-damage_estimation_human": {
         "phase": "applicable",
-        "type": "absence",
-        "description": "19 claims were auto-approved by AI but later flagged for escalation or override. The AI didn't know it should pause \u2014 the pause signal wasn't in its inputs.",
-        "hypothesis": "Surface missing_pause: Approval errors caught late, potential customer impact, rework cost",
-        "confidence": 0.85,
-        "improvement": 2.55,
+        "type": "friction",
+        "description": "Agents surfaced missing handoff context at damage_estimation_human (1 decisions)",
+        "hypothesis": "If we standardize the handoff into damage_estimation_human, agents will stop surfacing missing context",
+        "confidence": 0.5,
+        "improvement": 0.0,
+        "consequence": 0.2,
         "evidence_sprints": [
           1
         ],
         "sprints_in_phase": 3
       },
-      "ABS-B-S01-LLM-00": {
+      "AGENT-GAP-B-coverage_verification_human": {
+        "phase": "impact",
+        "type": "friction",
+        "description": "Agents surfaced missing handoff context at coverage_verification_human (2 decisions)",
+        "hypothesis": "If we standardize the handoff into coverage_verification_human, agents will stop surfacing missing context",
+        "confidence": 0.9,
+        "improvement": 0.0,
+        "consequence": 0.8,
+        "evidence_sprints": [
+          1,
+          2,
+          3,
+          4,
+          5,
+          6,
+          7,
+          8,
+          9,
+          10,
+          11,
+          12
+        ],
+        "sprints_in_phase": 1
+      },
+      "AGENT-GAP-B-liability_determination_human": {
+        "phase": "impact",
+        "type": "friction",
+        "description": "Agents surfaced missing handoff context at liability_determination_human (2 decisions)",
+        "hypothesis": "If we standardize the handoff into liability_determination_human, agents will stop surfacing missing context",
+        "confidence": 0.9,
+        "improvement": 0.0,
+        "consequence": 1.0,
+        "evidence_sprints": [
+          1,
+          2,
+          3,
+          4,
+          5,
+          6,
+          7,
+          8,
+          9,
+          10,
+          11,
+          12
+        ],
+        "sprints_in_phase": 6
+      },
+      "AGENT-GAP-B-settlement_human": {
+        "phase": "impact",
+        "type": "friction",
+        "description": "Agents surfaced missing handoff context at settlement_human (3 decisions)",
+        "hypothesis": "If we standardize the handoff into settlement_human, agents will stop surfacing missing context",
+        "confidence": 0.9,
+        "improvement": 0.0,
+        "consequence": 0.75,
+        "evidence_sprints": [
+          1,
+          2,
+          3,
+          4,
+          5,
+          6,
+          7,
+          8,
+          9,
+          10,
+          11,
+          12
+        ],
+        "sprints_in_phase": 2
+      },
+      "AGENT-GAP-B-approval": {
+        "phase": "replicable",
+        "type": "friction",
+        "description": "Agents surfaced missing handoff context at approval (4 decisions)",
+        "hypothesis": "If we standardize the handoff into approval, agents will stop surfacing missing context",
+        "confidence": 0.9,
+        "improvement": 0.0,
+        "consequence": 0.5,
+        "evidence_sprints": [
+          1,
+          2,
+          3,
+          4,
+          5,
+          6,
+          7,
+          8,
+          9,
+          10,
+          11,
+          12
+        ],
+        "sprints_in_phase": 1
+      },
+      "AGENT-GAP-B-payment": {
         "phase": "applicable",
-        "type": "absence",
-        "description": "The claim got stuck in a request_info loop for 4 consecutive steps, escalated to senior adjuster, and ultimately escalated to subrogation without any substantive progress. This caused significant delay, wasted effort, and potential regulatory exposure in a high-scrutiny state (GA).",
-        "hypothesis": "Surface unrecognized_gap: The claim got stuck in a request_info loop for 4 consecutive steps, escalated to senior adjuster, and ultimately escalated to subrogation without any substantive progress. This caused significant delay, wasted effort, and potential regulatory exposure in a high-scrutiny state (GA).",
-        "confidence": 0.5,
-        "improvement": 1.5,
+        "type": "friction",
+        "description": "Agents surfaced missing handoff context at payment (4 decisions)",
+        "hypothesis": "If we standardize the handoff into payment, agents will stop surfacing missing context",
+        "confidence": 0.8,
+        "improvement": 0.0,
+        "consequence": 0.2,
+        "evidence_sprints": [
+          1,
+          2
+        ],
+        "sprints_in_phase": 3
+      },
+      "AGENT-GAP-B-subrogation": {
+        "phase": "applicable",
+        "type": "friction",
+        "description": "Agents surfaced missing handoff context at subrogation (4 decisions)",
+        "hypothesis": "If we standardize the handoff into subrogation, agents will stop surfacing missing context",
+        "confidence": 0.8,
+        "improvement": 0.0,
+        "consequence": 0.3,
+        "evidence_sprints": [
+          1,
+          2
+        ],
+        "sprints_in_phase": 5
+      },
+      "AGENT-GAP-B-fnol_intake": {
+        "phase": "applicable",
+        "type": "friction",
+        "description": "Agents surfaced missing handoff context at fnol_intake (2 decisions)",
+        "hypothesis": "If we standardize the handoff into fnol_intake, agents will stop surfacing missing context",
+        "confidence": 0.6000000000000001,
+        "improvement": 0.0,
+        "consequence": 0.5,
         "evidence_sprints": [
           1
         ],
         "sprints_in_phase": 3
       },
-      "ABS-B-S01-LLM-01": {
-        "phase": "applicable",
-        "type": "absence",
-        "description": "Sanjay and Kathryn both flagged the missing notes as a reason to request more information, but the notes were never produced. This led to repeated request_info cycles and eventual escalation, delaying resolution and increasing risk of bad-faith claims.",
-        "hypothesis": "Surface unrecognized_gap: Sanjay and Kathryn both flagged the missing notes as a reason to request more information, but the notes were never produced. This led to repeated request_info cycles and eventual escalation, delaying resolution and increasing risk of bad-faith claims.",
-        "confidence": 0.5,
-        "improvement": 1.5,
+      "AGENT-GAP-B-investigation_human": {
+        "phase": "replicable",
+        "type": "friction",
+        "description": "Agents surfaced missing handoff context at investigation_human (1 decisions)",
+        "hypothesis": "If we standardize the handoff into investigation_human, agents will stop surfacing missing context",
+        "confidence": 0.7000000000000001,
+        "improvement": 0.0,
+        "consequence": 0.6666666666666666,
         "evidence_sprints": [
-          1
+          1,
+          3,
+          4,
+          5,
+          6,
+          7,
+          8,
+          9,
+          10,
+          11,
+          12
         ],
-        "sprints_in_phase": 3
+        "sprints_in_phase": 2
       },
-      "ABS-B-S01-LLM-02": {
+      "AGENT-GAP-B-escalated_to_kathryn": {
         "phase": "applicable",
-        "type": "absence",
-        "description": "Liability remains genuinely disputed, and the approval creates a false sense of progress. If the police report later contradicts the claim, the company could face bad-faith exposure in a high-regulatory-scrutiny state (PA). The AI (if used later) would have no way to know the report was unverified.",
-        "hypothesis": "Surface unrecognized_gap: Liability remains genuinely disputed, and the approval creates a false sense of progress. If the police report later contradicts the claim, the company could face bad-faith exposure in a high-regulatory-scrutiny state (PA). The AI (if used later) would have no way to know the report was unverified.",
+        "type": "friction",
+        "description": "Agents surfaced missing handoff context at escalated_to_kathryn (1 decisions)",
+        "hypothesis": "If we standardize the handoff into escalated_to_kathryn, agents will stop surfacing missing context",
         "confidence": 0.5,
-        "improvement": 1.5,
+        "improvement": 0.0,
+        "consequence": 0.5,
         "evidence_sprints": [
-          1
+          2,
+          5
         ],
-        "sprints_in_phase": 3
-      },
-      "ABS-B-S01-LLM-03": {
-        "phase": "applicable",
-        "type": "absence",
-        "description": "The claim was approved for liability without a verified police report, which could lead to incorrect fault allocation, improper settlement, or regulatory penalties. The absence was not caught by any automated check.",
-        "hypothesis": "Surface unrecognized_gap: The claim was approved for liability without a verified police report, which could lead to incorrect fault allocation, improper settlement, or regulatory penalties. The absence was not caught by any automated check.",
-        "confidence": 0.5,
-        "improvement": 1.5,
-        "evidence_sprints": [
-          1
-        ],
-        "sprints_in_phase": 3
-      },
-      "ABS-B-S01-LLM-04": {
-        "phase": "applicable",
-        "type": "absence",
-        "description": "Multiple downstream reviewers (Diana, Sanjay, Kathryn, Maria at payment, Tommy) all flagged the missing damage estimate, leading to repeated request_info cycles and eventual escalation. The claim could not be settled or subrogated without this core data.",
-        "hypothesis": "Surface unrecognized_gap: Multiple downstream reviewers (Diana, Sanjay, Kathryn, Maria at payment, Tommy) all flagged the missing damage estimate, leading to repeated request_info cycles and eventual escalation. The claim could not be settled or subrogated without this core data.",
-        "confidence": 0.5,
-        "improvement": 1.5,
-        "evidence_sprints": [
-          1
-        ],
-        "sprints_in_phase": 3
+        "sprints_in_phase": 2
       }
     }
   }
