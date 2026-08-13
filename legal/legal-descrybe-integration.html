@@ -1,0 +1,657 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<link rel="icon" type="image/svg+xml" href="../icon.svg">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="How Descrybe's legal research engine plugs into Legal AI OS — matter enrichment, citation verification, and an auditable cache wired into every function.">
+<title>Legal AI OS — Descrybe Integration</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,wght@0,400;0,500;0,600;0,700;0,800;1,400&family=Source+Code+Pro:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  /* ============ GULF STREAM RACING PALETTE ============ */
+  :root {
+    --font-body: 'Fraunces', Georgia, serif;
+    --font-mono: 'Source Code Pro', 'SF Mono', Consolas, monospace;
+
+    --bg: #eef4f9;
+    --surface: #ffffff;
+    --surface2: #f5f8fc;
+    --surface-elevated: #e8f0f7;
+    --border: rgba(0, 0, 0, 0.06);
+    --border-bright: rgba(0, 0, 0, 0.12);
+    --text: #0a1628;
+    --text-dim: #3d5a7a;
+    --text-muted: #7a9ab8;
+
+    --primary: #e8621a;
+    --primary-dim: rgba(232, 98, 26, 0.08);
+    --secondary: #4a90c4;
+    --secondary-dim: rgba(74, 144, 196, 0.08);
+    --metric: #0f766e;
+    --metric-dim: rgba(15, 118, 110, 0.06);
+    --amber: #b45309;
+    --amber-dim: rgba(180, 83, 9, 0.08);
+    --violet: #7c3aed;
+    --violet-dim: rgba(124, 58, 237, 0.08);
+    --rose: #e11d48;
+    --rose-dim: rgba(225, 29, 72, 0.08);
+    --slate: #475569;
+    --slate-dim: rgba(71, 85, 105, 0.08);
+    --emerald: #059669;
+    --emerald-dim: rgba(5, 150, 105, 0.08);
+  }
+
+  html.dark {
+    --bg: #0a1628;
+    --surface: #0f1f3d;
+    --surface2: #132844;
+    --surface-elevated: #162d52;
+    --border: rgba(255, 255, 255, 0.06);
+    --border-bright: rgba(255, 255, 255, 0.12);
+    --text: #e8edf5;
+    --text-dim: #9bb0d4;
+    --text-muted: #5e7aa3;
+
+    --primary: #f37021;
+    --primary-dim: rgba(243, 112, 33, 0.12);
+    --secondary: #6cace4;
+    --secondary-dim: rgba(108, 172, 228, 0.12);
+    --metric: #2dd4bf;
+    --metric-dim: rgba(45, 212, 191, 0.08);
+    --amber: #f59e0b;
+    --amber-dim: rgba(245, 158, 11, 0.12);
+    --violet: #a78bfa;
+    --violet-dim: rgba(167, 139, 250, 0.12);
+    --rose: #fb7185;
+    --rose-dim: rgba(251, 113, 133, 0.12);
+    --slate: #94a3b8;
+    --slate-dim: rgba(148, 163, 184, 0.12);
+    --emerald: #34d399;
+    --emerald-dim: rgba(52, 211, 153, 0.1);
+  }
+
+  /* ============ RESET + BASE ============ */
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: var(--bg);
+    background-image:
+      radial-gradient(ellipse at 80% 0%, var(--primary-dim) 0%, transparent 50%),
+      radial-gradient(ellipse at 20% 60%, var(--secondary-dim) 0%, transparent 40%);
+    color: var(--text);
+    font-family: var(--font-body);
+    font-size: 15px;
+    line-height: 1.7;
+    min-height: 100vh;
+    -webkit-font-smoothing: antialiased;
+    transition: background 0.3s, color 0.3s;
+  }
+
+  /* ============ NAV ============ */
+  .nav {
+    position: sticky; top: 0; z-index: 100;
+    backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px);
+    background: color-mix(in srgb, var(--surface) 85%, transparent);
+    border-bottom: 1px solid var(--border);
+    margin: 0 0 32px; padding: 0 32px;
+    transition: background 0.3s, border-color 0.3s;
+  }
+  .nav-inner {
+    max-width: 1000px; margin: 0 auto; padding: 12px 0;
+    display: flex; align-items: center; justify-content: space-between;
+  }
+  .nav-brand {
+    font-family: var(--font-mono); font-size: 13px; font-weight: 600;
+    color: var(--primary); text-decoration: none;
+  }
+  .theme-toggle {
+    width: 36px; height: 36px; border-radius: 10px;
+    border: 1px solid var(--border); background: var(--surface);
+    cursor: pointer; display: flex; align-items: center; justify-content: center;
+    font-size: 16px; color: var(--text-dim); transition: all 0.2s;
+  }
+  .theme-toggle:hover { border-color: var(--primary); color: var(--primary); }
+  .theme-toggle:focus-visible { outline: 2px solid var(--primary); outline-offset: 2px; }
+
+  /* ============ BACKLINK ============ */
+  .backlink {
+    position: fixed; top: 12px; left: 16px; z-index: 101;
+    font-family: var(--font-mono); font-size: 12px;
+    color: var(--text-dim); text-decoration: none;
+    padding: 6px 10px; border: 1px solid var(--border);
+    border-radius: 6px; background: var(--surface);
+    transition: color 0.15s, border-color 0.15s;
+  }
+  .backlink:hover { color: var(--text); border-color: var(--border-bright); }
+
+  /* ============ CONTAINER ============ */
+  .container { max-width: 1000px; margin: 0 auto; padding: 0 24px 80px; }
+
+  /* ============ ANIMATION ============ */
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(16px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  .section { animation: fadeUp 0.5s ease both; }
+  .section:nth-child(1) { animation-delay: 0.05s; }
+  .section:nth-child(2) { animation-delay: 0.10s; }
+  .section:nth-child(3) { animation-delay: 0.15s; }
+  .section:nth-child(4) { animation-delay: 0.20s; }
+  .section:nth-child(5) { animation-delay: 0.25s; }
+
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after {
+      animation-duration: 0.01ms !important;
+      animation-delay: 0ms !important;
+      transition-duration: 0.01ms !important;
+    }
+  }
+
+  /* ============ HERO ============ */
+  .hero { text-align: center; margin-bottom: 48px; padding: 32px 0 0; }
+  .hero-badge {
+    display: inline-block; font-family: var(--font-mono);
+    font-size: 11px; font-weight: 600; letter-spacing: 1.5px;
+    text-transform: uppercase; color: var(--secondary);
+    background: var(--secondary-dim); border: 1px solid var(--secondary);
+    border-radius: 20px; padding: 4px 14px; margin-bottom: 16px;
+  }
+  .hero h1 {
+    font-size: 44px; font-weight: 800; letter-spacing: -1px;
+    margin-bottom: 8px; color: var(--text); text-wrap: balance;
+  }
+  .hero .tagline {
+    font-size: 16px; color: var(--text-dim);
+    font-style: italic; max-width: 760px; margin: 0 auto;
+    text-wrap: nowrap;
+  }
+
+  /* ============ EXTERNAL LINK ============ */
+  a.descrybe-link {
+    color: inherit;
+    text-decoration: underline;
+    text-decoration-color: var(--primary);
+    text-underline-offset: 3px;
+    transition: color 0.15s;
+  }
+  a.descrybe-link:hover { color: var(--primary); }
+  a.descrybe-link:focus-visible { outline: 2px solid var(--primary); outline-offset: 2px; }
+
+  /* ============ EXEC SUMMARY (COLLAPSIBLE) ============ */
+  .exec-summary {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    margin-bottom: 40px;
+    overflow: hidden;
+  }
+  .exec-summary summary {
+    cursor: pointer;
+    list-style: none;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 18px 24px;
+    transition: color 0.15s;
+  }
+  .exec-summary summary::-webkit-details-marker { display: none; }
+  .exec-summary summary:hover { color: var(--primary); }
+  .exec-summary summary:focus-visible { outline: 2px solid var(--primary); outline-offset: 2px; }
+  .exec-summary__title {
+    font-size: 17px; font-weight: 700; letter-spacing: -0.3px;
+  }
+  .exec-summary__hint {
+    font-family: var(--font-mono); font-size: 10px; font-weight: 600;
+    letter-spacing: 1px; text-transform: uppercase; color: var(--text-muted);
+    margin-left: auto;
+  }
+  .exec-summary__chevron {
+    font-family: var(--font-mono); font-size: 18px;
+    color: var(--text-muted); transition: transform 0.2s;
+    line-height: 1;
+  }
+  .exec-summary[open] .exec-summary__chevron { transform: rotate(45deg); }
+  .exec-summary__body {
+    padding: 4px 24px 24px;
+    border-top: 1px solid var(--border);
+  }
+  .exec-summary__block { margin-top: 18px; }
+  .exec-summary__label {
+    font-family: var(--font-mono); font-size: 10px; font-weight: 600;
+    letter-spacing: 1.5px; text-transform: uppercase; margin-bottom: 10px;
+  }
+  .exec-summary__label--primary { color: var(--primary); }
+  .exec-summary__label--secondary { color: var(--secondary); }
+  .exec-summary__block p {
+    font-size: 14px; color: var(--text-dim); line-height: 1.7;
+    margin-bottom: 8px;
+  }
+  .exec-summary__block p strong { color: var(--text); font-weight: 600; }
+  .exec-summary__block ul { list-style: none; }
+  .exec-summary__block li {
+    position: relative; padding-left: 18px; margin-bottom: 8px;
+    font-size: 14px; color: var(--text-dim); line-height: 1.6;
+  }
+  .exec-summary__block li::before {
+    content: '\203A'; color: var(--text-muted); font-weight: 700;
+    position: absolute; left: 0; font-size: 16px; line-height: 1.35;
+  }
+
+  /* ============ SECTION HEADING ============ */
+  .section-head { margin: 48px 0 24px; text-align: center; }
+  .section-head h2 {
+    font-size: 26px; font-weight: 700; letter-spacing: -0.5px; margin-bottom: 6px;
+  }
+  .section-head p {
+    font-size: 14px; color: var(--text-dim); font-style: italic;
+  }
+
+  /* ============ MERMAID CONTAINER ============ */
+  .mermaid-wrap {
+    position: relative;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 28px 20px 24px;
+    overflow: auto;
+    margin-bottom: 16px;
+  }
+  .mermaid-wrap .mermaid {
+    display: flex; justify-content: center;
+    transition: transform 0.2s ease; transform-origin: top center;
+  }
+  .zoom-controls {
+    position: absolute; top: 8px; right: 8px;
+    display: flex; gap: 2px; z-index: 10;
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 6px; padding: 2px;
+  }
+  .zoom-controls button {
+    width: 28px; height: 28px; border: none; background: transparent;
+    color: var(--text-dim); font-family: var(--font-mono); font-size: 14px;
+    cursor: pointer; border-radius: 4px;
+    display: flex; align-items: center; justify-content: center;
+    transition: background 0.15s, color 0.15s;
+  }
+  .zoom-controls button:hover { background: var(--border); color: var(--text); }
+  .mermaid-wrap { scrollbar-width: thin; scrollbar-color: var(--border) transparent; }
+  .mermaid-wrap::-webkit-scrollbar { width: 6px; height: 6px; }
+  .mermaid-wrap::-webkit-scrollbar-track { background: transparent; }
+  .mermaid-wrap::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+  .mermaid-wrap::-webkit-scrollbar-thumb:hover { background: var(--text-dim); }
+  .mermaid-wrap.is-zoomed { cursor: grab; }
+  .mermaid-wrap.is-panning { cursor: grabbing; user-select: none; }
+
+  /* Mermaid base */
+  .mermaid .nodeLabel { font-family: var(--font-mono) !important; font-size: 12px !important; }
+  .mermaid .edgeLabel { font-family: var(--font-mono) !important; font-size: 11px !important; }
+  .mermaid .node rect, .mermaid .node circle, .mermaid .node polygon { stroke-width: 1.5px !important; }
+  .mermaid .edge-pattern-solid { stroke-width: 1.5px !important; }
+
+  /* Dark mode Mermaid overrides */
+  html.dark .mermaid g.fnNode rect, html.dark .mermaid g.fnNode polygon, html.dark .mermaid g.fnNode circle { fill: rgba(243,112,33,0.12) !important; stroke: #f37021 !important; }
+  html.dark .mermaid g.enrichNode rect, html.dark .mermaid g.enrichNode polygon, html.dark .mermaid g.enrichNode circle { fill: rgba(245,158,11,0.12) !important; stroke: #f59e0b !important; }
+  html.dark .mermaid g.svcNode rect, html.dark .mermaid g.svcNode polygon, html.dark .mermaid g.svcNode circle { fill: rgba(108,172,228,0.12) !important; stroke: #6cace4 !important; }
+  html.dark .mermaid g.apiNode rect, html.dark .mermaid g.apiNode polygon, html.dark .mermaid g.apiNode circle { fill: rgba(167,139,250,0.12) !important; stroke: #a78bfa !important; }
+  html.dark .mermaid g.storeNode rect, html.dark .mermaid g.storeNode polygon, html.dark .mermaid g.storeNode circle { fill: rgba(45,212,191,0.10) !important; stroke: #2dd4bf !important; }
+
+  html.dark .mermaid .nodeLabel { color: #e8edf5 !important; }
+  html.dark .mermaid .edgeLabel { color: #bccde8 !important; }
+  html.dark .mermaid .edgeLabel span { color: #bccde8 !important; }
+  html.dark .mermaid text { fill: #e8edf5 !important; }
+  html.dark .mermaid .labelBkg { fill: #132240 !important; }
+
+  /* Diagram caption */
+  .diagram-caption {
+    text-align: center; font-family: var(--font-mono);
+    font-size: 11px; color: var(--text-muted); margin-bottom: 48px;
+  }
+
+  /* ============ COMPONENT CARDS ============ */
+  .component-grid {
+    display: grid; grid-template-columns: 1fr 1fr; gap: 18px; margin-bottom: 48px;
+  }
+  .component-card {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 12px; padding: 22px 24px;
+    display: flex; flex-direction: column;
+  }
+  .component-card__file {
+    font-family: var(--font-mono); font-size: 11px; font-weight: 600;
+    letter-spacing: 0.5px; margin-bottom: 8px; word-break: break-all;
+  }
+  .component-card--primary h3 { color: var(--primary); }
+  .component-card--secondary h3 { color: var(--secondary); }
+  .component-card--violet h3 { color: var(--violet); }
+  .component-card--metric h3 { color: var(--metric); }
+  .component-card h3 { font-size: 18px; font-weight: 700; margin-bottom: 8px; letter-spacing: -0.3px; }
+  .component-card p { font-size: 13px; color: var(--text-dim); line-height: 1.6; }
+  .component-card p strong { color: var(--text); font-weight: 600; }
+  .component-card--primary { border-left: 3px solid var(--primary); }
+  .component-card--secondary { border-left: 3px solid var(--secondary); }
+  .component-card--violet { border-left: 3px solid var(--violet); }
+  .component-card--metric { border-left: 3px solid var(--metric); }
+
+  /* ============ WHAT YOU GET ============ */
+  .outcome-grid {
+    display: grid; grid-template-columns: repeat(3, 1fr); gap: 18px; margin-bottom: 48px;
+  }
+  .outcome-card {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 12px; padding: 22px 24px;
+  }
+  .outcome-card__num {
+    font-family: var(--font-mono); font-size: 10px; font-weight: 600;
+    letter-spacing: 1.5px; text-transform: uppercase; margin-bottom: 10px;
+  }
+  .outcome-card__num--primary { color: var(--primary); }
+  .outcome-card__num--secondary { color: var(--secondary); }
+  .outcome-card__num--metric { color: var(--metric); }
+  .outcome-card h3 { font-size: 17px; font-weight: 700; margin-bottom: 8px; letter-spacing: -0.3px; }
+  .outcome-card p { font-size: 13px; color: var(--text-dim); line-height: 1.6; }
+
+  /* ============ FOOTER ============ */
+  .footer {
+    text-align: center; font-family: var(--font-mono);
+    font-size: 11px; color: var(--text-muted); padding: 24px 0 0;
+  }
+
+  /* ============ RESPONSIVE ============ */
+  @media (max-width: 860px) {
+    .component-grid { grid-template-columns: 1fr; }
+    .outcome-grid { grid-template-columns: 1fr; }
+    .hero h1 { font-size: 32px; }
+    .hero .tagline { text-wrap: wrap; max-width: 560px; }
+    .backlink { top: 8px; left: 8px; font-size: 10px; padding: 4px 8px; }
+  }
+  @media (max-width: 500px) {
+    .hero h1 { font-size: 28px; }
+  }
+</style>
+</head>
+<body>
+
+<!-- Nav -->
+<div class="nav">
+  <div class="nav-inner">
+    <span class="nav-brand">Legal AI OS</span>
+    <button class="theme-toggle" id="themeToggle" aria-label="Toggle dark mode">
+      <span class="icon-light">&#9788;</span>
+      <span class="icon-dark" style="display:none">&#9790;</span>
+    </button>
+  </div>
+</div>
+
+<!-- Backlink -->
+<a href="../index.html#legal" class="backlink">&larr; Index</a>
+
+<div class="container">
+
+  <!-- Hero -->
+  <div class="hero section">
+    <div class="hero-badge">Legal AI OS</div>
+    <h1><a href="https://descrybe.ai" target="_blank" rel="noopener" class="descrybe-link">Descrybe</a> Integration</h1>
+    <p class="tagline">Legal research stops being a thing you go do. It becomes a thing that happens before you look.</p>
+  </div>
+
+  <!-- Executive Summary -->
+  <details class="exec-summary section" open>
+    <summary>
+      <span class="exec-summary__title">Executive Summary</span>
+      <span class="exec-summary__hint">plain english</span>
+      <span class="exec-summary__chevron">+</span>
+    </summary>
+    <div class="exec-summary__body">
+      <div class="exec-summary__block">
+        <div class="exec-summary__label exec-summary__label--primary">What we built with <a href="https://descrybe.ai" target="_blank" rel="noopener" class="descrybe-link">Descrybe</a></div>
+        <ul>
+          <li><a href="https://descrybe.ai" target="_blank" rel="noopener" class="descrybe-link">Descrybe</a> is now the <strong>research engine of Legal AI OS</strong>. Not a bolt-on tool. Not a side panel. The platform&rsquo;s research layer.</li>
+          <li>Every new matter arrives with Descrybe&rsquo;s case law and statutes already surfaced &mdash; matched to its jurisdiction and practice area &mdash; before anyone reviews it. The research is finished before a human thinks to ask for it.</li>
+          <li>Citation checking that actually checks. Drop in a cite and the exact wording, and Descrybe confirms the quote appears where you say it does. <strong>No hallucinated cases. No garbled cites.</strong></li>
+        </ul>
+      </div>
+      <div class="exec-summary__block">
+        <div class="exec-summary__label exec-summary__label--secondary">Why Descrybe makes the platform stronger</div>
+        <ul>
+          <li><strong>Structured primary law, not a flat keyword search.</strong> Real, resolvable authorities a lawyer can stand behind.</li>
+          <li><strong>Research happens before review, not after.</strong> The platform hands a lawyer a brief, not a blank page.</li>
+          <li><strong>Everything Descrybe returns lands on the permanent audit trail.</strong> When the client or the court asks &ldquo;why did you cite this,&rdquo; the answer is one query away.</li>
+        </ul>
+      </div>
+    </div>
+  </details>
+
+  <!-- Main Diagram -->
+  <div class="mermaid-wrap section">
+    <div class="zoom-controls">
+      <button onclick="zoomDiagram(this, 1.2)" title="Zoom in">+</button>
+      <button onclick="zoomDiagram(this, 0.8)" title="Zoom out">&minus;</button>
+      <button onclick="resetZoom(this)" title="Reset zoom">&#8634;</button>
+    </div>
+    <pre class="mermaid">
+      flowchart TD
+        matter["New Matter
+        jurisdiction + practice area
+        + adverse parties"]
+        enrich["Matter Enrichment
+        auto-builds queries"]
+        matter --> enrich
+
+        attorney["Attorney
+        research / verify-citation"]
+        functions["Legal-OS Functions
+        KM · Regulatory · DD · Contract"]
+
+        client["Descrybe Client
+        async + retry + timeout"]
+
+        enrich --> client
+        attorney --> client
+        functions --> client
+
+        cache{"Cache
+        hit?"}
+        client --> cache
+
+        api["Descrybe API
+        case law · statutes · citations"]
+
+        cache -->|"miss"| api
+        api --> normalize["Normalize
+        + rank results"]
+        cache -->|"hit"| normalize
+
+        store[("legal_research_queries
+        + results · 24h TTL")]
+        audit["Audit Trail
+        immutable"]
+
+        normalize --> store
+        normalize --> audit
+        store --> review["Attorney Review"]
+        audit --> review
+
+        classDef fnNode fill:#fde8d8,stroke:#e8621a,color:#0a1628
+        classDef enrichNode fill:#fef0d7,stroke:#b45309,color:#0a1628
+        classDef svcNode fill:#e0eef7,stroke:#4a90c4,color:#0a1628
+        classDef apiNode fill:#ede9fe,stroke:#7c3aed,color:#0a1628
+        classDef storeNode fill:#d5f0ee,stroke:#0f766e,color:#0a1628
+
+        class attorney,functions fnNode
+        class matter,enrich enrichNode
+        class client,cache,normalize svcNode
+        class api apiNode
+        class store,audit,review storeNode
+    </pre>
+  </div>
+  <div class="diagram-caption">Two paths in, one audited core. Auto-enrichment on matter creation. On-demand research and citation checks from the attorney or any function. Every result cached, every call written to the immutable audit trail.</div>
+
+  <!-- Components -->
+  <div class="section-head section">
+    <h2>What got built</h2>
+    <p>Four pieces. Each one fits the existing governance contract.</p>
+  </div>
+
+  <div class="component-grid section">
+    <div class="component-card component-card--primary">
+      <h3>The research connection</h3>
+      <p>Links the platform to <a href="https://descrybe.ai" target="_blank" rel="noopener" class="descrybe-link">Descrybe</a>. Searches case law, statutes, and regulations, then brings results back in one consistent form. Each public-law question is answered once and reused — no repeat work.</p>
+    </div>
+
+    <div class="component-card component-card--secondary">
+      <h3>Automatic matter research</h3>
+      <p>Turns what a matter already knows &mdash; its <strong>jurisdiction, practice area, and the parties involved</strong> &mdash; into a set of searches. Runs before anyone reviews it. Never slows the intake down.</p>
+    </div>
+
+    <div class="component-card component-card--violet">
+      <h3>Three things a lawyer can do</h3>
+      <p><strong>Run a research query. Verify a citation. Enrich an existing matter.</strong> Registered as the platform&rsquo;s ninth function.</p>
+    </div>
+
+    <div class="component-card component-card--metric">
+      <h3>A permanent record</h3>
+      <p>Keeps track of every query and every result. Public law is shared and reused; the matter&rsquo;s private details stay private.</p>
+    </div>
+  </div>
+
+  <!-- What you get -->
+  <div class="section-head section">
+    <h2>What you get</h2>
+    <p>Not a research tool bolted on the side. Research woven into the workflow.</p>
+  </div>
+
+  <div class="outcome-grid section">
+    <div class="outcome-card">
+      <div class="outcome-card__num outcome-card__num--primary">Research before review</div>
+      <h3>Matters arrive with authority</h3>
+      <p>A new matter lands with controlling case law and governing statutes already surfaced from its own jurisdiction and practice area. The partner reviews a brief, not a blank page.</p>
+    </div>
+
+    <div class="outcome-card">
+      <div class="outcome-card__num outcome-card__num--secondary">Citations that check themselves</div>
+      <h3>Verify the quote, not just the cite</h3>
+      <p>Drop a citation and the exact language. The system resolves it against Descrybe's corpus and tells you whether the words actually appear where you say they do.</p>
+    </div>
+
+    <div class="outcome-card">
+      <div class="outcome-card__num outcome-card__num--metric">Every query provable</div>
+      <h3>The audit trail is the product</h3>
+      <p>Every research call is captured &mdash; what was asked, what came back, what it cost. When the client asks why you cited something, the answer is one query away.</p>
+    </div>
+  </div>
+
+  <!-- Footer -->
+  <div class="footer">&copy; 2025&ndash;2026 Charlie Fuller</div>
+
+</div>
+
+<script type="module">
+  import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs';
+
+  mermaid.initialize({
+    startOnLoad: true,
+    theme: 'base',
+    look: 'classic',
+    securityLevel: 'loose',
+    themeVariables: {
+      primaryColor: '#f5f8fc',
+      primaryBorderColor: '#c8daea',
+      primaryTextColor: '#0a1628',
+      secondaryColor: '#f5f8fc',
+      secondaryBorderColor: '#c8daea',
+      secondaryTextColor: '#0a1628',
+      tertiaryColor: '#f5f8fc',
+      tertiaryBorderColor: '#c8daea',
+      tertiaryTextColor: '#0a1628',
+      lineColor: '#a0bedb',
+      fontSize: '12px',
+      fontFamily: "'Source Code Pro', 'SF Mono', Consolas, monospace",
+    }
+  });
+</script>
+
+<script>
+  function updateZoomState(wrap) {
+    var target = wrap.querySelector('.mermaid');
+    var zoom = parseFloat(target.dataset.zoom || '1');
+    wrap.classList.toggle('is-zoomed', zoom > 1);
+  }
+
+  function zoomDiagram(btn, factor) {
+    var wrap = btn.closest('.mermaid-wrap');
+    var target = wrap.querySelector('.mermaid');
+    var current = parseFloat(target.dataset.zoom || '1');
+    var next = Math.min(Math.max(current * factor, 0.3), 5);
+    target.dataset.zoom = next;
+    target.style.transform = 'scale(' + next + ')';
+    updateZoomState(wrap);
+  }
+
+  function resetZoom(btn) {
+    var wrap = btn.closest('.mermaid-wrap');
+    var target = wrap.querySelector('.mermaid');
+    target.dataset.zoom = '1';
+    target.style.transform = 'scale(1)';
+    updateZoomState(wrap);
+  }
+
+  document.querySelectorAll('.mermaid-wrap').forEach(function(wrap) {
+    wrap.addEventListener('wheel', function(e) {
+      if (!e.ctrlKey && !e.metaKey) return;
+      e.preventDefault();
+      var target = wrap.querySelector('.mermaid');
+      var current = parseFloat(target.dataset.zoom || '1');
+      var factor = e.deltaY < 0 ? 1.1 : 0.9;
+      var next = Math.min(Math.max(current * factor, 0.3), 5);
+      target.dataset.zoom = next;
+      target.style.transform = 'scale(' + next + ')';
+      updateZoomState(wrap);
+    }, { passive: false });
+
+    var startX, startY, scrollL, scrollT;
+    wrap.addEventListener('mousedown', function(e) {
+      if (e.target.closest('.zoom-controls')) return;
+      var target = wrap.querySelector('.mermaid');
+      if (parseFloat(target.dataset.zoom || '1') <= 1) return;
+      wrap.classList.add('is-panning');
+      startX = e.pageX - wrap.offsetLeft;
+      startY = e.pageY - wrap.offsetTop;
+      scrollL = wrap.scrollLeft;
+      scrollT = wrap.scrollTop;
+    });
+    window.addEventListener('mousemove', function(e) {
+      if (!wrap.classList.contains('is-panning')) return;
+      var x = e.pageX - wrap.offsetLeft;
+      var y = e.pageY - wrap.offsetTop;
+      wrap.scrollLeft = scrollL - (x - startX);
+      wrap.scrollTop = scrollT - (y - startY);
+    });
+    window.addEventListener('mouseup', function() {
+      wrap.classList.remove('is-panning');
+    });
+  });
+
+  const toggle = document.getElementById('themeToggle');
+  const iconLight = toggle.querySelector('.icon-light');
+  const iconDark = toggle.querySelector('.icon-dark');
+
+  function setTheme(d) {
+    document.documentElement.classList.toggle('dark', d);
+    iconLight.style.display = d ? 'none' : '';
+    iconDark.style.display = d ? '' : 'none';
+    try { localStorage.setItem('diagram-theme', d ? 'dark' : 'light'); } catch(e) {}
+  }
+
+  toggle.addEventListener('click', () =>
+    setTheme(!document.documentElement.classList.contains('dark'))
+  );
+
+  try {
+    if (localStorage.getItem('diagram-theme') === 'dark') setTheme(true);
+  } catch(e) {}
+</script>
+
+</body>
+</html>
