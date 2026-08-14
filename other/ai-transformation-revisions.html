@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Simulation Revision Log — AI Transformation Experiment</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,wght@0,400;0,500;0,600;0,700;0,800;1,400&family=Source+Code+Pro:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --font-display: 'Fraunces', Georgia, serif;
+    --font-mono: 'Source Code Pro', 'SF Mono', Consolas, monospace;
+    --bg: #eef4f9; --surface: #ffffff; --surface2: #f5f8fc;
+    --border: #c8daea; --border-bright: #a0bedb;
+    --text: #0a1628; --text-dim: #3d5a7a; --text-muted: #7a9ab8;
+    --primary: #e8621a; --primary-dim: rgba(232,98,26,0.06);
+    --secondary: #4a90c4; --secondary-dim: rgba(74,144,196,0.06);
+    --metric: #0f766e; --metric-dim: rgba(15,118,110,0.06);
+    --warn: #b45309; --warn-dim: rgba(180,83,9,0.08);
+    --trackb: #7c3aed; --trackb-dim: rgba(124,58,237,0.06);
+  }
+  html.dark {
+    --bg: #0a1628; --surface: #132240; --surface2: #1a2d52;
+    --border: #1a2d52; --border-bright: #2d4570;
+    --text: #e8edf5; --text-dim: #9bb0d4; --text-muted: #5e7aa3;
+    --primary: #f37021; --primary-dim: rgba(243,112,33,0.10);
+    --secondary: #6cace4; --secondary-dim: rgba(108,172,228,0.10);
+    --metric: #2dd4bf; --metric-dim: rgba(45,212,191,0.08);
+    --warn: #f59e0b; --warn-dim: rgba(245,158,11,0.12);
+    --trackb: #a78bfa; --trackb-dim: rgba(167,139,250,0.10);
+  }
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body { background:var(--bg); color:var(--text); font-family:var(--font-display); min-height:100vh; line-height:1.65; padding:0 32px 64px; }
+  .container { max-width:1080px; margin:0 auto; }
+  .backlink { position:fixed; top:12px; left:16px; z-index:101; font-family:var(--font-mono); font-size:12px; color:var(--text-dim); text-decoration:none; padding:6px 10px; border:1px solid var(--border); border-radius:6px; background:var(--surface); }
+  .backlink:hover { color:var(--primary); border-color:var(--primary); }
+  .nav { position:sticky; top:0; z-index:100; backdrop-filter:blur(16px); background:color-mix(in srgb, var(--surface) 85%, transparent); border-bottom:1px solid var(--border); margin:0 -32px 28px; padding:0 32px; }
+  .nav-inner { max-width:1080px; margin:0 auto; padding:10px 0; display:flex; align-items:center; justify-content:space-between; }
+  .nav-brand { font-family:var(--font-mono); font-size:11px; font-weight:600; letter-spacing:0.5px; color:var(--metric); }
+  .theme-toggle { width:32px; height:32px; border-radius:8px; border:1px solid var(--border); background:var(--surface); cursor:pointer; font-size:14px; color:var(--text-dim); }
+  .theme-toggle:hover { border-color:var(--primary); color:var(--primary); }
+  .hero { text-align:center; padding:36px 0 28px; }
+  .hero h1 { font-size:44px; font-weight:700; letter-spacing:-0.5px; color:var(--metric); margin-bottom:10px; }
+  .hero .lead { font-size:19px; color:var(--text-dim); max-width:720px; margin:0 auto; }
+  h2 { font-size:24px; font-weight:700; margin:44px 0 18px; color:var(--text); }
+  h3 { font-size:17px; font-weight:700; margin:20px 0 8px; color:var(--text); }
+  p { color:var(--text-dim); margin:0 0 14px; font-size:16px; }
+  p strong { color:var(--text); }
+
+  .round { background:var(--surface); border:1px solid var(--border); border-left:3px solid var(--primary); border-radius:0 10px 10px 0; padding:20px 24px; margin:18px 0; }
+  .round h3 { font-family:var(--font-mono); font-size:12px; font-weight:700; text-transform:uppercase; letter-spacing:0.6px; color:var(--primary); margin:0 0 10px; }
+  .score { font-family:var(--font-mono); font-size:13px; color:var(--metric); background:var(--metric-dim); border-radius:6px; padding:8px 12px; display:inline-block; margin:0 0 12px; }
+  .label { font-family:var(--font-mono); font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:0.5px; color:var(--text-muted); margin:14px 0 4px; }
+
+  table { width:100%; border-collapse:collapse; margin:16px 0; font-family:var(--font-mono); font-size:13px; background:var(--surface2); border:1px solid var(--border); border-radius:8px; overflow:hidden; }
+  th { text-align:left; padding:10px 14px; border-bottom:2px solid var(--border); color:var(--text-muted); font-size:11px; text-transform:uppercase; letter-spacing:0.5px; }
+  td { padding:9px 14px; border-bottom:1px solid var(--border); color:var(--text-dim); }
+  td:last-child { font-weight:700; }
+  td.win-a { color:var(--primary); }
+  td.win-b { color:var(--trackb); }
+  td.tie { color:var(--metric); }
+
+  ol { margin:0 0 16px 22px; color:var(--text-dim); }
+  ol li { margin-bottom:10px; font-size:16px; }
+  ol li strong { color:var(--text); }
+
+  .mechanism { background:var(--secondary-dim); border:1px solid var(--border); border-radius:8px; padding:14px 18px; margin:12px 0; }
+  .mechanism li { color:var(--text-dim); }
+
+  .symmetry { background:var(--trackb-dim); border:1px solid var(--border); border-radius:10px; padding:18px 22px; margin:20px 0; }
+  .symmetry p { color:var(--text-dim); }
+
+  .footer { margin-top:48px; padding-top:16px; border-top:1px solid var(--border); text-align:center; font-size:13px; color:var(--text-muted); }
+</style>
+</head>
+<body>
+<a href="../index.html" class="backlink">&larr; Index</a>
+<div class="nav"><div class="nav-inner"><span class="nav-brand">SIMULATION REVISION LOG</span><button class="theme-toggle" id="themeToggle" aria-label="Toggle dark mode">&#9788;</button></div></div>
+<div class="container">
+
+  <div class="hero">
+    <h1>Simulation Revision Log</h1>
+    <div class="lead">How the model got aligned. Each round: the numbers, what they showed, the mechanism, what we changed, why.</div>
+  </div>
+
+  <p>The metric that matters is <strong>translation debt</strong> — the fraction of decisions where meaning gets lost at a handoff. Lower is better. A "win" is &ge;5 points lower over the back half of the run.</p>
+
+  <div class="round">
+    <h3>Round 1 — baseline</h3>
+    <p>Track B was a straw man. It had Kotter phases and steering committees but never touched the workflow. Track A got all the mechanics.</p>
+    <span class="score">Score (mock, 12 sprints): trust gap B&minus;A = &minus;0.73 — the test wanted B &gt; A and failed</span>
+    <p class="label">What we saw</p>
+    <p>B "improved" nothing because it was wired to do nothing. The contest was decided before it started.</p>
+    <p class="label">What we revised</p>
+    <p>Gave B real mechanics — a-priori seam standardization in waves, with per-seam success proportional to how codifiable the seam is, and regression under change fatigue. Made translation debt <strong>state-derived</strong> (<code>not context_complete</code>), not a keyword scan of the LLM's prose.</p>
+    <p class="label">Why</p>
+    <p>A comparison with one working side isn't a comparison. B needed to actually pull the same levers as A, just with different dynamics.</p>
+  </div>
+
+  <div class="round">
+    <h3>Round 2 — B has mechanics (mock)</h3>
+    <span class="score">Score (mock, 16 sprints): translation debt A &rarr; 0%, B &rarr; 19%</span>
+    <p class="label">What we saw</p>
+    <p>B now acts, but A still wins on the mock. We suspected the mock flattered A (its deterministic <code>request_info</code> feeds A's evidence gate perfectly) and needed the real thing.</p>
+    <p class="label">What we revised</p>
+    <p>Wired the sweep to real DeepSeek runs, added the knobs that decide the winner (<code>seam_gap_profile</code>, <code>vendor_quality</code>, horizon, turbulence, decision latency).</p>
+    <p class="label">Why</p>
+    <p>The mock only exercises one regime. The whole point was to see if B could win under B-favoring conditions, and that needs the real LLM.</p>
+  </div>
+
+  <div class="round">
+    <h3>Round 3 — first real sweep (DeepSeek, 6 runs)</h3>
+    <table>
+      <thead><tr><th>run</th><th>A debt</th><th>B debt</th><th>winner</th></tr></thead>
+      <tbody>
+        <tr><td>S1 codifiable &middot; seed 19</td><td>4.6</td><td>22.6</td><td class="win-a">A</td></tr>
+        <tr><td>S1 codifiable &middot; seed 34</td><td>5.7</td><td>23.4</td><td class="win-a">A</td></tr>
+        <tr><td>S2 tacit &middot; seed 26</td><td>3.2</td><td>25.5</td><td class="win-a">A</td></tr>
+        <tr><td>S2 tacit &middot; seed 11</td><td>3.1</td><td>26.6</td><td class="win-a">A</td></tr>
+        <tr><td>S3 mixed &middot; seed 13</td><td>1.9</td><td>21.5</td><td class="win-a">A</td></tr>
+        <tr><td>S3 mixed &middot; seed 30</td><td>3.6</td><td>21.9</td><td class="win-a">A</td></tr>
+      </tbody>
+    </table>
+    <p class="label">What we saw</p>
+    <p>A won all six, even the "B should win" cell. B's debt pinned at ~21&ndash;27% in every scenario, insensitive to every knob — the signature of a structural bias.</p>
+    <p class="label">Mechanism (from the trace)</p>
+    <p>B's waves standardized the <em>wrong</em> seams — it hit the high-risk-but-already-clean AI steps (<code>damage_estimation_ai</code>, <code>subro_recovery_assessment</code>, <code>approval</code>) while <em>missing</em> the gappy codifiable seam <code>coverage_verification_ai</code> outright. And the seams it did complete reverted almost instantly (<code>fnol_intake</code> was completed and regressed in the same sprint). A, meanwhile, completed the actually-gappy seams durably, one observed failure at a time.</p>
+    <p class="label">What we revised (three bugs)</p>
+    <div class="mechanism">
+      <ol>
+        <li><strong>B fixed the wrong seams</strong> — ranked by static risk, not by what was actually broken.</li>
+        <li><strong>B's fixes washed off</strong> — reversion on a flat timer, self-reinforcing.</li>
+        <li><strong>B got one chance</strong> — a missed seam stayed broken forever.</li>
+      </ol>
+    </div>
+    <p class="label">Why</p>
+    <p>Each fix is grounded in what real change management does (Prosci/Kotter). Target what's broken. Revert <em>under pressure</em>, not on a timer. Keep working what slips.</p>
+  </div>
+
+  <div class="round">
+    <h3>Round 4 — fairness fixes (DeepSeek, re-running)</h3>
+    <table>
+      <thead><tr><th>run</th><th>A debt</th><th>B debt</th><th>winner</th></tr></thead>
+      <tbody>
+        <tr><td>S1 codifiable &middot; seed 19</td><td>4.9</td><td>5.1</td><td class="tie">tie</td></tr>
+        <tr><td>S1 codifiable &middot; seed 34</td><td>7.6</td><td>7.6</td><td class="tie">tie</td></tr>
+        <tr><td>S2 tacit &middot; seed 26</td><td>4.1</td><td>17.3</td><td class="win-a">A</td></tr>
+        <tr><td>S2 tacit &middot; seed 11</td><td>3.4</td><td>14.6</td><td class="win-a">A</td></tr>
+        <tr><td>S3 mixed &middot; seed 13</td><td>2.0</td><td>9.1</td><td class="win-a">A</td></tr>
+        <tr><td>S3 mixed &middot; seed 30</td><td>3.3</td><td>12.2</td><td class="win-a">A</td></tr>
+      </tbody>
+    </table>
+    <p class="label">What we saw</p>
+    <p>B's debt collapsed from ~23 to ~5 in the codifiable cell — a tie, not an 18-point loss. B is now genuinely competitive where it should be, and A still wins the tacit cell. But the codifiable cell <em>ties</em> rather than flips, and the mixed cell still goes to A on both seeds.</p>
+    <p class="label">Mechanism (from the trace)</p>
+    <ul>
+      <li><strong>Codifiable (S1):</strong> B completed all four gappy seams (<code>fnol_intake</code>, <code>coverage_verification_ai</code>, <code>settlement_ai</code>, <code>payment</code>), retrying the ones it initially missed, with <strong>zero regression</strong> in the calm environment. That's why it tied A.</li>
+      <li><strong>Tacit (S2):</strong> B hammered the tacit seams it can't see — <code>settlement_human</code> missed <strong>10 times</strong> — and the few it landed regressed. A's evidence-built fixes held. A wins.</li>
+    </ul>
+    <p class="label">What this means</p>
+    <p>The three fixes made B <em>competitive</em> (no longer a guaranteed loser), but they didn't reach a clean B-win. The remaining gap is B's a-priori design accuracy — 51&ndash;72% on codifiable seams — which isn't high enough to beat A's durability, even in calm, short, good-vendor conditions. Honest conclusion: B is no longer rigged to lose, but it's a contest B still doesn't <em>win</em>. To get a genuine B-win, <code>design_accuracy_base</code> has to rise, or the "codifiable" profile has to use genuinely low-tacitness seams (below ~0.2, not 0.15&ndash;0.4).</p>
+  </div>
+
+  <h2>What this teaches us about a better Track A</h2>
+  <p>Collected across the rounds, the sim is pointing at a specific design question:</p>
+  <ol>
+    <li><strong>A's edge is durability, not intelligence.</strong> A fixes the <em>root cause</em> — the gappy handoff where meaning is lost — and the fix sticks because the team built it from their own evidence. B fixes the <em>symptom</em> (a template, a dashboard) and it washes off. The winning ingredient is ownership, not speed.</li>
+    <li><strong>B's edge is breadth, not accuracy.</strong> B covers everything fast but is blind to tacit seams and can't hold what it takes. A sees clearly but moves one seam at a time.</li>
+    <li><strong>The next model is the question between them:</strong> can you get A's durability with B's breadth? Evidence-gated fixes that land fast and cover more than one seam per two sprints. The current sim is the instrument for testing that — the traces show exactly where A leaks time (learning lag, throughput cap) and where B leaks trust (regression).</li>
+  </ol>
+
+  <h2>What this teaches us about a better Track B</h2>
+  <p>The same trace reads the other way. B's failures aren't random; each one names a specific fix.</p>
+  <ol>
+    <li><strong>Keep the breadth, aim it.</strong> B's structural edge is covering everything fast. Its mistake was ranking by a static risk score and polishing already-clean handoffs while the broken ones leaked. A better B keeps the big-bang coverage but spends it on the seams where debt actually lives — the gappy ones.</li>
+    <li><strong>Actually do Consolidate and Anchor.</strong> Kotter's model has two whole phases for re-sustaining change that slips. B's implementation skipped them — it fired a flat regression timer instead of following up. The sim showed <code>fnol_intake</code> completed and reverted in the same sprint. A better B measures adoption and re-anchors when it dips, instead of letting it wash off.</li>
+    <li><strong>Know what you can't standardize.</strong> B is blind to tacit seams — the trace shows it missing <code>settlement_human</code> ten times, hammering judgment work it can't template. A better B would spend its a-priori budget on the codifiable seams (schemas, thresholds, payment rails) where its design is accurate, and <em>not</em> impose a RACI template on negotiation and liability where it isn't. Honesty about the limit is the fix.</li>
+    <li><strong>Measure absorption, not activation.</strong> B's steering committee reviews licenses and training completions — vanity metrics. The SWT warning is exact here: usage means people have access; absorption means the org can carry the change. A better B wires the committee to the outcome (translation debt) so governance closes the loop instead of spinning.</li>
+  </ol>
+
+  <div class="symmetry">
+    <p>The symmetry is the point. A better A leans toward B's breadth. A better B leans toward A's ownership. They're two ends of one axis — speed versus absorption — and the best transformation is the one that refuses to choose.</p>
+    <p>Each round of revision is tightening the instrument. The winner is the least interesting output; the <em>how and why</em> is what lets us build a better Track A, a better Track B, and a more faithful sim.</p>
+  </div>
+
+  <div class="footer">
+    &copy; 2025-2026 Charlie Fuller &nbsp;&middot;&nbsp; <a href="https://linkedin.com/in/charlie-fuller-colorado/" target="_blank" rel="noopener">LinkedIn</a>
+  </div>
+</div>
+<script>
+  (function() {
+    var toggle = document.getElementById('themeToggle');
+    if (!toggle) return;
+    function setTheme(d) {
+      document.documentElement.classList.toggle('dark', d);
+      toggle.innerHTML = d ? '&#9790;' : '&#9788;';
+      try { localStorage.setItem('diagram-theme', d ? 'dark' : 'light'); } catch(e) {}
+    }
+    toggle.addEventListener('click', function() {
+      setTheme(!document.documentElement.classList.contains('dark'));
+    });
+    try { if (localStorage.getItem('diagram-theme') === 'dark') setTheme(true); } catch(e) {}
+  })();
+</script>
+</body>
+</html>
