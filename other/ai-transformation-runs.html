@@ -9,6 +9,11 @@
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600;9..144,700&family=Source+Code+Pro:wght@400;600&display=swap" rel="stylesheet">
 <style>
   :root {
+    --bg: #eef4f9; --surface: #ffffff; --surface2: #f5f8fc; --border: #c8daea;
+    --text: #0a1628; --text-dim: #3d5a7a; --text-muted: #6b8bab;
+    --orange: #e8621a; --blue: #4a90c4; --green: #3a9a7f; --red: #c93a4d;
+  }
+  html.dark {
     --bg: #0a1628; --surface: #0f1d35; --surface2: #132240; --border: #1a2d52;
     --text: #e8edf5; --text-dim: #9bb0d4; --text-muted: #5e7aa3;
     --orange: #f37021; --blue: #6cace4; --green: #4caf93; --red: #e0556a;
@@ -36,10 +41,22 @@
     border: 1px solid var(--border); border-radius: 6px; background: var(--surface);
   }
   .backlink:hover { color: var(--orange); border-color: var(--orange); }
+  .theme-toggle {
+    position: fixed; top: 12px; right: 16px; z-index: 101;
+    width: 36px; height: 36px; border-radius: 8px;
+    border: 1px solid var(--border); background: var(--surface);
+    cursor: pointer; display: flex; align-items: center; justify-content: center;
+    font-size: 18px; color: var(--text-dim); transition: all 0.2s;
+  }
+  .theme-toggle:hover { border-color: var(--orange); color: var(--orange); }
 </style>
 </head>
 <body>
 <a class="backlink" href="ai-transformation-results.html">← Back to results</a>
+<button class="theme-toggle" id="themeToggle" aria-label="Toggle dark mode">
+  <span class="icon-light">&#9788;</span>
+  <span class="icon-dark" style="display:none">&#9790;</span>
+</button>
 <div class="container">
   <h1>AI Transformation Experiment — Cross-Run Comparison</h1>
   <div class="panel" style="border-left:4px solid var(--orange);">
@@ -61,5 +78,18 @@
     &copy; 2025-2026 Charlie Fuller &nbsp;&middot;&nbsp; <a href="https://linkedin.com/in/charlie-fuller-colorado/" target="_blank" rel="noopener">LinkedIn</a>
   </div>
 </div>
+<script>
+  const toggle = document.getElementById('themeToggle');
+  const iconLight = toggle.querySelector('.icon-light');
+  const iconDark = toggle.querySelector('.icon-dark');
+  function setTheme(d) {
+    document.documentElement.classList.toggle('dark', d);
+    iconLight.style.display = d ? 'none' : '';
+    iconDark.style.display = d ? '' : 'none';
+    try { localStorage.setItem('diagram-theme', d ? 'dark' : 'light'); } catch(e) {}
+  }
+  toggle.addEventListener('click', () => setTheme(!document.documentElement.classList.contains('dark')));
+  try { if (localStorage.getItem('diagram-theme') === 'dark') setTheme(true); } catch(e) {}
+</script>
 </body>
 </html>
