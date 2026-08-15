@@ -200,27 +200,25 @@
   </div>
 
   <div class="round" style="border-left-color:var(--metric);">
-    <h3 style="color:var(--metric);">Round 6 — cross-run reproducibility</h3>
-    <p>A second independent review confirmed the Round 5 rig is gone (it re-derived the translation-debt number straight from the raw decision log and got an exact match — <strong>0.0 disagreement</strong> between the log and the reported metric). But it caught a real bug that Round 5's own determinism check was too weak to see.</p>
-    <p class="label">What we found — same seed, same code, different answers</p>
-    <p>Running the identical seed in <em>separate program launches</em> gave different headline numbers each time (the translation-debt total is shown; a "wobble" of ~12%). Forcing Python's randomness key to a fixed value made them snap back to identical — proving the drift came from launch-to-launch randomness, not the model:</p>
+    <h3 style="color:var(--metric);">Round 6 — can someone else get the same numbers?</h3>
+    <p>A scientific result should be repeatable: run it again, get the same answer. A fresh review checked that — and found the sim was giving slightly <em>different</em> numbers each time it ran, even with everything set the same. That's a reproducibility bug, and it's worth fixing before anyone trusts the numbers.</p>
+    <p class="label">What we found</p>
+    <p>Same settings, run three times, three different answers — a wobble of about 12%:</p>
     <table>
-      <thead><tr><th>same seed, 3 launches</th><th>run 1</th><th>run 2</th><th>run 3</th><th>reproducible?</th></tr></thead>
+      <thead><tr><th>same settings, 3 runs</th><th>run 1</th><th>run 2</th><th>run 3</th><th>same answer?</th></tr></thead>
       <tbody>
-        <tr><td>before fix (default)</td><td>129.1</td><td>124.2</td><td>139.1</td><td class="win-b">no</td></tr>
-        <tr><td>before fix (key pinned)</td><td>184.2</td><td>184.2</td><td>184.2</td><td class="tie">yes*</td></tr>
-        <tr><td>after fix (default)</td><td>124.2</td><td>124.2</td><td>124.2</td><td class="win-a">yes</td></tr>
+        <tr><td>before the fix</td><td>129</td><td>124</td><td>139</td><td class="win-b">no</td></tr>
+        <tr><td>after the fix</td><td>124</td><td>124</td><td>124</td><td class="win-a">yes</td></tr>
       </tbody>
     </table>
-    <p style="font-size:13px;color:var(--text-muted);">*pinning the key works but is fragile — it only helps if every launch remembers to set it. The fix makes reproducibility automatic. (Round 5 "verified" determinism by running both trials <em>inside one program</em>, which shares that key by construction — so it structurally could never have caught this.)</p>
-    <p class="label">Why</p>
-    <p>Python shuffles the iteration order of <strong>sets</strong> differently on every launch. One spot iterated a set of employees while drawing the random "who leaves this quarter" number for each — so a different launch dealt the same random draws to different people, changing who departed, which cascaded into every downstream metric. (Ordinary lists and dictionaries keep their order; only sets shuffle — so it was one specific spot, not a pervasive rot.)</p>
+    <p class="label">Why it happened</p>
+    <p>The sim decides "who leaves the company this quarter" by going down the list of employees and rolling the dice for each. The catch: the program was building that list in a slightly different order every time it started up. Same dice, dealt to people in a different order &rarr; different people left &rarr; every downstream number shifted. The randomness itself was fine; the <em>order</em> it got applied in wasn't fixed.</p>
     <p class="label">What we changed</p>
-    <p>Sort that set before iterating it, so the random draws always map to people in the same order — <strong>on any machine, any launch</strong>. We chose sorting over forcing an environment setting because sorting is durable: it survives someone running a script directly, and it lets any <em>future</em> version of this bug fail loudly instead of hiding.</p>
-    <p class="label">Verified (properly this time)</p>
-    <p><strong>4 separate launches</strong> now produce a byte-identical fingerprint across <strong>8 metrics × 2 tracks</strong> (a single hash, <code>f830e46…</code>, matched every time). We reproduced the bug first, then confirmed the one-line sort closed it, with all checks still passing.</p>
-    <p class="label">Scope, kept honest</p>
-    <p>This only affected whether someone else re-running the sim gets the <em>exact same absolute numbers</em>. It never touched the A-vs-B conclusions (both tracks always shared the same randomness within a run) or the "no longer rigged" verdict. The other open items the review noted — B can't win an outcome metric (an honest consequence of design accuracy on judgment work, disclosed not hidden), an inert veto lever, B's floor-pinned margins — are documented limitations, not bugs.</p>
+    <p>Put the employee list in a fixed, sorted order before rolling. Now the same dice always land on the same people, on any computer, every run.</p>
+    <p class="label">Verified</p>
+    <p>We reproduced the wobble first, applied the one-line fix, then ran it several more times — identical numbers every time. All other checks still pass.</p>
+    <p class="label">What this does and doesn't change</p>
+    <p>This was only about <em>repeatability</em> — whether you and I get the exact same number from the same run. It never touched who wins A vs B or the "no longer rigged" verdict; within any single run both approaches always played by the same rules. It just means the published numbers can now be re-checked by anyone.</p>
   </div>
 
   <h2>What this teaches us about a better Track A</h2>
