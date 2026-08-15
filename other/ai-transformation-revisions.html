@@ -158,8 +158,60 @@
       <li><strong>Predictable:</strong> B completed all four broken seams (intake, coverage check, settlement, payment), retrying the ones it initially missed, with <strong>zero backsliding</strong> in the calm environment. That's why it tied A.</li>
       <li><strong>Judgment:</strong> B hammered the seams it can't see — the human negotiation step missed <strong>10 times</strong> — and the few it landed reverted. A's evidence-built fixes held. A wins.</li>
     </ul>
-    <p class="label">What this means</p>
-    <p>The three fixes made B competitive (no longer a guaranteed loser), but they didn't reach a clean B-win. The remaining gap is how accurate B's upfront design is — 51&ndash;72% on predictable seams — which isn't high enough to beat A's durability, even in calm, short, good-vendor conditions. Honest conclusion: B is no longer rigged to lose, but it's a contest B still doesn't win. To get a genuine B-win, its upfront design has to get more accurate, or the "predictable" scenario has to use genuinely predictable seams (below ~0.2 on the predictability scale, not 0.15&ndash;0.4).</p>
+    <p class="label">What this means <span style="font-weight:400;color:var(--text-muted);">(revised by Round 5)</span></p>
+    <p>The three fixes made B competitive (no longer a guaranteed loser), but they didn't reach a clean B-win. At the time we read this as an honest verdict: B is no longer rigged to lose, but it's a contest B still doesn't win. <strong>Round 5 showed that verdict was premature</strong> — the predictable cell tied instead of flipping because Track A still had a hidden head start we hadn't found yet.</p>
+  </div>
+
+  <div class="round" style="border-left-color:var(--trackb);">
+    <h3 style="color:var(--trackb);">Round 5 — adversarial audit &amp; de-rigging</h3>
+    <p>An independent, adversarial review audited the whole model with one question: is either side <em>still</em> favored by construction rather than by conditions? It found two places where the outcome was quietly written in — both pointing at Track A — plus a reproducibility bug.</p>
+    <p class="label">What the audit found</p>
+    <div class="mechanism">
+      <ol>
+        <li><strong>A could sharpen a seam it had never watched break.</strong> A's rule is that it's blind to failures it hasn't observed — that blindness is its honest cost. But the code let A improve the worst AI seam every cycle whether or not it had seen that seam fail: a free, recurring head start that bypassed A's own constraint. <em>This is why the predictable cell tied instead of flipping to B.</em></li>
+        <li><strong>Employee trust-in-AI was hand-set to drift apart.</strong> Two tuned constants nudged B's trust up and held A's flat every sprint — the comment literally said they were "calibrated so B climbs and A holds." The outcome was an input.</li>
+        <li><strong>Same seed didn't reproduce.</strong> Three sources of randomness on A's side were unseeded, so two identical runs could diverge.</li>
+      </ol>
+    </div>
+    <p class="label">What we changed</p>
+    <p>A can now only sharpen seams it has actually watched fail — <strong>kept the durability</strong> (its fixes still don't wash off; that's legitimate) and <strong>removed the omniscience</strong>. Trust now emerges for <strong>both sides from the same thing</strong>: what agents actually experience when the AI succeeds or fails. And every source of randomness is seeded.</p>
+    <p class="label">Verified</p>
+    <ul>
+      <li>Two same-seed runs now match <strong>within a single process</strong> (they didn't before). <em>Round 6 found this check was too weak and hardened it.</em></li>
+      <li>Trust comes out <strong>close and earned</strong> — A 6.8, B 6.7 — instead of forced apart.</li>
+      <li>Both sides now share the <strong>same starting debt</strong> and separate only by conditions, not by construction.</li>
+    </ul>
+    <p class="label">Result — the real 6-run sweep (DeepSeek)</p>
+    <table>
+      <thead><tr><th>run</th><th>A debt</th><th>B debt</th><th>Δ(A−B)</th><th>winner</th></tr></thead>
+      <tbody>
+        <tr><td>Predictable &middot; seed 19</td><td>5.85</td><td>5.53</td><td>+0.32</td><td class="tie">tie</td></tr>
+        <tr><td>Predictable &middot; seed 34</td><td>6.00</td><td>5.60</td><td>+0.40</td><td class="tie">tie</td></tr>
+        <tr><td>Judgment &middot; seed 26</td><td>3.88</td><td>15.29</td><td>&minus;11.41</td><td class="win-a">A</td></tr>
+        <tr><td>Judgment &middot; seed 11</td><td>2.23</td><td>2.23</td><td>+0.00</td><td class="tie">tie</td></tr>
+        <tr><td>Mixed &middot; seed 13</td><td>2.20</td><td>8.37</td><td>&minus;6.17</td><td class="win-a">A</td></tr>
+        <tr><td>Mixed &middot; seed 30</td><td>4.07</td><td>12.01</td><td>&minus;7.95</td><td class="win-a">A</td></tr>
+      </tbody>
+    </table>
+    <p class="label">What actually happened — my prediction was wrong on both counts</p>
+    <p>I predicted the predictable cell would <em>flip to B</em> and the judgment cell would <em>stay a clean A-win</em>. Neither held. The predictable cell stayed a <strong>tie</strong> (though both seeds now lean B, where before they were even) — removing A's crutch narrowed the gap but didn't hand B the win. And the judgment cell went from a clean A-sweep to <strong>A + tie</strong> — one of A's two tacit wins softened to a dead heat once its free head-start was gone. Three A-wins, three ties, zero clean B-wins.</p>
+    <p class="label">The honest read — a map, not a scoreboard</p>
+    <p>The point was never to make B win. It was to see whether the winner emerges from conditions. It does: <strong>A's advantage concentrates where the work is tacit or mixed and turbulent</strong> (it wins the judgment and both mixed cells, by 6&ndash;11 points) and <strong>evaporates to a tie where the work is codifiable and calm</strong> (the predictable cell is a wash). That A no longer wins <em>everything</em> — that a fake A-win collapsed to a tie the moment the crutch came out — is the de-rigging working. That B never gets a clean win is an honest limitation, not a rig: B's a-priori design accuracy is capped on judgment seams it can't template, so it converges to A on codifiable work and loses on tacit work. Disclosed, not hidden. The meaningful output is the regime map: <strong>ownership wins where meaning is tacit; the approaches converge where meaning is codifiable.</strong></p>
+  </div>
+
+  <div class="round" style="border-left-color:var(--metric);">
+    <h3 style="color:var(--metric);">Round 6 — cross-run reproducibility</h3>
+    <p>A second independent review confirmed the Round 5 rig is gone (it re-derived the translation-debt number straight from the raw decision log and got an exact match — <strong>0.0 disagreement</strong>). But it caught a real bug that Round 5's own determinism check was too weak to see.</p>
+    <p class="label">What we found</p>
+    <p>Run the same seed twice in <em>two separate program launches</em> and the headline numbers drifted (one metric came back 129, then 124, then 139). Round 5 had "verified" determinism by running both trials <em>inside one program</em> — which shares a hidden randomness key by construction, so it could never have caught this.</p>
+    <p class="label">Why</p>
+    <p>Python shuffles the iteration order of <strong>sets</strong> differently on every launch. One spot iterated a set of employees while drawing the random "who leaves this quarter" number for each — so a different launch dealt the same random draws to different people, changing who departed, which cascaded into every downstream metric. (Ordinary lists and dictionaries keep their order; only sets shuffle — so it was one specific spot, not a pervasive rot.)</p>
+    <p class="label">What we changed</p>
+    <p>Sort that set before iterating it, so the random draws always map to people in the same order — <strong>on any machine, any launch</strong>. We chose sorting over forcing an environment setting because sorting is durable: it survives someone running a script directly, and it lets any <em>future</em> version of this bug fail loudly instead of hiding.</p>
+    <p class="label">Verified (properly this time)</p>
+    <p>Four separate launches now produce a byte-identical fingerprint across eight metrics on both tracks. We reproduced the bug first, then confirmed the one-line sort closed it, with all checks still passing.</p>
+    <p class="label">Scope, kept honest</p>
+    <p>This only affected whether someone else re-running the sim gets the <em>exact same absolute numbers</em>. It never touched the A-vs-B conclusions (both tracks always shared the same randomness within a run) or the "no longer rigged" verdict. The other open items the review noted — B can't win an outcome metric (an honest consequence of design accuracy on judgment work, disclosed not hidden), an inert veto lever, B's floor-pinned margins — are documented limitations, not bugs.</p>
   </div>
 
   <h2>What this teaches us about a better Track A</h2>
@@ -183,6 +235,11 @@
     <p>The symmetry is the point. A better A leans toward B's breadth. A better B leans toward A's ownership. They're two ends of one axis — speed versus absorption — and the best transformation is the one that refuses to choose.</p>
     <p>Each round of revision tightens the model. The winner is the least interesting output; the <em>how and why</em> is what lets us build a better Track A, a better Track B, and a more faithful sim.</p>
   </div>
+
+  <p style="text-align:center;margin-top:24px;font-family:var(--font-mono);font-size:13px;">
+    Authoritative full run (post-fix, 16 sprints, seed 42):
+    <a href="ai-transformation-results.html" style="color:var(--primary);">see the results dashboard &rarr;</a>
+  </p>
 
   <div class="footer">
     &copy; 2025-2026 Charlie Fuller &nbsp;&middot;&nbsp; <a href="https://linkedin.com/in/charlie-fuller-colorado/" target="_blank" rel="noopener">LinkedIn</a>
