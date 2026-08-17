@@ -4,8 +4,8 @@
 <meta charset="UTF-8">
 <link rel="icon" type="image/svg+xml" href="../icon.svg">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<meta name="description" content="How deterministic NLP preprocessing — text normalization and clause-aware segmentation — fixes the naive period-splitting that fragments contract clauses in retrieval.">
-<title>Legal AI OS — NLP Preprocessing: Before &amp; After</title>
+<meta name="description" content="How a contract gets split into searchable pieces — the old way cuts sentences in half; the fix keeps whole clauses together for better answers.">
+<title>Legal AI OS — Splitting a Contract the Right Way</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,wght@0,400;0,500;0,600;0,700;0,800;1,400&family=Source+Code+Pro:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -351,15 +351,15 @@
   <!-- Hero -->
   <div class="hero section">
     <div class="hero-badge">Legal AI OS</div>
-    <h1>How NLP Fixes Contract Chunking</h1>
-    <p class="tagline">The same contract, chunked two ways &mdash; naive period-splitting that fragments clauses, and deterministic NLP that keeps them whole.</p>
+    <h1>Splitting a Contract the Right Way</h1>
+    <p class="tagline">The same contract, cut two ways &mdash; one that breaks sentences apart, one that keeps them whole.</p>
   </div>
 
   <!-- ============ BEFORE ============ -->
   <div class="diagram-header section">
-    <div class="diagram-header__num diagram-header__num--rose">Before &mdash; the naive split</div>
-    <h2>Chunking by <code>rfind('.')</code></h2>
-    <div class="diagram-header__subtitle">The last period in the window is often not a sentence end</div>
+    <div class="diagram-header__num diagram-header__num--rose">Before &mdash; the old way</div>
+    <h2>Cut at Every Period</h2>
+    <div class="diagram-header__subtitle">Even periods that aren't the end of a sentence</div>
   </div>
 
   <div class="mermaid-wrap section">
@@ -370,17 +370,16 @@
     </div>
     <pre class="mermaid">
       flowchart TD
-        doc["Contract Document"]
-        extract["Extract Text"]
-        chunk["Chunk Text
-        rfind('.') boundary"]
-        frag["Broken chunks
+        doc["A Contract"]
+        extract["Read the Words"]
+        chunk["Cut at Every Period"]
+        frag["Broken Pieces
         'Acme Corp.' / '§4.2' /
         '$1,250,000.00'"]
-        embed["Embed Chunks"]
-        vector[("Vector Store")]
-        retrieve["Retrieved Fragment"]
-        llm["LLM"]
+        embed["Make It Searchable"]
+        vector[("Searchable Library")]
+        retrieve["Wrong Piece Retrieved"]
+        llm["AI"]
         answer["Answer"]
 
         doc --> extract
@@ -405,14 +404,14 @@
   </div>
 
   <div class="diagram-label diagram-label--rose section">
-    <code>rfind('.')</code> finds the last period, period. In a contract that period is as likely to be <code>Inc.</code>, <code>&sect;4.2</code>, or <code>$1,250,000.00</code> as a real sentence end. The chunk breaks mid-clause, and the fragment gets embedded &mdash; noise you pay for every retrieval.
+    Cut at every period, period. In a contract, a period is as likely to sit inside "Inc.", "&sect;4.2", or "$1,250,000.00" as at the end of a sentence. So the text gets cut in the middle of a clause &mdash; and that broken piece is what the search library stores.
   </div>
 
   <!-- ============ AFTER ============ -->
   <div class="diagram-header section">
-    <div class="diagram-header__num diagram-header__num--secondary">After &mdash; deterministic NLP</div>
-    <h2>Normalize, Then Segment by Clause</h2>
-    <div class="diagram-header__subtitle">Two insertions: a clean step, and a legal-aware boundary</div>
+    <div class="diagram-header__num diagram-header__num--secondary">After &mdash; the fix</div>
+    <h2>Clean It, Then Cut at Real Breaks</h2>
+    <div class="diagram-header__subtitle">Two small changes keep whole clauses intact</div>
   </div>
 
   <div class="mermaid-wrap section">
@@ -423,23 +422,22 @@
     </div>
     <pre class="mermaid">
       flowchart TD
-        doc["Contract Document"]
-        extract["Extract Text"]
-        norm["normalize_text()
-        strip page markers
-        collapse whitespace
-        dedupe headers"]
-        chunk["chunk_text()
-        legal-aware boundary"]
-        seg["split_sentences()
-        knows Inc. / §4.2 /
+        doc["A Contract"]
+        extract["Read the Words"]
+        norm["Clean the Text
+        drop page numbers,
+        repeated headers,
+        stray spaces"]
+        chunk["Cut at Real Sentence Ends"]
+        seg["Knows These Aren't Ends
+        Inc. / §4.2 /
         decimals / U.S."]
-        clean["Whole clauses
-        no mid-ref breaks"]
-        embed["Embed Chunks"]
-        vector[("Vector Store")]
-        retrieve["Retrieved Clause"]
-        llm["LLM"]
+        clean["Whole Clauses
+        nothing cut in half"]
+        embed["Make It Searchable"]
+        vector[("Searchable Library")]
+        retrieve["Right Clause Retrieved"]
+        llm["AI"]
         answer["Answer"]
 
         doc --> extract
@@ -471,44 +469,44 @@
   </div>
 
   <div class="diagram-label diagram-label--secondary section">
-    Same pipeline, two insertions. <code>normalize_text()</code> sits between extraction and chunking. <code>split_sentences()</code> replaces the <code>rfind('.')</code> boundary inside <code>chunk_text()</code>. Nothing downstream changes signature.
+    Same steps, two small changes. First clean the text so it isn't carrying page numbers and junk. Then cut only at real sentence ends &mdash; the kind that know an abbreviation or a section number isn't the end of a thought.
   </div>
 
   <!-- ============ THE TWO INSERTIONS ============ -->
   <div class="insertions section">
     <div class="insertion-card">
-      <div class="insertion-card__tag insertion-card__tag--teal">Insertion 1 &mdash; normalize</div>
-      <h3><code>normalize_text()</code></h3>
-      <p>Strips injected page markers, collapses whitespace, and drops repeated header/footer lines before anything gets embedded. Cleaner tokens &rarr; tighter vectors. Deterministic, replayable, no model call.</p>
+      <div class="insertion-card__tag insertion-card__tag--teal">First &mdash; clean it</div>
+      <h3>Strip the noise</h3>
+      <p>Drop page numbers, repeated headers, and stray spaces before anything gets searched. Clean text searches better, and the cleanup is free and instant.</p>
     </div>
     <div class="insertion-card">
-      <div class="insertion-card__tag insertion-card__tag--violet">Insertion 2 &mdash; segment</div>
-      <h3><code>split_sentences()</code></h3>
-      <p>Replaces the naive period test with legal-aware boundary detection. Knows the difference between a sentence end and an abbreviation, section reference, decimal, or jurisdiction. Chunks land on whole clauses.</p>
+      <div class="insertion-card__tag insertion-card__tag--violet">Second &mdash; cut at real breaks</div>
+      <h3>Respect the sentence</h3>
+      <p>Know the difference between a real sentence end and an abbreviation, a section number, or a dollar amount. So pieces stay whole instead of getting cut in half.</p>
     </div>
   </div>
 
   <!-- ============ SUMMARY ============ -->
   <div class="summary-header section">
     <h2>What changes</h2>
-    <p>Three wins, all before the LLM ever sees the text</p>
+    <p>Three wins, all before the AI ever reads the text</p>
   </div>
 
   <div class="summary-grid section">
     <div class="summary-card">
       <div class="summary-card__bar summary-card__bar--secondary"></div>
-      <div class="summary-card__title">Better embeddings</div>
-      <div class="summary-card__text">Whole clauses instead of mid-reference fragments. Retrieval returns the actual provision, not half a section number.</div>
+      <div class="summary-card__title">Better search results</div>
+      <div class="summary-card__text">Whole clauses instead of half a section number. The AI finds the actual provision, not a fragment.</div>
     </div>
     <div class="summary-card">
       <div class="summary-card__bar summary-card__bar--rose"></div>
-      <div class="summary-card__title">Cheaper audit trail</div>
-      <div class="summary-card__text">Structure is deterministic, so it replays identically. The "prove it" query gets a rule, not a model guess.</div>
+      <div class="summary-card__title">A trail you can trust</div>
+      <div class="summary-card__text">The same text gives the same result, every time. You can show your work.</div>
     </div>
     <div class="summary-card">
       <div class="summary-card__bar summary-card__bar--violet"></div>
-      <div class="summary-card__title">No LLM call for structure</div>
-      <div class="summary-card__text">Segmentation and normalization run in milliseconds in-process. Tokens go to judgment, not to deciding where a sentence ends.</div>
+      <div class="summary-card__title">Less AI cost</div>
+      <div class="summary-card__text">Splitting text is free and instant. You only pay the AI for judgment, not for deciding where a sentence ends.</div>
     </div>
   </div>
 
