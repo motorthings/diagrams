@@ -1,0 +1,653 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="The AI Transformation Experiment reported end to end: the theory, the instrument, two seeds of data, and the one claim the evidence does not yet support.">
+<title>AI Transformation Experiment &mdash; Findings Report</title>
+<link rel="icon" type="image/svg+xml" href="../icon.svg">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,wght@0,400;0,500;0,600;0,700;0,800;1,400&family=Source+Code+Pro:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --font-display: 'Fraunces', Georgia, serif;
+    --font-mono: 'Source Code Pro', 'SF Mono', Consolas, monospace;
+    --bg: #eef4f9; --surface: #ffffff; --surface2: #f5f8fc;
+    --border: #c8daea; --border-bright: #a0bedb;
+    --text: #0a1628; --text-dim: #3d5a7a; --text-muted: #7a9ab8;
+    --primary: #e8621a; --primary-dim: rgba(232,98,26,0.08);
+    --secondary: #4a90c4; --secondary-dim: rgba(74,144,196,0.08);
+    --metric: #0f766e; --metric-dim: rgba(15,118,110,0.06);
+    --amber: #b45309; --amber-dim: rgba(180,83,9,0.08);
+    --violet: #7c3aed; --violet-dim: rgba(124,58,237,0.08);
+    --rose: #e11d48; --rose-dim: rgba(225,29,72,0.08);
+    --slate: #475569; --slate-dim: rgba(71,85,105,0.08);
+    --grid: #d9e6f2;
+  }
+  html.dark {
+    --bg: #0a1628; --surface: #132240; --surface2: #1a2d52;
+    --border: #1a2d52; --border-bright: #2d4570;
+    --text: #e8edf5; --text-dim: #9bb0d4; --text-muted: #5e7aa3;
+    --primary: #f37021; --primary-dim: rgba(243,112,33,0.12);
+    --secondary: #6cace4; --secondary-dim: rgba(108,172,228,0.12);
+    --metric: #2dd4bf; --metric-dim: rgba(45,212,191,0.08);
+    --amber: #f59e0b; --amber-dim: rgba(245,158,11,0.12);
+    --violet: #a78bfa; --violet-dim: rgba(167,139,250,0.12);
+    --rose: #fb7185; --rose-dim: rgba(251,113,133,0.12);
+    --slate: #94a3b8; --slate-dim: rgba(148,163,184,0.12);
+    --grid: #21375e;
+  }
+
+  * { margin:0; padding:0; box-sizing:border-box; }
+
+  body {
+    background: var(--bg);
+    background-image:
+      radial-gradient(ellipse at 80% 0%, var(--primary-dim) 0%, transparent 50%),
+      radial-gradient(ellipse at 20% 60%, var(--secondary-dim) 0%, transparent 40%);
+    color: var(--text); font-family: var(--font-display);
+    min-height: 100vh; line-height: 1.6; padding: 0 32px 80px;
+    transition: background 0.3s, color 0.3s;
+  }
+
+  .backlink{position:fixed;top:12px;left:16px;z-index:101;font-family:var(--font-mono,'Source Code Pro',monospace);font-size:12px;color:var(--text-dim,var(--text3));text-decoration:none;padding:6px 10px;border:1px solid var(--border);border-radius:6px;background:var(--surface);transition:color .15s,border-color .15s}
+  .backlink:hover{color:var(--text);border-color:var(--border-bright,var(--text2))}
+
+  .nav {
+    position: sticky; top: 0; z-index: 100;
+    backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px);
+    background: color-mix(in srgb, var(--surface) 85%, transparent);
+    border-bottom: 1px solid var(--border);
+    margin: 0 -32px 32px; padding: 0 32px;
+    transition: background 0.3s, border-color 0.3s;
+  }
+  .nav-inner {
+    max-width: 1000px; margin: 0 auto; padding: 12px 0;
+    display: flex; align-items: center; justify-content: space-between; gap: 16px;
+  }
+  .nav-brand {
+    font-family: var(--font-mono); font-size: 12px; font-weight: 600;
+    letter-spacing: 0.5px; color: var(--primary); text-decoration: none;
+  }
+  .nav-brand:hover { text-decoration: underline; }
+  .theme-toggle {
+    width: 36px; height: 36px; border-radius: 10px; flex-shrink: 0;
+    border: 1px solid var(--border); background: var(--surface);
+    cursor: pointer; display: flex; align-items: center; justify-content: center;
+    font-size: 16px; color: var(--text-dim); transition: all 0.2s;
+  }
+  .theme-toggle:hover { border-color: var(--primary); color: var(--primary); }
+  button:focus-visible, a:focus-visible, summary:focus-visible {
+    outline: 2px solid var(--primary); outline-offset: 2px; border-radius: 4px;
+  }
+
+  .container { max-width: 1000px; margin: 0 auto; }
+
+  .hero { margin-bottom: 40px; }
+  .hero-badge {
+    display: inline-block; font-family: var(--font-mono); font-size: 10px;
+    font-weight: 600; letter-spacing: 1.5px; text-transform: uppercase;
+    color: var(--primary); border: 1px solid var(--primary);
+    padding: 4px 10px; border-radius: 20px; margin-bottom: 16px;
+  }
+  h1 { font-size: 44px; font-weight: 800; line-height: 1.1; color: var(--text); letter-spacing: -0.5px; }
+  .hero-sub { font-size: 17px; color: var(--text-dim); margin-top: 14px; max-width: 70ch; }
+
+  /* rigor chain */
+  .chain {
+    display: flex; align-items: stretch; flex-wrap: wrap; gap: 6px;
+    margin: 26px 0 22px; padding: 16px 18px;
+    background: var(--surface); border: 1px solid var(--border); border-radius: 12px;
+  }
+  .chain-step {
+    display: flex; flex-direction: column; gap: 3px; padding: 8px 12px;
+    border-radius: 8px; border: 1px solid var(--border);
+    background: var(--surface2); flex: 1 1 118px; min-width: 108px;
+  }
+  .chain-n {
+    font-family: var(--font-mono); font-size: 9px; font-weight: 700;
+    letter-spacing: 1.2px; color: var(--text-muted);
+  }
+  .chain-t { font-size: 12px; line-height: 1.3; color: var(--text-dim); font-weight: 500; }
+  .chain-step.suspect { border-color: var(--amber); background: var(--amber-dim); }
+  .chain-step.suspect .chain-n, .chain-step.suspect .chain-t { color: var(--amber); }
+  .chain-step.bad { border-color: var(--rose); background: var(--rose-dim); }
+  .chain-step.bad .chain-n, .chain-step.bad .chain-t { color: var(--rose); }
+  .chain-step.open { border-color: var(--metric); background: var(--metric-dim); }
+  .chain-step.open .chain-n, .chain-step.open .chain-t { color: var(--metric); }
+  .chain-arrow {
+    display: flex; align-items: center; color: var(--text-muted);
+    font-family: var(--font-mono); font-size: 13px; flex: 0 0 auto;
+  }
+  @media (max-width: 760px) { .chain-arrow { display: none; } }
+
+  .section { margin-top: 48px; }
+  .section-label {
+    font-family: var(--font-mono); font-size: 10px; font-weight: 700;
+    letter-spacing: 2px; text-transform: uppercase; color: var(--primary);
+    margin-bottom: 8px;
+  }
+  h2 { font-size: 26px; font-weight: 700; color: var(--text); margin-bottom: 12px; letter-spacing: -0.2px; }
+  h3 { font-size: 19px; font-weight: 600; color: var(--text); margin-bottom: 8px; }
+  p { color: var(--text-dim); margin-bottom: 14px; max-width: 74ch; }
+  p strong, li strong { color: var(--text); font-weight: 600; }
+
+  .card {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 12px; padding: 22px 24px; margin-bottom: 18px;
+  }
+  .card h3 { margin-bottom: 10px; }
+  .card p:last-child { margin-bottom: 0; }
+
+  .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; }
+  .grid3 { display: grid; grid-template-columns: repeat(3,1fr); gap: 14px; }
+
+  .track-card { border-left: 3px solid var(--slate); }
+  .track-a { border-left-color: var(--primary); }
+  .track-b { border-left-color: var(--secondary); }
+  .track-tag {
+    font-family: var(--font-mono); font-size: 10px; font-weight: 700;
+    letter-spacing: 1.5px; text-transform: uppercase; margin-bottom: 6px; display: block;
+  }
+  .track-a .track-tag { color: var(--primary); }
+  .track-b .track-tag { color: var(--secondary); }
+
+  .stat { background: var(--surface2); border: 1px solid var(--border); border-radius: 10px; padding: 14px 16px; }
+  .stat-val { font-family: var(--font-mono); font-size: 22px; font-weight: 700; color: var(--text); line-height: 1.2; }
+  .stat-lab { font-family: var(--font-mono); font-size: 9px; font-weight: 600; letter-spacing: 1px; text-transform: uppercase; color: var(--text-muted); margin-top: 4px; }
+
+  ul { margin: 0 0 14px 20px; color: var(--text-dim); }
+  li { margin-bottom: 6px; }
+
+  .table-wrap { overflow-x: auto; margin-bottom: 18px; border: 1px solid var(--border); border-radius: 12px; background: var(--surface); }
+  table.data-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  .data-table th {
+    font-family: var(--font-mono); font-size: 10px; font-weight: 700;
+    letter-spacing: 1px; text-transform: uppercase; color: var(--text-muted);
+    text-align: left; padding: 12px 14px; border-bottom: 1px solid var(--border); white-space: nowrap;
+  }
+  .data-table td { padding: 11px 14px; border-bottom: 1px solid var(--border); color: var(--text-dim); }
+  .data-table tr:last-child td { border-bottom: none; }
+  .data-table td.num { font-family: var(--font-mono); text-align: right; color: var(--text); }
+  .data-table td.metric-name { font-family: var(--font-mono); font-size: 12px; color: var(--text); }
+
+  .pill { font-family: var(--font-mono); font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: 20px; letter-spacing: 0.5px; white-space: nowrap; }
+  .pill-yes { background: var(--metric-dim); color: var(--metric); border: 1px solid var(--metric); }
+  .pill-no  { background: var(--rose-dim); color: var(--rose); border: 1px solid var(--rose); }
+  .pill-a   { background: var(--primary-dim); color: var(--primary); border: 1px solid var(--primary); }
+  .pill-b   { background: var(--secondary-dim); color: var(--secondary); border: 1px solid var(--secondary); }
+  .pill-tie { background: var(--slate-dim); color: var(--slate); border: 1px solid var(--slate); }
+
+  /* chart */
+  .chart-box { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 20px; margin-bottom: 18px; }
+  .controls { display: flex; flex-wrap: wrap; gap: 18px; margin-bottom: 18px; align-items: flex-end; }
+  .ctrl-group { display: flex; flex-direction: column; gap: 6px; }
+  .ctrl-label { font-family: var(--font-mono); font-size: 9px; font-weight: 700; letter-spacing: 1.2px; text-transform: uppercase; color: var(--text-muted); }
+  .btn-row { display: flex; gap: 6px; flex-wrap: wrap; }
+  .btn {
+    font-family: var(--font-mono); font-size: 11px; font-weight: 600;
+    padding: 7px 12px; border-radius: 7px; cursor: pointer;
+    border: 1px solid var(--border); background: var(--surface2); color: var(--text-dim);
+    transition: all 0.15s;
+  }
+  .btn:hover { border-color: var(--primary); color: var(--primary); }
+  .btn.active { background: var(--primary); border-color: var(--primary); color: #fff; }
+  html.dark .btn.active { color: #0a1628; }
+
+  .legend { display: flex; gap: 20px; flex-wrap: wrap; margin-top: 12px; font-family: var(--font-mono); font-size: 11px; color: var(--text-dim); }
+  .legend span { display: flex; align-items: center; gap: 7px; }
+  .swatch { width: 14px; height: 3px; border-radius: 2px; display: inline-block; }
+  .swatch-dash { background: repeating-linear-gradient(90deg, var(--secondary) 0 4px, transparent 4px 7px); }
+
+  .chart-note { font-size: 13px; color: var(--text-muted); margin-top: 12px; font-style: italic; }
+
+  .callout {
+    border-left: 3px solid var(--amber); background: var(--amber-dim);
+    border-radius: 0 10px 10px 0; padding: 18px 22px; margin: 22px 0;
+  }
+  .callout.rose { border-left-color: var(--rose); background: var(--rose-dim); }
+  .callout.metric { border-left-color: var(--metric); background: var(--metric-dim); }
+  .callout-title {
+    font-family: var(--font-mono); font-size: 10px; font-weight: 700;
+    letter-spacing: 1.5px; text-transform: uppercase; margin-bottom: 8px; color: var(--amber);
+  }
+  .callout.rose .callout-title { color: var(--rose); }
+  .callout.metric .callout-title { color: var(--metric); }
+  .callout p:last-child { margin-bottom: 0; }
+
+  details.collapsible { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; margin-bottom: 12px; }
+  details.collapsible summary {
+    cursor: pointer; padding: 14px 18px; font-weight: 600; font-size: 15px;
+    color: var(--text); list-style: none; display: flex; justify-content: space-between; align-items: center; gap: 12px;
+  }
+  details.collapsible summary::-webkit-details-marker { display: none; }
+  details.collapsible summary::after { content: '+'; font-family: var(--font-mono); color: var(--primary); font-size: 18px; }
+  details.collapsible[open] summary::after { content: '\2212'; }
+  .collapsible__body { padding: 0 18px 18px; }
+  .collapsible__body p:last-child, .collapsible__body ul:last-child { margin-bottom: 0; }
+
+  .finding-id { font-family: var(--font-mono); font-size: 11px; font-weight: 700; color: var(--rose); }
+
+  .footer {
+    margin-top: 56px; padding-top: 22px; border-top: 1px solid var(--border);
+    font-family: var(--font-mono); font-size: 11px; color: var(--text-muted);
+    display: flex; justify-content: space-between; flex-wrap: wrap; gap: 12px;
+  }
+  .footer a { color: var(--text-dim); text-decoration: none; }
+  .footer a:hover { color: var(--primary); }
+
+  .related { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 6px; }
+  .related a {
+    font-family: var(--font-mono); font-size: 11px; text-decoration: none;
+    color: var(--text-dim); border: 1px solid var(--border); background: var(--surface);
+    padding: 6px 11px; border-radius: 7px; transition: all 0.15s;
+  }
+  .related a:hover { border-color: var(--primary); color: var(--primary); }
+
+  @media (max-width: 760px) {
+    body { padding: 0 18px 60px; }
+    .nav { margin: 0 -18px 24px; padding: 0 18px; }
+    h1 { font-size: 28px; }
+    h2 { font-size: 21px; }
+    .grid2, .grid3 { grid-template-columns: 1fr; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after { animation-duration: 0.01ms !important; animation-delay: 0ms !important; transition-duration: 0.01ms !important; }
+  }
+</style>
+</head>
+<body>
+
+<a href="../index.html" class="backlink">&larr; Index</a>
+
+<div class="nav">
+  <div class="nav-inner">
+    <a href="../index.html" class="nav-brand">AI TRANSFORMATION EXPERIMENT</a>
+    <button class="theme-toggle" id="themeToggle" aria-label="Toggle dark mode">
+      <span class="icon-light">&#9788;</span>
+      <span class="icon-dark" style="display:none">&#9790;</span>
+    </button>
+  </div>
+</div>
+
+<div class="container">
+
+  <div class="hero">
+    <span class="hero-badge">Findings Report &middot; 2 seeds &middot; 16 sprints &middot; 1 adversarial audit</span>
+    <h1>I built a simulation that proved my thesis.<br>Then I audited it and found it was cheating.</h1>
+    <p class="hero-sub">You cannot fork a real company to test whether the AI operating model is discovered or designed. So I simulated one. It returned the answer I wanted, which is exactly when a result deserves the least trust. This is the theory, the instrument, the data, and the one claim the evidence still does not support.</p>
+
+    <div class="chain">
+      <div class="chain-step"><span class="chain-n">01</span><span class="chain-t">Build the instrument</span></div>
+      <div class="chain-arrow">&rarr;</div>
+      <div class="chain-step"><span class="chain-n">02</span><span class="chain-t">It confirms my thesis</span></div>
+      <div class="chain-arrow">&rarr;</div>
+      <div class="chain-step suspect"><span class="chain-n">03</span><span class="chain-t">Distrust that</span></div>
+      <div class="chain-arrow">&rarr;</div>
+      <div class="chain-step"><span class="chain-n">04</span><span class="chain-t">Trace every metric to its mutation</span></div>
+      <div class="chain-arrow">&rarr;</div>
+      <div class="chain-step bad"><span class="chain-n">05</span><span class="chain-t">Find the rig</span></div>
+      <div class="chain-arrow">&rarr;</div>
+      <div class="chain-step"><span class="chain-n">06</span><span class="chain-t">Fix it</span></div>
+      <div class="chain-arrow">&rarr;</div>
+      <div class="chain-step open"><span class="chain-n">07</span><span class="chain-t">Publish what is still unverified</span></div>
+    </div>
+
+    <div class="related">
+      <a href="ai-transformation-experiment.html">Overview</a>
+      <a href="ai-transformation-results.html">Full run output</a>
+      <a href="ai-transformation-runs.html">Cross-run comparison</a>
+      <a href="measurement-validation.html">Measurement &amp; validation</a>
+      <a href="ai-transformation-revisions.html">Revision log</a>
+    </div>
+  </div>
+
+  <!-- ===================== I. THEORY ===================== -->
+  <div class="section">
+    <div class="section-label">I &middot; Theory</div>
+    <h2>Discovered, not designed</h2>
+    <p>Stuart Winter-Tear argues the AI operating model is <strong>discovered through implementation</strong>, not designed before it. It is a good claim. It is also the kind of claim that never gets tested, because testing it means running the same company through two different change processes at the same time, and nobody has a spare company.</p>
+    <p>So the question underneath this experiment is not "is he right." It is narrower and more useful: <strong>what specifically gets discovered, what redesigns follow, and how does that differ from planning the change up front?</strong> Answer that with concrete examples and the framework stops being a slogan.</p>
+
+    <div class="grid2">
+      <div class="card track-card track-a">
+        <span class="track-tag">Track A &middot; Organic discovery</span>
+        <h3>Deploy without reorganizing</h3>
+        <p>Put AI into the existing process. Watch where it breaks. Extract the learning. Redesign from evidence you actually observed. Slow, narrow, and blind to any seam it has not yet seen fail. That blindness is the honest cost of the method.</p>
+      </div>
+      <div class="card track-card track-b">
+        <span class="track-tag">Track B &middot; Traditional change management</span>
+        <h3>Design it, then roll it out</h3>
+        <p>Kotter, Prosci ADKAR, McKinsey 7S. Assess up front, rank the seams by risk, design the target state, run a broad coordinated rollout, govern with a steering committee. Fast and wide, but only as accurate as the a-priori design.</p>
+      </div>
+    </div>
+
+    <div class="callout metric">
+      <div class="callout-title">The measurement that matters</div>
+      <p><strong>Translation debt.</strong> The share of decisions where information had to be reconstructed, re-requested, or repaired at a handoff. It is the tax an organization pays when AI is inserted into a seam nobody redesigned. Lower is better.</p>
+    </div>
+  </div>
+
+  <!-- ===================== II. INSTRUMENT ===================== -->
+  <div class="section">
+    <div class="section-label">II &middot; The instrument</div>
+    <h2>Progressive Insurance, simulated twice</h2>
+    <p>Both tracks run a calibrated model of Progressive: 70,000 employees, $86B in premiums, 87.3% combined ratio, already running 55% of claims through AI. Financials from Q2 2026 filings, culture from Glassdoor, incentives from the disclosed Gainshare structure and job postings.</p>
+    <p>Eleven stakeholders carry psychological depth. OCEAN traits, cognitive biases, motivational drivers, relationship networks. Because organizations are not rational optimizers. They are people protecting their metrics, buffering bad news, and repairing broken processes with knowledge they never wrote down.</p>
+    <p><strong>Both tracks face the same world.</strong> Same hurricanes, same attrition, same market cycles, same random seed, same claims. The only variable is how change happens.</p>
+
+    <div class="grid3" style="margin-bottom:18px">
+      <div class="stat"><div class="stat-val">16</div><div class="stat-lab">Quarterly sprints</div></div>
+      <div class="stat"><div class="stat-val">25</div><div class="stat-lab">Claims per sprint</div></div>
+      <div class="stat"><div class="stat-val">2</div><div class="stat-lab">Seeds (42, 7)</div></div>
+      <div class="stat"><div class="stat-val">5,380 / 5,403</div><div class="stat-lab">Decisions A / B</div></div>
+      <div class="stat"><div class="stat-val">8,243</div><div class="stat-lab">LLM calls, seed 42</div></div>
+      <div class="stat"><div class="stat-val">~$7.64</div><div class="stat-lab">Cost per full run</div></div>
+    </div>
+
+    <div class="card">
+      <h3>Seam profile is the regime dial</h3>
+      <p>The headline runs use the <strong>tacit</strong> profile: judgment-heavy human handoffs that start gappy: liability calls, negotiation, settlement. This is the regime where Track A should win, because a-priori design cannot template work that lives in someone's head.</p>
+      <p>The opposite regime is <strong>codifiable</strong>: schemas, thresholds, payment rails. Work Track B can actually design in advance. That is the cell where B should win, and the reason it matters is covered in section IV.</p>
+    </div>
+  </div>
+
+  <!-- ===================== III. DATA ===================== -->
+  <div class="section">
+    <div class="section-label">III &middot; Data out</div>
+    <h2>What the runs produced</h2>
+    <p>Back-half means (sprints 9&ndash;16), tacit regime, both seeds. Toggle the seed and the metric to see whether a result is structure or noise.</p>
+
+    <div class="chart-box">
+      <div class="controls">
+        <div class="ctrl-group">
+          <span class="ctrl-label">Metric</span>
+          <div class="btn-row" id="metricBtns">
+            <button class="btn active" data-metric="translation_debt_index">Translation debt</button>
+            <button class="btn" data-metric="first_pass_accuracy">First-pass accuracy</button>
+            <button class="btn" data-metric="cost_per_claim">Cost per claim</button>
+            <button class="btn" data-metric="exception_rate">Exception rate</button>
+            <button class="btn" data-metric="employee_ai_trust">Employee AI trust</button>
+          </div>
+        </div>
+        <div class="ctrl-group">
+          <span class="ctrl-label">Seed</span>
+          <div class="btn-row" id="seedBtns">
+            <button class="btn active" data-seed="s42">42 &middot; canonical</button>
+            <button class="btn" data-seed="s7">7 &middot; replicate</button>
+          </div>
+        </div>
+      </div>
+
+      <svg id="chart" viewBox="0 0 900 380" role="img" aria-label="Metric trajectory by sprint for Track A and Track B"></svg>
+
+      <div class="legend">
+        <span><span class="swatch" style="background:var(--primary)"></span> Track A &middot; organic discovery</span>
+        <span><span class="swatch swatch-dash"></span> Track B &middot; traditional change management</span>
+      </div>
+      <p class="chart-note" id="chartNote"></p>
+    </div>
+
+    <h3 style="margin-top:28px">Headline, back-half means</h3>
+    <div class="table-wrap">
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>Metric</th>
+            <th style="text-align:right">A &middot; s42</th>
+            <th style="text-align:right">B &middot; s42</th>
+            <th style="text-align:right">A &middot; s7</th>
+            <th style="text-align:right">B &middot; s7</th>
+            <th>Direction holds?</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr><td class="metric-name">translation_debt_index</td><td class="num">3.22</td><td class="num">14.91</td><td class="num">3.60</td><td class="num">12.80</td><td><span class="pill pill-yes">replicates</span></td></tr>
+          <tr><td class="metric-name">exception_rate</td><td class="num">8.07</td><td class="num">13.95</td><td class="num">12.71</td><td class="num">19.13</td><td><span class="pill pill-yes">replicates</span></td></tr>
+          <tr><td class="metric-name">cost_per_claim</td><td class="num">$280.51</td><td class="num">$351.13</td><td class="num">$319.54</td><td class="num">$408.79</td><td><span class="pill pill-yes">replicates</span></td></tr>
+          <tr><td class="metric-name">cycle_time</td><td class="num">4.58</td><td class="num">4.84</td><td class="num">6.42</td><td class="num">6.67</td><td><span class="pill pill-yes">replicates</span></td></tr>
+          <tr><td class="metric-name">first_pass_accuracy</td><td class="num">69.0%</td><td class="num">44.0%</td><td class="num">33.5%</td><td class="num">21.0%</td><td><span class="pill pill-yes">replicates</span></td></tr>
+          <tr><td class="metric-name">trust_polarization</td><td class="num">2.45</td><td class="num">2.90</td><td class="num">2.44</td><td class="num">2.62</td><td><span class="pill pill-yes">replicates</span></td></tr>
+          <tr><td class="metric-name">employee_ai_trust</td><td class="num">7.66</td><td class="num">7.61</td><td class="num">7.95</td><td class="num">8.23</td><td><span class="pill pill-no">flips sign</span></td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="callout metric">
+      <div class="callout-title">The sign flip is the good news</div>
+      <p>Trust is the one metric that changes direction between seeds. It should. An earlier version of this simulation wrote trust by fiat. Fixed per-track deltas, hand-calibrated so B climbed and A held flat. That was removed. Trust is now derived from experienced AI success and failure, identically for both tracks.</p>
+      <p>What emerged: <strong>trust climbs in both tracks together</strong>, from roughly 5.0 to 7.7&ndash;8.4, and lands near-equal. The gap wobbles around zero depending on seed. That is what an honest null looks like. <strong>The change process is not what moves trust. Working AI is.</strong></p>
+    </div>
+
+    <h3 style="margin-top:28px">Three structural patterns</h3>
+    <div class="card">
+      <h3>1. A's debt collapses at the same point in both seeds</h3>
+      <p>Sprint 8 to 11, Track A falls from ~15 to under 2 and stays there. Seed 42: 14.94 &rarr; 10.32 &rarr; 2.76 &rarr; 1.34. Seed 7: 10.50 &rarr; 14.09 &rarr; 3.67 &rarr; 1.88. Track B plateaus in the 8&ndash;17 band and never converges. The inflection is structural, not seed noise. It is where accumulated observation finally covers enough seams for the durable fixes to compound.</p>
+    </div>
+    <div class="card">
+      <h3>2. B's failures are specific, not random</h3>
+      <p>The traces name them. B ranks seams by a static risk score and polishes already-clean handoffs while the broken ones leak. It fires a flat regression timer instead of doing Kotter's Consolidate and Anchor phases, so <span class="metric-name">fnol_intake</span> completes and reverts inside the same sprint. And it repeatedly templates <span class="metric-name">settlement_human</span>, judgment work it structurally cannot template.</p>
+    </div>
+    <div class="card">
+      <h3>3. Cost rises before it falls, in both tracks</h3>
+      <p>Both start near $500&ndash;$560 per claim and both come down. That is not a Track A effect. It is the genuine shape of AI adoption cost: rework and translation overhead land first, savings land later. A run that showed instant savings would be the suspicious one.</p>
+    </div>
+  </div>
+
+  <!-- ===================== IV. CONCLUSIONS ===================== -->
+  <div class="section">
+    <div class="section-label">IV &middot; Conclusions</div>
+    <h2>What holds, and what does not</h2>
+
+    <div class="card">
+      <h3>What the evidence supports</h3>
+      <ul>
+        <li><strong>In the tacit regime, Track A wins on outcomes.</strong> Six of seven headline metrics hold direction across two independent seeds.</li>
+        <li><strong>The win is mechanism-grounded, not assigned.</strong> A earns it by observing real failures and landing fixes that do not revert, while B templates work it cannot template and regresses.</li>
+        <li><strong>Durability is the actual advantage.</strong> Not speed, not breadth. A's fixes stick because the team built them from its own evidence and owns them.</li>
+        <li><strong>Trust is not the differentiator.</strong> It rises in both tracks and lands near-equal. Sentiment is the wrong place to look for the divergence; outcomes are the right place.</li>
+      </ul>
+    </div>
+
+    <div class="callout rose">
+      <div class="callout-title">The claim this report cannot make</div>
+      <p><strong>Validity gate 5, the honest counterfactual, is unmet on the current code.</strong> The gate asks: can we construct conditions where Track B wins? If not, the instrument asserts its answer instead of discovering it.</p>
+      <p>An adversarial audit found that Track A was receiving an unconditional, permanent, never-regressing cut to the exact variable the headline metric is computed from. That was fixed. The audit made a specific falsifiable prediction: after the fix, the codifiable-and-calm cell should flip to a clean B win.</p>
+      <p><strong>That prediction has never been tested.</strong> The de-rigging landed at 18:38. The validation sweep was written at 15:36 the same day. The sweep in the repo predates the fix it was meant to validate. Until it is re-run, every result above is provisional.</p>
+    </div>
+
+    <h3>The regime map, as last measured (pre-fix)</h3>
+    <div class="table-wrap">
+      <table class="data-table">
+        <thead><tr><th>Cell</th><th>Designed to test</th><th>Seed A</th><th>Seed B</th><th>Expected</th></tr></thead>
+        <tbody>
+          <tr><td class="metric-name">S1_B_should_win</td><td>Codifiable seams, calm, short horizon</td><td><span class="pill pill-tie">tie</span></td><td><span class="pill pill-tie">tie</span></td><td>B</td></tr>
+          <tr><td class="metric-name">S2_A_should_win</td><td>Tacit seams, turbulent, long horizon</td><td><span class="pill pill-a">A</span></td><td><span class="pill pill-tie">tie</span></td><td>A</td></tr>
+          <tr><td class="metric-name">S3_honest_middle</td><td>Mixed, should vary by seed</td><td><span class="pill pill-a">A</span></td><td><span class="pill pill-a">A</span></td><td>seed-dependent</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="chart-note">Track B does not win a single cell. Two seeds per cell is underpowered. Both facts are why the re-run is the top priority.</p>
+
+    <h3 style="margin-top:28px">Open threats to validity</h3>
+
+    <details class="collapsible">
+      <summary><span><span class="finding-id">C1</span> &nbsp; Track A's error-rate reduction was ungated. Fixed, unverified</span></summary>
+      <div class="collapsible__body">
+        <p>A's redesign cut the worst AI seam's error rate by 40% every two sprints, permanently, whether or not A had ever observed that seam fail. B's equivalent lever was smaller, probabilistic, blocked on tacit seams, and reversible. Because the headline metric is a direct function of that variable, A held a condition-independent structural edge.</p>
+        <p>The fix gates the cut on observed failures, so A only repairs what it has actually seen break. Durability survives; omniscience is removed. <strong>The post-fix sweep confirming this has not been run.</strong></p>
+      </div>
+    </details>
+
+    <details class="collapsible">
+      <summary><span><span class="finding-id">M1</span> &nbsp; Trust was written by fiat. Fixed and confirmed</span></summary>
+      <div class="collapsible__body">
+        <p>Fixed per-track deltas moved trust every sprint, with a source comment stating outright that they were calibrated so the tracks would diverge. Removed and replaced with derivation from the already-tracked positive and negative AI experience counters. The canonical run shows the fix working: 7.66 versus 7.61, essentially equal, and flipping sign on the second seed. This one is verified.</p>
+      </div>
+    </details>
+
+    <details class="collapsible">
+      <summary><span><span class="finding-id">C2</span> &nbsp; Unseeded randomness broke reproducibility. Fixed</span></summary>
+      <div class="collapsible__body">
+        <p>Three sites in Track A used the global unseeded RNG, feeding the playbook, discovery, redesign, and workflow mutation chain. Same-seed runs diverged. Now threaded through the seeded per-sprint generator, so the simulation's own randomness and iteration order are deterministic. The remaining non-pinned source is the language model itself at temperature.</p>
+      </div>
+    </details>
+
+    <details class="collapsible">
+      <summary><span><span class="finding-id">OPEN</span> &nbsp; Four things still unresolved</span></summary>
+      <div class="collapsible__body">
+        <ul>
+          <li><strong>Agent differentiation is thin.</strong> Only 2 of 11 modelled people behave differently across tracks. The other 9 are identical. The psychological layer is doing less work than intended.</li>
+          <li><strong>Attrition never fires.</strong> The mechanic exists and has never triggered in any run. Undiagnosed.</li>
+          <li><strong>Two seeds is underpowered</strong> for a claim about structure versus noise. Six of seven replicating is encouraging, not conclusive.</li>
+          <li><strong>Track A reaches exactly 0.00 debt at sprint 12 on seed 42.</strong> Post-fix that means A observed and repaired every seam, which is plausible on a small workflow over 16 sprints. It also sits close enough to the C1 failure mode to deserve a look rather than a victory lap.</li>
+        </ul>
+      </div>
+    </details>
+
+    <div class="callout">
+      <div class="callout-title">What the experiment is actually for</div>
+      <p>The winner is the least interesting output. Two tracks are two ends of one axis, speed versus absorption, and the traces show exactly where each leaks. A leaks time: it cannot fix what it has not yet watched break. B leaks trust: it templates the untemplatable and its changes wash off.</p>
+      <p>A better Track A borrows B's breadth. A better Track B borrows A's ownership. The instrument earns its keep by being sharp enough to say which, and honest enough to say when it cannot.</p>
+    </div>
+  </div>
+
+  <div class="footer">
+    <span>&copy; 2025-2026 Charlie Fuller</span>
+    <span><a href="ai-transformation-results.html">Raw run output &rarr;</a></span>
+  </div>
+
+</div>
+
+<script>
+  const DATA = {
+    s42: {
+      translation_debt_index: { A:[24.43,25.68,32.16,20.09,22.37,17.35,16.89,14.94,10.32,2.76,1.34,0.0,3.97,2.6,2.68,2.04], B:[24.42,24.55,32.02,20.18,21.17,17.78,17.65,24.36,20.51,17.01,16.78,8.67,14.09,12.99,12.67,16.56] },
+      first_pass_accuracy:    { A:[20,28,12,24,20,20,24,36,36,68,72,84,64,76,76,76], B:[20,28,8,20,28,16,20,28,36,52,48,48,40,36,44,48] },
+      cost_per_claim:         { A:[507.48,500.48,582.2,449.48,470.2,476.92,475.08,312.76,362.08,240.04,290.92,274.64,262.04,284.64,277.2,252.48], B:[504.48,508.48,624.2,489.48,470.2,448.92,495.08,359.76,416.08,343.04,383.92,317.64,301.04,360.64,340.2,346.48] },
+      exception_rate:         { A:[26.24,22.52,27.31,20.09,19.18,26.03,19.63,7.79,11.61,6.21,12.08,5.37,11.26,4.55,8.72,4.76], B:[26.73,25.45,36.4,29.36,20.27,17.78,22.62,8.33,13.46,19.73,20.13,6.67,9.4,13.64,14.67,13.91] },
+      employee_ai_trust:      { A:[5.0,5.1,5.28,5.54,6.05,6.57,6.9,7.08,7.16,7.45,7.71,7.74,7.64,7.73,7.86,8.0], B:[5.02,4.97,5.21,5.59,5.94,6.52,6.76,7.04,7.17,7.53,7.76,7.78,7.62,7.6,7.7,7.73] }
+    },
+    s7: {
+      translation_debt_index: { A:[27.8,25.34,20.09,23.98,17.43,18.02,13.24,10.5,14.09,3.67,1.88,0.93,2.73,2.83,1.38,1.3], B:[28.83,25.11,21.86,23.18,19.35,18.22,13.76,17.26,23.68,15.67,11.16,8.64,10.5,8.37,9.63,14.75] },
+      first_pass_accuracy:    { A:[16,12,20,16,20,12,32,24,8,16,36,56,44,20,40,48], B:[16,8,16,28,12,16,24,20,4,16,24,28,24,12,24,36] },
+      cost_per_claim:         { A:[559.76,495.48,419.48,514.2,429.76,490.36,380.2,370.2,392.76,331.76,258.04,336.08,306.92,270.32,333.08,327.36], B:[537.76,498.48,450.48,494.2,433.76,473.36,377.2,432.2,527.76,425.76,344.04,397.08,385.92,316.32,405.08,468.36] },
+      exception_rate:         { A:[34.53,22.17,13.24,26.24,22.02,22.97,12.33,14.16,18.18,20.18,8.45,12.04,9.09,12.26,10.6,10.87], B:[28.38,23.74,18.6,23.18,20.28,18.22,11.01,16.81,32.02,23.96,14.42,14.09,15.53,14.42,14.68,23.96] },
+      employee_ai_trust:      { A:[4.71,5.04,5.51,5.83,6.22,6.55,7.09,7.17,7.27,7.48,7.83,7.88,8.06,8.28,8.35,8.44], B:[4.86,5.19,5.56,5.97,6.36,6.65,7.36,7.6,7.65,7.89,8.19,8.12,8.27,8.53,8.62,8.57] }
+    }
+  };
+
+  const META = {
+    translation_debt_index: { label:'Translation debt index', unit:'', better:'lower',
+      note:'A collapses below 2 from sprint 10 and holds. B plateaus in the 8 to 17 band. The same inflection appears on both seeds.' },
+    first_pass_accuracy:    { label:'First-pass accuracy', unit:'%', better:'higher',
+      note:'A pulls ahead in the back half on both seeds. Absolute level is much lower on seed 7, the gap direction is not.' },
+    cost_per_claim:         { label:'Cost per claim', unit:'$', better:'lower',
+      note:'Both tracks start high and come down. Rework and translation overhead land before savings do, in both processes.' },
+    exception_rate:         { label:'Exception rate', unit:'%', better:'lower',
+      note:'A runs lower in the back half on both seeds, though noisier than translation debt.' },
+    employee_ai_trust:      { label:'Employee AI trust', unit:'',  better:'higher',
+      note:'The lines track each other almost exactly. Trust is derived from experienced AI success for both tracks, and it does not separate them.' }
+  };
+
+  let curMetric = 'translation_debt_index';
+  let curSeed = 's42';
+
+  const svg = document.getElementById('chart');
+  const NS = 'http://www.w3.org/2000/svg';
+  const W = 900, H = 380, PAD = { t: 24, r: 24, b: 46, l: 62 };
+
+  function css(v){ return getComputedStyle(document.documentElement).getPropertyValue(v).trim(); }
+  function el(n, attrs){ const e = document.createElementNS(NS, n); for (const k in attrs) e.setAttribute(k, attrs[k]); return e; }
+
+  function draw() {
+    const series = DATA[curSeed][curMetric];
+    const meta = META[curMetric];
+    const all = series.A.concat(series.B);
+    let min = Math.min.apply(null, all), max = Math.max.apply(null, all);
+    const span = (max - min) || 1;
+    min = Math.max(0, min - span * 0.12); max = max + span * 0.12;
+
+    const n = series.A.length;
+    const iw = W - PAD.l - PAD.r, ih = H - PAD.t - PAD.b;
+    const x = i => PAD.l + (i / (n - 1)) * iw;
+    const y = v => PAD.t + ih - ((v - min) / (max - min)) * ih;
+
+    while (svg.firstChild) svg.removeChild(svg.firstChild);
+
+    const cGrid = css('--grid'), cDim = css('--text-muted'), cA = css('--primary'), cB = css('--secondary');
+
+    // gridlines + y labels
+    for (let g = 0; g <= 4; g++) {
+      const v = min + (max - min) * (g / 4), yy = y(v);
+      svg.appendChild(el('line', { x1: PAD.l, x2: W - PAD.r, y1: yy, y2: yy, stroke: cGrid, 'stroke-width': 1 }));
+      const t = el('text', { x: PAD.l - 10, y: yy + 4, 'text-anchor': 'end', fill: cDim,
+        'font-family': "'Source Code Pro', monospace", 'font-size': 11 });
+      t.textContent = (meta.unit === '$' ? '$' : '') + (max - min < 12 ? v.toFixed(1) : Math.round(v)) + (meta.unit === '%' ? '%' : '');
+      svg.appendChild(t);
+    }
+
+    // x labels
+    for (let i = 0; i < n; i += 3) {
+      const t = el('text', { x: x(i), y: H - PAD.b + 22, 'text-anchor': 'middle', fill: cDim,
+        'font-family': "'Source Code Pro', monospace", 'font-size': 11 });
+      t.textContent = 'S' + (i + 1);
+      svg.appendChild(t);
+    }
+    const xl = el('text', { x: PAD.l + iw / 2, y: H - 6, 'text-anchor': 'middle', fill: cDim,
+      'font-family': "'Source Code Pro', monospace", 'font-size': 10, 'letter-spacing': 1 });
+    xl.textContent = 'SPRINT';
+    svg.appendChild(xl);
+
+    // back-half shading
+    const bhX = x(8);
+    svg.appendChild(el('rect', { x: bhX, y: PAD.t, width: (W - PAD.r) - bhX, height: ih, fill: cA, opacity: 0.05 }));
+    const bh = el('text', { x: bhX + 8, y: PAD.t + 15, fill: cDim, 'font-family': "'Source Code Pro', monospace", 'font-size': 10 });
+    bh.textContent = 'back half (mean reported)';
+    svg.appendChild(bh);
+
+    const path = arr => arr.map((v, i) => (i ? 'L' : 'M') + x(i).toFixed(1) + ' ' + y(v).toFixed(1)).join(' ');
+
+    svg.appendChild(el('path', { d: path(series.B), fill: 'none', stroke: cB, 'stroke-width': 2.5,
+      'stroke-dasharray': '6 4', 'stroke-linejoin': 'round', 'stroke-linecap': 'round' }));
+    svg.appendChild(el('path', { d: path(series.A), fill: 'none', stroke: cA, 'stroke-width': 2.5,
+      'stroke-linejoin': 'round', 'stroke-linecap': 'round' }));
+
+    series.B.forEach((v, i) => svg.appendChild(el('circle', { cx: x(i), cy: y(v), r: 2.5, fill: cB })));
+    series.A.forEach((v, i) => svg.appendChild(el('circle', { cx: x(i), cy: y(v), r: 3, fill: cA })));
+
+    document.getElementById('chartNote').textContent =
+      meta.label + '. ' + meta.better.charAt(0).toUpperCase()+meta.better.slice(1) + ' is better. ' + meta.note;
+  }
+
+  document.getElementById('metricBtns').addEventListener('click', e => {
+    const b = e.target.closest('button'); if (!b) return;
+    curMetric = b.dataset.metric;
+    [...e.currentTarget.children].forEach(c => c.classList.toggle('active', c === b));
+    draw();
+  });
+  document.getElementById('seedBtns').addEventListener('click', e => {
+    const b = e.target.closest('button'); if (!b) return;
+    curSeed = b.dataset.seed;
+    [...e.currentTarget.children].forEach(c => c.classList.toggle('active', c === b));
+    draw();
+  });
+
+  const toggle = document.getElementById('themeToggle');
+  const iconLight = toggle.querySelector('.icon-light');
+  const iconDark = toggle.querySelector('.icon-dark');
+  function setTheme(d) {
+    document.documentElement.classList.toggle('dark', d);
+    iconLight.style.display = d ? 'none' : '';
+    iconDark.style.display = d ? '' : 'none';
+    try { localStorage.setItem('diagram-theme', d ? 'dark' : 'light'); } catch(e) {}
+    draw();
+  }
+  toggle.addEventListener('click', () => setTheme(!document.documentElement.classList.contains('dark')));
+  try { if (localStorage.getItem('diagram-theme') === 'dark') setTheme(true); } catch(e) {}
+
+  draw();
+</script>
+</body>
+</html>
