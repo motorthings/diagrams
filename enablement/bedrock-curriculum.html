@@ -1,0 +1,360 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>BEDROCK — AI Foundations Curriculum</title>
+  <link rel="icon" type="image/svg+xml" href="../icon.svg">
+  <meta name="description" content="The BEDROCK AI Foundations course — five cognitive shifts that turn tacit expertise into a transferable, tool-agnostic assistant spec.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,wght@0,400;0,500;0,600;0,700;0,800;1,400&family=Source+Code+Pro:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --font-display: 'Fraunces', Georgia, serif;
+      --font-mono: 'Source Code Pro', 'SF Mono', Consolas, monospace;
+      --bg: #eef4f9; --surface: #ffffff; --surface2: #f5f8fc;
+      --border: #c8daea; --border-bright: #a0bedb;
+      --text: #0a1628; --text-dim: #3d5a7a; --text-muted: #7a9ab8;
+      --primary: #e8621a; --primary-dim: rgba(232,98,26,0.08);
+      --secondary: #4a90c4; --secondary-dim: rgba(74,144,196,0.08);
+      --metric: #0f766e; --metric-dim: rgba(15,118,110,0.06);
+      --violet: #7c3aed; --violet-dim: rgba(124,58,237,0.08);
+    }
+    html.dark {
+      --bg: #0a1628; --surface: #132240; --surface2: #1a2d52;
+      --border: #1a2d52; --border-bright: #2d4570;
+      --text: #e8edf5; --text-dim: #9bb0d4; --text-muted: #5e7aa3;
+      --primary: #f37021; --primary-dim: rgba(243,112,33,0.12);
+      --secondary: #6cace4; --secondary-dim: rgba(108,172,228,0.12);
+      --metric: #2dd4bf; --metric-dim: rgba(45,212,191,0.08);
+      --violet: #a78bfa; --violet-dim: rgba(167,139,250,0.12);
+    }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      background: var(--bg);
+      background-image:
+        radial-gradient(ellipse at 80% 0%, var(--primary-dim) 0%, transparent 50%),
+        radial-gradient(ellipse at 20% 60%, var(--metric-dim) 0%, transparent 40%);
+      color: var(--text); font-family: var(--font-display);
+      min-height: 100vh; line-height: 1.7; padding: 0 32px 64px;
+      transition: background 0.3s, color 0.3s;
+    }
+
+    .backlink {
+      position: fixed; top: 12px; left: 16px; z-index: 101;
+      font-family: var(--font-mono); font-size: 12px;
+      color: var(--text-dim); text-decoration: none;
+      padding: 6px 10px; border: 1px solid var(--border); border-radius: 6px;
+      background: var(--surface); transition: color .15s, border-color .15s;
+    }
+    .backlink:hover { color: var(--text); border-color: var(--border-bright); }
+
+    .nav {
+      position: sticky; top: 0; z-index: 100;
+      backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px);
+      background: color-mix(in srgb, var(--surface) 85%, transparent);
+      border-bottom: 1px solid var(--border);
+      margin: 0 -32px 32px; padding: 0 32px;
+      transition: background 0.3s, border-color 0.3s;
+    }
+    .nav-inner {
+      max-width: 1000px; margin: 0 auto; padding: 12px 0;
+      display: flex; align-items: center; justify-content: space-between;
+    }
+    .nav-brand {
+      font-family: var(--font-mono); font-size: 12px; font-weight: 600;
+      letter-spacing: 0.5px; color: var(--primary); text-decoration: none;
+    }
+    .nav-brand:hover { color: var(--text); }
+    .theme-toggle {
+      width: 36px; height: 36px; border-radius: 10px;
+      border: 1px solid var(--border); background: var(--surface);
+      cursor: pointer; display: flex; align-items: center; justify-content: center;
+      font-size: 16px; color: var(--text-dim); transition: all 0.2s;
+    }
+    .theme-toggle:hover { border-color: var(--primary); color: var(--primary); }
+    .theme-toggle:focus-visible, .backlink:focus-visible, a:focus-visible {
+      outline: 2px solid var(--primary); outline-offset: 2px; border-radius: 6px;
+    }
+
+    .container { max-width: 1000px; margin: 0 auto; }
+
+    /* Hero */
+    .hero { text-align: center; padding: 36px 0 8px; }
+    .hero-badge {
+      display: inline-block; font-family: var(--font-mono); font-size: 11px;
+      font-weight: 700; letter-spacing: 2px; text-transform: uppercase;
+      color: var(--metric); background: var(--metric-dim);
+      padding: 5px 14px; border-radius: 20px; margin-bottom: 20px;
+    }
+    .hero h1 { font-size: 44px; font-weight: 800; letter-spacing: -0.5px; color: var(--text); margin-bottom: 16px; line-height: 1.1; }
+    .hero .lead { font-size: 20px; color: var(--text-dim); max-width: 720px; margin: 0 auto; line-height: 1.55; }
+
+    /* Power stack */
+    .stack { margin-top: 44px; }
+    .stack-caption {
+      text-align: center; font-family: var(--font-mono); font-size: 11px;
+      color: var(--text-muted); letter-spacing: 0.5px; margin-bottom: 18px;
+    }
+    .stack-col { display: flex; flex-direction: column; align-items: center; gap: 0; }
+    .stack-layer {
+      width: 100%; max-width: 560px; text-align: center;
+      border-radius: 12px; padding: 18px 22px;
+    }
+    .stack-layer .layer-name { font-size: 22px; font-weight: 700; color: var(--text); }
+    .stack-layer .layer-sub { font-size: 13px; color: var(--text-muted); font-family: var(--font-mono); margin-top: 2px; }
+    .stack-layer--impact { background: var(--primary-dim); border: 1px solid var(--primary); }
+    .stack-layer--tools { background: var(--violet-dim); border: 1px solid var(--violet); }
+    .stack-layer--explicit { background: var(--secondary-dim); border: 1px solid var(--secondary); }
+    .stack-layer--bedrock { background: var(--metric-dim); border: 2px solid var(--metric); padding: 22px; }
+    .stack-layer--bedrock .layer-name { color: var(--metric); }
+    .stack-arrow {
+      font-size: 20px; color: var(--text-muted); font-family: var(--font-mono);
+      padding: 4px 0;
+    }
+    .stack-arrow span { font-size: 11px; color: var(--text-muted); letter-spacing: 0.5px; }
+    .stack-bedrock-label {
+      margin-top: 14px; text-align: center; font-family: var(--font-mono);
+      font-size: 11px; color: var(--metric); letter-spacing: 1px; text-transform: uppercase;
+    }
+
+    /* Sections */
+    section { margin-top: 48px; }
+    h2 { font-size: 26px; font-weight: 700; color: var(--text); margin-bottom: 20px; }
+    .section-kicker {
+      font-family: var(--font-mono); font-size: 11px; font-weight: 600;
+      letter-spacing: 1.2px; text-transform: uppercase; color: var(--metric); margin-bottom: 6px;
+    }
+
+    @keyframes fadeUp { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+    .stage { margin-bottom: 30px; animation: fadeUp 0.35s ease-out both; }
+    .stage:nth-child(1) { animation-delay: 0.03s; } .stage:nth-child(2) { animation-delay: 0.08s; }
+    .stage:nth-child(3) { animation-delay: 0.13s; } .stage:nth-child(4) { animation-delay: 0.18s; }
+    .stage:nth-child(5) { animation-delay: 0.23s; } .stage:nth-child(6) { animation-delay: 0.28s; }
+    @media (prefers-reduced-motion: reduce) { .stage { animation: none; } }
+
+    .stage-head { display: flex; align-items: flex-start; gap: 16px; margin-bottom: 8px; }
+    .stage-num {
+      width: 38px; height: 38px; border-radius: 50%; flex-shrink: 0;
+      display: flex; align-items: center; justify-content: center;
+      font-family: var(--font-mono); font-size: 15px; font-weight: 700;
+      color: #fff; background: var(--metric); margin-top: 2px;
+    }
+    .stage-info { flex: 1; }
+    .stage-info h3 { font-size: 21px; font-weight: 700; color: var(--text); margin-bottom: 4px; }
+    .stage-info .week-tag {
+      font-family: var(--font-mono); font-size: 10px; font-weight: 600;
+      letter-spacing: 1.2px; text-transform: uppercase; color: var(--text-muted); margin-bottom: 10px;
+    }
+
+    .shift { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 10px; }
+    @media (max-width: 600px) { .shift { grid-template-columns: 1fr; } }
+    .shift-panel {
+      background: var(--surface2); border: 1px solid var(--border);
+      border-radius: 0 8px 8px 0; padding: 14px 16px; font-size: 14px;
+      color: var(--text-dim); line-height: 1.6;
+    }
+    .shift-panel--not { border-left: 3px solid var(--text-muted); }
+    .shift-panel--not strong { color: var(--text-muted); }
+    .shift-panel--actually { border-left: 3px solid var(--metric); background: var(--metric-dim); }
+    .shift-panel--actually strong { color: var(--metric); }
+    .shift-panel strong { display: block; margin-bottom: 4px; font-size: 14px; }
+
+    /* Capstone */
+    .capstone {
+      background: var(--primary-dim); border: 1px solid var(--primary);
+      border-radius: 12px; padding: 20px 24px; margin-top: 8px;
+    }
+    .capstone h3 { font-size: 20px; font-weight: 700; color: var(--text); margin-bottom: 6px; }
+    .capstone p { font-size: 14px; color: var(--text-dim); line-height: 1.6; }
+
+    /* Constraints callout */
+    .callout {
+      background: var(--surface); border: 1px dashed var(--border-bright);
+      border-radius: 12px; padding: 24px 28px; margin-top: 48px; text-align: center;
+    }
+    .callout h2 { margin-bottom: 12px; }
+    .callout p { font-size: 16px; color: var(--text-dim); max-width: 720px; margin: 0 auto; line-height: 1.7; }
+    .callout strong { color: var(--text); }
+
+    /* Landing */
+    .landing { margin-top: 56px; text-align: center; }
+    .landing .one-breath {
+      font-size: 30px; font-weight: 800; color: var(--metric); line-height: 1.3;
+      max-width: 640px; margin: 0 auto; letter-spacing: -0.3px;
+    }
+
+    .footer { margin-top: 48px; padding-top: 16px; border-top: 1px solid var(--border); text-align: center; font-size: 13px; color: var(--text-muted); }
+    .footer a { color: var(--primary); text-decoration: none; }
+
+    @media (max-width: 640px) {
+      body { padding: 0 12px 48px; }
+      .nav { margin: 0 -12px 24px; padding: 0 12px; }
+      .hero h1 { font-size: 30px; }
+      .hero .lead { font-size: 17px; }
+      .landing .one-breath { font-size: 23px; }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after { animation-duration: 0.01ms !important; animation-delay: 0ms !important; transition-duration: 0.01ms !important; }
+    }
+  </style>
+</head>
+<body>
+
+<a href="../index.html" class="backlink">&larr; Index</a>
+
+<div class="nav">
+  <div class="nav-inner">
+    <a href="../index.html" class="nav-brand">BEDROCK Curriculum</a>
+    <button class="theme-toggle" id="themeToggle" aria-label="Toggle dark mode">
+      <span class="icon-light">&#9788;</span>
+      <span class="icon-dark" style="display:none">&#9790;</span>
+    </button>
+  </div>
+</div>
+
+<div class="container">
+  <div class="hero">
+    <div class="hero-badge">BEDROCK &middot; AI Foundations</div>
+    <h1>Your expertise is the bedrock</h1>
+    <p class="lead">AI tools come and go. Your expertise is permanent. Most AI courses start with the tools and hope you figure out how to apply them. This one starts with you &mdash; what you already know, made explicit, then amplified.</p>
+  </div>
+
+  <div class="stack">
+    <div class="stack-caption">the power stack &middot; build on bedrock, not sand</div>
+    <div class="stack-col">
+      <div class="stack-layer stack-layer--impact">
+        <div class="layer-name">Scaled Impact</div>
+        <div class="layer-sub">your quality &times; AI speed</div>
+      </div>
+      <div class="stack-arrow">&uarr; <span>amplify</span></div>
+      <div class="stack-layer stack-layer--tools">
+        <div class="layer-name">+ AI Tools</div>
+        <div class="layer-sub">the amplification layer</div>
+      </div>
+      <div class="stack-arrow">&uarr; <span>make transferable</span></div>
+      <div class="stack-layer stack-layer--explicit">
+        <div class="layer-name">Made Explicit</div>
+        <div class="layer-sub">documented, transferable</div>
+      </div>
+      <div class="stack-arrow">&uarr; <span>recognize</span></div>
+      <div class="stack-layer stack-layer--bedrock">
+        <div class="layer-name">Your Expertise</div>
+        <div class="layer-sub">domain knowledge &middot; wisdom &middot; judgment &middot; standards</div>
+      </div>
+    </div>
+    <div class="stack-bedrock-label">&#9660; this is the foundation everything else builds on</div>
+  </div>
+
+  <section>
+    <div class="section-kicker">The course framework</div>
+    <h2>Five cognitive shifts, not five tips</h2>
+
+    <div class="stage">
+      <div class="stage-head">
+        <div class="stage-num">1</div>
+        <div class="stage-info">
+          <h3>Recognize and articulate your quality standards</h3>
+          <div class="week-tag">Week 0 &middot; Recognize Your Expertise</div>
+          <div class="shift">
+            <div class="shift-panel shift-panel--not"><strong>Not:</strong>Learn to define requirements for AI.</div>
+            <div class="shift-panel shift-panel--actually"><strong>Actually:</strong>You already know what excellent looks like. This is practicing naming it out loud.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="stage">
+      <div class="stage-head">
+        <div class="stage-num">2</div>
+        <div class="stage-info">
+          <h3>Understand what complete communication requires</h3>
+          <div class="week-tag">Week 1 &middot; RCICE</div>
+          <div class="shift">
+            <div class="shift-panel shift-panel--not"><strong>Not:</strong>Learn a prompting formula.</div>
+            <div class="shift-panel shift-panel--actually"><strong>Actually:</strong>All delegation &mdash; to an AI, a colleague, or a vendor &mdash; needs role, context, instructions, criteria, and examples.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="stage">
+      <div class="stage-head">
+        <div class="stage-num">3</div>
+        <div class="stage-info">
+          <h3>Distinguish between teaching and testing</h3>
+          <div class="week-tag">Week 2 &middot; Examples &amp; Tests</div>
+          <div class="shift">
+            <div class="shift-panel shift-panel--not"><strong>Not:</strong>Add examples to prompts.</div>
+            <div class="shift-panel shift-panel--actually"><strong>Actually:</strong>Examples show the pattern to follow. Tests verify understanding. That is how expertise transfers.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="stage">
+      <div class="stage-head">
+        <div class="stage-num">4</div>
+        <div class="stage-info">
+          <h3>Invest in inputs, not clever wording</h3>
+          <div class="week-tag">Week 3 &middot; Context Packs</div>
+          <div class="shift">
+            <div class="shift-panel shift-panel--not"><strong>Not:</strong>Find the magic prompt.</div>
+            <div class="shift-panel shift-panel--actually"><strong>Actually:</strong>Quality comes from complete information. Your context pack &mdash; past work, voice, constraints, glossary &mdash; is your expertise made portable.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="stage">
+      <div class="stage-head">
+        <div class="stage-num">5</div>
+        <div class="stage-info">
+          <h3>Think first-principles, not tool-specific</h3>
+          <div class="week-tag">Week 4 &middot; Tool Independence</div>
+          <div class="shift">
+            <div class="shift-panel shift-panel--not"><strong>Not:</strong>Learn which AI tool to use.</div>
+            <div class="shift-panel shift-panel--actually"><strong>Actually:</strong>Understand how these systems work at the foundation level, so you can adapt to any tool today or in the future.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="capstone">
+      <h3>Capstone &mdash; Your Expertise Codified</h3>
+      <p>A one-page assistant onboarding sheet: an RCICE prompt, three example input-to-ideal-output pairs, an acceptance criteria checklist, and a plan-first preamble. Peer-reviewed for clarity, criteria quality, and transferability across tools.</p>
+    </div>
+  </section>
+
+  <div class="callout">
+    <h2>Not a tool course</h2>
+    <p>No workflow building. No paid tools. Rotate across free tools &mdash; Claude, ChatGPT, Gemini, Perplexity &mdash; to keep the thinking tool-agnostic, and capture everything in a living notebook. <strong>The shift is the deliverable. The tool is just where you practice it.</strong></p>
+  </div>
+
+  <div class="landing">
+    <div class="one-breath">Build on bedrock, not sand.</div>
+  </div>
+
+  <div class="footer">
+    <a href="../index.html">&larr; Index</a>
+    &nbsp;&middot;&nbsp;
+    &copy; 2025-2026 Charlie Fuller
+  </div>
+</div>
+
+<script>
+  const toggle = document.getElementById('themeToggle');
+  const iconLight = toggle.querySelector('.icon-light');
+  const iconDark = toggle.querySelector('.icon-dark');
+  function setTheme(d) {
+    document.documentElement.classList.toggle('dark', d);
+    iconLight.style.display = d ? 'none' : '';
+    iconDark.style.display = d ? '' : 'none';
+    try { localStorage.setItem('diagram-theme', d ? 'dark' : 'light'); } catch(e) {}
+  }
+  toggle.addEventListener('click', () => setTheme(!document.documentElement.classList.contains('dark')));
+  try { if (localStorage.getItem('diagram-theme') === 'dark') setTheme(true); } catch(e) {}
+</script>
+</body>
+</html>
