@@ -1,0 +1,340 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="A plain-English tour of how the AI transformation simulation works — what a claim is, what a seam is, and how one round of the two-team race actually runs, step by step.">
+<title>AI Transformation Experiment — How the Simulation Works (Plain English)</title>
+<link rel="icon" type="image/svg+xml" href="../icon.svg">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,wght@0,400;0,500;0,600;0,700;0,800;1,400&family=Source+Code+Pro:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --font-display: 'Fraunces', Georgia, serif;
+    --font-mono: 'Source Code Pro', 'SF Mono', Consolas, monospace;
+    --bg: #eef4f9; --surface: #ffffff; --surface2: #f5f8fc;
+    --border: #c8daea; --border-bright: #a0bedb;
+    --text: #0a1628; --text-dim: #3d5a7a; --text-muted: #7a9ab8;
+    --primary: #e8621a; --primary-dim: rgba(232,98,26,0.08);
+    --secondary: #4a90c4; --secondary-dim: rgba(74,144,196,0.08);
+    --metric: #0f766e; --metric-dim: rgba(15,118,110,0.06);
+    --amber: #b45309; --amber-dim: rgba(180,83,9,0.08);
+    --slate: #475569; --slate-dim: rgba(71,85,105,0.08);
+  }
+  html.dark {
+    --bg: #0a1628; --surface: #132240; --surface2: #1a2d52;
+    --border: #1a2d52; --border-bright: #2d4570;
+    --text: #e8edf5; --text-dim: #9bb0d4; --text-muted: #5e7aa3;
+    --primary: #f37021; --primary-dim: rgba(243,112,33,0.12);
+    --secondary: #6cace4; --secondary-dim: rgba(108,172,228,0.12);
+    --metric: #2dd4bf; --metric-dim: rgba(45,212,191,0.08);
+    --amber: #f59e0b; --amber-dim: rgba(245,158,11,0.12);
+    --slate: #475569; --slate-dim: rgba(71,85,105,0.08);
+  }
+
+  * { margin:0; padding:0; box-sizing:border-box; }
+
+  body {
+    background: var(--bg);
+    background-image:
+      radial-gradient(ellipse at 80% 0%, var(--primary-dim) 0%, transparent 50%),
+      radial-gradient(ellipse at 20% 60%, var(--secondary-dim) 0%, transparent 40%);
+    color: var(--text); font-family: var(--font-display);
+    min-height: 100vh; line-height: 1.7; padding: 0 24px 64px;
+    transition: background 0.3s, color 0.3s;
+  }
+
+  .backlink {
+    position: fixed; top: 12px; left: 16px; z-index: 101;
+    font-family: var(--font-mono); font-size: 12px; color: var(--text-dim);
+    text-decoration: none; padding: 6px 10px;
+    border: 1px solid var(--border); border-radius: 6px;
+    background: var(--surface);
+    transition: color 0.15s, border-color 0.15s;
+  }
+  .backlink:hover { color: var(--text); border-color: var(--border-bright); }
+
+  .nav {
+    position: sticky; top: 0; z-index: 100;
+    backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px);
+    background: color-mix(in srgb, var(--surface) 85%, transparent);
+    border-bottom: 1px solid var(--border);
+    margin: 0 -24px 32px; padding: 0 24px;
+    transition: background 0.3s, border-color 0.3s;
+  }
+  .nav-inner {
+    max-width: 1200px; margin: 0 auto; padding: 12px 0 12px 96px;
+    display: flex; align-items: center; justify-content: space-between;
+  }
+  .nav-brand {
+    font-family: var(--font-mono); font-size: 12px; font-weight: 600;
+    letter-spacing: 0.5px; color: var(--primary); text-decoration: none;
+  }
+  .nav-brand:hover { color: var(--text); }
+  .theme-toggle {
+    width: 36px; height: 36px; border-radius: 10px;
+    border: 1px solid var(--border); background: var(--surface);
+    cursor: pointer; display: flex; align-items: center; justify-content: center;
+    font-size: 16px; color: var(--text-dim); transition: all 0.2s;
+  }
+  .theme-toggle:hover, .theme-toggle:focus-visible { border-color: var(--primary); color: var(--primary); outline: none; }
+
+  .container { max-width: 940px; margin: 0 auto; }
+
+  /* Hero */
+  .hero { text-align: center; padding: 44px 0 30px; }
+  .hero h1 { font-size: 46px; font-weight: 700; letter-spacing: -0.5px; color: var(--primary); margin-bottom: 14px; }
+  .hero .lead { font-size: 20px; color: var(--text-dim); max-width: 640px; margin: 0 auto; line-height: 1.5; }
+  .hero .sub { font-size: 14px; color: var(--text-muted); font-family: var(--font-mono); margin-top: 16px; }
+
+  section { margin-top: 46px; }
+  h2 { font-size: 27px; font-weight: 700; color: var(--text); margin-bottom: 8px; }
+  section > p { font-size: 16px; color: var(--text-dim); line-height: 1.7; margin-bottom: 12px; }
+  section > p:first-of-type { margin-top: 14px; }
+  .lead-in { color: var(--text-muted); font-family: var(--font-mono); font-size: 12px; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 4px; }
+  strong.hl { color: var(--primary); font-weight: 700; }
+
+  @keyframes fadeUp { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+  @media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation-duration: 0.01ms !important; animation-delay: 0ms !important; transition: none !important; } }
+
+  /* Callout */
+  .callout {
+    background: var(--primary-dim); border: 1px solid var(--border);
+    border-left: 4px solid var(--primary); border-radius: 0 10px 10px 0;
+    padding: 18px 22px; margin-top: 18px;
+  }
+  .callout .k { font-family: var(--font-mono); font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; color: var(--primary); margin-bottom: 6px; }
+  .callout p { font-size: 17px; color: var(--text); line-height: 1.55; }
+
+  /* Two teams */
+  .team-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-top: 18px; }
+  @media (max-width: 640px) { .team-grid { grid-template-columns: 1fr; } }
+  .team-card { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 20px 22px; }
+  .team-card.a { border-top: 4px solid var(--secondary); }
+  .team-card.b { border-top: 4px solid var(--amber); }
+  .team-card .tname { font-size: 20px; font-weight: 700; margin-bottom: 2px; }
+  .team-card.a .tname { color: var(--secondary); }
+  .team-card.b .tname { color: var(--amber); }
+  .team-card .tnick { font-family: var(--font-mono); font-size: 11px; text-transform: uppercase; letter-spacing: 1px; color: var(--text-muted); margin-bottom: 12px; }
+  .team-card p { font-size: 14.5px; color: var(--text-dim); line-height: 1.6; }
+  .team-card .catch { font-size: 13px; color: var(--text-muted); margin-top: 10px; font-style: italic; }
+
+  /* Numbered step rows (sprint + claim journey) */
+  .steps { display: flex; flex-direction: column; gap: 8px; margin-top: 16px; }
+  .step {
+    display: flex; align-items: flex-start; gap: 14px;
+    background: var(--surface2); border: 1px solid var(--border);
+    border-left: 3px solid var(--secondary); border-radius: 0 8px 8px 0;
+    padding: 13px 16px; font-size: 15px; color: var(--text-dim); line-height: 1.6;
+  }
+  .step .n {
+    width: 28px; height: 28px; border-radius: 50%; flex-shrink: 0;
+    display: flex; align-items: center; justify-content: center;
+    font-family: var(--font-mono); font-size: 13px; font-weight: 700;
+    color: #fff; background: var(--secondary); margin-top: 1px;
+  }
+  .step strong { color: var(--secondary); }
+
+  /* Claim journey — vertical flow */
+  .flow { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 24px 20px; margin-top: 18px; }
+  .flow-col { display: flex; flex-direction: column; align-items: center; gap: 0; }
+  .fbox {
+    min-width: 220px; max-width: 340px; text-align: center;
+    border-radius: 10px; padding: 12px 16px; font-size: 14.5px; line-height: 1.4; font-weight: 500;
+  }
+  .fbox small { display: block; font-weight: 400; font-size: 12.5px; color: var(--text-muted); margin-top: 3px; }
+  .fbox.start { background: var(--secondary-dim); border: 2px solid var(--secondary); color: var(--text); }
+  .fbox.ai { background: var(--metric-dim); border: 2px solid var(--metric); color: var(--text); }
+  .fbox.good { background: var(--metric-dim); border: 2px solid var(--metric); color: var(--text); }
+  .fbox.bad { background: var(--primary-dim); border: 2px dashed var(--primary); color: var(--text); }
+  .fbox.end { background: var(--amber-dim); border: 2px solid var(--amber); color: var(--text); }
+  .farrow { padding: 3px 0; font-size: 20px; color: var(--text-muted); font-family: var(--font-mono); }
+  .fsplit { display: flex; gap: 24px; align-items: flex-start; justify-content: center; flex-wrap: wrap; }
+  .fsplit .leg { display: flex; flex-direction: column; align-items: center; }
+  .fsplit .leg-label { font-family: var(--font-mono); font-size: 10px; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 6px; }
+  .fsplit .leg.g .leg-label { color: var(--metric); }
+  .fsplit .leg.b .leg-label { color: var(--primary); }
+
+  /* Definition chips */
+  .def { background: var(--surface2); border: 1px solid var(--border); border-left: 3px solid var(--metric); border-radius: 0 8px 8px 0; padding: 14px 16px; margin-top: 12px; }
+  .def .term { font-weight: 700; color: var(--metric); font-size: 15px; }
+  .def p { font-size: 14.5px; color: var(--text-dim); line-height: 1.6; margin-top: 2px; }
+
+  .footer { margin-top: 60px; padding-top: 18px; border-top: 1px solid var(--border); text-align: center; font-size: 13px; color: var(--text-muted); }
+</style>
+</head>
+<body>
+<a href="../index.html" class="backlink">&larr; Index</a>
+<div class="nav">
+  <div class="nav-inner">
+    <a href="../index.html" class="nav-brand">&larr; AI Transformation Experiment</a>
+    <button class="theme-toggle" id="themeToggle" aria-label="Toggle dark mode">
+      <span class="icon-light">&#9788;</span>
+      <span class="icon-dark" style="display:none">&#9790;</span>
+    </button>
+  </div>
+</div>
+
+<div class="container">
+
+  <div class="hero">
+    <h1>How the Simulation Works</h1>
+    <p class="lead">A plain-English tour. No background needed. If you can follow a game of telephone and a relay race, you can follow all of this.</p>
+    <p class="sub">Written for someone who has never touched the code &middot; every term explained</p>
+  </div>
+
+  <!-- 1 -->
+  <section>
+    <div class="lead-in">The whole point</div>
+    <h2>One question, asked fairly</h2>
+    <p>A company decides it wants to start using artificial intelligence to do some of its work. There are two very different ways to go about that. The question we care about is simple: <strong class="hl">which way ends up with less of a mess?</strong></p>
+    <p>You can't answer that honestly in the real world, because no two companies are alike. So instead we build a pretend company inside a computer, make an exact copy of it, and run both copies at the same time. One copy adopts AI the first way. The other copy adopts it the second way. Everything else about them is identical: same customers, same staff, same good and bad luck.</p>
+    <p>Because the two copies are the same in every way except their approach, any difference at the end had to come from the approach. That is the entire trick.</p>
+  </section>
+
+  <!-- 2 -->
+  <section>
+    <div class="lead-in">The pretend company</div>
+    <h2>It's an insurance company</h2>
+    <p>We picked an insurance company because its work is easy to picture. Here are the only three ideas you need.</p>
+    <div class="def">
+      <span class="term">A claim</span>
+      <p>Someone's car gets dented. They call their insurer and say, "please pay to fix this." That request is a <em>claim</em>. Inside the company, a claim doesn't get handled by one person. It moves from desk to desk: someone checks it, someone estimates the cost, someone approves the payment, someone closes it out.</p>
+    </div>
+    <div class="def">
+      <span class="term">Underwriting</span>
+      <p>Deciding whether to insure a new customer in the first place, and what to charge them. Think of it as the company's version of "should we say yes to this person, and for how much?"</p>
+    </div>
+    <div class="def">
+      <span class="term">Subrogation</span>
+      <p>A long word for a simple thing: chasing down the <em>other</em> party's insurer to get money back. If the other driver caused the crash, your insurer pays you now and then goes and collects from their insurer later.</p>
+    </div>
+    <p>That's it. Requests come in, and they travel through a chain of desks until they're finished.</p>
+  </section>
+
+  <!-- 3 -->
+  <section>
+    <div class="lead-in">The most important idea on the page</div>
+    <h2>The game of telephone</h2>
+    <p>Every time a piece of work passes from one desk to the next, that handoff is what we call a <strong class="hl">seam</strong>. It's the stitch where two people's work meets.</p>
+    <p>Now remember the childhood game of telephone. You whisper a sentence to the next person, they whisper it to the next, and by the end it has turned into nonsense. The same thing happens at a seam. The work arrives at the next desk slightly garbled, missing a detail, unclear. So the next person has to stop and untangle it before they can do their own job.</p>
+    <p>That wasted untangling time is the thing we measure. We give it a name:</p>
+    <div class="callout">
+      <div class="k">The number that decides everything</div>
+      <p><strong>Translation debt</strong> is the extra cleanup work created every time meaning gets lost at a handoff. Less of it is better. Whichever team ends up with less translation debt is the team that ran its company more smoothly. This one number picks the winner.</p>
+    </div>
+  </section>
+
+  <!-- 4 -->
+  <section>
+    <div class="lead-in">The two contestants</div>
+    <h2>Two teams, two philosophies</h2>
+    <p>Both teams run an identical copy of the insurance company. The only thing that differs is <em>how</em> they bring AI in.</p>
+    <div class="team-grid">
+      <div class="team-card a">
+        <div class="tname">Team A</div>
+        <div class="tnick">Learn as you go</div>
+        <p>Start tiny. Put AI into one small corner of the work. Watch closely to see what actually breaks. Fix only the things you've seen break with your own eyes. Then, and only then, grow a little bigger.</p>
+        <p class="catch">Careful and grounded, but slow &mdash; and blind to any problem it hasn't personally run into yet.</p>
+      </div>
+      <div class="team-card b">
+        <div class="tname">Team B</div>
+        <div class="tnick">Big plan first</div>
+        <p>Do it the way big companies usually do. Pick the technology, design the whole future setup on paper, and roll it out everywhere at once. Manage people's resistance as you go.</p>
+        <p class="catch">Covers a lot of ground fast &mdash; but it's all based on a plan, not on watching what really happens.</p>
+      </div>
+    </div>
+    <p style="margin-top:16px;">One team learns by doing. The other plans, then acts. Which produces less mess? That's the race.</p>
+  </section>
+
+  <!-- 5 -->
+  <section>
+    <div class="lead-in">One round of the game</div>
+    <h2>What happens in a single round</h2>
+    <p>The simulation runs in rounds. Each round is a stretch of time, like a couple of weeks at the office. Here is everything that happens in one round. The exact same round happens to both teams at the same moment.</p>
+    <div class="steps">
+      <div class="step"><span class="n">1</span><span><strong>The day's weather is rolled.</strong> The computer decides what's going on in the world this round: maybe a flood of new claims, maybe a budget freeze, maybe a quiet stretch. Whatever it is, both teams get the exact same weather. Nobody gets an easier day.</span></div>
+      <div class="step"><span class="n">2</span><span><strong>Each team makes its move.</strong> Team A looks at what broke last round and fixes one thing it has real evidence for. Team B follows the next step of its big plan. This is where the two philosophies actually differ.</span></div>
+      <div class="step"><span class="n">3</span><span><strong>The work arrives.</strong> A fresh pile of claims lands on both teams' desks &mdash; the identical pile for each, so it's a fair comparison.</span></div>
+      <div class="step"><span class="n">4</span><span><strong>Every claim travels its chain of desks.</strong> At the desks where AI does the work, the computer tries to handle the claim. Sometimes it works cleanly. Sometimes it "loses the thread" at a handoff, and a human has to step in and sort out the mess. (That mess is the translation debt from earlier.)</span></div>
+      <div class="step"><span class="n">5</span><span><strong>People react.</strong> When the AI helps smoothly, the staff trust it a little more. When it hands them garbled work, they trust it a little less. Trust goes up and down based on real experience, not on what anyone was told to feel.</span></div>
+      <div class="step"><span class="n">6</span><span><strong>Some people quit.</strong> Staff who get worn down and stop trusting the tools eventually leave. And when one person leaves, it makes their teammates more likely to leave too. Fewer people means more dropped handoffs, which wears down more people. It snowballs.</span></div>
+      <div class="step"><span class="n">7</span><span><strong>Tally the mess.</strong> At the end of the round, we measure how much translation debt each team piled up, plus a few other health numbers. Then the next round begins.</span></div>
+    </div>
+    <p style="margin-top:16px;">Repeat this for many rounds and you get two full stories: how each version of the company fared over time.</p>
+  </section>
+
+  <!-- 6 -->
+  <section>
+    <div class="lead-in">Zooming in</div>
+    <h2>Following one claim through the office</h2>
+    <p>Step 4 above is the heart of it. Here's what a single claim's trip looks like when it reaches an AI desk.</p>
+    <div class="flow">
+      <div class="flow-col">
+        <div class="fbox start">A claim arrives<small>someone wants their dented car paid for</small></div>
+        <div class="farrow">&darr;</div>
+        <div class="fbox start">Sorted into a lane<small>simple ones go to the AI, tricky ones go to a person</small></div>
+        <div class="farrow">&darr;</div>
+        <div class="fbox ai">The AI takes a turn<small>it tries to handle this step of the work</small></div>
+        <div class="farrow">&darr;</div>
+        <div class="fsplit">
+          <div class="leg g">
+            <div class="leg-label">&#9679; it went cleanly</div>
+            <div class="fbox good">Handoff is clear<small>the next desk gets exactly what it needs</small></div>
+          </div>
+          <div class="leg b">
+            <div class="leg-label">&#9679; it got garbled</div>
+            <div class="fbox bad">Meaning was lost<small>a human must stop and untangle it &mdash; that's translation debt</small></div>
+          </div>
+        </div>
+        <div class="farrow">&darr;</div>
+        <div class="fbox end">Approved, paid, closed<small>the claim is finished, one way or the other</small></div>
+      </div>
+    </div>
+    <p style="margin-top:16px;">A smooth trip costs almost nothing. A garbled one costs real cleanup time and chips away at the staff's trust. Multiply that across thousands of claims over many rounds, and the small differences add up into a clear winner &mdash; or a genuine tie.</p>
+  </section>
+
+  <!-- 7 -->
+  <section>
+    <div class="lead-in">Why it's a fair test</div>
+    <h2>The referee treats both teams identically</h2>
+    <p>Here's the clever part. Whether the AI succeeds or stumbles on a given handoff is decided the <strong class="hl">exact same way for both teams, at the exact same moment</strong>. If Team A's AI trips over a particular claim, Team B's AI trips over that identical claim too. Neither team gets luckier.</p>
+    <p>That means any <em>lasting</em> difference between the two companies can only come from how each philosophy fixes its handoffs over time. Not from a good roll of the dice. That's what makes this an honest measuring stick instead of a coin flip.</p>
+    <div class="callout">
+      <div class="k">The catch we spend most of our time chasing</div>
+      <p>If one team secretly gets a free, permanent fix that the other team can't earn, the fairness quietly breaks &mdash; and the test just tells you whatever you were hoping to hear. Finding those hidden thumbs on the scale, and removing them, is most of the real work. A recent audit caught exactly one, and the whole re-run you may have seen me doing is checking the result now that it's gone.</p>
+    </div>
+  </section>
+
+  <!-- 8 -->
+  <section>
+    <div class="lead-in">Calling it</div>
+    <h2>How the winner is decided</h2>
+    <p>We let both companies run all the way to the end. Then we ignore the early rounds &mdash; every new setup is clumsy at first &mdash; and look only at the settled second half.</p>
+    <p>Whichever team has clearly less translation debt over that settled stretch wins. If they're close enough that you can't confidently tell them apart, we call it an honest <strong class="hl">tie</strong>. We don't crown a winner on a hair's difference, because a hair's difference is just noise.</p>
+    <div class="callout">
+      <div class="k">In one sentence</div>
+      <p>Build the same company twice, adopt AI two different ways, give both the identical customers and the identical luck, and see which one wastes less effort cleaning up after itself.</p>
+    </div>
+  </section>
+
+  <div class="footer">&copy; 2025&ndash;2026 Charlie Fuller</div>
+
+</div>
+
+<script>
+  const toggle = document.getElementById('themeToggle');
+  const iconLight = toggle.querySelector('.icon-light');
+  const iconDark = toggle.querySelector('.icon-dark');
+  function setTheme(d) {
+    document.documentElement.classList.toggle('dark', d);
+    iconLight.style.display = d ? 'none' : '';
+    iconDark.style.display = d ? '' : 'none';
+    try { localStorage.setItem('diagram-theme', d ? 'dark' : 'light'); } catch(e) {}
+  }
+  toggle.addEventListener('click', () => setTheme(!document.documentElement.classList.contains('dark')));
+  try { if (localStorage.getItem('diagram-theme') === 'dark') setTheme(true); } catch(e) {}
+</script>
+</body>
+</html>
