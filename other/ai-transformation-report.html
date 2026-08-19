@@ -282,7 +282,7 @@
   <div class="hero">
     <h1>I built a simulation that proved a thesis I'd arrived at.<br>Then I audited it and found it was cheating.</h1>
     <span class="hero-badge" aria-hidden="true">2 seeds &middot; 16 sprints &middot; 1 adversarial audit</span>
-    <p class="hero-sub">You cannot fork a real company to test whether the AI operating model is discovered or designed. So I simulated one. It returned the answer I wanted, which is exactly when a result deserves the least trust.</p>
+    <p class="hero-sub">You cannot fork a real company to test whether the AI operating model is discovered or designed. So I simulated one. It returned the answer I wanted, which is exactly when a result deserves the least trust. So I traced the win to its source, found a rig, cut it out, and re-ran the whole test. The tidy answer did not come back &mdash; and that is the finding.</p>
 
     <div class="chain">
       <div class="chain-step"><span class="chain-n">01</span><span class="chain-t">Build the instrument</span></div>
@@ -293,11 +293,11 @@
       <div class="chain-arrow">&rarr;</div>
       <div class="chain-step"><span class="chain-n">04</span><span class="chain-t">Trace every metric to its mutation</span></div>
       <div class="chain-arrow">&rarr;</div>
-      <div class="chain-step bad"><span class="chain-n">05</span><span class="chain-t">Find the rig</span></div>
+      <div class="chain-step bad"><span class="chain-n">05</span><span class="chain-t">Found the rig</span></div>
       <div class="chain-arrow">&rarr;</div>
-      <div class="chain-step"><span class="chain-n">06</span><span class="chain-t">Fix it</span></div>
+      <div class="chain-step"><span class="chain-n">06</span><span class="chain-t">Fixed it</span></div>
       <div class="chain-arrow">&rarr;</div>
-      <div class="chain-step open"><span class="chain-n">07</span><span class="chain-t">Publish what is still unverified</span></div>
+      <div class="chain-step"><span class="chain-n">07</span><span class="chain-t">Re-ran the honest test</span></div>
     </div>
 
     <div class="related">
@@ -355,8 +355,8 @@
   <div class="section">
     <div class="section-label">III &middot; The finding</div>
     <div class="kicker">Start here</div>
-    <h2>The instrument failed its own test</h2>
-    <p class="lede">Validity gate 5 asks one question: can we construct conditions where Track B wins? If not, the simulation asserts its answer instead of discovering it. Track B does not win a single cell. Including the cell built for it to win.</p>
+    <h2>The instrument failed its own test &mdash; and that is how I caught the rig</h2>
+    <p class="lede">Validity gate 5 asks one question: can we construct conditions where Track B wins? If not, the simulation asserts its answer instead of discovering it. In the original build, Track B <strong>did not win a single cell</strong> &mdash; including the cell built for it to win. That was the tell. Everything in this section is what that tell led me to, and how I fixed it. The resolution is in Section V.</p>
 
     <div class="table-wrap">
       <table class="data-table">
@@ -379,7 +379,12 @@
       <p><strong>The subtle part is which half was legitimate.</strong> A's fixes being durable is real, and it is the actual mechanism the whole thesis rests on. The team owns the fix because it built the fix from its own evidence. Keep that. What was rigged is that the fix was ungated, larger, and guaranteed every cycle. A is supposed to be blind to seams it has not yet watched break. The code handed it omniscience and deleted its defining constraint.</p>
     </div>
 
-    <p>The fix gates the cut on observed failures. Durability survives, omniscience is removed, and the winner becomes conditional on the regime instead of guaranteed.</p>
+    <div class="card" style="border-left:4px solid var(--metric)">
+      <div class="callout-title" style="color:var(--metric)">How I fixed it</div>
+      <p>One line, one gate. The cut is now allowed only on seams Track A has <strong>actually observed failing</strong> &mdash; the same evidence gate that already governed everything else A does.</p>
+      <div class="code-snip">if step.name in observed_gap_steps:      # only what A has watched break<br>&nbsp;&nbsp;&nbsp;&nbsp;step.ai_error_rate = max(0.02, step.ai_error_rate * 0.6)</div>
+      <p>Durability survives, because it is real: A's fixes still stick, since the team built them from its own evidence. Omniscience is gone, because A can no longer repair a seam it has never seen break. The winner becomes <strong>conditional on the regime</strong> instead of guaranteed. I also deleted the second rig &mdash; the hand-written trust deltas &mdash; and re-derived trust from experience for both tracks (next section). Then I re-ran the full sweep on the fixed code to see what it actually says (Section V).</p>
+    </div>
   </div>
 
   <div class="section">
