@@ -1,0 +1,319 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="How we know the AI transformation simulation is fair and realistic — the safeguards that keep it from telling us what we want to hear, and the real-world data it's built on.">
+<title>AI Transformation Experiment — Is the Simulation Fair? (Plain English)</title>
+<link rel="icon" type="image/svg+xml" href="../icon.svg">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,wght@0,400;0,500;0,600;0,700;0,800;1,400&family=Source+Code+Pro:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --font-display: 'Fraunces', Georgia, serif;
+    --font-mono: 'Source Code Pro', 'SF Mono', Consolas, monospace;
+    --bg: #eef4f9; --surface: #ffffff; --surface2: #f5f8fc;
+    --border: #c8daea; --border-bright: #a0bedb;
+    --text: #0a1628; --text-dim: #3d5a7a; --text-muted: #7a9ab8;
+    --primary: #e8621a; --primary-dim: rgba(232,98,26,0.08);
+    --secondary: #4a90c4; --secondary-dim: rgba(74,144,196,0.08);
+    --metric: #0f766e; --metric-dim: rgba(15,118,110,0.06);
+    --amber: #b45309; --amber-dim: rgba(180,83,9,0.08);
+    --slate: #475569; --slate-dim: rgba(71,85,105,0.08);
+  }
+  html.dark {
+    --bg: #0a1628; --surface: #132240; --surface2: #1a2d52;
+    --border: #1a2d52; --border-bright: #2d4570;
+    --text: #e8edf5; --text-dim: #9bb0d4; --text-muted: #5e7aa3;
+    --primary: #f37021; --primary-dim: rgba(243,112,33,0.12);
+    --secondary: #6cace4; --secondary-dim: rgba(108,172,228,0.12);
+    --metric: #2dd4bf; --metric-dim: rgba(45,212,191,0.08);
+    --amber: #f59e0b; --amber-dim: rgba(245,158,11,0.12);
+    --slate: #475569; --slate-dim: rgba(71,85,105,0.08);
+  }
+
+  * { margin:0; padding:0; box-sizing:border-box; }
+
+  body {
+    background: var(--bg);
+    background-image:
+      radial-gradient(ellipse at 80% 0%, var(--primary-dim) 0%, transparent 50%),
+      radial-gradient(ellipse at 20% 60%, var(--secondary-dim) 0%, transparent 40%);
+    color: var(--text); font-family: var(--font-display);
+    min-height: 100vh; line-height: 1.7; padding: 0 24px 64px;
+    transition: background 0.3s, color 0.3s;
+  }
+
+  .backlink {
+    position: fixed; top: 12px; left: 16px; z-index: 101;
+    font-family: var(--font-mono); font-size: 12px; color: var(--text-dim);
+    text-decoration: none; padding: 6px 10px;
+    border: 1px solid var(--border); border-radius: 6px; background: var(--surface);
+    transition: color 0.15s, border-color 0.15s;
+  }
+  .backlink:hover { color: var(--text); border-color: var(--border-bright); }
+
+  .nav {
+    position: sticky; top: 0; z-index: 100;
+    backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px);
+    background: color-mix(in srgb, var(--surface) 85%, transparent);
+    border-bottom: 1px solid var(--border);
+    margin: 0 -24px 32px; padding: 0 24px;
+    transition: background 0.3s, border-color 0.3s;
+  }
+  .nav-inner {
+    max-width: 1200px; margin: 0 auto; padding: 12px 0 12px 96px;
+    display: flex; align-items: center; justify-content: space-between;
+  }
+  .nav-brand { font-family: var(--font-mono); font-size: 12px; font-weight: 600; letter-spacing: 0.5px; color: var(--primary); text-decoration: none; }
+  .nav-brand:hover { color: var(--text); }
+  .theme-toggle {
+    width: 36px; height: 36px; border-radius: 10px;
+    border: 1px solid var(--border); background: var(--surface);
+    cursor: pointer; display: flex; align-items: center; justify-content: center;
+    font-size: 16px; color: var(--text-dim); transition: all 0.2s;
+  }
+  .theme-toggle:hover, .theme-toggle:focus-visible { border-color: var(--primary); color: var(--primary); outline: none; }
+
+  .container { max-width: 940px; margin: 0 auto; }
+
+  .hero { text-align: center; padding: 44px 0 30px; }
+  .hero h1 { font-size: 44px; font-weight: 700; letter-spacing: -0.5px; color: var(--primary); margin-bottom: 14px; }
+  .hero .lead { font-size: 20px; color: var(--text-dim); max-width: 660px; margin: 0 auto; line-height: 1.5; }
+  .hero .sub { font-size: 14px; color: var(--text-muted); font-family: var(--font-mono); margin-top: 16px; }
+
+  section { margin-top: 46px; }
+  h2 { font-size: 27px; font-weight: 700; color: var(--text); margin-bottom: 8px; }
+  section > p { font-size: 16px; color: var(--text-dim); line-height: 1.7; margin-bottom: 12px; }
+  section > p:first-of-type { margin-top: 14px; }
+  .lead-in { color: var(--text-muted); font-family: var(--font-mono); font-size: 12px; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 4px; }
+  strong.hl { color: var(--primary); font-weight: 700; }
+
+  @media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation-duration: 0.01ms !important; transition: none !important; } }
+
+  .callout {
+    background: var(--primary-dim); border: 1px solid var(--border);
+    border-left: 4px solid var(--primary); border-radius: 0 10px 10px 0;
+    padding: 18px 22px; margin-top: 18px;
+  }
+  .callout.teal { background: var(--metric-dim); border-left-color: var(--metric); }
+  .callout .k { font-family: var(--font-mono); font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; color: var(--primary); margin-bottom: 6px; }
+  .callout.teal .k { color: var(--metric); }
+  .callout p { font-size: 16.5px; color: var(--text); line-height: 1.6; }
+
+  /* Safeguard cards — the risk vs the check */
+  .guard {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 12px; padding: 20px 24px; margin-top: 14px;
+    border-left: 4px solid var(--metric);
+  }
+  .guard h4 { font-size: 18px; font-weight: 700; color: var(--text); margin-bottom: 12px; }
+  .grow { display: grid; grid-template-columns: 104px 1fr; gap: 9px 14px; }
+  .grow dt { font-family: var(--font-mono); font-size: 10px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; padding-top: 3px; }
+  .grow dt.risk { color: var(--amber); }
+  .grow dt.check { color: var(--metric); }
+  .grow dd { font-size: 14.5px; color: var(--text-dim); line-height: 1.65; }
+  .grow dd strong { color: var(--text); }
+  .grow code { font-family: var(--font-mono); font-size: 12px; background: var(--surface2); padding: 1px 5px; border-radius: 4px; color: var(--text); }
+  @media (max-width: 768px) { .grow { grid-template-columns: 1fr; gap: 2px 0; } .grow dt { padding-top: 8px; } }
+
+  /* Real-world grounding facts */
+  .facts { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-top: 16px; }
+  @media (max-width: 720px) { .facts { grid-template-columns: 1fr 1fr; } }
+  @media (max-width: 440px) { .facts { grid-template-columns: 1fr; } }
+  .fact { background: var(--surface2); border: 1px solid var(--border); border-left: 3px solid var(--secondary); border-radius: 0 8px 8px 0; padding: 14px 16px; }
+  .fact .n { font-size: 24px; font-weight: 800; color: var(--secondary); line-height: 1.1; }
+  .fact .l { font-size: 13px; color: var(--text-dim); line-height: 1.45; margin-top: 4px; }
+
+  .def { background: var(--surface2); border: 1px solid var(--border); border-left: 3px solid var(--metric); border-radius: 0 8px 8px 0; padding: 14px 16px; margin-top: 12px; }
+  .def .term { font-weight: 700; color: var(--metric); font-size: 15px; }
+  .def p { font-size: 14.5px; color: var(--text-dim); line-height: 1.6; margin-top: 2px; }
+
+  .section-rule { margin: 60px 0 20px; border: none; border-top: 1px solid var(--border-bright); }
+
+  .footer { margin-top: 60px; padding-top: 18px; border-top: 1px solid var(--border); text-align: center; font-size: 13px; color: var(--text-muted); }
+</style>
+</head>
+<body>
+<a href="../index.html" class="backlink">&larr; Index</a>
+<div class="nav">
+  <div class="nav-inner">
+    <a href="../index.html" class="nav-brand">&larr; AI Transformation Experiment</a>
+    <button class="theme-toggle" id="themeToggle" aria-label="Toggle dark mode">
+      <span class="icon-light">&#9788;</span>
+      <span class="icon-dark" style="display:none">&#9790;</span>
+    </button>
+  </div>
+</div>
+
+<div class="container">
+
+  <div class="hero">
+    <h1>Is the Simulation Fair?</h1>
+    <p class="lead">A pretend company can be built to say anything you want. Here's how we keep this one honest &mdash; and how we know it's grounded in the real world, not made up.</p>
+    <p class="sub">A companion to "How the Simulation Works" &middot; plain English throughout</p>
+  </div>
+
+  <!-- The trap -->
+  <section>
+    <div class="lead-in">The honest problem</div>
+    <h2>The trap every simulation falls into</h2>
+    <p>Here's the uncomfortable truth. If you build a computer model of a company and you're quietly hoping one side wins, you will almost certainly get that side to win &mdash; without ever meaning to cheat. A number nudged here, an advantage granted there, and the model dutifully hands back the answer you were rooting for. Then you show it around as "proof."</p>
+    <p>That's not proof. That's a mirror.</p>
+    <p>So the real question isn't "did our preferred approach win?" It's <strong class="hl">"would this simulation have been willing to tell us we were wrong?"</strong> A model that can only confirm your hopes proves nothing. A model that fights back, that produces results you didn't want, is the only kind worth trusting. Everything below is how we force this one to be that second kind.</p>
+  </section>
+
+  <hr class="section-rule">
+
+  <!-- PART 1: FAIR -->
+  <section>
+    <div class="lead-in">Part one &middot; Fair</div>
+    <h2>Six ways we keep it from cheating</h2>
+    <p>"Fair" means neither team gets a secret advantage, and the model is genuinely allowed to reach either answer. Six safeguards enforce that.</p>
+
+    <div class="guard">
+      <h4>1 &middot; Both teams get the identical luck</h4>
+      <dl class="grow">
+        <dt class="risk">The risk</dt>
+        <dd>If one team happened to get easier customers or luckier breaks, its win would mean nothing.</dd>
+        <dt class="check">The check</dt>
+        <dd>Whether the AI succeeds or stumbles on any given handoff is decided by a <strong>fixed fingerprint</strong> of the exact claim, step, and moment &mdash; not a live coin flip. So both teams hit the <strong>identical</strong> success and failure on the identical work at the identical time. There is no luck to be unequal. Any lasting difference between them can only come from their approach.</dd>
+      </dl>
+    </div>
+
+    <div class="guard">
+      <h4>2 &middot; The scoreboard is symmetric</h4>
+      <dl class="grow">
+        <dt class="risk">The risk</dt>
+        <dd>A scoring rule tilted even slightly toward one side quietly decides the winner before the race.</dd>
+        <dt class="check">The check</dt>
+        <dd>The winner is whoever has clearly less cleanup work over the settled second half of the run. The rule is direction-blind: the <strong>same margin</strong> is required to declare either team the winner. It doesn't know or care which team we like.</dd>
+      </dl>
+    </div>
+
+    <div class="guard">
+      <h4>3 &middot; The losing team isn't a punching bag</h4>
+      <dl class="grow">
+        <dt class="risk">The risk</dt>
+        <dd>The easiest way to rig a contest is to make the other side stupid &mdash; a cartoon of clueless executives staring at dashboards.</dd>
+        <dt class="check">The check</dt>
+        <dd>The "big plan" team runs on the <strong>real playbooks</strong> real companies use (Kotter's 8 Steps, Prosci ADKAR, McKinsey 7S), executed competently. And a separate <strong>fidelity auditor</strong> inspects both teams every single round, checking neither has drifted into caricature. If it finds too many violations, it can <strong>halt the run</strong>. A weak opponent isn't allowed to stand.</dd>
+      </dl>
+    </div>
+
+    <div class="guard">
+      <h4>4 &middot; We actively try to make the other side win</h4>
+      <dl class="grow">
+        <dt class="risk">The risk</dt>
+        <dd>If you never test whether the underdog <em>can</em> win, you never learn whether the deck was stacked.</dd>
+        <dt class="check">The check</dt>
+        <dd>We deliberately build the conditions where the "big plan" team <em>should</em> win &mdash; the easy, well-documented, calm situations that favor planning over learning-by-doing &mdash; and check whether the model lets it. If it can produce that win, it isn't rigged. If it never can, that's a real finding worth chasing, not a design we hide.</dd>
+      </dl>
+    </div>
+
+    <div class="guard">
+      <h4>5 &middot; We hire a skeptic to attack it</h4>
+      <dl class="grow">
+        <dt class="risk">The risk</dt>
+        <dd>The person who built the model is the last person likely to spot their own thumb on the scale.</dd>
+        <dt class="check">The check</dt>
+        <dd>We run <strong>adversarial audits</strong> whose only job is to find hidden advantages. One recently caught a real one: the "learn as you go" team was getting an unearned, permanent, never-fading discount on the exact number the whole score is built from. It was removed &mdash; and the entire result re-checked with it gone. (More on that below.)</dd>
+      </dl>
+    </div>
+
+    <div class="guard">
+      <h4>6 &middot; We write the prediction down first</h4>
+      <dl class="grow">
+        <dt class="risk">The risk</dt>
+        <dd>If you decide what counts as success <em>after</em> seeing the result, you'll always find a way to call it a win.</dd>
+        <dt class="check">The check</dt>
+        <dd>Before a re-run, we commit the prediction in writing &mdash; "this specific situation should flip to this team." And the random starting conditions are chosen <strong>blind to the outcome</strong>, screened only for the weather we wanted, never for who wins. No moving the goalposts after the ball is in the air.</dd>
+      </dl>
+    </div>
+  </section>
+
+  <hr class="section-rule">
+
+  <!-- PART 2: REALISTIC -->
+  <section>
+    <div class="lead-in">Part two &middot; Realistic</div>
+    <h2>Why the pretend company behaves like a real one</h2>
+    <p>Fair isn't enough. A perfectly fair model of a company that doesn't exist still tells you nothing. So the model is built on real numbers and real behavior, not invented ones.</p>
+
+    <div class="facts">
+      <div class="fact"><div class="n">70,000</div><div class="l">employees at the real company it's modeled on (Progressive Insurance)</div></div>
+      <div class="fact"><div class="n">$86B</div><div class="l">in real annual premiums, from public filings</div></div>
+      <div class="fact"><div class="n">55%</div><div class="l">of claims the real company already runs through AI &mdash; the starting point</div></div>
+      <div class="fact"><div class="n">87.3%</div><div class="l">combined ratio &mdash; the real profitability number we calibrate to</div></div>
+      <div class="fact"><div class="n">3</div><div class="l">real insurance workflows: auto claims, commercial underwriting, subrogation</div></div>
+      <div class="fact"><div class="n">43</div><div class="l">measured numbers across 6 dimensions, checked by 8 validity gates</div></div>
+    </div>
+
+    <div class="def" style="margin-top:18px">
+      <span class="term">Real financials, not guesses</span>
+      <p>The company's size, money, and starting AI usage are taken from public quarterly filings, Glassdoor reviews, and job postings &mdash; not typed in to make a point. If the baseline didn't look like the real company, the model would be wrong, and we'd know to fix it.</p>
+    </div>
+    <div class="def">
+      <span class="term">Real work, not a toy</span>
+      <p>Claims travel the actual chain of desks an insurer uses, across three genuine lines of business. Each handoff's riskiness is set from how that real job actually works &mdash; payment runs on safe standardized rails, live negotiation with a claimant does not.</p>
+    </div>
+    <div class="def">
+      <span class="term">Real people, not robots</span>
+      <p>The staff aren't rational machines. Each is modeled with a personality (the standard "big five" traits), known human thinking-biases (the Kahneman and Tversky research), what actually drives them, and who they listen to. Organizations don't run on logic &mdash; they run on people protecting their turf, softening bad news, and quietly fixing things with knowledge that never got written down. The model bakes that in.</p>
+    </div>
+    <div class="def">
+      <span class="term">Real playbooks, not straw men</span>
+      <p>Both approaches are grounded in published, field-tested methods &mdash; and cross-checked against outside expert frameworks so neither is a flattering self-portrait.</p>
+    </div>
+  </section>
+
+  <!-- The proof standard -->
+  <section>
+    <div class="lead-in">The bar we hold it to</div>
+    <h2>What actually counts as proof</h2>
+    <p>Proof has nothing to do with our preferred approach winning. It's about whether the model captures enough reality that its output is evidence instead of decoration. Five plain tests:</p>
+    <div class="def"><span class="term">It surprises us.</span><p>If every result just confirms what we already believed, we built an echo chamber. Real proof looks like discoveries we didn't program &mdash; a bottleneck showing up somewhere we didn't expect. The model logs these on its own.</p></div>
+    <div class="def"><span class="term">Practitioners recognize it.</span><p>If a claims executive reads a character's decision log and says "I've managed three of that person," the model caught something true.</p></div>
+    <div class="def"><span class="term">It's robust, not fragile.</span><p>Run it many times with different random starts. The big patterns should hold; only the small details should shift. If a tiny change flips the whole result, nothing was proved &mdash; which is exactly why we run across seeds instead of trusting one.</p></div>
+    <div class="def"><span class="term">The losing side still does something right.</span><p>Even a clumsy transformation improves <em>something</em>. If the other team is a total punching bag, it's propaganda, not evidence.</p></div>
+    <div class="def"><span class="term">The counterfactual is honest.</span><p>We can point to conditions where the other approach would be the right call &mdash; and the model can actually produce that. A model that can only reach one answer isn't measuring; it's asserting.</p></div>
+  </section>
+
+  <hr class="section-rule">
+
+  <!-- The live proof -->
+  <section>
+    <div class="lead-in">The proof, in the open</div>
+    <h2>The best evidence: it refused to give us the answer we wanted</h2>
+    <p>Here's the part most demos hide. When the skeptic's audit removed that hidden advantage and we re-ran everything honestly, the model did <strong class="hl">not</strong> hand us a clean, satisfying story. It gave us an awkward, more believable one.</p>
+    <div class="callout">
+      <div class="k">What the honest re-run actually showed</div>
+      <p>In the calm, easy situations that were supposed to favor careful up-front planning, the two approaches came out <strong>essentially tied</strong> &mdash; a hair's difference, well inside the noise. In the messy, high-pressure situations, the "learn as you go" team won <strong>decisively</strong>. Neither result is the tidy landslide anyone was hoping for. That's exactly what makes it trustworthy.</p>
+    </div>
+    <p>A rigged model gives you a clean win for your favorite. An honest model gives you a tie where the theory was weak and a clear result where it was strong &mdash; and makes you sit with the discomfort. We're still running the final, most extreme test right now: stacking every advantage in the underdog's favor to see if there's <em>any</em> honest way for it to win outright. Whatever it says, we report it.</p>
+    <div class="callout teal">
+      <div class="k">The whole point in one line</div>
+      <p>We didn't build this to win an argument. We built it to find out if we were wrong &mdash; and we wired it so it could tell us so. The day it stopped agreeing with us is the day it started being worth something.</p>
+    </div>
+  </section>
+
+  <div class="footer">&copy; 2025&ndash;2026 Charlie Fuller</div>
+
+</div>
+
+<script>
+  const toggle = document.getElementById('themeToggle');
+  const iconLight = toggle.querySelector('.icon-light');
+  const iconDark = toggle.querySelector('.icon-dark');
+  function setTheme(d) {
+    document.documentElement.classList.toggle('dark', d);
+    iconLight.style.display = d ? 'none' : '';
+    iconDark.style.display = d ? '' : 'none';
+    try { localStorage.setItem('diagram-theme', d ? 'dark' : 'light'); } catch(e) {}
+  }
+  toggle.addEventListener('click', () => setTheme(!document.documentElement.classList.contains('dark')));
+  try { if (localStorage.getItem('diagram-theme') === 'dark') setTheme(true); } catch(e) {}
+</script>
+</body>
+</html>
