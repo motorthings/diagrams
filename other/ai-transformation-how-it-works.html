@@ -161,6 +161,37 @@
   .def .term { font-weight: 700; color: var(--metric); font-size: 15px; }
   .def p { font-size: 14.5px; color: var(--text-dim); line-height: 1.6; margin-top: 2px; }
 
+  /* Under the hood — mechanical detail */
+  .section-rule { margin: 60px 0 20px; border: none; border-top: 1px solid var(--border-bright); }
+  .uh-intro { font-size: 15.5px; color: var(--text-dim); line-height: 1.75; max-width: 760px; margin-top: 12px; }
+  .uh-intro strong { color: var(--text); }
+  .section-lead { font-size: 14.5px; color: var(--text-dim); max-width: 760px; margin: 6px 0 4px; line-height: 1.7; }
+  .mech-lever {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 12px; padding: 20px 24px; margin-top: 14px;
+  }
+  .mech-lever h4 { font-size: 17px; font-weight: 700; color: var(--text); margin-bottom: 2px; }
+  .mech-lever .knob {
+    font-family: var(--font-mono); font-size: 11px; color: var(--text-muted);
+    margin-bottom: 12px; display: block;
+  }
+  .mech-row { display: grid; grid-template-columns: 96px 1fr; gap: 10px 14px; }
+  .mech-row dt {
+    font-family: var(--font-mono); font-size: 10px; font-weight: 700;
+    letter-spacing: 0.06em; text-transform: uppercase; color: var(--amber); padding-top: 3px;
+  }
+  .mech-row dt.measured { color: var(--metric); }
+  .mech-row dd { font-size: 14px; color: var(--text-dim); line-height: 1.65; }
+  .mech-row dd strong { color: var(--text); }
+  .mech-row code {
+    font-family: var(--font-mono); font-size: 12px;
+    background: var(--surface2); padding: 1px 5px; border-radius: 4px; color: var(--text);
+  }
+  @media (max-width: 768px) {
+    .mech-row { grid-template-columns: 1fr; gap: 2px 0; }
+    .mech-row dt { padding-top: 8px; }
+  }
+
   .footer { margin-top: 60px; padding-top: 18px; border-top: 1px solid var(--border); text-align: center; font-size: 13px; color: var(--text-muted); }
 </style>
 </head>
@@ -316,6 +347,128 @@
     <div class="callout">
       <div class="k">In one sentence</div>
       <p>Build the same company twice, adopt AI two different ways, give both the identical customers and the identical luck, and see which one wastes less effort cleaning up after itself.</p>
+    </div>
+  </section>
+
+  <hr class="section-rule">
+
+  <!-- UNDER THE HOOD -->
+  <section>
+    <div class="lead-in">Under the hood</div>
+    <h2>How each part is actually simulated</h2>
+    <p class="uh-intro">Everything above is the shape. Here is the machine. <strong>Nothing below is a metaphor</strong> &mdash; it's what the engine does, sprint by sprint, and every number is a real setting in the code. Read it if you want to know exactly where a result comes from before you trust it.</p>
+  </section>
+
+  <!-- The unit of work -->
+  <section>
+    <div class="lead-in">The unit of work</div>
+    <h2>Every claim is a chain of handoffs, and each seam carries two numbers</h2>
+    <p>A claim runs through a fixed chain of desks &mdash; intake, routing, damage estimate, coverage check, approval, payment, closure &mdash; across three real insurance workflows: <strong class="hl">auto claims, commercial underwriting, and subrogation</strong>. Every desk-to-desk handoff is a seam, and each seam is stamped with two independent numbers set before the run starts.</p>
+    <div class="mech-lever">
+      <h4>Seam risk</h4>
+      <span class="knob">how likely meaning breaks at this handoff &middot; 0 to 1</span>
+      <div class="mech-row">
+        <dt>Modeled</dt>
+        <dd>Set per handoff from how the real job works. Subrogation is the riskiest in the building (<code>0.9</code>) because it sits downstream of everything; coverage verification is <code>0.8</code>; the AI damage estimate is <code>0.7</code>. Payment execution is near zero &mdash; it runs on standardized rails.</dd>
+      </div>
+    </div>
+    <div class="mech-lever">
+      <h4>Seam tacitness</h4>
+      <span class="knob">how much of the judgment is irreducibly human &middot; 0 to 1</span>
+      <div class="mech-row">
+        <dt>Modeled</dt>
+        <dd><code>0</code> means a checklist a computer can codify (routing on structured data is <code>0.20</code>). <code>1</code> means pure human judgment (live negotiation with a claimant is <code>0.85</code>). This is <strong>deliberately separate from seam risk</strong>: a handoff can be risky <em>and</em> codifiable. AI is strong where tacitness is low and fails where it's high &mdash; which is exactly where the two teams split.</dd>
+      </div>
+    </div>
+    <p style="margin-top:16px;">This is why the company leaks value unevenly. The cheap, standardized steps are safe. The expensive human-judgment steps are where a confident-looking AI handoff is most likely to be quietly wrong.</p>
+  </section>
+
+  <!-- How a handoff breaks and is counted -->
+  <section>
+    <div class="lead-in">The three quality signals</div>
+    <h2>How a broken handoff is modeled, and how it's counted</h2>
+    <div class="mech-lever">
+      <h4>Handoff failure</h4>
+      <div class="mech-row">
+        <dt>Modeled</dt>
+        <dd>When the AI handles a step it can do, it either succeeds or <strong>loses meaning at the handoff</strong>. Whether it fails isn't a coin flip &mdash; it's fixed by a fingerprint of the exact <code>(claim, step, sprint)</code>, so the same claim at the same moment always resolves the same way for <strong>both teams</strong>. A volume spike pushes failures up (<code>&times;(1 + 0.5 &times; surge)</code>); a handoff whose context has been standardized fails about <code>30%</code> less often. The rate is held between <code>0.01</code> and <code>0.95</code>.</dd>
+        <dt class="measured">Counted</dt>
+        <dd><strong>Translation Debt Index</strong> = broken handoffs + reconciliation incidents + "quick alignment" meetings, per 100 claims. Starts around <code>100</code>, and a healthy target is <code>30</code>. This is the headline number that decides the winner.</dd>
+      </div>
+    </div>
+    <div class="mech-lever">
+      <h4>Exception rate</h4>
+      <div class="mech-row">
+        <dt>Modeled</dt>
+        <dd>Any claim that had to be kicked to a human beyond the normal path &mdash; the tail of the work turning into supervision and rescue.</dd>
+        <dt class="measured">Counted</dt>
+        <dd><strong>Exception rate</strong> = escalated decisions &divide; all decisions that sprint.</dd>
+      </div>
+    </div>
+    <div class="mech-lever">
+      <h4>Cost per claim</h4>
+      <div class="mech-row">
+        <dt>Modeled</dt>
+        <dd>Every reconciliation and every rework pass adds real handling cost on top of the base processing.</dd>
+        <dt class="measured">Counted</dt>
+        <dd><strong>Cost per claim</strong>, used as a tie-breaker when the debt numbers are close. More broken seams means more cleanup means higher cost.</dd>
+      </div>
+    </div>
+  </section>
+
+  <!-- The two teams mechanically -->
+  <section>
+    <div class="lead-in">The two teams, mechanically</div>
+    <h2>What each philosophy actually does to a seam</h2>
+    <p class="section-lead">Both teams are trying to close the same gappy handoffs. They just go about it in opposite ways &mdash; and the difference in the code is small, specific, and decisive.</p>
+    <div class="mech-lever">
+      <h4>Team A &middot; Learn as you go</h4>
+      <span class="knob">fixes only what it has personally watched break</span>
+      <div class="mech-row">
+        <dt>Modeled</dt>
+        <dd>A can only touch a seam it has <strong>actually observed failing</strong>. Each fix cycle it standardizes the worst observed broken handoff, and cuts the error rate of its worst observed AI seam to <code>60%</code> of what it was (a 40% cut), floored at <code>0.02</code>. The catch: it's blind to seams it hasn't hit yet, so early on it's fixing a short list. The payoff: <strong>its fixes never regress</strong> &mdash; the team built them from its own evidence, so they stick.</dd>
+      </div>
+    </div>
+    <div class="mech-lever">
+      <h4>Team B &middot; Big plan first</h4>
+      <span class="knob">standardizes a-priori, in five planned waves, blind to what's actually broken</span>
+      <div class="mech-row">
+        <dt>Modeled</dt>
+        <dd>B commits to a plan before running anything, ranking seams by their <em>designed</em> risk. It rolls out in <code>5</code> waves. Its odds of nailing a given seam are <code>0.85 &times; (1 &minus; tacitness)</code> &mdash; so it cleanly codifies explicit seams and keeps missing the tacit ones it's blind to. A hit lowers that seam's error rate by up to <code>0.4 &times; vendor_quality</code> (about a third, with a good vendor). A miss <em>raises</em> friction <code>10%</code> &mdash; a rigid template imposed where judgment was needed.</dd>
+        <dt>Modeled</dt>
+        <dd>And B's wins don't fully stick. Completed seams <strong>revert</strong> under change fatigue and turbulence (base <code>8%</code> per sprint, scaled by how rough the quarter is). This is the honest cost of speed and breadth &mdash; the real-world finding that most big transformations don't sustain their gains.</dd>
+      </div>
+    </div>
+    <p style="margin-top:16px;">That's the whole contest in one line: A is slow, narrow, and permanent; B is fast, broad, and leaky. Which wins depends entirely on the seam mix and the weather &mdash; which is what the experiment is built to find.</p>
+  </section>
+
+  <!-- The human loop -->
+  <section>
+    <div class="lead-in">The human loop</div>
+    <h2>People aren't a constant &mdash; they respond, and it feeds back</h2>
+    <div class="mech-lever">
+      <h4>Trust moves slowly, and it's mostly earned</h4>
+      <div class="mech-row">
+        <dt>Modeled</dt>
+        <dd>Each smooth AI handoff nudges a worker's trust up; each garbled one nudges it down &mdash; a small <code>0.03</code> per interaction, so trust builds slowly and honestly. A person's view is <code>60%</code> their own experience and <code>40%</code> the people around them, and it drifts <code>15%</code> toward an influential colleague each sprint. Nobody is told how to feel.</dd>
+      </div>
+    </div>
+    <div class="mech-lever">
+      <h4>Quitting cascades</h4>
+      <div class="mech-row">
+        <dt>Modeled</dt>
+        <dd>Worn-down, distrustful staff leave faster. And one departure raises the odds of the next in the same group by <code>10%</code>, an effect that fades by half each sprint and is capped at <code>2&times;</code>. A rough quarter (high stress) lifts attrition on its own. When AI genuinely reduces grind, attrition drops <code>15%</code> instead.</dd>
+        <dt class="measured">Why it matters</dt>
+        <dd>Fewer people means more dropped handoffs, which wears down more people. This feedback loop is why the same plan can hold in a calm run and wobble in a stormy one &mdash; and why we re-run across many random starts before trusting any result.</dd>
+      </div>
+    </div>
+  </section>
+
+  <!-- Where the numbers come from -->
+  <section>
+    <div class="callout">
+      <div class="k">Where the numbers come from</div>
+      <p>Every value on this page &mdash; the error rates, the 40% cut, the vendor strength, the regression rate, the trust step &mdash; is a named, explicit setting in the code, not a hidden constant tuned to get an answer. The AI's success or failure on each handoff is decided the identical way for both teams, so any lasting gap between them comes from the approach, not luck. When one team was quietly handed an unearned, permanent advantage, an audit caught it and it was removed &mdash; and re-checking the result with that thumb off the scale is the work still finishing in the background.</p>
     </div>
   </section>
 
