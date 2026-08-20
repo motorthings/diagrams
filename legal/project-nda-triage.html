@@ -3,7 +3,8 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Legal Metrics Analysis Agent — Legal AI Project</title>
+<title>NDA Triage Agent — Legal AI Project</title>
+<meta name="description" content="A Glean agent that triages Field NDAs — approving standard papers for execution or routing real risks to GTM Legal — and generates an audit certificate for every self-approved NDA.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;0,6..72,600;0,6..72,700;1,6..72,400;1,6..72,500&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
@@ -66,6 +67,12 @@
   .ba-card .ba-text { font-size: 15px; color: var(--text-dim); line-height: 1.5; }
   .ba-card .ba-metric { font-family: var(--font-display); font-size: 28px; font-weight: 600; color: var(--heading); margin-top: 8px; }
 
+  .decision-flow { display: flex; flex-direction: column; gap: 0; margin: 20px 0; }
+  .decision-node { background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 14px 20px; text-align: center; }
+  .decision-node .d-label { font-family: var(--font-mono); font-size: 9px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--accent-bright); margin-bottom: 4px; }
+  .decision-node .d-text { font-size: 15px; color: var(--text); font-weight: 500; }
+  .decision-arrow { text-align: center; color: var(--text-faint); font-family: var(--font-mono); font-size: 16px; padding: 4px 0; }
+
   .metric-row { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 12px; margin: 20px 0; }
   .metric-card { background: var(--surface-warm); border: 1px solid var(--border); border-radius: 8px; padding: 16px 20px; text-align: center; }
   .metric-card .m-value { font-family: var(--font-display); font-size: 28px; font-weight: 600; color: var(--heading); }
@@ -90,39 +97,38 @@
 <body>
   <nav class="nav">
     <a href="legal-project-registry.html">&larr; Project Registry</a>
-    <span>Enterprise Engagement — Legal Metrics</span>
+    <span>Enterprise Engagement — GTM Legal</span>
   </nav>
 
   <div class="container">
     <header class="hero fade-up">
       <div class="hero-label">Enterprise Legal Project</div>
-      <h1>Legal Metrics Analysis Agent</h1>
-      <p class="hero-sub">Natural-language access to procurement and revenue-contract execution data, plus outside-counsel spend by firm and practice area. The first time leadership could ask a question and get an answer without pulling data across four different systems.</p>
+      <h1>NDA Triage Agent</h1>
+      <p class="hero-sub">Triages Field NDAs — approving standard papers for execution or routing real risk to GTM Legal — and generates an audit certificate for every self-approved NDA.</p>
       <div class="hero-meta">
         <div class="meta-item"><strong>Status:</strong> Deployed</div>
         <div class="meta-item"><strong>Platform:</strong> Glean</div>
-        <div class="meta-item"><strong>Department:</strong> Legal Operations</div>
-        <div class="meta-item"><strong>Data Sources:</strong> Tableau, SFDC, SAP, SimpleLegal</div>
+        <div class="meta-item"><strong>Department:</strong> GTM Legal</div>
+        <div class="meta-item"><strong>Audit:</strong> Certificate + sheet</div>
       </div>
     </header>
 
     <section>
       <div class="section-label">The Problem</div>
       <h2><svg class="section-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><line x1="8" y1="8" x2="16" y2="16"/><line x1="16" y1="8" x2="8" y2="16"/></svg>Why it was built</h2>
-      <p>Legal leadership needed to answer basic operational questions: <strong>how many NDAs did we execute last quarter? What are we spending with each outside counsel firm? Which practice areas drive the most contract volume?</strong></p>
-      <p>Answering any of these required manual pulls across <strong>four disconnected systems</strong> — Tableau for contract data, SFDC for revenue contracts, SAP for procurement, SimpleLegal for outside-counsel spend. Each query meant logging into a different tool, running a different report, and manually reconciling the results. A single question could consume hours of analyst time. And the answer was stale the moment it was produced.</p>
+      <p>Every Field NDA landing on Legal's desk forced a single question: <strong>is this our standard paper, or does it hide real risk?</strong> Most were standard — and still waited on a lawyer to say so. The team needed a way to approve the easy ones fast while still catching the ones that deserved a human.</p>
+      <p>The cost of over-routing is friction. The cost of under-routing is an uncapped indemnity or a non-compete you didn't negotiate out. The agent exists to split those two correctly, every time, with a paper trail.</p>
     </section>
 
     <div class="before-after fade-up">
       <div class="ba-card before">
         <div class="ba-label">Before</div>
-        <div class="ba-text">Analyst logs into 4 systems. Runs reports. Reconciles in Excel. Produces answer. Each query: hours. Answer is point-in-time, already stale. Only the analyst can do it.</div>
-        <div class="ba-metric">Hours per query</div>
+        <div class="ba-text">Every NDA — standard or not — waited for a lawyer's review. Field submitter fills a LinkSquares request, waits, chases. Standard papers sit in queue behind real risk.</div>
+        <div class="ba-metric">Every NDA waits</div>
       </div>
       <div class="ba-card after">
-        <div class="ba-label">After</div>
-        <div class="ba-text">Leader types a natural-language question. Agent queries the connected data sources and returns a structured answer with source references. Self-serve. Always current.</div>
-        <div class="ba-metric">Seconds per query</div>
+        <div class="ba-text">Agent ingests the NDA, classifies it, and decides: approve for execution, or route to GTM Legal. Self-approved NDAs get a certificate of review plus an audit-log row automatically.</div>
+        <div class="ba-metric">Instant triage</div>
       </div>
     </div>
 
@@ -130,13 +136,32 @@
       <div class="section-label">The Solution</div>
       <h2><svg class="section-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><polygon points="12,4 14,10 20,10 15,14 17,20 12,16 7,20 9,14 4,10 10,10"/></svg>What it does</h2>
       <p>
-        A Glean agent connected to all four source systems. Leadership asks questions in natural language — "what did we spend with Firm X last quarter across all practice areas?" — and the agent queries the relevant sources, reconciles the data, and returns a structured answer with line-item detail.
+        A Glean agent that ingests the NDA from a file, pasted text, or a Salesforce/LinkSquares link, then makes one of three calls.
+      </p>
+      <div class="decision-flow">
+        <div class="decision-node">
+          <div class="d-label">Standard paper, no edits</div>
+          <div class="d-text">Approve for execution. Generate a certificate of review and log to the audit sheet.</div>
+        </div>
+        <div class="decision-arrow">&darr;</div>
+        <div class="decision-node">
+          <div class="d-label">Customer/partner paper or edited</div>
+          <div class="d-text">Evaluate against policy. Route to GTM Legal via LinkSquares with a deal-ready issue summary.</div>
+        </div>
+        <div class="decision-arrow">&darr;</div>
+        <div class="decision-node">
+          <div class="d-label">Not an NDA, or far beyond one</div>
+          <div class="d-text">Direct the submitter to GTM Legal review with the exact LinkSquares steps.</div>
+        </div>
+      </div>
+      <p>
+        The decision logic is where the judgment lives. Default to <strong>speed and low friction</strong> — accept customer NDAs unless there's a true red flag. Red flags that force a route: non-compete or non-solicit obligations, residuals clauses, DPA-like security terms, first-party indemnities with uncapped liability, liquidated damages for a confidentiality breach.
       </p>
       <p>
-        Key data domains: <strong>procurement contracts</strong> (MSSA, NDA, sales orders), <strong>revenue contracts</strong> (by customer, region, type), <strong>outside-counsel spend</strong> (by firm, practice area, matter type). The agent knows which source to query based on the question — the user doesn't need to know where the data lives.
+        For unilateral NDAs it asks the one question that matters: <strong>will sensitive information be shared?</strong> No — approve. Yes or unknown — route. And it handles the entity rules automatically: Contentful Inc. for the Americas and ANZ, Contentful GmbH elsewhere.
       </p>
       <div class="insight">
-        <strong>Why this mattered:</strong> This wasn't about saving analyst time. It was about moving legal operations from reactive reporting to self-serve intelligence. When a VP can ask "how many procurement contracts are up for renewal next quarter?" and get an answer in seconds, the legal function's relationship with the business changes. Legal stops being a bottleneck and starts being a source of operational clarity.
+        <strong>Why the certificate mattered:</strong> A self-approval is only as good as its proof. The agent generates a "Certificate of NDA Review and Approval" with the decision, red-flag summary, contracting entity, and run ID — and appends the row to a shared audit sheet in the same breath. Legal gets the paper trail without doing the work. The Field gets a DocuSign-ready green light without the wait.
       </div>
     </section>
 
@@ -144,12 +169,12 @@
       <div class="section-label">The Impact</div>
       <h2><svg class="section-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="23,6 13,17 9,13 1,20"/><polyline points="17,6 23,6 23,12"/></svg>Metrics &amp; improvements</h2>
       <div class="metric-row">
-        <div class="metric-card"><div class="m-value">4 → 0</div><div class="m-label">Systems to log into</div></div>
-        <div class="metric-card"><div class="m-value">~190 hrs/yr</div><div class="m-label">Analyst time saved</div></div>
-        <div class="metric-card"><div class="m-value">Self-serve</div><div class="m-label">No analyst required</div></div>
-        <div class="metric-card"><div class="m-value">Real-time</div><div class="m-label">Not point-in-time</div></div>
+        <div class="metric-card"><div class="m-value">3</div><div class="m-label">Decision paths</div></div>
+        <div class="metric-card"><div class="m-value">Auto</div><div class="m-label">Certificate + audit log</div></div>
+        <div class="metric-card"><div class="m-value">5</div><div class="m-label">Red-flag categories</div></div>
+        <div class="metric-card"><div class="m-value">DocuSign</div><div class="m-label">Signature handoff</div></div>
       </div>
-      <p><strong>Improvement:</strong> Hours of manual data pulls and reconciliation across 4 systems → seconds-long natural-language query. The analyst role shifted from report runner to data steward. Leadership got answers while the question was still relevant. The natural-language interface meant non-technical stakeholders could self-serve for the first time.</p>
+      <p><strong>Improvement:</strong> Standard NDAs clear instantly instead of waiting for a lawyer. The ones that route to Legal arrive with a deal-ready summary of the issues, not a raw upload. Every decision — approve or route — lands in the audit sheet with a certificate URL, so nothing self-approved is ever unaccounted for.</p>
     </section>
 
     <a href="legal-project-registry.html" class="back-link">&larr; Back to Project Registry</a>
