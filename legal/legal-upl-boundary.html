@@ -1,0 +1,403 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<link rel="icon" type="image/svg+xml" href="../icon.svg">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="Maps the unauthorized practice of law line for a legal AI platform, keeping every recommendation behind licensed attorney judgment.">
+<title>Legal AI OS — UPL Boundary Map</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,wght@0,400;0,500;0,600;0,700;0,800;1,400&family=Source+Code+Pro:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --font-body: 'Fraunces', Georgia, serif;
+    --font-mono: 'Source Code Pro', 'SF Mono', Consolas, monospace;
+
+    --bg: #f6f7fb;
+    --surface: #ffffff;
+    --surface2: #f0f2f7;
+    --border: rgba(0, 0, 0, 0.06);
+    --border-bright: rgba(0, 0, 0, 0.12);
+    --text: #0f172a;
+    --text-dim: #64748b;
+
+    --slate: #475569;
+    --slate-dim: rgba(71, 85, 105, 0.08);
+    --blue: #2563eb;
+    --blue-dim: rgba(37, 99, 235, 0.08);
+    --violet: #7c3aed;
+    --violet-dim: rgba(124, 58, 237, 0.08);
+    --teal: #0d9488;
+    --teal-dim: rgba(13, 148, 136, 0.08);
+    --emerald: #059669;
+    --emerald-dim: rgba(5, 150, 105, 0.08);
+    --amber: #d97706;
+    --amber-dim: rgba(217, 119, 6, 0.08);
+    --orange: #ea580c;
+    --orange-dim: rgba(234, 88, 12, 0.08);
+    --red: #dc2626;
+    --red-dim: rgba(220, 38, 38, 0.08);
+    --indigo: #4f46e5;
+    --indigo-dim: rgba(79, 70, 229, 0.08);
+    --rose: #e11d48;
+    --rose-dim: rgba(225, 29, 72, 0.08);
+  }
+
+  html.dark {
+      --bg: #0c1222;
+      --surface: #131c31;
+      --surface2: #1a2744;
+      --border: rgba(255, 255, 255, 0.06);
+      --border-bright: rgba(255, 255, 255, 0.12);
+      --text: #e2e8f0;
+      --text-dim: #94a3b8;
+      --slate: #94a3b8; --slate-dim: rgba(148, 163, 184, 0.12);
+      --blue: #60a5fa; --blue-dim: rgba(96, 165, 250, 0.12);
+      --violet: #a78bfa; --violet-dim: rgba(167, 139, 250, 0.12);
+      --teal: #2dd4bf; --teal-dim: rgba(45, 212, 191, 0.12);
+      --emerald: #34d399; --emerald-dim: rgba(52, 211, 153, 0.12);
+      --amber: #fbbf24; --amber-dim: rgba(251, 191, 36, 0.12);
+      --orange: #fb923c; --orange-dim: rgba(251, 146, 60, 0.12);
+      --red: #f87171; --red-dim: rgba(248, 113, 113, 0.12);
+      --indigo: #818cf8; --indigo-dim: rgba(129, 140, 248, 0.12);
+      --rose: #fb7185; --rose-dim: rgba(251, 113, 133, 0.12);
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: var(--bg);
+    background-image:
+      radial-gradient(at 10% 0%, var(--indigo-dim) 0%, transparent 40%),
+      radial-gradient(at 90% 80%, var(--teal-dim) 0%, transparent 40%);
+    color: var(--text);
+    font-family: var(--font-body);
+    font-size: 15px;
+    line-height: 1.7;
+    min-height: 100vh;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  .nav {
+    position: sticky; top: 0; z-index: 100;
+    backdrop-filter: blur(16px);
+    background: color-mix(in srgb, var(--surface) 85%, transparent);
+    border-bottom: 1px solid var(--border);
+  }
+  .nav-inner {
+    max-width: 1000px; margin: 0 auto; padding: 12px 24px;
+    display: flex; align-items: center; justify-content: space-between;
+  }
+  .nav-brand {
+    font-family: var(--font-mono); font-size: 13px; font-weight: 600;
+    color: var(--indigo); text-decoration: none;
+  }
+  .theme-toggle {
+    width: 36px; height: 36px; border-radius: 10px;
+    border: 1px solid var(--border); background: var(--surface);
+    cursor: pointer; display: flex; align-items: center; justify-content: center;
+    font-size: 16px; color: var(--text-dim); transition: all 0.2s;
+  }
+  .theme-toggle:hover { border-color: var(--indigo); color: var(--indigo); }
+  .theme-toggle:focus-visible, .nav-brand:focus-visible { outline: 2px solid var(--indigo); outline-offset: 2px; }
+
+  .container { max-width: 1000px; margin: 0 auto; padding: 48px 24px 80px; }
+
+  @keyframes fadeUp { from { opacity: 0; transform: translateY(16px); } to { opacity: 1; transform: translateY(0); } }
+
+  .hero { text-align: center; margin-bottom: 48px; animation: fadeUp 0.5s ease both; }
+  .hero h1 {
+    font-size: 42px; font-weight: 800; letter-spacing: -1px; margin-bottom: 8px;
+    background: linear-gradient(135deg, var(--indigo), var(--teal));
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+  }
+  .hero p { font-size: 17px; color: var(--text-dim); max-width: 700px; margin: 0 auto; }
+  .hero .thesis {
+    margin-top: 16px; font-size: 14px; color: var(--text-dim);
+    max-width: 640px; margin-left: auto; margin-right: auto; line-height: 1.6;
+  }
+
+  .section { margin-bottom: 48px; animation: fadeUp 0.5s ease both; }
+  .section-title {
+    font-family: var(--font-mono); font-size: 12px; font-weight: 700;
+    letter-spacing: 0.15em; text-transform: uppercase; margin-bottom: 16px;
+  }
+
+  /* === THE UPL LINE === */
+  .upl-map {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 28px;
+  }
+  .upl-grid {
+    display: grid;
+    grid-template-columns: 1fr auto 1fr;
+    gap: 20px;
+    align-items: stretch;
+  }
+  .upl-side { padding: 8px 0; }
+  .upl-side-title {
+    font-family: var(--font-mono); font-size: 11px; font-weight: 700;
+    letter-spacing: 0.1em; text-transform: uppercase; margin-bottom: 12px;
+  }
+  .upl-item {
+    display: flex; gap: 10px; align-items: flex-start;
+    padding: 10px 12px; border-radius: 8px; margin-bottom: 8px;
+    font-size: 13px; line-height: 1.45;
+  }
+  .upl-item:last-child { margin-bottom: 0; }
+  .upl-item .dot { font-size: 10px; margin-top: 4px; }
+  .upl-side.system .upl-item { background: var(--indigo-dim); }
+  .upl-side.system .upl-item .dot { color: var(--indigo); }
+  .upl-side.system .upl-side-title { color: var(--indigo); }
+  .upl-side.attorney .upl-item { background: var(--emerald-dim); }
+  .upl-side.attorney .upl-item .dot { color: var(--emerald); }
+  .upl-side.attorney .upl-side-title { color: var(--emerald); }
+
+  .upl-divider {
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    position: relative; width: 2px; background: var(--rose);
+  }
+  .upl-divider-label {
+    position: absolute; top: 50%; left: 50%;
+    transform: translate(-50%, -50%) rotate(-90deg);
+    font-family: var(--font-mono); font-size: 10px; font-weight: 700;
+    letter-spacing: 0.2em; text-transform: uppercase; color: var(--rose);
+    white-space: nowrap; background: var(--surface);
+    padding: 6px 10px; border-radius: 6px; border: 1px solid var(--border);
+  }
+  .upl-map-foot {
+    margin-top: 20px; padding-top: 16px; border-top: 1px solid var(--border);
+    font-size: 12px; color: var(--text-dim); line-height: 1.6;
+  }
+
+  /* === RULES === */
+  .rules-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+  .rule-card {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 12px; padding: 20px;
+  }
+  .rule-cite {
+    font-family: var(--font-mono); font-size: 11px; font-weight: 700;
+    color: var(--indigo); margin-bottom: 4px;
+  }
+  .rule-name { font-size: 15px; font-weight: 700; color: var(--text); margin-bottom: 6px; }
+  .rule-desc { font-size: 12px; color: var(--text-dim); line-height: 1.6; }
+
+  /* === DESIGN GUARANTEES === */
+  .guarantee-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+  .guarantee {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 12px; padding: 20px;
+  }
+  .guarantee-title { font-size: 14px; font-weight: 700; color: var(--text); margin-bottom: 6px; }
+  .guarantee-desc { font-size: 12px; color: var(--text-dim); line-height: 1.6; }
+  .guarantee-tag {
+    display: inline-block; margin-top: 10px;
+    font-family: var(--font-mono); font-size: 9px; font-weight: 600;
+    letter-spacing: 0.08em; text-transform: uppercase;
+    padding: 3px 8px; border-radius: 4px;
+  }
+
+  /* === INTERVIEWER === */
+  .why-box {
+    background: var(--surface); border: 1px solid var(--border);
+    border-left: 4px solid var(--rose);
+    border-radius: 12px; padding: 24px;
+  }
+  .why-box p { font-size: 13px; color: var(--text-dim); line-height: 1.7; }
+  .why-box strong { color: var(--text); }
+
+  .footer {
+    margin-top: 48px; padding-top: 16px;
+    border-top: 1px solid var(--border);
+    text-align: center; font-size: 12px; color: var(--text-dim);
+  }
+  .footer a { color: var(--indigo); text-decoration: none; }
+
+  @media (max-width: 768px) {
+    .rules-grid, .guarantee-grid { grid-template-columns: 1fr; }
+    .upl-grid { grid-template-columns: 1fr; gap: 14px; }
+    .upl-divider { width: 100%; height: 2px; }
+    .upl-divider-label { transform: none; top: auto; left: 50%; bottom: auto; }
+    .hero h1 { font-size: 28px; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after { animation-duration: 0.01ms !important; animation-delay: 0ms !important; }
+  }
+.backlink{position:fixed;top:12px;left:16px;z-index:101;font-family:var(--font-mono);font-size:12px;color:var(--text-dim);text-decoration:none;padding:6px 10px;border:1px solid var(--border);border-radius:6px;background:var(--surface);transition:color .15s,border-color .15s}
+.backlink:hover{color:var(--text);border-color:var(--border-bright)}
+.backlink:focus-visible { outline: 2px solid var(--indigo); outline-offset: 2px; }
+</style>
+</head>
+<body>
+<a href="../index.html" class="backlink">&larr; Index</a>
+
+<div class="nav">
+  <div class="nav-inner">
+    <a href="../index.html" class="nav-brand">← Legal AI OS</a>
+    <button class="theme-toggle" id="themeToggle" aria-label="Toggle dark mode">
+      <span class="icon-light">&#9788;</span>
+      <span class="icon-dark" style="display:none">&#9790;</span>
+    </button>
+  </div>
+</div>
+
+<div class="container">
+
+  <div class="hero">
+    <h1>Where the AI Stops and the Lawyer Starts</h1>
+    <p>The platform is an aid to legal work, not legal advice. It flags, surfaces, and recommends. It never forms an attorney-client relationship, gives legal advice, or makes a legal decision. A licensed human decides.</p>
+    <div class="thesis">This page draws the line the whole system is built around: everything left of it is software's job, everything right of it is a lawyer's. The boundary is not a policy disclaimer. It is the operating contract between the code and the profession it serves.</div>
+  </div>
+
+  <!-- The UPL Line -->
+  <div class="section">
+    <div class="section-title" style="color: var(--indigo);">The UPL Line</div>
+    <div class="upl-map">
+      <div class="upl-grid">
+
+        <div class="upl-side system">
+          <div class="upl-side-title">The System</div>
+          <div class="upl-item"><span class="dot">&#9679;</span>Classifies and routes documents to the right matter</div>
+          <div class="upl-item"><span class="dot">&#9679;</span>Extracts terms, obligations, and parties</div>
+          <div class="upl-item"><span class="dot">&#9679;</span>Scores risk and attaches a confidence level</div>
+          <div class="upl-item"><span class="dot">&#9679;</span>Flags problem language and suggests redlines</div>
+          <div class="upl-item"><span class="dot">&#9679;</span>Surfaces relevant precedent and firm standards</div>
+          <div class="upl-item"><span class="dot">&#9679;</span>Escalates low-confidence output to a human</div>
+        </div>
+
+        <div class="upl-divider">
+          <div class="upl-divider-label">The UPL Line</div>
+        </div>
+
+        <div class="upl-side attorney">
+          <div class="upl-side-title">The Attorney</div>
+          <div class="upl-item"><span class="dot">&#9679;</span>Forms the legal conclusion and the legal judgment</div>
+          <div class="upl-item"><span class="dot">&#9679;</span>Gives legal advice to the client</div>
+          <div class="upl-item"><span class="dot">&#9679;</span>Chooses the strategy and the negotiating position</div>
+          <div class="upl-item"><span class="dot">&#9679;</span>Signs, files, and accepts responsibility for the work</div>
+          <div class="upl-item"><span class="dot">&#9679;</span>Communicates directly with the client</div>
+        </div>
+
+      </div>
+      <div class="upl-map-foot">Everything the system produces is input to a licensed decision, never the decision itself. The red line is crossed the moment software stands in for the lawyer instead of preparing the lawyer's work.</div>
+    </div>
+  </div>
+
+  <!-- The Rules -->
+  <div class="section">
+    <div class="section-title" style="color: var(--indigo);">The Rules It Cites</div>
+    <div class="rules-grid">
+
+      <div class="rule-card" style="border-top: 3px solid var(--rose);">
+        <div class="rule-cite">ABA Model Rule 5.5</div>
+        <div class="rule-name">Unauthorized Practice of Law; Multijurisdictional Practice</div>
+        <div class="rule-desc">The rule the boundary exists to respect. It confines the practice of law to licensed lawyers and makes clear that legal services are the lawyer's province. The platform is designed so that everything it does stays outside the zone Rule 5.5 protects.</div>
+      </div>
+
+      <div class="rule-card" style="border-top: 3px solid var(--indigo);">
+        <div class="rule-cite">ABA Model Rule 5.3</div>
+        <div class="rule-name">Responsibilities Regarding Nonlawyer Assistance</div>
+        <div class="rule-desc">The ethical frame for AI as nonlawyer assistance under lawyer supervision. The Comment requires the lawyer to make reasonable efforts to ensure that a nonlawyer's conduct is compatible with the lawyer's professional obligations. The system is the nonlawyer assistant, and it is built to stay inside that supervised lane.</div>
+      </div>
+
+      <div class="rule-card" style="border-top: 3px solid var(--teal);">
+        <div class="rule-cite">ABA Model Rule 1.1, Comment 8</div>
+        <div class="rule-name">Duty of Technological Competence</div>
+        <div class="rule-desc">A lawyer must keep abreast of the benefits and risks associated with relevant technology. Using the platform is competent practice only because it is transparent, verifiable, and supervised. Chain-of-reasoning and source attribution are what make the tool a competence enabler rather than a competence risk.</div>
+      </div>
+
+      <div class="rule-card" style="border-top: 3px solid var(--emerald);">
+        <div class="rule-cite">ABA Model Rule 1.6</div>
+        <div class="rule-name">Confidentiality of Information</div>
+        <div class="rule-desc">Client information is protected against disclosure. The platform enforces this with ethical walls and data isolation: practice groups are walled, client data stays in its own tenant, and nothing leaves the trust boundary for third-party training. Confidentiality is structural, not a checkbox.</div>
+      </div>
+
+      <div class="rule-card" style="border-top: 3px solid var(--amber); grid-column: 1 / -1;">
+        <div class="rule-cite">ABA Formal Opinion 512 (2024)</div>
+        <div class="rule-name">Generative Artificial Intelligence Tools</div>
+        <div class="rule-desc">Formal Opinion 512 holds that a lawyer may use generative AI while discharging their duties of competence, confidentiality, and supervision, so long as the lawyer maintains ultimate responsibility for the work. The platform's design is consistent with it: the lawyer verifies every output, the data stays protected, and the model is supervised rather than autonomous.</div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- Design Guarantees -->
+  <div class="section">
+    <div class="section-title" style="color: var(--indigo);">Design Guarantees That Respect the Line</div>
+    <div class="guarantee-grid">
+
+      <div class="guarantee" style="border-left: 3px solid var(--rose);">
+        <div class="guarantee-title">Confidence Thresholds Escalate</div>
+        <div class="guarantee-desc">Low-confidence output is never released. Below the threshold, results are pushed to a human reviewer before anything reaches a matter. Risk flags escalate regardless of confidence.</div>
+        <span class="guarantee-tag" style="background: var(--rose-dim); color: var(--rose);">Rule 5.3 &middot; 5.5</span>
+      </div>
+
+      <div class="guarantee" style="border-left: 3px solid var(--indigo);">
+        <div class="guarantee-title">No Autonomous Legal Decisions</div>
+        <div class="guarantee-desc">The system cannot form a legal conclusion, recommend a specific legal outcome, or take a legal action on its own. Autonomy is capped at preparation and surface. The decision always lives with the attorney.</div>
+        <span class="guarantee-tag" style="background: var(--indigo-dim); color: var(--indigo);">Rule 5.5</span>
+      </div>
+
+      <div class="guarantee" style="border-left: 3px solid var(--teal);">
+        <div class="guarantee-title">Human-in-the-Loop for Every Decision</div>
+        <div class="guarantee-desc">Every classification, risk score, and redline is reviewed before it becomes part of a lawyer's work product. Every human override is logged with who, when, and why. No output reaches the client unexamined.</div>
+        <span class="guarantee-tag" style="background: var(--teal-dim); color: var(--teal);">Rule 5.3 &middot; Op. 512</span>
+      </div>
+
+      <div class="guarantee" style="border-left: 3px solid var(--emerald);">
+        <div class="guarantee-title">Chain-of-Reasoning, Verifiable</div>
+        <div class="guarantee-desc">Every recommendation carries its reasoning, visible to the reviewer. The attorney can trace how the system reached an answer, question it, and override it. The tool is transparent by construction, not by policy.</div>
+        <span class="guarantee-tag" style="background: var(--emerald-dim); color: var(--emerald);">Rule 1.1 Cmt 8</span>
+      </div>
+
+      <div class="guarantee" style="border-left: 3px solid var(--blue);">
+        <div class="guarantee-title">Source Attribution</div>
+        <div class="guarantee-desc">Every conclusion cites the clause, standard, or precedent that drove it. Nothing is a black box. If an attorney questions a result later, the full context is retrievable and attributable.</div>
+        <span class="guarantee-tag" style="background: var(--blue-dim); color: var(--blue);">Rule 1.1 Cmt 8</span>
+      </div>
+
+      <div class="guarantee" style="border-left: 3px solid var(--amber);">
+        <div class="guarantee-title">Ethical Walls and Data Isolation</div>
+        <div class="guarantee-desc">Practice groups are walled from each other. Client data stays in its own tenant and never leaves the trust boundary. Confidentiality is enforced at the data layer, mapping directly to the lawyer's duty under Rule 1.6.</div>
+        <span class="guarantee-tag" style="background: var(--amber-dim); color: var(--amber);">Rule 1.6</span>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- For an interviewer -->
+  <div class="section">
+    <div class="section-title" style="color: var(--indigo);">What This Means for an Interviewer</div>
+    <div class="why-box">
+      <p>A non-lawyer legal engineer has to know exactly where the role stops. This page is that map. The honest answer to "who's responsible for the legal work" is: the licensed attorney, every time. The engineer's job is to build a system the lawyer can trust and verify, not to build a lawyer. When an interviewer asks where the AI ends and the profession begins, the answer is a drawn line, not a hand wave. Build the side of the line that prepares the work, and make it transparent enough that a lawyer is confident standing behind it.</p>
+    </div>
+  </div>
+
+  <div class="footer">
+    Legal AI OS — UPL Boundary Map
+    &nbsp;·&nbsp;
+    <a href="../index.html">All Diagrams &rarr;</a>
+  </div>
+
+</div>
+
+<script>
+  const toggle = document.getElementById('themeToggle');
+  const iconLight = toggle.querySelector('.icon-light');
+  const iconDark = toggle.querySelector('.icon-dark');
+  function setTheme(d) {
+    document.documentElement.classList.toggle('dark', d);
+    iconLight.style.display = d ? 'none' : '';
+    iconDark.style.display = d ? '' : 'none';
+    try { localStorage.setItem('diagram-theme', d ? 'dark' : 'light'); } catch(e) {}
+  }
+  toggle.addEventListener('click', () => setTheme(!document.documentElement.classList.contains('dark')));
+  try { if (localStorage.getItem('diagram-theme') === 'dark') setTheme(true); } catch(e) {}
+</script>
+
+</body>
+</html>

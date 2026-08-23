@@ -1,0 +1,479 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<link rel="icon" type="image/svg+xml" href="../icon.svg">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="How the Legal AI OS turns Data Protection Impact Assessments into structural, auditable artifacts grounded in real system behavior.">
+<title>Legal AI OS — Privacy & AI Governance</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,wght@0,400;0,500;0,600;0,700;0,800;1,400&family=Source+Code+Pro:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --font-body: 'Fraunces', Georgia, serif;
+    --font-mono: 'Source Code Pro', 'SF Mono', Consolas, monospace;
+
+    --bg: #f6f7fb;
+    --surface: #ffffff;
+    --surface2: #f0f2f7;
+    --border: rgba(0, 0, 0, 0.06);
+    --border-bright: rgba(0, 0, 0, 0.12);
+    --text: #0f172a;
+    --text-dim: #64748b;
+
+    --slate: #475569;
+    --slate-dim: rgba(71, 85, 105, 0.08);
+    --blue: #2563eb;
+    --blue-dim: rgba(37, 99, 235, 0.08);
+    --violet: #7c3aed;
+    --violet-dim: rgba(124, 58, 237, 0.08);
+    --teal: #0d9488;
+    --teal-dim: rgba(13, 148, 136, 0.08);
+    --emerald: #059669;
+    --emerald-dim: rgba(5, 150, 105, 0.08);
+    --amber: #d97706;
+    --amber-dim: rgba(217, 119, 6, 0.08);
+    --orange: #ea580c;
+    --orange-dim: rgba(234, 88, 12, 0.08);
+    --red: #dc2626;
+    --red-dim: rgba(220, 38, 38, 0.08);
+    --indigo: #4f46e5;
+    --indigo-dim: rgba(79, 70, 229, 0.08);
+    --rose: #e11d48;
+    --rose-dim: rgba(225, 29, 72, 0.08);
+  }
+
+  html.dark {
+      --bg: #0c1222;
+      --surface: #131c31;
+      --surface2: #1a2744;
+      --border: rgba(255, 255, 255, 0.06);
+      --border-bright: rgba(255, 255, 255, 0.12);
+      --text: #e2e8f0;
+      --text-dim: #94a3b8;
+      --slate: #94a3b8; --slate-dim: rgba(148, 163, 184, 0.12);
+      --blue: #60a5fa; --blue-dim: rgba(96, 165, 250, 0.12);
+      --violet: #a78bfa; --violet-dim: rgba(167, 139, 250, 0.12);
+      --teal: #2dd4bf; --teal-dim: rgba(45, 212, 191, 0.12);
+      --emerald: #34d399; --emerald-dim: rgba(52, 211, 153, 0.12);
+      --amber: #fbbf24; --amber-dim: rgba(251, 191, 36, 0.12);
+      --orange: #fb923c; --orange-dim: rgba(251, 146, 60, 0.12);
+      --red: #f87171; --red-dim: rgba(248, 113, 113, 0.12);
+      --indigo: #818cf8; --indigo-dim: rgba(129, 140, 248, 0.12);
+      --rose: #fb7185; --rose-dim: rgba(251, 113, 133, 0.12);
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: var(--bg);
+    background-image:
+      radial-gradient(at 10% 0%, var(--indigo-dim) 0%, transparent 40%),
+      radial-gradient(at 90% 80%, var(--teal-dim) 0%, transparent 40%);
+    color: var(--text);
+    font-family: var(--font-body);
+    font-size: 15px;
+    line-height: 1.7;
+    min-height: 100vh;
+    padding: 0 24px;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  .nav {
+    position: sticky; top: 0; z-index: 100;
+    backdrop-filter: blur(16px);
+    background: color-mix(in srgb, var(--surface) 85%, transparent);
+    border-bottom: 1px solid var(--border);
+    margin: 0 -24px 24px;
+  }
+  .nav-inner {
+    max-width: 1000px; margin: 0 auto; padding: 12px 24px;
+    display: flex; align-items: center; justify-content: space-between;
+  }
+  .nav-brand {
+    font-family: var(--font-mono); font-size: 13px; font-weight: 600;
+    color: var(--indigo); text-decoration: none;
+  }
+
+  .container { max-width: 1000px; margin: 0 auto; padding: 48px 0 80px; }
+
+  @keyframes fadeUp { from { opacity: 0; transform: translateY(16px); } to { opacity: 1; transform: translateY(0); } }
+
+  .hero { text-align: center; margin-bottom: 48px; animation: fadeUp 0.5s ease both; }
+  .hero h1 {
+    font-size: 42px; font-weight: 800; letter-spacing: -1px; margin-bottom: 8px;
+    background: linear-gradient(135deg, var(--indigo), var(--teal));
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+  }
+  .hero p { font-size: 17px; color: var(--text-dim); max-width: 700px; margin: 0 auto; }
+
+  .section { margin-bottom: 48px; animation: fadeUp 0.5s ease both; }
+  .section-title {
+    font-family: var(--font-mono); font-size: 12px; font-weight: 700;
+    letter-spacing: 0.15em; text-transform: uppercase; margin-bottom: 16px;
+  }
+  .section-head { font-size: 24px; font-weight: 700; margin-bottom: 8px; }
+  .section-lede { font-size: 14px; color: var(--text-dim); max-width: 720px; margin-bottom: 20px; }
+
+  /* === RISK TIER TABLE === */
+  .table-wrap { overflow-x: auto; }
+  .risk-table {
+    width: 100%; border-collapse: collapse;
+    background: var(--surface); border: 1px solid var(--border); border-radius: 12px;
+  }
+  .risk-table th {
+    font-family: var(--font-mono); font-size: 11px; font-weight: 700;
+    letter-spacing: 0.05em; text-transform: uppercase;
+    text-align: left; padding: 12px 16px; border-bottom: 1px solid var(--border);
+    background: var(--surface2); color: var(--text);
+  }
+  .risk-table td {
+    padding: 14px 16px; border-bottom: 1px solid var(--border);
+    font-size: 13px; vertical-align: top;
+  }
+  .risk-table tr:last-child td { border-bottom: none; }
+  .risk-table td.dim { color: var(--text-dim); }
+
+  .tier-badge {
+    display: inline-block; font-family: var(--font-mono); font-size: 10px; font-weight: 700;
+    padding: 3px 8px; border-radius: 4px; margin-bottom: 4px;
+  }
+
+  .callout {
+    background: var(--surface); border: 1px solid var(--border);
+    border-left: 4px solid var(--amber);
+    border-radius: 10px; padding: 14px 18px; margin-top: 16px;
+    font-size: 13px; color: var(--text-dim);
+  }
+  .callout strong { color: var(--text); }
+
+  /* === DPIA FLOW === */
+  .dpia-flow {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 16px; padding: 28px;
+  }
+  .dpia-row {
+    display: flex; align-items: flex-start; gap: 0;
+    overflow-x: auto; padding-bottom: 8px;
+  }
+  .dpia-step {
+    flex: 1; min-width: 150px;
+    background: var(--surface2); border: 1px solid var(--border);
+    border-radius: 10px; padding: 16px 14px;
+  }
+  .dpia-arrow {
+    flex-shrink: 0; width: 30px;
+    display: flex; align-items: center; justify-content: center;
+    color: var(--border-bright); font-size: 18px; margin-top: 18px;
+  }
+  .dpia-num {
+    font-family: var(--font-mono); font-size: 10px; font-weight: 700;
+    color: var(--indigo); margin-bottom: 4px;
+  }
+  .dpia-name { font-size: 13px; font-weight: 700; color: var(--text); margin-bottom: 4px; }
+  .dpia-desc { font-size: 11px; color: var(--text-dim); line-height: 1.4; }
+
+  .dpia-sources {
+    display: grid; grid-template-columns: repeat(4, 1fr);
+    gap: 12px; margin-top: 24px;
+  }
+  .src-card {
+    background: var(--surface2); border: 1px solid var(--border);
+    border-radius: 8px; padding: 14px;
+  }
+  .src-name {
+    font-family: var(--font-mono); font-size: 10px; font-weight: 700;
+    color: var(--indigo); margin-bottom: 4px;
+  }
+  .src-desc { font-size: 12px; color: var(--text-dim); line-height: 1.5; }
+
+  /* === RMF GRID === */
+  .rmf-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; }
+  .rmf-card {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 12px; padding: 20px;
+  }
+  .rmf-letter {
+    font-family: var(--font-mono); font-size: 22px; font-weight: 700;
+    margin-bottom: 6px;
+  }
+  .rmf-name { font-size: 15px; font-weight: 700; color: var(--text); margin-bottom: 6px; }
+  .rmf-desc { font-size: 12px; color: var(--text-dim); line-height: 1.6; }
+
+  /* === GDPR / CCPA === */
+  .gdpr-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; }
+  .gdpr-card {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 12px; padding: 20px;
+  }
+  .gdpr-title { font-size: 14px; font-weight: 700; color: var(--text); margin-bottom: 6px; }
+  .gdpr-desc { font-size: 12px; color: var(--text-dim); line-height: 1.6; }
+
+  /* === WHY === */
+  .why-band {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 16px; padding: 28px;
+  }
+  .why-cols { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+  .why-desc { font-size: 14px; color: var(--text-dim); line-height: 1.7; }
+  .why-desc strong { color: var(--text); }
+
+  .footer {
+    margin-top: 48px; padding-top: 16px;
+    border-top: 1px solid var(--border);
+    text-align: center; font-size: 12px; color: var(--text-dim);
+  }
+  .footer a { color: var(--indigo); text-decoration: none; }
+
+  .theme-toggle {
+    width: 36px; height: 36px; border-radius: 10px;
+    border: 1px solid var(--border); background: var(--surface);
+    cursor: pointer; display: flex; align-items: center; justify-content: center;
+    font-size: 16px; color: var(--text-dim); transition: all 0.2s;
+  }
+  .theme-toggle:hover { border-color: var(--indigo); color: var(--indigo); }
+  .theme-toggle:focus-visible { outline: 2px solid var(--indigo); outline-offset: 2px; }
+
+.backlink{position:fixed;top:12px;left:16px;z-index:101;font-family:var(--font-mono);font-size:12px;color:var(--text-dim);text-decoration:none;padding:6px 10px;border:1px solid var(--border);border-radius:6px;background:var(--surface);transition:color .15s,border-color .15s}
+.backlink:hover{color:var(--text);border-color:var(--border-bright)}
+.backlink:focus-visible { outline: 2px solid var(--indigo); outline-offset: 2px; }
+
+  @media (max-width: 768px) {
+    .dpia-row { flex-direction: column; }
+    .dpia-arrow { transform: rotate(90deg); width: 100%; margin-top: 4px; margin-bottom: 4px; }
+    .dpia-sources, .rmf-grid, .gdpr-grid { grid-template-columns: 1fr; }
+    .why-cols { grid-template-columns: 1fr; }
+    .hero h1 { font-size: 28px; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after { animation-duration: 0.01ms !important; animation-delay: 0ms !important; }
+  }
+</style>
+</head>
+<body>
+<a href="../index.html" class="backlink">&larr; Index</a>
+
+<div class="nav">
+  <div class="nav-inner">
+    <a href="../index.html" class="nav-brand">← Charlie Fuller — Visual Explainers</a>
+    <button class="theme-toggle" id="themeToggle" aria-label="Toggle dark mode">
+      <span class="icon-light">&#9788;</span>
+      <span class="icon-dark" style="display:none">&#9790;</span>
+    </button>
+  </div>
+</div>
+
+<div class="container">
+
+  <div class="hero">
+    <h1>Privacy &amp; AI Governance by Design</h1>
+    <p>Compliance is not a policy document. It&rsquo;s a structural, auditable artifact — produced from how the system actually behaves. The Legal AI OS turns a Data Protection Impact Assessment into something provable, not a checkbox.</p>
+  </div>
+
+  <!-- Risk Tier Framework -->
+  <div class="section">
+    <div class="section-title" style="color: var(--indigo);">The Risk-Tier Framework — EU AI Act</div>
+    <div class="section-head">Where legal-AI processing sits</div>
+    <p class="section-lede">The EU AI Act sorts AI systems by risk. Where any single deployment lands depends on what it does, who it affects, and how it&rsquo;s used. The tiers below are the Act&rsquo;s own categories. The placement note is reasoning, not a legal opinion on a specific deployment.</p>
+
+    <div class="table-wrap">
+      <table class="risk-table">
+        <thead>
+          <tr><th style="width:20%;">Tier</th><th style="width:38%;">What the Act requires</th><th style="width:42%;">Legal-AI processing note</th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><span class="tier-badge" style="background: var(--red-dim); color: var(--red);">Unacceptable</span><br><span class="dim">Prohibited</span></td>
+            <td>Banned practices: subliminal manipulation, social scoring, real-time remote biometric ID in public spaces, exploitation of vulnerabilities. Not deployable, period.</td>
+            <td class="dim">Document-processing and review AI does not fall into the prohibited categories. This tier is a hard floor no legal-AI deployment should approach.</td>
+          </tr>
+          <tr>
+            <td><span class="tier-badge" style="background: var(--amber-dim); color: var(--amber);">High</span><br><span class="dim">Most regulated</span></td>
+            <td>Strict obligations: risk management, data governance, technical documentation, transparency, human oversight, accuracy, robustness, cybersecurity. Must be assessed before market entry.</td>
+            <td>Systems that materially affect legal rights could be high-risk. The platform is designed so deployments can be governed to meet these obligations — risk management, data governance, transparency, and human oversight are built in, ready when a deployment requires them.</td>
+          </tr>
+          <tr>
+            <td><span class="tier-badge" style="background: var(--blue-dim); color: var(--blue);">Limited / Minimal</span><br><span class="dim">Lighter duties</span></td>
+            <td>Limited-risk systems carry transparency duties — users know they are interacting with AI. Minimal-risk systems face no additional obligations beyond existing law.</td>
+            <td>Recommendation and document-processing tools often sit here. Transparency is met by surfacing that an AI produced the analysis, with the decision log as the record.</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="callout">
+      <strong>Not a legal opinion.</strong> The tier a real deployment occupies depends on its specific purpose, subjects, and context of use. This framework shows how the Act is structured and how the platform is built to meet whatever tier a deployment lands in — including High-risk obligations when they apply.
+    </div>
+  </div>
+
+  <!-- DPIA Flow -->
+  <div class="section">
+    <div class="section-title" style="color: var(--indigo);">DPIA — How It&rsquo;s Generated</div>
+    <div class="section-head">An assessment from real behavior, not self-reporting</div>
+    <p class="section-lede">A DPIA (and its algorithmic-impact cousin) is assembled from the system&rsquo;s actual artifacts. What data flows, why, how long it&rsquo;s kept, what wall it stays behind, who signed off. The output is an exportable, compliance-ready record.</p>
+
+    <div class="dpia-flow">
+      <div class="dpia-row">
+        <div class="dpia-step">
+          <div class="dpia-num">STEP 1</div>
+          <div class="dpia-name">Scope</div>
+          <div class="dpia-desc">What the processing does, the data categories, the purposes, the lawful basis under consideration.</div>
+        </div>
+        <div class="dpia-arrow">&rarr;</div>
+        <div class="dpia-step">
+          <div class="dpia-num">STEP 2</div>
+          <div class="dpia-name">Data inventory</div>
+          <div class="dpia-desc">Every field processed, where it comes from, where it&rsquo;s stored, who can read it.</div>
+        </div>
+        <div class="dpia-arrow">&rarr;</div>
+        <div class="dpia-step">
+          <div class="dpia-num">STEP 3</div>
+          <div class="dpia-name">Risk identification</div>
+          <div class="dpia-desc">Risks to data subjects, drawn from actual access patterns and confidentiality boundaries.</div>
+        </div>
+        <div class="dpia-arrow">&rarr;</div>
+        <div class="dpia-step">
+          <div class="dpia-num">STEP 4</div>
+          <div class="dpia-name">Mitigations</div>
+          <div class="dpia-desc">What controls the system actually enforces: retention limits, ethical walls, minimisation.</div>
+        </div>
+        <div class="dpia-arrow">&rarr;</div>
+        <div class="dpia-step">
+          <div class="dpia-num">STEP 5</div>
+          <div class="dpia-name">Human sign-off</div>
+          <div class="dpia-desc">A named reviewer reviews and approves the assessment. Nothing ships unsigned.</div>
+        </div>
+        <div class="dpia-arrow">&rarr;</div>
+        <div class="dpia-step">
+          <div class="dpia-num">STEP 6</div>
+          <div class="dpia-name">Audit-ready artifact</div>
+          <div class="dpia-desc">Exportable report with cited evidence, versioned, ready for regulators and clients.</div>
+        </div>
+      </div>
+
+      <div class="dpia-sources">
+        <div class="src-card">
+          <div class="src-name">Data Inventory</div>
+          <div class="src-desc">Live mapping of fields processed, sources, and storage locations.</div>
+        </div>
+        <div class="src-card">
+          <div class="src-name">Retention Limits</div>
+          <div class="src-desc">Automated deletion and retention windows enforced in the system.</div>
+        </div>
+        <div class="src-card">
+          <div class="src-name">Confidentiality Walls</div>
+          <div class="src-desc">Ethical-wall isolation, including the platform&rsquo;s Rule 1.6-style walls, structural not policy.</div>
+        </div>
+        <div class="src-card">
+          <div class="src-name">Traceability Logs</div>
+          <div class="src-desc">Every decision, override, and approval attributable to a person and a time.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- NIST AI RMF -->
+  <div class="section">
+    <div class="section-title" style="color: var(--indigo);">NIST AI RMF Mapping</div>
+    <div class="section-head">The RMF functions, mapped to platform capability</div>
+    <p class="section-lede">NIST AI RMF 1.0 organizes responsible AI into four functions: Govern, Map, Measure, Manage. Each maps to what the platform actually does.</p>
+
+    <div class="rmf-grid">
+      <div class="rmf-card" style="border-top: 3px solid var(--violet);">
+        <div class="rmf-letter" style="color: var(--violet);">G</div>
+        <div class="rmf-name">Govern</div>
+        <div class="rmf-desc">Policies, roles, and accountability. Named owners, documented approvals, ethical walls, and a clear chain of who decides.</div>
+      </div>
+      <div class="rmf-card" style="border-top: 3px solid var(--blue);">
+        <div class="rmf-letter" style="color: var(--blue);">M</div>
+        <div class="rmf-name">Map</div>
+        <div class="rmf-desc">Context and risks. A live data inventory and processing map show what&rsquo;s processed, why, and by whom — the raw material for the DPIA.</div>
+      </div>
+      <div class="rmf-card" style="border-top: 3px solid var(--amber);">
+        <div class="rmf-letter" style="color: var(--amber);">M</div>
+        <div class="rmf-name">Measure</div>
+        <div class="rmf-desc">Test and evaluate. Traceability logs, confidence scoring, and continuous monitoring quantify how the system performs against its risk profile.</div>
+      </div>
+      <div class="rmf-card" style="border-top: 3px solid var(--teal);">
+        <div class="rmf-letter" style="color: var(--teal);">M</div>
+        <div class="rmf-name">Manage</div>
+        <div class="rmf-desc">Control and reduce risk. Human-in-the-loop oversight, escalation rules, and automated mitigation that the system enforces.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- GDPR / CCPA -->
+  <div class="section">
+    <div class="section-title" style="color: var(--indigo);">GDPR / CCPA Fundamentals</div>
+    <div class="section-head">The core concepts the platform is built to support</div>
+    <p class="section-lede">A survey, not a treatise. These are the ground rules any legal-AI deployment in the EU or California operates under — and the ones the platform operationalizes.</p>
+
+    <div class="gdpr-grid">
+      <div class="gdpr-card">
+        <div class="gdpr-title">Lawful basis</div>
+        <div class="gdpr-desc">Processing must rest on a recognized basis under GDPR Art. 6. The assessment records which basis applies, rather than assuming it.</div>
+      </div>
+      <div class="gdpr-card">
+        <div class="gdpr-title">Purpose limitation</div>
+        <div class="gdpr-desc">Data is collected for a stated purpose and used for that purpose. The platform ties each data flow to its declared purpose.</div>
+      </div>
+      <div class="gdpr-card">
+        <div class="gdpr-title">Data minimization</div>
+        <div class="gdpr-desc">Only the data needed for the purpose is processed. Scoping limits what enters the pipeline in the first place.</div>
+      </div>
+      <div class="gdpr-card">
+        <div class="gdpr-title">Data subject rights</div>
+        <div class="gdpr-desc">Access, rectification, erasure, portability. Traceability makes each right answerable — you can show what exists and remove it on request.</div>
+      </div>
+      <div class="gdpr-card">
+        <div class="gdpr-title">DPIA trigger — Art. 35</div>
+        <div class="gdpr-desc">GDPR Art. 35 requires a DPIA where processing is likely to result in a high risk to individuals. Systematic AI evaluation of personal data is a classic trigger.</div>
+      </div>
+      <div class="gdpr-card">
+        <div class="gdpr-title">CCPA / CPRA rights</div>
+        <div class="gdpr-desc">Know, delete, correct, and opt-out of sale or sharing of personal information. The audit trail supports responding to each request.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Why This Is The Specialization -->
+  <div class="section">
+    <div class="section-title" style="color: var(--indigo);">Why This Is The Specialization</div>
+    <div class="why-band">
+      <div class="why-cols">
+        <div>
+          <div class="section-head">Audit-ready compliance evidence</div>
+        </div>
+        <div>
+          <p class="why-desc" style="margin-bottom: 12px;">Regulated industries don&rsquo;t buy feature lists. They buy the ability to <strong>prove</strong> how data is handled — to regulators, to clients, to their own boards. Most AI governance is a policy nobody reads after week one. This turns governance into software: structural walls, attributable logs, exportable impact assessments.</p>
+          <p class="why-desc">The specialization is confidence in a crowded market. Buyers in law, finance, and healthcare need someone who can show, not claim. That&rsquo;s the standing this work builds.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="footer">
+    Legal AI OS — Privacy &amp; AI Governance
+    &nbsp;·&nbsp;
+    <a href="../index.html">All Diagrams &rarr;</a>
+  </div>
+
+</div>
+
+<script>
+  const toggle = document.getElementById('themeToggle');
+  const iconLight = toggle.querySelector('.icon-light');
+  const iconDark = toggle.querySelector('.icon-dark');
+  function setTheme(d) {
+    document.documentElement.classList.toggle('dark', d);
+    iconLight.style.display = d ? 'none' : '';
+    iconDark.style.display = d ? '' : 'none';
+    try { localStorage.setItem('diagram-theme', d ? 'dark' : 'light'); } catch(e) {}
+  }
+  toggle.addEventListener('click', () => setTheme(!document.documentElement.classList.contains('dark')));
+  try { if (localStorage.getItem('diagram-theme') === 'dark') setTheme(true); } catch(e) {}
+</script>
+
+</body>
+</html>
