@@ -1,0 +1,363 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>The AI Profit Paradox — Calculator</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Mulish:ital,wght@0,300;0,400;0,600;0,700;0,800;1,400&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --paper:#171416; --card:#1E1A1D;
+    --ink:#F5F2F1; --body:#C9C3C1; --muted:#948E8C;
+    --line:#332D31; --line-2:#463D42;
+    --accent:#E39CB2; --accent-btn:#B83159; --accent-btn-hover:#A4093F;
+    --accent-soft:rgba(184,49,89,0.14);
+    --nav-bg:rgba(23,20,22,0.78);
+    --shadow:0 24px 60px -32px rgba(0,0,0,0.85);
+    --win:#5FBF9B; --win-soft:rgba(95,191,155,0.12);
+    --loss:#E36C89; --loss-soft:rgba(227,108,137,0.12);
+    --amber:#D9A05B; --amber-soft:rgba(217,160,91,0.12);
+  }
+  [data-theme="light"]{
+    --paper:#FAF8F7; --card:#FFFFFF;
+    --ink:#1F1A1C; --body:#5A5658; --muted:#76716F;
+    --line:#E7E4E2; --line-2:#D6D2D0;
+    --accent:#A4093F; --accent-btn:#A4093F; --accent-btn-hover:#8F0B39;
+    --accent-soft:#F7E4EB;
+    --nav-bg:rgba(250,248,247,0.82);
+    --shadow:0 24px 56px -34px rgba(31,26,28,0.45);
+    --win:#0F8A5F; --win-soft:rgba(15,138,95,0.08);
+    --loss:#B83159; --loss-soft:rgba(184,49,89,0.08);
+    --amber:#B4720E; --amber-soft:rgba(180,114,14,0.08);
+  }
+  *{margin:0; padding:0; box-sizing:border-box}
+  body{
+    background:var(--paper); color:var(--body);
+    font-family:'Mulish','Avenir Next','Segoe UI',system-ui,-apple-system,sans-serif;
+    font-size:17px; line-height:1.65; min-height:100vh; -webkit-font-smoothing:antialiased;
+  }
+  ::selection{background:var(--accent-soft)}
+  a{color:var(--accent); text-decoration:none}
+  code{font-family:'SF Mono',Consolas,monospace; font-size:.9em; background:var(--accent-soft); padding:1px 5px; border-radius:4px; color:var(--ink)}
+
+  .nav{position:sticky; top:0; z-index:100; backdrop-filter:blur(16px); -webkit-backdrop-filter:blur(16px);
+    background:var(--nav-bg); border-bottom:1px solid var(--line); margin:0 0 36px; padding:0 32px}
+  .nav-inner{max-width:960px; margin:0 auto; padding:14px 0; display:flex; align-items:center; justify-content:space-between}
+  .nav-brand{font-size:14px; font-weight:700; color:var(--ink)}
+  .nav-brand b{color:var(--accent)}
+  .nav-actions{display:flex; gap:12px; align-items:center}
+  .btn{display:inline-flex; align-items:center; min-height:42px; padding:0 20px; border:0;
+    border-radius:999px; font-family:inherit; font-size:14px; font-weight:700; cursor:pointer;
+    background:var(--accent-btn); color:#fff; box-shadow:var(--shadow); transition:background .18s ease,transform .18s ease}
+  .btn:hover{background:var(--accent-btn-hover); transform:translateY(-1px)}
+  .theme-toggle{width:42px; height:42px; border-radius:999px; border:1px solid var(--line-2);
+    background:transparent; cursor:pointer; display:flex; align-items:center; justify-content:center;
+    font-size:16px; color:var(--body); transition:border-color .18s,color .18s}
+  .theme-toggle:hover{border-color:var(--accent); color:var(--accent)}
+
+  .wrap{max-width:1240px; margin:0 auto; padding:0 16px 80px}
+
+  .hero{text-align:center; margin-bottom:32px; padding:8px 0 0}
+  .hero h1{font-size:clamp(34px,5vw,58px); font-weight:300; line-height:1.05; letter-spacing:-.025em; color:var(--ink); margin-bottom:16px}
+  .hero .lede{font-size:19px; color:var(--ink); max-width:640px; margin:0 auto 16px; line-height:1.4; font-weight:400}
+  .hero .lede b{color:var(--accent); font-weight:700}
+  .hero .meta{display:flex; flex-wrap:wrap; justify-content:center; gap:8px 22px; font-size:14px; color:var(--muted)}
+  .hero .meta span{display:inline-flex; align-items:center; gap:8px}
+  .hero .meta span::before{content:"›"; color:var(--accent); font-weight:700}
+
+  /* side-by-side: controls left, result right */
+  .layout{display:grid; grid-template-columns:minmax(320px,0.82fr) 1.18fr; gap:26px; align-items:start}
+  @media (max-width:860px){.layout{grid-template-columns:1fr}}
+  .controls-wrap{display:flex; flex-direction:column; gap:20px}
+  .panel{background:var(--card); border:1px solid var(--line); border-radius:16px; padding:20px 24px; box-shadow:var(--shadow)}
+  .panel h2{font-size:12px; font-weight:800; letter-spacing:.12em; text-transform:uppercase; color:var(--accent); margin-bottom:14px}
+  label{display:block; margin-bottom:12px}
+  label:last-child{margin-bottom:0}
+  .lab{display:flex; justify-content:space-between; align-items:baseline; margin-bottom:4px}
+  .lab .name{font-size:15px; color:var(--ink); font-weight:600}
+  .lab .val{font-size:15px; font-weight:800; color:var(--accent)}
+  .hint{color:var(--muted); font-size:13px; line-height:1.5; margin-top:5px}
+  .hint b{color:var(--body)}
+  .info{display:inline-flex; align-items:center; justify-content:center; width:15px; height:15px;
+    margin-left:7px; border:1px solid var(--line-2); border-radius:999px; font-size:10px; font-weight:700;
+    font-style:normal; color:var(--muted); cursor:help; position:relative; vertical-align:middle}
+  .info:hover{color:#fff; background:var(--accent-btn); border-color:var(--accent-btn)}
+  .info:hover::after{content:attr(data-tip); position:absolute; left:50%; bottom:calc(100% + 9px);
+    transform:translateX(-50%); width:250px; background:var(--card); color:var(--body);
+    border:1px solid var(--line-2); border-radius:10px; padding:11px 13px; font-size:12.5px;
+    font-weight:400; line-height:1.5; box-shadow:var(--shadow); z-index:60; text-align:left; white-space:normal}
+  .info:hover::before{content:""; position:absolute; left:50%; bottom:calc(100% + 3px);
+    transform:translateX(-50%); border:6px solid transparent; border-top-color:var(--line-2); z-index:60}
+  input[type=range]{width:100%; accent-color:var(--accent-btn); height:18px; margin:0}
+
+  .rule{margin:48px 0 32px; border:0; border-top:1px solid var(--line-2)}
+
+  /* report / print target */
+  .report{background:var(--card); border:1px solid var(--line-2); border-radius:18px; padding:36px 38px; box-shadow:var(--shadow)}
+  .report-head{display:flex; justify-content:space-between; align-items:baseline; flex-wrap:wrap; gap:8px; border-bottom:1px solid var(--line); padding-bottom:18px; margin-bottom:26px}
+  .report-head h3{font-size:26px; font-weight:300; letter-spacing:-.02em; color:var(--ink)}
+  .report-head .stamp{font-size:12px; color:var(--muted)}
+
+  .cards{display:grid; grid-template-columns:1fr 1fr; gap:20px}
+  @media (max-width:620px){.cards{grid-template-columns:1fr}}
+  .card{border:1px solid var(--line); border-radius:14px; padding:26px; text-align:center; background:var(--paper)}
+  .card .tag{font-size:11px; font-weight:800; letter-spacing:.1em; text-transform:uppercase; color:var(--muted)}
+  .card .big{font-size:42px; font-weight:300; letter-spacing:-.02em; margin:10px 0 2px; line-height:1; color:var(--ink)}
+  .card .note{font-size:12px; color:var(--muted)}
+  .card.loss{border-color:var(--loss); background:var(--loss-soft)} .card.loss .big{color:var(--loss)}
+  .card.win{border-color:var(--win); background:var(--win-soft)} .card.win .big{color:var(--win)}
+
+  .swingbar{margin-top:20px; background:var(--amber-soft); border:1px solid var(--line); border-left:4px solid var(--amber); border-radius:0 12px 12px 0; padding:22px 26px; text-align:center}
+  .swingbar .cap{color:var(--body); font-size:13px}
+  .swingbar .big{font-size:36px; font-weight:300; letter-spacing:-.02em; color:var(--amber); line-height:1.1; margin:8px 0}
+
+  .verdict{margin-top:22px; background:var(--paper); border:1px solid var(--line); border-left:3px solid var(--loss); border-radius:0 12px 12px 0; padding:18px 22px; font-size:14px; color:var(--ink); line-height:1.7}
+  .verdict b{color:var(--loss)}
+
+  .print-only{display:none}
+  .inputs-title{font-size:11px; font-weight:800; letter-spacing:.1em; text-transform:uppercase; color:var(--accent); margin:30px 0 14px}
+  .inputs-grid{display:grid; grid-template-columns:1fr 1fr; gap:6px 36px}
+  @media (max-width:620px){.inputs-grid{grid-template-columns:1fr}}
+  .irow{display:flex; justify-content:space-between; border-bottom:1px dotted var(--line-2); padding:7px 0; font-size:13px}
+  .irow .k{color:var(--body)}
+  .irow .v{font-weight:700; color:var(--ink)}
+
+  .identity{margin-top:28px; font-size:13px; color:var(--body); line-height:1.7}
+  .identity b{color:var(--ink)}
+  .defs{display:flex; flex-wrap:wrap; gap:10px; margin-top:12px}
+  .def{display:inline-flex; align-items:center; gap:0; background:var(--paper); border:1px solid var(--line);
+    border-radius:999px; padding:6px 6px 6px 13px; font-size:13px}
+  .def code{background:none; padding:0; color:var(--ink); font-weight:700}
+  .def .info{margin-left:8px}
+
+  .footer{margin-top:44px; padding-top:20px; border-top:1px solid var(--line); text-align:center}
+  .footer .note{display:block; margin-bottom:8px; font-size:12px; color:var(--muted)}
+  .footer .copy{font-size:11px; color:var(--muted)}
+
+  @media print{
+    @page{margin:9mm}
+    html[data-theme]{--paper:#fff; --card:#fff; --ink:#000; --body:#222; --muted:#666; --line:#ddd; --line-2:#ccc}
+    body{background:#fff; font-size:11px}
+    .nav, .controls-wrap, .footer .note, .btn, .theme-toggle{display:none !important}
+    .print-only{display:block}
+    .wrap{max-width:100%; padding:0}
+    .layout{display:block}
+    .hero{margin-bottom:12px; padding:0} .hero h1{font-size:26px; margin-bottom:6px}
+    .hero .lede{font-size:13px; max-width:none; margin-bottom:6px} .hero .meta{display:none}
+    .report{border:0; padding:0; box-shadow:none}
+    .report-head{padding-bottom:8px; margin-bottom:12px} .report-head h3{font-size:18px}
+    .cards{gap:12px} .card{padding:14px} .card .big{font-size:30px; margin:6px 0 2px}
+    .swingbar{margin-top:12px; padding:12px 16px} .swingbar .big{font-size:26px; margin:4px 0}
+    .verdict{margin-top:12px; padding:10px 14px}
+    .inputs-title{margin:16px 0 8px} .inputs-grid{gap:2px 28px} .irow{padding:4px 0}
+    .identity{margin-top:14px; font-size:11px}
+    .footer{margin-top:16px; padding-top:10px}
+    .card,.swingbar,.verdict,.report{break-inside:avoid; -webkit-print-color-adjust:exact; print-color-adjust:exact}
+  }
+</style>
+</head>
+<body>
+
+<div class="nav">
+  <div class="nav-inner">
+    <span class="nav-brand">Charlie Fuller — <b>Legal AI Architect</b></span>
+    <div class="nav-actions">
+      <button class="btn" id="printBtn">Print / Save PDF</button>
+      <button class="theme-toggle" id="themeToggle" aria-label="Toggle theme">
+        <span class="icon-dark">&#9790;</span>
+        <span class="icon-light" style="display:none">&#9788;</span>
+      </button>
+    </div>
+  </div>
+</div>
+
+<div class="wrap">
+
+  <div class="hero">
+    <h1>The AI Profit Paradox</h1>
+    <p class="lede">Same tool. Same hours saved. <b>Opposite sign on the bottom line</b> — the only thing that changes is how you bill.</p>
+    <div class="meta">
+      <span>Deterministic: same inputs, same answer</span>
+      <span>Drag your numbers in</span>
+      <span>Print the result</span>
+    </div>
+  </div>
+
+  <div class="layout">
+    <div class="controls-wrap">
+      <div class="panel">
+        <h2>Your firm</h2>
+        <label>
+          <div class="lab"><span class="name">Blended billable rate</span><span class="val" id="rateV"></span></div>
+          <input type="range" id="rate" min="250" max="1400" step="25" value="550">
+        </label>
+        <label>
+          <div class="lab"><span class="name">Billable hours / lawyer / year</span><span class="val" id="hoursV"></span></div>
+          <input type="range" id="hours" min="1200" max="2400" step="50" value="1800">
+        </label>
+        <label>
+          <div class="lab"><span class="name">Lawyers (firm size)</span><span class="val" id="lawyersV"></span></div>
+          <input type="range" id="lawyers" min="10" max="2000" step="10" value="900">
+        </label>
+        <label>
+          <div class="lab"><span class="name">AI tooling cost / lawyer / year</span><span class="val" id="aicostV"></span></div>
+          <input type="range" id="aicost" min="0" max="30000" step="500" value="6000">
+        </label>
+      </div>
+
+      <div class="panel">
+        <h2>What AI actually does</h2>
+        <label>
+          <div class="lab"><span class="name">Addressable work (the seam)<span class="info" data-tip="Share of work AI can truly compress. Research &amp; citation: high. Partner judgment: low.">i</span></span><span class="val" id="addrV"></span></div>
+          <input type="range" id="addr" min="0" max="100" step="1" value="35">
+        </label>
+        <label>
+          <div class="lab"><span class="name">Compression on that work<span class="info" data-tip="Fraction of addressable hours the tool removes.">i</span></span><span class="val" id="compV"></span></div>
+          <input type="range" id="comp" min="0" max="100" step="1" value="40">
+        </label>
+        <label>
+          <div class="lab"><span class="name">Refill rate<span class="info" data-tip="Freed hours you actually resell as new billable work. Gated by demand, not effort. Sourced benchmark ~25% (range 15–35%): legal demand is flat and firms already run ~37% utilization with lawyers not busy enough.">i</span></span><span class="val" id="refillV"></span></div>
+          <input type="range" id="refill" min="0" max="120" step="1" value="25">
+        </label>
+        <label>
+          <div class="lab"><span class="name">Client giveback (your pricing power)<span class="info" data-tip="Share of AI savings you hand back in lower fixed fees — the inverse of your pricing power. Bespoke bet-the-company work → near 0%. Commodity review for a procurement-run buyer → 60%+. Realistic default ~25%.">i</span></span><span class="val" id="passV"></span></div>
+          <input type="range" id="pass" min="0" max="75" step="1" value="25">
+        </label>
+      </div>
+    </div>
+
+    <div class="report" id="report">
+      <div class="report-head">
+        <h3>Result</h3>
+      <span class="stamp" id="stamp"></span>
+    </div>
+
+    <div class="cards">
+      <div class="card" id="hourlyCard">
+        <div class="tag">Hourly billing</div>
+        <div class="big" id="hourlyBig"></div>
+        <div class="note">profit change / lawyer / year</div>
+      </div>
+      <div class="card" id="fixedCard">
+        <div class="tag">Fixed fee</div>
+        <div class="big" id="fixedBig"></div>
+        <div class="note">profit change / lawyer / year</div>
+      </div>
+    </div>
+
+    <div class="swingbar">
+      <div class="cap">Same tool, same hours saved. The gap you create just by choosing how to charge:</div>
+      <div class="big" id="swingBig"></div>
+      <div class="cap" id="firmLine"></div>
+    </div>
+
+    <div class="verdict" id="verdict"></div>
+
+    <div class="print-only">
+      <div class="inputs-title">Inputs used</div>
+      <div class="inputs-grid" id="inputsGrid"></div>
+    </div>
+
+    <div class="identity">
+      <b>The identity</b> — hover each term.
+      <div class="defs">
+        <span class="def"><code>freed</code><span class="info" data-tip="hours × addressable × compression — the hours AI removes per lawyer per year. The seam decides how much of the work is even touchable.">i</span></span>
+        <span class="def"><code>Hourly Δ</code><span class="info" data-tip="−rate × freed × (1 − refill) − aiCost. Freed hours were billed revenue; every one you fail to resell is lost at full rate. Can't reach breakeven until refill hits 100%+.">i</span></span>
+        <span class="def"><code>Fixed Δ</code><span class="info" data-tip="+rate × freed × refill − rate × freed × giveback − aiCost. Freed hours were sunk cost; resold capacity is new revenue, minus whatever clients claw back in lower fees.">i</span></span>
+        <span class="def"><code>swing</code><span class="info" data-tip="Fixed Δ − Hourly Δ = rate × freed × (1 − giveback). The gap you create just by how you charge. Independent of tooling cost — that cancels on both sides.">i</span></span>
+      </div>
+    </div>
+    </div>
+  </div>
+
+  <div class="footer">
+    <span class="note">Deterministic &amp; open — same core as pricing_model.py (10 passing tests). Refill benchmark sourced; see REFILL_BENCHMARK.md.</span>
+    <span class="copy">&copy; 2025-2026 Charlie Fuller &nbsp;&middot;&nbsp; <a href="https://linkedin.com/in/charlie-fuller-colorado/" target="_blank" rel="noopener">LinkedIn</a></span>
+  </div>
+</div>
+
+<script>
+  const $ = id => document.getElementById(id);
+  const usd = n => (n < 0 ? "−$" : "$") + Math.abs(Math.round(n)).toLocaleString();
+  const usdM = n => { const s = n < 0 ? "−$" : "$"; const a = Math.abs(n);
+    return a >= 1e6 ? s + (a/1e6).toFixed(1) + "M" : a >= 1e3 ? s + (a/1e3).toFixed(0) + "K" : s + Math.round(a); };
+
+  function calc() {
+    const rate = +$('rate').value, hours = +$('hours').value, lawyers = +$('lawyers').value,
+          aiCost = +$('aicost').value, addr = +$('addr').value/100, comp = +$('comp').value/100,
+          refill = +$('refill').value/100, pass = +$('pass').value/100;
+
+    const freed = hours * addr * comp;
+    const hourly = -rate*freed*(1-refill) - aiCost;
+    const fixed  =  rate*freed*refill - rate*freed*pass - aiCost;
+    const swing  = fixed - hourly;
+    const beHourly = freed > 0 ? 1 + aiCost/(rate*freed) : Infinity;
+
+    $('rateV').textContent = "$" + rate + "/hr";
+    $('hoursV').textContent = hours.toLocaleString();
+    $('lawyersV').textContent = lawyers.toLocaleString();
+    $('aicostV').textContent = "$" + aiCost.toLocaleString();
+    $('addrV').textContent = Math.round(addr*100) + "%";
+    $('compV').textContent = Math.round(comp*100) + "%";
+    $('refillV').textContent = Math.round(refill*100) + "%";
+    $('passV').textContent = Math.round(pass*100) + "%";
+
+    $('hourlyBig').textContent = usd(hourly);
+    $('fixedBig').textContent  = usd(fixed);
+    $('hourlyCard').className = 'card ' + (hourly >= 0 ? 'win' : 'loss');
+    $('fixedCard').className  = 'card ' + (fixed  >= 0 ? 'win' : 'loss');
+
+    $('swingBig').textContent = usd(swing) + " / lawyer / year";
+    $('firmLine').textContent = "Across " + lawyers.toLocaleString() + " lawyers, that's "
+        + usdM(swing*lawyers) + " a year in self-inflicted profit swing.";
+
+    const beTxt = isFinite(beHourly) ? Math.round(beHourly*100) + "%" : "impossible";
+    $('verdict').innerHTML = "Hourly billing needs a <b>" + beTxt + " refill rate</b> just to break even "
+      + "— you'd have to resell every hour AI frees and then some. Your stated refill is "
+      + Math.round(refill*100) + "%. Fixed fee beats hourly by " + usd(rate*freed*(1-pass))
+      + " per lawyer regardless. That gap is the paradox.";
+
+    const rows = [
+      ["Blended rate", "$" + rate + "/hr"],
+      ["Billable hours / lawyer", hours.toLocaleString()],
+      ["Firm size", lawyers.toLocaleString() + " lawyers"],
+      ["AI tooling / lawyer", "$" + aiCost.toLocaleString()],
+      ["Addressable work", Math.round(addr*100) + "%"],
+      ["Compression", Math.round(comp*100) + "%"],
+      ["Refill rate", Math.round(refill*100) + "%"],
+      ["Client giveback", Math.round(pass*100) + "%"],
+      ["Freed hours / lawyer / yr", Math.round(freed).toLocaleString()],
+    ];
+    $('inputsGrid').innerHTML = rows.map(r =>
+      '<div class="irow"><span class="k">' + r[0] + '</span><span class="v">' + r[1] + '</span></div>').join('');
+  }
+
+  document.querySelectorAll('input[type=range]').forEach(el => el.addEventListener('input', calc));
+  $('printBtn').addEventListener('click', () => window.print());
+  try {
+    $('stamp').textContent = "Generated " + new Date().toLocaleDateString(undefined,
+      { year: 'numeric', month: 'long', day: 'numeric' });
+  } catch(e) {}
+
+  // theme toggle — data-theme on <html>, matching the portfolio
+  const root = document.documentElement;
+  const toggle = $('themeToggle');
+  const iconLight = toggle.querySelector('.icon-light');
+  const iconDark = toggle.querySelector('.icon-dark');
+  function setTheme(mode) {
+    root.setAttribute('data-theme', mode);
+    const light = mode === 'light';
+    iconLight.style.display = light ? '' : 'none';
+    iconDark.style.display  = light ? 'none' : '';
+    try { localStorage.setItem('paradox-theme', mode); } catch(e) {}
+  }
+  toggle.addEventListener('click', () =>
+    setTheme(root.getAttribute('data-theme') === 'light' ? 'dark' : 'light'));
+  try { const t = localStorage.getItem('paradox-theme'); if (t) setTheme(t); } catch(e) {}
+
+  calc();
+</script>
+</body>
+</html>
