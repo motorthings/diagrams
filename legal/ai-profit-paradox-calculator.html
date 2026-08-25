@@ -219,7 +219,7 @@
         </label>
         <label>
           <div class="lab"><span class="name">Refill rate<span class="info" data-tip="Freed hours you actually resell as new billable work. Gated by demand, not effort. Sourced benchmark ~25% (range 15–35%): legal demand is flat and firms already run ~37% utilization with lawyers not busy enough.">i</span></span><span class="val" id="refillV"></span></div>
-          <input type="range" id="refill" min="0" max="120" step="1" value="25">
+          <input type="range" id="refill" min="0" max="100" step="1" value="25">
         </label>
         <label>
           <div class="lab"><span class="name">Client giveback (your pricing power)<span class="info" data-tip="Share of AI savings you hand back in lower fixed fees — the inverse of your pricing power. Bespoke bet-the-company work → near 0%. Commodity review for a procurement-run buyer → 60%+. Realistic default ~25%.">i</span></span><span class="val" id="passV"></span></div>
@@ -251,6 +251,7 @@
       <div class="cap">Same tool, same hours saved. The gap you create just by choosing how to charge:</div>
       <div class="big" id="swingBig"></div>
       <div class="cap" id="firmLine"></div>
+      <div class="cap" id="seamRangeLine" style="display:none"></div>
     </div>
 
     <div class="verdict" id="verdict"></div>
@@ -284,6 +285,9 @@
   const usdM = n => { const s = n < 0 ? "−$" : "$"; const a = Math.abs(n);
     return a >= 1e6 ? s + (a/1e6).toFixed(1) + "M" : a >= 1e3 ? s + (a/1e3).toFixed(0) + "K" : s + Math.round(a); };
 
+  // set by the Seam Finder handoff; carries the estimate's low/high into the money
+  let seamRange = null;
+
   function calc() {
     const rate = +$('rate').value, hours = +$('hours').value, lawyers = +$('lawyers').value,
           aiCost = +$('aicost').value, addr = +$('addr').value/100, comp = +$('comp').value/100,
@@ -312,6 +316,20 @@
     $('swingBig').textContent = usd(swing) + " / lawyer / year";
     $('firmLine').textContent = "Across " + lawyers.toLocaleString() + " lawyers, that's "
         + usdM(swing*lawyers) + " a year in self-inflicted profit swing.";
+
+    // propagate the seam's uncertainty into the money when present
+    const rangeEl = $('seamRangeLine');
+    if (seamRange && rangeEl) {
+      const [aLo, aHi] = seamRange;
+      const freedLo = hours*(aLo/100)*comp, freedHi = hours*(aHi/100)*comp;
+      const swingLo = rate*freedLo*(1-pass), swingHi = rate*freedHi*(1-pass);
+      rangeEl.style.display = 'block';
+      rangeEl.textContent = "Seam-only uncertainty: at " + aLo + "% addressable, the swing is "
+        + usd(swingLo) + "; at " + aHi + "%, it's " + usd(swingHi)
+        + ". Only the seam varies; rate, hours, compression, refill and giveback are held at the values you entered. The number above is the center, not the truth.";
+    } else if (rangeEl) {
+      rangeEl.style.display = 'none';
+    }
 
     const beTxt = isFinite(beHourly) ? Math.round(beHourly*100) + "%" : "impossible";
     $('verdict').innerHTML = "Hourly billing needs a <b>" + beTxt + " refill rate</b> just to break even "
@@ -356,6 +374,33 @@
   toggle.addEventListener('click', () =>
     setTheme(root.getAttribute('data-theme') === 'light' ? 'dark' : 'light'));
   try { const t = localStorage.getItem('paradox-theme'); if (t) setTheme(t); } catch(e) {}
+
+  // Seam Finder handoff — accept ?addr=N&addrLow=&addrHigh=&source=seam to prefill addressable work as an estimate
+  try {
+    const p = new URLSearchParams(location.search);
+    const seamAddr = parseFloat(p.get('addr'));
+    if (!isNaN(seamAddr) && seamAddr >= 0 && seamAddr <= 100) {
+      $('addr').value = Math.round(seamAddr);
+      if (p.get('source') === 'seam') {
+        let note = document.getElementById('seamNote');
+        if (!note) {
+          note = document.createElement('div');
+          note.id = 'seamNote';
+          note.style.cssText = 'font-size:12px;color:var(--win);margin:-4px 0 12px;line-height:1.4';
+          $('addr').closest('label').after(note);
+        }
+        const lo = p.get('addrLow'), hi = p.get('addrHigh');
+        if (lo && hi) {
+          const l = Math.max(0, Math.min(100, parseFloat(lo)));
+          const h = Math.max(0, Math.min(100, parseFloat(hi)));
+          if (!isNaN(l) && !isNaN(h) && h >= l) seamRange = [l, h];
+        }
+        note.textContent = 'Addressable work loaded from the Seam Finder as a rubric estimate'
+          + (lo && hi ? ' (sensitivity range ' + lo + '&ndash;' + hi + '%). ' : '. ')
+          + 'Not measured, treat as directional. Drag to adjust.';
+      }
+    }
+  } catch(e) {}
 
   calc();
 </script>

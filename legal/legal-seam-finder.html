@@ -1,0 +1,565 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>The Seam Finder — Where AI Stops and the Lawyer Starts</title>
+<meta name="description" content="Decompose a legal workflow into tasks, rate each on three checkable questions, hour-weight them, and get an honest band and range for the share AI can compress. Feeds the AI Profit Paradox.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Mulish:ital,wght@0,300;0,400;0,600;0,700;0,800;1,400&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --paper:#171416; --card:#1E1A1D;
+    --ink:#F5F2F1; --body:#C9C3C1; --muted:#948E8C;
+    --line:#332D31; --line-2:#463D42;
+    --accent:#E39CB2; --accent-btn:#B83159; --accent-btn-hover:#A4093F;
+    --accent-soft:rgba(184,49,89,0.14);
+    --nav-bg:rgba(23,20,22,0.78);
+    --shadow:0 24px 60px -32px rgba(0,0,0,0.85);
+    --win:#5FBF9B; --win-soft:rgba(95,191,155,0.12);
+    --loss:#E36C89; --loss-soft:rgba(227,108,137,0.12);
+    --amber:#D9A05B; --amber-soft:rgba(217,160,91,0.12);
+    --seam-mid:#C9A06B;
+  }
+  [data-theme="light"]{
+    --paper:#FAF8F7; --card:#FFFFFF;
+    --ink:#1F1A1C; --body:#5A5658; --muted:#76716F;
+    --line:#E7E4E2; --line-2:#D6D2D0;
+    --accent:#A4093F; --accent-btn:#A4093F; --accent-btn-hover:#8F0B39;
+    --accent-soft:#F7E4EB;
+    --nav-bg:rgba(250,248,247,0.82);
+    --shadow:0 24px 56px -34px rgba(31,26,28,0.45);
+    --win:#0F8A5F; --win-soft:rgba(15,138,95,0.08);
+    --loss:#B83159; --loss-soft:rgba(184,49,89,0.08);
+    --amber:#B4720E; --amber-soft:rgba(180,114,14,0.08);
+    --seam-mid:#9C7A3E;
+  }
+  *{margin:0; padding:0; box-sizing:border-box}
+  body{
+    background:var(--paper); color:var(--body);
+    font-family:'Mulish','Avenir Next','Segoe UI',system-ui,-apple-system,sans-serif;
+    font-size:17px; line-height:1.65; min-height:100vh; -webkit-font-smoothing:antialiased;
+  }
+  ::selection{background:var(--accent-soft)}
+  a{color:var(--accent); text-decoration:none}
+  code{font-family:'SF Mono',Consolas,monospace; font-size:.9em; background:var(--accent-soft); padding:1px 5px; border-radius:4px; color:var(--ink)}
+  button{font-family:inherit}
+  :focus-visible{outline:2px solid var(--accent); outline-offset:2px; border-radius:6px}
+
+  .nav{position:sticky; top:0; z-index:100; backdrop-filter:blur(16px); -webkit-backdrop-filter:blur(16px);
+    background:var(--nav-bg); border-bottom:1px solid var(--line); margin:0 0 32px; padding:0 32px}
+  .nav-inner{max-width:1200px; margin:0 auto; padding:14px 0; display:flex; align-items:center; justify-content:space-between}
+  .nav-brand{font-size:14px; font-weight:700; color:var(--ink)}
+  .nav-brand b{color:var(--accent)}
+  .nav-actions{display:flex; gap:12px; align-items:center}
+  .btn{display:inline-flex; align-items:center; justify-content:center; min-height:42px; padding:0 20px; border:0;
+    border-radius:999px; font-family:inherit; font-size:14px; font-weight:700; cursor:pointer;
+    background:var(--accent-btn); color:#fff; box-shadow:var(--shadow); transition:background .18s ease,transform .18s ease}
+  .btn:hover{background:var(--accent-btn-hover); transform:translateY(-1px)}
+  .btn.btn-ghost{background:transparent; color:var(--accent); border:1px solid var(--line-2); box-shadow:none}
+  .btn.btn-ghost:hover{border-color:var(--accent); background:var(--accent-soft)}
+  .theme-toggle{width:42px; height:42px; border-radius:999px; border:1px solid var(--line-2);
+    background:transparent; cursor:pointer; display:flex; align-items:center; justify-content:center;
+    font-size:16px; color:var(--body); transition:border-color .18s,color .18s}
+  .theme-toggle:hover{border-color:var(--accent); color:var(--accent)}
+
+  .wrap{max-width:1200px; margin:0 auto; padding:0 16px 80px}
+
+  .hero{text-align:center; margin-bottom:24px; padding:8px 0 0}
+  .hero h1{font-size:clamp(34px,5vw,56px); font-weight:300; line-height:1.05; letter-spacing:-.025em; color:var(--ink); margin-bottom:14px}
+  .hero .lede{font-size:19px; color:var(--ink); max-width:700px; margin:0 auto 16px; line-height:1.45; font-weight:400}
+  .hero .lede b{color:var(--accent); font-weight:700}
+  .hero .meta{display:flex; flex-wrap:wrap; justify-content:center; gap:8px 22px; font-size:14px; color:var(--muted)}
+  .hero .meta span{display:inline-flex; align-items:center; gap:8px}
+  .hero .meta span::before{content:"›"; color:var(--accent); font-weight:700}
+
+  .chips{display:flex; flex-wrap:wrap; justify-content:center; gap:10px; margin-bottom:26px}
+  .chip{padding:9px 16px; border-radius:999px; border:1px solid var(--line-2); background:var(--card);
+    color:var(--body); font-size:13px; font-weight:600; cursor:pointer; transition:all .15s ease; text-align:left; line-height:1.3}
+  .chip:hover{border-color:var(--accent); color:var(--ink)}
+  .chip small{display:block; font-size:10.5px; font-weight:400; color:var(--muted); margin-top:1px}
+  .chip.active{border-color:var(--accent); background:var(--accent-soft); color:var(--ink)}
+  .chip.active small{color:var(--body)}
+  .chips-cap{text-align:center; font-size:12px; color:var(--muted); margin:-14px 0 20px}
+
+  .layout{display:grid; grid-template-columns:minmax(340px,1fr) 1.05fr; gap:26px; align-items:start}
+  @media (max-width:880px){.layout{grid-template-columns:1fr}}
+  .controls-wrap{display:flex; flex-direction:column; gap:20px}
+  .panel{background:var(--card); border:1px solid var(--line); border-radius:16px; padding:20px 24px; box-shadow:var(--shadow)}
+  .panel h2{font-size:12px; font-weight:800; letter-spacing:.12em; text-transform:uppercase; color:var(--accent); margin-bottom:6px}
+  .panel .panel-sub{font-size:13px; color:var(--muted); margin-bottom:16px; line-height:1.5}
+  .legend{font-size:12.5px; color:var(--body); background:var(--paper); border:1px solid var(--line);
+    border-radius:10px; padding:12px 14px; margin-bottom:16px; line-height:1.6}
+  .legend b{color:var(--ink)}
+
+  .task{border:1px solid var(--line); border-radius:12px; padding:14px 16px; margin-bottom:12px; background:var(--paper)}
+  .task:last-child{margin-bottom:16px}
+  .task-head{display:flex; align-items:center; justify-content:space-between; gap:10px; margin-bottom:10px}
+  .task-name{flex:1; background:transparent; border:0; border-bottom:1px solid var(--line-2);
+    color:var(--ink); font-family:inherit; font-size:15px; font-weight:600; padding:2px 0}
+  .task-name:focus{outline:none; border-bottom-color:var(--accent)}
+  .task-del{width:26px; height:26px; border-radius:7px; border:1px solid var(--line-2); background:transparent;
+    color:var(--muted); font-size:16px; cursor:pointer; line-height:1; flex-shrink:0}
+  .task-del:hover{color:var(--loss); border-color:var(--loss)}
+  .task-del:disabled{opacity:.3; cursor:default}
+  .task-grid{display:grid; grid-template-columns:1fr 1fr 1fr 1fr; gap:12px}
+  @media (max-width:560px){.task-grid{grid-template-columns:1fr 1fr}}
+  .tg-cell .tg-lab{display:block; font-size:10.5px; font-weight:700; letter-spacing:.06em; text-transform:uppercase; color:var(--muted); margin-bottom:2px}
+  .tg-cell .tg-val{display:block; font-size:13px; font-weight:800; color:var(--accent); margin-bottom:2px; font-variant-numeric:tabular-nums}
+  .tg-cell input[type=range]{width:100%; accent-color:var(--accent-btn); height:16px}
+  .tg-cell .tg-pct{font-size:10.5px; color:var(--muted)}
+  .tg-cell.hours .tg-val{color:var(--ink)}
+
+  .addrow{display:flex; align-items:center; gap:12px}
+  .add-btn{display:inline-flex; align-items:center; gap:6px; padding:8px 14px; border-radius:999px;
+    border:1px dashed var(--line-2); background:transparent; color:var(--body); font-size:13px; font-weight:600; cursor:pointer}
+  .add-btn:hover{border-color:var(--accent); color:var(--accent)}
+  .add-hint{font-size:12px; color:var(--muted)}
+
+  .confrow{display:flex; flex-wrap:wrap; align-items:center; gap:10px; margin-top:16px; padding-top:14px; border-top:1px solid var(--line)}
+  .conf-lab{font-size:12.5px; color:var(--body); font-weight:600}
+  .conf-opts{display:flex; gap:8px; flex-wrap:wrap}
+  .conf{padding:7px 13px; border-radius:999px; border:1px solid var(--line-2); background:var(--card);
+    color:var(--body); font-size:12.5px; font-weight:700; cursor:pointer; transition:all .15s ease}
+  .conf:hover{border-color:var(--accent); color:var(--ink)}
+  .conf.active{border-color:var(--accent); background:var(--accent-soft); color:var(--ink)}
+
+  .info{display:inline-flex; align-items:center; justify-content:center; width:15px; height:15px;
+    margin-left:6px; border:1px solid var(--line-2); border-radius:999px; font-size:10px; font-weight:700;
+    font-style:normal; color:var(--muted); cursor:help; position:relative; vertical-align:middle}
+  .info:hover{color:#fff; background:var(--accent-btn); border-color:var(--accent-btn)}
+  .info:hover::after{content:attr(data-tip); position:absolute; left:50%; bottom:calc(100% + 9px);
+    transform:translateX(-50%); width:250px; background:var(--card); color:var(--body);
+    border:1px solid var(--line-2); border-radius:10px; padding:11px 13px; font-size:12.5px;
+    font-weight:400; line-height:1.5; box-shadow:var(--shadow); z-index:60; text-align:left; white-space:normal}
+  .info:hover::before{content:""; position:absolute; left:50%; bottom:calc(100% + 3px);
+    transform:translateX(-50%); border:6px solid transparent; border-top-color:var(--line-2); z-index:60}
+
+  .report{background:var(--card); border:1px solid var(--line-2); border-radius:18px; padding:30px 32px; box-shadow:var(--shadow)}
+  .report-head{display:flex; justify-content:space-between; align-items:baseline; flex-wrap:wrap; gap:8px; border-bottom:1px solid var(--line); padding-bottom:16px; margin-bottom:22px}
+  .report-head h3{font-size:22px; font-weight:300; letter-spacing:-.02em; color:var(--ink)}
+  .report-head .stamp{font-size:12px; color:var(--muted)}
+
+  .score-block{text-align:center; margin-bottom:18px}
+  .score-num{font-size:62px; font-weight:300; letter-spacing:-.03em; line-height:1; color:var(--ink)}
+  .score-num em{font-style:normal; font-size:28px; color:var(--muted); font-weight:400}
+  .score-range{font-size:13px; color:var(--muted); margin-top:6px}
+  .score-range b{color:var(--body); font-weight:700}
+  .score-band{display:inline-block; margin-top:10px; font-size:12px; font-weight:800; letter-spacing:.1em;
+    text-transform:uppercase; padding:6px 14px; border-radius:999px}
+  .band-codifiable{color:var(--win); background:var(--win-soft); border:1px solid var(--win)}
+  .band-semi{color:var(--amber); background:var(--amber-soft); border:1px solid var(--amber)}
+  .band-mixed{color:var(--seam-mid); background:var(--amber-soft); border:1px solid var(--seam-mid)}
+  .band-tacit{color:var(--loss); background:var(--loss-soft); border:1px solid var(--loss)}
+
+  .seambar{margin:20px 0 6px; position:relative; padding-top:8px}
+  .seambar .track{height:14px; border-radius:999px; overflow:hidden; display:flex;
+    background:linear-gradient(to right, var(--win) 0%, var(--win) 72%, var(--seam-mid) 78%, var(--loss) 100%)}
+  .seambar .range-band{position:absolute; top:-6px; height:34px; background:var(--accent-soft);
+    border:1px dashed var(--accent); border-radius:4px; opacity:.85; transition:left .15s ease,width .15s ease}
+  .seambar .marker{position:absolute; top:-6px; width:3px; height:34px; border-radius:2px;
+    background:var(--ink); box-shadow:0 0 0 1px var(--paper), 0 2px 6px rgba(0,0,0,.5); transition:left .15s ease}
+  .seambar .ends{display:flex; justify-content:space-between; font-size:11.5px; color:var(--muted); margin-top:10px; font-weight:600; letter-spacing:.03em}
+  .seambar .ends .right{color:var(--loss)}
+
+  .verdict{margin-top:20px; background:var(--paper); border:1px solid var(--line); border-left:3px solid var(--accent);
+    border-radius:0 12px 12px 0; padding:15px 18px; font-size:14px; color:var(--ink); line-height:1.7}
+  .verdict b{color:var(--accent)}
+  .verdict .gate-note{display:block; margin-top:8px; font-size:12.5px; color:var(--muted)}
+
+  .handoff{margin-top:18px; display:flex; flex-direction:column; gap:10px; padding:15px 18px;
+    background:var(--win-soft); border:1px solid var(--line); border-left:3px solid var(--win); border-radius:0 12px 12px 0}
+  .handoff .cap{font-size:11px; font-weight:800; letter-spacing:.1em; text-transform:uppercase; color:var(--win)}
+  .handoff .addrline{font-size:15px; color:var(--ink)}
+  .handoff .addrline b{font-size:20px; color:var(--win)}
+  .handoff .row{display:flex; flex-wrap:wrap; gap:10px; margin-top:2px}
+  .handoff .est{font-size:11.5px; color:var(--muted)}
+
+  .breakdown-title{font-size:11px; font-weight:800; letter-spacing:.1em; text-transform:uppercase; color:var(--accent); margin:24px 0 10px}
+  .table-wrap{overflow-x:auto}
+  table.bt{width:100%; border-collapse:collapse; font-size:13px}
+  table.bt th{text-align:left; font-size:10.5px; font-weight:700; letter-spacing:.06em; text-transform:uppercase;
+    color:var(--muted); border-bottom:1px solid var(--line); padding:6px 8px}
+  table.bt td{padding:7px 8px; border-bottom:1px dotted var(--line-2); color:var(--body); vertical-align:middle}
+  table.bt td.num{text-align:right; font-variant-numeric:tabular-nums; font-weight:700; color:var(--ink)}
+  table.bt .dot{display:inline-block; width:8px; height:8px; border-radius:999px; margin-right:7px}
+  table.bt .tbar{height:7px; border-radius:999px; background:var(--paper); border:1px solid var(--line); overflow:hidden; min-width:60px}
+  table.bt .tfill{height:100%; border-radius:999px; background:linear-gradient(to right,var(--win),var(--accent))}
+
+  details.formula{margin-top:20px; border:1px solid var(--line); border-radius:12px; background:var(--paper)}
+  details.formula summary{cursor:pointer; padding:13px 16px; font-size:13px; font-weight:700; color:var(--ink); list-style:none}
+  details.formula summary::-webkit-details-marker{display:none}
+  details.formula summary::before{content:"›"; color:var(--accent); font-weight:700; margin-right:8px}
+  details.formula[open] summary::before{content:"›"; display:inline-block; transform:rotate(90deg)}
+  details.formula .body{padding:0 16px 16px; font-size:13px; color:var(--body); line-height:1.7}
+  details.formula .body p{margin-bottom:10px}
+  details.formula .body b{color:var(--ink)}
+  details.formula .term{display:flex; justify-content:space-between; gap:10px; padding:6px 0; border-bottom:1px dotted var(--line-2); font-size:13px}
+  details.formula .term code{font-size:12px}
+  details.formula .term .w{color:var(--muted); font-family:'SF Mono',Consolas,monospace; font-size:11.5px}
+
+  .footer{margin-top:40px; padding-top:20px; border-top:1px solid var(--line); text-align:center}
+  .footer .note{display:block; margin-bottom:8px; font-size:12px; color:var(--muted); max-width:780px; margin-left:auto; margin-right:auto}
+  .footer .copy{font-size:11px; color:var(--muted)}
+
+  @media print{
+    @page{margin:9mm}
+    html[data-theme]{--paper:#fff; --card:#fff; --ink:#000; --body:#222; --muted:#666; --line:#ddd; --line-2:#ccc}
+    body{background:#fff; font-size:11px}
+    .nav, .controls-wrap, .chips, .chips-cap, .footer .note, .btn, .theme-toggle, .addrow{display:none !important}
+    .wrap{max-width:100%; padding:0}
+    .layout{display:block}
+    .hero{margin-bottom:10px; padding:0} .hero h1{font-size:26px; margin-bottom:6px}
+    .hero .lede{font-size:13px; max-width:none; margin-bottom:6px} .hero .meta{display:none}
+    .report{border:0; padding:0; box-shadow:none}
+    .score-num{font-size:52px} .score-num em{font-size:24px}
+    .seambar .marker{box-shadow:none}
+    .report, .verdict, .handoff, details.formula{break-inside:avoid; -webkit-print-color-adjust:exact; print-color-adjust:exact}
+  }
+  @media (prefers-reduced-motion: reduce){
+    *,*::before,*::after{transition:none !important; animation:none !important}
+  }
+</style>
+</head>
+<body>
+
+<div class="nav">
+  <div class="nav-inner">
+    <a href="index.html" class="nav-brand" style="text-decoration:none">Charlie Fuller — <b>Legal AI Architect</b></a>
+    <div class="nav-actions">
+      <button class="btn btn-ghost" id="printBtn">Print / Save PDF</button>
+      <button class="theme-toggle" id="themeToggle" aria-label="Toggle theme">
+        <span class="icon-dark">&#9790;</span>
+        <span class="icon-light" style="display:none">&#9788;</span>
+      </button>
+    </div>
+  </div>
+</div>
+
+<div class="wrap">
+
+  <div class="hero">
+    <h1>The Seam Finder</h1>
+    <p class="lede">Every workflow has a seam: the line where AI stops and the lawyer starts. <b>This finds yours.</b> Break the work into tasks, rate each on three checkable questions, weight by hours, and get an honest band and range for what AI can compress.</p>
+    <div class="meta">
+      <span>Task by task, not a single blob</span>
+      <span>Checkable questions</span>
+      <span>Returns a range, not false precision</span>
+    </div>
+  </div>
+
+  <div class="chips" id="chips" role="group" aria-label="Calibration anchors">
+    <button class="chip" data-p="nda"><span>NDA triage</span><small>rights, notice, assignment</small></button>
+    <button class="chip" data-p="memo"><span>Research memo</span><small>retrieve, cite, assemble</small></button>
+    <button class="chip" data-p="depo"><span>Deposition prep</span><small>facts in, judgment mid</small></button>
+    <button class="chip" data-p="deal"><span>Deal markup</span><small>precedent, then trade</small></button>
+    <button class="chip" data-p="nego"><span>Client negotiation</span><small>no template, no delegate</small></button>
+  </div>
+  <div class="chips-cap">Calibration anchors. Starting points, not results. Adjust them to your actual matter.</div>
+
+  <div class="layout">
+    <div class="controls-wrap">
+      <div class="panel">
+        <h2>Decompose the workflow</h2>
+        <p class="panel-sub">Name each task, set its share of the billed hours, and rate it on the three questions. The share is your best estimate of relative time, not a measured budget. The hour weighting is what keeps the result a fraction of time instead of a count of tasks.</p>
+        <div class="legend">
+          <b>Hours share</b> &nbsp;&middot;&nbsp; that task's portion of the workflow's billed time. <br>
+          <b>Retrieval</b><span class="info" data-tip="Does it rest on retrieving and citing authority you already have? Checkable: 'pull the case, cite the clause.'">i</span> &nbsp;how much of the task is finding and citing known material.<br>
+          <b>Checkable</b><span class="info" data-tip="Can a checker call this right or wrong against a standard? High means a rubric can grade it. Legal craft is a defensible range, so most tasks land low here by design.">i</span> &nbsp;can a checker grade it against a standard.<br>
+          <b>Templated</b><span class="info" data-tip="Does a template or precedent already exist? If it's templated today, a machine can be the template.">i</span> &nbsp;is there a template or precedent.
+        </div>
+        <div id="taskList"></div>
+        <div class="addrow">
+          <button class="add-btn" id="addTask"><span>+</span> Add a task</button>
+          <span class="add-hint">up to 6</span>
+        </div>
+
+        <div class="confrow">
+          <span class="conf-lab">Confidence in these ratings<span class="info" data-tip="How far each rating could plausibly be off. This sets the width of the sensitivity band: Very sure = within 4 points, Sure = 8, Guessing = 15. Pick it honestly; it is an input, not a fixed constant, and shrinking it shrinks the range on purpose.">i</span></span>
+          <div class="conf-opts" id="confOpts" role="group" aria-label="Rating confidence">
+            <button class="conf" data-s="4">Very sure (&#177;4)</button>
+            <button class="conf active" data-s="8">Sure (&#177;8)</button>
+            <button class="conf" data-s="15">Guessing (&#177;15)</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="report" id="report">
+      <div class="report-head">
+        <h3>Seam score</h3>
+        <span class="stamp" id="stamp"></span>
+      </div>
+
+      <div class="score-block">
+        <div class="score-num"><span id="scoreNum">0</span><em>%</em></div>
+        <div class="score-band" id="scoreBand">Rated</div>
+        <div class="score-range" id="scoreRange"></div>
+      </div>
+
+      <div class="seambar">
+        <div class="range-band" id="rangeBand"></div>
+        <div class="marker" id="marker"></div>
+        <div class="track"></div>
+        <div class="ends"><span>Codifiable &middot; AI wins now</span><span class="right">Tacit &middot; stalls at the partner</span></div>
+      </div>
+
+      <div class="verdict" id="verdict"></div>
+
+      <div class="handoff">
+        <div class="cap">Addressable work for the calculator</div>
+        <div class="addrline">Hour-weighted share of this workflow: <b id="addrPct">0%</b></div>
+        <div class="est" id="addrEst"></div>
+        <div class="est">One workflow, not your whole book. Score several before trusting a firm-level dollar figure.</div>
+        <div class="row">
+          <a class="btn" id="openCalc" href="#">Open in the calculator</a>
+          <button class="btn btn-ghost" id="copyBtn">Copy value</button>
+        </div>
+      </div>
+
+      <div class="breakdown-title">Where the hours sit</div>
+      <div class="table-wrap">
+        <table class="bt">
+          <thead><tr><th>Task</th><th>Hours</th><th>Codifiable</th><th>Into the score</th></tr></thead>
+          <tbody id="btBody"></tbody>
+        </table>
+      </div>
+
+      <details class="formula">
+        <summary>How the score is built, open</summary>
+        <div class="body">
+          <p>Each task gets a codifiable fraction from three checkable content signals, then that fraction is weighted by the task's share of the billable hours.</p>
+          <div class="term"><code>retrieval</code><span class="w">&#215; 0.40</span></div>
+          <div class="term"><code>checkable</code><span class="w">&#215; 0.30</span></div>
+          <div class="term"><code>templated</code><span class="w">&#215; 0.30</span></div>
+          <p style="margin-top:10px"><b>What's deliberately excluded.</b> Two things you might expect are not scored here, on purpose. The partner review gate is a quality control on whether the firm <i>trusts</i> the output, not evidence the underlying work is incompressible, so it belongs downstream in the calculator's refill rate. And the cost of being wrong is orthogonal to compressibility, so a filing deadline can score high even though it's malpractice-grade. Leaving both out keeps the number about the work, not about risk.</p>
+          <p><b>Why a range, not a number.</b> The headline is the hour-weighted share, and the range shows what it would be if every rating was off by up to your chosen confidence bound in the same direction. That is an admission, not a hedge: this is a rubric, not a measurement. It has not been validated against a firm's actual compression outcomes. Treat the number as directional.</p>
+          <p><b>The band boundaries at 75 / 55 / 35 / 15 are judgment calls, not measurements.</b> A one-point drag can relabel a workflow across a boundary. Weigh the range, not the label.</p>
+          <p><b>The three signals correlate.</b> Templated work is often determinate and retrieval-heavy, so the additive sum double-counts some of what they share. The weights and the sum are a judgment, not a hidden strength. If you disagree with them, the honest response is to distrust the precise number, not to trust the label.</p>
+          <p><b>Scope.</b> This scores one workflow. The calculator will happily extrapolate it to a firm's whole book. If you feed it a dollar figure, score several representative workflows first, not one.</p>
+          <p><b>It will tend to agree with you.</b> If you already believe a workflow is or is not compressible, the three sliders can land almost any band. Use it to force yourself to name the tasks and the evidence, not to confirm a prior.</p>
+          <p>Feed it into the <a href="ai-profit-paradox-calculator.html">AI Profit Paradox</a> as its addressable-work input. The calculator now shows what the seam's uncertainty does to the dollar figure.</p>
+        </div>
+      </details>
+    </div>
+  </div>
+
+  <div class="footer">
+    <span class="note">A rubric, not a measurement. Task-by-task, hour-weighted, checkable questions, an honest sensitivity range, and the partner gate left to the calculator's refill rate. Same style of core as the AI Profit Paradox.</span>
+    <span class="copy">&copy; 2025-2026 Charlie Fuller &nbsp;&middot;&nbsp; <a href="https://linkedin.com/in/charlie-fuller-colorado/" target="_blank" rel="noopener">LinkedIn</a></span>
+  </div>
+</div>
+
+<script>
+  const $ = id => document.getElementById(id);
+  const clamp = (n,lo,hi) => Math.max(lo, Math.min(hi, n));
+  const W = { r:.40, d:.30, t:.30 };
+
+  const PRESETS = {
+    nda:  { label:'NDA triage', tasks:[
+      {name:'Triage &amp; rights parse', hours:45, r:95, d:90, t:100},
+      {name:'Clause identification', hours:35, r:90, d:85, t:95},
+      {name:'Business-point flags', hours:20, r:50, d:55, t:40}]},
+    memo: { label:'Research memo', tasks:[
+      {name:'Retrieval &amp; cite assembly', hours:50, r:85, d:70, t:60},
+      {name:'Synthesis &amp; structure', hours:30, r:40, d:55, t:70},
+      {name:'The analysis', hours:20, r:20, d:35, t:30}]},
+    depo: { label:'Deposition prep', tasks:[
+      {name:'Fact &amp; document review', hours:40, r:75, d:70, t:45},
+      {name:'Witness themes &amp; outline', hours:35, r:35, d:45, t:40},
+      {name:'Strategy &amp; judgment', hours:25, r:15, d:30, t:20}]},
+    deal: { label:'Deal markup', tasks:[
+      {name:'Precedent markup', hours:35, r:70, d:65, t:85},
+      {name:'Risk &amp; business-point resolution', hours:30, r:35, d:35, t:40},
+      {name:'Negotiation &amp; trade-offs', hours:35, r:10, d:20, t:15}]},
+    nego: { label:'Client negotiation', tasks:[
+      {name:'Matter &amp; document intake', hours:20, r:60, d:50, t:45},
+      {name:'Position &amp; leverage strategy', hours:40, r:15, d:25, t:15},
+      {name:'The call / judgment', hours:40, r:5, d:15, t:10}]},
+  };
+
+  let tasks = [ {name:'Retrieval &amp; cite assembly', hours:50, r:85, d:70, t:60},
+                {name:'Synthesis &amp; structure', hours:30, r:40, d:55, t:70},
+                {name:'The analysis', hours:20, r:20, d:35, t:30} ];
+  let SENS = 8; // how far each rating could be off, set by the confidence control
+
+  function readTasks(){
+    return tasks.map((t,i)=>{
+      const g = id => +document.getElementById(id).value;
+      const nameEl = document.querySelectorAll('.task-name')[i];
+      return { name: nameEl ? nameEl.value : t.name,
+        hours: g('hours-'+i), r:g('r-'+i), d:g('d-'+i), t:g('t-'+i) };
+    });
+  }
+
+  function rebuild(){
+    const list = $('taskList');
+    list.innerHTML = tasks.map((t,i)=>`
+      <div class="task">
+        <div class="task-head">
+          <input class="task-name" value="${t.name}" aria-label="Task name">
+          <button class="task-del" data-i="${i}" ${tasks.length<=1?'disabled':''} title="Remove task">&#215;</button>
+        </div>
+        <div class="task-grid">
+          <div class="tg-cell hours">
+            <span class="tg-lab">Hours</span><span class="tg-val" id="vH${i}"></span>
+            <input type="range" id="hours-${i}" min="0" max="100" step="5" value="${t.hours}">
+          </div>
+          <div class="tg-cell">
+            <span class="tg-lab">Retrieval</span><span class="tg-val" id="vR${i}"></span>
+            <input type="range" id="r-${i}" min="0" max="100" step="5" value="${t.r}">
+          </div>
+          <div class="tg-cell">
+            <span class="tg-lab">Checkable</span><span class="tg-val" id="vD${i}"></span>
+            <input type="range" id="d-${i}" min="0" max="100" step="5" value="${t.d}">
+          </div>
+          <div class="tg-cell">
+            <span class="tg-lab">Templated</span><span class="tg-val" id="vT${i}"></span>
+            <input type="range" id="t-${i}" min="0" max="100" step="5" value="${t.t}">
+          </div>
+        </div>
+      </div>`).join('');
+    bindTaskEvents();
+    calc();
+  }
+
+  function bindTaskEvents(){
+    document.querySelectorAll('#taskList input[type=range]').forEach(el => el.addEventListener('input', calc));
+    document.querySelectorAll('#taskList .task-name').forEach(el => el.addEventListener('input', calc));
+    document.querySelectorAll('#taskList .task-del').forEach(el => el.addEventListener('click', ()=>{
+      const i = +el.dataset.i;
+      if (tasks.length <= 1) return;
+      tasks.splice(i,1); rebuild();
+    }));
+  }
+
+  function bandFor(s){
+    if (s >= 75) return {cls:'band-codifiable', label:'Codifiable · machine work at the core',
+      v:'The retrieval-heavy core of this workflow is machine work by the questions above. That is about whether the work <i>can</i> be compressed, not a promise that a given tool already delivers it. Whether a specific product reaches it is a separate, unmodeled question.'};
+    if (s >= 55) return {cls:'band-semi', label:'Semi-codifiable · pipeline ready',
+      v:'The seam runs under it. The retrieval and assembly tasks compress; the analysis task stays yours. Because it is hour-weighted, the share tells you how much of your actual time sits on each side.'};
+    if (s >= 35) return {cls:'band-mixed', label:'Mixed · the seam cuts through it',
+      v:'Half the billed hours are machine work, half are judgment. Expect partial compression: AI drafts and organizes, the reasoning that makes it defensible stays human.'};
+    if (s >= 15) return {cls:'band-tacit', label:'Mostly tacit · partner-heavy',
+      v:'Most of the billed hours sit in judgment the firm will not delegate. Compress the intake and the edges, not the core.'};
+    return {cls:'band-tacit', label:'Tacit · stalls at the partner',
+      v:'This one does not yield. The weight is in position and judgment, where the cost of being wrong is carried by a person. That is not a limitation. It is the boundary.'};
+  }
+
+  function calc(){
+    const ts = readTasks();
+    const totalH = ts.reduce((s,t)=>s+t.hours,0) || 1;
+    let addr = 0;
+    ts.forEach(t=>{ const cod = W.r*t.r + W.d*t.d + W.t*t.t; t._cod=cod; t._w=t.hours/totalH; t._cont=cod*t._w; addr += t._cont; });
+    const center = Math.round(addr);
+
+    // sensitivity range: every content rating off by SENS in the same direction
+    let lo=0, hi=0;
+    ts.forEach(t=>{
+      const w=t._w;
+      lo += w*(W.r*clamp(t.r-SENS,0,100) + W.d*clamp(t.d-SENS,0,100) + W.t*clamp(t.t-SENS,0,100));
+      hi += w*(W.r*clamp(t.r+SENS,0,100) + W.d*clamp(t.d+SENS,0,100) + W.t*clamp(t.t+SENS,0,100));
+    });
+    const loR = Math.round(lo), hiR = Math.round(hi);
+
+    // readouts
+    ts.forEach((t,i)=>{
+      $('vH'+i).textContent = t.hours + '%';
+      $('vR'+i).textContent = t.r + '%';
+      $('vD'+i).textContent = t.d + '%';
+      $('vT'+i).textContent = t.t + '%';
+    });
+
+    $('scoreNum').textContent = center;
+    $('scoreRange').innerHTML = 'Range if each rating was off by up to ' + SENS + ' pts (your stated confidence): <b>' + loR + '&ndash;' + hiR + '%</b>';
+    $('addrPct').textContent = center + '%';
+    $('addrEst').textContent = 'Rubric-estimated. Not measured. Treat as directional, not exact.';
+
+    const band = bandFor(center);
+    const b = $('scoreBand');
+    b.className = 'score-band ' + band.cls;
+    b.textContent = band.label;
+    const bandLo = bandFor(loR), bandHi = bandFor(hiR);
+    const straddle = bandLo.label !== bandHi.label
+      ? '<span class="gate-note">Your confidence range spans two bands (<b>' + bandLo.label + '</b> to <b>' + bandHi.label + '</b>). Read the narrative loosely; the boundary is a judgment, not a fact.</span>'
+      : '';
+    $('verdict').innerHTML = band.v +
+      '<span class="gate-note">The partner gate is not scored here. It is why your <b>refill rate</b> matters in the calculator, not your addressability.</span>' + straddle;
+    $('verdict').style.borderLeftColor = band.cls === 'band-codifiable' ? 'var(--win)'
+      : band.cls === 'band-tacit' ? 'var(--loss)' : 'var(--amber)';
+
+    $('marker').style.left = 'calc(' + center + '% - 1.5px)';
+    $('rangeBand').style.left = 'calc(' + loR + '% - 1px)';
+    $('rangeBand').style.width = 'calc(' + (hiR-loR) + '% + 2px)';
+
+    $('openCalc').href = 'ai-profit-paradox-calculator.html?addr=' + center + '&addrLow=' + loR + '&addrHigh=' + hiR + '&source=seam';
+
+    $('btBody').innerHTML = ts.map(t=>{
+      const dot = t._cod >= 60 ? 'var(--win)' : t._cod >= 35 ? 'var(--amber)' : 'var(--loss)';
+      return '<tr>' +
+        '<td><span class="dot" style="background:'+dot+'"></span>'+t.name+'</td>' +
+        '<td class="num">'+Math.round(t._w*100)+'%</td>' +
+        '<td><div class="tbar"><div class="tfill" style="width:'+Math.round(t._cod)+'%"></div></div></td>' +
+        '<td class="num">'+Math.round(t._cont)+'</td></tr>';
+    }).join('');
+  }
+
+  // presets
+  document.querySelectorAll('.chip').forEach(chip => {
+    chip.addEventListener('click', ()=>{
+      document.querySelectorAll('.chip').forEach(c=>c.classList.remove('active'));
+      chip.classList.add('active');
+      tasks = PRESETS[chip.dataset.p].tasks.map(t=>({...t}));
+      rebuild();
+    });
+  });
+
+  document.querySelectorAll('#confOpts .conf').forEach(btn => btn.addEventListener('click', ()=>{
+    document.querySelectorAll('#confOpts .conf').forEach(b=>b.classList.remove('active'));
+    btn.classList.add('active');
+    SENS = +btn.dataset.s;
+    calc();
+  }));
+
+  $('addTask').addEventListener('click', ()=>{
+    if (tasks.length >= 6) return;
+    tasks.push({name:'New task', hours:20, r:50, d:50, t:50});
+    rebuild();
+  });
+
+  document.querySelectorAll('input[type=range]').forEach(el => el.addEventListener('input', ()=>{
+    document.querySelectorAll('.chip').forEach(c=>c.classList.remove('active'));
+    calc();
+  }));
+
+  $('printBtn').addEventListener('click', ()=>window.print());
+  $('copyBtn').addEventListener('click', ()=>{
+    const txt = $('addrPct').textContent;
+    const done = ()=>{ $('copyBtn').textContent='Copied'; setTimeout(()=>{$('copyBtn').textContent='Copy value';},1400); };
+    if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(txt).then(done).catch(done); else done();
+  });
+
+  try { $('stamp').textContent = "Generated " + new Date().toLocaleDateString(undefined,{year:'numeric',month:'long',day:'numeric'}); } catch(e){}
+
+  const root = document.documentElement;
+  const toggle = $('themeToggle');
+  const iconLight = toggle.querySelector('.icon-light');
+  const iconDark = toggle.querySelector('.icon-dark');
+  function setTheme(mode){
+    root.setAttribute('data-theme', mode);
+    const light = mode==='light';
+    iconLight.style.display = light?'':'none';
+    iconDark.style.display = light?'none':'';
+    try{localStorage.setItem('seam-theme',mode);}catch(e){}
+  }
+  toggle.addEventListener('click', ()=>setTheme(root.getAttribute('data-theme')==='light'?'dark':'light'));
+  try{const t=localStorage.getItem('seam-theme'); if(t)setTheme(t);}catch(e){}
+
+  // open on the research memo calibration so the default is mid-range and honest
+  document.querySelector('.chip[data-p="memo"]').classList.add('active');
+  tasks = PRESETS.memo.tasks.map(t=>({...t}));
+  rebuild();
+</script>
+</body>
+</html>
