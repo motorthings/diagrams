@@ -225,6 +225,14 @@
           <div class="lab"><span class="name">Client giveback (your pricing power)<span class="info" data-tip="Share of AI savings you hand back in lower fixed fees — the inverse of your pricing power. Bespoke bet-the-company work → near 0%. Commodity review for a procurement-run buyer → 60%+. Realistic default ~25%.">i</span></span><span class="val" id="passV"></span></div>
           <input type="range" id="pass" min="0" max="75" step="1" value="25">
         </label>
+        <label>
+          <div class="lab"><span class="name">Check-back drag<span class="info" data-tip="Share of freed hours you actually spend verifying the AI's output. Net freed = freed × (1 − check). Some 'saved' time always leaks back into QC. Realistic default ~10%.">i</span></span><span class="val" id="checkV"></span></div>
+          <input type="range" id="check" min="0" max="60" step="1" value="10">
+        </label>
+        <label>
+          <div class="lab"><span class="name">Upsell uplift<span class="info" data-tip="How much higher redeployed hours bill than the freed work they replaced. 0 = resold at the same rate. Redeploying grunt-work hours to exploratory, higher-value work pushes this up. Conservative default 0%.">i</span></span><span class="val" id="upliftV"></span></div>
+          <input type="range" id="uplift" min="0" max="100" step="5" value="0">
+        </label>
       </div>
     </div>
 
@@ -265,9 +273,10 @@
       <b>The identity</b> — hover each term.
       <div class="defs">
         <span class="def"><code>freed</code><span class="info" data-tip="hours × addressable × compression — the hours AI removes per lawyer per year. The seam decides how much of the work is even touchable.">i</span></span>
-        <span class="def"><code>Hourly Δ</code><span class="info" data-tip="−rate × freed × (1 − refill) − aiCost. Freed hours were billed revenue; every one you fail to resell is lost at full rate. Can't reach breakeven until refill hits 100%+.">i</span></span>
-        <span class="def"><code>Fixed Δ</code><span class="info" data-tip="+rate × freed × refill − rate × freed × giveback − aiCost. Freed hours were sunk cost; resold capacity is new revenue, minus whatever clients claw back in lower fees.">i</span></span>
-        <span class="def"><code>swing</code><span class="info" data-tip="Fixed Δ − Hourly Δ = rate × freed × (1 − giveback). The gap you create just by how you charge. Independent of tooling cost — that cancels on both sides.">i</span></span>
+        <span class="def"><code>netFreed</code><span class="info" data-tip="freed × (1 − check) — the hours actually usable after you spend a share verifying the AI's output. Some saved time always leaks back into QC.">i</span></span>
+        <span class="def"><code>Hourly Δ</code><span class="info" data-tip="−rate × netFreed × (1 − refill) − aiCost. Freed hours were billed revenue; every one you fail to resell is lost at full rate. Can't reach breakeven until refill hits 100%+.">i</span></span>
+        <span class="def"><code>Fixed Δ</code><span class="info" data-tip="+rate × netFreed × refill × (1 + uplift) − rate × netFreed × giveback − aiCost. Resold hours bill above base rate when redeployed to higher-value work; minus client giveback and tooling.">i</span></span>
+        <span class="def"><code>swing</code><span class="info" data-tip="Fixed Δ − Hourly Δ = rate × netFreed × (1 + refill × uplift − giveback). The gap you create just by how you charge. Tooling cost cancels on both sides; uplift widens it, giveback narrows it.">i</span></span>
       </div>
     </div>
     </div>
@@ -291,13 +300,17 @@
   function calc() {
     const rate = +$('rate').value, hours = +$('hours').value, lawyers = +$('lawyers').value,
           aiCost = +$('aicost').value, addr = +$('addr').value/100, comp = +$('comp').value/100,
-          refill = +$('refill').value/100, pass = +$('pass').value/100;
+          refill = +$('refill').value/100, pass = +$('pass').value/100,
+          check = +$('check').value/100, uplift = +$('uplift').value/100;
 
-    const freed = hours * addr * comp;
-    const hourly = -rate*freed*(1-refill) - aiCost;
-    const fixed  =  rate*freed*refill - rate*freed*pass - aiCost;
-    const swing  = fixed - hourly;
-    const beHourly = freed > 0 ? 1 + aiCost/(rate*freed) : Infinity;
+    // gross hours AI removes, then net after you spend a share verifying the output
+    const freed  = hours * addr * comp;
+    const netFreed = freed * (1 - check);
+    // redeployed hours bill at (1 + uplift) × rate, not base rate
+    const hourly = -rate*netFreed*(1-refill) - aiCost;
+    const fixed  =  rate*netFreed*refill*(1+uplift) - rate*netFreed*pass - aiCost;
+    const swing  = fixed - hourly; // = rate·netFreed·(1 + refill·uplift − pass)
+    const beHourly = netFreed > 0 ? 1 + aiCost/(rate*netFreed) : Infinity;
 
     $('rateV').textContent = "$" + rate + "/hr";
     $('hoursV').textContent = hours.toLocaleString();
@@ -307,6 +320,8 @@
     $('compV').textContent = Math.round(comp*100) + "%";
     $('refillV').textContent = Math.round(refill*100) + "%";
     $('passV').textContent = Math.round(pass*100) + "%";
+    $('checkV').textContent = Math.round(check*100) + "%";
+    $('upliftV').textContent = Math.round(uplift*100) + "%";
 
     $('hourlyBig').textContent = usd(hourly);
     $('fixedBig').textContent  = usd(fixed);
@@ -321,8 +336,8 @@
     const rangeEl = $('seamRangeLine');
     if (seamRange && rangeEl) {
       const [aLo, aHi] = seamRange;
-      const freedLo = hours*(aLo/100)*comp, freedHi = hours*(aHi/100)*comp;
-      const swingLo = rate*freedLo*(1-pass), swingHi = rate*freedHi*(1-pass);
+      const freedLo = hours*(aLo/100)*comp*(1-check), freedHi = hours*(aHi/100)*comp*(1-check);
+      const swingLo = rate*freedLo*(1 + refill*uplift - pass), swingHi = rate*freedHi*(1 + refill*uplift - pass);
       rangeEl.style.display = 'block';
       rangeEl.textContent = "Seam-only uncertainty: at " + aLo + "% addressable, the swing is "
         + usd(swingLo) + "; at " + aHi + "%, it's " + usd(swingHi)
@@ -332,10 +347,15 @@
     }
 
     const beTxt = isFinite(beHourly) ? Math.round(beHourly*100) + "%" : "impossible";
+    const gapPerLawyer = rate*netFreed*(1 + refill*uplift - pass);
     $('verdict').innerHTML = "Hourly billing needs a <b>" + beTxt + " refill rate</b> just to break even "
       + "— you'd have to resell every hour AI frees and then some. Your stated refill is "
-      + Math.round(refill*100) + "%. Fixed fee beats hourly by " + usd(rate*freed*(1-pass))
-      + " per lawyer regardless. That gap is the paradox.";
+      + Math.round(refill*100) + "%. Fixed fee beats hourly by " + usd(gapPerLawyer)
+      + " per lawyer regardless"
+      + (uplift > 0 ? ", and redeploying freed hours to higher-value work adds "
+        + usd(rate*netFreed*refill*uplift) + " of that" : "")
+      + ". The check-back drag trims the gross hours by " + Math.round(check*100)
+      + "% before any of this counts. That gap is the paradox.";
 
     const rows = [
       ["Blended rate", "$" + rate + "/hr"],
@@ -346,7 +366,10 @@
       ["Compression", Math.round(comp*100) + "%"],
       ["Refill rate", Math.round(refill*100) + "%"],
       ["Client giveback", Math.round(pass*100) + "%"],
+      ["Check-back drag", Math.round(check*100) + "%"],
+      ["Upsell uplift", Math.round(uplift*100) + "%"],
       ["Freed hours / lawyer / yr", Math.round(freed).toLocaleString()],
+      ["Net freed (after check-back)", Math.round(netFreed).toLocaleString()],
     ];
     $('inputsGrid').innerHTML = rows.map(r =>
       '<div class="irow"><span class="k">' + r[0] + '</span><span class="v">' + r[1] + '</span></div>').join('');
