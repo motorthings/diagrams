@@ -2,485 +2,467 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<link rel="icon" type="image/svg+xml" href="../icon.svg">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<meta name="description" content="Charlie Fuller builds governed AI tools for legal work: privacy, confidentiality, and the unauthorized-practice boundary engineered in, not bolted on.">
-<title>Charlie Fuller — Legal Engineer · Privacy &amp; AI Governance</title>
+<meta name="description" content="Legal AI a firm can actually deploy. Charlie Fuller builds the governance layer &mdash; privacy, confidentiality, audit trail, human oversight, and a boundary the system will not cross.">
+<title>Charlie Fuller &mdash; Legal Engineer &middot; Privacy &amp; AI Governance</title>
+<link rel="icon" type="image/svg+xml" href="../icon.svg">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,wght@0,400;0,500;0,600;0,700;0,800;1,400&family=Source+Code+Pro:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Newsreader:opsz,wght@6..72,300;6..72,400;6..72,500;6..72,600&family=Instrument+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
-  :root {
-    --font-display: 'Fraunces', Georgia, serif;
-    --font-mono: 'Source Code Pro', 'SF Mono', Consolas, monospace;
+/* ============ TOKENS ============ */
+:root{
+  color-scheme:dark;
+  /* dark (default) &mdash; warm near-black ink, one bronze accent */
+  --ink:#ece6da;
+  --body:#d6cfc0;
+  --muted:#a09683;
+  --page:#14120e;
+  --card:#1b1813;
+  --raised:#242017;
+  --border-subtle:#2a2620;
+  --border-default:#3b362d;
+  --accent:#e0a35c;
+  --accent-hover:#eab67a;
+  --accent-ink:#14120e;
+  --shadow:0 1px 3px rgba(0,0,0,.30),0 12px 40px rgba(0,0,0,.30);
+  --font-display:'Newsreader',Georgia,serif;
+  --font-body:'Instrument Sans',system-ui,sans-serif;
+  --radius-card:8px;
+  --radius-pill:999px;
+  --ease:cubic-bezier(.16,1,.3,1);
+}
+html.light{
+  color-scheme:light;
+  --ink:#1b1711;
+  --body:#2b251c;
+  --muted:#6f6554;
+  --page:#f5f1e8;
+  --card:#ffffff;
+  --raised:#efe9db;
+  --border-subtle:#e7e0d2;
+  --border-default:#d3c9b5;
+  --accent:#8a4f18;
+  --accent-hover:#6f3e10;
+  --accent-ink:#ffffff;
+  --shadow:0 1px 2px rgba(30,22,8,.05),0 14px 44px rgba(30,22,8,.10);
+}
 
-    --bg: #eef4f9; --surface: #ffffff; --surface2: #f5f8fc;
-    --border: #c8daea; --border-bright: #a0bedb;
-    --text: #0a1628; --text-dim: #3d5a7a; --text-muted: #7a9ab8;
-    --primary: #e8621a; --primary-dim: rgba(232,98,26,0.08);
-    --secondary: #4a90c4; --secondary-dim: rgba(74,144,196,0.08);
-    --metric: #0f766e; --metric-dim: rgba(15,118,110,0.06);
-    --amber: #b45309; --amber-dim: rgba(180,83,9,0.08);
-    --violet: #7c3aed; --violet-dim: rgba(124,58,237,0.08);
-    --rose: #e11d48; --rose-dim: rgba(225,29,72,0.08);
-    --slate: #475569; --slate-dim: rgba(71,85,105,0.08);
-  }
+/* ============ BASE ============ */
+*{margin:0;padding:0;box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{
+  background:var(--page);color:var(--body);
+  font-family:var(--font-body);
+  font-size:18px;line-height:1.65;
+  overflow-x:hidden;
+  -webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility;
+  transition:background .2s var(--ease),color .2s var(--ease);
+}
+h1,h2,h3,p,.eyebrow{text-wrap:pretty}
+a{color:var(--accent);text-decoration:none}
+a:hover{color:var(--accent-hover)}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px;border-radius:2px}
+::selection{background:var(--accent);color:var(--accent-ink)}
 
-  html.dark {
-    --bg: #0a1628; --surface: #132240; --surface2: #1a2d52;
-    --border: #1a2d52; --border-bright: #2d4570;
-    --text: #e8edf5; --text-dim: #9bb0d4; --text-muted: #5e7aa3;
-    --primary: #f37021; --primary-dim: rgba(243,112,33,0.12);
-    --secondary: #6cace4; --secondary-dim: rgba(108,172,228,0.12);
-    --metric: #2dd4bf; --metric-dim: rgba(45,212,191,0.08);
-    --amber: #f59e0b; --amber-dim: rgba(245,158,11,0.12);
-    --violet: #a78bfa; --violet-dim: rgba(167,139,250,0.12);
-    --rose: #fb7185; --rose-dim: rgba(251,113,133,0.12);
-    --slate: #94a3b8; --slate-dim: rgba(148,163,184,0.12);
-  }
+.wrap{max-width:1080px;margin:0 auto;padding:0 clamp(20px,4vw,48px)}
+.narrow{max-width:720px}
+section{padding:clamp(64px,9vw,120px) 0}
+.eyebrow{font-size:12px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin-bottom:16px}
 
-  * { margin: 0; padding: 0; box-sizing: border-box; }
+/* ============ NAV ============ */
+header.nav{
+  position:sticky;top:0;z-index:100;
+  background:color-mix(in srgb,var(--page) 82%,transparent);
+  backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);
+  border-bottom:1px solid var(--border-subtle);
+}
+.nav-inner{max-width:1080px;margin:0 auto;padding:0 clamp(20px,4vw,48px);height:56px;display:flex;align-items:center;justify-content:space-between;gap:16px}
+.nav-brand{font-weight:700;color:var(--ink);letter-spacing:-.01em}
+.nav-brand .sub{color:var(--muted);font-weight:500}
+.nav-right{display:flex;align-items:center;gap:22px}
+.nav-link{font-size:15px;color:var(--body)}
+.nav-link:hover{color:var(--accent)}
+.theme-toggle{
+  font-family:var(--font-body);font-size:13px;font-weight:600;color:var(--muted);
+  background:var(--card);border:1px solid var(--border-default);border-radius:var(--radius-pill);
+  padding:7px 16px;cursor:pointer;
+  transition:color .15s var(--ease),border-color .15s var(--ease);
+}
+.theme-toggle:hover{color:var(--ink);border-color:var(--accent)}
+.theme-toggle[aria-pressed="true"]{color:var(--accent);border-color:var(--accent)}
 
-  body {
-    background: var(--bg);
-    background-image:
-      radial-gradient(ellipse at 80% 0%, var(--primary-dim) 0%, transparent 50%),
-      radial-gradient(ellipse at 20% 60%, var(--secondary-dim) 0%, transparent 40%);
-    color: var(--text);
-    font-family: var(--font-display);
-    font-size: 15px;
-    line-height: 1.7;
-    min-height: 100vh;
-    padding: 0 32px 80px;
-    -webkit-font-smoothing: antialiased;
-    transition: background 0.3s, color 0.3s;
-  }
+/* ============ HERO ============ */
+.hero{padding-top:clamp(72px,12vw,150px);padding-bottom:clamp(48px,7vw,80px)}
+.hero-grid{display:grid;grid-template-columns:repeat(12,1fr);column-gap:32px}
+.hero-main{grid-column:1 / span 8}
+.hero h1{
+  font-family:var(--font-display);font-weight:500;letter-spacing:-.02em;
+  font-size:clamp(44px,7vw,72px);line-height:1.02;color:var(--ink);
+}
+.hero h1 em{font-style:italic;color:var(--accent)}
+.hero .lede{font-size:20px;line-height:1.6;color:var(--body);margin-top:24px;max-width:60ch}
+.hero-actions{display:flex;flex-wrap:wrap;gap:14px;margin-top:38px}
+.btn{
+  font-family:var(--font-body);font-size:16px;font-weight:600;border-radius:var(--radius-pill);
+  padding:14px 28px;display:inline-flex;align-items:center;gap:8px;
+  transition:transform .18s var(--ease),background .18s var(--ease),border-color .18s var(--ease),color .18s var(--ease);
+}
+.btn-primary{background:var(--accent);color:var(--accent-ink);box-shadow:var(--shadow)}
+.btn-primary:hover{background:var(--accent-hover);color:var(--accent-ink);transform:translateY(-1px)}
+.btn-ghost{background:transparent;color:var(--body);border:1px solid var(--border-default)}
+.btn-ghost:hover{border-color:var(--accent);color:var(--ink)}
+.anchors{font-size:13px;color:var(--muted);margin-top:34px;max-width:66ch;line-height:1.8}
+.anchors .a{font-variant-numeric:tabular-nums}
 
-  .nav {
-    position: sticky; top: 0; z-index: 100;
-    backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px);
-    background: color-mix(in srgb, var(--surface) 85%, transparent);
-    border-bottom: 1px solid var(--border);
-    margin: 0 -32px 32px;
-    padding: 0 32px;
-  }
-  .nav-inner {
-    max-width: 1000px; margin: 0 auto; padding: 12px 0;
-    display: flex; align-items: center; justify-content: space-between;
-  }
-  .nav-brand {
-    font-family: var(--font-mono); font-size: 12px; font-weight: 600;
-    letter-spacing: 0.5px; color: var(--primary); text-decoration: none;
-  }
-  .nav-brand:hover { text-decoration: underline; }
+/* ============ LAYER (inverted full-bleed) ============ */
+.layer{background:var(--raised);border-block:1px solid var(--border-subtle)}
+.layer h2{font-family:var(--font-display);font-weight:500;font-size:clamp(30px,4.5vw,44px);line-height:1.08;color:var(--ink);letter-spacing:-.015em}
+.layer .lede{font-size:18px;color:var(--body);margin-top:16px;max-width:60ch}
+.strata{display:grid;grid-template-columns:repeat(12,1fr);gap:20px;margin-top:52px}
+.stratum{grid-column:span 4;border:1px solid var(--border-subtle);border-radius:var(--radius-card);padding:30px;background:var(--card);display:flex;flex-direction:column}
+.stratum .num{font-variant-numeric:tabular-nums;font-size:13px;font-weight:700;color:var(--muted);letter-spacing:.06em;margin-bottom:16px}
+.stratum h3{font-family:var(--font-display);font-weight:500;font-size:24px;color:var(--body);margin-bottom:10px}
+.stratum p{font-size:16px;color:var(--muted);line-height:1.6}
+.stratum.rails{border:2px solid var(--accent);background:var(--raised)}
+.stratum.rails h3{color:var(--ink)}
+.stratum.rails p{color:var(--body)}
+.stratum.rails .tag{font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--accent);margin-top:auto;padding-top:20px}
 
-  .theme-toggle {
-    width: 36px; height: 36px; border-radius: 10px;
-    border: 1px solid var(--border); background: var(--surface);
-    cursor: pointer; display: flex; align-items: center; justify-content: center;
-    font-size: 16px; color: var(--text-dim); transition: all 0.2s;
-  }
-  .theme-toggle:hover { border-color: var(--primary); color: var(--primary); }
+/* ============ RISK CLAIMS ============ */
+.claims-grid{display:grid;grid-template-columns:repeat(12,1fr);column-gap:48px;row-gap:56px}
+.claim{grid-column:span 6}
+.claim .claim-mark{width:28px;height:3px;background:var(--accent);margin-bottom:20px}
+.claim h3{font-family:var(--font-display);font-weight:500;font-size:clamp(24px,3vw,30px);line-height:1.15;color:var(--ink);letter-spacing:-.01em;margin-bottom:18px}
+.claim p{font-size:17px;color:var(--body);max-width:56ch;line-height:1.65}
+.claim p+p{margin-top:12px}
 
-  .backlink{position:fixed;top:12px;left:16px;z-index:101;font-family:var(--font-mono);font-size:12px;color:var(--text-dim);text-decoration:none;padding:6px 10px;border:1px solid var(--border);border-radius:6px;background:var(--surface);transition:color .15s,border-color .15s}
-  .backlink:hover{color:var(--text);border-color:var(--border-bright)}
+/* ============ WHAT I BUILD ============ */
+.build-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:18px;margin-top:44px}
+.build-item{border:1px solid var(--border-subtle);border-radius:var(--radius-card);padding:28px;background:var(--card)}
+.build-item h3{font-size:18px;font-weight:700;color:var(--ink);margin-bottom:8px}
+.build-item p{font-size:15px;color:var(--muted);line-height:1.55}
 
-  .container { max-width: 1000px; margin: 0 auto; padding-top: 48px; }
+/* ============ THE WORK ============ */
+.lead-card{
+  display:block;border:1px solid var(--border-default);border-radius:var(--radius-card);
+  background:var(--card);padding:clamp(28px,4vw,44px);margin:48px 0 0;
+  box-shadow:var(--shadow);transition:border-color .18s var(--ease),transform .18s var(--ease);
+}
+.lead-card:hover{border-color:var(--accent);transform:translateY(-2px)}
+.lead-card .lead-tag{display:inline-block;font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--accent);margin-bottom:16px}
+.lead-card h3{font-family:var(--font-display);font-weight:500;font-size:clamp(28px,4vw,38px);color:var(--ink);letter-spacing:-.015em;margin-bottom:14px}
+.lead-card p{font-size:18px;color:var(--body);max-width:60ch;line-height:1.6}
+.lead-card .go{display:inline-flex;align-items:center;gap:8px;margin-top:22px;font-weight:600;color:var(--accent)}
+.lead-card .go .arr{display:inline-block;transition:transform .18s var(--ease)}
+.lead-card:hover .go .arr{transform:translateX(3px)}
+.work-groups{margin-top:56px}
+.work-group{margin-top:44px}
+.work-group:first-child{margin-top:0}
+.work-eyebrow{font-size:12px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);padding-bottom:14px;border-bottom:1px solid var(--border-subtle);margin-bottom:20px}
+.work-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}
+.work-card{
+  display:flex;flex-direction:column;min-height:132px;
+  border:1px solid var(--border-subtle);border-radius:var(--radius-card);
+  background:var(--card);padding:26px;text-decoration:none;color:inherit;
+  transition:border-color .18s var(--ease),background .18s var(--ease),transform .18s var(--ease);
+}
+.work-card:hover{border-color:var(--accent);background:var(--raised);transform:translateY(-2px)}
+.work-card h3{font-size:18px;font-weight:700;color:var(--ink);margin-bottom:8px}
+.work-card:hover h3{color:var(--accent)}
+.work-card p{font-size:15px;color:var(--body);line-height:1.5}
+.work-card .emph{margin-top:auto;padding-top:14px;font-size:15px;font-weight:600;color:var(--accent);font-variant-numeric:tabular-nums}
+.work-card .go{display:inline-flex;align-items:center;gap:6px;margin-top:14px;font-size:14px;font-weight:600;color:var(--muted)}
+.work-card .go .arr{display:inline-block;transition:transform .18s var(--ease)}
+.work-card:hover .go .arr{transform:translateX(3px)}
 
-  @keyframes fadeUp { from { opacity: 0; transform: translateY(16px); } to { opacity: 1; transform: translateY(0); } }
+/* ============ HONEST NOTE ============ */
+.honest p{font-size:15px;color:var(--muted);line-height:1.7}
 
-  .hero { text-align: center; margin-bottom: 40px; animation: fadeUp 0.5s ease both; }
-  .hero .hero-badge {
-    font-family: var(--font-mono); font-size: 11px; font-weight: 600;
-    letter-spacing: 0.12em; text-transform: uppercase;
-    color: var(--metric); margin-bottom: 18px; display: inline-block;
-    padding: 5px 12px; border: 1px solid var(--border); border-radius: 20px;
-    background: var(--surface);
-  }
-  .hero h1 {
-    font-size: 44px; font-weight: 800; letter-spacing: -1px;
-    margin-bottom: 10px; color: var(--text);
-  }
-  .hero h1 .accent { color: var(--primary); }
-  .hero .role {
-    font-family: var(--font-mono); font-size: 14px; font-weight: 500;
-    color: var(--secondary); margin-bottom: 16px;
-  }
-  .hero p { font-size: 18px; color: var(--text-dim); max-width: 720px; margin: 0 auto; line-height: 1.6; }
-  .hero p strong { color: var(--text); font-weight: 600; }
+/* ============ CTA ============ */
+.cta{background:var(--raised);border-block:1px solid var(--border-subtle)}
+.cta h2{font-family:var(--font-display);font-weight:500;font-size:clamp(34px,5vw,52px);line-height:1.05;color:var(--ink);letter-spacing:-.015em;max-width:20ch}
+.cta .lede{font-size:18px;color:var(--body);margin-top:18px;max-width:52ch}
+.cta .actions{display:flex;align-items:center;flex-wrap:wrap;gap:26px;margin-top:36px}
+.cta .quiet{font-size:14px;color:var(--muted)}
 
-  /* === TAG ROW (scannable strengths) === */
-  .strength-row { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 12px; }
+/* ============ FOOTER ============ */
+footer{padding:48px 0 72px;border-top:1px solid var(--border-subtle)}
+.foot-inner{max-width:1080px;margin:0 auto;padding:0 clamp(20px,4vw,48px);display:flex;flex-wrap:wrap;gap:12px 28px;font-size:14px;color:var(--muted)}
+footer a{color:var(--muted)}
+footer a:hover{color:var(--accent)}
 
-  /* === CITE-VERIFIED BANNER === */
-  .guarantee {
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-left: 4px solid var(--metric);
-    border-radius: 12px;
-    padding: 20px 24px;
-    margin-bottom: 48px;
-    animation: fadeUp 0.5s ease both;
-  }
-  .guarantee-label {
-    font-family: var(--font-mono); font-size: 11px; font-weight: 700;
-    letter-spacing: 0.12em; text-transform: uppercase;
-    color: var(--metric); margin-bottom: 8px;
-  }
-  .guarantee p { font-size: 15px; color: var(--text); line-height: 1.65; }
-  .guarantee p .scope { color: var(--text-dim); }
+/* ============ REVEAL (single, reduced-motion aware) ============ */
+.reveal{opacity:0;transform:translateY(8px);transition:opacity .5s var(--ease),transform .5s var(--ease)}
+.reveal.in{opacity:1;transform:none}
+@media (prefers-reduced-motion:reduce){
+  html{scroll-behavior:auto}
+  *,*::before,*::after{transition:none!important;animation:none!important}
+  .reveal{opacity:1;transform:none}
+}
 
-  .section { margin-bottom: 48px; animation: fadeUp 0.5s ease both; }
-  .section-title {
-    font-family: var(--font-mono); font-size: 15px; font-weight: 700;
-    letter-spacing: 0.12em; text-transform: uppercase;
-    color: var(--primary); margin-bottom: 22px;
-  }
-  .section-head h2 {
-    font-size: 32px; font-weight: 700; letter-spacing: -0.5px;
-    color: var(--text); margin-bottom: 8px;
-  }
-  .section-head .lede { font-size: 15px; color: var(--text-dim); max-width: 680px; }
-
-  /* === BOUNDARY STATEMENT === */
-  .boundary {
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: 14px;
-    padding: 28px;
-  }
-  .boundary p { font-size: 16px; color: var(--text); margin-bottom: 14px; }
-  .boundary p:last-child { margin-bottom: 0; }
-  .boundary .punch { font-size: 17px; font-weight: 600; }
-  .boundary .cites {
-    font-family: var(--font-mono); font-size: 11px;
-    margin-top: 16px; padding-top: 14px; border-top: 1px solid var(--border);
-    display: flex; flex-wrap: wrap; gap: 6px;
-  }
-  .boundary .cites span {
-    background: var(--secondary-dim); color: var(--secondary);
-    border-radius: 4px; padding: 3px 8px;
-  }
-
-  /* === WHAT I BUILD (five lines, matching the boundary card) === */
-  .build-row { padding: 16px 0; border-bottom: 1px solid var(--border); }
-  .build-row:last-of-type { border-bottom: none; }
-  .build-name { display: block; font-size: 18px; font-weight: 700; color: var(--text); margin-bottom: 4px; }
-  .build-desc { display: block; font-size: 15px; color: var(--text-dim); line-height: 1.55; }
-
-  .boundary .boundary-note { font-size: 15px; color: var(--text-dim); margin-top: 12px; }
-  .footnote {
-    font-size: 12px; color: var(--text-muted); text-align: center; line-height: 1.6;
-    max-width: 760px; margin: 0 auto 32px;
-  }
-
-  /* === LANDSCAPE (where I fit) === */
-  .layer {
-    background: var(--surface); border: 1px solid var(--border);
-    border-radius: 14px; padding: 24px 26px; margin-bottom: 10px;
-  }
-  .layer.this-is-me {
-    border-left: 4px solid var(--primary);
-    background: linear-gradient(90deg, var(--primary-dim), transparent 60%), var(--surface);
-  }
-  .layer-head { display: flex; align-items: center; gap: 12px; margin-bottom: 10px; }
-  .layer-num {
-    font-family: var(--font-mono); font-size: 13px; font-weight: 700; color: var(--text-muted);
-    border: 1px solid var(--border-bright); border-radius: 6px; padding: 3px 8px;
-  }
-  .layer-name { font-size: 22px; font-weight: 700; color: var(--text); }
-  .this-is-me .layer-name { color: var(--primary); }
-  .layer-desc { font-size: 15px; color: var(--text-dim); line-height: 1.65; }
-  .me-tag {
-    font-family: var(--font-mono); font-size: 10px; font-weight: 700; letter-spacing: 0.08em;
-    text-transform: uppercase; color: var(--primary); background: var(--primary-dim);
-    border: 1px solid var(--primary); border-radius: 20px; padding: 3px 10px; margin-left: auto;
-  }
-
-  /* === STRENGTHS GRID === */
-  .strengths {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-    gap: 14px;
-  }
-  .strength {
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: 12px;
-    padding: 22px 20px;
-  }
-  .strength-name { font-size: 16px; font-weight: 700; color: var(--text); margin-bottom: 6px; }
-  .strength-desc { font-size: 13px; color: var(--text-dim); line-height: 1.6; }
-  .strength-tags { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 12px; }
-  .strength-tag {
-    font-family: var(--font-mono); font-size: 10px; font-weight: 500;
-    padding: 3px 8px; border-radius: 4px;
-  }
-  .discipline-note {
-    font-size: 12px; color: var(--text-muted);
-    margin-top: 14px; font-style: italic;
-  }
-
-  /* === TIERS === */
-  .tier { margin-bottom: 36px; }
-  .tier-label {
-    display: inline-block;
-    font-family: var(--font-mono); font-size: 11px; font-weight: 700;
-    letter-spacing: 0.12em; text-transform: uppercase;
-    padding: 5px 12px; border-radius: 6px; margin-bottom: 14px;
-  }
-  .tier-label.t1 { background: var(--primary-dim); color: var(--primary); }
-  .tier-label.t2 { background: var(--secondary-dim); color: var(--secondary); }
-  .tier-label.t3 { background: var(--metric-dim); color: var(--metric); }
-
-  .work-grid { display: block; }
-  .work-card {
-    width: 100%; margin-bottom: 10px;
-    display: block;
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: 12px;
-    padding: 22px 26px;
-    text-decoration: none;
-    color: inherit;
-    transition: border-color 0.2s;
-  }
-  .work-card:hover { border-color: var(--primary); }
-  .work-card h3 { font-size: 20px; font-weight: 700; color: var(--text); margin-bottom: 6px; }
-  .work-card:hover h3 { color: var(--primary); }
-  .work-card .work-desc { font-size: 15px; color: var(--text-dim); line-height: 1.55; }
-  .work-card .work-arrow {
-    font-family: var(--font-mono); font-size: 12px; color: var(--primary);
-    margin-top: 10px;
-  }
-
-  /* === CONTACT / FOOTER === */
-  .contact {
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: 14px;
-    padding: 28px;
-    text-align: center;
-    margin-bottom: 16px;
-  }
-  .contact h2 { font-size: 22px; font-weight: 700; color: var(--text); margin-bottom: 8px; }
-  .contact p { font-size: 15px; color: var(--text-dim); max-width: 560px; margin: 0 auto 12px; }
-  .contact a { color: var(--primary); font-weight: 600; text-decoration: none; }
-  .contact a:hover { text-decoration: underline; }
-  .contact-cta { margin-top: 16px; }
-  .contact-cta a {
-    display: inline-block; background: var(--primary); color: #fff;
-    font-weight: 600; padding: 12px 24px; border-radius: 8px; text-decoration: none;
-  }
-  .contact-cta a:hover { filter: brightness(1.08); text-decoration: none; }
-  .contact-sub { margin-top: 14px; }
-  .contact-sub a { font-family: var(--font-mono); font-size: 12px; color: var(--text-muted); text-decoration: none; }
-  .contact-sub a:hover { color: var(--text); }
-
-  .footer {
-    padding-top: 16px;
-    border-top: 1px solid var(--border);
-    text-align: center; font-size: 12px; color: var(--text-muted);
-  }
-
-  @media (max-width: 640px) {
-    body { padding: 0 20px 64px; }
-    .nav { margin: 0 -20px 24px; padding: 0 20px; }
-    .hero h1 { font-size: 28px; }
-    .container { padding-top: 32px; }
-  }
-  @media (prefers-reduced-motion: reduce) {
-    *, *::before, *::after { animation-duration: 0.01ms !important; animation-delay: 0ms !important; }
-  }
+/* ============ RESPONSIVE ============ */
+@media (max-width:1023px){
+  .stratum{grid-column:span 6}
+  .stratum.rails{grid-column:span 12}
+  .work-grid{grid-template-columns:repeat(2,1fr)}
+  .build-grid{grid-template-columns:repeat(2,1fr)}
+}
+@media (max-width:767px){
+  body{font-size:17px}
+  section{padding:56px 0}
+  .hero h1{font-size:clamp(36px,11vw,46px)}
+  .hero-main{grid-column:1 / span 12}
+  .claim{grid-column:span 12}
+  .build-grid{grid-template-columns:1fr}
+  .stratum{grid-column:span 12}
+  .work-grid{grid-template-columns:1fr}
+  .nav-inner{height:56px}
+  .nav-brand .sub{display:none}
+}
 </style>
 </head>
 <body>
-<a href="../index.html" class="backlink">&larr; Index</a>
 
-<div class="nav">
+<header class="nav">
   <div class="nav-inner">
-    <a href="../index.html" class="nav-brand">&larr; Charlie Fuller &mdash; Diagrams</a>
-    <button class="theme-toggle" id="themeToggle" aria-label="Toggle dark mode">
-      <span class="icon-light">&#9788;</span>
-      <span class="icon-dark" style="display:none">&#9790;</span>
-    </button>
-  </div>
-</div>
-
-<div class="container">
-
-  <!-- 1. HEADER -->
-  <div class="hero">
-    <span class="hero-badge">Legal Engineer &middot; Non-JD</span>
-    <h1>I build <span class="accent">governed AI</span> for legal work.</h1>
-    <div class="role">AI that helps lawyers move faster &mdash; with the privacy, oversight, and accountability a firm can&rsquo;t be without.</div>
-  </div>
-
-  <!-- 2. WHERE I FIT IN AI & LAW -->
-  <div class="section">
-    <div class="section-title">Where I fit in AI &amp; law</div>
-    <div class="landscape">
-      <div class="layer">
-        <div class="layer-head"><span class="layer-num">1</span><span class="layer-name">The brain</span></div>
-        <div class="layer-desc">The tools that do the legal thinking and drafting.</div>
-      </div>
-      <div class="layer">
-        <div class="layer-head"><span class="layer-num">2</span><span class="layer-name">The library</span></div>
-        <div class="layer-desc">The tools that hold the law.</div>
-      </div>
-      <div class="layer this-is-me">
-        <div class="layer-head"><span class="layer-num">3</span><span class="layer-name">The rails</span><span class="me-tag">This is me</span></div>
-        <div class="layer-desc">The layer that makes those tools safe for a firm to actually use. I don&rsquo;t build the model or the library. I build the layer that makes them deployable &mdash; and defensible.</div>
-      </div>
+    <a href="../index.html" class="nav-brand">Charlie Fuller <span class="sub">&middot; Legal Engineer</span></a>
+    <div class="nav-right">
+      <a class="nav-link" href="../index.html">All diagrams</a>
+      <button id="themeToggle" class="theme-toggle" type="button" aria-pressed="false" aria-label="Toggle light or dark theme"><span id="themeLabel">Dark</span></button>
     </div>
   </div>
+</header>
 
-  <!-- 3. THE BOUNDARY -->
-  <div class="section">
-    <div class="section-title">The boundary</div>
-    <div class="boundary">
-      <p class="punch">The platform recommends. A licensed attorney decides.</p>
-      <p class="boundary-note">I build to that line deliberately &mdash; the system knows where it stops, and so do I.</p>
+<main>
+
+  <!-- HERO -->
+  <section class="hero" aria-labelledby="hero-h">
+    <div class="wrap hero-grid">
+      <div class="hero-main">
+        <p class="eyebrow">Legal Engineer &middot; non-JD</p>
+        <h1 id="hero-h">Legal AI a firm can <em>actually deploy.</em></h1>
+        <p class="lede">The layer between legal AI and a firm&rsquo;s obligations &mdash; privacy, oversight, audit trail, and a boundary the system will not cross.</p>
+        <div class="hero-actions">
+          <a class="btn btn-primary" href="legal-ai-os-overview.html">Open Legal AI OS</a>
+          <a class="btn btn-ghost" href="#layer">See how a firm runs AI safely</a>
+        </div>
+        <p class="anchors"><span class="a">ABA Model Rules 1.1 / 1.6 / 5.3 / 5.5</span> &middot; <span class="a">Formal Opinion 512</span> &middot; <span class="a">GDPR</span> &middot; <span class="a">EU AI Act</span> &middot; <span class="a">NIST AI RMF</span> &middot; <span class="a">CCPA/CPRA</span></p>
+      </div>
     </div>
-  </div>
+  </section>
 
-  <!-- 4. NOTHING INVENTED -->
-  <div class="guarantee">
-    <div class="guarantee-label">Nothing invented</div>
-    <p>Every authority I cite is verified real and still good law. No fabricated cases, no invented citations &mdash; the thing law-firm AI is most afraid of is the one I design against.</p>
-  </div>
-
-  <!-- 5. WHAT I BUILD -->
-  <div class="section">
-    <div class="section-title">What I build</div>
-    <div class="boundary">
-      <div class="build-row">
-        <span class="build-name">Privacy and AI governance</span>
-        <span class="build-desc">AI that respects how a firm has to treat data &mdash; assessed, not assumed.</span>
+  <!-- THE LAYER -->
+  <section class="layer" id="layer" aria-labelledby="layer-h">
+    <div class="wrap">
+      <p class="eyebrow">Where this work sits</p>
+      <h2 id="layer-h">Legal AI has a brain and a library. Firms still can&rsquo;t deploy it.</h2>
+      <p class="lede">The models reason and draft. The research holds the law. Neither is usable in a firm until the layer around it makes the use safe.</p>
+      <div class="strata">
+        <div class="stratum">
+          <div class="num">01</div>
+          <h3>The brain</h3>
+          <p>The tools that reason and draft.</p>
+        </div>
+        <div class="stratum">
+          <div class="num">02</div>
+          <h3>The library</h3>
+          <p>The tools that hold the law.</p>
+        </div>
+        <div class="stratum rails">
+          <div class="num">03</div>
+          <h3>The rails</h3>
+          <p>Privacy, oversight, audit, and a hard boundary &mdash; the layer that makes both deployable.</p>
+          <div class="tag">The layer I build</div>
+        </div>
       </div>
-      <div class="build-row">
-        <span class="build-name">Confidentiality</span>
-        <span class="build-desc">Client data walled off at the foundation. Nothing leaks, nothing is shared.</span>
-      </div>
-      <div class="build-row">
-        <span class="build-name">Accountability</span>
-        <span class="build-desc">Every decision logged and provable &mdash; you can show what the AI did and why.</span>
-      </div>
-      <div class="build-row">
-        <span class="build-name">Human oversight</span>
-        <span class="build-desc">The important stuff goes to a lawyer. The AI never decides alone.</span>
-      </div>
-      <div class="build-row">
-        <span class="build-name">Knowing where to stop</span>
-        <span class="build-desc">The system stays on its side of the line. The judgment stays with the attorney.</span>
-      </div>
-      <div class="discipline-note">The vocabularies this work is built in &mdash; AIGP, CIPP-E, CLOC, LPP &mdash; are named as disciplines, not claimed as earned credentials.</div>
     </div>
-  </div>
+  </section>
 
-  <!-- 6. THE WORK -->
-  <div class="section">
-    <div class="section-title">The work</div>
+  <!-- THE TWO RISK CLAIMS -->
+  <section aria-labelledby="risks-h">
+    <div class="wrap">
+      <h2 id="risks-h" class="eyebrow">The two risks a firm can&rsquo;t take</h2>
+      <div class="claims-grid">
+        <div class="claim">
+          <span class="claim-mark"></span>
+          <h3>The platform recommends. A licensed attorney decides.</h3>
+          <p>The system never holds the judgment. Every low-confidence output escalates to a licensed attorney, and every decision is logged.</p>
+          <p>That line is designed in, not promised on paper.</p>
+        </div>
+        <div class="claim">
+          <span class="claim-mark"></span>
+          <h3>No authority is fabricated.</h3>
+          <p>Nothing on this site is invented. Every citation is checked against the record and confirmed still good law.</p>
+          <p>Hallucinated authority is the failure a firm can&rsquo;t afford &mdash; it&rsquo;s the one I design against.</p>
+        </div>
+      </div>
+    </div>
+  </section>
 
-    <div class="tier">
-      <div class="tier-label t1">The specialization</div>
-      <div class="work-grid">
-        <a class="work-card" href="legal-privacy-dpia.html">
+  <!-- WHAT I BUILD -->
+  <section aria-labelledby="build-h">
+    <div class="wrap">
+      <h2 id="build-h" class="eyebrow">What I build</h2>
+      <div class="build-grid">
+        <div class="build-item">
           <h3>Privacy &amp; AI governance</h3>
-          <div class="work-desc">Assessing how the AI handles data &mdash; the discipline this role is increasingly about.</div>
-          <div class="work-arrow">Open &rarr;</div>
-        </a>
-        <a class="work-card" href="legal-upl-boundary.html">
+          <p>Data handling assessed, not assumed.</p>
+        </div>
+        <div class="build-item">
+          <h3>Confidentiality</h3>
+          <p>Client data walled off at the foundation.</p>
+        </div>
+        <div class="build-item">
+          <h3>Accountability</h3>
+          <p>Every decision logged and provable.</p>
+        </div>
+        <div class="build-item">
+          <h3>Human oversight</h3>
+          <p>The judgment stays with the attorney.</p>
+        </div>
+        <div class="build-item">
           <h3>The boundary</h3>
-          <div class="work-desc">Where the AI stops and the lawyer starts &mdash; drawn, not assumed.</div>
-          <div class="work-arrow">Open &rarr;</div>
-        </a>
-        <a class="work-card" href="legal-ai-governance.html">
-          <h3>Governance model</h3>
-          <div class="work-desc">How a firm runs AI safely &mdash; the pillars that make it deployable.</div>
-          <div class="work-arrow">Open &rarr;</div>
-        </a>
+          <p>The system will not cross it.</p>
+        </div>
       </div>
     </div>
+  </section>
 
-    <div class="tier">
-      <div class="tier-label t2">Shipped</div>
-      <div class="work-grid">
-        <a class="work-card" href="legal-ai-os-overview.html">
-          <h3>Legal AI OS</h3>
-          <div class="work-desc">A governed platform for legal work &mdash; every decision logged and provable.</div>
-          <div class="work-arrow">Open &rarr;</div>
-        </a>
-        <a class="work-card" href="legal-os-full-platform.html">
-          <h3>Full platform</h3>
-          <div class="work-desc">The same governance across the whole firm, end to end.</div>
-          <div class="work-arrow">Open &rarr;</div>
-        </a>
-        <a class="work-card" href="project-nda-triage.html">
-          <h3>NDA triage</h3>
-          <div class="work-desc">Field NDAs approved or routed in seconds &mdash; with proof of every call.</div>
-          <div class="work-arrow">Open &rarr;</div>
-        </a>
-        <a class="work-card" href="project-separation-agreement.html">
-          <h3>Separation &amp; severance</h3>
-          <div class="work-desc">A two-to-four-hour task cut to thirty seconds, across three countries.</div>
-          <div class="work-arrow">Open &rarr;</div>
-        </a>
-        <a class="work-card" href="project-itfa.html">
-          <h3>Privacy research</h3>
-          <div class="work-desc">Vendor privacy paperwork researched &mdash; half the work automated.</div>
-          <div class="work-arrow">Open &rarr;</div>
-        </a>
+  <!-- THE WORK -->
+  <section aria-labelledby="work-h">
+    <div class="wrap">
+      <h2 id="work-h" class="eyebrow">The work, as evidence</h2>
+
+      <a class="lead-card reveal" href="legal-ai-os-overview.html">
+        <span class="lead-tag">Start here</span>
+        <h3>Legal AI OS</h3>
+        <p>The governed platform behind this work &mdash; contract review, legal research, and more, where every decision is logged and provable.</p>
+        <span class="go">Open the platform <span class="arr">&rarr;</span></span>
+      </a>
+
+      <div class="work-groups">
+
+        <div class="work-group">
+          <div class="work-eyebrow">The specialization</div>
+          <div class="work-grid">
+            <a class="work-card" href="legal-privacy-dpia.html">
+              <h3>Privacy &amp; AI governance</h3>
+              <p>Sees how AI handles a firm&rsquo;s data.</p>
+              <span class="go">Open <span class="arr">&rarr;</span></span>
+            </a>
+            <a class="work-card" href="legal-upl-boundary.html">
+              <h3>The boundary</h3>
+              <p>Maps the line a firm&rsquo;s AI won&rsquo;t cross.</p>
+              <span class="go">Open <span class="arr">&rarr;</span></span>
+            </a>
+            <a class="work-card" href="legal-ai-governance.html">
+              <h3>Governance model</h3>
+              <p>The pillars that make AI deployable.</p>
+              <span class="go">Open <span class="arr">&rarr;</span></span>
+            </a>
+          </div>
+        </div>
+
+        <div class="work-group">
+          <div class="work-eyebrow">Shipped</div>
+          <div class="work-grid">
+            <a class="work-card" href="legal-os-full-platform.html">
+              <h3>Full platform</h3>
+              <p>The same rails across the whole firm.</p>
+              <span class="go">Open <span class="arr">&rarr;</span></span>
+            </a>
+            <a class="work-card" href="project-nda-triage.html">
+              <h3>NDA triage</h3>
+              <p>Field NDAs cleared in seconds, with an audit trail behind every call.</p>
+              <span class="go">Open <span class="arr">&rarr;</span></span>
+            </a>
+            <a class="work-card" href="project-separation-agreement.html">
+              <h3>Separation &amp; severance</h3>
+              <p>A two-to-four-hour task cut to thirty seconds, across three countries.</p>
+              <span class="go">Open <span class="arr">&rarr;</span></span>
+            </a>
+            <a class="work-card" href="project-itfa.html">
+              <h3>Privacy research</h3>
+              <p>Half the privacy paperwork automated.</p>
+              <span class="go">Open <span class="arr">&rarr;</span></span>
+            </a>
+          </div>
+        </div>
+
+        <div class="work-group">
+          <div class="work-eyebrow">Under the hood</div>
+          <div class="work-grid">
+            <a class="work-card" href="legal-descrybe-integration.html">
+              <h3>Citation verification</h3>
+              <p>Every authority real, cited correctly, still good law.</p>
+              <span class="go">Open <span class="arr">&rarr;</span></span>
+            </a>
+            <a class="work-card" href="legal-ai-storage-options.html">
+              <h3>Isolation</h3>
+              <p>Client data never leaves the firm&rsquo;s control.</p>
+              <span class="go">Open <span class="arr">&rarr;</span></span>
+            </a>
+          </div>
+        </div>
+
       </div>
     </div>
+  </section>
 
-    <div class="tier">
-      <div class="tier-label t3">Under the hood</div>
-      <div class="work-grid">
-        <a class="work-card" href="legal-descrybe-integration.html">
-          <h3>Citation verification</h3>
-          <div class="work-desc">Every authority checked &mdash; real, correctly cited, still good law.</div>
-          <div class="work-arrow">Open &rarr;</div>
-        </a>
-        <a class="work-card" href="legal-ai-storage-options.html">
-          <h3>Isolation</h3>
-          <div class="work-desc">Client data isolated so it never leaves the firm&rsquo;s control.</div>
-          <div class="work-arrow">Open &rarr;</div>
-        </a>
+  <!-- HONEST NOTE -->
+  <section class="honest" aria-labelledby="honest-h">
+    <div class="wrap narrow">
+      <h2 id="honest-h" class="eyebrow">On credentials</h2>
+      <p>These vocabularies &mdash; AIGP, CIPP-E, CLOC, LPP &mdash; are named as disciplines, not claimed as credentials. Non-JD by design: I build and govern the system; I don&rsquo;t practice law.</p>
+    </div>
+  </section>
+
+  <!-- CTA -->
+  <section class="cta" aria-labelledby="cta-h">
+    <div class="inner">
+      <h2 id="cta-h">If your firm runs legal AI, it needs this layer.</h2>
+      <p class="lede">Open to privacy and AI-governance roles inside legal teams.</p>
+      <div class="actions">
+        <a class="btn btn-primary" href="https://www.linkedin.com/in/charlie-fuller-colorado">Connect on LinkedIn</a>
+        <a class="quiet" href="https://github.com/motorthings">github.com/motorthings</a>
       </div>
     </div>
+  </section>
+
+</main>
+
+<footer>
+  <div class="foot-inner">
+    <span>&copy; 2025&ndash;2026 Charlie Fuller</span>
+    <a href="../index.html">All diagrams</a>
+    <a href="https://github.com/motorthings">GitHub</a>
   </div>
-
-  <!-- 7. CONTACT -->
-  <div class="section">
-    <div class="contact">
-      <h2>Let's talk legal engineering.</h2>
-      <p>Open to privacy &amp; AI governance roles inside legal teams.</p>
-      <p class="contact-cta"><a href="https://www.linkedin.com/in/charlie-fuller-colorado">Connect on LinkedIn &rarr;</a></p>
-      <p class="contact-sub"><a href="https://github.com/motorthings">github.com/motorthings</a></p>
-    </div>
-  </div>
-
-  <p class="footnote">Authorities this work rests on &mdash; ABA Model Rules 1.1, 1.6, 5.3, 5.5 &middot; ABA Formal Opinion 512 &middot; GDPR &middot; EU AI Act &middot; NIST AI RMF &middot; CCPA/CPRA. All verified good law.</p>
-
-  <div class="footer">
-    &copy; 2025&ndash;2026 Charlie Fuller &nbsp;&middot;&nbsp; <a href="../index.html" style="color: var(--primary); text-decoration: none;">All diagrams</a>
-  </div>
-
-</div>
+</footer>
 
 <script>
-  const toggle = document.getElementById('themeToggle');
-  const iconLight = toggle.querySelector('.icon-light');
-  const iconDark = toggle.querySelector('.icon-dark');
-  function setTheme(d) {
-    document.documentElement.classList.toggle('dark', d);
-    iconLight.style.display = d ? 'none' : '';
-    iconDark.style.display = d ? '' : 'none';
-    try { localStorage.setItem('diagram-theme', d ? 'dark' : 'light'); } catch(e) {}
+(function(){
+  var root=document.documentElement;
+  var toggle=document.getElementById('themeToggle');
+  var label=document.getElementById('themeLabel');
+  function apply(light){
+    root.classList.toggle('light',light);
+    root.style.colorScheme=light?'light':'dark';
+    toggle.setAttribute('aria-pressed',String(light));
+    label.textContent=light?'Light':'Dark';
+    try{ if(light){localStorage.setItem('legal-theme','light');} else {localStorage.removeItem('legal-theme');} }catch(e){}
   }
-  toggle.addEventListener('click', () => setTheme(!document.documentElement.classList.contains('dark')));
-  try { if (localStorage.getItem('diagram-theme') === 'dark') setTheme(true); } catch(e) {}
+  var saved=null; try{ saved=localStorage.getItem('legal-theme'); }catch(e){}
+  apply(saved==='light');
+  toggle.addEventListener('click',function(){ apply(!root.classList.contains('light')); });
+  var rv=document.querySelector('.reveal');
+  if(rv && !window.matchMedia('(prefers-reduced-motion: reduce)').matches){
+    if('IntersectionObserver' in window){
+      var io=new IntersectionObserver(function(es){ es.forEach(function(e){ if(e.isIntersecting){ rv.classList.add('in'); io.disconnect(); } }); },{threshold:0.25});
+      io.observe(rv);
+    } else { rv.classList.add('in'); }
+  } else if(rv){ rv.classList.add('in'); }
+})();
 </script>
 
 </body>
