@@ -1,0 +1,445 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Legal AI Evaluation &mdash; Architecture</title>
+<meta name="description" content="How to evaluate legal AI when there is no ground truth without a lawyer: programmatic checks, independent scorers, a hard veto rule, and human trace coding.">
+<link rel="icon" type="image/svg+xml" href="../icon.svg">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,wght@0,400;0,500;0,600;0,700;0,800;1,400&family=Source+Code+Pro:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --font-display: 'Fraunces', Georgia, serif;
+    --font-mono: 'Source Code Pro', 'SF Mono', Consolas, monospace;
+    --bg: #eef4f9; --surface: #ffffff; --surface2: #f5f8fc;
+    --border: #c8daea; --border-bright: #a0bedb;
+    --text: #0a1628; --text-dim: #3d5a7a; --text-muted: #7a9ab8;
+    --primary: #e8621a; --primary-dim: rgba(232,98,26,0.08);
+    --secondary: #4a90c4; --secondary-dim: rgba(74,144,196,0.08);
+    --metric: #0f766e; --metric-dim: rgba(15,118,110,0.06);
+    --amber: #b45309; --amber-dim: rgba(180,83,9,0.08);
+    --violet: #7c3aed; --violet-dim: rgba(124,58,237,0.08);
+    --rose: #e11d48; --rose-dim: rgba(225,29,72,0.08);
+    --slate: #475569; --slate-dim: rgba(71,85,105,0.08);
+  }
+  html.dark {
+    --bg: #0a1628; --surface: #132240; --surface2: #1a2d52;
+    --border: #1a2d52; --border-bright: #2d4570;
+    --text: #e8edf5; --text-dim: #9bb0d4; --text-muted: #5e7aa3;
+    --primary: #f37021; --primary-dim: rgba(243,112,33,0.12);
+    --secondary: #6cace4; --secondary-dim: rgba(108,172,228,0.12);
+    --metric: #2dd4bf; --metric-dim: rgba(45,212,191,0.08);
+    --amber: #f59e0b; --amber-dim: rgba(245,158,11,0.12);
+    --violet: #a78bfa; --violet-dim: rgba(167,139,250,0.12);
+    --rose: #fb7185; --rose-dim: rgba(251,113,133,0.12);
+    --slate: #94a3b8; --slate-dim: rgba(148,163,184,0.12);
+  }
+
+  * { margin:0; padding:0; box-sizing:border-box; }
+
+  body {
+    background: var(--bg);
+    background-image:
+      radial-gradient(ellipse at 80% 0%, var(--primary-dim) 0%, transparent 50%),
+      radial-gradient(ellipse at 20% 60%, var(--secondary-dim) 0%, transparent 40%);
+    color: var(--text); font-family: var(--font-display);
+    min-height: 100vh; line-height: 1.7; padding: 0 32px 80px;
+    transition: background 0.3s, color 0.3s;
+  }
+
+  .backlink{position:fixed;top:12px;left:16px;z-index:101;font-family:var(--font-mono,'Source Code Pro',monospace);font-size:12px;color:var(--text-dim,var(--text3));text-decoration:none;padding:6px 10px;border:1px solid var(--border);border-radius:6px;background:var(--surface);transition:color .15s,border-color .15s}
+  .backlink:hover{color:var(--text);border-color:var(--border-bright,var(--text2))}
+
+  .nav {
+    position: sticky; top: 0; z-index: 100;
+    backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px);
+    background: color-mix(in srgb, var(--surface) 85%, transparent);
+    border-bottom: 1px solid var(--border);
+    margin: 0 -32px 32px; padding: 0 32px;
+    transition: background 0.3s, border-color 0.3s;
+  }
+  .nav-inner {
+    max-width: 1000px; margin: 0 auto; padding: 12px 0;
+    display: flex; align-items: center; justify-content: space-between;
+  }
+  .nav-brand {
+    font-family: var(--font-mono); font-size: 12px; font-weight: 600;
+    letter-spacing: 0.5px; color: var(--primary); text-decoration: none;
+  }
+  .theme-toggle {
+    width: 36px; height: 36px; border-radius: 10px;
+    border: 1px solid var(--border); background: var(--surface);
+    cursor: pointer; display: flex; align-items: center; justify-content: center;
+    font-size: 16px; color: var(--text-dim); transition: all 0.2s;
+  }
+  .theme-toggle:hover { border-color: var(--primary); color: var(--primary); }
+  .theme-toggle:focus-visible, .nav-brand:focus-visible, .backlink:focus-visible,
+  .zoom-controls button:focus-visible { outline: 2px solid var(--primary); outline-offset: 2px; }
+
+  .container { max-width: 1000px; margin: 0 auto; }
+
+  @keyframes fadeUp { from { opacity:0; transform:translateY(12px); } to { opacity:1; transform:translateY(0); } }
+  .animate { animation: fadeUp 0.4s ease-out both; animation-delay: calc(var(--i, 0) * 0.05s); }
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after { animation-duration:0.01ms !important; animation-delay:0ms !important; }
+  }
+
+  .hero { text-align: center; padding: 40px 0 20px; animation: fadeUp 0.5s ease-out; }
+  .hero-badge {
+    display: inline-flex; align-items: center; gap: 6px;
+    padding: 5px 16px; background: var(--primary-dim);
+    border: 1px solid var(--primary); border-radius: 20px;
+    font-family: var(--font-mono); font-size: 10px; font-weight: 600;
+    color: var(--primary); letter-spacing: 1px; text-transform: uppercase;
+    margin-bottom: 20px;
+  }
+  .hero h1 { font-size: 44px; font-weight: 800; letter-spacing: -0.5px; margin-bottom: 10px; color: var(--text); }
+  .hero .subtitle { font-size: 19px; color: var(--text-dim); max-width: 640px; margin: 0 auto; }
+
+  .lede {
+    background: var(--surface); border: 1px solid var(--border);
+    border-left: 3px solid var(--rose); border-radius: 0 12px 12px 0;
+    padding: 22px 26px; font-size: 16px; line-height: 1.65;
+    color: var(--text-dim); margin: 28px 0 8px;
+  }
+  .lede strong { color: var(--text); }
+  .lede .punch { display:block; margin-top:12px; font-size:18px; font-weight:700; color: var(--text); }
+
+  .mermaid-wrap {
+    position: relative; background: var(--surface);
+    border: 1px solid var(--border); border-radius: 14px;
+    padding: 36px 24px; overflow: auto; margin: 32px 0;
+    animation: fadeUp 0.4s ease-out both; animation-delay: 0.08s;
+  }
+  .mermaid-wrap .mermaid { display: flex; justify-content: center; transition: transform 0.2s ease; transform-origin: top center; }
+  .mermaid-wrap.is-zoomed { cursor: grab; }
+  .mermaid-wrap.is-panning { cursor: grabbing; user-select: none; }
+  .zoom-controls {
+    position: absolute; top: 10px; right: 10px; z-index: 10;
+    display: flex; gap: 2px; background: var(--surface);
+    border: 1px solid var(--border); border-radius: 8px; padding: 3px;
+  }
+  .zoom-controls button {
+    width: 30px; height: 30px; border: none; background: transparent;
+    color: var(--text-dim); font-family: var(--font-mono); font-size: 16px;
+    cursor: pointer; border-radius: 5px; display: flex; align-items: center;
+    justify-content: center; transition: background 0.15s, color 0.15s;
+  }
+  .zoom-controls button:hover { background: var(--border); color: var(--text); }
+  .mermaid-wrap { scrollbar-width: thin; scrollbar-color: var(--border) transparent; }
+  .mermaid-wrap::-webkit-scrollbar { width:6px; height:6px; }
+  .mermaid-wrap::-webkit-scrollbar-track { background:transparent; }
+  .mermaid-wrap::-webkit-scrollbar-thumb { background:var(--border); border-radius:3px; }
+
+  .mermaid .nodeLabel { font-family: var(--font-display) !important; font-size: 15px !important; }
+  .mermaid .edgeLabel { font-family: var(--font-mono) !important; font-size: 11px !important; }
+  .mermaid .node rect, .mermaid .node circle, .mermaid .node polygon { stroke-width: 1.5px !important; }
+
+  .mermaid g.input rect, .mermaid g.input polygon, .mermaid g.input circle { fill: var(--amber-dim) !important; stroke: var(--amber) !important; }
+  .mermaid g.agent rect, .mermaid g.agent polygon, .mermaid g.agent circle { fill: var(--secondary-dim) !important; stroke: var(--secondary) !important; }
+  .mermaid g.output rect, .mermaid g.output polygon, .mermaid g.output circle { fill: var(--metric-dim) !important; stroke: var(--metric) !important; }
+  .mermaid g.gate rect, .mermaid g.gate polygon, .mermaid g.gate circle { fill: var(--amber-dim) !important; stroke: var(--amber) !important; }
+  .mermaid g.closed rect, .mermaid g.closed polygon, .mermaid g.closed circle { fill: var(--rose-dim) !important; stroke: var(--rose) !important; }
+  .mermaid g.flow rect, .mermaid g.flow polygon, .mermaid g.flow circle { fill: var(--primary-dim) !important; stroke: var(--primary) !important; }
+  .mermaid g.research rect, .mermaid g.research polygon, .mermaid g.research circle { fill: var(--violet-dim) !important; stroke: var(--violet) !important; }
+
+  html.dark .mermaid .nodeLabel { color: #e8edf5 !important; }
+  html.dark .mermaid .edgeLabel { color: #bccde8 !important; }
+  html.dark .mermaid .edgeLabel span { color: #bccde8 !important; }
+  html.dark .mermaid text { fill: #e8edf5 !important; }
+  html.dark .mermaid .labelBkg { fill: #132240 !important; }
+
+  .detail-section { margin-bottom: 40px; }
+  .detail-section h2 {
+    font-family: var(--font-mono); font-size: 12px; font-weight: 700;
+    letter-spacing: 1px; text-transform: uppercase;
+    color: var(--primary); margin-bottom: 16px;
+  }
+  .detail-section p { font-size: 15px; color: var(--text-dim); margin-bottom: 14px; }
+  .detail-section p strong { color: var(--text); }
+
+  .context-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 10px; }
+  .context-card {
+    background: var(--surface); border: 1px solid var(--border);
+    border-left: 3px solid; border-radius: 0 10px 10px 0;
+    padding: 16px 18px; font-size: 14px; line-height: 1.5;
+  }
+  .context-card .label { font-family: var(--font-mono); font-size: 10px; font-weight: 600; letter-spacing: 0.5px; text-transform: uppercase; margin-bottom: 4px; }
+  .context-card .name { font-size: 16px; font-weight: 700; margin-bottom: 4px; }
+  .context-card .desc { font-size: 13px; color: var(--text-dim); }
+  .context-card.amber { border-left-color: var(--amber); } .context-card.amber .label { color: var(--amber); }
+  .context-card.secondary { border-left-color: var(--secondary); } .context-card.secondary .label { color: var(--secondary); }
+  .context-card.metric { border-left-color: var(--metric); } .context-card.metric .label { color: var(--metric); }
+  .context-card.violet { border-left-color: var(--violet); } .context-card.violet .label { color: var(--violet); }
+  .context-card.rose { border-left-color: var(--rose); } .context-card.rose .label { color: var(--rose); }
+  .context-card.slate { border-left-color: var(--slate); } .context-card.slate .label { color: var(--slate); }
+
+  .table-wrap { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; overflow: hidden; }
+  .table-scroll { overflow-x: auto; }
+  .data-table { width: 100%; border-collapse: collapse; font-size: 14px; }
+  .data-table th {
+    font-family: var(--font-mono); font-size: 10px; font-weight: 700;
+    letter-spacing: 0.8px; text-transform: uppercase; color: var(--text-muted);
+    text-align: left; padding: 12px 16px; border-bottom: 1px solid var(--border); white-space: nowrap;
+  }
+  .data-table td { padding: 12px 16px; border-bottom: 1px solid var(--border); color: var(--text-dim); vertical-align: top; }
+  .data-table tr:last-child td { border-bottom: none; }
+  .data-table td strong { color: var(--text); font-weight: 600; }
+  .tier1 { font-family: var(--font-mono); font-size: 11px; font-weight: 700; color: var(--rose); }
+  .tier2 { font-family: var(--font-mono); font-size: 11px; font-weight: 700; color: var(--slate); }
+
+  .callout {
+    background: var(--surface); border: 1px solid var(--border);
+    border-left: 3px solid var(--primary); border-radius: 0 12px 12px 0;
+    padding: 20px 24px; font-size: 15px; line-height: 1.65;
+    color: var(--text-dim); margin-top: 32px;
+  }
+  .callout strong { color: var(--text); }
+
+  .footer {
+    margin-top: 56px; padding-top: 20px;
+    border-top: 1px solid var(--border);
+    text-align: center; font-size: 13px; color: var(--text-muted);
+  }
+  .footer a { color: var(--primary); text-decoration: none; }
+  .footer a:hover { text-decoration: underline; }
+
+  @media (max-width: 640px) {
+    body { padding: 0 12px 48px; }
+    .nav { margin: 0 -12px 24px; padding: 0 12px; }
+    .hero h1 { font-size: 28px; }
+    .context-grid { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+
+<a href="index.html" class="backlink">&larr; Legal</a>
+
+<div class="nav">
+  <div class="nav-inner">
+    <a href="index.html" class="nav-brand">LEGAL ENGINEERING</a>
+    <button class="theme-toggle" id="themeToggle" aria-label="Toggle dark mode">
+      <span class="icon-light">&#9788;</span>
+      <span class="icon-dark" style="display:none">&#9790;</span>
+    </button>
+  </div>
+</div>
+
+<div class="container">
+  <div class="hero">
+    <div class="hero-badge">Evaluation Architecture</div>
+    <h1>Grading legal AI when there is no answer key</h1>
+    <p class="subtitle">In most domains you can check the output against ground truth. In legal, ground truth is a lawyer, and lawyers are the most expensive test harness ever built.</p>
+  </div>
+
+  <div class="lede">
+    So most teams skip it. They watch usage dashboards, see the line go up, and call that adoption. Usage is not accuracy. A tool everybody opens and nobody trusts still shows a rising line right up until the day the associate quietly goes back to doing it by hand.
+    <strong class="punch">You cannot afford to have a lawyer grade every output. You can afford to make the system prove it hasn't failed.</strong>
+  </div>
+
+  <div class="mermaid-wrap animate" style="--i:1">
+    <div class="zoom-controls">
+      <button onclick="zoomDiagram(this, 1.2)" title="Zoom in">+</button>
+      <button onclick="zoomDiagram(this, 0.8)" title="Zoom out">&minus;</button>
+      <button onclick="resetZoom(this)" title="Reset">&#8634;</button>
+    </div>
+    <pre class="mermaid">
+      flowchart TD
+        A["Agent output in production"] --> B["Programmatic checks"]
+        A --> C["Independent rubric scorers"]
+        A --> D["Sampled traces for human review"]
+
+        B --> E["Weighted score"]
+        C --> E
+
+        D --> F["Open coding by a reviewer"]
+        F --> G["Axial coding into failure categories"]
+
+        E --> H{"Any Tier 1 below 75"}
+        H -->|"Yes"| I["Capped at 74.9. Cannot certify."]
+        H -->|"No"| J["Certification band awarded"]
+
+        I --> K["Instruction rewrite"]
+        G --> K
+        K --> A
+
+        classDef input fill:rgba(180,83,9,0.08),stroke:#b45309,stroke-width:2px,color:#0a1628
+        classDef agent fill:rgba(74,144,196,0.08),stroke:#4a90c4,stroke-width:2px,color:#0a1628
+        classDef research fill:rgba(124,58,237,0.08),stroke:#7c3aed,stroke-width:2px,color:#0a1628
+        classDef gate fill:rgba(180,83,9,0.08),stroke:#b45309,stroke-width:2px,color:#0a1628
+        classDef closed fill:rgba(225,29,72,0.08),stroke:#e11d48,stroke-width:2px,color:#0a1628
+        classDef output fill:rgba(15,118,110,0.06),stroke:#0f766e,stroke-width:2px,color:#0a1628
+        classDef flow fill:rgba(232,98,26,0.08),stroke:#e8621a,stroke-width:2px,color:#0a1628
+
+        class A input
+        class B,C agent
+        class D,F,G research
+        class E flow
+        class H gate
+        class I closed
+        class J output
+        class K flow
+    </pre>
+  </div>
+
+  <div class="detail-section animate" style="--i:2">
+    <h2>Three layers, because one is never enough</h2>
+    <div class="context-grid">
+      <div class="context-card secondary">
+        <div class="label">Layer 1</div>
+        <div class="name">Programmatic checks</div>
+        <div class="desc">Run wherever the answer is actually deterministic. Does the cited case exist. Does the clause appear in the document. Did retrieval respect the ethical wall. These are cheap, fast, and catch the failures that embarrass you in front of a client.</div>
+      </div>
+      <div class="context-card secondary">
+        <div class="label">Layer 2</div>
+        <div class="name">Independent rubric scorers</div>
+        <div class="desc">Separate scorers on separate dimensions, each blind to the others. Not one model asked for an overall grade. A single judge averages away the one failure that matters, which is exactly the failure you are trying to catch.</div>
+      </div>
+      <div class="context-card violet">
+        <div class="label">Layer 3</div>
+        <div class="name">Human trace coding</div>
+        <div class="desc">A reviewer reads real transcripts and annotates specific turns. Slow, expensive, and irreplaceable. It is the only layer that finds the problems nobody thought to write a check for.</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="detail-section animate" style="--i:3">
+    <h2>The veto rule</h2>
+    <p>Weighted averages have a design flaw that everybody knows about and almost nobody fixes: a strong score on four dimensions will bury a catastrophic score on the fifth. The agent gets an 84, ships, and leaks privileged material in week three.</p>
+    <p><strong>So the critical dimensions get a veto, not a weight.</strong> Safety and Bias score at 1.5x, and either one landing below 75 caps the total at 74.9 regardless of everything else. Not a warning. Not a flag for someone to review. The number is capped below the lowest certification band, which means it cannot ship.</p>
+
+    <div class="table-wrap">
+      <div class="table-scroll">
+        <table class="data-table">
+          <thead>
+            <tr><th>Dimension</th><th>Tier</th><th>Weight</th><th>What it catches in a legal context</th></tr>
+          </thead>
+          <tbody>
+            <tr><td><strong>Safety</strong></td><td class="tier1">TIER 1</td><td>1.5x</td><td>Privilege leakage, ethical wall breach, boundary failure, data exposure</td></tr>
+            <tr><td><strong>Bias</strong></td><td class="tier1">TIER 1</td><td>1.5x</td><td>Differential treatment across matters, clients, or parties</td></tr>
+            <tr><td><strong>Instructions</strong></td><td class="tier2">TIER 2</td><td>1.0x</td><td>Scope drift, unclear intent, dependency gaps, unusable output</td></tr>
+            <tr><td><strong>Ethos</strong></td><td class="tier2">TIER 2</td><td>1.0x</td><td>Professional responsibility, access to counsel, downstream impact</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <p style="margin-top:16px;">Certification lands in bands: Platinum at 90, Gold at 85, Silver at 80, Bronze at 75. Below 75 there is no band. That is the whole point of putting the cap at 74.9.</p>
+  </div>
+
+  <div class="detail-section animate" style="--i:4">
+    <h2>What automated scoring cannot see</h2>
+    <p>Scores tell you something went wrong. They do not tell you what. A drop from 86 to 79 is a number, not a repair instruction.</p>
+    <p>So the trace layer borrows from qualitative research methodology. A reviewer reads real conversations and annotates specific turns with a description and a severity. That is open coding. Then those annotations get synthesized into five or six named failure categories, each ranked by frequency multiplied by severity weight. That is axial coding. The reviewer edits the taxonomy and approves it.</p>
+    <p><strong>The rewrite step then receives categorized, human-validated failure patterns with cited examples instead of a score delta.</strong> The difference in output quality is not subtle.</p>
+  </div>
+
+  <div class="detail-section animate" style="--i:5">
+    <h2>Cadence follows autonomy</h2>
+    <p>How often you evaluate should be a function of how much rope the system has, not a number somebody picked in a planning meeting.</p>
+    <div class="context-grid">
+      <div class="context-card metric">
+        <div class="label">Read only</div>
+        <div class="name">Light cadence</div>
+        <div class="desc">The system retrieves and summarizes. A human does everything else. Evaluate on a slow cycle and monitor retrieval quality.</div>
+      </div>
+      <div class="context-card amber">
+        <div class="label">Semi autonomous</div>
+        <div class="name">Regular cadence</div>
+        <div class="desc">The system drafts and a human approves. Evaluate frequently, because approval fatigue is real and rubber-stamping is the failure mode.</div>
+      </div>
+      <div class="context-card rose">
+        <div class="label">Fully autonomous</div>
+        <div class="name">Continuous</div>
+        <div class="desc">The system acts without review. Continuous monitoring, tight drift thresholds, and a defined decommission trigger. In legal, this tier should be rare and narrow.</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="callout animate" style="--i:6">
+    The design principle underneath all of it: <strong>the system does not get to say "I am aligned."</strong> It only gets to say "I have not been proven misaligned yet, and here is what I am doing to check." Everything above is what that second sentence looks like when you actually build it.
+  </div>
+
+  <div class="footer">
+    <a href="index.html">&larr; Legal</a>
+    &nbsp;&middot;&nbsp;
+    <a href="legal-rag-permission-architecture.html">Permission-Aware Retrieval &rarr;</a>
+    &nbsp;&middot;&nbsp;
+    &copy; 2025-2026 Charlie Fuller
+  </div>
+</div>
+
+<script type="module">
+  import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs';
+  const isDark = document.documentElement.classList.contains('dark');
+  mermaid.initialize({
+    startOnLoad: true, theme: 'base', look: 'classic',
+    themeVariables: {
+      primaryColor: isDark ? '#132240' : '#f5f8fc',
+      primaryBorderColor: isDark ? '#f37021' : '#e8621a',
+      primaryTextColor: isDark ? '#e8edf5' : '#0a1628',
+      secondaryColor: isDark ? '#132240' : '#ffffff',
+      secondaryBorderColor: isDark ? '#6cace4' : '#4a90c4',
+      secondaryTextColor: isDark ? '#e8edf5' : '#0a1628',
+      tertiaryColor: isDark ? '#132240' : '#ffffff',
+      tertiaryBorderColor: isDark ? '#2dd4bf' : '#0f766e',
+      tertiaryTextColor: isDark ? '#e8edf5' : '#0a1628',
+      lineColor: isDark ? '#5e7aa3' : '#7a9ab8',
+      fontSize: '15px', fontFamily: "'Fraunces', Georgia, serif",
+    }
+  });
+</script>
+<script>
+  function updateZoomState(wrap) {
+    const t = wrap.querySelector('.mermaid');
+    wrap.classList.toggle('is-zoomed', parseFloat(t.dataset.zoom || '1') > 1);
+  }
+  function zoomDiagram(btn, factor) {
+    const wrap = btn.closest('.mermaid-wrap'), t = wrap.querySelector('.mermaid');
+    const n = Math.min(Math.max((parseFloat(t.dataset.zoom || '1')) * factor, 0.3), 5);
+    t.dataset.zoom = n; t.style.transform = 'scale(' + n + ')'; updateZoomState(wrap);
+  }
+  function resetZoom(btn) {
+    const wrap = btn.closest('.mermaid-wrap'), t = wrap.querySelector('.mermaid');
+    t.dataset.zoom = '1'; t.style.transform = 'scale(1)'; updateZoomState(wrap);
+  }
+  document.querySelectorAll('.mermaid-wrap').forEach(function(wrap) {
+    wrap.addEventListener('wheel', function(e) {
+      if (!e.ctrlKey && !e.metaKey) return;
+      e.preventDefault();
+      const t = wrap.querySelector('.mermaid');
+      const n = Math.min(Math.max((parseFloat(t.dataset.zoom || '1')) * (e.deltaY < 0 ? 1.1 : 0.9), 0.3), 5);
+      t.dataset.zoom = n; t.style.transform = 'scale(' + n + ')'; updateZoomState(wrap);
+    }, { passive: false });
+    let sx, sy, sl, st;
+    wrap.addEventListener('mousedown', function(e) {
+      if (e.target.closest('.zoom-controls')) return;
+      if (parseFloat(wrap.querySelector('.mermaid').dataset.zoom || '1') <= 1) return;
+      wrap.classList.add('is-panning'); sx = e.clientX; sy = e.clientY;
+      sl = wrap.scrollLeft; st = wrap.scrollTop;
+    });
+    window.addEventListener('mousemove', function(e) {
+      if (!wrap.classList.contains('is-panning')) return;
+      wrap.scrollLeft = sl - (e.clientX - sx); wrap.scrollTop = st - (e.clientY - sy);
+    });
+    window.addEventListener('mouseup', function() { wrap.classList.remove('is-panning'); });
+  });
+</script>
+<script>
+  const toggle = document.getElementById('themeToggle');
+  const iconLight = toggle.querySelector('.icon-light');
+  const iconDark = toggle.querySelector('.icon-dark');
+  function setTheme(d) {
+    document.documentElement.classList.toggle('dark', d);
+    iconLight.style.display = d ? 'none' : '';
+    iconDark.style.display = d ? '' : 'none';
+    try { localStorage.setItem('diagram-theme', d ? 'dark' : 'light'); } catch(e) {}
+  }
+  toggle.addEventListener('click', () => setTheme(!document.documentElement.classList.contains('dark')));
+  try { if (localStorage.getItem('diagram-theme') === 'dark') setTheme(true); } catch(e) {}
+</script>
+</body>
+</html>
