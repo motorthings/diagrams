@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Customer Success — The Approach</title>
+<meta name="description" content="The build approach behind a CSM health agent: capture the real org, write the PRD, run the AESOP build with a platform choice, and prove it on synthetic data.">
+<link rel="icon" href="../icon.svg" type="image/svg+xml" />
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,650&family=Sora:wght@400;500;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --font-display: 'Fraunces', Georgia, serif;
+  --font-body: 'Sora', system-ui, sans-serif;
+  --font-mono: 'Space Mono', 'SF Mono', Consolas, monospace;
+  --bg: #f7fafc;
+  --surface: #ffffff;
+  --surface-2: #eef4f9;
+  --border: rgba(15, 23, 42, 0.08);
+  --border-bright: rgba(15, 23, 42, 0.16);
+  --text: #0f172a;
+  --text-dim: #5b6472;
+  --muted: #8a93a3;
+  --accent: #5b9bd5; --accent-deep: #3f7fb8; --accent-dim: rgba(91,155,213,0.12);
+  --det: #5b9bd5; --det-dim: rgba(91,155,213,0.12);
+  --prob: #a12bb8; --prob-dim: rgba(161,43,184,0.10);
+  --good: #16a34a; --good-dim: rgba(22,163,74,0.12);
+  --warn: #d97706; --warn-dim: rgba(217,119,6,0.12);
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #0d1319; --surface: #151c24; --surface-2: #1b242e;
+    --border: rgba(255,255,255,0.08); --border-bright: rgba(255,255,255,0.16);
+    --text: #e6edf3; --text-dim: #9aa6b2; --muted: #6b7683;
+    --accent-dim: rgba(91,155,213,0.16); --det-dim: rgba(91,155,213,0.16);
+    --prob-dim: rgba(161,43,184,0.16); --good-dim: rgba(22,163,74,0.16); --warn-dim: rgba(217,119,6,0.16);
+  }
+}
+* { box-sizing: border-box; }
+html { scroll-behavior: smooth; }
+body {
+  margin: 0; font-family: var(--font-body); color: var(--text); background: var(--bg);
+  background-image: radial-gradient(ellipse 60% 42% at 50% -6%, var(--accent-dim) 0%, transparent 62%);
+  -webkit-font-smoothing: antialiased; min-height: 100vh;
+}
+.backlink{position:fixed;top:12px;left:16px;z-index:101;font-family:var(--font-mono);font-size:12px;color:var(--text-dim);text-decoration:none;padding:6px 10px;border:1px solid var(--border);border-radius:6px;background:var(--surface);transition:color .15s,border-color .15s}
+.backlink:hover{color:var(--text);border-color:var(--border-bright)}
+
+.page { max-width: 960px; margin: 0 auto; padding: 88px 32px 96px; }
+.eyebrow { font-family: var(--font-mono); font-size: 11px; font-weight: 700; letter-spacing: 2.5px; text-transform: uppercase; color: var(--accent-deep); margin-bottom: 18px; }
+h1 { font-family: var(--font-display); font-size: clamp(38px, 5.6vw, 56px); line-height: 1.0; font-weight: 580; letter-spacing: -0.02em; margin: 0 0 18px; }
+.lede { font-size: 17px; line-height: 1.6; color: var(--text-dim); max-width: 58ch; margin: 0 0 48px; }
+.lede strong { color: var(--text); font-weight: 600; }
+
+.sec { font-family: var(--font-mono); font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 2px; color: var(--muted); margin: 52px 0 16px; display: flex; align-items: center; gap: 10px; }
+.sec .n { color: var(--accent-deep); }
+.sec::after { content: ''; flex: 1; height: 1px; background: var(--border); }
+
+/* stages — vertical flow */
+.stages { display: flex; flex-direction: column; }
+.stage {
+  display: grid; grid-template-columns: 52px 1fr; gap: 18px; align-items: start;
+  background: var(--surface); border: 1px solid var(--border); border-radius: 14px;
+  padding: 20px 24px; position: relative;
+}
+.stage .num { font-family: var(--font-display); font-size: 26px; font-weight: 620; color: var(--accent-deep); line-height: 1; }
+.stage h3 { font-family: var(--font-display); font-size: 20px; font-weight: 600; margin: 0 0 4px; letter-spacing: -0.01em; }
+.stage .artifact { font-family: var(--font-mono); font-size: 11px; color: var(--accent-deep); margin-bottom: 8px; }
+.stage p { font-size: 14px; line-height: 1.55; color: var(--text-dim); margin: 0; }
+.stage p strong { color: var(--text); font-weight: 600; }
+.stage code { font-family: var(--font-mono); font-size: 11px; color: var(--text); }
+.stage-conn { display: flex; justify-content: center; padding: 4px 0; color: var(--border-bright); }
+.stage-conn svg { width: 20px; height: 24px; fill: none; stroke: var(--accent); stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+
+/* synthetic-data note — the honest caveat */
+.note-stage {
+  background: var(--prob-dim); border: 1px solid var(--prob); border-radius: 14px;
+  padding: 20px 24px; display: grid; grid-template-columns: 52px 1fr; gap: 18px; align-items: start;
+}
+.note-stage .num { font-family: var(--font-display); font-size: 26px; font-weight: 620; color: var(--prob); line-height: 1; }
+.note-stage h3 { font-family: var(--font-display); font-size: 20px; font-weight: 600; margin: 0 0 4px; letter-spacing: -0.01em; color: var(--prob); }
+.note-stage .artifact { font-family: var(--font-mono); font-size: 11px; color: var(--prob); margin-bottom: 8px; }
+.note-stage p { font-size: 14px; line-height: 1.55; color: var(--text-dim); margin: 0; }
+.note-stage p strong { color: var(--text); font-weight: 600; }
+
+/* prompt-vs-code table */
+.table-wrap { background: var(--surface); border: 1px solid var(--border); border-radius: 14px; overflow: hidden; }
+.table-scroll { overflow-x: auto; }
+table { width: 100%; border-collapse: collapse; font-size: 13.5px; }
+thead th {
+  font-family: var(--font-mono); font-size: 10px; font-weight: 700; text-transform: uppercase;
+  letter-spacing: 1px; color: var(--muted); text-align: left; padding: 12px 18px;
+  border-bottom: 1px solid var(--border-bright); white-space: nowrap;
+}
+tbody td { padding: 12px 18px; border-bottom: 1px solid var(--border); vertical-align: top; }
+tbody tr:last-child td { border-bottom: none; }
+tbody td.what { font-weight: 600; white-space: nowrap; }
+tbody td.why { color: var(--text-dim); }
+.tag { font-family: var(--font-mono); font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.8px; padding: 2px 8px; border-radius: 20px; white-space: nowrap; }
+.tag--code { background: var(--det-dim); color: var(--accent-deep); }
+.tag--prompt { background: var(--prob-dim); color: var(--prob); }
+.tag--both { background: var(--good-dim); color: var(--good); }
+
+/* principles */
+.principles { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.p { background: var(--surface); border: 1px solid var(--border); border-radius: 14px; padding: 20px 22px; min-width: 0; }
+.p .k { font-family: var(--font-display); font-size: 18px; font-weight: 600; margin-bottom: 6px; letter-spacing: -0.01em; }
+.p p { font-size: 13.5px; line-height: 1.55; color: var(--text-dim); margin: 0; }
+.p p strong { color: var(--text); font-weight: 600; }
+.p--det { border-left: 3px solid var(--det); }
+.p--good { border-left: 3px solid var(--good); }
+.p--warn { border-left: 3px solid var(--warn); }
+.p--prob { border-left: 3px solid var(--prob); }
+@media (max-width: 720px) { .principles { grid-template-columns: 1fr; } .stage, .note-stage { grid-template-columns: 1fr; } }
+
+.foot { margin-top: 56px; padding-top: 20px; border-top: 1px solid var(--border); font-family: var(--font-mono); font-size: 11px; color: var(--muted); }
+</style>
+</head>
+<body>
+<a href="index.html" class="backlink">&larr; Customer Success</a>
+<div class="page">
+
+  <div class="eyebrow">CSM Health &amp; Renewals Agent</div>
+  <h1>The approach.</h1>
+  <p class="lede">Capture the real org, write the PRD, let AESOP run the build with a platform choice — then prove it on synthetic data. <strong>The org is real; only the data is fake</strong> — and that's enough to stand up a working demo, fast.</p>
+
+  <div class="sec"><span class="n">01</span> The approach</div>
+  <div class="stages">
+    <div class="stage">
+      <div class="num">1</div>
+      <div>
+        <h3>Discover</h3>
+        <div class="artifact">01-discover-brief</div>
+        <p>Capture the org — the real before-state (<strong>4 hrs/wk rebuilding health by hand</strong>, risk surfacing late), the real stack, the real constraints. End in open questions, not assumptions.</p>
+      </div>
+    </div>
+    <div class="stage-conn"><svg viewBox="0 0 20 24"><path d="M10 2 L10 22 M5 17 L10 22 L15 17"/></svg></div>
+    <div class="stage">
+      <div class="num">2</div>
+      <div>
+        <h3>Build PRD</h3>
+        <div class="artifact">working agreement &middot; design spec &middot; build PRD</div>
+        <p>The spec set: a governance contract, the architecture and <strong>prompt-vs-code line</strong>, and the build-ready PRD. Rules locked before code.</p>
+      </div>
+    </div>
+    <div class="stage-conn"><svg viewBox="0 0 20 24"><path d="M10 2 L10 22 M5 17 L10 22 L15 17"/></svg></div>
+    <div class="stage">
+      <div class="num">3</div>
+      <div>
+        <h3>AESOP build</h3>
+        <div class="artifact">build-artifacts</div>
+        <p>The PRD feeds AESOP, which runs the build and makes a <strong>platform choice</strong>: <code>FastAPI</code> on Fly (backend), <code>Next.js</code> on Vercel (frontend), <code>Supabase</code> for data + auth, and a provider-flexible LLM (DeepSeek / Anthropic).</p>
+      </div>
+    </div>
+    <div class="stage-conn"><svg viewBox="0 0 20 24"><path d="M10 2 L10 22 M5 17 L10 22 L15 17"/></svg></div>
+    <div class="note-stage">
+      <div class="num">4</div>
+      <div>
+        <h3>Synthetic data, real org</h3>
+        <div class="artifact">data/ &middot; seed 42</div>
+        <p>A 12-account book exercises every rule and both draft framings. Synthetic data removes the blockers — no real customer data leaves the governed environment, no approval to wait on — so it's <strong>fast enough to stand up a demo</strong> that's still grounded in a real, captured org.</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="sec"><span class="n">02</span> The prompt-vs-code line</div>
+  <p class="lede" style="margin-bottom:16px">The decision that governs every stage: what lives in <strong>deterministic code</strong> and what the <strong>model</strong> is allowed to do.</p>
+  <div class="table-wrap">
+    <div class="table-scroll">
+      <table>
+        <thead><tr><th>Decision</th><th>Where</th><th>Why</th></tr></thead>
+        <tbody>
+          <tr><td class="what">Risk scoring &amp; thresholds</td><td><span class="tag tag--code">Code</span></td><td class="why">Reproducible, auditable, cheap</td></tr>
+          <tr><td class="what">Escalation routing</td><td><span class="tag tag--code">Code</span></td><td class="why">Deterministic — never skipped</td></tr>
+          <tr><td class="what">Grounding check</td><td><span class="tag tag--both">Code + LLM judge</span></td><td class="why">Deterministic trace + semantic check</td></tr>
+          <tr><td class="what">Health narrative</td><td><span class="tag tag--prompt">Prompt</span></td><td class="why">Language synthesis is the model's job</td></tr>
+          <tr><td class="what">Renewal draft</td><td><span class="tag tag--prompt">Prompt</span></td><td class="why">Tone + framing, human-reviewed</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="sec"><span class="n">03</span> The principles that govern every stage</div>
+  <div class="principles">
+    <div class="p p--det">
+      <div class="k">Deterministic-first</div>
+      <p>The risk math is <strong>code</strong>, never the LLM. A flag means the same thing every run, and every claim traces to a signal or a quoted sentence.</p>
+    </div>
+    <div class="p p--good">
+      <div class="k">Grounded</div>
+      <p>Nothing asserted without a receipt. Missing usage is reported as a gap, never fabricated into a trend.</p>
+    </div>
+    <div class="p p--warn">
+      <div class="k">Human-in-the-loop</div>
+      <p>Everything customer-facing stays draft. The CSM confirms every flag and edits every draft — the agent never sends.</p>
+    </div>
+    <div class="p p--prob">
+      <div class="k">Honest eval</div>
+      <p>Self-scored weekly, and <strong>not a rigged 100%</strong> — escalation accuracy is pinned at 85.7%, because one judgment-boundary case is the point of the eval.</p>
+    </div>
+  </div>
+
+  <div class="foot">&copy; 2025-2026 Charlie Fuller</div>
+
+</div>
+</body>
+</html>
