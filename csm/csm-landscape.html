@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Customer Satisfaction — The Territory</title>
+<meta name="description" content="A quadrant map of AI in customer success: what's solved, what's a trap, what's the frontier, and where the plumbing is still unbuilt.">
+<link rel="icon" href="../icon.svg" type="image/svg+xml" />
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,650&family=Sora:wght@400;500;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --font-display: 'Fraunces', Georgia, serif;
+  --font-body: 'Sora', system-ui, sans-serif;
+  --font-mono: 'Space Mono', 'SF Mono', Consolas, monospace;
+  --bg: #f7fafc;
+  --surface: #ffffff;
+  --surface-2: #eef4f9;
+  --border: rgba(15, 23, 42, 0.08);
+  --border-bright: rgba(15, 23, 42, 0.16);
+  --text: #0f172a;
+  --text-dim: #5b6472;
+  --muted: #8a93a3;
+  --accent: #5b9bd5; --accent-deep: #3f7fb8; --accent-dim: rgba(91,155,213,0.12);
+  --det: #5b9bd5; --det-dim: rgba(91,155,213,0.12);
+  --prob: #a12bb8; --prob-dim: rgba(161,43,184,0.10);
+  --good: #16a34a; --good-dim: rgba(22,163,74,0.12);
+  --warn: #d97706; --warn-dim: rgba(217,119,6,0.12);
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #0d1319; --surface: #151c24; --surface-2: #1b242e;
+    --border: rgba(255,255,255,0.08); --border-bright: rgba(255,255,255,0.16);
+    --text: #e6edf3; --text-dim: #9aa6b2; --muted: #6b7683;
+    --accent-dim: rgba(91,155,213,0.16); --det-dim: rgba(91,155,213,0.16);
+    --prob-dim: rgba(161,43,184,0.16); --good-dim: rgba(22,163,74,0.16); --warn-dim: rgba(217,119,6,0.16);
+  }
+}
+* { box-sizing: border-box; }
+html { scroll-behavior: smooth; }
+body {
+  margin: 0; font-family: var(--font-body); color: var(--text); background: var(--bg);
+  background-image: radial-gradient(ellipse 60% 42% at 50% -6%, var(--accent-dim) 0%, transparent 62%);
+  -webkit-font-smoothing: antialiased; min-height: 100vh;
+}
+.backlink{position:fixed;top:12px;left:16px;z-index:101;font-family:var(--font-mono);font-size:12px;color:var(--text-dim);text-decoration:none;padding:6px 10px;border:1px solid var(--border);border-radius:6px;background:var(--surface);transition:color .15s,border-color .15s}
+.backlink:hover{color:var(--text);border-color:var(--border-bright)}
+
+.page { max-width: 1000px; margin: 0 auto; padding: 88px 32px 96px; }
+.eyebrow { font-family: var(--font-mono); font-size: 11px; font-weight: 700; letter-spacing: 2.5px; text-transform: uppercase; color: var(--accent-deep); margin-bottom: 18px; }
+h1 { font-family: var(--font-display); font-size: clamp(36px, 5.4vw, 54px); line-height: 1.0; font-weight: 580; letter-spacing: -0.02em; margin: 0 0 16px; }
+.lede { font-size: 17px; line-height: 1.6; color: var(--text-dim); max-width: 60ch; margin: 0 0 44px; }
+.lede strong { color: var(--text); font-weight: 600; }
+
+.sec { font-family: var(--font-mono); font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 2px; color: var(--muted); margin: 48px 0 16px; display: flex; align-items: center; gap: 10px; }
+.sec .n { color: var(--accent-deep); }
+.sec::after { content: ''; flex: 1; height: 1px; background: var(--border); }
+
+/* hero statement */
+.statement { font-family: var(--font-display); font-size: 24px; font-weight: 580; line-height: 1.3; padding: 24px 28px; background: var(--surface); border: 1px solid var(--border); border-radius: 14px; margin-bottom: 24px; }
+.statement .s { color: var(--good); }
+.statement .u { color: var(--warn); }
+
+/* map */
+.map { background: var(--surface); border: 1px solid var(--border); border-radius: 14px; padding: 20px; }
+.map-xaxis { display: flex; justify-content: space-between; font-family: var(--font-mono); font-size: 10px; text-transform: uppercase; letter-spacing: 1.2px; color: var(--muted); padding: 0 0 12px; }
+.map-body { display: flex; gap: 0; }
+.map-yaxis { writing-mode: vertical-rl; transform: rotate(180deg); display: flex; justify-content: space-between; align-items: center; font-family: var(--font-mono); font-size: 10px; text-transform: uppercase; letter-spacing: 1.2px; color: var(--muted); padding: 8px 12px; border-left: 1px solid var(--border); }
+.map-grid { flex: 1; display: grid; grid-template-columns: 1fr 1fr; gap: 1px; background: var(--border); border: 1px solid var(--border); border-radius: 10px; overflow: hidden; min-width: 0; }
+.zone { background: var(--surface); padding: 20px 22px; min-width: 0; }
+.zone h4 { font-family: var(--font-mono); font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 1.5px; margin: 0 0 6px; }
+.zone .tag { font-family: var(--font-mono); font-size: 9.5px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; padding: 2px 8px; border-radius: 20px; display: inline-block; margin-bottom: 12px; }
+.zone ul { list-style: none; margin: 0; padding: 0; }
+.zone li { font-size: 13px; line-height: 1.5; padding: 6px 0 6px 16px; position: relative; border-top: 1px solid var(--border); }
+.zone li:first-child { border-top: none; }
+.zone li::before { content: ''; position: absolute; left: 2px; top: 12px; width: 6px; height: 6px; border-radius: 50%; }
+.zone li small { display: block; color: var(--muted); font-size: 11px; margin-top: 2px; font-family: var(--font-mono); }
+.zone--good { background: color-mix(in srgb, var(--surface) 82%, var(--good-dim)); }
+.zone--good h4 { color: var(--good); } .zone--good .tag { background: var(--good-dim); color: var(--good); } .zone--good li::before { background: var(--good); }
+.zone--det { background: color-mix(in srgb, var(--surface) 82%, var(--det-dim)); }
+.zone--det h4 { color: var(--accent-deep); } .zone--det .tag { background: var(--det-dim); color: var(--accent-deep); } .zone--det li::before { background: var(--det); }
+.zone--warn { background: color-mix(in srgb, var(--surface) 82%, var(--warn-dim)); }
+.zone--warn h4 { color: var(--warn); } .zone--warn .tag { background: var(--warn-dim); color: var(--warn); } .zone--warn li::before { background: var(--warn); }
+.zone--prob { background: color-mix(in srgb, var(--surface) 82%, var(--prob-dim)); }
+.zone--prob h4 { color: var(--prob); } .zone--prob .tag { background: var(--prob-dim); color: var(--prob); } .zone--prob li::before { background: var(--prob); }
+.bedrock { margin-top: 1px; background: var(--prob-dim); border: 1px solid var(--border); border-radius: 10px; padding: 14px 22px; display: flex; align-items: baseline; gap: 14px; flex-wrap: wrap; }
+.bedrock .blabel { font-family: var(--font-mono); font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 1.5px; color: var(--prob); white-space: nowrap; }
+.bedrock p { font-size: 13px; line-height: 1.55; color: var(--text-dim); flex: 1; min-width: 200px; margin: 0; }
+.bedrock p strong { color: var(--text); font-weight: 600; }
+@media (max-width: 768px) { .map-grid { grid-template-columns: 1fr; } .map-yaxis { display: none; } .map-xaxis { flex-direction: column; gap: 4px; } }
+
+/* cards */
+.cards { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.card { background: var(--surface); border: 1px solid var(--border); border-radius: 14px; padding: 16px 18px; min-width: 0; }
+.card h3 { font-family: var(--font-display); font-size: 16px; font-weight: 600; margin: 0 0 6px; letter-spacing: -0.01em; }
+.card p { font-size: 13px; line-height: 1.55; color: var(--text-dim); margin: 0; }
+.card p strong { color: var(--text); font-weight: 600; }
+.card .metric { font-family: var(--font-mono); font-size: 12px; font-weight: 700; margin-top: 10px; display: inline-block; padding: 3px 9px; border-radius: 5px; }
+.card .src { font-family: var(--font-mono); font-size: 10px; color: var(--muted); margin-top: 8px; display: block; }
+.card--good { border-left: 3px solid var(--good); } .card--good .metric { background: var(--good-dim); color: var(--good); }
+.card--det { border-left: 3px solid var(--det); } .card--det .metric { background: var(--det-dim); color: var(--accent-deep); }
+.card--warn { border-left: 3px solid var(--warn); } .card--warn .metric { background: var(--warn-dim); color: var(--warn); }
+.card--prob { border-left: 3px solid var(--prob); } .card--prob .metric { background: var(--prob-dim); color: var(--prob); }
+@media (max-width: 768px) { .cards { grid-template-columns: 1fr; } }
+
+/* plays */
+.play { background: var(--surface); border: 1px solid var(--border); border-left: 3px solid var(--accent); border-radius: 12px; padding: 18px 22px; margin-bottom: 12px; }
+.play .pnum { font-family: var(--font-mono); font-size: 11px; font-weight: 700; color: var(--accent-deep); text-transform: uppercase; letter-spacing: 1.5px; margin-bottom: 6px; }
+.play h3 { font-family: var(--font-display); font-size: 17px; font-weight: 600; margin: 0 0 6px; }
+.play blockquote { font-size: 14px; line-height: 1.6; color: var(--text-dim); font-style: italic; border-left: 2px solid var(--accent-dim); padding-left: 14px; margin: 0; }
+.play blockquote strong { color: var(--text); font-style: normal; font-weight: 600; }
+
+/* sources */
+.sources { display: flex; gap: 8px; flex-wrap: wrap; }
+.source { background: var(--surface); border: 1px solid var(--border); border-radius: 6px; padding: 6px 12px; font-family: var(--font-mono); font-size: 11px; color: var(--text-dim); }
+.foot { margin-top: 56px; padding-top: 20px; border-top: 1px solid var(--border); font-family: var(--font-mono); font-size: 11px; color: var(--muted); }
+</style>
+</head>
+<body>
+<a href="index.html" class="backlink">&larr; Customer Satisfaction</a>
+<div class="page">
+
+  <div class="eyebrow">The territory</div>
+  <h1>AI in customer<br>success, mapped.</h1>
+  <p class="lede">Solved for <strong>drafting, summarizing, and surfacing</strong>. Not solved for <strong>predicting churn</strong> or <strong>replacing the relationship</strong>.</p>
+
+  <div class="statement">AI in CS is solved for <span class="s">drafting, summarizing, surfacing</span>.<br>It is not solved for <span class="u">predicting churn</span> or <span class="u">replacing the relationship</span>.</div>
+
+  <div class="map">
+    <div class="map-xaxis"><span>&larr; Assist the human</span><span>Act / predict for the human &rarr;</span></div>
+    <div class="map-body">
+      <div class="map-yaxis"><span>Works today</span><span>Doesn't work (yet)</span></div>
+      <div class="map-grid">
+        <div class="zone zone--good">
+          <span class="tag">Solved</span>
+          <h4>The working tools</h4>
+          <ul>
+            <li>QBR &amp; report prep <small>2&ndash;3 days &rarr; near zero</small></li>
+            <li>In-product support <small>80% resolution</small></li>
+            <li>Pre-call briefing <small>20 min &rarr; 2 min</small></li>
+            <li>Churn analysis (retrospective)</li>
+            <li>Visibility: where time goes</li>
+          </ul>
+        </div>
+        <div class="zone zone--det">
+          <span class="tag">Frontier</span>
+          <h4>Assist &rarr; act</h4>
+          <ul>
+            <li>Ready-built agents</li>
+            <li>Proactive outbound &mdash; revenue</li>
+            <li>Conversational voice, &lt;800ms</li>
+            <li>The tiered model</li>
+          </ul>
+        </div>
+        <div class="zone zone--prob">
+          <span class="tag">Foundation</span>
+          <h4>The unbuilt plumbing</h4>
+          <ul>
+            <li>ID reconciliation</li>
+            <li>Data unification</li>
+            <li>The action gap</li>
+            <li>Governance &amp; audit</li>
+          </ul>
+        </div>
+        <div class="zone zone--warn">
+          <span class="tag">Trap</span>
+          <h4>Wrong, faster</h4>
+          <ul>
+            <li>Churn prediction <small>40&ndash;60% false positives</small></li>
+            <li>Replacing the relationship</li>
+            <li>AI-first hire, small teams</li>
+            <li>Pilot paralysis <small>2/3 stuck</small></li>
+          </ul>
+        </div>
+      </div>
+    </div>
+    <div class="bedrock">
+      <span class="blabel">Through-line</span>
+      <p><strong>AI on fragmented data doesn't fix anything &mdash; it amplifies the blindness.</strong> A model that can't see LinkedIn departures or billing disputes still emits a confident 0.82.</p>
+    </div>
+  </div>
+
+  <div class="sec"><span class="n">01</span> Solved &mdash; what works</div>
+  <div class="cards">
+    <div class="card card--good"><h3>Collapsing QBR prep</h3><p>2&ndash;3 days per QBR pulling data and building slides drops to near-zero. The CSM moves from <strong>operational to editorial</strong>.</p><span class="metric">2&ndash;3 days &rarr; near zero</span><span class="src">Pixis</span></div>
+    <div class="card card--good"><h3>In-product AI support</h3><p>Not deflection &mdash; <strong>un-sticking the customer.</strong> Loom hit 80% resolution without escalation and 11% lower churn.</p><span class="metric">80% resolution</span><span class="src">Atlassian / Loom</span></div>
+    <div class="card card--good"><h3>Pre-call briefing</h3><p>AI summarizes the account before every call and drafts routine comms.</p><span class="metric">20 min &rarr; 2 min</span><span class="src">ChurnZero</span></div>
+    <div class="card card--good"><h3>Churn analysis, not prediction</h3><p>Reads a churned account's full history and drafts the post-mortem.</p><span class="src">ChurnZero Retrospective</span></div>
+    <div class="card card--good"><h3>Visibility before intervention</h3><p>Rockwell burned 3,000 hours/quarter scheduling meetings &mdash; nobody knew until analytics surfaced it.</p><span class="metric">3,000 hrs found</span><span class="src">Gainsight Pulse</span></div>
+  </div>
+
+  <div class="sec"><span class="n">02</span> Frontier &mdash; the smart money</div>
+  <div class="cards">
+    <div class="card card--det"><h3>Proactive outbound</h3><p>Recover carts, push loan apps, handle collections. AI as <strong>revenue engine</strong>, not cost-cutter.</p><span class="src">Talkdesk</span></div>
+    <div class="card card--det"><h3>Voice is back</h3><p>82% expect AI to <strong>increase</strong> voice traffic. Sub-800ms, frustration detection.</p><span class="metric">82% more voice</span><span class="src">Zoom</span></div>
+    <div class="card card--det"><h3>The tiered model</h3><p>AI absorbs low-touch and mid-tier; it <strong>frees the CSM</strong> for the accounts where revenue lives.</p></div>
+    <div class="card card--det"><h3>Agent-acts, not just assist</h3><p>ChurnZero ships 20 agents. NICE + ServiceNow wire &ldquo;activate the business&rdquo; &mdash; an interaction triggers a workflow.</p><span class="src">ChurnZero &middot; NICE</span></div>
+  </div>
+
+  <div class="sec"><span class="n">03</span> Trap &mdash; not worth it</div>
+  <div class="cards">
+    <div class="card card--warn"><h3>Churn prediction is the biggest trap</h3><p>64% report gaps between predicted and actual churn. <strong>78% of errors are context failures.</strong></p><span class="metric">40&ndash;60% false positives</span><span class="src">TSIA &middot; Valuize</span></div>
+    <div class="card card--warn"><h3>Prediction without a playbook</h3><p>A health score screams &ldquo;fire&rdquo; but can't pick up a bucket of water. <strong>&ldquo;Yellow&rdquo; is not a strategy.</strong></p><span class="src">getPerspective</span></div>
+    <div class="card card--warn"><h3>AI-first hire, small teams</h3><p>An AI &ldquo;CS employee&rdquo; can cost $200&ndash;400/mo to deflect ~$20/mo.</p><span class="metric">$200&ndash;400 to save $20</span><span class="src">Geta.team</span></div>
+    <div class="card card--warn"><h3>Data quality is the #1 barrier</h3><p>Only 1/3 moved beyond pilots; data quality outranks budget and skills combined.</p><span class="metric">2/3 stuck in pilots</span><span class="src">EverAfter</span></div>
+  </div>
+
+  <div class="sec"><span class="n">04</span> Unclaimed &mdash; the edge</div>
+  <div class="cards">
+    <div class="card card--prob"><h3>The action gap is the product</h3><p>Everyone builds prediction. Almost nobody builds the <strong>response workflow</strong>. Prediction is the easy half; prevention is unsolved.</p></div>
+    <div class="card card--prob"><h3>ID reconciliation is the first project</h3><p>&ldquo;Sounds trivial, takes four months.&rdquo; The teams getting value did it first.</p></div>
+    <div class="card card--prob"><h3>Selection bias is invisible</h3><p>Models learn the <strong>loud minority</strong>. The silent accounts drifting toward churn aren't in the data.</p></div>
+    <div class="card card--prob"><h3>The right signals aren't obvious</h3><p>Milestone completion beats usage volume. &ldquo;Ticket silence&rdquo; can be louder than volume.</p></div>
+    <div class="card card--prob"><h3>Human-in-the-loop is a cost lever</h3><p>Reviewing only the 18% high-ACV + low-confidence flags caught 89% of false positives.</p><span class="metric">52% &rarr; 19%</span></div>
+    <div class="card card--prob"><h3>Governance is the moat</h3><p>Guardrails, permissions, auditable automation &mdash; not just &ldquo;agentic workflows.&rdquo;</p></div>
+  </div>
+
+  <div class="sec"><span class="n">05</span> In the room</div>
+  <div class="play"><div class="pnum">Play 1 &middot; lead with data, not AI</div><h3>Open with the data-quality thesis</h3><blockquote>&ldquo;Most CS AI fails because the data isn't unified. My first project is <strong>reconciling customer identity</strong>, not building an agent.&rdquo;</blockquote></div>
+  <div class="play"><div class="pnum">Play 2 &middot; anchor to the action gap</div><h3>Ask the Director-level question</h3><blockquote>&ldquo;When your churn model flags a red account, what actually happens &mdash; a playbook, an owner, a tracked outcome, or does it sit in a dashboard?&rdquo;</blockquote></div>
+  <div class="play"><div class="pnum">Play 3 &middot; name the tiering bet</div><h3>Absorb, don't replace</h3><blockquote>&ldquo;Absorb the low-touch and mid-tier so your best people spend their hours where <strong>expansion and renewal actually come from</strong>.&rdquo;</blockquote></div>
+
+  <div class="sec"><span class="n">06</span> Sources</div>
+  <div class="sources">
+    <span class="source">Pixis</span><span class="source">Atlassian / Loom</span><span class="source">ChurnZero</span><span class="source">Gainsight Pulse</span><span class="source">Talkdesk</span><span class="source">Zoom</span><span class="source">TSIA</span><span class="source">Valuize</span><span class="source">getPerspective</span><span class="source">Geta.team</span><span class="source">EverAfter</span><span class="source">Cloudset</span><span class="source">UserIntuition</span><span class="source">Gainsight / Ironclad</span>
+  </div>
+
+  <div class="foot">&copy; 2025-2026 Charlie Fuller</div>
+
+</div>
+</body>
+</html>
