@@ -159,6 +159,21 @@ table.data-table{width:100%;border-collapse:collapse;font-size:13.5px}
 .un .ub{font-family:var(--font-mono);font-size:11.5px;color:var(--text-muted);line-height:1.5;margin-top:6px}
 @media(max-width:760px){.un{overflow-x:auto}}
 
+/* assumptions */
+.assume-note{background:var(--good-dim);border:1px solid var(--good);color:var(--text);border-radius:12px;padding:15px 20px;margin-bottom:14px;font-size:15px;line-height:1.5}
+.assume-note b{color:var(--good)}
+.assume{background:var(--surface);border:1px solid var(--border);border-top:3px solid var(--good);border-radius:16px;overflow:hidden}
+.assume table{width:100%;border-collapse:collapse;font-size:13.5px}
+.assume th{font-family:var(--font-mono);font-size:11px;font-weight:700;letter-spacing:1px;text-transform:uppercase;text-align:left;padding:14px 16px;color:var(--good);background:var(--surface2);border-bottom:1px solid var(--border)}
+.assume td{padding:14px 16px;border-bottom:1px solid var(--border);vertical-align:top}
+.assume tr:last-child td{border-bottom:none}
+.assume tr:hover td{background:var(--good-dim)}
+.assume .aq{font-weight:600;color:var(--text);margin-bottom:4px;font-size:14.5px}
+.assume .aw{font-size:13px;color:var(--text-dim);line-height:1.5}
+.assume .ac{font-size:13px;color:var(--text-dim);line-height:1.5}
+.assume .ac b{color:var(--good);font-weight:600}
+@media(max-width:760px){.assume{overflow-x:auto}}
+
 /* footer */
 .foot{margin-top:60px;padding-top:22px;border-top:1px solid var(--border);font-family:var(--font-mono);font-size:11px;color:var(--text-muted);display:flex;justify-content:space-between;gap:20px;flex-wrap:wrap}
 .foot a{color:var(--text-dim);text-decoration:none}
@@ -405,6 +420,56 @@ table.data-table{width:100%;border-collapse:collapse;font-size:13.5px}
               <div class="uw">How is EWS success measured and tied to churn? The repo's outcome tracker logs renewed / churned / expanded per intervention.</div>
               <div class="ub">Confirm the North Star with Mark and Rohit.</div></td>
           <td class="uw">The org mandate is churn. Without a defined outcome metric, you can't prove ROI to the two people who matter most.</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="sec"><span class="n">05</span> The working assumptions <span class="hint">defaults that make it buildable today, swapped when we know better</span></div>
+  <div class="assume-note"><b>Finishable now, correctable later.</b> The unknowns don't block the plan &mdash; we build against these defaults and change each one the moment it resolves. Every assumption has a known correction path.</div>
+  <div class="assume">
+    <table>
+      <thead><tr><th style="width:44%">Assumption we build against</th><th>Correction we can make later</th></tr></thead>
+      <tbody>
+        <tr>
+          <td><div class="aq">The loop gets a Snowflake write path</div>
+              <div class="aw">A dedicated service role and its own namespace inside the governed warehouse, writes routed through the data-analytics team's standard process.</div></td>
+          <td class="ac"><b>If not blessed:</b> the loop writes to a data-team-staged area and they fan it in. Same schema, one-hop difference.</td>
+        </tr>
+        <tr>
+          <td><div class="aq">Daily incremental, not near-real-time</div>
+              <div class="aw">Source data isn't streaming and the weekly run already works. "New tags today, next steps tomorrow" fits a daily tick.</div></td>
+          <td class="ac"><b>If the mandate needs faster:</b> move to event-triggered. The event log makes that an additive upgrade, not a rewrite.</td>
+        </tr>
+        <tr>
+          <td><div class="aq">10,000 accounts, proved at 1,000</div>
+              <div class="aw">Size for 10,000 accounts, four steps each, weekly. Measure real unit cost on a 1,000-account pilot before committing.</div></td>
+          <td class="ac"><b>After pilot data lands:</b> resize capacity and re-budget from measured, not assumed, per-account cost.</td>
+        </tr>
+        <tr>
+          <td><div class="aq">Bedrock runtime, cheap model where it binds</div>
+              <div class="aw">Narrative and QA run on the approved Bedrock runtime; a cheaper model (Llama) where cost is the constraint. The score stays in code either way.</div></td>
+          <td class="ac"><b>As procurement clears:</b> swap the model tier for a cheaper approved path. The loop definition doesn't change.</td>
+        </tr>
+        <tr>
+          <td><div class="aq">Totango is the master account key</div>
+              <div class="aw">Totango holds the canonical account ID &mdash; it's the post-sales system of record. Salesforce maps in as the sales-side reference.</div></td>
+          <td class="ac"><b>If they have a golden-record system:</b> reconcile to it once the data team confirms. One identity map, not a loop change.</td>
+        </tr>
+        <tr>
+          <td><div class="aq">History seeds from the S3 JSONs</div>
+              <div class="aw">Existing S3 extracts backfill roughly 8&ndash;12 weeks of score_history at go-live, so trends are usable immediately.</div></td>
+          <td class="ac"><b>If they don't:</b> trends start empty and build over weeks. Set that expectation with stakeholders now.</td>
+        </tr>
+        <tr>
+          <td><div class="aq">The fourth agent is the action step</div>
+              <div class="aw">The loop is the three named steps plus a next-step/action agent &mdash; the gap the repo already closes.</div></td>
+          <td class="ac"><b>If Devin's fourth differs:</b> confirm the roster and rework the loop. Early, cheap; later, expensive.</td>
+        </tr>
+        <tr>
+          <td><div class="aq">Churn saved is the North Star</div>
+              <div class="aw">Success = at-risk contracts saved and interventions acknowledged, tracked through the outcome log.</div></td>
+          <td class="ac"><b>Lock the exact metric with Mark and Rohit:</b> so attribution is real, not hoped for.</td>
         </tr>
       </tbody>
     </table>
