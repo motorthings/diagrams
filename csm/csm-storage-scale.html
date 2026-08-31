@@ -1,0 +1,553 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CSM Health &amp; Renewals &mdash; Data Storage at Scale</title>
+<meta name="description" content="How the Proofpoint early-warning system stores the account record at scale: raw S3 landing splits from a Snowflake account record, and four agents run as one incremental loop.">
+<link rel="icon" href="../icon.svg" type="image/svg+xml" />
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,700;9..144,800&family=Source+Code+Pro:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --font-display:'Fraunces',Georgia,serif;
+  --font-body:'Fraunces',Georgia,serif;
+  --font-mono:'Source Code Pro','SF Mono',Consolas,monospace;
+
+  --bg:#f4f6fb; --surface:#ffffff; --surface2:#edf1f8; --surface3:#e4eaf4;
+  --border:#c9d4e6; --border-bright:#a3b6d6;
+  --text:#16213a; --text-dim:#4a5b7c; --text-muted:#7d8db0;
+
+  --primary:#3b4fd8; --primary-dim:rgba(59,79,216,0.08);
+  --secondary:#0891b2; --secondary-dim:rgba(8,145,178,0.08);
+  --metric:#059669; --metric-dim:rgba(5,150,105,0.07);
+  --amber:#b45309; --amber-dim:rgba(180,83,9,0.10);
+  --violet:#6d28d9; --violet-dim:rgba(109,40,217,0.08);
+  --rose:#dc2626; --rose-dim:rgba(220,38,38,0.08);
+  --slate:#475569; --slate-dim:rgba(71,85,105,0.08);
+  --good:#0f766e; --good-dim:rgba(15,118,110,0.10);
+  --bad:#b91c1c; --bad-dim:rgba(185,28,28,0.10);
+  --warn:#b45309; --warn-dim:rgba(180,83,9,0.12);
+}
+html.dark{
+  --bg:#0b1220; --surface:#111b30; --surface2:#17233c; --surface3:#1d2b47;
+  --border:#22314f; --border-bright:#31476e;
+  --text:#e6ecf7; --text-dim:#93a5c8; --text-muted:#5e7095;
+
+  --primary:#7d8dff; --primary-dim:rgba(125,141,255,0.14);
+  --secondary:#22d3ee; --secondary-dim:rgba(34,211,238,0.12);
+  --metric:#34d399; --metric-dim:rgba(52,211,153,0.10);
+  --amber:#fbbf24; --amber-dim:rgba(251,191,36,0.14);
+  --violet:#a78bfa; --violet-dim:rgba(167,139,250,0.14);
+  --rose:#fb7185; --rose-dim:rgba(251,113,133,0.14);
+  --slate:#94a3b8; --slate-dim:rgba(148,163,184,0.14);
+  --good:#5eead4; --good-dim:rgba(94,234,212,0.12);
+  --bad:#f87171; --bad-dim:rgba(248,113,113,0.12);
+  --warn:#fbbf24; --warn-dim:rgba(251,191,36,0.14);
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{
+  background:var(--bg);
+  background-image:
+    radial-gradient(ellipse at 80% 0%, var(--primary-dim) 0%, transparent 52%),
+    radial-gradient(ellipse at 18% 62%, var(--secondary-dim) 0%, transparent 44%);
+  color:var(--text); font-family:var(--font-body); line-height:1.6;
+  min-height:100vh; padding:0 32px 72px;
+  transition:background .3s,color .3s; -webkit-font-smoothing:antialiased;
+}
+.backlink{position:fixed;top:12px;left:16px;z-index:101;font-family:var(--font-mono);font-size:12px;color:var(--text-dim);text-decoration:none;padding:6px 10px;border:1px solid var(--border);border-radius:6px;background:var(--surface);transition:color .15s,border-color .15s}
+.backlink:hover{color:var(--text);border-color:var(--border-bright)}
+:focus-visible{outline:2px solid var(--primary);outline-offset:2px}
+
+.nav{position:sticky;top:0;z-index:100;backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);background:color-mix(in srgb,var(--surface) 85%,transparent);border-bottom:1px solid var(--border);margin:0 -32px 34px;transition:background .3s,border-color .3s}
+.nav-inner{max-width:1160px;margin:0 auto;padding:14px 0;display:flex;align-items:center;justify-content:space-between}
+.nav-brand{font-family:var(--font-mono);font-size:12px;font-weight:600;letter-spacing:.5px;color:var(--text-dim);text-decoration:none;text-transform:uppercase}
+.nav-brand:hover{color:var(--primary)}
+.theme-toggle{width:38px;height:38px;border-radius:10px;border:1px solid var(--border);background:var(--surface);cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:16px;color:var(--text-dim);transition:all .2s}
+.theme-toggle:hover{border-color:var(--primary);color:var(--primary)}
+
+.wrap{max-width:1160px;margin:0 auto}
+.hero{padding:40px 0 8px}
+.hero-badge{display:inline-block;font-family:var(--font-mono);font-size:11px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--primary);border:1px solid var(--primary-dim);background:var(--primary-dim);border-radius:100px;padding:6px 14px;margin-bottom:22px}
+.hero h1{font-family:var(--font-display);font-size:clamp(40px,6vw,62px);line-height:1.0;font-weight:800;letter-spacing:-0.02em;margin:0 0 18px;max-width:17ch}
+.hero .lede{font-size:19px;line-height:1.6;color:var(--text-dim);max-width:60ch}
+.hero .lede strong{color:var(--text);font-weight:600}
+
+.sec{font-family:var(--font-mono);font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:2px;color:var(--text-muted);margin:52px 0 18px;display:flex;align-items:center;gap:12px}
+.sec .n{color:var(--primary)}
+.sec::after{content:'';flex:1;height:1px;background:var(--border)}
+.sec .hint{font-family:var(--font-mono);font-size:10px;color:var(--text-muted);text-transform:none;letter-spacing:.5px}
+
+/* exec cards */
+.excards{display:grid;grid-template-columns:repeat(2,1fr);gap:14px}
+.excard{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:22px 22px;min-width:0}
+.excard .k{font-family:var(--font-mono);font-size:11px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--primary);margin-bottom:8px;display:block}
+.excard h3{font-family:var(--font-display);font-size:21px;font-weight:600;letter-spacing:-0.01em;margin-bottom:8px}
+.excard p{font-size:14.5px;line-height:1.55;color:var(--text-dim)}
+.excard p b{color:var(--text);font-weight:600}
+@media(max-width:760px){.excards{grid-template-columns:1fr}}
+
+/* the ask callout */
+.ask{background:var(--surface2);border:1px solid var(--border);border-radius:14px;padding:24px 26px;margin-top:14px}
+.ask .ah{font-family:var(--font-mono);font-size:11px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--violet);margin-bottom:16px;display:flex;align-items:center;gap:10px}
+.ask .qa{display:grid;grid-template-columns:1fr 1fr;gap:0 26px;margin:0}
+.ask .qa div{display:flex;gap:12px;padding:12px 0;border-bottom:1px solid var(--border);min-width:0}
+.ask .qa .q{font-family:var(--font-mono);font-size:12px;font-weight:700;color:var(--text-dim);white-space:nowrap;flex-shrink:0}
+.ask .qa .a{font-size:14.5px;color:var(--text)}
+@media(max-width:760px){.ask .qa{grid-template-columns:1fr}}
+
+/* mermaid */
+.mermaid-wrap{background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:20px;margin-bottom:14px;overflow:hidden}
+.mermaid-ctrl{display:flex;align-items:center;justify-content:flex-end;gap:6px;margin-bottom:12px}
+.mermaid-ctrl button{width:34px;height:30px;border-radius:8px;border:1px solid var(--border);background:var(--surface2);color:var(--text-dim);font-family:var(--font-mono);font-size:14px;font-weight:600;cursor:pointer;transition:all .15s}
+.mermaid-ctrl button:hover{border-color:var(--primary);color:var(--primary)}
+.mermaid{display:flex;justify-content:center;overflow:hidden;cursor:grab}
+.mermaid svg{max-width:none}
+.mermaid.grabbing{cursor:grabbing}
+.legend{display:flex;flex-wrap:wrap;gap:8px 18px;margin-top:6px}
+.legend-item{display:flex;align-items:center;gap:7px;font-family:var(--font-mono);font-size:10.5px;color:var(--text-dim)}
+.legend-swatch{width:12px;height:12px;border-radius:3px;border:1px solid}
+
+/* collapsibles */
+details.col{border:1px solid var(--border);border-radius:14px;background:var(--surface);margin-bottom:12px;overflow:hidden}
+details.col>summary{cursor:pointer;padding:18px 22px;display:flex;align-items:center;gap:14px;font-family:var(--font-display);font-size:19px;font-weight:600;letter-spacing:-0.01em;list-style:none}
+details.col>summary::-webkit-details-marker{display:none}
+details.col>summary .cn{font-family:var(--font-mono);font-size:11px;font-weight:700;color:var(--primary);flex-shrink:0}
+details.col>summary .ct{flex:1}
+details.col>summary .cv{font-family:var(--font-mono);font-size:10px;color:var(--text-muted);flex-shrink:0;transition:transform .2s}
+details.col[open]>summary .cv{transform:rotate(90deg)}
+details.col .body{padding:4px 22px 24px;border-top:1px solid var(--border)}
+details.col .body>p{font-size:15px;color:var(--text-dim);margin:16px 0}
+
+/* small component grids inside detail */
+.duo{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:16px}
+@media(max-width:760px){.duo{grid-template-columns:1fr}}
+.mini{background:var(--surface2);border:1px solid var(--border);border-radius:12px;padding:16px 18px;min-width:0}
+.mini .mk{font-family:var(--font-mono);font-size:10.5px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;margin-bottom:10px}
+.mini ul{list-style:none}
+.mini li{font-size:14px;color:var(--text-dim);padding:6px 0 6px 18px;position:relative}
+.mini li::before{content:'';position:absolute;left:0;top:14px;width:6px;height:6px;border-radius:50%;background:var(--primary)}
+.mini li b{color:var(--text);font-weight:600}
+
+/* schema table */
+.table-wrap{margin-top:16px;overflow-x:auto;border:1px solid var(--border);border-radius:12px;background:var(--surface)}
+.table-scroll{overflow-x:auto}
+table.data-table{width:100%;border-collapse:collapse;font-size:13.5px}
+.data-table th{font-family:var(--font-mono);font-size:11px;font-weight:700;letter-spacing:1px;text-transform:uppercase;text-align:left;padding:12px 16px;color:var(--text-muted);background:var(--surface2);border-bottom:1px solid var(--border);position:sticky;top:0}
+.data-table td{padding:12px 16px;border-bottom:1px solid var(--border);vertical-align:top;color:var(--text-dim)}
+.data-table tr:nth-child(even) td{background:var(--surface2)}
+.data-table td code{font-family:var(--font-mono);font-size:12px;color:var(--primary);font-weight:600;white-space:nowrap}
+.data-table td b{color:var(--text);font-weight:600}
+.data-table tr:hover td{background:var(--primary-dim)}
+
+/* unknowns */
+.un{background:var(--surface);border:1px solid var(--border);border-radius:16px;overflow:hidden}
+.un table{width:100%;border-collapse:collapse;font-size:13.5px}
+.un th{font-family:var(--font-mono);font-size:11px;font-weight:700;letter-spacing:1px;text-transform:uppercase;text-align:left;padding:14px 16px;color:var(--text-muted);background:var(--surface2);border-bottom:1px solid var(--border)}
+.un td{padding:14px 16px;border-bottom:1px solid var(--border);vertical-align:top}
+.un tr:last-child td{border-bottom:none}
+.un tr:hover td{background:var(--primary-dim)}
+.prio{display:inline-flex;align-items:center;gap:7px;font-family:var(--font-mono);font-size:10.5px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;white-space:nowrap}
+.dot{width:9px;height:9px;border-radius:50%;flex-shrink:0}
+.p-bad{color:var(--bad)} .p-bad .dot{background:var(--bad)}
+.p-warn{color:var(--warn)} .p-warn .dot{background:var(--warn)}
+.p-good{color:var(--good)} .p-good .dot{background:var(--good)}
+.un .uq{font-weight:600;color:var(--text);margin-bottom:4px;font-size:14.5px}
+.un .uw{font-size:13px;color:var(--text-dim);line-height:1.5}
+.un .ub{font-family:var(--font-mono);font-size:11.5px;color:var(--text-muted);line-height:1.5;margin-top:6px}
+@media(max-width:760px){.un{overflow-x:auto}}
+
+/* footer */
+.foot{margin-top:60px;padding-top:22px;border-top:1px solid var(--border);font-family:var(--font-mono);font-size:11px;color:var(--text-muted);display:flex;justify-content:space-between;gap:20px;flex-wrap:wrap}
+.foot a{color:var(--text-dim);text-decoration:none}
+.foot a:hover{color:var(--primary)}
+
+@media(prefers-reduced-motion:reduce){*,*::before,*::after{animation-duration:.01ms!important;animation-delay:0ms!important;transition-duration:.01ms!important}}
+</style>
+</head>
+<body>
+<a href="index.html" class="backlink">&larr; Customer Success</a>
+
+<div class="nav">
+  <div class="nav-inner">
+    <a href="../index.html" class="nav-brand">Proofpoint EWS &middot; Data Storage</a>
+    <button class="theme-toggle" id="themeToggle" aria-label="Toggle dark mode">
+      <span class="icon-light">&#9788;</span>
+      <span class="icon-dark" style="display:none">&#9790;</span>
+    </button>
+  </div>
+</div>
+
+<div class="wrap">
+  <header class="hero">
+    <span class="hero-badge">The data question, mapped</span>
+    <h1>Where does the record live at 10,000 accounts?</h1>
+    <p class="lede">Raw data stays where it is. <strong>The account record moves to Snowflake.</strong> Four agents become one incremental loop. That's the whole answer &mdash; two tiers, not one.</p>
+  </header>
+
+  <div class="sec"><span class="n">01</span> The recommendation</div>
+  <div class="excards">
+    <div class="excard">
+      <span class="k">Two tiers, not one</span>
+      <h3>Raw stays. The record moves.</h3>
+      <p><b>Totango and Salesforce extracts keep landing in S3</b> as an append-only archive &mdash; cheap, auditable, reprocessable. The thing Devin asked about, the account record, is the part that outgrows S3. That moves to <b>Snowflake</b>, which the org already owns and the data team already governs.</p>
+    </div>
+    <div class="excard">
+      <span class="k">Derived, not stored</span>
+      <h3>The record is a view over events</h3>
+      <p>Agents don't overwrite one blob. They <b>append facts to an event log</b>, and the account row is rebuilt from that log by code. Every field traces to a real event. Auditable, replayable, rebuildable. That's the governance moat, not a policy nobody reads.</p>
+    </div>
+    <div class="excard">
+      <span class="k">One loop, not four scripts</span>
+      <h3>Incremental, per account</h3>
+      <p>Devin's "new tags today, next steps tomorrow" falls out naturally. A change to one account <b>triggers that account's steps only</b> &mdash; signal, narrative, QA, action &mdash; not a whole-book rerun. Four steps in one loop with a shared log.</p>
+    </div>
+    <div class="excard">
+      <span class="k">Nothing new to approve</span>
+      <h3>Built on the stack you have</h3>
+      <p>Reuses <b>S3 + Snowflake + the governed AWS runtime</b>. The LLM only narrates; the risk math stays in code. In a cybersecurity org where every key needs a blessing, the least-exciting answer is the right one.</p>
+    </div>
+  </div>
+
+  <div class="ask">
+    <div class="ah">Devin asked four things. The short answers.</div>
+    <div class="qa">
+      <div><span class="q">"Snowflake?"</span><span class="a">Yes &mdash; for the record and the history. Raw stays in S3. Both, not either-or.</span></div>
+      <div><span class="q">"Four automations?"</span><span class="a">Four <i>steps</i> in one loop with a shared event log. Decoupled, but consistent.</span></div>
+      <div><span class="q">"Historic trends?"</span><span class="a">The event log is the history. Query it over time &mdash; no separate trend pipeline.</span></div>
+      <div><span class="q">"Pre-process in Snowflake?"</span><span class="a">Yes, via the data-analytics team you already have. It fans data in; you read and score it.</span></div>
+    </div>
+  </div>
+
+  <div class="sec"><span class="n">02</span> The architecture <span class="hint">click + drag to pan, scroll to zoom</span></div>
+  <div class="mermaid-wrap">
+    <div class="mermaid-ctrl">
+      <button id="zoomin" aria-label="Zoom in">+</button>
+      <button id="zoomout" aria-label="Zoom out">&minus;</button>
+      <button id="zoomreset" aria-label="Reset zoom">&#10226;</button>
+    </div>
+    <div class="mermaid" id="mermaidBox"></div>
+  </div>
+  <div class="legend">
+    <span class="legend-item"><span class="legend-swatch" style="background:var(--secondary);border-color:var(--secondary)"></span> Source &mdash; don't store here</span>
+    <span class="legend-item"><span class="legend-swatch" style="background:var(--slate);border-color:var(--slate)"></span> Tier 1 &mdash; raw landing (S3)</span>
+    <span class="legend-item"><span class="legend-swatch" style="background:var(--primary);border-color:var(--primary)"></span> Tier 2 &mdash; account record (Snowflake)</span>
+    <span class="legend-item"><span class="legend-swatch" style="background:var(--violet);border-color:var(--violet)"></span> The per-account loop</span>
+    <span class="legend-item"><span class="legend-swatch" style="background:var(--amber);border-color:var(--amber)"></span> LLM &mdash; narrates only</span>
+    <span class="legend-item"><span class="legend-swatch" style="background:var(--good);border-color:var(--good)"></span> Consumers</span>
+  </div>
+
+  <div class="sec"><span class="n">03</span> The deep view <span class="hint">click a section to expand</span></div>
+
+  <details class="col">
+    <summary><span class="cn">A</span><span class="ct">The two tiers, in depth</span><span class="cv">&rarr;</span></summary>
+    <div class="body">
+      <p>The decision isn't "S3 or Snowflake." It's <b>which data lives in each</b>. Confusing the two is how you end up storing the whole world in the wrong place.</p>
+      <div class="duo">
+        <div class="mini">
+          <div class="mk" style="color:var(--secondary)">Tier 1 &mdash; raw landing (S3)</div>
+          <ul>
+            <li><b>Append-only</b> extracts from Totango and Salesforce</li>
+            <li>Cheap, immutable, <b>auditable</b> &mdash; reprocess anytime</li>
+            <li>This is Devin's current setup, and it's <b>fine to keep</b> for this</li>
+            <li>Fan-in and field creation handled by the <b>data-analytics team</b></li>
+          </ul>
+        </div>
+        <div class="mini">
+          <div class="mk" style="color:var(--primary)">Tier 2 &mdash; account record (Snowflake)</div>
+          <ul>
+            <li><b>One row per account</b>, updated incrementally</li>
+            <li>Per-record random access, SQL, and <b>history</b></li>
+            <li>Where S3 JSONs fail: rewrite the whole blob to change one field</li>
+            <li>Aligned with the org's governed warehouse &mdash; <b>nothing to buy</b></li>
+          </ul>
+        </div>
+      </div>
+      <p>The rule of thumb: if you <i>append and archive</i> it, it's Tier 1. If you <i>update and query</i> it, it's Tier 2.</p>
+    </div>
+  </details>
+
+  <details class="col">
+    <summary><span class="cn">B</span><span class="ct">The per-account loop and the four steps</span><span class="cv">&rarr;</span></summary>
+    <div class="body">
+      <p>The weekly whole-book run is the trap. The target is an <b>event-driven loop</b>: a change to one account triggers that account's steps only.</p>
+      <div class="table-wrap"><div class="table-scroll">
+        <table class="data-table">
+          <thead><tr><th>Step</th><th>What it does</th><th>Engine</th></tr></thead>
+          <tbody>
+            <tr><td><code>signal + tag</code></td><td>Turns raw signals into flags and tags on the account</td><td>Deterministic code</td></tr>
+            <tr><td><code>narrative</code></td><td>Writes the plain-language story the CSM can defend</td><td>LLM, grounded in the flags</td></tr>
+            <tr><td><code>QA</code></td><td>Checks the narrative cites real signals, kills drift</td><td>Rules + LLM check</td></tr>
+            <tr><td><code>next step / action</code></td><td>Routes a playbook and a suggested action, human confirms</td><td>Code-routed + HITL</td></tr>
+          </tbody>
+        </table>
+      </div></div>
+      <p>Each step is <b>idempotent and resumable</b>. A step fails mid-account, you retry that step, not the book. The risk math lives in code; the LLM only narrates and is QA'd. That's what keeps a 10,000-account run cheap and trustworthy.</p>
+    </div>
+  </details>
+
+  <details class="col">
+    <summary><span class="cn">C</span><span class="ct">The schema: what actually lives in Snowflake</span><span class="cv">&rarr;</span></summary>
+    <div class="body">
+      <p>Three tables. The <code>account</code> row is derived from the <code>account_event</code> log by code &mdash; never written directly by the agents.</p>
+      <div class="table-wrap"><div class="table-scroll">
+        <table class="data-table">
+          <thead><tr><th>Table</th><th>Kind</th><th>What it holds</th><th>Why it exists</th></tr></thead>
+          <tbody>
+            <tr><td><code>account_event</code></td><td>append-only log</td><td>Every fact an agent produces: a tag, a next step, a QA verdict, a narrative</td><td>Audit, replay, and the raw material for history</td></tr>
+            <tr><td><code>account</code></td><td>materialized state</td><td>One row per account: current flags, tags, next steps, health score, status</td><td>The record a CSM opens and the loop updates</td></tr>
+            <tr><td><code>score_history</code></td><td>snapshot</td><td>One row per scoring run per account</td><td>Historic trends and the churn-prediction feed</td></tr>
+          </tbody>
+        </table>
+      </div></div>
+      <p>This is the repo's design at small scale &mdash; the deterministic risk engine plus a decision log &mdash; lifted into a governed warehouse. What's proven on 12 synthetic accounts is the same shape at 10,000.</p>
+    </div>
+  </details>
+
+  <details class="col">
+    <summary><span class="cn">D</span><span class="ct">Where it runs, and why it's guardrail-friendly</span><span class="cv">&rarr;</span></summary>
+    <div class="body">
+      <div class="duo">
+        <div class="mini">
+          <div class="mk" style="color:var(--good)">Run in the stack you have</div>
+          <ul>
+            <li><b>AWS runtime</b> &mdash; Lambda per loop step, already governed</li>
+            <li><b>Snowflake</b> &mdash; the account record, already owned</li>
+            <li><b>S3</b> &mdash; raw landing, unchanged</li>
+          </ul>
+        </div>
+        <div class="mini">
+          <div class="mk" style="color:var(--warn)">LLM kept to one place</div>
+          <ul>
+            <li>Narrative and QA only, at the <b>Bedrock</b> runtime</li>
+            <li>Cheaper models (Llama) fit here &mdash; the score is code</li>
+            <li>Customer data stays in the governed runtime, <b>not in unblessed tools</b></li>
+          </ul>
+        </div>
+      </div>
+      <p>The pitch to Devin and Mark: <b>no new data store, no new provider, no new approval.</b> You already own every piece. The skill set is wiring them and making the loop reliable &mdash; which is the role, not a rebuild.</p>
+    </div>
+  </details>
+
+  <div class="sec"><span class="n">04</span> What we don't know yet <span class="hint">the blockers that shape the plan</span></div>
+  <div class="un">
+    <table>
+      <thead><tr><th style="width:120px">Priority</th><th>What we need to know</th><th style="width:46%">Why it matters / what it blocks</th></tr></thead>
+      <tbody>
+        <tr>
+          <td><span class="prio p-bad"><span class="dot"></span>Blocks go/no-go</span></td>
+          <td><div class="uq">Can the pipeline write to Snowflake?</div>
+              <div class="uw">Devin said Snowflake "should work well" &mdash; that's hope, not approval. Does the loop get a role, or must writes route through the data-engineering team?</div>
+              <div class="ub">Blocked by: the security-review guardrail on every integration.</div></td>
+          <td class="uw">This is the single biggest unknown. If the loop can't write the record, the whole Tier 2 collapses and you're back to S3. Everything else depends on the answer.</td>
+        </tr>
+        <tr>
+          <td><span class="prio p-bad"><span class="dot"></span>Blocks go/no-go</span></td>
+          <td><div class="uq">What does "quick" actually mean?</div>
+              <div class="uw">"On demand, operating quick" &mdash; minutes, hours, or daily? The freshness SLA decides the trigger design: push-on-event vs. pull-on-cadence.</div>
+              <div class="ub">Different architecture for near-real-time vs. overnight.</div></td>
+          <td class="uw">Near-real-time means event triggers and CDC from source systems. Daily means a batch that still updates one record per account. One is much harder in a governed org.</td>
+        </tr>
+        <tr>
+          <td><span class="prio p-bad"><span class="dot"></span>Blocks go/no-go</span></td>
+          <td><div class="uq">Account count and event volume</div>
+              <div class="uw">Devin said "thousands / 10,000 accounts." But how many source events per account per week? Sizing drives Snowflake credits and LLM cost.</div>
+              <div class="ub">Blocked by: volume data only they have.</div></td>
+          <td class="uw">A 1,000-account pilot and a 10,000-account rollout differ in cost and capacity by an order of magnitude. You can't cost the plan without the number.</td>
+        </tr>
+        <tr>
+          <td><span class="prio p-bad"><span class="dot"></span>Blocks go/no-go</span></td>
+          <td><div class="uq">Which LLM runtimes are approved?</div>
+              <div class="uw">Cybersecurity data-residency rules on customer data. Is Bedrock the only sanctioned runtime, or is a cheaper Llama path cleared?</div>
+              <div class="ub">Blocked by: the security review + procurement.</div></td>
+          <td class="uw">Gates the narrative step. If only premium models are approved, per-account cost rises and the cheap-model play Devin floated dies.</td>
+        </tr>
+        <tr>
+          <td><span class="prio p-warn"><span class="dot"></span>Refines the plan</span></td>
+          <td><div class="uq">Schema ownership and governance</div>
+              <div class="uw">The data-analytics team owns Snowflake. Is the EWS schema inside their governed warehouse or isolated? Who reviews DDL?</div>
+              <div class="ub">Blocks: the approval workflow, not the approach.</div></td>
+          <td class="uw">Determines who signs off schema changes and how fast you can iterate. Know the boundary before you design the tables.</td>
+        </tr>
+        <tr>
+          <td><span class="prio p-warn"><span class="dot"></span>Refines the plan</span></td>
+          <td><div class="uq">The fourth agent</div>
+              <div class="uw">Devin named signals+tag, narrative, QA, and couldn't recall the last. We can't finalize the loop without the full roster and their I/O.</div>
+              <div class="ub">One quick follow-up to Devin.</div></td>
+          <td class="uw">Every step changes the event schema. Locking the roster early avoids a rework of the loop definition.</td>
+        </tr>
+        <tr>
+          <td><span class="prio p-warn"><span class="dot"></span>Refines the plan</span></td>
+          <td><div class="uq">Canonical account identity</div>
+              <div class="uw">One customer, one ID across Totango and Salesforce. Is there a reconciled account key, or does the loop have to build one?</div>
+              <div class="ub">Blocks: accurate records, not the architecture.</div></td>
+          <td class="uw">Score on split identity and you score wrong. This is the plumbing problem the repo's "The Fix" page names &mdash; solve it before the loop matters.</td>
+        </tr>
+        <tr>
+          <td><span class="prio p-warn"><span class="dot"></span>Refines the plan</span></td>
+          <td><div class="uq">History for backfill</div>
+              <div class="uw">To show historic trends now, you need history. Does existing S3/Snowflake data go back far enough, or do trends start at go-live?</div>
+              <div class="ub">Blocks: the trend feature's launch date.</div></td>
+          <td class="uw">"Historic trends" was a stated goal. If there's no past data, score_history starts empty and trends only build over weeks &mdash; set the expectation now.</td>
+        </tr>
+        <tr>
+          <td><span class="prio p-warn"><span class="dot"></span>Refines the plan</span></td>
+          <td><div class="uq">Cost per account at 10,000</div>
+              <div class="uw">Unit economics of 4 steps &times; 10,000 accounts &times; weekly. Especially with the consumption-based pivot 18 months out.</div>
+              <div class="ub">Blocks: budget approval.</div></td>
+          <td class="uw">A board-facing metric. Keeping the score in code and the LLM narrow is what holds per-account cost down &mdash; quantify it to defend it.</td>
+        </tr>
+        <tr>
+          <td><span class="prio p-good"><span class="dot"></span>Assumption to confirm</span></td>
+          <td><div class="uq">The churn metric and attribution</div>
+              <div class="uw">How is EWS success measured and tied to churn? The repo's outcome tracker logs renewed / churned / expanded per intervention.</div>
+              <div class="ub">Confirm the North Star with Mark and Rohit.</div></td>
+          <td class="uw">The org mandate is churn. Without a defined outcome metric, you can't prove ROI to the two people who matter most.</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="foot">
+    <span>&copy; 2025-2026 Charlie Fuller</span>
+    <a href="csm-health-explainer.html">The agent &rarr;</a>
+  </div>
+</div>
+
+<script type="module">
+import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs';
+mermaid.initialize({
+  startOnLoad:true, theme:'base', look:'classic', securityLevel:'loose',
+  themeVariables:{
+    fontFamily:'Source Code Pro, monospace', fontSize:'13px',
+    background:'#ffffff', primaryColor:'rgba(125,141,255,0.10)', primaryBorderColor:'#3b4fd8', primaryTextColor:'#16213a',
+    lineColor:'#a3b6d6', secondaryColor:'rgba(8,145,178,0.08)', secondaryBorderColor:'#0891b2', tertiaryColor:'rgba(5,150,105,0.07)', tertiaryBorderColor:'#059669'
+  }
+});
+const graph = `flowchart TD
+  subgraph SRC["Source - don't store here"]
+    TOT["Totango (post-sales CRM)"]
+    SF["Salesforce"]
+  end
+  subgraph L1["Tier 1 - raw landing (S3)"]
+    S3["S3 bucket - append-only extracts"]
+  end
+  subgraph L2["Tier 2 - account record (Snowflake)"]
+    SW["governed warehouse"]
+    ACC["account - one row per account"]
+    EVT["account_event - append-only log"]
+    HIST["score_history - trends"]
+  end
+  subgraph LP["The per-account loop"]
+    TRIG["change on one account"]
+    A1["signal + tag"]
+    A2["narrative"]
+    A3["QA"]
+    A4["next step / action"]
+    LLM["LLM (Bedrock) - narrates only"]
+  end
+  UI["CSM review UI"]
+  TREND["historic trends / churn"]
+  TOT --> S3
+  SF --> S3
+  S3 --> SW
+  SW --> TRIG
+  TRIG --> A1
+  A1 --> A2
+  A2 --> A3
+  A3 --> A4
+  LLM -. grounded .-> A2
+  A1 --> EVT
+  A2 --> EVT
+  A3 --> EVT
+  A4 --> EVT
+  EVT --> ACC
+  EVT --> HIST
+  A4 --> ACC
+  ACC --> UI
+  HIST --> TREND
+  class TOT,SF source
+  class S3 tier1
+  class SW,ACC,EVT,HIST tier2
+  class TRIG,A1,A2,A3,A4 agent
+  class LLM llm
+  class UI,TREND out`;
+const {svg} = await mermaid.render('theGraph', graph);
+document.getElementById('mermaidBox').innerHTML = svg;
+</script>
+
+<script>
+// dark mode text override (mermaid renders text at init time)
+const mq = () => {
+  const dark = document.documentElement.classList.contains('dark');
+  const root = document.querySelector('.mermaid');
+  if (!root) return;
+  root.querySelectorAll('text').forEach(t => { t.style.fill = dark ? '#e6ecf7' : '#16213a'; });
+  root.querySelectorAll('.edgeLabel').forEach(e => { e.style.color = dark ? '#93a5c8' : '#4a5b7c'; });
+};
+const mo = new MutationObserver(mq); const mm = document.getElementById('mermaidBox');
+if (mm) mo.observe(mm, {childList:true, subtree:true});
+// zoom + pan
+(function(){
+  const box = document.getElementById('mermaidBox');
+  const svg = () => box.querySelector('svg');
+  let scale = 1, tx = 0, ty = 0, dragging = false, sx = 0, sy = 0;
+  const apply = () => {
+    const s = svg(); if(!s) return;
+    s.style.transform = `translate(${tx}px,${ty}px) scale(${scale})`;
+    s.style.transformOrigin = 'center top';
+  };
+  const fit = () => {
+    const s = svg(); if(!s){scale=1;tx=0;ty=0;return}
+    const bw = box.clientWidth, sw = s.getBBox().width;
+    scale = Math.min(1, bw / (sw + 60)); tx = 0; ty = 0; apply();
+  };
+  document.getElementById('zoomin').onclick = () => { scale = Math.min(2.5, scale*1.2); apply(); };
+  document.getElementById('zoomout').onclick = () => { scale = Math.max(0.3, scale/1.2); apply(); };
+  document.getElementById('zoomreset').onclick = fit;
+  box.addEventListener('wheel', e => {
+    if(!e.ctrlKey && !e.metaKey) return;
+    e.preventDefault();
+    scale = Math.max(0.3, Math.min(2.5, scale * (e.deltaY > 0 ? 0.92 : 1.08))); apply();
+  }, {passive:false});
+  box.addEventListener('mousedown', e => { dragging = true; sx = e.clientX - tx; sy = e.clientY - ty; box.classList.add('grabbing'); });
+  window.addEventListener('mousemove', e => { if(!dragging) return; tx = e.clientX - sx; ty = e.clientY - sy; apply(); });
+  window.addEventListener('mouseup', () => { dragging = false; box.classList.remove('grabbing'); });
+  setTimeout(fit, 400);
+})();
+// theme toggle
+(function(){
+  const toggle = document.getElementById('themeToggle');
+  const iconLight = toggle.querySelector('.icon-light');
+  const iconDark = toggle.querySelector('.icon-dark');
+  function setTheme(d){
+    document.documentElement.classList.toggle('dark', d);
+    iconLight.style.display = d ? 'none' : '';
+    iconDark.style.display = d ? '' : 'none';
+    mq();
+    try{ localStorage.setItem('diagram-theme', d ? 'dark' : 'light'); }catch(e){}
+  }
+  toggle.addEventListener('click', () => setTheme(!document.documentElement.classList.contains('dark')));
+  try{ if(localStorage.getItem('diagram-theme') === 'dark') setTheme(true); }catch(e){}
+})();
+</script>
+<style>
+.mermaid g.source rect, .mermaid g.source polygon, .mermaid g.source circle{fill:var(--secondary-dim)!important;stroke:var(--secondary)!important}
+.mermaid g.tier1 rect, .mermaid g.tier1 polygon{fill:var(--slate-dim)!important;stroke:var(--slate)!important}
+.mermaid g.tier2 rect, .mermaid g.tier2 polygon{fill:var(--primary-dim)!important;stroke:var(--primary)!important}
+.mermaid g.agent rect, .mermaid g.agent polygon{fill:var(--violet-dim)!important;stroke:var(--violet)!important}
+.mermaid g.llm rect, .mermaid g.llm polygon{fill:var(--amber-dim)!important;stroke:var(--amber)!important}
+.mermaid g.out rect, .mermaid g.out polygon{fill:var(--good-dim)!important;stroke:var(--good)!important}
+html.dark .mermaid .nodeLabel{color:#e6ecf7!important}
+html.dark .mermaid .edgeLabel{color:#93a5c8!important}
+html.dark .mermaid .edgeLabel span{color:#93a5c8!important}
+html.dark .mermaid .labelBkg{fill:#111b30!important}
+html.dark .mermaid .cluster-label text{fill:#93a5c8!important}
+html.dark .mermaid .cluster rect{fill:#17233c!important;stroke:#31476e!important}
+.mermaid .cluster rect{fill:var(--surface2)!important;stroke:var(--border-bright)!important}
+.mermaid .cluster-label text{fill:var(--text-dim)!important;font-family:var(--font-mono)!important}
+</style>
+</body>
+</html>
