@@ -465,8 +465,64 @@ details.sec-wrap .sec-body > .sec{display:none}
 
   </div>
 </details>
+  <details class="sec-wrap">
+    <summary class="sec"><span class="n">04</span> A worked example <span class="hint">the data records, row by row</span></summary>
+    <div class="sec-body">
+
+      <p style="font-size:15px;line-height:1.6;color:var(--text-dim);margin:6px 0 16px">Here's what the whole thing actually looks like, end to end, using three example accounts: Meridian (at risk), Granite (churn-imminent), and Sunrise (healthy).</p>
+
+      <p style="font-size:15px;line-height:1.6;color:var(--text-dim);margin:0 0 16px"><b style="color:var(--text)">The data question:</b> with 10,000 customer accounts, where does the account record live? Customer information is scattered across the tools the team already uses &mdash; Totango (post-sales) and Salesforce. You can't act on a customer until those facts are pulled into one current record.</p>
+
+      <p style="font-size:15px;line-height:1.6;color:var(--text-dim);margin:0 0 16px"><b style="color:var(--text)">Tier one &mdash; the raw data stays put.</b> Copies of the raw data land in an S3 bucket, a simple append-only archive. Nothing is ever edited there, so you can always re-check the original. This is what the team already runs today, and it stays.</p>
+
+      <p style="font-size:15px;line-height:1.6;color:var(--text-dim);margin:0 0 16px"><b style="color:var(--text)">Tier two &mdash; the account record moves to Snowflake.</b> This is where the real work happens, in three tables: <b>account</b> (one current row per customer), <b>account_event</b> (the append-only log every observation gets added to), and <b>score_history</b> (snapshots over time). The account row is <i>derived from</i> the event log, never overwritten directly &mdash; so every number traces back to a real observation.</p>
+
+      <h3 style="font-family:var(--font-display);font-size:19px;font-weight:600;margin:22px 0 4px">The account record &mdash; one row per customer</h3>
+      <div class="table-wrap"><div class="table-scroll">
+        <table class="data-table">
+          <thead><tr><th>account_id</th><th>customer</th><th>arr</th><th>health_score</th><th>status</th><th>risk_flags</th><th>next_action</th></tr></thead>
+          <tbody>
+            <tr><td><code>ACC-1002</code></td><td>Meridian</td><td>$240k</td><td>42</td><td>at_risk</td><td>usage_down, renewal_60d</td><td>call about renewal</td></tr>
+            <tr><td><code>ACC-1006</code></td><td>Granite</td><td>$510k</td><td>18</td><td>churn_imminent</td><td>churn_signal</td><td>escalate to director</td></tr>
+            <tr><td><code>ACC-1005</code></td><td>Sunrise</td><td>$90k</td><td>88</td><td>healthy</td><td>&mdash;</td><td>offer expansion</td></tr>
+          </tbody>
+        </table>
+      </div></div>
+
+      <h3 style="font-family:var(--font-display);font-size:19px;font-weight:600;margin:22px 0 4px">The event log &mdash; every loop step appends a row</h3>
+      <div class="table-wrap"><div class="table-scroll">
+        <table class="data-table">
+          <thead><tr><th>event_id</th><th>account_id</th><th>ts</th><th>event_type</th><th>payload</th><th>source</th></tr></thead>
+          <tbody>
+            <tr><td><code>8411</code></td><td><code>ACC-1002</code></td><td>08-28</td><td>usage_drop</td><td><code>{wau: -22%}</code></td><td>usage_weekly</td></tr>
+            <tr><td><code>8412</code></td><td><code>ACC-1002</code></td><td>08-28</td><td>ticket_spike</td><td><code>{tickets: +3}</code></td><td>support_tickets</td></tr>
+            <tr><td><code>8413</code></td><td><code>ACC-1002</code></td><td>08-29</td><td>narrative_written</td><td><code>usage down three straight weeks</code></td><td>narrative_agent</td></tr>
+            <tr><td><code>8414</code></td><td><code>ACC-1002</code></td><td>08-29</td><td>qa_verdict</td><td><code>{pass: true}</code></td><td>qa_agent</td></tr>
+            <tr><td><code>8415</code></td><td><code>ACC-1002</code></td><td>08-30</td><td>next_step</td><td><code>schedule renewal check-in</code></td><td>action_agent</td></tr>
+            <tr><td><code>8416</code></td><td><code>ACC-1006</code></td><td>08-30</td><td>churn_signal</td><td><code>{renewal_likelihood: low}</code></td><td>scoring</td></tr>
+            <tr><td><code>8417</code></td><td><code>ACC-1006</code></td><td>08-30</td><td>escalation</td><td><code>{level: churn_imminent}</code></td><td>escalation_engine</td></tr>
+          </tbody>
+        </table>
+      </div></div>
+
+      <h3 style="font-family:var(--font-display);font-size:19px;font-weight:600;margin:22px 0 4px">The history &mdash; a snapshot per run, so you see the trend</h3>
+      <div class="table-wrap"><div class="table-scroll">
+        <table class="data-table">
+          <thead><tr><th>account_id</th><th>snapshot_date</th><th>health_score</th><th>flags</th></tr></thead>
+          <tbody>
+            <tr><td><code>ACC-1002</code></td><td>2026-08-17</td><td>68</td><td><code>{usage_down}</code></td></tr>
+            <tr><td><code>ACC-1002</code></td><td>2026-08-24</td><td>55</td><td><code>{usage_down, ticket_spike}</code></td></tr>
+            <tr><td><code>ACC-1002</code></td><td>2026-08-31</td><td>42</td><td><code>{usage_down, ticket_spike, renewal_60d}</code></td></tr>
+          </tbody>
+        </table>
+      </div></div>
+
+      <p style="font-size:15px;line-height:1.6;color:var(--text-dim);margin:18px 0 0"><b style="color:var(--text)">How they connect:</b><br>the <code>account</code> row isn't stored independently &mdash; it's <b>derived from</b> <code>account_event</code>.<br>Each observation (a usage drop, a narrative, a QA verdict, a next step) is appended; a deterministic layer recomputes the current <code>account</code> row from the log and pushes a fresh row into <code>score_history</code>.<br>Every number on Meridian's record traces back to events 8411&ndash;8415 &mdash; nothing guessed, nothing overwritten.<br>The <code>payload</code> columns are JSON; shown here as <code>{key: value}</code> for readability.</p>
+
+    </div>
+  </details>
 <details class="sec-wrap">
-  <summary class="sec"><span class="n">04</span> What we don't know yet <span class="hint">the blockers that shape the plan</span></summary>
+  <summary class="sec"><span class="n">05</span> What we don't know yet <span class="hint">the blockers that shape the plan</span></summary>
   <div class="sec-body">
   <div class="un">
     <table>
@@ -549,7 +605,7 @@ details.sec-wrap .sec-body > .sec{display:none}
   </div>
 </details>
 <details class="sec-wrap">
-  <summary class="sec"><span class="n">05</span> The working assumptions <span class="hint">defaults that make it buildable today, swapped when we know better</span></summary>
+  <summary class="sec"><span class="n">06</span> The working assumptions <span class="hint">defaults that make it buildable today, swapped when we know better</span></summary>
   <div class="sec-body">
   <div class="assume-note"><b>Finishable now, correctable later.</b> The unknowns don't block the plan &mdash; we build against these defaults and change each one the moment it resolves. Every assumption has a known correction path.</div>
   <div class="assume">
@@ -603,7 +659,7 @@ details.sec-wrap .sec-body > .sec{display:none}
   </div>
 </details>
 <details class="sec-wrap">
-  <summary class="sec"><span class="n">06</span> Where this plan could be wrong <span class="hint">the honest risks, hardest first</span></summary>
+  <summary class="sec"><span class="n">07</span> Where this plan could be wrong <span class="hint">the honest risks, hardest first</span></summary>
   <div class="sec-body">
   <div class="risk-note"><b>This is a strong architecture, not a finished plan.</b> The risks below are the ones that could sink it &mdash; not the ones we already flagged as unknowns. Read these before you build.</div>
   <div class="risks">
@@ -643,64 +699,6 @@ details.sec-wrap .sec-body > .sec{display:none}
 
   </div>
 </details>
-
-  <details class="sec-wrap">
-    <summary class="sec"><span class="n">07</span> A worked example <span class="hint">the data records, row by row</span></summary>
-    <div class="sec-body">
-
-      <p style="font-size:15px;line-height:1.6;color:var(--text-dim);margin:6px 0 16px">Here's what the whole thing actually looks like, end to end, using three example accounts: Meridian (at risk), Granite (churn-imminent), and Sunrise (healthy).</p>
-
-      <p style="font-size:15px;line-height:1.6;color:var(--text-dim);margin:0 0 16px"><b style="color:var(--text)">The data question:</b> with 10,000 customer accounts, where does the account record live? Customer information is scattered across the tools the team already uses &mdash; Totango (post-sales) and Salesforce. You can't act on a customer until those facts are pulled into one current record.</p>
-
-      <p style="font-size:15px;line-height:1.6;color:var(--text-dim);margin:0 0 16px"><b style="color:var(--text)">Tier one &mdash; the raw data stays put.</b> Copies of the raw data land in an S3 bucket, a simple append-only archive. Nothing is ever edited there, so you can always re-check the original. This is what the team already runs today, and it stays.</p>
-
-      <p style="font-size:15px;line-height:1.6;color:var(--text-dim);margin:0 0 16px"><b style="color:var(--text)">Tier two &mdash; the account record moves to Snowflake.</b> This is where the real work happens, in three tables: <b>account</b> (one current row per customer), <b>account_event</b> (the append-only log every observation gets added to), and <b>score_history</b> (snapshots over time). The account row is <i>derived from</i> the event log, never overwritten directly &mdash; so every number traces back to a real observation.</p>
-
-      <h3 style="font-family:var(--font-display);font-size:19px;font-weight:600;margin:22px 0 4px">The account record &mdash; one row per customer</h3>
-      <div class="table-wrap"><div class="table-scroll">
-        <table class="data-table">
-          <thead><tr><th>account_id</th><th>customer</th><th>arr</th><th>health_score</th><th>status</th><th>risk_flags</th><th>next_action</th></tr></thead>
-          <tbody>
-            <tr><td><code>ACC-1002</code></td><td>Meridian</td><td>$240k</td><td>42</td><td>at_risk</td><td>usage_down, renewal_60d</td><td>call about renewal</td></tr>
-            <tr><td><code>ACC-1006</code></td><td>Granite</td><td>$510k</td><td>18</td><td>churn_imminent</td><td>churn_signal</td><td>escalate to director</td></tr>
-            <tr><td><code>ACC-1005</code></td><td>Sunrise</td><td>$90k</td><td>88</td><td>healthy</td><td>&mdash;</td><td>offer expansion</td></tr>
-          </tbody>
-        </table>
-      </div></div>
-
-      <h3 style="font-family:var(--font-display);font-size:19px;font-weight:600;margin:22px 0 4px">The event log &mdash; every loop step appends a row</h3>
-      <div class="table-wrap"><div class="table-scroll">
-        <table class="data-table">
-          <thead><tr><th>event_id</th><th>account_id</th><th>ts</th><th>event_type</th><th>payload</th><th>source</th></tr></thead>
-          <tbody>
-            <tr><td><code>8411</code></td><td><code>ACC-1002</code></td><td>08-28</td><td>usage_drop</td><td><code>{wau: -22%}</code></td><td>usage_weekly</td></tr>
-            <tr><td><code>8412</code></td><td><code>ACC-1002</code></td><td>08-28</td><td>ticket_spike</td><td><code>{tickets: +3}</code></td><td>support_tickets</td></tr>
-            <tr><td><code>8413</code></td><td><code>ACC-1002</code></td><td>08-29</td><td>narrative_written</td><td><code>usage down three straight weeks</code></td><td>narrative_agent</td></tr>
-            <tr><td><code>8414</code></td><td><code>ACC-1002</code></td><td>08-29</td><td>qa_verdict</td><td><code>{pass: true}</code></td><td>qa_agent</td></tr>
-            <tr><td><code>8415</code></td><td><code>ACC-1002</code></td><td>08-30</td><td>next_step</td><td><code>schedule renewal check-in</code></td><td>action_agent</td></tr>
-            <tr><td><code>8416</code></td><td><code>ACC-1006</code></td><td>08-30</td><td>churn_signal</td><td><code>{renewal_likelihood: low}</code></td><td>scoring</td></tr>
-            <tr><td><code>8417</code></td><td><code>ACC-1006</code></td><td>08-30</td><td>escalation</td><td><code>{level: churn_imminent}</code></td><td>escalation_engine</td></tr>
-          </tbody>
-        </table>
-      </div></div>
-
-      <h3 style="font-family:var(--font-display);font-size:19px;font-weight:600;margin:22px 0 4px">The history &mdash; a snapshot per run, so you see the trend</h3>
-      <div class="table-wrap"><div class="table-scroll">
-        <table class="data-table">
-          <thead><tr><th>account_id</th><th>snapshot_date</th><th>health_score</th><th>flags</th></tr></thead>
-          <tbody>
-            <tr><td><code>ACC-1002</code></td><td>2026-08-17</td><td>68</td><td><code>{usage_down}</code></td></tr>
-            <tr><td><code>ACC-1002</code></td><td>2026-08-24</td><td>55</td><td><code>{usage_down, ticket_spike}</code></td></tr>
-            <tr><td><code>ACC-1002</code></td><td>2026-08-31</td><td>42</td><td><code>{usage_down, ticket_spike, renewal_60d}</code></td></tr>
-          </tbody>
-        </table>
-      </div></div>
-
-      <p style="font-size:15px;line-height:1.6;color:var(--text-dim);margin:18px 0 0"><b style="color:var(--text)">How they connect:</b><br>the <code>account</code> row isn't stored independently &mdash; it's <b>derived from</b> <code>account_event</code>.<br>Each observation (a usage drop, a narrative, a QA verdict, a next step) is appended; a deterministic layer recomputes the current <code>account</code> row from the log and pushes a fresh row into <code>score_history</code>.<br>Every number on Meridian's record traces back to events 8411&ndash;8415 &mdash; nothing guessed, nothing overwritten.<br>The <code>payload</code> columns are JSON; shown here as <code>{key: value}</code> for readability.</p>
-
-    </div>
-  </details>
-
   <div class="foot">
     <span>&copy; 2025-2026 Charlie Fuller</span>
     <a href="csm-health-explainer.html">The agent &rarr;</a>
