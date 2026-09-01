@@ -1,0 +1,369 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="Where to draw the line between what you keep for yourself and what you hand to AI — judgment versus production, seven seams, one border test, and a plan to hold the line." />
+  <title>Cognition &amp; AI — The Offloading Line</title>
+  <link rel="icon" href="icon.svg" type="image/svg+xml" />
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,wght@0,400;0,500;0,600;0,700;0,800;1,400&family=Source+Code+Pro:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --font-display: 'Fraunces', Georgia, serif;
+      --font-mono: 'Source Code Pro', 'SF Mono', Consolas, monospace;
+      --bg: #eef4f9; --surface: #ffffff; --surface2: #f5f8fc;
+      --border: #c8daea; --border-bright: #a0bedb;
+      --text: #0a1628; --text-dim: #3d5a7a; --text-muted: #7a9ab8;
+      --primary: #e8621a; --primary-dim: rgba(232,98,26,0.08);
+      --secondary: #4a90c4; --secondary-dim: rgba(74,144,196,0.08);
+      --metric: #0f766e; --metric-dim: rgba(15,118,110,0.06);
+      --amber: #b45309; --amber-dim: rgba(180,83,9,0.08);
+      --violet: #7c3aed; --violet-dim: rgba(124,58,237,0.08);
+      --rose: #e11d48; --rose-dim: rgba(225,29,72,0.08);
+      --slate: #475569; --slate-dim: rgba(71,85,105,0.08);
+    }
+    html.dark {
+      --bg: #0a1628; --surface: #132240; --surface2: #1a2d52;
+      --border: #1a2d52; --border-bright: #2d4570;
+      --text: #e8edf5; --text-dim: #9bb0d4; --text-muted: #5e7aa3;
+      --primary: #f37021; --primary-dim: rgba(243,112,33,0.12);
+      --secondary: #6cace4; --secondary-dim: rgba(108,172,228,0.12);
+      --metric: #2dd4bf; --metric-dim: rgba(45,212,191,0.08);
+      --amber: #f59e0b; --amber-dim: rgba(245,158,11,0.12);
+      --violet: #a78bfa; --violet-dim: rgba(167,139,250,0.12);
+      --rose: #fb7185; --rose-dim: rgba(251,113,133,0.12);
+      --slate: #94a3b8; --slate-dim: rgba(148,163,184,0.12);
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      background: var(--bg);
+      background-image:
+        radial-gradient(ellipse at 80% 0%, var(--primary-dim) 0%, transparent 50%),
+        radial-gradient(ellipse at 20% 60%, var(--secondary-dim) 0%, transparent 40%);
+      color: var(--text); font-family: var(--font-display);
+      min-height: 100vh; line-height: 1.6; padding: 0 32px 48px;
+      transition: background 0.3s, color 0.3s;
+    }
+
+    .backlink{position:fixed;top:12px;left:16px;z-index:101;font-family:var(--font-mono,'Source Code Pro',monospace);font-size:12px;color:var(--text-dim,var(--text3));text-decoration:none;padding:6px 10px;border:1px solid var(--border);border-radius:6px;background:var(--surface);transition:color .15s,border-color .15s}
+    .backlink:hover{color:var(--text);border-color:var(--border-bright,var(--text2))}
+
+    .nav {
+      position: sticky; top: 0; z-index: 100;
+      backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px);
+      background: color-mix(in srgb, var(--surface) 85%, transparent);
+      border-bottom: 1px solid var(--border);
+      margin: 0 -32px 32px; padding: 0 32px 0 100px;
+      transition: background 0.3s, border-color 0.3s;
+    }
+    .nav-inner {
+      max-width: 1000px; margin: 0 auto; padding: 12px 0;
+      display: flex; align-items: center; justify-content: space-between;
+    }
+    .nav-brand {
+      font-family: var(--font-mono); font-size: 12px; font-weight: 600;
+      letter-spacing: 0.5px; color: var(--primary); text-decoration: none;
+    }
+    .theme-toggle {
+      width: 36px; height: 36px; border-radius: 10px;
+      border: 1px solid var(--border); background: var(--surface);
+      cursor: pointer; display: flex; align-items: center; justify-content: center;
+      font-size: 16px; color: var(--text-dim); transition: all 0.2s;
+    }
+    .theme-toggle:hover { border-color: var(--primary); color: var(--primary); }
+    .theme-toggle:focus-visible { outline: 2px solid var(--primary); outline-offset: 2px; }
+
+    .container { max-width: 1000px; margin: 0 auto; }
+
+    /* Hero */
+    .hero { margin-bottom: 40px; }
+    .hero-badge {
+      display: inline-block; font-family: var(--font-mono); font-size: 11px; font-weight: 600;
+      letter-spacing: 0.08em; text-transform: uppercase; color: var(--primary);
+      border: 1px solid var(--primary); border-radius: 20px; padding: 4px 12px; margin-bottom: 18px;
+    }
+    h1 {
+      font-family: var(--font-display); font-size: 44px; font-weight: 800; line-height: 1.05;
+      letter-spacing: -0.5px; color: var(--text); margin-bottom: 16px;
+    }
+    .hero-sub {
+      font-size: 18px; font-weight: 400; color: var(--text-dim); max-width: 640px;
+    }
+    .hero-sub strong { color: var(--text); font-weight: 600; }
+
+    /* Sections */
+    .section { margin-top: 40px; }
+    .section-label {
+      font-family: var(--font-mono); font-size: 11px; font-weight: 700;
+      letter-spacing: 0.15em; text-transform: uppercase; color: var(--text-muted);
+      margin-bottom: 12px;
+    }
+    h2 {
+      font-family: var(--font-display); font-size: 26px; font-weight: 700;
+      color: var(--text); margin-bottom: 12px; letter-spacing: -0.3px;
+    }
+    .lede { font-size: 17px; color: var(--text-dim); max-width: 720px; margin-bottom: 20px; }
+    .lede strong { color: var(--text); }
+
+    /* The one cut — two column contrast */
+    .contrast {
+      display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-top: 20px;
+    }
+    .contrast-card {
+      background: var(--surface); border: 1px solid var(--border); border-radius: 14px; padding: 24px;
+    }
+    .contrast-card.keep { border-top: 3px solid var(--primary); }
+    .contrast-card.give { border-top: 3px solid var(--secondary); }
+    .contrast-card h3 {
+      font-family: var(--font-mono); font-size: 12px; font-weight: 700;
+      letter-spacing: 0.1em; text-transform: uppercase; margin-bottom: 12px;
+    }
+    .contrast-card.keep h3 { color: var(--primary); }
+    .contrast-card.give h3 { color: var(--secondary); }
+    .contrast-card p { font-size: 15px; color: var(--text-dim); line-height: 1.6; }
+    .contrast-card p strong { color: var(--text); }
+
+    /* Three more cuts */
+    .cuts { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-top: 20px; }
+    .cut {
+      background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 22px;
+    }
+    .cut .num {
+      font-family: var(--font-mono); font-size: 11px; font-weight: 700; color: var(--primary);
+      letter-spacing: 0.08em; margin-bottom: 10px; display: block;
+    }
+    .cut h3 { font-size: 19px; font-weight: 700; color: var(--text); margin-bottom: 8px; }
+    .cut p { font-size: 14px; color: var(--text-dim); line-height: 1.55; }
+
+    /* Border test callout */
+    .test {
+      background: var(--metric-dim); border: 1px solid var(--metric); border-radius: 16px;
+      padding: 30px 32px; margin-top: 20px;
+    }
+    .test .q {
+      font-size: 22px; font-weight: 700; color: var(--text); line-height: 1.3; margin-bottom: 10px;
+      font-style: italic;
+    }
+    .test p { font-size: 15px; color: var(--text-dim); }
+    .test p strong { color: var(--metric); }
+
+    /* Seams */
+    .seams { margin-top: 20px; display: flex; flex-direction: column; gap: 12px; }
+    .seam {
+      display: grid; grid-template-columns: 56px 1fr; gap: 16px; align-items: start;
+      background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 18px 20px;
+    }
+    .seam-num {
+      font-family: var(--font-mono); font-size: 22px; font-weight: 700; color: var(--primary);
+      line-height: 1; padding-top: 2px;
+    }
+    .seam h3 { font-size: 18px; font-weight: 700; color: var(--text); margin-bottom: 4px; }
+    .seam p { font-size: 14px; color: var(--text-dim); line-height: 1.55; }
+    .seam p strong { color: var(--text); }
+
+    /* Plan */
+    .plan { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-top: 20px; }
+    .plan-item {
+      background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 22px;
+      border-left: 3px solid var(--violet);
+    }
+    .plan-item .label {
+      font-family: var(--font-mono); font-size: 11px; font-weight: 700; color: var(--violet);
+      letter-spacing: 0.08em; text-transform: uppercase; margin-bottom: 10px; display: block;
+    }
+    .plan-item h3 { font-size: 18px; font-weight: 700; color: var(--text); margin-bottom: 8px; }
+    .plan-item p { font-size: 14px; color: var(--text-dim); line-height: 1.55; }
+
+    .footer {
+      margin-top: 48px; padding-top: 20px; border-top: 1px solid var(--border);
+      font-family: var(--font-mono); font-size: 12px; color: var(--text-muted);
+    }
+
+    @media (max-width: 640px) {
+      body { padding: 0 16px 32px; }
+      .nav { margin: 0 -16px 24px; padding: 0 16px 0 96px; }
+      h1 { font-size: 28px; }
+      .hero-sub { font-size: 16px; }
+      .contrast, .cuts, .plan { grid-template-columns: 1fr; }
+      .seam { grid-template-columns: 40px 1fr; gap: 12px; }
+      .test .q { font-size: 18px; }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after { animation-duration: 0.01ms !important; animation-delay: 0ms !important; }
+    }
+  </style>
+</head>
+<body>
+
+  <a href="index.html" class="backlink">&larr; Index</a>
+
+  <div class="nav">
+    <div class="nav-inner">
+      <a href="index.html" class="nav-brand">Cognition &amp; AI</a>
+      <button class="theme-toggle" id="themeToggle" aria-label="Toggle dark mode">
+        <span class="icon-light">&#9788;</span>
+        <span class="icon-dark" style="display:none">&#9790;</span>
+      </button>
+    </div>
+  </div>
+
+  <div class="container">
+
+    <div class="hero">
+      <span class="hero-badge">Personal operating rule</span>
+      <h1>The offloading line</h1>
+      <p class="hero-sub">AI is best at what you can already do but find tedious. You keep what only you can do. <strong>The line isn't between tasks &mdash; it's between the part of a task where thinking happens and the part where producing happens.</strong></p>
+    </div>
+
+    <div class="section">
+      <div class="section-label">01 &middot; The one cut that matters</div>
+      <h2>Judgment versus production</h2>
+      <p class="lede">AI produces. It drafts, enumerates, formats, remembers, retrieves, generates the hundred mediocre versions. That's production, and it all goes to the machine. Judgment is the part where <strong>you decide what matters, what's true, what to do, what's good enough.</strong></p>
+      <p class="lede">Judgment is quiet. Drafting feels like work, so it's easy to hand over. Deciding doesn't feel like work, so it's easy to keep. But deciding is the whole job &mdash; and it's also the part that's easiest to sneak off to the machine without noticing.</p>
+      <div class="contrast">
+        <div class="contrast-card keep">
+          <h3>You keep &middot; judgment</h3>
+          <p>Deciding what matters. What's true. What to do. What ships. <strong>Every time the AI makes that call for you, you've paid for convenience with the one thing you're trying to keep.</strong></p>
+        </div>
+        <div class="contrast-card give">
+          <h3>AI gets &middot; production</h3>
+          <p>Drafting, enumerating, formatting, remembering, retrieving, generating versions. The throughput. <strong>Anything you can already do but find tedious is a candidate to hand over.</strong></p>
+        </div>
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="section-label">02 &middot; Three more cuts</div>
+      <h2>Same idea, three angles</h2>
+      <div class="cuts">
+        <div class="cut">
+          <span class="num">FIRST / LAST</span>
+          <h3>You take both ends</h3>
+          <p>Face the blank page and form your own bad hypothesis first &mdash; starting from nothing is where thinking happens. Then AI runs the messy middle. Then you take the last pass: review, veto, decide.</p>
+        </div>
+        <div class="cut">
+          <span class="num">BREADTH / DEPTH</span>
+          <h3>AI is wide, you're deep</h3>
+          <p>It surfaces fifty options. You pick one. It's good at width, bad at conviction, and conviction is built only by making the call and owning it.</p>
+        </div>
+        <div class="cut">
+          <span class="num">LOOP / ARTIFACT</span>
+          <h3>The loop is the skill</h3>
+          <p>The artifact is AI's. The loop is yours: notice something's off, figure out why, fix it. That notice-to-diagnosis-to-fix cycle is cognition. Keep it even when you outsource the output.</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="section-label">03 &middot; The border test</div>
+      <h2>One question, self-checking</h2>
+      <div class="test">
+        <p class="q">Would I still be able to do this cold if the AI disappeared tomorrow?</p>
+        <p>Ask it once per skill you care about. If the answer is no, you haven't augmented the skill &mdash; <strong>you've replaced it.</strong> That's the whole border, and it polices itself.</p>
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="section-label">04 &middot; The seven seams</div>
+      <h2>Where the leak actually is</h2>
+      <p class="lede">None of these announce themselves. You cross them by drift, not decision &mdash; and the cost is paid in capability you don't miss until you need it and it's gone.</p>
+      <div class="seams">
+        <div class="seam">
+          <div class="seam-num">1</div>
+          <div>
+            <h3>The prompt itself</h3>
+            <p>Framing the question is half the thinking. Ask vaguely and let it frame, and you've offloaded judgment wearing a costume. <strong>Did you specify the problem, or ask "what should I do about X?"</strong></p>
+          </div>
+        </div>
+        <div class="seam">
+          <div class="seam-num">2</div>
+          <div>
+            <h3>Between answer and accept</h3>
+            <p>"Looks right" is not review. If you can't catch a subtle wrongness, you no longer have the skill &mdash; you have the AI's skill by proxy. <strong>The seam is whether you can tell when it's quietly off.</strong></p>
+          </div>
+        </div>
+        <div class="seam">
+          <div class="seam-num">3</div>
+          <div>
+            <h3>Between options and choice</h3>
+            <p>It surfaces fifty paths. Take its "I'd recommend" without a reason of your own and you've made a decision you didn't make. <strong>Pick one for a reason you can state.</strong></p>
+          </div>
+        </div>
+        <div class="seam">
+          <div class="seam-num">4</div>
+          <div>
+            <h3>Between draft and edit</h3>
+            <p>Editing is thinking. Reworking a sentence, cutting a paragraph, reordering the argument &mdash; that's where your taste operates. Ship the draft "good enough" and you've ceded the last pass. <strong>Do you touch it after it comes back?</strong></p>
+          </div>
+        </div>
+        <div class="seam">
+          <div class="seam-num">5</div>
+          <div>
+            <h3>Between knowing and remembering</h3>
+            <p>Ask it "what did I decide about X" and the decision migrates from your head to the log. The machine can hold the data. <strong>Keep the why &mdash; the reasoning, the tradeoffs you chose.</strong></p>
+          </div>
+        </div>
+        <div class="seam">
+          <div class="seam-num">6</div>
+          <div>
+            <h3>Between doing and delegating</h3>
+            <p>The "I could do this myself but it's faster if..." moment. Faster is real. But every time you take faster on a skill you said you'd keep, <strong>the border moves.</strong></p>
+          </div>
+        </div>
+        <div class="seam">
+          <div class="seam-num">7</div>
+          <div>
+            <h3>The calibration seam</h3>
+            <p>Predict before you ask. Skip the guess and you never learn how often you're wrong and how often it's wrong. <strong>You lose the ability to tell them apart, and that's the whole game.</strong></p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="section-label">05 &middot; The plan</div>
+      <h2>Holding the line</h2>
+      <div class="plan">
+        <div class="plan-item">
+          <span class="label">Predict first</span>
+          <h3>Commit to a guess</h3>
+          <p>State your answer, then check the AI's. Calibration only survives if you put a stake in the ground before you look.</p>
+        </div>
+        <div class="plan-item">
+          <span class="label">Do it cold</span>
+          <h3>On a schedule</h3>
+          <p>The rule isn't "never let AI do X." It's "make sure you still do X unassisted, sometimes." Pick three skills you'd refuse to lose and do them by hand once a week, badly if you have to.</p>
+        </div>
+        <div class="plan-item">
+          <span class="label">No-AI zone</span>
+          <h3>Where deciding is the skill</h3>
+          <p>Your thesis. Your values. The hard conversation. The final call. Not because AI can't help &mdash; because the point is that you make them.</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="footer">&copy; 2025-2026 Charlie Fuller &middot; Hold the ends &mdash; the framing, the choice, the edit, the reason. The machine gets the middle.</div>
+
+  </div>
+
+  <script>
+    const toggle = document.getElementById('themeToggle');
+    const iconLight = toggle.querySelector('.icon-light');
+    const iconDark = toggle.querySelector('.icon-dark');
+    function setTheme(d) {
+      document.documentElement.classList.toggle('dark', d);
+      iconLight.style.display = d ? 'none' : '';
+      iconDark.style.display = d ? '' : 'none';
+      try { localStorage.setItem('diagram-theme', d ? 'dark' : 'light'); } catch(e) {}
+    }
+    toggle.addEventListener('click', () => setTheme(!document.documentElement.classList.contains('dark')));
+    try { if (localStorage.getItem('diagram-theme') === 'dark') setTheme(true); } catch(e) {}
+  </script>
+
+</body>
+</html>
