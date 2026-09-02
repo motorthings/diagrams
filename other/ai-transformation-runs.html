@@ -2,94 +2,151 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
+<link rel="icon" type="image/svg+xml" href="../icon.svg">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>AI Transformation Experiment — Cross-Run Comparison</title>
+<title>AI Transformation Experiment &mdash; Cross-Run Results</title>
+<meta name="description" content="Every simulation run side by side: which outcome patterns hold across seeds and which are per-run noise. The robust-not-fragile evidence for the AI Transformation Experiment.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600;9..144,700&family=Source+Code+Pro:wght@400;600&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Public+Sans:wght@400;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
 <style>
   :root {
-    --bg: #eef4f9; --surface: #ffffff; --surface2: #f5f8fc; --border: #c8daea;
-    --text: #0a1628; --text-dim: #3d5a7a; --text-muted: #6b8bab;
-    --orange: #e8621a; --blue: #4a90c4; --green: #3a9a7f; --red: #c93a4d;
+    --font-display: 'Instrument Serif', Georgia, serif;
+    --font-body: 'Public Sans', system-ui, sans-serif;
+    --font-mono: 'JetBrains Mono', 'SF Mono', monospace;
+    /* Research / coldprint Ledger — light only */
+    --ink: #1a2740; --graphite: #2c3b57; --body: #3f4f6b; --muted: #7a879c;
+    --rule: #c8c5b2; --row: #e6e3d2; --sheet: #f7f7f2; --desk: #ebeae0;
+    --spine: #1a2740; --spine-fg: #f7f7f2;
+    --accent: #b45309; --amber: #a16207; --blue: #4f46e5; --teal: #0f766e; --violet: #7a3ea0; --rose: #b3342a;
   }
-  html.dark {
-    --bg: #0a1628; --surface: #0f1d35; --surface2: #132240; --border: #1a2d52;
-    --text: #e8edf5; --text-dim: #9bb0d4; --text-muted: #5e7aa3;
-    --orange: #f37021; --blue: #6cace4; --green: #4caf93; --red: #e0556a;
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { background: var(--desk); color: var(--body); font-family: var(--font-body); font-size: 17px; line-height: 1.62; -webkit-font-smoothing: antialiased; text-rendering: optimizeLegibility; }
+  .topbar { max-width: 1160px; margin: 0 auto; padding: 18px 28px 6px; }
+  .backlink a { font-size: 14px; color: var(--muted); text-decoration: none; }
+  .backlink a:hover { color: var(--ink); }
+  .backlink .arr { color: var(--accent); font-size: 15px; margin-right: 2px; }
+
+  .sheet { max-width: 1160px; margin: 6px auto 72px; background: var(--sheet); display: grid; grid-template-columns: 56px 1fr; }
+  .spine { background: var(--spine); display: flex; align-items: flex-end; justify-content: center; padding: 26px 0; }
+  .spine-label { writing-mode: vertical-rl; transform: rotate(180deg); font-family: var(--font-mono); font-size: 13px; letter-spacing: 0.22em; color: var(--spine-fg); white-space: nowrap; text-transform: uppercase; }
+  .content { padding: 48px 60px 6px; min-width: 0; }
+
+  .masthead { border-bottom: 3px solid var(--ink); padding-bottom: 16px; }
+  .masthead h1 { font-family: var(--font-display); font-weight: 400; font-size: 48px; line-height: 0.98; letter-spacing: -0.028em; color: var(--ink); }
+  .tagline { font-family: var(--font-mono); font-size: 11.5px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.14em; color: var(--accent); margin: 10px 0 14px; }
+  .lede { font-family: var(--font-display); font-style: italic; font-size: 19px; line-height: 1.5; color: var(--graphite); max-width: 920px; }
+  .lede b { color: var(--ink); }
+
+  section.sec { border-top: 3px solid var(--ink); padding: 22px 0 4px; }
+  .sec-title { display: grid; grid-template-columns: 88px 1fr; gap: 0 22px; align-items: baseline; margin-bottom: 6px; }
+  .sec-title .n { font-family: var(--font-display); font-size: 30px; line-height: 0.9; color: var(--accent); }
+  .sec-title h2 { font-size: 23px; font-weight: 700; letter-spacing: -0.012em; color: var(--ink); }
+  .sec-title h2 .cnt { font-family: var(--font-mono); font-size: 12px; font-weight: 500; color: var(--muted); margin-left: 10px; }
+  .sec-body { padding: 0 0 8px 110px; }
+  .sec-body p, .sec-body p.lead { max-width: 940px; margin-bottom: 12px; }
+  .sec-body p.nb { margin-bottom: 0; }
+  .sec-body b, .sec-body strong { color: var(--ink); }
+  .stat { font-family: var(--font-display); font-size: 34px; line-height: 1; color: var(--blue); margin: 2px 0 8px; }
+  .stat b { font-weight: 400; color: var(--accent); }
+
+  .pmap { border-top: 1px solid var(--row); padding: 12px 0 6px; display: grid; grid-template-columns: 230px 1fr; gap: 3px 28px; align-items: baseline; }
+  .pmap:first-of-type { border-top: none; }
+  .pmap .pm-k { font-family: var(--font-mono); font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; color: var(--blue); line-height: 1.45; }
+  .pmap .pm-b { font-size: 14px; line-height: 1.6; }
+  .pmap.i-blue .pm-k { color: var(--blue); } .pmap.i-teal .pm-k { color: var(--teal); }
+  .pmap.i-vio .pm-k { color: var(--violet); } .pmap.i-amb .pm-k { color: var(--amber); }
+
+  table.tbl { width: 100%; border-collapse: collapse; margin: 2px 0 6px; }
+  .tbl th { text-align: left; font-family: var(--font-mono); font-size: 10px; font-weight: 600; color: var(--muted); padding: 6px 12px 8px 0; border-bottom: 2px solid var(--ink); letter-spacing: 0.04em; text-transform: uppercase; }
+  .tbl td { padding: 9px 12px 9px 0; border-bottom: 1px solid var(--row); vertical-align: top; font-size: 13px; line-height: 1.5; }
+  .tbl tr:last-child td { border-bottom: none; }
+  .tbl td.m { font-weight: 700; color: var(--ink); }
+  .tbl td .sub { display: block; font-size: 11px; color: var(--muted); font-weight: 400; }
+  .tbl td .why { display: block; font-size: 11px; color: var(--amber); margin-top: 2px; }
+  .tbl td.c { font-family: var(--font-mono); white-space: nowrap; text-align: left; }
+  .tbl td.c .w { display: block; font-size: 10px; font-weight: 700; }
+  .tbl .a { color: var(--teal); } .tbl .b { color: var(--blue); } .tbl .e { color: var(--muted); }
+  .tbl .stable { text-align: center; font-family: var(--font-mono); color: var(--teal); }
+
+  .footer { border-top: 3px solid var(--ink); margin: 26px 0 0; padding: 18px 0 30px; display: flex; justify-content: space-between; gap: 20px; flex-wrap: wrap; font-family: var(--font-mono); font-size: 11.5px; color: var(--muted); }
+  .footer a { color: var(--accent); text-decoration: none; }
+
+  @media (max-width: 900px) {
+    .sheet { grid-template-columns: 40px 1fr; }
+    .spine-label { font-size: 11px; }
+    .content { padding: 32px 22px 4px; }
+    .masthead h1 { font-size: 36px; }
+    .sec-title { grid-template-columns: 50px 1fr; }
+    .sec-title .n { font-size: 25px; }
+    .sec-body { padding-left: 0; }
+    .pmap { grid-template-columns: 1fr; gap: 2px; }
+    body { font-size: 16px; }
   }
-  * { margin:0; padding:0; box-sizing:border-box; }
-  body { background:var(--bg); color:var(--text); font-family:'Source Code Pro',monospace; font-size:14px; line-height:1.6; }
-  h1, h2, h3 { font-family:'Fraunces',serif; }
-  h1 { font-size:32px; color:var(--orange); margin-bottom:4px; }
-  h2 { font-size:22px; margin:36px 0 16px; padding-bottom:8px; border-bottom:1px solid var(--border); }
-  .container { max-width:1000px; margin:0 auto; padding:32px; }
-  .intro { color:var(--text-dim); margin:16px 0 8px; }
-  table { width:100%; border-collapse:collapse; margin:16px 0; font-size:13px; }
-  th { text-align:left; padding:8px 12px; border-bottom:2px solid var(--border); color:var(--text-muted); text-transform:uppercase; font-size:11px; letter-spacing:0.5px; }
-  td { padding:8px 12px; border-bottom:1px solid var(--border); vertical-align:top; }
-  .panel { background:var(--surface2); border:1px solid var(--border); border-radius:8px; padding:18px 20px; margin:16px 0; }
-  .panel h3 { color:var(--text); margin-bottom:10px; }
-  .panel ul { list-style:none; }
-  .panel li { padding:4px 0; color:var(--text-dim); }
-  .foot { margin-top:40px; padding-top:16px; border-top:1px solid var(--border); color:var(--text-muted); font-size:12px; text-align:center; }
-  a { color:var(--orange); }
-  .backlink {
-    position: fixed; top: 12px; left: 16px; z-index: 101;
-    font-family: 'Source Code Pro', monospace; font-size: 12px; color: var(--text-dim);
-    text-decoration: none; padding: 6px 10px;
-    border: 1px solid var(--border); border-radius: 6px; background: var(--surface);
-  }
-  .backlink:hover { color: var(--orange); border-color: var(--orange); }
-  .theme-toggle {
-    position: fixed; top: 12px; right: 16px; z-index: 101;
-    width: 36px; height: 36px; border-radius: 8px;
-    border: 1px solid var(--border); background: var(--surface);
-    cursor: pointer; display: flex; align-items: center; justify-content: center;
-    font-size: 18px; color: var(--text-dim); transition: all 0.2s;
-  }
-  .theme-toggle:hover { border-color: var(--orange); color: var(--orange); }
 </style>
 </head>
 <body>
-<a class="backlink" href="ai-transformation-results.html">← Back to results</a>
-<button class="theme-toggle" id="themeToggle" aria-label="Toggle dark mode">
-  <span class="icon-light">&#9788;</span>
-  <span class="icon-dark" style="display:none">&#9790;</span>
-</button>
-<div class="container">
-  <h1>AI Transformation Experiment — Cross-Run Comparison</h1>
-  <div class="panel" style="border-left:4px solid var(--orange);">
-  <h3 style="color:var(--orange);margin-bottom:6px;">Executive Summary</h3>
-  <p style="font-family:'Fraunces',serif;font-size:20px;font-weight:600;margin-bottom:10px;">12 of 14 outcome metrics hold across every run — 10 for Track A, 0 for Track B, 2 tied.</p>
-  <p style="color:var(--text-dim);line-height:1.7;">Track A owns Translation debt, Exception rate, Handoff failure rate, Supplement requests, Cost per claim, Cycle time, Trust polarization, First-pass accuracy, Customer retention, Policy bind rate. Missed recovery opportunities, Recovery dollars are a dead heat. Underwriting cycle time, Risk selection accuracy flip between runs — real noise, not signal.</p>
+
+<div class="topbar">
+  <div class="backlink"><a href="../ai-transformation-experiment.html"><span class="arr">&larr;</span> AI Transformation Experiment</a></div>
 </div>
 
-  <h2>Metric Winners by Run</h2>
-  <p class="intro">3 runs compared — seed 42, seed 43, seed 44. A pattern is marked <span style='color:var(--green)'>✓</span> when the same track wins it in every run. If the ✓ holds, the result is structural, not a fluke.</p>
-  <table>
-    <thead><tr><th>Metric</th><th style='padding:8px 12px;text-align:center;'>Seed 42</th><th style='padding:8px 12px;text-align:center;'>Seed 43</th><th style='padding:8px 12px;text-align:center;'>Seed 44</th><th style='text-align:center;'>Stable</th></tr></thead>
-    <tbody>
-      <tr><td style='font-weight:600;'>Translation debt<br><span style='font-weight:400;font-size:12px;color:var(--text-muted);'>Meaning lost when work passes between steps.</span><br><span style='font-size:12px;color:var(--orange);'>Track A loses less information at handoffs</span></td><td style="color:var(--orange);font-weight:600;">25 vs 28<br><span style="font-size:11px;color:var(--text-muted)">A</span></td><td style="color:var(--orange);font-weight:600;">25 vs 31<br><span style="font-size:11px;color:var(--text-muted)">A</span></td><td style="color:var(--orange);font-weight:600;">29 vs 32<br><span style="font-size:11px;color:var(--text-muted)">A</span></td><td style='text-align:center;color:var(--green);'>✓</td></tr><tr><td style='font-weight:600;'>Exception rate<br><span style='font-weight:400;font-size:12px;color:var(--text-muted);'>How often work hits an exception needing a human decision.</span><br><span style='font-size:12px;color:var(--orange);'>Track A hits fewer exceptions</span></td><td style="color:var(--orange);font-weight:600;">15 vs 25<br><span style="font-size:11px;color:var(--text-muted)">A</span></td><td style="color:var(--orange);font-weight:600;">19 vs 30<br><span style="font-size:11px;color:var(--text-muted)">A</span></td><td style="color:var(--orange);font-weight:600;">23 vs 29<br><span style="font-size:11px;color:var(--text-muted)">A</span></td><td style='text-align:center;color:var(--green);'>✓</td></tr><tr><td style='font-weight:600;'>Handoff failure rate<br><span style='font-weight:400;font-size:12px;color:var(--text-muted);'>How often a handoff between steps breaks.</span><br><span style='font-size:12px;color:var(--orange);'>Track A has fewer broken handoffs</span></td><td style="color:var(--orange);font-weight:600;">40 vs 50<br><span style="font-size:11px;color:var(--text-muted)">A</span></td><td style="color:var(--orange);font-weight:600;">46 vs 58<br><span style="font-size:11px;color:var(--text-muted)">A</span></td><td style="color:var(--orange);font-weight:600;">49 vs 53<br><span style="font-size:11px;color:var(--text-muted)">A</span></td><td style='text-align:center;color:var(--green);'>✓</td></tr><tr><td style='font-weight:600;'>Supplement requests<br><span style='font-weight:400;font-size:12px;color:var(--text-muted);'>How often agents ask for missing information.</span><br><span style='font-size:12px;color:var(--orange);'>Track A requests fewer supplements</span></td><td style="color:var(--orange);font-weight:600;">64 vs 98<br><span style="font-size:11px;color:var(--text-muted)">A</span></td><td style="color:var(--orange);font-weight:600;">52 vs 112<br><span style="font-size:11px;color:var(--text-muted)">A</span></td><td style="color:var(--orange);font-weight:600;">81 vs 132<br><span style="font-size:11px;color:var(--text-muted)">A</span></td><td style='text-align:center;color:var(--green);'>✓</td></tr><tr><td style='font-weight:600;'>Cost per claim<br><span style='font-weight:400;font-size:12px;color:var(--text-muted);'>Dollars to process a claim, including rework.</span><br><span style='font-size:12px;color:var(--orange);'>Track A spends less per claim</span></td><td style="color:var(--orange);font-weight:600;">400 vs 434<br><span style="font-size:11px;color:var(--text-muted)">A</span></td><td style="color:var(--orange);font-weight:600;">385 vs 434<br><span style="font-size:11px;color:var(--text-muted)">A</span></td><td style="color:var(--orange);font-weight:600;">501 vs 542<br><span style="font-size:11px;color:var(--text-muted)">A</span></td><td style='text-align:center;color:var(--green);'>✓</td></tr><tr><td style='font-weight:600;'>Cycle time<br><span style='font-weight:400;font-size:12px;color:var(--text-muted);'>Days from claim start to finish.</span><br><span style='font-size:12px;color:var(--orange);'>Track A finishes claims faster</span></td><td style="color:var(--orange);font-weight:600;">5 vs 5<br><span style="font-size:11px;color:var(--text-muted)">A</span></td><td style="color:var(--orange);font-weight:600;">4 vs 5<br><span style="font-size:11px;color:var(--text-muted)">A</span></td><td style="color:var(--orange);font-weight:600;">7 vs 7<br><span style="font-size:11px;color:var(--text-muted)">A</span></td><td style='text-align:center;color:var(--green);'>✓</td></tr><tr><td style='font-weight:600;'>Trust polarization<br><span style='font-weight:400;font-size:12px;color:var(--text-muted);'>How divided employees are about the AI.</span><br><span style='font-size:12px;color:var(--orange);'>Track A has less internal division about AI</span></td><td style="color:var(--orange);font-weight:600;">3 vs 3<br><span style="font-size:11px;color:var(--text-muted)">A</span></td><td style="color:var(--orange);font-weight:600;">2 vs 3<br><span style="font-size:11px;color:var(--text-muted)">A</span></td><td style="color:var(--orange);font-weight:600;">3 vs 3<br><span style="font-size:11px;color:var(--text-muted)">A</span></td><td style='text-align:center;color:var(--green);'>✓</td></tr><tr><td style='font-weight:600;'>Underwriting cycle time<br><span style='font-weight:400;font-size:12px;color:var(--text-muted);'>Time to issue a policy.</span><br><span style='font-size:12px;color:var(--orange);'>Track A issues policies faster</span></td><td style="color:var(--blue);font-weight:600;">4 vs 4<br><span style="font-size:11px;color:var(--text-muted)">B</span></td><td style="color:var(--blue);font-weight:600;">4 vs 4<br><span style="font-size:11px;color:var(--text-muted)">B</span></td><td style="color:var(--orange);font-weight:600;">4 vs 4<br><span style="font-size:11px;color:var(--text-muted)">A</span></td><td style='text-align:center;color:var(--green);'></td></tr><tr><td style='font-weight:600;'>Missed recovery opportunities<br><span style='font-weight:400;font-size:12px;color:var(--text-muted);'>Recovery chances subrogation left on the table.</span><br><span style='font-size:12px;color:var(--orange);'>Track A misses fewer recovery chances</span></td><td style="color:var(--text-dim);font-weight:600;">8 vs 8<br><span style="font-size:11px;color:var(--text-muted)">=</span></td><td style="color:var(--text-dim);font-weight:600;">5 vs 5<br><span style="font-size:11px;color:var(--text-muted)">=</span></td><td style="color:var(--text-dim);font-weight:600;">3 vs 3<br><span style="font-size:11px;color:var(--text-muted)">=</span></td><td style='text-align:center;color:var(--green);'>✓</td></tr><tr><td style='font-weight:600;'>First-pass accuracy<br><span style='font-weight:400;font-size:12px;color:var(--text-muted);'>Share of claims handled right the first time, no rework.</span><br><span style='font-size:12px;color:var(--orange);'>Track A gets more claims right the first time</span></td><td style="color:var(--orange);font-weight:600;">57 vs 45<br><span style="font-size:11px;color:var(--text-muted)">A</span></td><td style="color:var(--orange);font-weight:600;">52 vs 37<br><span style="font-size:11px;color:var(--text-muted)">A</span></td><td style="color:var(--orange);font-weight:600;">28 vs 21<br><span style="font-size:11px;color:var(--text-muted)">A</span></td><td style='text-align:center;color:var(--green);'>✓</td></tr><tr><td style='font-weight:600;'>Customer retention<br><span style='font-weight:400;font-size:12px;color:var(--text-muted);'>Share of customers who stay after a claim.</span><br><span style='font-size:12px;color:var(--orange);'>Track A keeps more customers</span></td><td style="color:var(--orange);font-weight:600;">80 vs 76<br><span style="font-size:11px;color:var(--text-muted)">A</span></td><td style="color:var(--orange);font-weight:600;">79 vs 74<br><span style="font-size:11px;color:var(--text-muted)">A</span></td><td style="color:var(--orange);font-weight:600;">73 vs 71<br><span style="font-size:11px;color:var(--text-muted)">A</span></td><td style='text-align:center;color:var(--green);'>✓</td></tr><tr><td style='font-weight:600;'>Risk selection accuracy<br><span style='font-weight:400;font-size:12px;color:var(--text-muted);'>How accurately risks are priced.</span><br><span style='font-size:12px;color:var(--orange);'>Track A prices risks more accurately</span></td><td style="color:var(--blue);font-weight:600;">82 vs 92<br><span style="font-size:11px;color:var(--text-muted)">B</span></td><td style="color:var(--orange);font-weight:600;">89 vs 87<br><span style="font-size:11px;color:var(--text-muted)">A</span></td><td style="color:var(--blue);font-weight:600;">87 vs 88<br><span style="font-size:11px;color:var(--text-muted)">B</span></td><td style='text-align:center;color:var(--green);'></td></tr><tr><td style='font-weight:600;'>Policy bind rate<br><span style='font-weight:400;font-size:12px;color:var(--text-muted);'>How often a quoted policy is bound.</span><br><span style='font-size:12px;color:var(--orange);'>Track A closes more policies</span></td><td style="color:var(--orange);font-weight:600;">90 vs 85<br><span style="font-size:11px;color:var(--text-muted)">A</span></td><td style="color:var(--orange);font-weight:600;">88 vs 87<br><span style="font-size:11px;color:var(--text-muted)">A</span></td><td style="color:var(--orange);font-weight:600;">85 vs 84<br><span style="font-size:11px;color:var(--text-muted)">A</span></td><td style='text-align:center;color:var(--green);'>✓</td></tr><tr><td style='font-weight:600;'>Recovery dollars<br><span style='font-weight:400;font-size:12px;color:var(--text-muted);'>Dollars recovered through subrogation.</span><br><span style='font-size:12px;color:var(--orange);'>Track A recovers more dollars</span></td><td style="color:var(--text-dim);font-weight:600;">4199 vs 4199<br><span style="font-size:11px;color:var(--text-muted)">=</span></td><td style="color:var(--text-dim);font-weight:600;">4921 vs 4921<br><span style="font-size:11px;color:var(--text-muted)">=</span></td><td style="color:var(--text-dim);font-weight:600;">5394 vs 5394<br><span style="font-size:11px;color:var(--text-muted)">=</span></td><td style='text-align:center;color:var(--green);'>✓</td></tr><tr><td style='font-weight:600;'>Employee AI trust<br><span style='font-weight:400;font-size:12px;color:var(--text-muted);'>How much employees trust the AI (0-10).</span><br><span style='font-size:12px;color:var(--orange);'>Trust stays roughly flat — the divergence is in outcomes, not sentiment</span></td><td style="color:var(--blue);font-weight:600;">4.9 vs 5.3<br><span style="font-size:11px;color:var(--text-muted)">B</span></td><td style="color:var(--orange);font-weight:600;">5.0 vs 5.0<br><span style="font-size:11px;color:var(--text-muted)">A</span></td><td style="color:var(--blue);font-weight:600;">4.4 vs 4.5<br><span style="font-size:11px;color:var(--text-muted)">B</span></td><td style='text-align:center;color:var(--green);'></td></tr>
-    </tbody>
-  </table>
+<div class="sheet">
+  <div class="spine"><div class="spine-label">CROSS-RUN RESULTS</div></div>
 
-  <div class="foot">
-    &copy; 2025-2026 Charlie Fuller &nbsp;&middot;&nbsp; <a href="https://linkedin.com/in/charlie-fuller-colorado/" target="_blank" rel="noopener">LinkedIn</a>
+  <div class="content">
+
+    <header class="masthead">
+      <h1>Cross-Run Results</h1>
+      <div class="tagline">Robust, not fragile</div>
+      <p class="lede">Every simulation run side by side &mdash; which outcome patterns hold across seeds and which are per-run noise.</p>
+    </header>
+
+    <!-- 01 -->
+    <section class="sec">
+      <div class="sec-title"><span class="n">01</span><h2>Executive summary</h2></div>
+      <div class="sec-body">
+        <div class="stat">12 of 14 outcome metrics hold across every run <b>&mdash; 10 for Track A, 0 for Track B, 2 tied.</b></div>
+        <p><b>Track A owns</b> Translation debt, Exception rate, Handoff failure rate, Supplement requests, Cost per claim, Cycle time, Trust polarization, First-pass accuracy, Customer retention, and Policy bind rate. <b>Missed recovery opportunities</b> and <b>Recovery dollars</b> are a dead heat. <b>Underwriting cycle time</b> and <b>Risk selection accuracy</b> flip between runs &mdash; real noise, not signal.</p>
+      </div>
+    </section>
+
+    <!-- 02 -->
+    <section class="sec">
+      <div class="sec-title"><span class="n">02</span><h2>Metric winners by run<span class="cnt">seed 42 &middot; 43 &middot; 44</span></h2></div>
+      <div class="sec-body">
+        <p class="lead">Three runs compared. A pattern is marked <b>stable</b> when the same track wins it in every run. If it holds across seeds, the result is structural, not a fluke.</p>
+        <table class="tbl">
+          <thead><tr><th style="width:34%">Metric</th><th>Seed 42</th><th>Seed 43</th><th>Seed 44</th><th style="text-align:center">Stable</th></tr></thead>
+          <tbody>
+            <tr><td class="m">Translation debt<span class="sub">Meaning lost when work passes between steps.</span><span class="why">Track A loses less information at handoffs</span></td><td class="c a">25 vs 28<span class="w">A</span></td><td class="c a">25 vs 31<span class="w">A</span></td><td class="c a">29 vs 32<span class="w">A</span></td><td class="stable">&#10003;</td></tr>
+            <tr><td class="m">Exception rate<span class="sub">How often work hits an exception needing a human decision.</span><span class="why">Track A hits fewer exceptions</span></td><td class="c a">15 vs 25<span class="w">A</span></td><td class="c a">19 vs 30<span class="w">A</span></td><td class="c a">23 vs 29<span class="w">A</span></td><td class="stable">&#10003;</td></tr>
+            <tr><td class="m">Handoff failure rate<span class="sub">How often a handoff between steps breaks.</span><span class="why">Track A has fewer broken handoffs</span></td><td class="c a">40 vs 50<span class="w">A</span></td><td class="c a">46 vs 58<span class="w">A</span></td><td class="c a">49 vs 53<span class="w">A</span></td><td class="stable">&#10003;</td></tr>
+            <tr><td class="m">Supplement requests<span class="sub">How often agents ask for missing information.</span><span class="why">Track A requests fewer supplements</span></td><td class="c a">64 vs 98<span class="w">A</span></td><td class="c a">52 vs 112<span class="w">A</span></td><td class="c a">81 vs 132<span class="w">A</span></td><td class="stable">&#10003;</td></tr>
+            <tr><td class="m">Cost per claim<span class="sub">Dollars to process a claim, including rework.</span><span class="why">Track A spends less per claim</span></td><td class="c a">400 vs 434<span class="w">A</span></td><td class="c a">385 vs 434<span class="w">A</span></td><td class="c a">501 vs 542<span class="w">A</span></td><td class="stable">&#10003;</td></tr>
+            <tr><td class="m">Cycle time<span class="sub">Days from claim start to finish.</span><span class="why">Track A finishes claims faster</span></td><td class="c a">5 vs 5<span class="w">A</span></td><td class="c a">4 vs 5<span class="w">A</span></td><td class="c a">7 vs 7<span class="w">A</span></td><td class="stable">&#10003;</td></tr>
+            <tr><td class="m">Trust polarization<span class="sub">How divided employees are about the AI.</span><span class="why">Track A has less internal division about AI</span></td><td class="c a">3 vs 3<span class="w">A</span></td><td class="c a">2 vs 3<span class="w">A</span></td><td class="c a">3 vs 3<span class="w">A</span></td><td class="stable">&#10003;</td></tr>
+            <tr><td class="m">Underwriting cycle time<span class="sub">Time to issue a policy.</span><span class="why">Track A issues policies faster</span></td><td class="c b">4 vs 4<span class="w">B</span></td><td class="c b">4 vs 4<span class="w">B</span></td><td class="c a">4 vs 4<span class="w">A</span></td><td class="stable" style="color:var(--muted)">&mdash;</td></tr>
+            <tr><td class="m">Missed recovery opportunities<span class="sub">Recovery chances subrogation left on the table.</span><span class="why">Track A misses fewer recovery chances</span></td><td class="c e">8 vs 8<span class="w">=</span></td><td class="c e">5 vs 5<span class="w">=</span></td><td class="c e">3 vs 3<span class="w">=</span></td><td class="stable">&#10003;</td></tr>
+            <tr><td class="m">First-pass accuracy<span class="sub">Share of claims handled right the first time, no rework.</span><span class="why">Track A gets more claims right the first time</span></td><td class="c a">57 vs 45<span class="w">A</span></td><td class="c a">52 vs 37<span class="w">A</span></td><td class="c a">28 vs 21<span class="w">A</span></td><td class="stable">&#10003;</td></tr>
+            <tr><td class="m">Customer retention<span class="sub">Share of customers who stay after a claim.</span><span class="why">Track A keeps more customers</span></td><td class="c a">80 vs 76<span class="w">A</span></td><td class="c a">79 vs 74<span class="w">A</span></td><td class="c a">73 vs 71<span class="w">A</span></td><td class="stable">&#10003;</td></tr>
+            <tr><td class="m">Risk selection accuracy<span class="sub">How accurately risks are priced.</span><span class="why">Track A prices risks more accurately</span></td><td class="c b">82 vs 92<span class="w">B</span></td><td class="c a">89 vs 87<span class="w">A</span></td><td class="c b">87 vs 88<span class="w">B</span></td><td class="stable" style="color:var(--muted)">&mdash;</td></tr>
+            <tr><td class="m">Policy bind rate<span class="sub">How often a quoted policy is bound.</span><span class="why">Track A closes more policies</span></td><td class="c a">90 vs 85<span class="w">A</span></td><td class="c a">88 vs 87<span class="w">A</span></td><td class="c a">85 vs 84<span class="w">A</span></td><td class="stable">&#10003;</td></tr>
+            <tr><td class="m">Recovery dollars<span class="sub">Dollars recovered through subrogation.</span><span class="why">Track A recovers more dollars</span></td><td class="c e">4199 vs 4199<span class="w">=</span></td><td class="c e">4921 vs 4921<span class="w">=</span></td><td class="c e">5394 vs 5394<span class="w">=</span></td><td class="stable">&#10003;</td></tr>
+            <tr><td class="m">Employee AI trust<span class="sub">How much employees trust the AI (0&ndash;10).</span><span class="why">Trust stays roughly flat &mdash; the divergence is in outcomes, not sentiment</span></td><td class="c b">4.9 vs 5.3<span class="w">B</span></td><td class="c a">5.0 vs 5.0<span class="w">A</span></td><td class="c b">4.4 vs 4.5<span class="w">B</span></td><td class="stable" style="color:var(--muted)">&mdash;</td></tr>
+          </tbody>
+        </table>
+        <p class="lead"><b>A</b> = Track A wins &nbsp;&middot;&nbsp; <b>B</b> = Track B wins &nbsp;&middot;&nbsp; <b>=</b> tied. Stable marks a pattern that holds in every run.</p>
+      </div>
+    </section>
+
+    <footer class="footer">
+      <a href="../ai-transformation-experiment.html">&larr; AI Transformation Experiment</a>
+      <span>&copy; 2025-2026 Charlie Fuller</span>
+    </footer>
+
   </div>
 </div>
-<script>
-  const toggle = document.getElementById('themeToggle');
-  const iconLight = toggle.querySelector('.icon-light');
-  const iconDark = toggle.querySelector('.icon-dark');
-  function setTheme(d) {
-    document.documentElement.classList.toggle('dark', d);
-    iconLight.style.display = d ? 'none' : '';
-    iconDark.style.display = d ? '' : 'none';
-    try { localStorage.setItem('diagram-theme', d ? 'dark' : 'light'); } catch(e) {}
-  }
-  toggle.addEventListener('click', () => setTheme(!document.documentElement.classList.contains('dark')));
-  try { if (localStorage.getItem('diagram-theme') === 'dark') setTheme(true); } catch(e) {}
-</script>
+
 </body>
 </html>
