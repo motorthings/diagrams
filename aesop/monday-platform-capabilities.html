@@ -4,146 +4,94 @@
 <meta charset="UTF-8">
 <link rel="icon" type="image/svg+xml" href="../icon.svg">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>AESOP Transformation OS + Monday.com</title>
+<title>AESOP + Monday.com</title>
+<meta name="description" content="How AESOP turns a requirements brief into a deployed Monday.com solution: describe, design and generate every artifact, get four ready-to-deploy pieces, deploy.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Anton&family=Public+Sans:wght@400;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Public+Sans:wght@400;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
 <style>
-:root {
-  --ink:        #1F1A1C;
-  --graphite:   #3D3A3C;
-  --body:       #55504E;
-  --muted:      #76716F;
-  --rule-hair:  #D6D2D0;
-  --rule-faint: #E7E4E2;
-  --sheet:      #FAF8F7;
-  --desk:       #E8E5E1;
-  --cream-ink:  #C9C4BE;
+  :root {
+    --font-display: 'Instrument Serif', Georgia, serif;
+    --font-body: 'Public Sans', system-ui, sans-serif;
+    --font-mono: 'JetBrains Mono', 'SF Mono', monospace;
+    /* Gulf Stream Racing on a Ledger sheet — light only */
+    --ink: #0a1628; --graphite: #2e4d73; --body: #3d5a7a; --muted: #7a9ab8;
+    --rule: #c6d5e6; --row: #dbe5f0; --sheet: #eef4f9; --desk: #e4ecf4;
+    --spine: #0a1628; --spine-fg: #eef4f9;
+    --accent: #e8621a; --amber: #b45309; --blue: #2f6fa8; --teal: #0f766e; --violet: #7c3aed;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { background: var(--desk); color: var(--body); font-family: var(--font-body); font-size: 17px; line-height: 1.6; -webkit-font-smoothing: antialiased; text-rendering: optimizeLegibility; }
+  .topbar { max-width: 1140px; margin: 0 auto; padding: 18px 28px 6px; }
+  .backlink a { font-size: 14px; color: var(--muted); text-decoration: none; }
+  .backlink a:hover { color: var(--accent); }
+  .backlink .arr { color: var(--accent); font-size: 15px; margin-right: 2px; }
 
-  --maroon: #A4093F;
-  --amber:  #EFAE42;
-  --coral:  #BE5142;
-  --olive:  #7F8C30;
-  --sage:   #8FBFAE;
-  --rose:   #E38FA8;
+  .sheet { max-width: 1140px; margin: 6px auto 72px; background: var(--sheet); display: grid; grid-template-columns: 56px 1fr; }
+  .spine { background: var(--spine); display: flex; align-items: flex-end; justify-content: center; padding: 26px 0; }
+  .spine-label { writing-mode: vertical-rl; transform: rotate(180deg); font-family: var(--font-mono); font-size: 13px; letter-spacing: 0.22em; color: var(--spine-fg); white-space: nowrap; text-transform: uppercase; }
+  .content { padding: 50px 58px 8px; min-width: 0; }
 
-  --serif: 'Instrument Serif', Georgia, serif;
-  --sans:  'Public Sans', system-ui, sans-serif;
-  --mono:  'JetBrains Mono', monospace;
-  --cond:  'Anton', Impact, sans-serif;
-}
+  .masthead { display: flex; align-items: flex-end; justify-content: space-between; gap: 30px; border-bottom: 3px solid var(--ink); padding-bottom: 14px; }
+  .masthead h1 { font-family: var(--font-display); font-weight: 400; font-size: 44px; line-height: 1.0; letter-spacing: -0.02em; color: var(--ink); max-width: 760px; }
+  .masthead h1 .accent { color: var(--accent); }
+  .masthead-num { font-family: var(--font-display); font-size: 40px; line-height: 0.9; color: var(--accent); }
 
-* { margin: 0; padding: 0; box-sizing: border-box; }
+  .entry { display: grid; grid-template-columns: 96px 1fr; gap: 0 28px; align-items: start; border-top: 1px solid var(--rule); padding: 26px 0 28px; }
+  .entry:last-of-type { border-bottom: 3px solid var(--ink); }
+  .entry-num { font-family: var(--font-display); font-size: 56px; line-height: 0.9; color: var(--accent); }
+  .entry-title { font-size: 23px; font-weight: 700; letter-spacing: -0.014em; color: var(--ink); margin-bottom: 8px; }
+  .entry-body { font-size: 17px; line-height: 1.6; color: var(--graphite); margin: 0 0 12px; }
+  .entry-mono { font-family: var(--font-mono); font-size: 12.5px; line-height: 1.9; color: var(--muted); }
+  .e-3 .entry-num { color: var(--violet); }
+  .e-4 .entry-num { color: var(--teal); }
 
-body {
-  background: var(--desk);
-  color: var(--ink);
-  font-family: var(--sans);
-  font-size: 17px;
-  line-height: 1.6;
-  -webkit-font-smoothing: antialiased;
-  text-rendering: optimizeLegibility;
-}
+  .artifacts { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px 24px; margin-top: 6px; }
+  .artifact { border-top: 1px solid var(--row); padding-top: 10px; }
+  .artifact .name { font-size: 15px; font-weight: 700; color: var(--ink); margin-bottom: 4px; }
+  .artifact .desc { font-size: 13px; color: var(--body); line-height: 1.5; }
 
-.backlink { max-width: 1140px; margin: 0 auto; padding: 20px 28px 8px; }
-.backlink a { font-size: 14px; color: var(--muted); text-decoration: none; }
-.backlink a:hover { color: var(--maroon); }
+  .deploy-facts div { font-size: 15px; color: var(--body); line-height: 1.8; border-top: 1px solid var(--row); padding: 6px 0; }
+  .deploy-facts div:first-child { border-top: none; }
 
-.sheet { max-width: 1140px; margin: 0 auto 72px; background: var(--sheet); display: grid; grid-template-columns: 56px 1fr; }
-.spine { background: var(--ink); display: flex; align-items: flex-end; justify-content: center; padding: 30px 0; }
-.spine-label {
-  writing-mode: vertical-rl; transform: rotate(180deg);
-  font-family: var(--cond); font-size: 18px; letter-spacing: 0.2em;
-  color: var(--sheet); text-transform: uppercase; white-space: nowrap;
-}
-.content { padding: 54px 58px 62px; }
+  .entry--inverse { background: var(--ink); color: var(--spine-fg); border: none; padding: 28px; }
+  .entry--inverse .entry-num { color: var(--accent); }
+  .entry--inverse .entry-title { color: #ffffff; }
+  .entry--inverse .entry-body { color: #cfe0f2; }
+  .entry--inverse .entry-mono { color: #9db7d2; }
 
-/* Masthead */
-.masthead {
-  display: flex; align-items: flex-end; justify-content: space-between;
-  gap: 30px; border-bottom: 3px solid var(--ink); padding-bottom: 12px;
-}
-.masthead h1 {
-  font-family: var(--serif); font-weight: 400; font-size: 32px;
-  line-height: 1.05; letter-spacing: -0.014em; max-width: 720px;
-}
-.masthead h1 .accent { color: var(--maroon); }
-.masthead-num { font-family: var(--serif); font-size: 32px; line-height: 0.95; color: var(--amber); }
+  .close { font-family: var(--font-display); font-size: 26px; line-height: 1.3; margin-top: 26px; color: var(--graphite); max-width: 700px; }
+  .close strong { font-weight: 400; color: var(--accent); }
 
-/* Entries */
-.ledger { margin-top: 4px; }
-.entry {
-  display: grid; grid-template-columns: 104px 1fr; gap: 0 28px;
-  align-items: start; border-top: 1px solid var(--rule-hair); padding: 30px 0 32px;
-}
-.entry:last-of-type { border-bottom: 3px solid var(--ink); }
-.entry-num { font-family: var(--serif); font-size: 72px; line-height: 0.95; }
-.entry-title { font-size: 24px; font-weight: 700; letter-spacing: -0.014em; margin-bottom: 8px; }
-.entry-body { font-size: 17px; line-height: 1.6; color: var(--graphite); margin: 0 0 12px; }
-.entry-sub  { font-size: 17px; line-height: 1.6; color: var(--body); margin: 0 0 14px; }
-.entry-mono { font-family: var(--mono); font-size: 13px; line-height: 1.9; color: var(--muted); }
+  .footer { border-top: 3px solid var(--ink); margin-top: 22px; padding: 20px 0 30px; display: flex; justify-content: space-between; gap: 20px; font-family: var(--font-mono); font-size: 11.5px; color: var(--muted); }
+  .footer a { color: var(--accent); text-decoration: none; }
 
-.e-1 .entry-num { color: var(--maroon); }
-.e-3 .entry-num { color: var(--coral); }
-.e-4 .entry-num { color: var(--olive); }
-
-/* Output artifacts — 4-up grid */
-.artifacts { display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px; margin-top: 4px; }
-.artifact .name { font-size: 15px; font-weight: 700; color: var(--ink); margin-bottom: 4px; }
-.artifact .desc { font-size: 13px; color: var(--body); line-height: 1.5; }
-
-/* Deploy facts — bare lines */
-.deploy-facts div { font-size: 15px; color: var(--body); line-height: 1.8; }
-
-/* Inverted entry (build) */
-.entry--inverse {
-  background: var(--ink); color: var(--sheet);
-  border: none; padding: 30px 28px 34px;
-}
-.entry--inverse .entry-num { color: var(--rose); }
-.entry--inverse .entry-title { color: var(--sheet); }
-.entry--inverse .entry-body { color: var(--cream-ink); }
-.entry--inverse .entry-sub { color: var(--cream-ink); }
-.entry--inverse .entry-mono { color: var(--sage); }
-
-/* Close */
-.close {
-  font-family: var(--serif); font-size: 24px; line-height: 1.3;
-  margin-top: 28px; color: var(--graphite);
-}
-.close strong { font-weight: 400; color: var(--maroon); }
-
-/* Footer */
-.footer { border-top: 3px solid var(--ink); margin-top: 24px; padding: 24px 0 0; }
-.footer .rule-line { font-size: 14px; color: var(--body); line-height: 1.7; }
-.footer a { color: var(--maroon); text-decoration: none; }
-.footer a:hover { text-decoration: underline; }
-
-/* Responsive */
-@media (max-width: 960px) {
-  .sheet { grid-template-columns: 1fr; }
-  .spine { display: none; }
-  .content { padding: 40px 32px 48px; }
-  .entry { grid-template-columns: 72px 1fr; }
-  .entry-num { font-size: 56px; }
-  .artifacts { grid-template-columns: 1fr 1fr; }
-}
-@media (max-width: 640px) {
-  .content { padding: 30px 20px 40px; }
-  .masthead { flex-direction: column; align-items: flex-start; gap: 8px; }
-  .masthead h1 { font-size: 26px; }
-  .entry { grid-template-columns: 1fr; gap: 8px; }
-  .artifacts { grid-template-columns: 1fr; }
-  .entry--inverse { grid-template-columns: 1fr; }
-}
+  @media (max-width: 960px) {
+    .sheet { grid-template-columns: 40px 1fr; }
+    .spine { display: none; }
+    .content { padding: 34px 24px 4px; }
+    .masthead h1 { font-size: 34px; }
+    .entry { grid-template-columns: 60px 1fr; gap: 0 18px; }
+    .entry-num { font-size: 44px; }
+    .artifacts { grid-template-columns: 1fr 1fr; }
+  }
+  @media (max-width: 640px) {
+    .content { padding: 26px 18px 2px; }
+    .masthead { flex-direction: column; align-items: flex-start; }
+    .masthead h1 { font-size: 26px; }
+    .entry { grid-template-columns: 1fr; gap: 4px; }
+    .artifacts { grid-template-columns: 1fr; }
+  }
 </style>
 </head>
 <body>
 
-<div class="backlink"><a href="../aesop.html">&larr; AESOP Transformation OS</a></div>
+<div class="topbar">
+  <div class="backlink"><a href="../aesop.html"><span class="arr">&larr;</span> AESOP</a></div>
+</div>
 
 <div class="sheet">
-  <div class="spine"><div class="spine-label">Charlie Fuller &nbsp;·&nbsp; AESOP + Monday.com</div></div>
+  <div class="spine"><div class="spine-label">AESOP &nbsp;&middot;&nbsp; MONDAY.COM</div></div>
 
   <div class="content">
 
@@ -152,58 +100,55 @@ body {
       <div class="masthead-num">04</div>
     </div>
 
-    <div class="ledger">
+    <div class="entry">
+      <div class="entry-num">01</div>
+      <div>
+        <div class="entry-title">Describe what you need</div>
+        <p class="entry-body">Any format. Natural language, human intent.</p>
+        <div class="entry-mono">PRD &nbsp;&middot;&nbsp; Discovery interview &nbsp;&middot;&nbsp; Product brief</div>
+      </div>
+    </div>
 
-      <div class="entry e-1">
-        <div class="entry-num">01</div>
-        <div>
-          <div class="entry-title">Describe what you need</div>
-          <p class="entry-body">Any format. Natural language, human intent.</p>
-          <div class="entry-mono">PRD &nbsp;·&nbsp; Discovery interview &nbsp;·&nbsp; Product brief</div>
+    <div class="entry entry--inverse">
+      <div class="entry-num">02</div>
+      <div>
+        <div class="entry-title">AESOP designs &amp; generates every artifact</div>
+        <p class="entry-body">Designs and generates every artifact. Validates against Monday.com&rsquo;s API before you touch the platform.</p>
+        <div class="entry-mono">Discover &rarr; Design &rarr; Build</div>
+      </div>
+    </div>
+
+    <div class="entry e-3">
+      <div class="entry-num">03</div>
+      <div>
+        <div class="entry-title">You get four ready-to-deploy artifacts</div>
+        <div class="artifacts">
+          <div class="artifact"><div class="name">Board Schema</div><div class="desc">Boards, groups, columns, views &mdash; all 35 column types, naming enforced</div></div>
+          <div class="artifact"><div class="name">Automation Recipes</div><div class="desc">Trigger/action pairs with conditional logic &mdash; 8 triggers, 6 actions</div></div>
+          <div class="artifact"><div class="name">AI Agent Config</div><div class="desc">Sidekick tools, Claude/GPT providers, webhooks, scoped permissions</div></div>
+          <div class="artifact"><div class="name">Deployment Guide</div><div class="desc">GraphQL mutations, column ordering, verification checklist, rollback plan</div></div>
         </div>
       </div>
+    </div>
 
-      <div class="entry entry--inverse">
-        <div class="entry-num">02</div>
-        <div>
-          <div class="entry-title">AESOP Transformation OS designs &amp; generates every artifact</div>
-          <p class="entry-body">Designs and generates every artifact. Validates against Monday.com's API before you touch the platform.</p>
-          <div class="entry-mono">Discover &rarr; Design &rarr; Build</div>
+    <div class="entry e-4">
+      <div class="entry-num">04</div>
+      <div>
+        <div class="entry-title">Deploy to Monday.com</div>
+        <div class="deploy-facts">
+          <div>Every artifact pre-validated against Monday.com API constraints</div>
+          <div>One GraphQL call per resource</div>
+          <div>Board, automations, and agent live in minutes</div>
         </div>
       </div>
-
-      <div class="entry e-3">
-        <div class="entry-num">03</div>
-        <div>
-          <div class="entry-title">You get four ready-to-deploy artifacts</div>
-          <div class="artifacts">
-            <div class="artifact"><div class="name">Board Schema</div><div class="desc">Boards, groups, columns, views &mdash; all 35 column types, naming enforced</div></div>
-            <div class="artifact"><div class="name">Automation Recipes</div><div class="desc">Trigger/action pairs with conditional logic. 8 triggers + 6 actions</div></div>
-            <div class="artifact"><div class="name">AI Agent Config</div><div class="desc">Sidekick tools, Claude/GPT providers, webhooks, scoped permissions</div></div>
-            <div class="artifact"><div class="name">Deployment Guide</div><div class="desc">GraphQL mutations, column ordering, verification checklist, rollback plan</div></div>
-          </div>
-        </div>
-      </div>
-
-      <div class="entry e-4">
-        <div class="entry-num">04</div>
-        <div>
-          <div class="entry-title">Deploy to Monday.com</div>
-          <div class="deploy-facts">
-            <div>Every artifact pre-validated against Monday.com API constraints</div>
-            <div>One GraphQL call per resource</div>
-            <div>Board, automations, and agent live in minutes</div>
-          </div>
-        </div>
-      </div>
-
     </div>
 
     <div class="close">Days of board design, automation wiring, and agent configuration &mdash; <strong>done in one build run.</strong></div>
 
-    <div class="footer">
-      <div class="rule-line">&copy; 2025-2026 Charlie Fuller &nbsp;&middot;&nbsp; <a href="https://linkedin.com/in/charlie-fuller-colorado/" target="_blank" rel="noopener">LinkedIn</a></div>
-    </div>
+    <footer class="footer">
+      <a href="../aesop.html">&larr; AESOP</a>
+      <span>&copy; 2025-2026 Charlie Fuller</span>
+    </footer>
 
   </div>
 </div>
