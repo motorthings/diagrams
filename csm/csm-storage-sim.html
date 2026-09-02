@@ -1,0 +1,576 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CSM Health &amp; Renewals &mdash; The Data Fix, Explained and Running Live</title>
+<meta name="description" content="Why customer facts get scattered and risk slips past, a simple fix &mdash; one current record per account rebuilt from its own history &mdash; and a live demo running on three sample accounts.">
+<link rel="icon" href="../icon.svg" type="image/svg+xml" />
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Public+Sans:wght@200;400;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root{
+  --font-display:'Instrument Serif',Georgia,serif;
+  --font-body:'Public Sans',system-ui,sans-serif;
+  --font-mono:'JetBrains Mono','SF Mono',Consolas,monospace;
+
+  --ink:#1F1A1C;   /* rules, headings, inverted fields */
+  --graphite:#3D3A3C;
+  --body:#55504E;  /* body copy */
+  --muted:#76716F; /* captions, margin notes */
+  --rule-hair:#D6D2D0;   /* interior hairlines */
+  --rule-faint:#E7E4E2;  /* table row rules */
+  --sheet:#FAF8F7; /* the page */
+
+  --maroon:#A4093F;   /* the accent, used alone or first */
+  --amber:#EFAE42;    /* step 1 */
+  --coral:#BE5142;    /* step 3 */
+  --olive:#7F8C30;    /* step 4 */
+  --sage:#8FBFAE;
+  --rose:#E38FA8;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{
+  background:var(--sheet); color:var(--ink); font-family:var(--font-body);
+  line-height:1.6; -webkit-font-smoothing:antialiased;
+  padding:40px 32px 64px;
+}
+a{color:inherit}
+.wrap{max-width:1040px;margin:0 auto}
+
+/* spine / running head */
+.spine{display:flex;align-items:baseline;justify-content:space-between;gap:20px;flex-wrap:wrap;
+  border-bottom:3px solid var(--ink);padding-bottom:14px;margin-bottom:34px}
+.spine .brand{font-family:var(--font-display);font-size:24px;letter-spacing:-0.014em}
+.spine .meta{font-family:var(--font-mono);font-size:12px;color:var(--muted)}
+.spine a{text-decoration:none;color:var(--muted)}
+.spine a:hover{color:var(--maroon)}
+
+/* masthead */
+.masthead{padding:0 0 40px}
+.masthead .tag{font-family:var(--font-mono);font-size:12px;color:var(--muted);margin-bottom:18px}
+.masthead h1{font-family:var(--font-display);font-weight:400;font-size:clamp(40px,7vw,72px);
+  line-height:0.98;letter-spacing:-0.028em;max-width:17ch}
+.masthead .lede{font-size:17px;line-height:1.6;color:var(--body);max-width:60ch;margin-top:20px}
+.masthead .lede b{font-weight:600;color:var(--ink)}
+
+/* ledger rows */
+.row{display:grid;grid-template-columns:104px 1fr 176px;gap:0 28px;align-items:start;
+  border-top:1px solid var(--rule-hair);padding:30px 0 32px}
+.row .num{font-family:var(--font-display);font-size:72px;line-height:0.95;color:var(--maroon)}
+.row .rc h2{font-size:24px;font-weight:700;letter-spacing:-0.014em;line-height:1.2;margin-bottom:10px}
+.row .rc p{font-size:17px;line-height:1.6;color:var(--body);max-width:640px}
+.row .rc p b{font-weight:600;color:var(--ink)}
+.row .note{font-family:var(--font-display);font-style:italic;font-size:16px;line-height:1.48;color:var(--muted)}
+.row .facts{font-family:var(--font-mono);font-size:13px;line-height:1.9;color:var(--muted)}
+@media(max-width:820px){.row{grid-template-columns:1fr}.row .num{font-size:52px}.row .note{margin-top:10px}}
+
+/* the demo block header */
+.demo-head{display:grid;grid-template-columns:104px 1fr;gap:0 28px;border-top:1px solid var(--rule-hair);
+  padding:30px 0 8px}
+.demo-head .num{font-family:var(--font-display);font-size:72px;line-height:0.95;color:var(--maroon)}
+.demo-head h2{font-size:24px;font-weight:700;letter-spacing:-0.014em;margin-bottom:10px}
+.demo-head p{font-size:17px;line-height:1.6;color:var(--body);max-width:640px}
+.demo-head p b{font-weight:600;color:var(--ink)}
+@media(max-width:820px){.demo-head{grid-template-columns:1fr}.demo-head .num{font-size:52px}}
+
+/* stake — money at risk, one figure */
+.stake{display:flex;align-items:baseline;gap:18px;padding:16px 0 14px;flex-wrap:wrap;border-top:2px solid var(--ink);border-bottom:2px solid var(--ink)}
+.stake .st-label{font-family:var(--font-mono);font-size:12px;color:var(--muted)}
+.stake .st-fig{font-family:var(--font-display);font-size:44px;line-height:0.95;color:var(--ink)}
+.stake .st-sub{font-family:var(--font-mono);font-size:11px;color:var(--muted)}
+
+/* ledger tables */
+.tbl{margin-top:18px}
+.tbl .t-head{display:flex;align-items:baseline;gap:16px;flex-wrap:wrap;padding-top:14px}
+.tbl .t-title{font-size:20px;font-weight:700;letter-spacing:-0.014em}
+.tbl .t-tag{font-family:var(--font-mono);font-size:11px;color:var(--muted)}
+.tbl .t-count{font-family:var(--font-mono);font-size:11px;color:var(--muted);margin-left:auto}
+.tbl .t-cap{font-size:14px;line-height:1.5;color:var(--muted);max-width:660px;margin:6px 0 14px}
+.tbl .t-cap b{font-weight:600;color:var(--ink)}
+table.ledger{width:100%;border-collapse:separate;border-spacing:0;font-size:15px}
+table.ledger th{font-family:var(--font-mono);font-size:12px;font-weight:500;color:var(--muted);
+  text-align:left;padding:8px 12px 8px 0;border-bottom:2px solid var(--ink);white-space:nowrap}
+table.ledger td{padding:11px 12px 11px 0;border-bottom:1px solid var(--rule-faint);color:var(--body);
+  vertical-align:top;white-space:nowrap}
+table.ledger tr:last-child td{border-bottom:3px solid var(--ink)}
+table.ledger td b{color:var(--ink);font-weight:600}
+table.ledger td code{font-family:var(--font-mono);font-size:12.5px;color:var(--graphite)}
+.ledger td .v{font-family:var(--font-mono);font-size:11px;font-weight:500;color:var(--muted);margin-right:9px;text-transform:lowercase}
+table.ledger td.num{text-align:right;font-family:var(--font-display);font-size:28px;line-height:1;
+  color:var(--ink);white-space:nowrap}
+.ledger td.rbar{width:8px;min-width:8px;padding:0;background-clip:content-box}
+.ledger th.rb{width:8px;min-width:8px;padding:0}
+.ledger tr:last-child td.rbar{border-bottom:none}
+.scroll{overflow-x:auto}
+
+/* controls */
+.ctl{display:flex;align-items:baseline;gap:22px;flex-wrap:wrap;padding:18px 0 6px}
+.ctl .run{font-family:var(--font-mono);font-size:12px;color:var(--muted)}
+.ctl .run b{color:var(--ink);font-weight:500}
+.btn{font-family:var(--font-mono);font-size:12px;font-weight:500;color:var(--ink);
+  border:1px solid var(--ink);background:transparent;border-radius:0;padding:8px 18px;cursor:pointer}
+.btn:hover{background:var(--ink);color:var(--sheet)}
+.btn:disabled{opacity:.4;cursor:not-allowed;background:transparent;color:var(--ink)}
+.btn--go{background:var(--ink);color:var(--sheet)}
+.btn--go:hover{background:var(--maroon);border-color:var(--maroon)}
+
+/* the loop — numbered steps, active numeral in accent */
+.pipe{display:flex;align-items:center;gap:6px;flex-wrap:wrap;padding:16px 0 4px;border-top:1px solid var(--rule-hair)}
+.pipe .ph{font-family:var(--font-mono);font-size:11px;color:var(--muted);margin-right:8px}
+.step{font-family:var(--font-mono);font-size:13px;color:var(--muted);padding:8px 12px;white-space:nowrap}
+.step b{font-size:15px;color:var(--muted);font-weight:500;margin-right:8px}
+.step.s1{--sc:var(--amber)} .step.s2{--sc:var(--maroon)} .step.s3{--sc:var(--coral)} .step.s4{--sc:var(--olive)}
+.step.done b{color:var(--sc)}
+.step.run{background:var(--sc);color:var(--sheet)}
+.step.run b{color:var(--sheet)}
+.pipe .arr{color:var(--rule-hair);font-family:var(--font-mono)}
+
+/* annotation — a ledger row with a full-strength accent rule on the active step */
+.annote{position:relative;padding:16px 18px 18px 24px;border-top:1px solid var(--rule-hair);margin-top:6px;height:230px;overflow-y:auto}
+.annote::before{content:'';position:absolute;left:0;top:0;bottom:0;width:5px;background:var(--sc, var(--graphite))}
+.annote[data-step="s1"]{--sc:var(--amber)} .annote[data-step="s2"]{--sc:var(--maroon)}
+.annote[data-step="s3"]{--sc:var(--coral)} .annote[data-step="s4"]{--sc:var(--olive)}
+.annote[data-step="s0"]{--sc:var(--graphite)}
+.annote .a-head{display:flex;align-items:baseline;gap:12px;flex-wrap:wrap;margin-bottom:8px}
+.annote .a-step{font-family:var(--font-mono);font-size:13px;font-weight:500;color:var(--sc)}
+.annote .a-now{font-family:var(--font-mono);font-size:10px;color:var(--muted)}
+.an-body{font-size:16px;line-height:1.6;color:var(--ink)}
+.an-body b{font-weight:600}
+.an-list{list-style:none;margin:6px 0 0;padding:0}
+.an-list li{position:relative;padding:2px 0 2px 20px;font-size:16px;line-height:1.6;color:var(--ink)}
+.an-list li::before{content:'';position:absolute;left:0;top:12px;width:10px;height:2px;background:var(--sc)}
+.an-write{display:block;margin-top:9px;font-family:var(--font-mono);font-size:11px;color:var(--sc)}
+.an-write b{font-weight:600}
+.an-write .p{color:var(--muted);font-weight:400}
+
+/* closing note */
+.note{padding:26px 0 30px;border-top:3px solid var(--ink);margin-top:26px}
+.note .n-h{font-size:20px;font-weight:700;letter-spacing:-0.014em;margin-bottom:10px}
+.note p{font-size:16px;line-height:1.6;color:var(--body);max-width:680px;margin:8px 0}
+.note p b{color:var(--ink);font-weight:600}
+.note .outcomes{font-family:var(--font-display);font-size:19px;line-height:1.5;color:var(--body);margin:10px 0}
+.note .outcomes b{color:var(--maroon);font-weight:400}
+.note .honest{font-family:var(--font-display);font-style:italic;font-size:16px;line-height:1.5;color:var(--muted);margin-top:14px}
+.note .honest b{color:var(--coral);font-style:normal;font-weight:600}
+
+.foot{margin-top:34px;padding-top:14px;border-top:1px solid var(--rule-hair);
+  font-family:var(--font-mono);font-size:11px;color:var(--muted);display:flex;justify-content:space-between;gap:20px;flex-wrap:wrap}
+.foot a{color:var(--muted);text-decoration:none}
+.foot a:hover{color:var(--maroon)}
+
+@media(max-width:640px){body{padding:24px 18px 48px}}
+@media(prefers-reduced-motion:reduce){*,*::before,*::after{transition-duration:.01ms!important}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="spine">
+    <span class="brand">Customer Success · The Data Fix</span>
+    <span class="meta"><a href="index.html">&larr; back to the CSM set</a></span>
+  </div>
+
+  <header class="masthead">
+    <div class="tag">The data question, answered · for a post-sales team</div>
+    <h1>Understand the problem. Watch the fix work.</h1>
+    <p class="lede">Three parts, in plain English: <b>the problem</b> &mdash; why risk slips past; <b>the fix</b> &mdash; a simple way to keep account facts trustworthy; <b>and a live demo</b> of the fix running on three sample accounts.</p>
+  </header>
+
+  <div class="row">
+    <div class="num">01</div>
+    <div class="rc">
+      <h2>The problem: customer facts are scattered, so risk gets missed.</h2>
+      <p>Everything you need to judge an account lives in different places &mdash; who they are, what they pay, how they use the product, whether their renewal is coming up. None of it sits in one current record you can actually act on. So judging "is this account healthy" means stitching facts together by hand, and an account slipping toward trouble can go quiet for weeks before anyone notices. With thousands of accounts, that isn't a process annoyance &mdash; it's a blind spot. A missed renewal is real money.</p>
+    </div>
+    <p class="note">Scattered facts, hand-stitched, risk goes quiet.</p>
+  </div>
+
+  <div class="row">
+    <div class="num">02</div>
+    <div class="rc">
+      <h2>The fix: one current record per account, kept honest by its own history.</h2>
+      <p>Keep a single current record for every account. When the system notices something new &mdash; usage down, tickets up, a renewal window opening &mdash; it <b>writes that down</b>, then re-figures the account's health fresh from everything it has learned. Nothing is ever overwritten, so every conclusion has a traceable "why," and an account in trouble surfaces the moment it appears, not weeks later. In one line: a trustworthy current record, rebuilt from its history, that flags risk as it happens.</p>
+      <div class="facts">three lists of data · nothing edited, only added · every flag has a reason</div>
+    </div>
+    <p class="note">One record, rebuilt from history, flags risk as it happens.</p>
+  </div>
+
+  <div class="demo-head">
+    <div class="num">03</div>
+    <div>
+      <h2>Watch it work</h2>
+      <p>Three sample accounts, watched one at a time. Press <b>Step</b> to run the loop &mdash; the screen holds one account and the one fact it just handled, so you watch each move land. When one account's story finishes, the next steps in.</p>
+    </div>
+  </div>
+
+  <div class="stake">
+    <span class="st-label">Money at risk</span>
+    <span class="st-fig" id="stakeTotal">$0k</span>
+    <span class="st-sub">the accounts that are not healthy, summed</span>
+  </div>
+
+  <div class="ctl">
+    <span class="run">Run <b id="dayNum">0</b><span id="dayDate" style="color:var(--muted)"> &mdash; start</span></span>
+    <button class="btn btn--go" id="stepBtn">Step</button>
+    <button class="btn" id="resetBtn">Reset</button>
+  </div>
+
+  <div class="pipe" aria-label="The loop, four steps">
+    <span class="ph">The loop</span>
+    <span class="step s1" id="s0"><b>01</b>spot the change</span>
+    <span class="arr">&rarr;</span>
+    <span class="step s2" id="s1"><b>02</b>write the story</span>
+    <span class="arr">&rarr;</span>
+    <span class="step s3" id="s2"><b>03</b>check the story</span>
+    <span class="arr">&rarr;</span>
+    <span class="step s4" id="s3"><b>04</b>decide next step</span>
+  </div>
+
+  <div class="annote" data-step="s0">
+    <div class="a-head">
+      <span class="a-now">Loop step</span>
+      <span class="a-step" id="anStep">Ready</span>
+    </div>
+    <div class="an-body" id="anBody">Press <b>Step</b> to move through it one piece at a time. Each piece explains itself here.</div>
+    <div class="an-detail" id="anDetail"></div>
+  </div>
+
+  <div class="tbl">
+    <div class="t-head">
+      <span class="t-title">The account</span>
+      <span class="t-tag">the current state &mdash; what you act on · derived from the log</span>
+      <span class="t-count" id="accCount">3 rows</span>
+    </div>
+    <p class="t-cap">The account we&#39;re watching, rebuilt fresh from its log as each fact lands. <b>Health</b> and <b>next step</b> are the working answer. Nothing here is typed by hand &mdash; it's derived, so every flag has a reason you can point to.</p>
+    <div class="scroll"><table class="ledger" id="accTable">
+      <thead><tr><th class="rb"></th><th>id</th><th>account</th><th>value</th><th>health</th><th>status</th><th>why</th><th>next step</th></tr></thead>
+      <tbody id="accBody"></tbody>
+    </table></div>
+  </div>
+
+  <div class="tbl">
+    <div class="t-head">
+      <span class="t-title">The log</span>
+      <span class="t-tag">the raw record &mdash; everything noticed, in order</span>
+      <span class="t-count" id="logCount">0 rows</span>
+    </div>
+    <p class="t-cap">One row per step, tagged with what the system did to the record. <b>added</b> &mdash; a new fact or verdict written to the log, append-only, never edited. <b>used</b> &mdash; the check step reads the existing facts to verify the story. The full log keeps every row &mdash; nothing is ever deleted &mdash; so you can always look back. <b>This is the proof behind the account row.</b></p>
+    <div class="scroll fixed" id="logScroll"><table class="ledger" id="evTable">
+      <thead><tr><th class="rb"></th><th>id</th><th>account</th><th>when</th><th>what happened</th><th>the detail</th></tr></thead>
+      <tbody id="evBody"></tbody>
+    </table></div>
+  </div>
+
+  <div class="tbl">
+    <div class="t-head">
+      <span class="t-title">The history</span>
+      <span class="t-tag">the trend &mdash; a snapshot after each run</span>
+      <span class="t-count" id="histCount">0 rows</span>
+    </div>
+    <p class="t-cap">The snapshot from the most recent run. Every run saves one and keeps it &mdash; read them in order and you see the trend.</p>
+    <div class="scroll fixed" id="histScroll"><table class="ledger" id="histTable">
+      <thead><tr><th class="rb"></th><th>account</th><th>when</th><th>health</th><th>why</th></tr></thead>
+      <tbody id="histBody"></tbody>
+    </table></div>
+  </div>
+
+  <div class="note">
+    <div class="n-h">What you just watched</div>
+    <p>The same simple fix ran on all three accounts. Each time the system noticed something new, it wrote it down, then re-worked that account's health from everything it knew. Nothing was overwritten &mdash; so every "at risk" has a reason you can point to.</p>
+    <p>By the end, <b>$750k of the book sits at risk</b>, and every dollar of it has a next step:</p>
+    <div class="outcomes"><b>Granite</b> &mdash; goes to a director &nbsp;·&nbsp; <b>Meridian</b> &mdash; the renewal gets a call &nbsp;·&nbsp; <b>Sunrise</b> &mdash; gets an expansion offer</div>
+    <p>A person signs off before anything actually ships.</p>
+    <div class="honest">One honest note. This shows the record-keeping working. Two real-world details still need a quick check before it could run for real: the trigger that catches a change, and getting write access to the data warehouse. That check is part of the plan, not hidden.</div>
+  </div>
+
+  <div class="foot">
+    <span>&copy; 2025&ndash;2026 Charlie Fuller</span>
+    <a href="csm-storage-scale.html">The full architecture &rarr;</a>
+  </div>
+</div>
+
+<script>(function(){
+  var ACCOUNTS = {
+    'ACC-1002': {name:'Meridian', arr:'$240k', arrNum:240, start:68},
+    'ACC-1005': {name:'Sunrise',  arr:'$90k',  arrNum:90,  start:88},
+    'ACC-1006': {name:'Granite',  arr:'$510k', arrNum:510, start:55}
+  };
+  var FOCUS = [
+    { id:'ACC-1002', evts:[
+        [1,'usage_drop',-10,'weekly usage fell','usage_down'],
+        [2,'ticket_spike',-8,'more support tickets','ticket_spike'],
+        [3,'usage_drop',-10,'weekly usage fell','usage_down']
+      ]},
+    { id:'ACC-1005', evts:[
+        [2,'feature_adoption',0,'started using SSO','adoption'],
+        [7,'expansion_offer',0,'offered an upgrade','expansion']
+      ]},
+    { id:'ACC-1006', evts:[
+        [4,'renewal_likelihood',-10,'renewal looks unlikely','renewal_low'],
+        [5,'churn_signal',-25,'account may not renew','churn_signal'],
+        [6,'escalation',-5,'sent to a director','churn_imminent']
+      ]}
+  ];
+  var PLAIN_EVENT = {
+    usage_drop:'usage dropped', usage_up:'usage improved', ticket_spike:'tickets spiked',
+    feature_adoption:'adopted a feature', renewal_60d:'renewal coming up', renewal_likelihood:'renewal at risk',
+    churn_signal:'churn warning', escalation:'escalated', expansion_offer:'expansion offered',
+    renewal_checkin:'renewal check-in', narrative_written:'story written', qa_verdict:'story checked', next_step:'next step set'
+  };
+  var PLAIN_PAYLOAD = {
+    usage_drop:'weekly usage fell', usage_up:'weekly usage rose', ticket_spike:'more support tickets',
+    feature_adoption:'started using SSO', renewal_60d:'renewal is within 60 days', renewal_likelihood:'renewal looks unlikely',
+    churn_signal:'account may not renew', escalation:'sent to a director', expansion_offer:'offered an upgrade',
+    renewal_checkin:'a call to lock in renewal', narrative_written:'the story the CSM can tell', qa_verdict:'passed the check', next_step:'the next action'
+  };
+  var PLAIN_FLAG = {
+    usage_down:'usage down', ticket_spike:'tickets spiked', renewal_60d:'renewal in 60 days',
+    renewal_low:'renewal at risk', churn_signal:'churn warning', churn_imminent:'may churn',
+    adoption:'adopting a feature', expansion:'expansion ready'
+  };
+  var MAX_DAYS = 8;
+  var BASE_DATE = '2026-08-24';
+  var state = { day:0, evtId:8400, scores:{}, flags:{}, log:[], snaps:[], logStart:0, snapStart:0, accFilter:null };
+  var STEPS = [];
+  var idx = 0;
+  var $ = function(id){ return document.getElementById(id); };
+  var accBody = $('accBody'), evBody = $('evBody'), histBody = $('histBody');
+  var accCount = $('accCount'), logCount = $('logCount'), histCount = $('histCount');
+  var dayNum = $('dayNum'), dayDate = $('dayDate');
+  var anStep = $('anStep'), anBody = $('anBody'), anDetail = $('anDetail'), annote = document.querySelector('.annote');
+  var stakeTotal = $('stakeTotal');
+  function dateOf(d){ var dt = new Date(BASE_DATE); dt.setDate(dt.getDate()+d-1); return dt.toISOString().slice(0,10); }
+  function nameOf(id){ return ACCOUNTS[id].name + ' ('+id+')'; }
+  function flagsOf(id){
+    var f = state.flags[id].slice();
+    if (f.length === 0) return '&mdash;';
+    return f.map(function(x){ return PLAIN_FLAG[x] || x; }).join(', ');
+  }
+  function nextAction(id){
+    var s = state.scores[id];
+    if (s < 40) return 'escalate to director';
+    if (s < 70) return 'call about renewal';
+    return 'offer expansion';
+  }
+  function scoreNum(id){
+    return '<span style="font-family:var(--font-display);font-size:28px;line-height:1">'+state.scores[id]+'</span>';
+  }
+  function statusWord(id){
+    var s = state.scores[id];
+    if (s >= 70) return 'healthy';
+    if (s >= 40) return 'at risk';
+    return 'churn imminent';
+  }
+  function statusColor(id){
+    var s = state.scores[id];
+    if (s >= 70) return '#8FBFAE';
+    if (s >= 40) return '#EFAE42';
+    return '#A4093F';
+  }
+  function renderStake(){
+    var total = 0;
+    Object.keys(ACCOUNTS).forEach(function(id){ if (state.scores[id] < 70) total += ACCOUNTS[id].arrNum; });
+    stakeTotal.textContent = '$' + total + 'k';
+    stakeTotal.style.color = total > 0 ? 'var(--maroon)' : 'var(--ink)';
+  }
+  function plainChip(acc, type, d){
+    var sign = d>0 ? '+'+d : (d<0 ? d : '&mdash;');
+    return '<span class="p">'+ACCOUNTS[acc].name+' · '+(PLAIN_PAYLOAD[type]||type)+' · health '+sign+'</span> &nbsp; ';
+  }
+  function renderDay(){
+    dayNum.textContent = state.day;
+    var who = state.accFilter ? ' · watching '+ACCOUNTS[state.accFilter].name : '';
+    dayDate.innerHTML = (state.day === 0 ? ' &mdash; start' : ' &mdash; '+dateOf(state.day)) + who;
+  }
+  function renderAcc(){
+    var ids = state.accFilter ? [state.accFilter] : Object.keys(ACCOUNTS);
+    var html = ids.map(function(id){
+      var a = ACCOUNTS[id];
+      return '<tr data-acc="'+id+'"><td class="rbar" style="background:'+statusColor(id)+'"></td><td><code>'+id+'</code></td><td><b>'+a.name+'</b></td><td class="num">'+a.arr+'</td>'+
+        '<td>'+scoreNum(id)+'</td><td style="color:'+statusColor(id)+'">'+statusWord(id)+'</td>'+
+        '<td>'+flagsOf(id)+'</td><td>'+nextAction(id)+'</td></tr>';
+    }).join('');
+    accBody.innerHTML = html;
+    accCount.textContent = state.accFilter ? ACCOUNTS[state.accFilter].name + ' · 1 of ' + Object.keys(ACCOUNTS).length : Object.keys(ACCOUNTS).length + ' accounts';
+  }
+  function evStepColor(type){
+    if (type==='narrative_written') return '#A4093F';
+    if (type==='qa_verdict') return '#BE5142';
+    if (type==='next_step') return '#7F8C30';
+    return '#EFAE42';
+  }
+  function verbOf(type){
+    if (type==='qa_verdict') return 'used';
+    return 'added';
+  }
+  function renderEv(){
+    var rows = state.log.slice(state.logStart);
+    var html = rows.map(function(e, i){
+      return '<tr data-i="'+i+'"><td class="rbar" style="background:'+evStepColor(e.type)+'"></td><td><code>'+e.id+'</code></td><td><b>'+ACCOUNTS[e.acc].name+'</b> <code>'+e.acc+'</code></td>'+
+        '<td>'+e.date+'</td><td><span class="v">'+verbOf(e.type)+'</span>'+(PLAIN_EVENT[e.type]||e.type)+'</td><td>'+(PLAIN_PAYLOAD[e.type]||e.payload)+'</td></tr>';
+    }).join('');
+    evBody.innerHTML = html;
+    logCount.textContent = state.log.length + ' kept';
+  }
+  function renderHist(){
+    var rows = state.snaps.slice(state.snapStart);
+    var html = rows.map(function(s, i){
+      return '<tr data-id="snap'+i+'"><td class="rbar" style="background:'+statusColor(s.acc)+'"></td><td><b>'+ACCOUNTS[s.acc].name+'</b></td><td>'+s.date+'</td>'+
+        '<td>'+scoreNum(s.acc)+'</td><td>'+s.flags.map(function(x){return PLAIN_FLAG[x]||x;}).join(', ')+'</td></tr>';
+    }).join('');
+    histBody.innerHTML = html;
+    histCount.textContent = state.snaps.length + ' kept';
+  }
+  function paintSteps(done){
+    ['s0','s1','s2','s3'].forEach(function(id, i){
+      var el = $(id);
+      el.classList.remove('run','done');
+      if (done.length && i === done.length-1) el.classList.add('run');
+      if (i < done.length) el.classList.add('done');
+    });
+  }
+  function annotate(stepName, body, chips, stepKey){
+    anStep.textContent = stepName;
+    anBody.innerHTML = body;
+    anDetail.innerHTML = chips || '';
+    annote.setAttribute('data-step', stepKey || 's0');
+  }
+  function clearAnnotate(){
+    anStep.textContent = 'Ready';
+    anBody.innerHTML = 'Press <b>Step</b> to move through it one piece at a time. Each piece explains itself here.';
+    anDetail.innerHTML = '';
+    annote.setAttribute('data-step', 's0');
+  }
+  function colorVar(name){
+    var v = getComputedStyle(document.documentElement).getPropertyValue('--'+name).trim();
+    return v || name;
+  }
+  function hlRow(tr, color){
+    if (!tr) return;
+    var tds = tr.querySelectorAll('td');
+    tds.forEach(function(td){
+      td.style.transition = 'border-bottom .3s';
+      td.style.borderBottom = '5px solid '+color;
+    });
+    setTimeout(function(){ tds.forEach(function(td){ td.style.borderBottom = ''; td.style.transition=''; }); }, 1500);
+  }
+  function hlLog(color){
+    evBody.querySelectorAll('tr').forEach(function(tr){ hlRow(tr, color); });
+  }
+  function hlAcc(accs, color){
+    accs.forEach(function(a){ hlRow(accBody.querySelector('tr[data-acc="'+a+'"]'), color); });
+  }
+  function hlSnap(color){
+    histBody.querySelectorAll('tr').forEach(function(tr){ hlRow(tr, color); });
+  }
+  function append(acc, type, payload, source){
+    state.log.push({ id:'ev'+(++state.evtId), acc:acc, date:dateOf(state.day), type:type, payload:payload, source:source });
+  }
+  function doSignal(f, evt){
+    paintSteps(['s0']);
+    state.accFilter = f.id;
+    state.day = evt[0];
+    state.scores[f.id] = Math.max(2, Math.min(98, state.scores[f.id] + evt[2]));
+    if (evt[4] && state.flags[f.id].indexOf(evt[4])===-1) state.flags[f.id].push(evt[4]);
+    state.logStart = state.log.length;
+    append(f.id, evt[1], evt[3], 'signal');
+    renderDay(); renderEv(); renderAcc(); renderStake();
+    hlLog(colorVar('amber'));
+    hlAcc([f.id], colorVar('amber'));
+    annotate('Step 1: spot the change · '+ACCOUNTS[f.id].name,
+      '<ul class="an-list"><li>A new fact arrives &mdash; usage, tickets, or the renewal calendar.</li><li>The system marks it, then re-works the account&#39;s health from every marked fact.</li><li>Plain, predictable code &mdash; no guessing.</li></ul>',
+      plainChip(f.id, evt[1], evt[2]),
+      's1');
+  }
+  function doNarrative(f){
+    paintSteps(['s0','s1']);
+    state.accFilter = f.id;
+    state.logStart = state.log.length;
+    append(f.id, 'narrative_written', payloadNarrative(f.id), 'narrative_agent');
+    renderEv();
+    hlLog(colorVar('maroon'));
+    annotate('Step 2: write the story · '+ACCOUNTS[f.id].name,
+      '<ul class="an-list"><li>A language model reads the marked facts.</li><li>Turns them into a short, plain-English paragraph a CSM can say in a meeting.</li><li>Built only from the facts &mdash; never invents, never changes the score.</li></ul>',
+      '<span class="p">'+ACCOUNTS[f.id].name+' &rarr; "'+payloadNarrative(f.id)+'"</span>',
+      's2');
+  }
+  function doQA(f){
+    paintSteps(['s0','s1','s2']);
+    state.accFilter = f.id;
+    state.logStart = state.log.length;
+    append(f.id, 'qa_verdict', '{pass: true}', 'qa_agent');
+    renderEv();
+    hlLog(colorVar('coral'));
+    annotate('Step 3: check the story · '+ACCOUNTS[f.id].name,
+      '<ul class="an-list"><li>Rules check the story against the log.</li><li>Does every sentence point to a fact that actually exists?</li><li>If it drifted or made something up, it gets rewritten.</li></ul>',
+      '<span class="p">'+ACCOUNTS[f.id].name+' &rarr; pass (points to real facts)</span>',
+      's3');
+  }
+  function doAction(f){
+    paintSteps(['s0','s1','s2','s3']);
+    state.accFilter = f.id;
+    state.logStart = state.log.length;
+    append(f.id, 'next_step', '{action: '+nextAction(f.id)+'}', 'action_agent');
+    state.snapStart = state.snaps.length;
+    state.snaps.push({ acc:f.id, date:dateOf(state.day), score:state.scores[f.id], flags:state.flags[f.id].slice() });
+    renderEv(); renderAcc(); renderStake(); renderHist();
+    hlLog(colorVar('olive'));
+    hlAcc([f.id], colorVar('olive'));
+    hlSnap(colorVar('graphite'));
+    annotate('Step 4: decide next step · '+ACCOUNTS[f.id].name,
+      '<ul class="an-list"><li>From the facts and the checked story, the system picks one next action.</li><li>For example: call about the renewal, escalate to a director, offer an expansion.</li><li>It only suggests &mdash; a person confirms before anything happens.</li><li>It also saves a snapshot to the history, so the trend is kept.</li></ul>',
+      '<span class="p">'+ACCOUNTS[f.id].name+' &rarr; '+nextAction(f.id)+' · health '+state.scores[f.id]+'</span>',
+      's4');
+  }
+  function payloadNarrative(acc){
+    var s = state.scores[acc];
+    if (acc==='ACC-1006') return 'churn risk, escalate now';
+    if (acc==='ACC-1002') return 'usage and tickets point down; renewal is at risk';
+    if (acc==='ACC-1005') return 'healthy, expansion candidate';
+    return 'account score '+s;
+  }
+  function buildSteps(){
+    STEPS = [];
+    FOCUS.forEach(function(f){
+      f.evts.forEach(function(e){
+        STEPS.push({ type:'signal', f:f, evt:e });
+      });
+      STEPS.push({ type:'narrative', f:f });
+      STEPS.push({ type:'qa', f:f });
+      STEPS.push({ type:'action', f:f });
+    });
+  }
+  function runStepAt(i){
+    var s = STEPS[i];
+    if (s.type==='signal') doSignal(s.f, s.evt);
+    else if (s.type==='narrative') doNarrative(s.f);
+    else if (s.type==='qa') doQA(s.f);
+    else doAction(s.f);
+  }
+  function done(){ return idx >= STEPS.length; }
+  function reset(){
+    state = { day:0, evtId:8400, scores:{}, flags:{}, log:[], snaps:[], logStart:0, snapStart:0, accFilter:FOCUS[0].id };
+    Object.keys(ACCOUNTS).forEach(function(id){
+      state.scores[id] = ACCOUNTS[id].start;
+      state.flags[id] = [];
+    });
+    idx = 0;
+    buildSteps();
+    renderDay(); renderAcc(); renderEv(); renderHist(); renderStake();
+    paintSteps([]); clearAnnotate();
+    $('stepBtn').disabled = false; $('stepBtn').textContent = 'Step';
+  }
+  function stepOnce(){
+    if (done()) return;
+    runStepAt(idx);
+    idx++;
+    if (done()){ $('stepBtn').disabled = true; $('stepBtn').textContent = 'Done'; }
+  }
+  $('stepBtn').addEventListener('click', stepOnce);
+  $('resetBtn').addEventListener('click', reset);
+  reset();
+})();</script>
+</body>
+</html>
