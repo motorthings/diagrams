@@ -4,1237 +4,308 @@
 <meta charset="UTF-8">
 <link rel="icon" type="image/svg+xml" href="../icon.svg">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>AESOP Transformation OS — UX/UI Accessibility Audit</title>
+<title>AESOP &mdash; UX/UI Accessibility Audit</title>
+<meta name="description" content="An accessibility audit of the AESOP evaluation platform against WCAG, Nielsen Norman, W3C COGA, GOV.UK, plain-language, and other standards for low-literacy users.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600;9..144,700&family=Source+Code+Pro:wght@400;500;600" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Public+Sans:wght@400;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
 <style>
   :root {
-    --font-display: 'Playfair Display', Georgia, serif;
-    --font-body: 'Fraunces', Georgia, serif;
-    --font-mono: 'Source Code Pro', 'SF Mono', Consolas, monospace;
-
-    --bg: #faf8f5;
-    --surface: #ffffff;
-    --surface2: #f5f2ed;
-    --surface-elevated: #ffffff;
-    --border: rgba(0, 0, 0, 0.07);
-    --border-bright: rgba(0, 0, 0, 0.14);
-    --text: #1a1815;
-    --text-dim: #7a7268;
-    --accent: #8b5e3c;
-    --accent-dim: rgba(139, 94, 60, 0.08);
-    --green: #2d7a4f;
-    --green-dim: rgba(45, 122, 79, 0.08);
-    --red: #b5362a;
-    --red-dim: rgba(181, 54, 42, 0.08);
-    --orange: #c27a1a;
-    --orange-dim: rgba(194, 122, 26, 0.08);
-    --blue: #2a6cb5;
-    --blue-dim: rgba(42, 108, 181, 0.08);
-    --purple: #6b4fa0;
-    --purple-dim: rgba(107, 79, 160, 0.08);
+    --font-display: 'Instrument Serif', Georgia, serif;
+    --font-body: 'Public Sans', system-ui, sans-serif;
+    --font-mono: 'JetBrains Mono', 'SF Mono', monospace;
+    /* Gulf Stream Racing on a Ledger sheet — light only */
+    --ink: #0a1628; --graphite: #2e4d73; --body: #3d5a7a; --muted: #7a9ab8;
+    --rule: #c6d5e6; --row: #dbe5f0; --sheet: #eef4f9; --desk: #e4ecf4;
+    --spine: #0a1628; --spine-fg: #eef4f9;
+    --accent: #e8621a; --amber: #b45309; --blue: #2f6fa8; --teal: #0f766e; --violet: #7c3aed; --rose: #c23a30;
+    /* severity */
+    --ok: var(--teal); --mid: var(--accent); --warn: var(--amber); --bad: var(--rose); --info: var(--blue);
   }
-
-  @media (prefers-color-scheme: dark) {
-    :root {
-      --bg: #141210;
-      --surface: #1e1c19;
-      --surface2: #272420;
-      --surface-elevated: #2a2723;
-      --border: rgba(255, 255, 255, 0.06);
-      --border-bright: rgba(255, 255, 255, 0.12);
-      --text: #ede8e0;
-      --text-dim: #9a9188;
-      --accent: #d4a574;
-      --accent-dim: rgba(212, 165, 116, 0.1);
-      --green: #5ec98a;
-      --green-dim: rgba(94, 201, 138, 0.1);
-      --red: #e87066;
-      --red-dim: rgba(232, 112, 102, 0.1);
-      --orange: #e8a94d;
-      --orange-dim: rgba(232, 169, 77, 0.1);
-      --blue: #5ea3e8;
-      --blue-dim: rgba(94, 163, 232, 0.1);
-      --purple: #a385d0;
-      --purple-dim: rgba(163, 133, 208, 0.1);
-    }
-  }
-
   * { margin: 0; padding: 0; box-sizing: border-box; }
-  body {
-    background: var(--bg);
-    background-image:
-      radial-gradient(ellipse at 25% 0%, var(--accent-dim) 0%, transparent 50%),
-      radial-gradient(ellipse at 75% 100%, var(--green-dim) 0%, transparent 40%);
-    color: var(--text);
-    font-family: var(--font-body);
-    padding: 40px;
-    min-height: 100vh;
-    overflow-wrap: break-word;
-  }
+  body { background: var(--desk); color: var(--body); font-family: var(--font-body); font-size: 16.5px; line-height: 1.6; -webkit-font-smoothing: antialiased; text-rendering: optimizeLegibility; }
+  .topbar { max-width: 1180px; margin: 0 auto; padding: 18px 28px 6px; }
+  .backlink a { font-size: 14px; color: var(--muted); text-decoration: none; }
+  .backlink a:hover { color: var(--ink); }
+  .backlink .arr { color: var(--accent); font-size: 15px; margin-right: 2px; }
 
-  @keyframes fadeUp {
-    from { opacity: 0; transform: translateY(12px); }
-    to { opacity: 1; transform: translateY(0); }
-  }
-  @keyframes fadeScale {
-    from { opacity: 0; transform: scale(0.92); }
-    to { opacity: 1; transform: scale(1); }
-  }
-  @keyframes drawGauge {
-    from { stroke-dashoffset: var(--dash-full); }
-    to { stroke-dashoffset: var(--dash-offset); }
-  }
-  @keyframes countUp {
-    to { --count: var(--target); }
-  }
-  .animate {
-    animation: fadeUp 0.4s ease-out both;
-    animation-delay: calc(var(--i, 0) * 0.05s);
-  }
-  .animate-scale {
-    animation: fadeScale 0.35s ease-out both;
-    animation-delay: calc(var(--i, 0) * 0.06s);
-  }
+  .sheet { max-width: 1180px; margin: 6px auto 72px; background: var(--sheet); display: grid; grid-template-columns: 56px 1fr; }
+  .spine { background: var(--spine); display: flex; align-items: flex-end; justify-content: center; padding: 26px 0; }
+  .spine-label { writing-mode: vertical-rl; transform: rotate(180deg); font-family: var(--font-mono); font-size: 13px; letter-spacing: 0.22em; color: var(--spine-fg); white-space: nowrap; text-transform: uppercase; }
+  .content { padding: 46px 60px 6px; min-width: 0; }
 
-  @media (prefers-reduced-motion: reduce) {
-    *, *::before, *::after {
-      animation-duration: 0.01ms !important;
-      animation-delay: 0ms !important;
-      transition-duration: 0.01ms !important;
-    }
-  }
+  .masthead { border-bottom: 3px solid var(--ink); padding-bottom: 14px; }
+  .masthead h1 { font-family: var(--font-display); font-weight: 400; font-size: 46px; line-height: 0.98; letter-spacing: -0.028em; color: var(--ink); max-width: 920px; }
+  .lede { font-family: var(--font-display); font-style: italic; font-size: 18px; line-height: 1.45; color: var(--graphite); max-width: 880px; margin: 13px 0 14px; }
+  .stds { display: flex; flex-wrap: wrap; gap: 8px; }
+  .std { font-family: var(--font-mono); font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.06em; color: var(--blue); border: 1px solid var(--blue); padding: 3px 10px; }
 
-  /* ============ LAYOUT ============ */
-  .wrap {
-    max-width: 1400px;
-    margin: 0 auto;
-    display: grid;
-    grid-template-columns: 180px 1fr;
-    gap: 0 40px;
-  }
-  .main { min-width: 0; }
+  section.sec { border-top: 3px solid var(--ink); padding: 20px 0 2px; }
+  .sec-title { display: grid; grid-template-columns: 80px 1fr; gap: 0 22px; align-items: baseline; margin-bottom: 6px; }
+  .sec-title .n { font-family: var(--font-display); font-size: 28px; line-height: 0.9; color: var(--accent); }
+  .sec-title h2 { font-size: 22px; font-weight: 700; letter-spacing: -0.012em; color: var(--ink); }
+  .sec-body { padding: 0 0 8px 102px; }
+  .sec-body p.lead { max-width: 880px; margin-bottom: 12px; }
+  code { font-family: var(--font-mono); font-size: 0.82em; color: var(--accent); }
 
-  /* ============ TOC ============ */
-  .toc {
-    position: sticky;
-    top: 24px;
-    align-self: start;
-    padding: 14px 0;
-    grid-row: 1 / -1;
-    max-height: calc(100dvh - 48px);
-    overflow-y: auto;
-  }
-  .toc::-webkit-scrollbar { width: 3px; }
-  .toc::-webkit-scrollbar-thumb { background: var(--surface-elevated); border-radius: 2px; }
-  .toc-title {
-    font-family: var(--font-mono);
-    font-size: 9px;
-    font-weight: 700;
-    text-transform: uppercase;
-    letter-spacing: 2px;
-    color: var(--text-dim);
-    padding: 0 0 10px;
-    margin-bottom: 8px;
-    border-bottom: 1px solid var(--border);
-  }
-  .toc a {
-    display: block;
-    font-size: 11px;
-    font-family: var(--font-body);
-    color: var(--text-dim);
-    text-decoration: none;
-    padding: 5px 8px;
-    border-radius: 5px;
-    border-left: 2px solid transparent;
-    transition: all 0.15s;
-    line-height: 1.4;
-    margin-bottom: 1px;
-  }
-  .toc a:hover { color: var(--text); background: var(--surface2); }
-  .toc a.active { color: var(--text); border-left-color: var(--accent); font-weight: 500; }
+  /* overall */
+  .overall { display: grid; grid-template-columns: 210px 1fr; gap: 0 40px; align-items: center; }
+  .ov-gauge .ov-n { font-family: var(--font-display); font-size: 72px; line-height: 0.9; color: var(--accent); }
+  .ov-gauge .ov-of { font-family: var(--font-mono); font-size: 12px; color: var(--muted); margin-top: 6px; }
+  .ov-gauge .ov-of .bar { display: block; height: 8px; background: var(--desk); border: 1px solid var(--rule); margin-top: 10px; width: 180px; position: relative; }
+  .ov-gauge .ov-of .bar i { position: absolute; left: 0; top: 0; bottom: 0; width: 60%; background: var(--accent); }
+  .ov-text .ov-t { font-family: var(--font-display); font-size: 26px; color: var(--ink); font-style: italic; margin-bottom: 6px; }
+  .ov-text p { font-size: 14.5px; line-height: 1.6; max-width: 720px; }
+  .ov-text .ov-verdict { display: inline-block; margin-top: 10px; font-family: var(--font-mono); font-size: 10.5px; font-weight: 600; color: var(--amber); border: 1px solid var(--amber); padding: 4px 11px; }
 
-  @media (max-width: 1000px) {
-    .wrap { grid-template-columns: 1fr; padding-top: 0; }
-    body { padding: 20px; padding-top: 0; }
-    .toc {
-      position: sticky; top: 0; z-index: 200;
-      max-height: none; display: flex; gap: 4px;
-      align-items: center; overflow-x: auto;
-      -webkit-overflow-scrolling: touch;
-      background: var(--bg); border-bottom: 1px solid var(--border);
-      padding: 10px 0; margin: 0 -20px; padding-left: 20px; padding-right: 20px;
-      grid-row: auto;
-    }
-    .toc::-webkit-scrollbar { display: none; }
-    .toc-title { display: none; }
-    .toc a {
-      white-space: nowrap; flex-shrink: 0; border-left: none;
-      border-bottom: 2px solid transparent; border-radius: 4px 4px 0 0;
-      padding: 6px 10px; font-size: 10px;
-    }
-    .toc a.active { border-left: none; border-bottom-color: var(--accent); background: var(--surface); }
-    .main { padding-top: 20px; }
-    .sec-head { scroll-margin-top: 52px; }
-  }
+  /* dimension */
+  .dim { border-top: 2px solid var(--ink); padding: 14px 0; }
+  .dim:first-child { border-top: 3px solid var(--ink); }
+  .dim .d-head { display: grid; grid-template-columns: 1fr auto 200px; gap: 0 22px; align-items: baseline; margin-bottom: 6px; }
+  .dim .d-name { font-weight: 700; color: var(--ink); font-size: 17px; }
+  .dim .d-name .ln { font-family: var(--font-display); color: var(--muted); font-weight: 400; margin-right: 8px; }
+  .dim .d-score { font-family: var(--font-mono); font-weight: 600; font-size: 13px; }
+  .dim .d-bar { height: 6px; background: var(--desk); border: 1px solid var(--rule); position: relative; align-self: center; }
+  .dim .d-bar i { position: absolute; left: 0; top: 0; bottom: 0; }
+  .dim.g .d-score { color: var(--ok); } .dim.m .d-score { color: var(--mid); }
+  .dim.a .d-score { color: var(--warn); } .dim.r .d-score { color: var(--bad); }
+  .dim.g .d-bar i { background: var(--ok); } .dim.m .d-bar i { background: var(--mid); }
+  .dim.a .d-bar i { background: var(--warn); } .dim.r .d-bar i { background: var(--bad); }
+  .dim .d-cols { display: grid; grid-template-columns: 1fr 1fr; gap: 0 36px; margin-top: 4px; }
+  .dim .d-col .dc { font-family: var(--font-mono); font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.12em; margin: 2px 0 4px; }
+  .dim .d-col.s .dc { color: var(--ok); } .dim .d-col.i .dc { color: var(--mid); }
+  .dim ul { list-style: none; }
+  .dim li { font-size: 13px; line-height: 1.5; padding: 3px 0 3px 12px; position: relative; }
+  .dim .d-col.s li::before { content: '+'; position: absolute; left: 0; color: var(--ok); font-weight: 700; }
+  .dim .d-col.i li::before { content: '\2013'; position: absolute; left: 0; font-weight: 700; }
+  .dim .d-col.i li.crit::before { color: var(--bad); }
+  .tag { font-family: var(--font-mono); font-size: 9px; font-weight: 600; letter-spacing: 0.03em; margin-left: 4px; white-space: nowrap; }
+  .tag.t-ok { color: var(--ok); } .tag.t-mid { color: var(--mid); } .tag.t-warn { color: var(--warn); } .tag.t-bad { color: var(--bad); } .tag.t-info { color: var(--info); }
 
-  /* ============ HEADER ============ */
-  .page-header {
-    margin-bottom: 40px;
-    padding-bottom: 24px;
-    border-bottom: 1px solid var(--border);
-  }
-  .page-header h1 {
-    font-family: var(--font-display);
-    font-size: 38px;
-    font-weight: 700;
-    letter-spacing: -0.5px;
-    line-height: 1.2;
-    margin-bottom: 8px;
-  }
-  .page-header .subtitle {
-    font-family: var(--font-body);
-    font-size: 16px;
-    color: var(--text-dim);
-    font-weight: 300;
-    max-width: 700px;
-    line-height: 1.5;
-  }
-  .standards-row {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 6px;
-    margin-top: 16px;
-  }
-  .std-badge {
-    font-family: var(--font-mono);
-    font-size: 9px;
-    font-weight: 600;
-    text-transform: uppercase;
-    letter-spacing: 0.8px;
-    padding: 4px 10px;
-    border-radius: 4px;
-    background: var(--accent-dim);
-    color: var(--accent);
-    white-space: nowrap;
-  }
+  table.tbl { width: 100%; border-collapse: collapse; margin: 4px 0 6px; }
+  .tbl th { text-align: left; font-size: 11px; font-weight: 600; color: var(--muted); padding: 4px 10px 6px 0; border-bottom: 2px solid var(--ink); }
+  .tbl td { padding: 10px 10px 10px 0; border-bottom: 1px solid var(--row); vertical-align: top; font-size: 13px; line-height: 1.5; }
+  .tbl tr:last-child td { border-bottom: none; }
+  .tbl .rnum { font-family: var(--font-mono); color: var(--muted); }
+  .tbl .rname { font-weight: 700; color: var(--ink); }
+  .tbl .rdetail { display: block; color: var(--body); font-size: 12px; margin-top: 3px; font-weight: 400; line-height: 1.5; }
+  .tbl .rstd { font-family: var(--font-mono); font-size: 10.5px; color: var(--accent); }
+  .pill { font-family: var(--font-mono); font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.04em; white-space: nowrap; padding: 3px 9px; border: 1px solid; }
+  .pill.hi { color: var(--bad); border-color: var(--bad); }
+  .pill.med { color: var(--amber); border-color: var(--amber); }
+  .pill.low { color: var(--blue); border-color: var(--blue); }
+  .pill.eff { color: var(--muted); border-color: var(--rule); font-weight: 500; }
 
-  /* ============ SECTION HEADS ============ */
-  .sec-head {
-    font-family: var(--font-mono);
-    font-size: 11px;
-    font-weight: 600;
-    text-transform: uppercase;
-    letter-spacing: 1.5px;
-    color: var(--accent);
-    padding: 12px 0;
-    margin-top: 40px;
-    margin-bottom: 16px;
-    border-bottom: 1px solid var(--border);
-  }
+  /* priority quadrants */
+  .pq { display: grid; grid-template-columns: 1fr 1fr; gap: 14px 30px; }
+  .pcell { border-top: 3px solid var(--rule); padding-top: 8px; }
+  .pcell .pq-l { font-family: var(--font-mono); font-size: 10.5px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 6px; }
+  .pcell.do .pq-l { color: var(--teal); } .pcell.pl .pq-l { color: var(--blue); }
+  .pcell.ez .pq-l { color: var(--amber); } .pcell.la .pq-l { color: var(--muted); }
+  .pcell.do { border-top-color: var(--teal); } .pcell.pl { border-top-color: var(--blue); }
+  .pcell.ez { border-top-color: var(--amber); } .pcell.la { border-top-color: var(--rule); }
+  .pcell .pi { font-size: 13px; line-height: 1.55; }
+  .pcell .pi .num { font-family: var(--font-mono); font-weight: 700; color: var(--accent); margin-right: 4px; }
+  .pq .pcell .axis-lbl { font-family: var(--font-mono); font-size: 10px; color: var(--muted); margin-top: 8px; }
 
-  /* ============ OVERALL SCORE ============ */
-  .score-hero {
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: 16px;
-    padding: 40px;
-    display: flex;
-    align-items: center;
-    gap: 40px;
-    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
-    margin-bottom: 24px;
-    flex-wrap: wrap;
-  }
-  .gauge-wrap {
-    flex-shrink: 0;
-    position: relative;
-    width: 180px;
-    height: 180px;
-  }
-  .gauge-wrap svg {
-    width: 180px;
-    height: 180px;
-    transform: rotate(-90deg);
-  }
-  .gauge-bg {
-    fill: none;
-    stroke: var(--border);
-    stroke-width: 10;
-  }
-  .gauge-fill {
-    fill: none;
-    stroke: var(--orange);
-    stroke-width: 10;
-    stroke-linecap: round;
-    --dash-full: 502.65;
-    --dash-offset: 201.06;
-    stroke-dasharray: 502.65;
-    stroke-dashoffset: var(--dash-offset);
-    animation: drawGauge 1.2s ease-out both;
-    animation-delay: 0.3s;
-  }
-  .gauge-label {
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    text-align: center;
-  }
-  .gauge-number {
-    font-family: var(--font-display);
-    font-size: 44px;
-    font-weight: 700;
-    color: var(--orange);
-    line-height: 1;
-  }
-  .gauge-of {
-    font-family: var(--font-mono);
-    font-size: 12px;
-    color: var(--text-dim);
-    margin-top: 4px;
-  }
-  .score-summary {
-    flex: 1;
-    min-width: 240px;
-  }
-  .score-summary h2 {
-    font-family: var(--font-display);
-    font-size: 22px;
-    font-weight: 600;
-    margin-bottom: 8px;
-  }
-  .score-summary p {
-    color: var(--text-dim);
-    line-height: 1.6;
-    font-size: 14px;
-    margin-bottom: 12px;
-  }
-  .score-verdict {
-    font-family: var(--font-mono);
-    font-size: 11px;
-    font-weight: 600;
-    padding: 6px 14px;
-    border-radius: 6px;
-    background: var(--orange-dim);
-    color: var(--orange);
-    display: inline-block;
-  }
+  /* rewrites */
+  .rw { display: grid; grid-template-columns: 1fr 60px 1fr; gap: 0 16px; align-items: baseline; border-top: 1px solid var(--row); padding: 7px 0; }
+  .rw:first-of-type { border-top: none; }
+  .rw .rw-f { font-size: 13.5px; }
+  .rw .rw-f em { color: var(--rose); font-style: normal; }
+  .rw .rw-a { font-size: 13.5px; font-weight: 600; color: var(--teal); }
+  .rw .rw-arrow { text-align: center; color: var(--rule); font-family: var(--font-mono); }
 
-  /* ============ DIMENSION CARDS ============ */
-  .dim-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(340px, 1fr));
-    gap: 16px;
-    margin-bottom: 24px;
-  }
-  .dim-card {
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: 12px;
-    padding: 24px;
-    transition: transform 0.2s ease, box-shadow 0.2s ease;
-  }
-  .dim-card:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
-  }
-  .dim-head {
-    display: flex;
-    justify-content: space-between;
-    align-items: flex-start;
-    margin-bottom: 16px;
-    gap: 12px;
-  }
-  .dim-title {
-    font-family: var(--font-display);
-    font-size: 18px;
-    font-weight: 600;
-    line-height: 1.3;
-  }
-  .dim-score-pill {
-    font-family: var(--font-mono);
-    font-size: 13px;
-    font-weight: 600;
-    padding: 4px 12px;
-    border-radius: 20px;
-    white-space: nowrap;
-    flex-shrink: 0;
-  }
-  .dim-score-pill--green { background: var(--green-dim); color: var(--green); }
-  .dim-score-pill--orange { background: var(--orange-dim); color: var(--orange); }
-  .dim-score-pill--red { background: var(--red-dim); color: var(--red); }
+  .close { margin: 20px 0 2px; padding-top: 14px; border-top: 1px solid var(--rule); font-size: 15px; line-height: 1.6; color: var(--body); max-width: 880px; }
+  .close b { color: var(--ink); }
+  .footer { border-top: 3px solid var(--ink); margin: 24px 0 0; padding: 18px 0 30px; display: flex; justify-content: space-between; gap: 20px; flex-wrap: wrap; font-family: var(--font-mono); font-size: 11.5px; color: var(--muted); }
+  .footer a { color: var(--accent); text-decoration: none; }
 
-  .dim-bar-wrap {
-    height: 6px;
-    background: var(--border);
-    border-radius: 3px;
-    overflow: hidden;
-    margin-bottom: 16px;
+  @media (max-width: 920px) {
+    .sheet { grid-template-columns: 40px 1fr; }
+    .spine-label { font-size: 11px; }
+    .content { padding: 30px 22px 4px; }
+    .masthead h1 { font-size: 38px; }
+    .overall { grid-template-columns: 1fr; gap: 14px; }
+    .dim .d-head { grid-template-columns: 1fr auto; grid-template-areas: "n s" "b b"; }
+    .dim .d-name { grid-area: n; } .dim .d-score { grid-area: s; }
+    .dim .d-bar { grid-area: b; margin-top: 6px; }
+    .dim .d-cols { grid-template-columns: 1fr; gap: 10px; }
+    .pq { grid-template-columns: 1fr; }
+    .rw { grid-template-columns: 1fr; gap: 2px; }
+    .rw .rw-arrow { display: none; }
+    .sec-title { grid-template-columns: 48px 1fr; }
+    .sec-title .n { font-size: 24px; }
+    .sec-body { padding-left: 0; }
+    body { font-size: 15.5px; }
   }
-  .dim-bar {
-    height: 100%;
-    border-radius: 3px;
-    transition: width 0.8s ease-out;
-  }
-
-  .finding-list {
-    list-style: none;
-    padding: 0;
-    margin: 0;
-    font-size: 13px;
-    line-height: 1.7;
-  }
-  .finding-list li {
-    padding: 4px 0 4px 22px;
-    position: relative;
-    border-bottom: 1px solid var(--border);
-  }
-  .finding-list li:last-child { border-bottom: none; }
-  .finding-list li::before {
-    position: absolute;
-    left: 0;
-    font-size: 14px;
-    line-height: 1.7;
-  }
-  .finding-list li.strength::before { content: ''; color: var(--green); }
-  .finding-list li.issue::before { content: ''; color: var(--orange); }
-  .finding-list li.critical::before { content: ''; color: var(--red); }
-  .finding-list .label-tag {
-    font-family: var(--font-mono);
-    font-size: 9px;
-    font-weight: 600;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-    padding: 1px 6px;
-    border-radius: 3px;
-    margin-left: 4px;
-    vertical-align: middle;
-  }
-  .label-tag--strength { background: var(--green-dim); color: var(--green); }
-  .label-tag--issue { background: var(--orange-dim); color: var(--orange); }
-  .label-tag--critical { background: var(--red-dim); color: var(--red); }
-
-  .dim-section-label {
-    font-family: var(--font-mono);
-    font-size: 10px;
-    font-weight: 600;
-    text-transform: uppercase;
-    letter-spacing: 1px;
-    color: var(--text-dim);
-    margin: 12px 0 4px 0;
-  }
-
-  /* ============ RECOMMENDATION TABLE ============ */
-  .table-wrap {
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: 12px;
-    overflow: hidden;
-    margin-bottom: 24px;
-  }
-  .table-scroll {
-    overflow-x: auto;
-    -webkit-overflow-scrolling: touch;
-  }
-  .data-table {
-    width: 100%;
-    border-collapse: collapse;
-    font-size: 13px;
-    line-height: 1.55;
-  }
-  .data-table thead { position: sticky; top: 0; z-index: 2; }
-  .data-table th {
-    background: var(--surface2);
-    font-family: var(--font-mono);
-    font-size: 10px;
-    font-weight: 600;
-    text-transform: uppercase;
-    letter-spacing: 1.2px;
-    color: var(--text-dim);
-    text-align: left;
-    padding: 14px 16px;
-    border-bottom: 2px solid var(--border-bright);
-    white-space: nowrap;
-  }
-  .data-table td {
-    padding: 14px 16px;
-    border-bottom: 1px solid var(--border);
-    vertical-align: top;
-  }
-  .data-table tbody tr:last-child td { border-bottom: none; }
-  .data-table .wide { min-width: 220px; max-width: 440px; }
-  .data-table tbody tr:nth-child(even) { background: var(--accent-dim); }
-  .data-table tbody tr {
-    transition: background 0.15s ease;
-    animation: fadeUp 0.35s ease-out both;
-    animation-delay: calc(var(--i, 0) * 0.04s);
-  }
-  .data-table tbody tr:hover { background: var(--border); }
-  .data-table code {
-    font-family: var(--font-mono);
-    font-size: 11px;
-    background: var(--accent-dim);
-    color: var(--accent);
-    padding: 1px 5px;
-    border-radius: 3px;
-  }
-  .data-table small {
-    display: block;
-    color: var(--text-dim);
-    font-size: 11px;
-    margin-top: 3px;
-  }
-
-  .priority-badge {
-    font-family: var(--font-mono);
-    font-size: 10px;
-    font-weight: 600;
-    padding: 3px 10px;
-    border-radius: 6px;
-    white-space: nowrap;
-    display: inline-flex;
-    align-items: center;
-    gap: 4px;
-  }
-  .priority-badge::before {
-    content: '';
-    width: 6px;
-    height: 6px;
-    border-radius: 50%;
-    background: currentColor;
-  }
-  .priority-badge--high { background: var(--red-dim); color: var(--red); }
-  .priority-badge--medium { background: var(--orange-dim); color: var(--orange); }
-  .priority-badge--low { background: var(--blue-dim); color: var(--blue); }
-
-  .effort-badge {
-    font-family: var(--font-mono);
-    font-size: 10px;
-    font-weight: 500;
-    padding: 2px 8px;
-    border-radius: 4px;
-    background: var(--surface2);
-    color: var(--text-dim);
-    white-space: nowrap;
-  }
-
-  /* ============ STANDARDS DETAIL ============ */
-  .std-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-    gap: 12px;
-    margin-bottom: 24px;
-  }
-  .std-card {
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: 10px;
-    padding: 18px;
-  }
-  .std-card h4 {
-    font-family: var(--font-body);
-    font-size: 14px;
-    font-weight: 600;
-    margin-bottom: 6px;
-  }
-  .std-card p {
-    font-size: 12px;
-    color: var(--text-dim);
-    line-height: 1.5;
-  }
-  .std-card .std-focus {
-    font-family: var(--font-mono);
-    font-size: 10px;
-    color: var(--accent);
-    margin-top: 8px;
-  }
-
-  /* ============ PRIORITY MATRIX ============ */
-  .matrix-wrap {
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: 12px;
-    padding: 28px;
-    margin-bottom: 24px;
-  }
-  .matrix-title {
-    font-family: var(--font-display);
-    font-size: 18px;
-    font-weight: 600;
-    margin-bottom: 20px;
-  }
-  .matrix {
-    display: grid;
-    grid-template-columns: 40px 1fr 1fr;
-    grid-template-rows: 1fr 1fr 30px;
-    gap: 8px;
-    height: 400px;
-    position: relative;
-  }
-  .matrix-ylabel {
-    grid-column: 1;
-    grid-row: 1 / 3;
-    writing-mode: vertical-rl;
-    transform: rotate(180deg);
-    text-align: center;
-    font-family: var(--font-mono);
-    font-size: 10px;
-    font-weight: 600;
-    text-transform: uppercase;
-    letter-spacing: 1.5px;
-    color: var(--text-dim);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-  }
-  .matrix-xlabel {
-    grid-column: 2 / 4;
-    grid-row: 3;
-    text-align: center;
-    font-family: var(--font-mono);
-    font-size: 10px;
-    font-weight: 600;
-    text-transform: uppercase;
-    letter-spacing: 1.5px;
-    color: var(--text-dim);
-  }
-  .matrix-q {
-    border-radius: 10px;
-    padding: 16px;
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
-    overflow-y: auto;
-  }
-  .matrix-q--hi-hi {
-    grid-column: 2; grid-row: 1;
-    background: var(--green-dim);
-    border: 1px solid color-mix(in srgb, var(--green) 20%, transparent);
-  }
-  .matrix-q--hi-lo {
-    grid-column: 3; grid-row: 1;
-    background: var(--blue-dim);
-    border: 1px solid color-mix(in srgb, var(--blue) 20%, transparent);
-  }
-  .matrix-q--lo-hi {
-    grid-column: 2; grid-row: 2;
-    background: var(--orange-dim);
-    border: 1px solid color-mix(in srgb, var(--orange) 20%, transparent);
-  }
-  .matrix-q--lo-lo {
-    grid-column: 3; grid-row: 2;
-    background: var(--surface2);
-    border: 1px solid var(--border);
-  }
-  .matrix-q-label {
-    font-family: var(--font-mono);
-    font-size: 9px;
-    font-weight: 700;
-    text-transform: uppercase;
-    letter-spacing: 1px;
-    margin-bottom: 4px;
-  }
-  .matrix-q--hi-hi .matrix-q-label { color: var(--green); }
-  .matrix-q--hi-lo .matrix-q-label { color: var(--blue); }
-  .matrix-q--lo-hi .matrix-q-label { color: var(--orange); }
-  .matrix-q--lo-lo .matrix-q-label { color: var(--text-dim); }
-  .matrix-item {
-    font-size: 12px;
-    line-height: 1.4;
-    padding: 6px 10px;
-    background: var(--surface);
-    border-radius: 6px;
-    border: 1px solid var(--border);
-  }
-  .matrix-item .num {
-    font-family: var(--font-mono);
-    font-size: 10px;
-    font-weight: 600;
-    color: var(--accent);
-    margin-right: 4px;
-  }
-
-  /* ============ COLLAPSIBLE ============ */
-  details.collapsible {
-    border: 1px solid var(--border);
-    border-radius: 10px;
-    overflow: hidden;
-    margin-bottom: 16px;
-  }
-  details.collapsible summary {
-    padding: 14px 20px;
-    background: var(--surface);
-    font-family: var(--font-mono);
-    font-size: 12px;
-    font-weight: 600;
-    cursor: pointer;
-    list-style: none;
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    color: var(--text);
-    transition: background 0.15s ease;
-  }
-  details.collapsible summary:hover { background: var(--surface-elevated); }
-  details.collapsible summary::-webkit-details-marker { display: none; }
-  details.collapsible summary::before {
-    content: '\25B8';
-    font-size: 11px;
-    color: var(--text-dim);
-    transition: transform 0.15s ease;
-  }
-  details.collapsible[open] summary::before { transform: rotate(90deg); }
-  details.collapsible .collapsible__body {
-    padding: 16px 20px;
-    border-top: 1px solid var(--border);
-    font-size: 13px;
-    line-height: 1.6;
-    color: var(--text-dim);
-  }
-  details.collapsible .collapsible__body strong { color: var(--text); }
-
-  /* ============ FOOTER ============ */
-  .audit-footer {
-    margin-top: 48px;
-    padding-top: 20px;
-    border-top: 1px solid var(--border);
-    font-family: var(--font-mono);
-    font-size: 11px;
-    color: var(--text-dim);
-    display: flex;
-    justify-content: space-between;
-    flex-wrap: wrap;
-    gap: 8px;
-  }
-
-  @media (max-width: 768px) {
-    .page-header h1 { font-size: 28px; }
-    .score-hero { padding: 24px; gap: 24px; }
-    .gauge-wrap { width: 140px; height: 140px; }
-    .gauge-wrap svg { width: 140px; height: 140px; }
-    .gauge-number { font-size: 34px; }
-    .dim-grid { grid-template-columns: 1fr; }
-    .matrix { height: auto; grid-template-rows: auto auto 30px; }
-    .matrix-q { min-height: 120px; }
-  }
-
-  @media print {
-    body { padding: 20px; background: white; }
-    .toc { display: none; }
-    .wrap { grid-template-columns: 1fr; }
-    .dim-card:hover { transform: none; box-shadow: none; }
-    .score-hero { box-shadow: none; border: 2px solid #ccc; }
-  }
-.backlink{position:fixed;top:12px;left:16px;z-index:200;font-family:var(--font-mono,monospace);font-size:11px;color:var(--text-dim,#8b949e);text-decoration:none;padding:6px 10px;border:1px solid var(--border,rgba(255,255,255,0.08));border-radius:6px;background:var(--surface,#161b22);transition:color .15s,border-color .15s}.backlink:hover{color:var(--text,#e6edf3);border-color:var(--text-dim,#8b949e)}
 </style>
 </head>
 <body>
-<a href="../aesop.html" class="backlink">&larr; AESOP Transformation OS</a>
 
-<div class="wrap">
+<div class="topbar">
+  <div class="backlink"><a href="../aesop.html"><span class="arr">&larr;</span> AESOP</a></div>
+</div>
 
-  <nav class="toc" id="toc">
-    <div class="toc-title">Audit Sections</div>
-    <a href="#s0">Overall Score</a>
-    <a href="#s1">A. Navigation</a>
-    <a href="#s2">B. Language</a>
-    <a href="#s3">C. Error Handling</a>
-    <a href="#s4">D. Cognitive Load</a>
-    <a href="#s5">E. Visual Design</a>
-    <a href="#s6">F. Trust</a>
-    <a href="#s7">Recommendations</a>
-    <a href="#s8">Priority Matrix</a>
-    <a href="#s9">Standards Applied</a>
-  </nav>
+<div class="sheet">
+  <div class="spine"><div class="spine-label">UX / UI ACCESSIBILITY AUDIT</div></div>
 
-  <div class="main">
+  <div class="content">
 
-    <!-- HEADER -->
-    <div class="page-header animate" style="--i:0">
-      <h1>AESOP Transformation OS — UX/UI Accessibility Audit</h1>
-      <p class="subtitle">Evaluation of the AESOP AI evaluation platform against established usability and accessibility standards for users with low technical literacy.</p>
-      <div class="standards-row">
-        <span class="std-badge">WCAG 2.2</span>
-        <span class="std-badge">Nielsen Norman</span>
-        <span class="std-badge">W3C COGA</span>
-        <span class="std-badge">GOV.UK</span>
-        <span class="std-badge">Plain Language</span>
-        <span class="std-badge">WAI-AGE</span>
-        <span class="std-badge">ISO 9241</span>
-        <span class="std-badge">Universal Design</span>
-      </div>
-    </div>
+    <header class="masthead">
+      <h1>UX/UI Accessibility Audit</h1>
+      <p class="lede">An evaluation of the AESOP AI evaluation platform against established usability and accessibility standards, for users with low technical literacy.</p>
+      <div class="stds"><span class="std">WCAG 2.2</span><span class="std">Nielsen Norman</span><span class="std">W3C COGA</span><span class="std">GOV.UK</span><span class="std">Plain Language</span><span class="std">WAI-AGE</span><span class="std">ISO 9241</span><span class="std">Universal Design</span></div>
+    </header>
 
-    <!-- OVERALL SCORE -->
-    <div id="s0" class="sec-head animate" style="--i:1">Overall Assessment</div>
-
-    <div class="score-hero animate-scale" style="--i:2">
-      <div class="gauge-wrap">
-        <svg viewBox="0 0 180 180">
-          <circle class="gauge-bg" cx="90" cy="90" r="80"/>
-          <circle class="gauge-fill" cx="90" cy="90" r="80"/>
-        </svg>
-        <div class="gauge-label">
-          <div class="gauge-number">3.0</div>
-          <div class="gauge-of">of 5.0</div>
+    <!-- 01 -->
+    <section class="sec">
+      <div class="sec-title"><span class="n">01</span><h2>Overall assessment</h2></div>
+      <div class="sec-body">
+        <div class="overall">
+          <div class="ov-gauge"><div class="ov-n">3.0</div><div class="ov-of">of 5.0<span class="bar"><i></i></span></div></div>
+          <div class="ov-text">
+            <div class="ov-t">Functional, but not inclusive</div>
+            <p>AESOP delivers a capable evaluation platform with strong visual-design fundamentals. But its reliance on domain-specific jargon, military terminology, complex multi-path navigation, and an assumed technical literacy creates significant barriers for non-expert users. The biggest opportunity is language simplification and guided onboarding.</p>
+            <span class="ov-verdict">Needs improvement for low-literacy accessibility</span>
+          </div>
         </div>
       </div>
-      <div class="score-summary">
-        <h2>Functional but Not Inclusive</h2>
-        <p>AESOP delivers a capable evaluation platform with strong visual design fundamentals. However, its reliance on domain-specific jargon, military terminology, complex multi-path navigation, and assumption of technical literacy creates significant barriers for non-expert users. The biggest opportunity is in language simplification and guided onboarding.</p>
-        <span class="score-verdict">Needs improvement for low-literacy accessibility</span>
+    </section>
+
+    <!-- 02 -->
+    <section class="sec">
+      <div class="sec-title"><span class="n">02</span><h2>Findings by dimension</h2></div>
+      <div class="sec-body">
+
+        <div class="dim m">
+          <div class="d-head"><div class="d-name"><span class="ln">A</span>Navigation Clarity</div><div class="d-score">3.5 / 5</div><div class="d-bar"><i style="width:70%"></i></div></div>
+          <div class="d-cols">
+            <div class="d-col s"><div class="dc">Strengths</div><ul><li>Persistent sidebar visible on all pages</li><li>Back links on progress and completion pages</li><li>Multi-step wizards with step indicators and Next / Back buttons</li><li>Dashboard provides clear entry points via stat cards</li></ul></div>
+            <div class="d-col i"><div class="dc">Issues</div><ul><li>Nine sidebar items with no grouping or progressive disclosure <span class="tag t-mid">COGA Obj.2</span></li><li class="crit">Four overlapping evaluation paths (Cave, Investigate, Rubric, Evaluate) needing conceptual understanding to choose <span class="tag t-bad">NNG #6</span></li><li>No breadcrumbs on most pages <span class="tag t-mid">WCAG 2.4.8</span></li><li>No search for pages or features <span class="tag t-mid">WCAG 2.4.5</span></li><li>Welcome page assumes you already understand the three evaluation modes</li><li>Inconsistent onboarding: separate Welcome and Dashboard flows</li></ul></div>
+          </div>
+        </div>
+
+        <div class="dim r">
+          <div class="d-head"><div class="d-name"><span class="ln">B</span>Language Simplicity</div><div class="d-score">2.0 / 5</div><div class="d-bar"><i style="width:40%"></i></div></div>
+          <div class="d-cols">
+            <div class="d-col s"><div class="dc">Strengths</div><ul><li>Placeholder text gives concrete examples</li><li>&ldquo;How it Works&rdquo; sections attempt explanation</li><li>Some tooltips provide contextual definitions</li></ul></div>
+            <div class="d-col i"><div class="dc">Issues</div><ul><li class="crit">Heavy jargon with no definition: Red-Team, Black-Box, Adversarial, Resilience Score, Governance Documents <span class="tag t-bad">WCAG 3.1.3</span></li><li class="crit">Aggressive / military button labels: &ldquo;Launch Red Team,&rdquo; &ldquo;Generate Attack Scenarios,&rdquo; &ldquo;Breached / Defended&rdquo; <span class="tag t-bad">Plain Language</span></li><li class="crit">Technical API concepts exposed: POST requests, JSON payloads <span class="tag t-bad">COGA Obj.3</span></li><li>Abbreviations without expansion: AESOP, EMI, HIPAA, GDPR, FERPA <span class="tag t-mid">WCAG 3.1.4</span></li><li>Abstract capability names that don&rsquo;t say what they do</li><li class="crit">Reading level ~grade 12+ (target grade 6&ndash;8) <span class="tag t-bad">WCAG 3.1.5</span></li></ul></div>
+          </div>
+        </div>
+
+        <div class="dim m">
+          <div class="d-head"><div class="d-name"><span class="ln">C</span>Error Prevention &amp; Recovery</div><div class="d-score">3.0 / 5</div><div class="d-bar"><i style="width:60%"></i></div></div>
+          <div class="d-cols">
+            <div class="d-col s"><div class="dc">Strengths</div><ul><li>Form validation on submit with toast notifications</li><li>File-upload validation (type, size limits)</li><li>Disabled buttons and loading spinners prevent double-submission</li><li>Required fields indicated</li></ul></div>
+            <div class="d-col i"><div class="dc">Issues</div><ul><li class="crit">Transient toasts disappear before slow readers finish <span class="tag t-bad">COGA Obj.5</span></li><li>No &ldquo;check your answers&rdquo; summary before starting <span class="tag t-mid">GOV.UK</span></li><li>No confirmation before launching costly evaluations <span class="tag t-mid">WCAG 3.3.4</span></li><li>Generic error messages with no corrective action <span class="tag t-mid">WCAG 3.3.3</span></li><li>No undo for started evaluations</li><li>No indication of time or cost before starting</li></ul></div>
+          </div>
+        </div>
+
+        <div class="dim a">
+          <div class="d-head"><div class="d-name"><span class="ln">D</span>Cognitive Load</div><div class="d-score">2.5 / 5</div><div class="d-bar"><i style="width:50%"></i></div></div>
+          <div class="d-cols">
+            <div class="d-col s"><div class="dc">Strengths</div><ul><li>Progressive disclosure via collapsible sections</li><li>Step-by-step wizard for the unified evaluation flow</li><li>Report sections expandable / collapsible</li><li>Dark mode reduces visual fatigue</li></ul></div>
+            <div class="d-col i"><div class="dc">Issues</div><ul><li class="crit">Five capability toggles with complex availability logic on Step 2 <span class="tag t-bad">NNG #8</span></li><li>Reports hold massive nested content (dimensions, scenarios, transcripts)</li><li>Multiple evaluation types with subtle differences create choice paralysis <span class="tag t-mid">COGA Obj.5</span></li><li>About page has 5 tabs and 8 agent descriptions</li><li>Score visualizations use 4 systems (% , ring, bar, tier)</li><li>All features visible at once &mdash; no progressive onboarding</li></ul></div>
+          </div>
+        </div>
+
+        <div class="dim g">
+          <div class="d-head"><div class="d-name"><span class="ln">E</span>Visual Hierarchy &amp; Affordances</div><div class="d-score">4.0 / 5</div><div class="d-bar"><i style="width:80%"></i></div></div>
+          <div class="d-cols">
+            <div class="d-col s"><div class="dc">Strengths</div><ul><li>Clear hierarchy with consistent heading sizes</li><li>Interactive elements visually distinct</li><li>Consistent score color-coding</li><li>Icons paired with text labels</li><li>Consistent border, spacing, rounding system</li><li>Clear status badges</li></ul></div>
+            <div class="d-col i"><div class="dc">Issues</div><ul><li>Some icon-only actions without text labels <span class="tag t-mid">COGA Obj.1</span></li><li>Help toggle is a small 40px button at the screen edge <span class="tag t-mid">WAI-AGE</span></li><li class="crit">Dark-mode muted purple ~3.8:1 contrast <span class="tag t-bad">WCAG 1.4.3</span></li><li>No documented keyboard focus indicators <span class="tag t-mid">WCAG 2.4.7</span></li></ul></div>
+          </div>
+        </div>
+
+        <div class="dim m">
+          <div class="d-head"><div class="d-name"><span class="ln">F</span>Trust &amp; Transparency</div><div class="d-score">3.0 / 5</div><div class="d-bar"><i style="width:60%"></i></div></div>
+          <div class="d-cols">
+            <div class="d-col s"><div class="dc">Strengths</div><ul><li>Real-time progress indicators during evaluations</li><li>Clear completion states with report access</li><li>&ldquo;How it Works&rdquo; sections explain the process</li><li>About page provides context and methodology</li></ul></div>
+            <div class="d-col i"><div class="dc">Issues</div><ul><li class="crit">No &ldquo;before you begin&rdquo; page (requirements, time, expected outcome) <span class="tag t-bad">GOV.UK</span></li><li>No cost indication before starting <span class="tag t-mid">ISO 9241-110</span></li><li>Help panel (RAG chat) hidden by default &mdash; most users won&rsquo;t find it</li><li>No &ldquo;contact support&rdquo; in the main flows <span class="tag t-mid">COGA Obj.7</span></li><li>Terms and Privacy buried in About tabs</li></ul></div>
+          </div>
+        </div>
+
       </div>
-    </div>
+    </section>
 
-    <!-- DIMENSION A: Navigation -->
-    <div id="s1" class="sec-head animate" style="--i:3">A &mdash; Navigation Clarity</div>
-
-    <div class="dim-grid">
-      <div class="dim-card animate" style="--i:4">
-        <div class="dim-head">
-          <div class="dim-title">Navigation Clarity</div>
-          <span class="dim-score-pill dim-score-pill--orange">3.5 / 5</span>
-        </div>
-        <div class="dim-bar-wrap">
-          <div class="dim-bar" style="width:70%;background:var(--orange);"></div>
-        </div>
-
-        <div class="dim-section-label">Strengths</div>
-        <ul class="finding-list">
-          <li class="strength">Persistent sidebar navigation visible on all pages</li>
-          <li class="strength">Back links on progress and completion pages</li>
-          <li class="strength">Multi-step wizards with step indicators and Next/Back buttons</li>
-          <li class="strength">Dashboard provides clear entry points via stat cards</li>
-        </ul>
-
-        <div class="dim-section-label">Issues</div>
-        <ul class="finding-list">
-          <li class="issue">9 sidebar items with no grouping or progressive disclosure <span class="label-tag label-tag--issue">COGA Obj.2</span></li>
-          <li class="issue">4 overlapping evaluation paths (Cave, Investigate, Rubric, Evaluate) requiring conceptual understanding to choose <span class="label-tag label-tag--critical">NNG #6</span></li>
-          <li class="issue">No breadcrumbs on most pages <span class="label-tag label-tag--issue">WCAG 2.4.8</span></li>
-          <li class="issue">No search functionality for finding pages or features <span class="label-tag label-tag--issue">WCAG 2.4.5</span></li>
-          <li class="issue">Welcome page requires users to already understand 3 evaluation modes</li>
-          <li class="issue">Inconsistent onboarding: separate Welcome page and Dashboard Getting Started flows</li>
-        </ul>
-      </div>
-
-      <!-- DIMENSION B: Language -->
-      <div class="dim-card animate" style="--i:5">
-        <div class="dim-head">
-          <div class="dim-title">Language Simplicity</div>
-          <span class="dim-score-pill dim-score-pill--red">2.0 / 5</span>
-        </div>
-        <div class="dim-bar-wrap">
-          <div class="dim-bar" style="width:40%;background:var(--red);"></div>
-        </div>
-
-        <div class="dim-section-label">Strengths</div>
-        <ul class="finding-list">
-          <li class="strength">Placeholder text gives concrete examples</li>
-          <li class="strength">"How it Works" sections attempt to explain processes</li>
-          <li class="strength">Some tooltips provide contextual definitions</li>
-        </ul>
-
-        <div class="dim-section-label">Issues</div>
-        <ul class="finding-list">
-          <li class="critical">Heavy domain jargon without definition: "Red-Team," "Black-Box," "Adversarial," "Resilience Score," "Governance Documents" <span class="label-tag label-tag--critical">WCAG 3.1.3</span></li>
-          <li class="critical">Aggressive/military button labels: "Launch Red Team," "Generate Attack Scenarios," "Breached/Defended" <span class="label-tag label-tag--critical">Plain Language</span></li>
-          <li class="critical">Technical API concepts exposed to end users: POST requests, JSON payloads <span class="label-tag label-tag--critical">COGA Obj.3</span></li>
-          <li class="issue">Abbreviations without expansion: AESOP, EMI, HIPAA, GDPR, FERPA <span class="label-tag label-tag--issue">WCAG 3.1.4</span></li>
-          <li class="issue">Abstract capability names that don't explain what they do</li>
-          <li class="issue">Reading level estimated at grade 12+ (target: grade 6-8) <span class="label-tag label-tag--critical">WCAG 3.1.5</span></li>
-        </ul>
-      </div>
-    </div>
-
-    <!-- DIMENSION C: Error Prevention -->
-    <div id="s2" class="sec-head animate" style="--i:6">B &mdash; Language &amp; C &mdash; Error Prevention</div>
-
-    <div class="dim-grid">
-      <div class="dim-card animate" style="--i:7">
-        <div class="dim-head">
-          <div class="dim-title">Error Prevention &amp; Recovery</div>
-          <span class="dim-score-pill dim-score-pill--orange">3.0 / 5</span>
-        </div>
-        <div class="dim-bar-wrap">
-          <div class="dim-bar" style="width:60%;background:var(--orange);"></div>
-        </div>
-
-        <div class="dim-section-label">Strengths</div>
-        <ul class="finding-list">
-          <li class="strength">Form validation on submit with toast notifications</li>
-          <li class="strength">File upload validation (type, size limits)</li>
-          <li class="strength">Button disabled states and loading spinners prevent double-submission</li>
-          <li class="strength">Required fields indicated on forms</li>
-        </ul>
-
-        <div class="dim-section-label">Issues</div>
-        <ul class="finding-list">
-          <li class="critical">Toast notifications are transient &mdash; disappear before slow readers finish <span class="label-tag label-tag--critical">COGA Obj.5</span></li>
-          <li class="issue">No "check your answers" summary before starting evaluations <span class="label-tag label-tag--issue">GOV.UK</span></li>
-          <li class="issue">No confirmation dialog before launching evaluations (significant time/cost) <span class="label-tag label-tag--issue">WCAG 3.3.4</span></li>
-          <li class="issue">Generic error messages without specific corrective action <span class="label-tag label-tag--issue">WCAG 3.3.3</span></li>
-          <li class="issue">No undo for started evaluations</li>
-          <li class="issue">No indication of time or cost commitment before starting</li>
-        </ul>
-      </div>
-
-      <!-- DIMENSION D: Cognitive Load -->
-      <div class="dim-card animate" style="--i:8">
-        <div class="dim-head">
-          <div class="dim-title">Cognitive Load</div>
-          <span class="dim-score-pill dim-score-pill--red">2.5 / 5</span>
-        </div>
-        <div class="dim-bar-wrap">
-          <div class="dim-bar" style="width:50%;background:var(--red);"></div>
-        </div>
-
-        <div class="dim-section-label">Strengths</div>
-        <ul class="finding-list">
-          <li class="strength">Progressive disclosure via collapsible sections</li>
-          <li class="strength">Step-by-step wizard for the unified evaluation flow</li>
-          <li class="strength">Report sections are expandable/collapsible</li>
-          <li class="strength">Dark mode reduces visual fatigue</li>
-        </ul>
-
-        <div class="dim-section-label">Issues</div>
-        <ul class="finding-list">
-          <li class="critical">5 capability toggles with complex availability logic on Step 2 <span class="label-tag label-tag--critical">NNG #8</span></li>
-          <li class="issue">Reports contain massive nested content (dimensions, scenarios, transcripts)</li>
-          <li class="issue">Multiple evaluation types with subtle differences create choice paralysis <span class="label-tag label-tag--issue">COGA Obj.5</span></li>
-          <li class="issue">About page has 5 tabs including "philosophical foundations" and 8 agent descriptions</li>
-          <li class="issue">Score visualizations use 4 different systems (%, ring, bar, tier)</li>
-          <li class="issue">All features visible at once &mdash; no progressive onboarding</li>
-        </ul>
-      </div>
-    </div>
-
-    <!-- DIMENSION E & F -->
-    <div id="s3" class="sec-head animate" style="--i:9">D &mdash; Cognitive Load &amp; E &mdash; Visual Design</div>
-    <div id="s4" class="sec-head animate" style="--i:9;margin-top:0;border-bottom:none;padding:0;visibility:hidden;height:0;"></div>
-
-    <div class="dim-grid">
-      <div class="dim-card animate" style="--i:10">
-        <div class="dim-head">
-          <div class="dim-title">Visual Hierarchy &amp; Affordances</div>
-          <span class="dim-score-pill dim-score-pill--green">4.0 / 5</span>
-        </div>
-        <div class="dim-bar-wrap">
-          <div class="dim-bar" style="width:80%;background:var(--green);"></div>
-        </div>
-
-        <div class="dim-section-label">Strengths</div>
-        <ul class="finding-list">
-          <li class="strength">Clear visual hierarchy with consistent heading sizes</li>
-          <li class="strength">Interactive elements visually distinct (buttons colored, links styled)</li>
-          <li class="strength">Score color-coding consistent (green/amber/red thresholds)</li>
-          <li class="strength">Icons paired with text labels throughout</li>
-          <li class="strength">Consistent border, spacing, and rounding system</li>
-          <li class="strength">Status badges clearly differentiated (completed/running/failed)</li>
-        </ul>
-
-        <div class="dim-section-label">Issues</div>
-        <ul class="finding-list">
-          <li class="issue">Some icon-only actions (delete, expand/collapse) without text labels <span class="label-tag label-tag--issue">COGA Obj.1</span></li>
-          <li class="issue">Help panel toggle is a small 40px button on the screen edge <span class="label-tag label-tag--issue">WAI-AGE</span></li>
-          <li class="issue">Dark mode muted purple text (#a89ec0 on #1e1730) = ~3.8:1 contrast ratio <span class="label-tag label-tag--critical">WCAG 1.4.3</span></li>
-          <li class="issue">No documented keyboard focus indicators <span class="label-tag label-tag--issue">WCAG 2.4.7</span></li>
-        </ul>
-      </div>
-
-      <div class="dim-card animate" style="--i:11">
-        <div class="dim-head">
-          <div class="dim-title">Trust &amp; Transparency</div>
-          <span class="dim-score-pill dim-score-pill--orange">3.0 / 5</span>
-        </div>
-        <div class="dim-bar-wrap">
-          <div class="dim-bar" style="width:60%;background:var(--orange);"></div>
-        </div>
-
-        <div class="dim-section-label">Strengths</div>
-        <ul class="finding-list">
-          <li class="strength">Real-time progress indicators during evaluations (stage timeline, spinners)</li>
-          <li class="strength">Clear completion states with report access</li>
-          <li class="strength">"How it Works" sections explain evaluation process</li>
-          <li class="strength">About page provides organizational context and methodology</li>
-        </ul>
-
-        <div class="dim-section-label">Issues</div>
-        <ul class="finding-list">
-          <li class="critical">No "before you begin" page showing requirements, time estimate, expected outcome <span class="label-tag label-tag--critical">GOV.UK</span></li>
-          <li class="issue">No cost indication before starting evaluations <span class="label-tag label-tag--issue">ISO 9241-110</span></li>
-          <li class="issue">Help panel (RAG chat) hidden by default &mdash; most users won't discover it</li>
-          <li class="issue">No "contact support" or "need help?" visible in main flows <span class="label-tag label-tag--issue">COGA Obj.7</span></li>
-          <li class="issue">Terms of Service and Privacy Policy buried in About page tabs</li>
-        </ul>
-      </div>
-    </div>
-
-    <div id="s5" style="height:0;visibility:hidden;"></div>
-    <div id="s6" style="height:0;visibility:hidden;"></div>
-
-    <!-- RECOMMENDATIONS TABLE -->
-    <div id="s7" class="sec-head animate" style="--i:12">Top 10 Recommendations</div>
-
-    <div class="table-wrap animate" style="--i:13">
-      <div class="table-scroll">
-        <table class="data-table">
-          <thead>
-            <tr>
-              <th>#</th>
-              <th class="wide">Recommendation</th>
-              <th>Impact</th>
-              <th>Effort</th>
-              <th>Standards</th>
-            </tr>
-          </thead>
+    <!-- 03 -->
+    <section class="sec">
+      <div class="sec-title"><span class="n">03</span><h2>Top ten recommendations</h2></div>
+      <div class="sec-body" style="max-width:1040px">
+        <table class="tbl">
+          <thead><tr><th>#</th><th>Recommendation</th><th>Impact</th><th>Effort</th><th>Standards</th></tr></thead>
           <tbody>
-            <tr style="--i:14">
-              <td>1</td>
-              <td class="wide"><strong>Simplify terminology throughout</strong><small>Define every domain term on first use. Rename aggressive terms: "Red Team" &rarr; "Security Test", "Attack Scenarios" &rarr; "Challenge Scenarios", "Breached" &rarr; "Needs Improvement"</small></td>
-              <td><span class="priority-badge priority-badge--high">High</span></td>
-              <td><span class="effort-badge">Low</span></td>
-              <td><code>WCAG 3.1.3</code> <code>COGA 3</code> <code>Plain Lang</code></td>
-            </tr>
-            <tr style="--i:15">
-              <td>2</td>
-              <td class="wide"><strong>Add "before you begin" start pages</strong><small>Tell users what materials they need, how long it takes, and what they'll receive. GOV.UK start page pattern.</small></td>
-              <td><span class="priority-badge priority-badge--high">High</span></td>
-              <td><span class="effort-badge">Low</span></td>
-              <td><code>GOV.UK</code> <code>ISO 9241</code></td>
-            </tr>
-            <tr style="--i:16">
-              <td>3</td>
-              <td class="wide"><strong>Unify evaluation entry point</strong><small>Replace 4 separate flows (Evaluate, Cave, Rubric, Investigate) with one guided wizard that asks "What do you want to learn?" then configures the right evaluation.</small></td>
-              <td><span class="priority-badge priority-badge--high">High</span></td>
-              <td><span class="effort-badge">High</span></td>
-              <td><code>COGA 2</code> <code>NNG #6</code> <code>GOV.UK</code></td>
-            </tr>
-            <tr style="--i:17">
-              <td>4</td>
-              <td class="wide"><strong>Add confirmation before launch</strong><small>"You're about to start a Quality Analysis. This typically takes 5-10 min. Here's what you've entered: [summary]. Start?"</small></td>
-              <td><span class="priority-badge priority-badge--high">High</span></td>
-              <td><span class="effort-badge">Low</span></td>
-              <td><code>WCAG 3.3.4</code> <code>COGA 4</code></td>
-            </tr>
-            <tr style="--i:18">
-              <td>5</td>
-              <td class="wide"><strong>Replace transient toasts with inline errors</strong><small>Persistent, inline error messages at the field level with specific corrective instructions. Never rely solely on timed notifications.</small></td>
-              <td><span class="priority-badge priority-badge--high">High</span></td>
-              <td><span class="effort-badge">Medium</span></td>
-              <td><code>WCAG 3.3.1</code> <code>COGA 4</code> <code>GOV.UK</code></td>
-            </tr>
-            <tr style="--i:19">
-              <td>6</td>
-              <td class="wide"><strong>Add contextual help tooltips on every field</strong><small>Every form field should have a "?" icon that explains in plain language what the field means and why it matters.</small></td>
-              <td><span class="priority-badge priority-badge--medium">Medium</span></td>
-              <td><span class="effort-badge">Medium</span></td>
-              <td><code>COGA 7</code> <code>NNG #10</code></td>
-            </tr>
-            <tr style="--i:20">
-              <td>7</td>
-              <td class="wide"><strong>Group sidebar navigation items</strong><small>Organize into sections: "Evaluate" (containing all eval types), "Results" (history, reports), "Learn" (guides, about). Reduce visible items from 9 to 3-4 groups.</small></td>
-              <td><span class="priority-badge priority-badge--medium">Medium</span></td>
-              <td><span class="effort-badge">Medium</span></td>
-              <td><code>COGA 2</code> <code>NNG #8</code></td>
-            </tr>
-            <tr style="--i:21">
-              <td>8</td>
-              <td class="wide"><strong>Add visible "need help?" contact link</strong><small>Display on every page, especially on error states and evaluation progress pages. Include email, chat, or documentation link.</small></td>
-              <td><span class="priority-badge priority-badge--medium">Medium</span></td>
-              <td><span class="effort-badge">Low</span></td>
-              <td><code>COGA 7</code> <code>Universal</code></td>
-            </tr>
-            <tr style="--i:22">
-              <td>9</td>
-              <td class="wide"><strong>Fix dark mode contrast ratios</strong><small>Muted purple text (#a89ec0) on dark backgrounds falls below WCAG AA 4.5:1. Lighten to #c4b9d4 or similar.</small></td>
-              <td><span class="priority-badge priority-badge--medium">Medium</span></td>
-              <td><span class="effort-badge">Low</span></td>
-              <td><code>WCAG 1.4.3</code> <code>WAI-AGE</code></td>
-            </tr>
-            <tr style="--i:23">
-              <td>10</td>
-              <td class="wide"><strong>Add guided onboarding tour</strong><small>First-time users get a step-by-step walkthrough of key features. Highlight: what is AESOP, how to start, where results live. Dismissable, re-accessible from help.</small></td>
-              <td><span class="priority-badge priority-badge--low">Low</span></td>
-              <td><span class="effort-badge">High</span></td>
-              <td><code>ISO 9241</code> <code>COGA 1</code></td>
-            </tr>
+            <tr><td class="rnum">1</td><td class="rname">Simplify terminology throughout<span class="rdetail">Define every domain term on first use. Rename aggressive terms: &ldquo;Red Team&rdquo; &rarr; &ldquo;Security Test,&rdquo; &ldquo;Attack Scenarios&rdquo; &rarr; &ldquo;Challenge Scenarios,&rdquo; &ldquo;Breached&rdquo; &rarr; &ldquo;Needs Improvement.&rdquo;</span></td><td><span class="pill hi">High</span></td><td><span class="pill eff">Low</span></td><td class="rstd">WCAG 3.1.3 &middot; COGA 3 &middot; Plain</td></tr>
+            <tr><td class="rnum">2</td><td class="rname">Add &ldquo;before you begin&rdquo; start pages<span class="rdetail">Tell users what materials they need, how long it takes, and what they&rsquo;ll receive. The GOV.UK start-page pattern.</span></td><td><span class="pill hi">High</span></td><td><span class="pill eff">Low</span></td><td class="rstd">GOV.UK &middot; ISO 9241</td></tr>
+            <tr><td class="rnum">3</td><td class="rname">Unify the evaluation entry point<span class="rdetail">Replace four separate flows (Evaluate, Cave, Rubric, Investigate) with one guided wizard that asks &ldquo;what do you want to learn?&rdquo; then configures the right evaluation.</span></td><td><span class="pill hi">High</span></td><td><span class="pill eff">High</span></td><td class="rstd">COGA 2 &middot; NNG #6 &middot; GOV.UK</td></tr>
+            <tr><td class="rnum">4</td><td class="rname">Confirm before launch<span class="rdetail">&ldquo;You&rsquo;re about to start a Quality Analysis. This typically takes 5&ndash;10 min. Here&rsquo;s what you entered: [summary]. Start?&rdquo;</span></td><td><span class="pill hi">High</span></td><td><span class="pill eff">Low</span></td><td class="rstd">WCAG 3.3.4 &middot; COGA 4</td></tr>
+            <tr><td class="rnum">5</td><td class="rname">Replace transient toasts with inline errors<span class="rdetail">Persistent, inline field-level errors with specific corrective instructions. Never rely solely on timed notifications.</span></td><td><span class="pill hi">High</span></td><td><span class="pill eff">Medium</span></td><td class="rstd">WCAG 3.3.1 &middot; COGA 4 &middot; GOV.UK</td></tr>
+            <tr><td class="rnum">6</td><td class="rname">Add contextual help on every field<span class="rdetail">Every form field gets a &ldquo;?&rdquo; icon explaining in plain language what the field means and why it matters.</span></td><td><span class="pill med">Medium</span></td><td><span class="pill eff">Medium</span></td><td class="rstd">COGA 7 &middot; NNG #10</td></tr>
+            <tr><td class="rnum">7</td><td class="rname">Group sidebar navigation<span class="rdetail">Organize into sections &mdash; Evaluate (all eval types), Results (history, reports), Learn (guides, about) &mdash; cutting visible items from nine to 3&ndash;4 groups.</span></td><td><span class="pill med">Medium</span></td><td><span class="pill eff">Medium</span></td><td class="rstd">COGA 2 &middot; NNG #8</td></tr>
+            <tr><td class="rnum">8</td><td class="rname">Add a visible &ldquo;need help?&rdquo; contact link<span class="rdetail">Display on every page, especially error states and progress pages; include email, chat, or documentation.</span></td><td><span class="pill med">Medium</span></td><td><span class="pill eff">Low</span></td><td class="rstd">COGA 7 &middot; Universal</td></tr>
+            <tr><td class="rnum">9</td><td class="rname">Fix dark-mode contrast ratios<span class="rdetail">Muted purple text (#a89ec0) on dark backgrounds falls below WCAG AA 4.5:1. Lighten to ~#c4b9d4.</span></td><td><span class="pill med">Medium</span></td><td><span class="pill eff">Low</span></td><td class="rstd">WCAG 1.4.3 &middot; WAI-AGE</td></tr>
+            <tr><td class="rnum">10</td><td class="rname">Add a guided onboarding tour<span class="rdetail">First-time users walk through the key features &mdash; what AESOP is, how to start, where results live. Dismissable, re-accessible from help.</span></td><td><span class="pill low">Low</span></td><td><span class="pill eff">High</span></td><td class="rstd">ISO 9241 &middot; COGA 1</td></tr>
           </tbody>
         </table>
       </div>
-    </div>
+    </section>
 
-    <!-- PRIORITY MATRIX -->
-    <div id="s8" class="sec-head animate" style="--i:24">Priority Matrix</div>
-
-    <div class="matrix-wrap animate" style="--i:25">
-      <div class="matrix-title">Impact vs. Effort</div>
-      <div class="matrix">
-        <div class="matrix-ylabel">Impact &uarr;</div>
-
-        <div class="matrix-q matrix-q--hi-hi">
-          <div class="matrix-q-label">Quick Wins (Do First)</div>
-          <div class="matrix-item"><span class="num">#1</span> Simplify terminology</div>
-          <div class="matrix-item"><span class="num">#2</span> "Before you begin" pages</div>
-          <div class="matrix-item"><span class="num">#4</span> Confirmation before launch</div>
+    <!-- 04 -->
+    <section class="sec">
+      <div class="sec-title"><span class="n">04</span><h2>Priority matrix &mdash; impact vs effort</h2></div>
+      <div class="sec-body">
+        <div class="pq">
+          <div class="pcell do"><div class="pq-l">Quick wins &mdash; do first</div><div class="pi"><span class="num">#1</span>Simplify terminology</div><div class="pi"><span class="num">#2</span>&ldquo;Before you begin&rdquo; pages</div><div class="pi"><span class="num">#4</span>Confirmation before launch</div></div>
+          <div class="pcell pl"><div class="pq-l">Strategic &mdash; plan &amp; invest</div><div class="pi"><span class="num">#3</span>Unify evaluation entry</div><div class="pi"><span class="num">#5</span>Inline error messages</div></div>
+          <div class="pcell ez"><div class="pq-l">Easy additions</div><div class="pi"><span class="num">#8</span>&ldquo;Need help?&rdquo; link</div><div class="pi"><span class="num">#9</span>Fix contrast ratios</div></div>
+          <div class="pcell la"><div class="pq-l">Consider later</div><div class="pi"><span class="num">#6</span>Field-level help tooltips</div><div class="pi"><span class="num">#7</span>Group sidebar nav</div><div class="pi"><span class="num">#10</span>Onboarding tour</div></div>
         </div>
-
-        <div class="matrix-q matrix-q--hi-lo">
-          <div class="matrix-q-label">Strategic (Plan & Invest)</div>
-          <div class="matrix-item"><span class="num">#3</span> Unify evaluation entry</div>
-          <div class="matrix-item"><span class="num">#5</span> Inline error messages</div>
-        </div>
-
-        <div class="matrix-q matrix-q--lo-hi">
-          <div class="matrix-q-label">Easy Additions</div>
-          <div class="matrix-item"><span class="num">#8</span> "Need help?" link</div>
-          <div class="matrix-item"><span class="num">#9</span> Fix contrast ratios</div>
-        </div>
-
-        <div class="matrix-q matrix-q--lo-lo">
-          <div class="matrix-q-label">Consider Later</div>
-          <div class="matrix-item"><span class="num">#6</span> Field-level help tooltips</div>
-          <div class="matrix-item"><span class="num">#7</span> Group sidebar nav</div>
-          <div class="matrix-item"><span class="num">#10</span> Onboarding tour</div>
-        </div>
-
-        <div class="matrix-xlabel">Effort &rarr;</div>
       </div>
-    </div>
+    </section>
 
-    <!-- STANDARDS APPLIED -->
-    <div id="s9" class="sec-head animate" style="--i:26">Standards &amp; Frameworks Applied</div>
-
-    <div class="std-grid animate" style="--i:27">
-      <div class="std-card">
-        <h4>WCAG 2.2</h4>
-        <p>Web Content Accessibility Guidelines from W3C. Focus on cognitive accessibility criteria: Understandable (3.1), Input Assistance (3.3), Navigable (2.4).</p>
-        <div class="std-focus">Key criteria: 3.1.3, 3.1.5, 3.3.1-4, 2.4.5-8, 1.4.3</div>
+    <!-- 05 -->
+    <section class="sec">
+      <div class="sec-title"><span class="n">05</span><h2>Standards &amp; frameworks applied</h2></div>
+      <div class="sec-body">
+        <div class="rw"><div class="rw-f"><b>WCAG 2.2</b><br>Web Content Accessibility Guidelines &mdash; Understandable (3.1), Input Assistance (3.3), Navigable (2.4).</div><div class="rw-arrow">&mdash;</div><div class="rw-a">3.1.3, 3.1.5, 3.3.1&ndash;4, 2.4.5&ndash;8, 1.4.3</div></div>
+        <div class="rw"><div class="rw-f"><b>Nielsen Norman</b><br>Ten usability heuristics plus NNG research on low-literacy users.</div><div class="rw-arrow">&mdash;</div><div class="rw-a">#1, #3, #5, #6, #8, #9, #10</div></div>
+        <div class="rw"><div class="rw-f"><b>W3C COGA</b><br>&ldquo;Making Content Usable for People with Cognitive and Learning Disabilities.&rdquo;</div><div class="rw-arrow">&mdash;</div><div class="rw-a">Objectives 1&ndash;7</div></div>
+        <div class="rw"><div class="rw-f"><b>GOV.UK principles</b><br>One thing per page, start pages, check answers, confirmation pages, reading age 9.</div><div class="rw-arrow">&mdash;</div><div class="rw-a">Start pages &middot; error summary</div></div>
+        <div class="rw"><div class="rw-f"><b>Plain Language</b><br>U.S. Federal Plain Writing Act &mdash; active voice, short sentences, everyday words.</div><div class="rw-arrow">&mdash;</div><div class="rw-a">Grade 6&ndash;8 reading level</div></div>
+        <div class="rw"><div class="rw-f"><b>WAI-AGE / ISO 9241</b><br>Guidance for older users; interaction principles &mdash; self-descriptiveness, controllability, error tolerance.</div><div class="rw-arrow">&mdash;</div><div class="rw-a">&ge;4.5:1 contrast &middot; 44px targets</div></div>
       </div>
-      <div class="std-card">
-        <h4>Nielsen Norman Heuristics</h4>
-        <p>10 usability heuristics plus NNG's research on low-literacy users. Emphasis on visibility of system status, recognition over recall, and error prevention.</p>
-        <div class="std-focus">Key heuristics: #1, #3, #5, #6, #8, #9, #10</div>
+    </section>
+
+    <!-- 06 -->
+    <section class="sec">
+      <div class="sec-title"><span class="n">06</span><h2>Plain-language rewrites</h2></div>
+      <div class="sec-body" style="max-width:980px">
+        <div class="rw"><div class="rw-f"><em>Red-Team</em></div><div class="rw-arrow">&rarr;</div><div class="rw-a">Security Test / Safety Check</div></div>
+        <div class="rw"><div class="rw-f"><em>Black-Box Discovery</em></div><div class="rw-arrow">&rarr;</div><div class="rw-a">Blind Test / Unknown System Test</div></div>
+        <div class="rw"><div class="rw-f"><em>Adversarial</em></div><div class="rw-arrow">&rarr;</div><div class="rw-a">Challenge / Stress Test</div></div>
+        <div class="rw"><div class="rw-f"><em>Resilience Score</em></div><div class="rw-arrow">&rarr;</div><div class="rw-a">Safety Score</div></div>
+        <div class="rw"><div class="rw-f"><em>Governance Documents</em></div><div class="rw-arrow">&rarr;</div><div class="rw-a">Policy Documents / Rules &amp; Guidelines</div></div>
+        <div class="rw"><div class="rw-f"><em>Vital Context</em></div><div class="rw-arrow">&rarr;</div><div class="rw-a">Background Info / Additional Details</div></div>
+        <div class="rw"><div class="rw-f"><em>System Instructions</em></div><div class="rw-arrow">&rarr;</div><div class="rw-a">AI Instructions / Your AI&rsquo;s Rules</div></div>
+        <div class="rw"><div class="rw-f"><em>Chatbot Endpoint</em></div><div class="rw-arrow">&rarr;</div><div class="rw-a">Chatbot URL / Where to reach your chatbot</div></div>
+        <div class="rw"><div class="rw-f"><em>Launch Red Team</em></div><div class="rw-arrow">&rarr;</div><div class="rw-a">Start Security Test</div></div>
+        <div class="rw"><div class="rw-f"><em>Generate Attack Scenarios</em></div><div class="rw-arrow">&rarr;</div><div class="rw-a">Create Test Challenges</div></div>
+        <div class="rw"><div class="rw-f"><em>Breached / Defended</em></div><div class="rw-arrow">&rarr;</div><div class="rw-a">Failed&ndash;Needs Improvement / Passed&ndash;Protected</div></div>
+        <div class="rw"><div class="rw-f"><em>Cave of Shadows</em></div><div class="rw-arrow">&rarr;</div><div class="rw-a">Security Testing (drop the allegory in labels)</div></div>
+        <div class="rw"><div class="rw-f"><em>EMI Certification</em></div><div class="rw-arrow">&rarr;</div><div class="rw-a">AESOP Quality Rating (expand the acronym)</div></div>
       </div>
-      <div class="std-card">
-        <h4>W3C COGA Task Force</h4>
-        <p>"Making Content Usable for People with Cognitive and Learning Disabilities" (2021). 8 objectives with design patterns for cognitive accessibility.</p>
-        <div class="std-focus">Key objectives: 1-7 (all applied)</div>
-      </div>
-      <div class="std-card">
-        <h4>GOV.UK Design Principles</h4>
-        <p>Gold standard for inclusive digital design. "One thing per page," start pages, check answers, confirmation pages, reading age 9.</p>
-        <div class="std-focus">Key patterns: start pages, error summary, one-thing-per-page</div>
-      </div>
-      <div class="std-card">
-        <h4>Plain Language Guidelines</h4>
-        <p>U.S. Federal Plain Writing Act. Active voice, short sentences, everyday words, verb-phrase button labels, grade 6-8 reading level.</p>
-        <div class="std-focus">Key rules: active voice, no jargon, verb-phrase CTAs</div>
-      </div>
-      <div class="std-card">
-        <h4>WAI-AGE / ISO 9241</h4>
-        <p>W3C guidance for older users (44px targets, 16px text, no hover-dependent UIs) and ISO interaction principles (self-descriptiveness, controllability, error tolerance).</p>
-        <div class="std-focus">Key: min contrast 4.5:1, min targets 44px, no time limits</div>
-      </div>
-    </div>
+    </section>
 
-    <!-- DETAILED FINDINGS -->
-    <details class="collapsible animate" style="--i:28">
-      <summary>Terminology Examples Requiring Plain Language Rewrites</summary>
-      <div class="collapsible__body">
-        <strong>Current &rarr; Suggested rewrites:</strong><br><br>
-        &bull; "Red-Team" &rarr; <strong>"Security Test"</strong> or "Safety Check"<br>
-        &bull; "Black-Box Discovery" &rarr; <strong>"Blind Test"</strong> or "Unknown System Test"<br>
-        &bull; "Adversarial" &rarr; <strong>"Challenge"</strong> or "Stress Test"<br>
-        &bull; "Resilience Score" &rarr; <strong>"Safety Score"</strong><br>
-        &bull; "Governance Documents" &rarr; <strong>"Policy Documents"</strong> or "Rules &amp; Guidelines"<br>
-        &bull; "Vital Context" &rarr; <strong>"Background Info"</strong> or "Additional Details"<br>
-        &bull; "System Instructions" &rarr; <strong>"AI Instructions"</strong> or "Your AI's Rules"<br>
-        &bull; "Chatbot Endpoint" &rarr; <strong>"Chatbot URL"</strong> or "Where to reach your chatbot"<br>
-        &bull; "Launch Red Team" &rarr; <strong>"Start Security Test"</strong><br>
-        &bull; "Generate Attack Scenarios" &rarr; <strong>"Create Test Challenges"</strong><br>
-        &bull; "Breached" &rarr; <strong>"Failed"</strong> or "Needs Improvement"<br>
-        &bull; "Defended" &rarr; <strong>"Passed"</strong> or "Protected"<br>
-        &bull; "Cave of Shadows" &rarr; <strong>"Security Testing"</strong> (drop the allegory for labels)<br>
-        &bull; "EMI Certification" &rarr; <strong>"AESOP Quality Rating"</strong> (explain the acronym)<br>
-      </div>
-    </details>
+    <p class="close"><b>Method.</b> This audit was conducted by analyzing the full AESOP frontend &mdash; 35+ pages, navigation and form components, error handling, and user-facing text. Each dimension was scored against criteria from the eight standards above, reflecting the deployed app as of March 2026. It assesses the UX/UI experience for limited-literacy users only &mdash; not code quality, performance, or security. <b>The pattern across all six dimensions is the same:</b> sound structure undone by inaccessible language and unguided choice. The platform is more usable than its words allow.</p>
 
-    <details class="collapsible animate" style="--i:29">
-      <summary>GOV.UK "Before You Begin" Page Template</summary>
-      <div class="collapsible__body">
-        <strong>Recommended start page content for each evaluation type:</strong><br><br>
-        <strong>1. Title:</strong> Clear name of what the user is about to do<br>
-        <strong>2. What you'll need:</strong> Bulleted list of required materials (system instructions file, chatbot URL, etc.)<br>
-        <strong>3. How long it takes:</strong> "This usually takes 5-15 minutes to set up and 10-30 minutes to complete"<br>
-        <strong>4. What you'll get:</strong> "A detailed report showing how well your AI follows its instructions, with a quality score and specific recommendations"<br>
-        <strong>5. Before you start:</strong> Any prerequisites or warnings<br>
-        <strong>6. Start button:</strong> Single, prominent call to action<br>
-      </div>
-    </details>
+    <footer class="footer">
+      <a href="../aesop.html">&larr; AESOP</a>
+      <span>&copy; 2025-2026 Charlie Fuller</span>
+    </footer>
 
-    <details class="collapsible animate" style="--i:30">
-      <summary>Evaluation Methodology Notes</summary>
-      <div class="collapsible__body">
-        This audit was conducted by analyzing the complete frontend codebase of the AESOP application, including all 35+ pages, navigation components, form components, error handling patterns, and user-facing text. Each dimension was scored against specific criteria from the 8 standards frameworks listed above. Scores reflect the current state of the deployed application as of March 2026. The audit focuses exclusively on the UX/UI perspective for users with limited technical literacy &mdash; it does not assess code quality, performance, or security.
-      </div>
-    </details>
-
-    <!-- FOOTER -->
-    <div class="audit-footer animate" style="--i:31">
-      <span>AESOP UX/UI Accessibility Audit &mdash; March 2026</span>
-      <span>8 standards &middot; 6 dimensions &middot; 10 recommendations</span>
-    </div>
-
-  </div><!-- /main -->
-</div><!-- /wrap -->
-
-<script>
-(function() {
-  const toc = document.getElementById('toc');
-  const links = toc.querySelectorAll('a');
-  const sections = [];
-
-  links.forEach(link => {
-    const id = link.getAttribute('href').slice(1);
-    const el = document.getElementById(id);
-    if (el) sections.push({ id, el, link });
-  });
-
-  const observer = new IntersectionObserver(entries => {
-    entries.forEach(entry => {
-      if (entry.isIntersecting) {
-        links.forEach(l => l.classList.remove('active'));
-        const match = sections.find(s => s.el === entry.target);
-        if (match) {
-          match.link.classList.add('active');
-          if (window.innerWidth <= 1000) {
-            match.link.scrollIntoView({
-              behavior: 'smooth', block: 'nearest', inline: 'center'
-            });
-          }
-        }
-      }
-    });
-  }, { rootMargin: '-10% 0px -80% 0px' });
-
-  sections.forEach(s => observer.observe(s.el));
-
-  links.forEach(link => {
-    link.addEventListener('click', e => {
-      e.preventDefault();
-      const id = link.getAttribute('href').slice(1);
-      const el = document.getElementById(id);
-      if (el) {
-        el.scrollIntoView({ behavior: 'smooth', block: 'start' });
-        history.replaceState(null, '', '#' + id);
-      }
-    });
-  });
-})();
-</script>
+  </div>
+</div>
 
 </body>
 </html>
