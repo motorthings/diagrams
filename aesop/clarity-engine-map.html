@@ -4,575 +4,287 @@
 <meta charset="UTF-8">
 <link rel="icon" type="image/svg+xml" href="../icon.svg">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Clarity Engine — Three-Layer AI Transformation Diagnostic</title>
+<title>AESOP &mdash; The Three-Layer Clarity Engine</title>
+<meta name="description" content="Three frameworks that each diagnose a different reason AI transformation fails, and the capabilities that only exist when all three run together.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600;9..144,700&family=Source+Code+Pro:wght@400;500;600" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Public+Sans:wght@400;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
 <style>
   :root {
-    --font-body: 'Fraunces', Georgia, serif;
-    --font-mono: 'Source Code Pro', 'SF Mono', Consolas, monospace;
+    --font-display: 'Instrument Serif', Georgia, serif;
+    --font-body: 'Public Sans', system-ui, sans-serif;
+    --font-mono: 'JetBrains Mono', 'SF Mono', monospace;
+    /* Gulf Stream Racing on a Ledger sheet — light only */
+    --ink: #0a1628; --graphite: #2e4d73; --body: #3d5a7a; --muted: #7a9ab8;
+    --rule: #c6d5e6; --row: #dbe5f0; --sheet: #eef4f9; --desk: #e4ecf4;
+    --spine: #0a1628; --spine-fg: #eef4f9;
+    --accent: #e8621a; --amber: #b45309; --blue: #2f6fa8; --teal: #0f766e; --violet: #7c3aed; --rose: #c23a30;
+    /* partner layer colors */
+    --cA: var(--accent); --cS: var(--blue); --cU: var(--violet); --cE: var(--teal);
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { background: var(--desk); color: var(--body); font-family: var(--font-body); font-size: 17px; line-height: 1.62; -webkit-font-smoothing: antialiased; text-rendering: optimizeLegibility; }
+  .topbar { max-width: 1160px; margin: 0 auto; padding: 18px 28px 6px; }
+  .backlink a { font-size: 14px; color: var(--muted); text-decoration: none; }
+  .backlink a:hover { color: var(--ink); }
+  .backlink .arr { color: var(--accent); font-size: 15px; margin-right: 2px; }
 
-    --bg: #060912;
-    --card: #0C1220;
-    --cardAlt: #0F172A;
-    --aesop: #F59E0B;
-    --sdl: #22D3EE;
-    --unhyped: #A78BFA;
-    --emergent: #34D399;
-    --text: #EFF6FF;
-    --muted: #94A3B8;
-    --dim: #3B4A63;
-    --border: #1E293B;
-  }
+  .sheet { max-width: 1160px; margin: 6px auto 72px; background: var(--sheet); display: grid; grid-template-columns: 56px 1fr; }
+  .spine { background: var(--spine); display: flex; align-items: flex-end; justify-content: center; padding: 26px 0; }
+  .spine-label { writing-mode: vertical-rl; transform: rotate(180deg); font-family: var(--font-mono); font-size: 13px; letter-spacing: 0.22em; color: var(--spine-fg); white-space: nowrap; text-transform: uppercase; }
+  .content { padding: 48px 60px 6px; min-width: 0; }
 
-  * { box-sizing: border-box; margin: 0; padding: 0; }
+  .masthead { border-bottom: 3px solid var(--ink); padding-bottom: 14px; }
+  .masthead h1 { font-family: var(--font-display); font-weight: 400; font-size: 54px; line-height: 0.95; letter-spacing: -0.028em; color: var(--ink); max-width: 860px; }
+  .masthead h1 .hl { font-style: italic; color: var(--accent); }
+  .lede { font-family: var(--font-display); font-style: italic; font-size: 19px; line-height: 1.45; color: var(--graphite); max-width: 780px; margin: 14px 0 16px; }
+  .route { margin: 4px 0 0; font-family: var(--font-mono); font-size: 12.5px; line-height: 2; color: var(--muted); }
+  .route b { color: var(--accent); font-weight: 600; }
 
-  body {
-    background: var(--bg);
-    color: var(--text);
-    font-family: var(--font-body);
-    min-height: 100vh;
-    line-height: 1.6;
-  }
+  section.sec { border-top: 3px solid var(--ink); padding: 22px 0 4px; }
+  .sec-title { display: grid; grid-template-columns: 88px 1fr; gap: 0 22px; align-items: baseline; margin-bottom: 12px; }
+  .sec-title .n { font-family: var(--font-display); font-size: 30px; line-height: 0.9; color: var(--accent); }
+  .sec-title h2 { font-size: 23px; font-weight: 700; letter-spacing: -0.012em; color: var(--ink); }
+  .sec-title h2 .narrow { font-family: var(--font-display); font-style: italic; font-weight: 400; }
+  .sec-body { padding: 0 0 8px 110px; }
+  .sec-body p.lead { max-width: 780px; margin-bottom: 16px; }
+  .sec-body em { color: var(--ink); }
+  code { font-family: var(--font-mono); font-size: 0.82em; color: var(--accent); }
 
-  /* Nav */
-  .nav {
-    position: sticky; top: 0; z-index: 100;
-    backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px);
-    background: rgba(6, 9, 18, 0.85);
-    border-bottom: 1px solid var(--border);
-    padding: 0 24px;
-  }
-  .nav-inner {
-    max-width: 1100px; margin: 0 auto; padding: 12px 0;
-    display: flex; align-items: center; justify-content: space-between;
-  }
-  .nav-brand {
-    font-family: var(--font-mono); font-size: 13px; font-weight: 600;
-    letter-spacing: 0.5px; color: var(--emergent); text-decoration: none;
-  }
-  .nav-back {
-    font-family: var(--font-mono); font-size: 12px; color: var(--dim);
-    text-decoration: none; transition: color 0.2s;
-  }
-  .nav-back:hover { color: var(--muted); }
+  /* engine ruled rows */
+  .engine { border-top: 2px solid var(--ink); padding: 16px 0 8px; }
+  .engine:first-child { border-top: 3px solid var(--ink); }
+  .engine .en-head { display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 14px; margin-bottom: 3px; }
+  .engine .en-tag { font-family: var(--font-mono); font-size: 10.5px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.14em; }
+  .engine .en-name { font-family: var(--font-display); font-size: 27px; line-height: 1; color: var(--ink); }
+  .engine .en-owner { font-family: var(--font-mono); font-size: 12px; color: var(--muted); }
+  .engine .en-q { font-family: var(--font-display); font-style: italic; font-size: 17px; margin: 4px 0 12px; max-width: 720px; }
+  .engine .en-g { display: grid; grid-template-columns: 170px 1fr; gap: 4px 24px; align-items: baseline; margin-bottom: 9px; }
+  .engine .en-meas { list-style: none; grid-column: 2; }
+  .engine .en-meas li { font-size: 14px; line-height: 1.5; padding: 3px 0; border-top: 1px solid var(--row); }
+  .engine .en-meas li:first-child { border-top: none; }
+  .engine .en-sublabel { font-family: var(--font-mono); font-size: 10.5px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.1em; color: var(--muted); grid-column: 1; grid-row: 1 / span 2; }
+  .engine .en-out { border-top: 1px solid var(--rule); margin-top: 2px; padding-top: 9px; font-size: 14px; line-height: 1.55; display: grid; grid-template-columns: 170px 1fr; gap: 4px 24px; }
+  .engine .en-out .ol { font-family: var(--font-mono); font-size: 10.5px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em; }
+  .engine .en-out .ov { color: var(--body); }
+  .engine .en-out .ov b { color: var(--ink); }
 
-  /* Header */
-  .header {
-    padding: 52px 24px 40px;
-    text-align: center;
-    border-bottom: 1px solid var(--border);
-    background: radial-gradient(ellipse at top, #0F1E3A 0%, var(--bg) 70%);
-  }
-  .header-chip {
-    display: inline-block;
-    padding: 4px 14px;
-    border: 1px solid rgba(52, 211, 153, 0.25);
-    border-radius: 100px;
-    font-size: 11px;
-    letter-spacing: 0.18em;
-    color: var(--emergent);
-    text-transform: uppercase;
-    margin-bottom: 24px;
-    font-weight: 600;
-  }
-  .header h1 {
-    font-size: clamp(30px, 6vw, 52px);
-    font-weight: 800;
-    margin: 0 0 20px;
-    letter-spacing: -0.025em;
-    line-height: 1.05;
-  }
-  .header h1 .gradient-text {
-    background: linear-gradient(90deg, var(--aesop), var(--sdl), var(--unhyped));
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    background-clip: text;
-  }
-  .header p {
-    color: var(--muted);
-    font-size: 16px;
-    max-width: 540px;
-    margin: 0 auto;
-    line-height: 1.65;
-  }
+  /* convergence */
+  .conv { display: grid; grid-template-columns: 88px 1fr; gap: 4px 22px; align-items: center; }
+  .conv .conv-rule { grid-column: 2; border-top: 1px solid var(--rule); margin: 6px 0 2px; }
+  .conv .conv-bands { grid-column: 2; display: grid; grid-template-columns: repeat(3, 1fr); gap: 0 18px; margin: 6px 0; }
+  .conv-band { border-top: 2px solid; padding-top: 8px; }
+  .conv-band .cb-l { font-family: var(--font-mono); font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.12em; margin-bottom: 2px; }
+  .conv-band .cb-v { font-family: var(--font-display); font-size: 21px; line-height: 1; }
+  .conv-band.a { border-top-color: var(--cA); } .conv-band.a .cb-l { color: var(--cA); }
+  .conv-band.s { border-top-color: var(--cS); } .conv-band.s .cb-l { color: var(--cS); }
+  .conv-band.u { border-top-color: var(--cU); } .conv-band.u .cb-l { color: var(--cU); }
+  .conv-band .cb-l .arr { font-family: var(--font-body); font-weight: 600; }
+  .synth { border-top: 3px solid var(--ink); border-bottom: 1px solid var(--row); padding: 14px 0 16px; display: grid; grid-template-columns: 88px 1fr; gap: 0 22px; align-items: start; }
+  .synth .synth-tag { grid-column: 1; font-family: var(--font-mono); font-size: 10.5px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.12em; color: var(--teal); padding-top: 4px; }
+  .synth p { grid-column: 2; font-family: var(--font-display); font-style: italic; font-size: 22px; line-height: 1.35; color: var(--ink); max-width: 760px; }
+  .synth p em { color: var(--teal); }
 
-  /* Section label */
-  .section-label {
-    font-size: 10px;
-    letter-spacing: 0.18em;
-    color: var(--dim);
-    text-transform: uppercase;
-    margin-bottom: 20px;
-    text-align: center;
-    font-weight: 600;
-    font-family: var(--font-mono);
-  }
+  /* emergent / failure ruled lists */
+  .emerg { border-top: 1px solid var(--row); padding: 11px 0; display: grid; grid-template-columns: 240px 1fr; gap: 4px 26px; align-items: baseline; }
+  .emerg:first-child { border-top: none; }
+  .emerg .em-t { font-weight: 700; color: var(--ink); font-size: 16px; }
+  .emerg .em-b { font-size: 14.5px; line-height: 1.55; max-width: 720px; }
+  .emerg .em-b em { color: var(--ink); }
 
-  /* Content sections */
-  .section { padding: 48px 20px 16px; }
-  .section-convergence { padding: 32px 24px; text-align: center; position: relative; }
-  .section-emergent { padding: 0 20px 48px; }
-  .section-talent { padding: 48px 20px; background: var(--card); border-top: 1px solid var(--border); border-bottom: 1px solid var(--border); }
-  .section-failures { padding: 48px 20px 60px; }
+  /* talent match 3 columns */
+  .match3 { display: grid; grid-template-columns: 1fr 1.1fr 1fr; gap: 0 34px; }
+  .mcol { border-top: 2px solid var(--ink); padding-top: 12px; }
+  .mcol .mc-tag { font-family: var(--font-mono); font-size: 10.5px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.12em; margin-bottom: 10px; }
+  .mcol.cand { border-top-color: var(--cS); } .mcol.cand .mc-tag { color: var(--cS); }
+  .mcol.org { border-top-color: var(--cA); } .mcol.org .mc-tag { color: var(--cA); }
+  .mcol.match { border-top-color: var(--cE); text-align: center; }
+  .mcol.match .mc-tag { color: var(--teal); }
+  .mcol .mline { font-size: 13.5px; line-height: 1.5; padding: 4px 0; border-top: 1px solid var(--row); color: var(--body); }
+  .mcol .mline:first-of-type { border-top: none; }
+  .mcol .mline.flag { color: var(--ink); font-style: italic; }
+  .mcol .mfoot { margin-top: 10px; font-weight: 700; font-family: var(--font-mono); font-size: 11.5px; text-transform: uppercase; letter-spacing: 0.08em; }
+  .mcol.match .mc-glyph { font-size: 26px; color: var(--teal); line-height: 1; margin: 2px 0 8px; }
+  .mcol.match .mc-t2 { font-weight: 700; color: var(--ink); font-size: 16px; margin-bottom: 6px; }
+  .mcol.match .mc-desc { font-size: 13.5px; line-height: 1.55; color: var(--body); margin: 0 auto; max-width: 250px; }
 
-  /* Grids */
-  .grid-3 {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-    gap: 14px;
-    max-width: 1060px;
-    margin: 0 auto;
-  }
-  .grid-4 {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-    gap: 12px;
-    max-width: 1060px;
-    margin: 0 auto;
-  }
-  .grid-3-talent {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
-    gap: 14px;
-    max-width: 900px;
-    margin: 0 auto;
-    align-items: stretch;
-  }
-  .grid-failures {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-    gap: 12px;
-    max-width: 1060px;
-    margin: 0 auto;
-  }
+  .close { margin: 20px 0 2px; padding-top: 14px; border-top: 1px solid var(--rule); font-size: 16px; line-height: 1.6; color: var(--body); max-width: 780px; }
+  .close b { color: var(--ink); }
 
-  /* Framework cards */
-  .fw-card {
-    background: var(--card);
-    border-radius: 14px;
-    border: 1px solid var(--border);
-    border-left: 4px solid;
-    padding: 24px;
-    cursor: pointer;
-    transition: border-color 0.2s ease;
-  }
-  .fw-card:hover { border-color: rgba(255,255,255,0.08); }
-  .fw-card.open { border-color: rgba(255,255,255,0.05); }
+  .footer { border-top: 3px solid var(--ink); margin: 24px 0 0; padding: 18px 0 30px; display: flex; justify-content: space-between; gap: 20px; flex-wrap: wrap; font-family: var(--font-mono); font-size: 11.5px; color: var(--muted); }
+  .footer a { color: var(--accent); text-decoration: none; }
 
-  .fw-card .layer-tag {
-    font-size: 10px;
-    letter-spacing: 0.16em;
-    text-transform: uppercase;
-    font-weight: 700;
-    margin-bottom: 6px;
+  @media (max-width: 900px) {
+    .sheet { grid-template-columns: 40px 1fr; }
+    .spine-label { font-size: 11px; }
+    .content { padding: 32px 22px 4px; }
+    .masthead h1 { font-size: 40px; }
+    .conv { grid-template-columns: 1fr; }
+    .conv .conv-bands { grid-column: 1; grid-template-columns: 1fr; gap: 14px; }
+    .synth { grid-template-columns: 1fr; gap: 6px; }
+    .synth p { grid-column: 1; }
+    .match3 { grid-template-columns: 1fr; gap: 20px; }
+    .sec-title { grid-template-columns: 50px 1fr; }
+    .sec-title .n { font-size: 25px; }
+    .sec-body { padding-left: 0; }
+    .engine .en-g, .engine .en-out { grid-template-columns: 1fr; gap: 2px; }
+    .engine .en-sublabel { grid-column: 1; grid-row: auto; }
+    .emerg { grid-template-columns: 1fr; gap: 2px; }
+    body { font-size: 16px; }
   }
-  .fw-card .fw-name {
-    font-size: 19px;
-    font-weight: 700;
-    margin-bottom: 2px;
-  }
-  .fw-card .fw-sub {
-    font-size: 12px;
-    color: var(--dim);
-    margin-bottom: 16px;
-  }
-  .fw-card .fw-question {
-    font-size: 14px;
-    font-style: italic;
-    margin: 0 0 12px;
-    line-height: 1.55;
-  }
-  .fw-card .fw-detail { margin-top: 16px; display: none; }
-  .fw-card.open .fw-detail { display: block; }
-
-  .fw-card .measures-label {
-    font-size: 10px;
-    letter-spacing: 0.14em;
-    color: var(--dim);
-    text-transform: uppercase;
-    margin-bottom: 10px;
-  }
-  .fw-card .measure {
-    font-size: 13px;
-    color: var(--muted);
-    padding: 5px 0 5px 12px;
-    border-left: 2px solid rgba(255,255,255,0.08);
-    margin-bottom: 4px;
-    line-height: 1.45;
-  }
-  .fw-card .output-box {
-    margin-top: 16px;
-    padding: 14px;
-    border-radius: 8px;
-    font-size: 13px;
-    color: var(--muted);
-    line-height: 1.55;
-  }
-  .fw-card .output-box strong { font-weight: 600; }
-  .fw-card .expand-hint {
-    margin-top: 0;
-    font-size: 11px;
-    color: var(--dim);
-    text-align: right;
-  }
-  .fw-card.open .expand-hint { margin-top: 16px; }
-
-  /* Convergence */
-  .streams { display: flex; justify-content: center; gap: 72px; margin-bottom: 0; }
-  .stream { display: flex; flex-direction: column; align-items: center; }
-  .stream-line { width: 2px; height: 32px; }
-  .stream-dot { width: 6px; height: 6px; border-radius: 50%; opacity: 0.5; }
-
-  .synthesis-node {
-    display: inline-block;
-    position: relative;
-    padding: 28px 36px;
-    background: var(--cardAlt);
-    border-radius: 16px;
-    border: 1px solid var(--border);
-    max-width: 480px;
-    margin: 0 auto;
-    box-shadow: 0 0 60px rgba(52, 211, 153, 0.07);
-  }
-  .synthesis-node::before {
-    content: '';
-    position: absolute; inset: 0;
-    border-radius: 16px;
-    background: linear-gradient(135deg, rgba(245,158,11,0.09) 0%, rgba(34,211,238,0.06) 50%, rgba(167,139,250,0.09) 100%);
-    pointer-events: none;
-  }
-  .synthesis-node .inner { position: relative; z-index: 1; }
-  .synthesis-node .synth-tag {
-    font-size: 11px; letter-spacing: 0.16em; color: var(--emergent);
-    text-transform: uppercase; font-weight: 600; margin-bottom: 12px;
-  }
-  .synthesis-node p { font-size: 15px; color: var(--text); margin: 0; line-height: 1.65; }
-
-  .flow-down { display: flex; justify-content: center; margin-top: 0; }
-  .flow-down .flow-inner { display: flex; flex-direction: column; align-items: center; }
-  .flow-down .flow-line { width: 2px; height: 32px; }
-  .flow-down .flow-dot { width: 6px; height: 6px; border-radius: 50%; opacity: 0.6; }
-
-  /* Emergent cards */
-  .em-card {
-    background: var(--cardAlt);
-    border-radius: 12px;
-    border: 1px solid rgba(52, 211, 153, 0.12);
-    padding: 20px 22px;
-  }
-  .em-card .em-dot {
-    width: 8px; height: 8px; border-radius: 50%;
-    background: var(--emergent); margin-bottom: 12px;
-    box-shadow: 0 0 10px rgba(52, 211, 153, 0.38);
-  }
-  .em-card h4 { font-size: 14px; font-weight: 700; margin: 0 0 10px; color: var(--text); line-height: 1.35; }
-  .em-card p { font-size: 13px; color: var(--muted); margin: 0; line-height: 1.65; }
-
-  /* Talent columns */
-  .talent-col {
-    padding: 20px; border-radius: 12px;
-  }
-  .talent-col.candidate { border: 1px solid rgba(34,211,238,0.19); background: rgba(34,211,238,0.03); }
-  .talent-col.match {
-    border: 1px solid rgba(52,211,153,0.22); background: rgba(52,211,153,0.03);
-    display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center;
-  }
-  .talent-col.org { border: 1px solid rgba(245,158,11,0.19); background: rgba(245,158,11,0.03); }
-
-  .talent-col .col-tag {
-    font-size: 10px; letter-spacing: 0.14em; text-transform: uppercase;
-    font-weight: 700; margin-bottom: 14px;
-  }
-  .talent-col .talent-line {
-    font-size: 13px; color: var(--muted); padding: 4px 0; line-height: 1.5;
-  }
-  .talent-col .talent-footer {
-    margin-top: 14px; padding-top: 14px;
-    font-size: 13px; font-weight: 700;
-  }
-
-  .match-icon { font-size: 28px; margin-bottom: 12px; letter-spacing: -2px; }
-  .match-title { font-size: 14px; font-weight: 700; margin-bottom: 10px; }
-  .match-desc { font-size: 12px; color: var(--muted); line-height: 1.6; }
-
-  /* Failure cards */
-  .fail-card {
-    padding: 18px 20px; border-radius: 10px;
-    background: var(--card); border: 1px solid var(--border);
-    border-left: 3px solid;
-  }
-  .fail-card .fail-mode { font-size: 14px; font-weight: 700; margin-bottom: 8px; }
-  .fail-card .fail-desc { font-size: 13px; color: var(--muted); margin-bottom: 14px; line-height: 1.55; }
-  .fail-card .fail-catcher {
-    font-size: 10px; color: var(--dim); letter-spacing: 0.12em;
-    text-transform: uppercase;
-  }
-
-  @media (max-width: 640px) {
-    .header { padding: 36px 16px 28px; }
-    .section { padding: 32px 12px 12px; }
-    .section-convergence { padding: 24px 12px; }
-    .section-emergent { padding: 0 12px 32px; }
-    .section-talent { padding: 32px 12px; }
-    .section-failures { padding: 32px 12px 40px; }
-    .grid-3, .grid-4, .grid-3-talent, .grid-failures { grid-template-columns: 1fr; }
-    .streams { gap: 36px; }
-  }
-.backlink{position:fixed;top:12px;left:16px;z-index:200;font-family:var(--font-mono,monospace);font-size:11px;color:var(--text-dim,#8b949e);text-decoration:none;padding:6px 10px;border:1px solid var(--border,rgba(255,255,255,0.08));border-radius:6px;background:var(--surface,#161b22);transition:color .15s,border-color .15s}.backlink:hover{color:var(--text,#e6edf3);border-color:var(--text-dim,#8b949e)}
 </style>
 </head>
 <body>
-<a href="../aesop.html" class="backlink">&larr; AESOP Transformation OS</a>
 
-  <div class="nav">
-    <div class="nav-inner">
-      <a href="../index.html" class="nav-back">← Visual Explainers</a>
-      <span class="nav-brand">AESOP Transformation OS</span>
-    </div>
-  </div>
+<div class="topbar">
+  <div class="backlink"><a href="../aesop.html"><span class="arr">&larr;</span> AESOP</a></div>
+</div>
 
-  <!-- HEADER -->
-  <div class="header">
-    <div class="header-chip">System Architecture</div>
+<div class="sheet">
+  <div class="spine"><div class="spine-label">THE CLARITY ENGINE</div></div>
 
-    <h1>
-      The Three-Layer<br />
-      <span class="gradient-text">Clarity Engine</span>
-    </h1>
+  <div class="content">
 
-    <p>
-      Three frameworks that each diagnose a different reason AI transformation fails.
-      Together, they produce capabilities none can generate alone.
-    </p>
-  </div>
+    <header class="masthead">
+      <h1>The Three-Layer <span class="hl">Clarity Engine</span></h1>
+      <p class="lede">Three frameworks, each diagnosing a different reason AI transformation fails. Run together on one organization, they produce capabilities none can generate alone.</p>
+      <p class="route">AESOP &middot; transformation &nbsp;&rarr;&nbsp; Stealth Dog Labs &middot; human &nbsp;&rarr;&nbsp; Unhyped AI &middot; structure &nbsp;&rarr;&nbsp; <b>the whole system</b> &nbsp;&rarr;&nbsp; what emerges &nbsp;&rarr;&nbsp; what it prevents</p>
+    </header>
 
-  <!-- 01 — THE THREE ENGINES -->
-  <div class="section">
-    <div class="section-label">01 — The Three Diagnostic Engines</div>
+    <!-- 01 -->
+    <section class="sec">
+      <div class="sec-title"><span class="n">01</span><h2>The three diagnostic engines</h2></div>
+      <div class="sec-body">
 
-    <div class="grid-3">
+        <div class="engine" style="border-top-color: var(--cA)">
+          <div class="en-head"><span class="en-tag" style="color:var(--cA)">Transformation layer</span><span class="en-name">AESOP</span><span class="en-owner">Waifinder &middot; Charlie Fuller</span></div>
+          <p class="en-q" style="color:var(--cA)">&ldquo;Where is this organization &mdash; and what is the real path forward?&rdquo;</p>
+          <div class="en-g">
+            <span class="en-sublabel">What it measures</span>
+            <ul class="en-meas">
+              <li>AI maturity stage &amp; trajectory</li>
+              <li>Transformation readiness signals</li>
+              <li>Strategic priority sequencing</li>
+              <li>Capability &amp; investment gaps</li>
+            </ul>
+          </div>
+          <div class="en-out"><span class="ol" style="color:var(--cA)">Output</span><div class="ov">A sequenced roadmap calibrated to real organizational context &mdash; not aspirational positioning.</div></div>
+        </div>
 
-      <!-- AESOP -->
-      <div class="fw-card" data-fw="aesop" style="border-left-color: var(--aesop);">
-        <div class="layer-tag" style="color: var(--aesop);">Transformation Layer</div>
-        <div class="fw-name">AESOP</div>
-        <div class="fw-sub">Waifinder / Charlie Fuller</div>
-        <p class="fw-question" style="color: var(--aesop);">"Where is this org — and what is the real path forward?"</p>
+        <div class="engine" style="border-top-color: var(--cS)">
+          <div class="en-head"><span class="en-tag" style="color:var(--cS)">Human layer</span><span class="en-name">Stealth Dog Labs</span><span class="en-owner">Christopher Skinner</span></div>
+          <p class="en-q" style="color:var(--cS)">&ldquo;Who are the actual people &mdash; and how do they really think?&rdquo;</p>
+          <div class="en-g">
+            <span class="en-sublabel">What it measures</span>
+            <ul class="en-meas">
+              <li>Cognitive profiles across 90+ dimensions</li>
+              <li>Psycholinguistic signal extraction</li>
+              <li>Decision-making &amp; reasoning patterns</li>
+              <li>Change disposition &amp; capacity to adapt</li>
+            </ul>
+          </div>
+          <div class="en-out"><span class="ol" style="color:var(--cS)">Output</span><div class="ov">Individual thinking maps, team composition models, mandate quality scores &mdash; and candidate profiles read from resumes as behavioral artifacts.</div></div>
+        </div>
 
-        <div class="fw-detail">
-          <div class="measures-label">What it measures</div>
-          <div class="measure" style="border-left-color: rgba(245,158,11,0.21);">AI maturity stage &amp; trajectory</div>
-          <div class="measure" style="border-left-color: rgba(245,158,11,0.21);">Transformation readiness signals</div>
-          <div class="measure" style="border-left-color: rgba(245,158,11,0.21);">Strategic priority sequencing</div>
-          <div class="measure" style="border-left-color: rgba(245,158,11,0.21);">Capability &amp; investment gaps</div>
-          <div class="output-box" style="background: rgba(245,158,11,0.05);">
-            <strong style="color: var(--aesop);">Output → </strong>
-            A sequenced roadmap calibrated to real organizational context — not aspirational positioning.
+        <div class="engine" style="border-top-color: var(--cU)">
+          <div class="en-head"><span class="en-tag" style="color:var(--cU)">Structure layer</span><span class="en-name">Unhyped AI</span><span class="en-owner">Stuart Winter-Tear</span></div>
+          <p class="en-q" style="color:var(--cU)">&ldquo;Is the org actually wired for this &mdash; or will AI just inherit its dysfunction?&rdquo;</p>
+          <div class="en-g">
+            <span class="en-sublabel">What it measures</span>
+            <ul class="en-meas">
+              <li>Coordination clarity &amp; authority structure</li>
+              <li>Value flow mapping across the operating model</li>
+              <li>Governance &amp; decision architecture</li>
+              <li>Agentic readiness before deployment</li>
+            </ul>
+          </div>
+          <div class="en-out"><span class="ol" style="color:var(--cU)">Output</span><div class="ov">Operating model diagnosis, coordination health score, agentic readiness assessment &mdash; the structural truth before anything gets built.</div></div>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- 02 -->
+    <section class="sec">
+      <div class="sec-title"><span class="n">02</span><h2>Convergence &mdash; the synthesis point</h2></div>
+      <div class="sec-body">
+        <div class="conv">
+          <div class="conv-bands">
+            <div class="conv-band a"><div class="cb-l">AESOP <span class="arr">&rarr;</span></div><div class="cb-v" style="color:var(--cA)">Where it stands</div></div>
+            <div class="conv-band s"><div class="cb-l">Stealth Dog <span class="arr">&rarr;</span></div><div class="cb-v" style="color:var(--cS)">Who&rsquo;s thinking</div></div>
+            <div class="conv-band u"><div class="cb-l">Unhyped AI <span class="arr">&rarr;</span></div><div class="cb-v" style="color:var(--cU)">How it&rsquo;s wired</div></div>
           </div>
         </div>
-
-        <div class="expand-hint">tap to expand ↓</div>
+        <div class="synth">
+          <div class="synth-tag">The synthesis point</div>
+          <p>When all three run simultaneously on the same organization, you stop seeing three partial pictures &mdash; and start seeing the <em>whole system</em>.</p>
+        </div>
       </div>
+    </section>
 
-      <!-- Stealth Dog Labs -->
-      <div class="fw-card" data-fw="sdl" style="border-left-color: var(--sdl);">
-        <div class="layer-tag" style="color: var(--sdl);">Human Layer</div>
-        <div class="fw-name">Stealth Dog Labs</div>
-        <div class="fw-sub">Christopher Skinner</div>
-        <p class="fw-question" style="color: var(--sdl);">"Who are the actual people — and how do they really think?"</p>
+    <!-- 03 -->
+    <section class="sec">
+      <div class="sec-title"><span class="n">03</span><h2>What only exists when all three combine</h2></div>
+      <div class="sec-body">
+        <div class="emerg"><div class="em-t">Calibrated Transformation Roadmap</div><div class="em-b">Not just where you need to go &mdash; a path that accounts for how your specific people think, what your structure can actually carry, and where you genuinely sit on the maturity curve.</div></div>
+        <div class="emerg"><div class="em-t">Real Role Definition</div><div class="em-b">What you actually need to hire for &mdash; derived from operating model gaps, maturity context, and team cognitive composition. Not the ghost role your gut wrote into the JD.</div></div>
+        <div class="emerg"><div class="em-t">Cognitive-Fit Talent Matching</div><div class="em-b">Shape-to-shape between candidate profile and organizational need. The resume is a psycholinguistic artifact; the org need is derived, not declared. <em>No keyword theater.</em></div></div>
+        <div class="emerg"><div class="em-t">Transformation Momentum Score</div><div class="em-b">Ongoing measurement across all three layers &mdash; whether change is actually taking hold at the human, structural, and strategic levels before financial outcomes confirm it.</div></div>
+      </div>
+    </section>
 
-        <div class="fw-detail">
-          <div class="measures-label">What it measures</div>
-          <div class="measure" style="border-left-color: rgba(34,211,238,0.21);">Cognitive profiles across 90+ dimensions</div>
-          <div class="measure" style="border-left-color: rgba(34,211,238,0.21);">Psycholinguistic signal extraction</div>
-          <div class="measure" style="border-left-color: rgba(34,211,238,0.21);">Decision-making &amp; reasoning patterns</div>
-          <div class="measure" style="border-left-color: rgba(34,211,238,0.21);">Change disposition &amp; capacity to adapt</div>
-          <div class="output-box" style="background: rgba(34,211,238,0.05);">
-            <strong style="color: var(--sdl);">Output → </strong>
-            Individual thinking maps, team composition models, mandate quality scores — and candidate profiles from resumes as behavioral artifacts.
+    <!-- 04 -->
+    <section class="sec">
+      <div class="sec-title"><span class="n">04</span><h2>Application &mdash; the talent matching engine</h2></div>
+      <div class="sec-body">
+        <p class="lead">The clearest proof of the integration: matching the real person to the real role, on both sides at once.</p>
+        <div class="match3">
+          <div class="mcol cand">
+            <div class="mc-tag">Candidate side</div>
+            <div class="mline">Resume read as a psycholinguistic artifact</div>
+            <div class="mline">Stealth Dog extracts cognitive shape</div>
+            <div class="mline">Presentation quality scored</div>
+            <div class="mline">The &ldquo;slinger coefficient&rdquo; measured</div>
+            <div class="mline flag">Proven capability mapped</div>
+            <div class="mfoot" style="color:var(--cS)">Candidate Profile</div>
+          </div>
+          <div class="mcol match">
+            <div class="mc-glyph">&#8660;</div>
+            <div class="mc-tag" style="color:var(--teal)">Shape-to-shape match</div>
+            <div class="mc-t2">Not keyword-to-keyword</div>
+            <div class="mc-desc">Vector fit across cognitive, structural, and maturity dimensions simultaneously.</div>
+          </div>
+          <div class="mcol org">
+            <div class="mc-tag">Organization side</div>
+            <div class="mline">AESOP supplies maturity context</div>
+            <div class="mline">Unhyped supplies operating model gaps</div>
+            <div class="mline">Stealth Dog supplies team composition map</div>
+            <div class="mline flag">Real role definition derived &mdash; not declared from gut feel</div>
+            <div class="mfoot" style="color:var(--cA)">Organization Profile</div>
           </div>
         </div>
-
-        <div class="expand-hint">tap to expand ↓</div>
       </div>
+    </section>
 
-      <!-- Unhyped AI -->
-      <div class="fw-card" data-fw="unhyped" style="border-left-color: var(--unhyped);">
-        <div class="layer-tag" style="color: var(--unhyped);">Structure Layer</div>
-        <div class="fw-name">Unhyped AI</div>
-        <div class="fw-sub">Stuart Winter-Tear</div>
-        <p class="fw-question" style="color: var(--unhyped);">"Is the org actually wired for this — or will AI just inherit its dysfunction?"</p>
-
-        <div class="fw-detail">
-          <div class="measures-label">What it measures</div>
-          <div class="measure" style="border-left-color: rgba(167,139,250,0.21);">Coordination clarity &amp; authority structure</div>
-          <div class="measure" style="border-left-color: rgba(167,139,250,0.21);">Value flow mapping across the operating model</div>
-          <div class="measure" style="border-left-color: rgba(167,139,250,0.21);">Governance &amp; decision architecture</div>
-          <div class="measure" style="border-left-color: rgba(167,139,250,0.21);">Agentic readiness before deployment</div>
-          <div class="output-box" style="background: rgba(167,139,250,0.05);">
-            <strong style="color: var(--unhyped);">Output → </strong>
-            Operating model diagnosis, coordination health score, agentic readiness assessment — the structural truth before anything gets built.
-          </div>
-        </div>
-
-        <div class="expand-hint">tap to expand ↓</div>
+    <!-- 05 -->
+    <section class="sec">
+      <div class="sec-title"><span class="n">05</span><h2>The failure modes this prevents</h2></div>
+      <div class="sec-body">
+        <div class="emerg"><div class="em-t">Wrong Path</div><div class="em-b">Pursuing the wrong priorities at the wrong maturity stage. <em>Caught by AESOP.</em></div></div>
+        <div class="emerg"><div class="em-t">Wrong Structure</div><div class="em-b">Deploying AI into broken coordination &mdash; making dysfunction faster. <em>Caught by Unhyped AI.</em></div></div>
+        <div class="emerg"><div class="em-t">Wrong People</div><div class="em-b">Hiring for a ghost role, not the real capability the org actually needs. <em>Caught by Stealth Dog Labs.</em></div></div>
+        <div class="emerg"><div class="em-t">Wrong Sequence</div><div class="em-b">Doing all of the above in the wrong order &mdash; and losing eighteen months doing it. <em>Caught by the integration.</em></div></div>
+        <p class="close"><b>One diagnostic is a lens. All three is a diagnosis.</b> Each framework was built to answer one question no other layer can see &mdash; strategy, people, structure. Converged, they stop guessing about the parts and start reading the whole system.</p>
       </div>
-    </div>
+    </section>
+
+    <footer class="footer">
+      <a href="../aesop.html">&larr; AESOP</a>
+      <span>&copy; 2025-2026 Charlie Fuller</span>
+    </footer>
+
   </div>
-
-  <!-- CONVERGENCE -->
-  <div class="section-convergence">
-    <!-- Three streams flowing down -->
-    <div class="streams">
-      <div class="stream">
-        <div class="stream-line" style="background: linear-gradient(to bottom, rgba(245,158,11,0.5), rgba(245,158,11,0.12));"></div>
-        <div class="stream-dot" style="background: var(--aesop);"></div>
-      </div>
-      <div class="stream">
-        <div class="stream-line" style="background: linear-gradient(to bottom, rgba(34,211,238,0.5), rgba(34,211,238,0.12));"></div>
-        <div class="stream-dot" style="background: var(--sdl);"></div>
-      </div>
-      <div class="stream">
-        <div class="stream-line" style="background: linear-gradient(to bottom, rgba(167,139,250,0.5), rgba(167,139,250,0.12));"></div>
-        <div class="stream-dot" style="background: var(--unhyped);"></div>
-      </div>
-    </div>
-
-    <!-- Synthesis Node -->
-    <div class="synthesis-node">
-      <div class="inner">
-        <div class="synth-tag">The Synthesis Point</div>
-        <p>
-          When all three run simultaneously on the same organization, you stop seeing three partial pictures — and start seeing the <em>whole system</em>.
-        </p>
-      </div>
-    </div>
-
-    <!-- Flow down to emergent -->
-    <div class="flow-down">
-      <div class="flow-inner">
-        <div class="flow-line" style="background: linear-gradient(to bottom, rgba(52,211,153,0.5), rgba(52,211,153,0.12));"></div>
-        <div class="flow-dot" style="background: var(--emergent);"></div>
-      </div>
-    </div>
-  </div>
-
-  <!-- 02 — EMERGENT CAPABILITIES -->
-  <div class="section-emergent">
-    <div class="section-label">02 — What Only Exists When All Three Combine</div>
-
-    <div class="grid-4">
-      <div class="em-card">
-        <div class="em-dot"></div>
-        <h4>Calibrated Transformation Roadmap</h4>
-        <p>Not just where you need to go — a path that accounts for how your specific people think, what your structure can actually carry, and where you genuinely are on the maturity curve.</p>
-      </div>
-      <div class="em-card">
-        <div class="em-dot"></div>
-        <h4>Real Role Definition</h4>
-        <p>What you actually need to hire for — derived from operating model gaps, maturity context, and team cognitive composition. Not the ghost role your gut wrote into the JD.</p>
-      </div>
-      <div class="em-card">
-        <div class="em-dot"></div>
-        <h4>Cognitive-Fit Talent Matching</h4>
-        <p>Shape-to-shape matching between candidate profile and organizational need profile. The resume is a psycholinguistic artifact. The org need is derived, not declared. No keyword theater.</p>
-      </div>
-      <div class="em-card">
-        <div class="em-dot"></div>
-        <h4>Transformation Momentum Score</h4>
-        <p>Ongoing measurement across all three layers — tracking whether change is actually taking hold at the human, structural, and strategic levels before financial outcomes confirm it.</p>
-      </div>
-    </div>
-  </div>
-
-  <!-- 03 — TALENT MATCHING -->
-  <div class="section-talent">
-    <div class="section-label">03 — Application: The Talent Matching Engine</div>
-
-    <div class="grid-3-talent">
-      <!-- Candidate -->
-      <div class="talent-col candidate">
-        <div class="col-tag" style="color: var(--sdl);">Candidate Side</div>
-        <div class="talent-line">→ Resume as psycholinguistic artifact</div>
-        <div class="talent-line">→ SDL extracts cognitive shape</div>
-        <div class="talent-line">→ Presentation quality scored</div>
-        <div class="talent-line">→ The "slinger coefficient" measured</div>
-        <div class="talent-line">Proven capability mapped</div>
-        <div class="talent-footer" style="border-top: 1px solid rgba(34,211,238,0.12); color: var(--sdl);">Candidate Profile</div>
-      </div>
-
-      <!-- Match Engine -->
-      <div class="talent-col match">
-        <div class="match-icon" style="color: var(--emergent);">⟷</div>
-        <div class="match-title" style="color: var(--emergent);">Shape-to-Shape Match</div>
-        <div class="match-desc">
-          Not keyword-to-keyword.<br />
-          Vector fit across cognitive,<br />
-          structural, and maturity<br />
-          dimensions simultaneously.
-        </div>
-      </div>
-
-      <!-- Organization -->
-      <div class="talent-col org">
-        <div class="col-tag" style="color: var(--aesop);">Organization Side</div>
-        <div class="talent-line">→ AESOP maturity context</div>
-        <div class="talent-line">→ Unhyped operating model gaps</div>
-        <div class="talent-line">→ SDL team composition map</div>
-        <div class="talent-line">→ Real role definition derived</div>
-        <div class="talent-line">Not declared from gut feel</div>
-        <div class="talent-footer" style="border-top: 1px solid rgba(245,158,11,0.12); color: var(--aesop);">Organization Profile</div>
-      </div>
-    </div>
-  </div>
-
-  <!-- 04 — FAILURE MODES -->
-  <div class="section-failures">
-    <div class="section-label">04 — The Four Failure Modes This Prevents</div>
-
-    <div class="grid-failures">
-      <div class="fail-card" style="border-left-color: var(--aesop);">
-        <div class="fail-mode" style="color: var(--aesop);">Wrong Path</div>
-        <div class="fail-desc">Pursuing the wrong priorities at the wrong maturity stage</div>
-        <div class="fail-catcher">Caught by AESOP</div>
-      </div>
-      <div class="fail-card" style="border-left-color: var(--unhyped);">
-        <div class="fail-mode" style="color: var(--unhyped);">Wrong Structure</div>
-        <div class="fail-desc">Deploying AI into broken coordination — making dysfunction faster</div>
-        <div class="fail-catcher">Caught by Unhyped AI</div>
-      </div>
-      <div class="fail-card" style="border-left-color: var(--sdl);">
-        <div class="fail-mode" style="color: var(--sdl);">Wrong People</div>
-        <div class="fail-desc">Hiring for a ghost role, not the real capability the org actually needs</div>
-        <div class="fail-catcher">Caught by Stealth Dog Labs</div>
-      </div>
-      <div class="fail-card" style="border-left-color: var(--emergent);">
-        <div class="fail-mode" style="color: var(--emergent);">Wrong Sequence</div>
-        <div class="fail-desc">Doing all of the above in the wrong order and losing 18 months doing it</div>
-        <div class="fail-catcher">Caught by The Integration</div>
-      </div>
-    </div>
-  </div>
-
-  <script>
-    /* Expand/collapse framework cards */
-    document.querySelectorAll('.fw-card').forEach(function(card) {
-      card.addEventListener('click', function() {
-        var wasOpen = card.classList.contains('open');
-        // Close all
-        document.querySelectorAll('.fw-card').forEach(function(c) { c.classList.remove('open'); });
-        // Update hints
-        document.querySelectorAll('.fw-card .expand-hint').forEach(function(h) { h.textContent = 'tap to expand ↓'; });
-        // Open clicked (unless it was already open)
-        if (!wasOpen) {
-          card.classList.add('open');
-          card.querySelector('.expand-hint').textContent = 'tap to collapse ↑';
-        }
-      });
-    });
-  </script>
+</div>
 
 </body>
 </html>
