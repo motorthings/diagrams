@@ -2,509 +2,285 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<meta name="description" content="A plain-English tour of how the AI transformation simulation works — what a claim is, what a seam is, and how one round of the two-team race actually runs, step by step.">
-<title>AI Transformation Experiment — How the Simulation Works (Plain English)</title>
 <link rel="icon" type="image/svg+xml" href="../icon.svg">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AI Transformation Experiment &mdash; How It Works</title>
+<meta name="description" content="A plain-English tour of how the AI transformation simulation works — what a claim is, what a seam is, and how one round of the two-team race runs.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,wght@0,400;0,500;0,600;0,700;0,800;1,400&family=Source+Code+Pro:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Public+Sans:wght@400;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
 <style>
   :root {
-    --font-display: 'Fraunces', Georgia, serif;
-    --font-mono: 'Source Code Pro', 'SF Mono', Consolas, monospace;
-    --bg: #eef4f9; --surface: #ffffff; --surface2: #f5f8fc;
-    --border: #c8daea; --border-bright: #a0bedb;
-    --text: #0a1628; --text-dim: #3d5a7a; --text-muted: #7a9ab8;
-    --primary: #e8621a; --primary-dim: rgba(232,98,26,0.08);
-    --secondary: #4a90c4; --secondary-dim: rgba(74,144,196,0.08);
-    --metric: #0f766e; --metric-dim: rgba(15,118,110,0.06);
-    --amber: #b45309; --amber-dim: rgba(180,83,9,0.08);
-    --slate: #475569; --slate-dim: rgba(71,85,105,0.08);
+    --font-display: 'Instrument Serif', Georgia, serif;
+    --font-body: 'Public Sans', system-ui, sans-serif;
+    --font-mono: 'JetBrains Mono', 'SF Mono', monospace;
+    --ink: #1a2740; --graphite: #2c3b57; --body: #3f4f6b; --muted: #7a879c;
+    --rule: #c8c5b2; --row: #e6e3d2; --sheet: #f7f7f2; --desk: #ebeae0;
+    --spine: #1a2740; --spine-fg: #f7f7f2;
+    --accent: #b45309; --amber: #a16207; --blue: #4f46e5; --teal: #0f766e; --violet: #7a3ea0; --rose: #b3342a;
   }
-  html.dark {
-    --bg: #0a1628; --surface: #132240; --surface2: #1a2d52;
-    --border: #1a2d52; --border-bright: #2d4570;
-    --text: #e8edf5; --text-dim: #9bb0d4; --text-muted: #5e7aa3;
-    --primary: #f37021; --primary-dim: rgba(243,112,33,0.12);
-    --secondary: #6cace4; --secondary-dim: rgba(108,172,228,0.12);
-    --metric: #2dd4bf; --metric-dim: rgba(45,212,191,0.08);
-    --amber: #f59e0b; --amber-dim: rgba(245,158,11,0.12);
-    --slate: #475569; --slate-dim: rgba(71,85,105,0.08);
-  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { background: var(--desk); color: var(--body); font-family: var(--font-body); font-size: 17px; line-height: 1.66; -webkit-font-smoothing: antialiased; text-rendering: optimizeLegibility; }
+  .topbar { max-width: 1160px; margin: 0 auto; padding: 18px 28px 6px; }
+  .backlink a { font-size: 14px; color: var(--muted); text-decoration: none; }
+  .backlink a:hover { color: var(--ink); }
+  .backlink .arr { color: var(--accent); font-size: 15px; margin-right: 2px; }
 
-  * { margin:0; padding:0; box-sizing:border-box; }
+  .sheet { max-width: 1160px; margin: 6px auto 72px; background: var(--sheet); display: grid; grid-template-columns: 56px 1fr; }
+  .spine { background: var(--spine); display: flex; align-items: flex-end; justify-content: center; padding: 26px 0; }
+  .spine-label { writing-mode: vertical-rl; transform: rotate(180deg); font-family: var(--font-mono); font-size: 13px; letter-spacing: 0.22em; color: var(--spine-fg); white-space: nowrap; text-transform: uppercase; }
+  .content { padding: 48px 60px 6px; min-width: 0; }
 
-  body {
-    background: var(--bg);
-    background-image:
-      radial-gradient(ellipse at 80% 0%, var(--primary-dim) 0%, transparent 50%),
-      radial-gradient(ellipse at 20% 60%, var(--secondary-dim) 0%, transparent 40%);
-    color: var(--text); font-family: var(--font-display);
-    min-height: 100vh; line-height: 1.7; padding: 0 16px 64px;
-    transition: background 0.3s, color 0.3s;
-  }
+  .masthead { border-bottom: 3px solid var(--ink); padding-bottom: 16px; }
+  .masthead h1 { font-family: var(--font-display); font-weight: 400; font-size: 50px; line-height: 0.98; letter-spacing: -0.028em; color: var(--ink); }
+  .tagline { font-family: var(--font-mono); font-size: 11.5px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.14em; color: var(--accent); margin: 10px 0 14px; }
+  .lede { font-family: var(--font-display); font-style: italic; font-size: 19px; line-height: 1.5; color: var(--graphite); max-width: 940px; }
+  .lede b { color: var(--ink); }
 
-  .backlink {
-    position: fixed; top: 12px; left: 16px; z-index: 101;
-    font-family: var(--font-mono); font-size: 12px; color: var(--text-dim);
-    text-decoration: none; padding: 6px 10px;
-    border: 1px solid var(--border); border-radius: 6px;
-    background: var(--surface);
-    transition: color 0.15s, border-color 0.15s;
-  }
-  .backlink:hover { color: var(--text); border-color: var(--border-bright); }
+  section.sec { border-top: 3px solid var(--ink); padding: 22px 0 4px; }
+  .sec-title { display: grid; grid-template-columns: 88px 1fr; gap: 0 22px; align-items: baseline; margin-bottom: 4px; }
+  .sec-title .n { font-family: var(--font-display); font-size: 30px; line-height: 0.9; color: var(--accent); }
+  .sec-title h2 { font-size: 23px; font-weight: 700; letter-spacing: -0.012em; color: var(--ink); }
+  .sec-body { padding: 0 0 8px 110px; }
+  .sec-body p, .sec-body p.lead { max-width: 940px; margin-bottom: 12px; }
+  .sec-body p.nb { margin-bottom: 0; }
+  .sec-body b, .sec-body strong { color: var(--ink); }
+  .sec-body em { color: var(--graphite); }
+  .hl { color: var(--accent); font-weight: 700; }
+  code { font-family: var(--font-mono); font-size: 0.86em; color: var(--accent); }
 
-  .nav {
-    position: sticky; top: 0; z-index: 100;
-    backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px);
-    background: color-mix(in srgb, var(--surface) 85%, transparent);
-    border-bottom: 1px solid var(--border);
-    margin: 0 -16px 32px; padding: 0 16px;
-    transition: background 0.3s, border-color 0.3s;
-  }
-  .nav-inner {
-    max-width: 1200px; margin: 0 auto; padding: 12px 0 12px 96px;
-    display: flex; align-items: center; justify-content: space-between;
-  }
-  .nav-brand {
-    font-family: var(--font-mono); font-size: 12px; font-weight: 600;
-    letter-spacing: 0.5px; color: var(--primary); text-decoration: none;
-  }
-  .nav-brand:hover { color: var(--text); }
-  .theme-toggle {
-    width: 36px; height: 36px; border-radius: 10px;
-    border: 1px solid var(--border); background: var(--surface);
-    cursor: pointer; display: flex; align-items: center; justify-content: center;
-    font-size: 16px; color: var(--text-dim); transition: all 0.2s;
-  }
-  .theme-toggle:hover, .theme-toggle:focus-visible { border-color: var(--primary); color: var(--primary); outline: none; }
+  .pmap { border-top: 1px solid var(--row); padding: 12px 0 6px; display: grid; grid-template-columns: 230px 1fr; gap: 3px 28px; align-items: baseline; }
+  .pmap:first-of-type { border-top: none; }
+  .pmap .pm-k { font-family: var(--font-mono); font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.07em; color: var(--blue); line-height: 1.5; }
+  .pmap .pm-k .tag { display: block; color: var(--muted); font-weight: 500; font-size: 9.5px; letter-spacing: 0.16em; margin-bottom: 3px; }
+  .pmap .pm-k .ord { display: block; color: var(--accent); font-weight: 600; font-size: 10px; letter-spacing: 0.14em; margin-bottom: 2px; }
+  .pmap .pm-b { font-size: 14px; line-height: 1.6; }
+  .pmap .pm-b .tt { font-weight: 700; color: var(--ink); font-size: 15.5px; }
+  .pmap .pm-b .sub { display: block; padding: 5px 0 5px 15px; border-left: 2px solid; margin-top: 6px; }
+  .pmap .pm-b .sub.mod { border-color: var(--teal); } .pmap .pm-b .sub.ct { border-color: var(--amber); }
+  .pmap .pm-b .sub b { font-family: var(--font-mono); font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em; margin-right: 8px; }
+  .pmap .pm-b .sub.mod b { color: var(--teal); } .pmap .pm-b .sub.ct b { color: var(--amber); }
+  .pmap.i-blue .pm-k { color: var(--blue); } .pmap.i-teal .pm-k { color: var(--teal); }
+  .pmap.i-vio .pm-k { color: var(--violet); } .pmap.i-amb .pm-k { color: var(--amber); }
+  .pmap.i-rose .pm-k { color: var(--rose); } .pmap.i-acc .pm-k { color: var(--accent); }
+  .branch { font-size: 13px; line-height: 1.5; padding: 2px 0; }
+  .branch .bk { font-family: var(--font-mono); font-size: 10.5px; font-weight: 600; margin-right: 8px; }
+  .branch.pass .bk { color: var(--teal); } .branch.fail .bk { color: var(--rose); }
 
-  .container { max-width: 1000px; margin: 0 auto; }
+  .note { margin: 14px 0 2px; padding: 10px 0 6px 16px; border-left: 2px solid var(--blue); font-size: 15px; line-height: 1.6; color: var(--graphite); max-width: 940px; }
+  .note b { color: var(--ink); }
+  .note .mk { font-family: var(--font-mono); font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.12em; color: var(--blue); margin-right: 8px; }
+  .note.teal { border-color: var(--teal); } .note.teal .mk { color: var(--teal); }
 
-  /* Hero */
-  .hero { text-align: center; padding: 44px 0 30px; }
-  .hero h1 { font-size: 46px; font-weight: 700; letter-spacing: -0.5px; color: var(--primary); margin-bottom: 14px; }
-  .hero .lead { font-size: 20px; color: var(--text-dim); max-width: 640px; margin: 0 auto; line-height: 1.5; }
-  .hero .sub { font-size: 14px; color: var(--text-muted); font-family: var(--font-mono); margin-top: 16px; }
+  .footer { border-top: 3px solid var(--ink); margin: 26px 0 0; padding: 18px 0 30px; display: flex; justify-content: space-between; gap: 20px; flex-wrap: wrap; font-family: var(--font-mono); font-size: 11.5px; color: var(--muted); }
+  .footer a { color: var(--accent); text-decoration: none; }
 
-  section { margin-top: 46px; }
-  h2 { font-size: 27px; font-weight: 700; color: var(--text); margin-bottom: 8px; }
-  section > p { font-size: 16px; color: var(--text-dim); line-height: 1.7; margin-bottom: 12px; }
-  section > p:first-of-type { margin-top: 14px; }
-  .lead-in { color: var(--text-muted); font-family: var(--font-mono); font-size: 12px; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 4px; }
-  strong.hl { color: var(--primary); font-weight: 700; }
-
-  @keyframes fadeUp { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
-  @media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation-duration: 0.01ms !important; animation-delay: 0ms !important; transition: none !important; } }
-
-  /* Callout */
-  .callout {
-    background: var(--primary-dim); border: 1px solid var(--border);
-    border-left: 4px solid var(--primary); border-radius: 0 10px 10px 0;
-    padding: 18px 22px; margin-top: 18px;
+  @media (max-width: 900px) {
+    .sheet { grid-template-columns: 40px 1fr; }
+    .spine-label { font-size: 11px; }
+    .content { padding: 32px 22px 4px; }
+    .masthead h1 { font-size: 38px; }
+    .sec-title { grid-template-columns: 50px 1fr; }
+    .sec-title .n { font-size: 25px; }
+    .sec-body { padding-left: 0; }
+    .pmap { grid-template-columns: 1fr; gap: 2px; }
+    body { font-size: 16px; }
   }
-  .callout .k { font-family: var(--font-mono); font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; color: var(--primary); margin-bottom: 6px; }
-  .callout p { font-size: 17px; color: var(--text); line-height: 1.55; }
-
-  /* Two teams */
-  .team-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-top: 18px; }
-  @media (max-width: 640px) { .team-grid { grid-template-columns: 1fr; } }
-  .team-card { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 20px 22px; }
-  .team-card.a { border-top: 4px solid var(--secondary); }
-  .team-card.b { border-top: 4px solid var(--amber); }
-  .team-card .tname { font-size: 20px; font-weight: 700; margin-bottom: 2px; }
-  .team-card.a .tname { color: var(--secondary); }
-  .team-card.b .tname { color: var(--amber); }
-  .team-card .tnick { font-family: var(--font-mono); font-size: 11px; text-transform: uppercase; letter-spacing: 1px; color: var(--text-muted); margin-bottom: 12px; }
-  .team-card p { font-size: 14.5px; color: var(--text-dim); line-height: 1.6; }
-  .team-card .catch { font-size: 13px; color: var(--text-muted); margin-top: 10px; font-style: italic; }
-
-  /* Numbered step rows (sprint + claim journey) */
-  .steps { display: flex; flex-direction: column; gap: 8px; margin-top: 16px; }
-  .step {
-    display: flex; align-items: flex-start; gap: 14px;
-    background: var(--surface2); border: 1px solid var(--border);
-    border-left: 3px solid var(--secondary); border-radius: 0 8px 8px 0;
-    padding: 13px 16px; font-size: 15px; color: var(--text-dim); line-height: 1.6;
-  }
-  .step .n {
-    width: 28px; height: 28px; border-radius: 50%; flex-shrink: 0;
-    display: flex; align-items: center; justify-content: center;
-    font-family: var(--font-mono); font-size: 13px; font-weight: 700;
-    color: #fff; background: var(--secondary); margin-top: 1px;
-  }
-  .step strong { color: var(--secondary); }
-
-  /* Claim journey — vertical flow */
-  .flow { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 24px 20px; margin-top: 18px; }
-  .flow-col { display: flex; flex-direction: column; align-items: center; gap: 0; }
-  .fbox {
-    min-width: 220px; max-width: 340px; text-align: center;
-    border-radius: 10px; padding: 12px 16px; font-size: 14.5px; line-height: 1.4; font-weight: 500;
-  }
-  .fbox small { display: block; font-weight: 400; font-size: 12.5px; color: var(--text-muted); margin-top: 3px; }
-  .fbox.start { background: var(--secondary-dim); border: 2px solid var(--secondary); color: var(--text); }
-  .fbox.ai { background: var(--metric-dim); border: 2px solid var(--metric); color: var(--text); }
-  .fbox.good { background: var(--metric-dim); border: 2px solid var(--metric); color: var(--text); }
-  .fbox.bad { background: var(--primary-dim); border: 2px dashed var(--primary); color: var(--text); }
-  .fbox.end { background: var(--amber-dim); border: 2px solid var(--amber); color: var(--text); }
-  .farrow { padding: 3px 0; font-size: 20px; color: var(--text-muted); font-family: var(--font-mono); }
-  .fsplit { display: flex; gap: 24px; align-items: flex-start; justify-content: center; flex-wrap: wrap; }
-  .fsplit .leg { display: flex; flex-direction: column; align-items: center; }
-  .fsplit .leg-label { font-family: var(--font-mono); font-size: 10px; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 6px; }
-  .fsplit .leg.g .leg-label { color: var(--metric); }
-  .fsplit .leg.b .leg-label { color: var(--primary); }
-
-  /* Definition chips */
-  .def { background: var(--surface2); border: 1px solid var(--border); border-left: 3px solid var(--metric); border-radius: 0 8px 8px 0; padding: 14px 16px; margin-top: 12px; }
-  .def .term { font-weight: 700; color: var(--metric); font-size: 15px; }
-  .def p { font-size: 14.5px; color: var(--text-dim); line-height: 1.6; margin-top: 2px; }
-
-  /* Under the hood — mechanical detail */
-  .section-rule { margin: 60px 0 20px; border: none; border-top: 1px solid var(--border-bright); }
-  .uh-intro { font-size: 15.5px; color: var(--text-dim); line-height: 1.75; max-width: 760px; margin-top: 12px; }
-  .uh-intro strong { color: var(--text); }
-  .section-lead { font-size: 14.5px; color: var(--text-dim); max-width: 760px; margin: 6px 0 4px; line-height: 1.7; }
-  .mech-lever {
-    background: var(--surface); border: 1px solid var(--border);
-    border-radius: 12px; padding: 20px 24px; margin-top: 14px;
-  }
-  .mech-lever h4 { font-size: 17px; font-weight: 700; color: var(--text); margin-bottom: 2px; }
-  .mech-lever .knob {
-    font-family: var(--font-mono); font-size: 11px; color: var(--text-muted);
-    margin-bottom: 12px; display: block;
-  }
-  .mech-row { display: grid; grid-template-columns: 96px 1fr; gap: 10px 14px; }
-  .mech-row dt {
-    font-family: var(--font-mono); font-size: 10px; font-weight: 700;
-    letter-spacing: 0.06em; text-transform: uppercase; color: var(--amber); padding-top: 3px;
-  }
-  .mech-row dt.measured { color: var(--metric); }
-  .mech-row dd { font-size: 14px; color: var(--text-dim); line-height: 1.65; }
-  .mech-row dd strong { color: var(--text); }
-  .mech-row code {
-    font-family: var(--font-mono); font-size: 12px;
-    background: var(--surface2); padding: 1px 5px; border-radius: 4px; color: var(--text);
-  }
-  @media (max-width: 768px) {
-    .mech-row { grid-template-columns: 1fr; gap: 2px 0; }
-    .mech-row dt { padding-top: 8px; }
-  }
-
-  .footer { margin-top: 60px; padding-top: 18px; border-top: 1px solid var(--border); text-align: center; font-size: 13px; color: var(--text-muted); }
 </style>
 </head>
 <body>
-<a href="../ai-transformation-experiment.html" class="backlink">&larr; AI Transformation Experiment</a>
-<div class="nav">
-  <div class="nav-inner">
-    <a href="../index.html" class="nav-brand">&larr; AI Transformation Experiment</a>
-    <button class="theme-toggle" id="themeToggle" aria-label="Toggle dark mode">
-      <span class="icon-light">&#9788;</span>
-      <span class="icon-dark" style="display:none">&#9790;</span>
-    </button>
+
+<div class="topbar">
+  <div class="backlink"><a href="../ai-transformation-experiment.html"><span class="arr">&larr;</span> AI Transformation Experiment</a></div>
+</div>
+
+<div class="sheet">
+  <div class="spine"><div class="spine-label">HOW IT WORKS</div></div>
+
+  <div class="content">
+
+    <header class="masthead">
+      <h1>How the Simulation Works</h1>
+      <div class="tagline">Plain English &mdash; every term explained</div>
+      <p class="lede">A plain-English tour. No background needed. If you can follow a game of telephone and a relay race, you can follow all of this.</p>
+    </header>
+
+    <!-- 01 -->
+    <section class="sec">
+      <div class="sec-title"><span class="n">01</span><h2>One question, asked fairly</h2></div>
+      <div class="sec-body">
+        <p>A company decides it wants to use AI to do some of its work. There are two very different ways to go about that. The question is simple: <span class="hl">which way ends up with less of a mess?</span></p>
+        <p>You can&rsquo;t answer that honestly in the real world, because no two companies are alike. So we build a pretend company inside a computer, make an exact copy of it, and run both copies at the same time. One copy adopts AI the first way; the other the second. Everything else is identical &mdash; same customers, same staff, same good and bad luck. Because the two copies differ only in their approach, any difference at the end came from the approach. That is the entire trick.</p>
+      </div>
+    </section>
+
+    <!-- 02 -->
+    <section class="sec">
+      <div class="sec-title"><span class="n">02</span><h2>It&rsquo;s an insurance company</h2></div>
+      <div class="sec-body">
+        <p class="lead">We picked an insurance company because its work is easy to picture. Three ideas you need:</p>
+        <div class="pmap i-acc"><div class="pm-k">A claim</div><div class="pm-b">Someone&rsquo;s car gets dented. They call their insurer and say &ldquo;please pay to fix this.&rdquo; Inside the company a claim doesn&rsquo;t get handled by one person. It moves from desk to desk: someone checks it, someone estimates the cost, someone approves the payment, someone closes it out.</div></div>
+        <div class="pmap"><div class="pm-k">Underwriting</div><div class="pm-b">Deciding whether to insure a new customer in the first place, and what to charge them. The company&rsquo;s version of &ldquo;should we say yes to this person, and for how much?&rdquo;</div></div>
+        <div class="pmap"><div class="pm-k">Subrogation</div><div class="pm-b">Chasing the <em>other</em> party&rsquo;s insurer to get money back. If the other driver caused the crash, your insurer pays you now and goes and collects from their insurer later.</div></div>
+        <p class="nb">That&rsquo;s it. Requests come in, and they travel through a chain of desks until they&rsquo;re finished.</p>
+      </div>
+    </section>
+
+    <!-- 03 -->
+    <section class="sec">
+      <div class="sec-title"><span class="n">03</span><h2>The game of telephone</h2></div>
+      <div class="sec-body">
+        <p>Every time work passes from one desk to the next, that handoff is a <span class="hl">seam</span>. Two words carry most of this project:</p>
+        <div class="pmap i-acc"><div class="pm-k">Seam</div><div class="pm-b">A <b>handoff</b> &mdash; the exact point where work passes from one person to the next, or from the AI to a person. The stitch where two people&rsquo;s work meets. Seams are where meaning leaks, so they&rsquo;re where the whole contest is decided.</div></div>
+        <div class="pmap"><div class="pm-k">Tacit</div><div class="pm-b">Knowledge that lives in someone&rsquo;s head and is <b>hard to write down</b>. A checklist is the opposite of tacit; a veteran adjuster&rsquo;s gut feel for whether a claim smells wrong is deeply tacit. AI is good at the checklist kind of handoff and bad at the tacit kind &mdash; and that one difference splits the two teams.</div></div>
+        <p class="lead">Put those together and you get the two kinds of seam the experiment turns on:</p>
+        <div class="pmap i-teal"><div class="pm-k">Codifiable seam</div><div class="pm-b">A handoff whose knowledge <b>can be written down</b> as a rule or checklist &mdash; so a computer, or a plan made in advance, can standardize it without watching it fail. Think routing a claim by its data fields, or a fixed repair-cost schedule. Low tacitness. The &ldquo;big plan first&rdquo; team&rsquo;s home turf.</div></div>
+        <div class="pmap i-rose"><div class="pm-k">Tacit seam</div><div class="pm-b">A handoff that runs on <b>judgment you can&rsquo;t fully write down</b> &mdash; negotiating with a claimant, weighing disputed fault, reading a borderline case. High tacitness. No plan made in advance captures it, and AI stumbles on it. The only way to fix it is to watch it break and learn from the specifics &mdash; the &ldquo;learn as you go&rdquo; team&rsquo;s home turf.</div></div>
+        <p>Now remember the childhood game of telephone: a sentence whispered down the line turns into nonsense. The same happens at a seam. The work arrives at the next desk slightly garbled, missing a detail. The next person has to stop and untangle it before doing their own job. That wasted untangling time is what we measure.</p>
+        <div class="note"><span class="mk">The number that decides everything</span><b>Translation debt</b> is the extra cleanup work created every time meaning gets lost at a handoff. Less is better. Whichever team ends up with less translation debt ran its company more smoothly. This one number picks the winner.</div>
+      </div>
+    </section>
+
+    <!-- 04 -->
+    <section class="sec">
+      <div class="sec-title"><span class="n">04</span><h2>Two teams, two philosophies</h2></div>
+      <div class="sec-body">
+        <p>Both teams run an identical copy of the insurance company. Only <em>how</em> they bring AI in differs.</p>
+        <div class="pmap i-teal"><div class="pm-k">Team A &mdash;<br>learn as you go</div><div class="pm-b"><span class="tt">Start tiny.</span> Put AI into one small corner of the work. Watch closely to see what actually breaks. Fix only the things you&rsquo;ve seen break with your own eyes. Then grow a little bigger. <b>Careful and grounded, but slow &mdash; and blind to any problem it hasn&rsquo;t personally run into yet.</b></div></div>
+        <div class="pmap i-acc"><div class="pm-k">Team B &mdash;<br>big plan first</div><div class="pm-b"><span class="tt">The way big companies usually do.</span> Pick the technology, design the whole future setup on paper, and roll it out everywhere at once. Manage people&rsquo;s resistance as you go. <b>Covers a lot of ground fast &mdash; but it&rsquo;s all based on a plan, not on watching what really happens.</b></div></div>
+        <p class="nb">One team learns by doing. The other plans, then acts. Which produces less mess? That&rsquo;s the race.</p>
+      </div>
+    </section>
+
+    <!-- 05 -->
+    <section class="sec">
+      <div class="sec-title"><span class="n">05</span><h2>What happens in a single round</h2></div>
+      <div class="sec-body">
+        <p class="lead">The simulation runs in rounds. Each round is a stretch of time, like a couple of weeks at the office. The exact same round happens to both teams at the same moment.</p>
+        <div class="pmap"><div class="pm-k"><span class="ord">1</span>Weather</div><div class="pm-b">The day&rsquo;s weather is rolled &mdash; maybe a flood of new claims, a budget freeze, a quiet stretch. Whatever it is, both teams get the exact same weather.</div></div>
+        <div class="pmap"><div class="pm-k"><span class="ord">2</span>Moves</div><div class="pm-b">Team A looks at what broke last round and fixes one thing it has real evidence for. Team B follows the next step of its big plan. This is where the philosophies differ.</div></div>
+        <div class="pmap"><div class="pm-k"><span class="ord">3</span>Work arrives</div><div class="pm-b">A fresh, identical pile of claims lands on both teams&rsquo; desks &mdash; a fair comparison.</div></div>
+        <div class="pmap"><div class="pm-k"><span class="ord">4</span>Claims travel</div><div class="pm-b">Every claim travels its chain of desks. Where AI does the work, it sometimes handles the claim cleanly, sometimes &ldquo;loses the thread&rdquo; at a handoff so a human steps in to sort out the mess &mdash; that mess being the translation debt.</div></div>
+        <div class="pmap"><div class="pm-k"><span class="ord">5</span>People react</div><div class="pm-b">When the AI helps smoothly, staff trust it a little more; when it hands them garbled work, they trust it a little less. Trust moves on real experience, not on what anyone was told to feel.</div></div>
+        <div class="pmap"><div class="pm-k"><span class="ord">6</span>Some quit</div><div class="pm-b">Worn-down, distrustful staff eventually leave, and one departure makes teammates more likely to leave too. Fewer people means more dropped handoffs, which wears down more people. It snowballs.</div></div>
+        <div class="pmap"><div class="pm-k"><span class="ord">7</span>Tally</div><div class="pm-b">At the end of the round, measure how much translation debt each team piled up, plus a few other health numbers. Then the next round begins.</div></div>
+        <p class="nb">Repeat for many rounds and you get two full stories: how each version of the company fared over time.</p>
+      </div>
+    </section>
+
+    <!-- 06 -->
+    <section class="sec">
+      <div class="sec-title"><span class="n">06</span><h2>Following one claim through the office</h2></div>
+      <div class="sec-body">
+        <p class="lead">Step 4 is the heart of it. A single claim&rsquo;s trip when it reaches an AI desk:</p>
+        <div class="pmap i-acc"><div class="pm-k">Arrive</div><div class="pm-b">A claim arrives &mdash; someone wants their dented car paid for.</div></div>
+        <div class="pmap i-acc"><div class="pm-k">Sort</div><div class="pm-b">Sorted into a lane &mdash; simple ones go to the AI, tricky ones to a person.</div></div>
+        <div class="pmap i-acc"><div class="pm-k">AI turn</div><div class="pm-b">The AI takes a turn handling this step of the work.
+          <div class="branch pass"><span class="bk">WENT CLEANLY</span> The handoff is clear; the next desk gets exactly what it needs.</div>
+          <div class="branch fail"><span class="bk">GOT GARBLED</span> Meaning was lost; a human must stop and untangle it &mdash; that&rsquo;s translation debt.</div>
+        </div></div>
+        <div class="pmap i-acc"><div class="pm-k">Close</div><div class="pm-b">Approved, paid, closed &mdash; the claim is finished one way or the other.</div></div>
+        <p class="nb">A smooth trip costs almost nothing. A garbled one costs real cleanup time and chips away at trust. Across thousands of claims over many rounds, the small differences add up to a clear winner &mdash; or a genuine tie.</p>
+      </div>
+    </section>
+
+    <!-- 07 -->
+    <section class="sec">
+      <div class="sec-title"><span class="n">07</span><h2>The referee treats both teams identically</h2></div>
+      <div class="sec-body">
+        <p>Whether the AI succeeds or stumbles on a given handoff is decided the <span class="hl">exact same way for both teams, at the exact same moment</span>. If Team A&rsquo;s AI trips over a claim, Team B&rsquo;s AI trips over that identical claim too. Neither gets luckier. So any <em>lasting</em> difference can only come from how each philosophy fixes its handoffs over time &mdash; not from a good roll of the dice.</p>
+        <div class="note teal"><span class="mk">The catch we spend most of our time chasing</span>If one team secretly gets a free, permanent fix the other can&rsquo;t earn, the fairness quietly breaks and the test tells you whatever you were hoping to hear. Finding those hidden thumbs on the scale, and removing them, is most of the real work. A recent audit caught exactly one, and the whole re-run is checking the result now that it&rsquo;s gone.</div>
+      </div>
+    </section>
+
+    <!-- 08 -->
+    <section class="sec">
+      <div class="sec-title"><span class="n">08</span><h2>How the winner is decided</h2></div>
+      <div class="sec-body">
+        <p>We let both companies run all the way to the end. Then we ignore the early rounds &mdash; every new setup is clumsy at first &mdash; and look only at the settled second half. Whichever team has clearly less translation debt over that stretch wins. If they&rsquo;re too close to tell apart, we call it an honest <span class="hl">tie</span>. We don&rsquo;t crown a winner on a hair&rsquo;s difference, because a hair&rsquo;s difference is noise.</p>
+        <div class="note teal"><span class="mk">In one sentence</span>Build the same company twice, adopt AI two different ways, give both the identical customers and luck, and see which one wastes less effort cleaning up after itself.</div>
+      </div>
+    </section>
+
+    <!-- under the hood -->
+    <section class="sec">
+      <div class="sec-title"><span class="n">09</span><h2>Under the hood &mdash; the unit of work</h2></div>
+      <div class="sec-body">
+        <p class="lead"><b>Nothing below is a metaphor</b> &mdash; it&rsquo;s what the engine does, sprint by sprint, and every number is a real setting in the code. A claim runs through a fixed chain of desks &mdash; intake, routing, damage estimate, coverage check, approval, payment, closure &mdash; across <span class="hl">auto claims, commercial underwriting, and subrogation</span>. Each handoff is a seam stamped with two numbers set before the run.</p>
+        <div class="pmap i-teal"><div class="pm-k">Seam risk</div><div class="pm-b"><span class="tt">How likely meaning breaks at this handoff (0&ndash;1).</span>
+          <span class="sub mod"><b>Modeled</b> Set per handoff from how the real job works. Subrogation is the riskiest in the building (<code>0.9</code>) because it sits downstream of everything; coverage verification <code>0.8</code>; the AI damage estimate <code>0.7</code>. Payment execution is near zero &mdash; it runs on standardized rails.</span>
+        </div></div>
+        <div class="pmap i-vio"><div class="pm-k">Seam tacitness</div><div class="pm-b"><span class="tt">How much of the judgment is irreducibly human (0&ndash;1).</span>
+          <span class="sub mod"><b>Modeled</b> <code>0</code> = a checklist a computer can codify (routing on structured data is <code>0.20</code>); <code>1</code> = pure human judgment (live negotiation is <code>0.85</code>). Deliberately separate from seam risk &mdash; a handoff can be risky <em>and</em> codifiable. AI is strong where tacitness is low and fails where it&rsquo;s high &mdash; which is exactly where the two teams split.</span>
+        </div></div>
+        <p class="nb">This is why the company leaks value unevenly. The cheap, standardized steps are safe; the expensive human-judgment steps are where a confident-looking AI handoff is most likely to be quietly wrong.</p>
+      </div>
+    </section>
+
+    <!-- quality signals -->
+    <section class="sec">
+      <div class="sec-title"><span class="n">10</span><h2>How a broken handoff is modeled and counted</h2></div>
+      <div class="sec-body">
+        <div class="pmap i-rose"><div class="pm-k">Handoff<br>failure</div><div class="pm-b"><span class="tt">The quality signal behind the headline number.</span>
+          <span class="sub mod"><b>Modeled</b> When the AI handles a step, it either succeeds or <strong>loses meaning at the handoff</strong>. Whether it fails isn&rsquo;t a coin flip &mdash; it&rsquo;s fixed by a fingerprint of the exact <code>(claim, step, sprint)</code>, so the same claim at the same moment resolves the same way for <b>both teams</b>. A volume spike pushes failures up (<code>&times;(1 + 0.5 &times; surge)</code>); a standardized handoff fails about <code>30%</code> less. The rate is held between <code>0.01</code> and <code>0.95</code>.</span>
+          <span class="sub ct"><b>Counted</b> <strong>Translation Debt Index</strong> = broken handoffs + reconciliation incidents + &ldquo;quick alignment&rdquo; meetings, per 100 claims. Starts near <code>100</code>; a healthy target is <code>30</code>. The headline number that decides the winner.</span>
+        </div></div>
+        <div class="pmap"><div class="pm-k">Exception<br>rate</div><div class="pm-b">
+          <span class="sub mod"><b>Modeled</b> Any claim kicked to a human beyond the normal path &mdash; the tail of the work turning into supervision and rescue.</span>
+          <span class="sub ct"><b>Counted</b> <strong>Exception rate</strong> = escalated decisions &divide; all decisions that sprint.</span>
+        </div></div>
+        <div class="pmap i-amb"><div class="pm-k">Cost per<br>claim</div><div class="pm-b">
+          <span class="sub mod"><b>Modeled</b> Every reconciliation and rework pass adds real handling cost on top of base processing.</span>
+          <span class="sub ct"><b>Counted</b> <strong>Cost per claim</strong>, used as a tie-breaker when debt numbers are close. More broken seams means more cleanup means higher cost.</span>
+        </div></div>
+      </div>
+    </section>
+
+    <!-- two teams mechanically -->
+    <section class="sec">
+      <div class="sec-title"><span class="n">11</span><h2>What each philosophy actually does to a seam</h2></div>
+      <div class="sec-body">
+        <p class="lead">Both teams close the same gappy handoffs &mdash; in opposite ways. The difference in the code is small, specific, and decisive.</p>
+        <div class="pmap i-teal"><div class="pm-k">Team A &mdash;<br>learn as you go</div><div class="pm-b"><span class="tt">Fixes only what it has personally watched break.</span>
+          <span class="sub mod"><b>Modeled</b> A can only touch a seam it has <strong>actually observed failing</strong>. Each fix cycle it standardizes the worst observed broken handoff and cuts the error rate of its worst observed AI seam to <code>60%</code> of what it was (a 40% cut), floored at <code>0.02</code>. It&rsquo;s blind to seams it hasn&rsquo;t hit yet &mdash; but <strong>its fixes never regress</strong>, because the team built them from its own evidence.</span>
+        </div></div>
+        <div class="pmap i-acc"><div class="pm-k">Team B &mdash;<br>big plan first</div><div class="pm-b"><span class="tt">Standardizes a-priori, in five planned waves, blind to what&rsquo;s actually broken.</span>
+          <span class="sub mod"><b>Modeled</b> B commits to a plan before running anything, ranking seams by <em>designed</em> risk, and rolls out in <code>5</code> waves. Its odds of nailing a seam are <code>0.85 &times; (1 &minus; tacitness)</code> &mdash; so it cleanly codifies explicit seams and keeps missing the tacit ones. A hit lowers a seam&rsquo;s error rate by up to <code>0.4 &times; vendor_quality</code>; a miss <em>raises</em> friction <code>10%</code> &mdash; a rigid template imposed where judgment was needed.</span>
+          <span class="sub mod"><b>Modeled</b> And B&rsquo;s wins don&rsquo;t fully stick. Completed seams <strong>revert</strong> under change fatigue and turbulence (base <code>8%</code> per sprint, scaled by how rough the quarter is) &mdash; the honest cost of speed and breadth, and the real-world finding that most big transformations don&rsquo;t sustain their gains.</span>
+        </div></div>
+        <p class="nb">The whole contest in one line: A is slow, narrow, and permanent; B is fast, broad, and leaky. Which wins depends on the seam mix and the weather &mdash; which is what the experiment is built to find.</p>
+      </div>
+    </section>
+
+    <!-- human loop -->
+    <section class="sec">
+      <div class="sec-title"><span class="n">12</span><h2>People aren&rsquo;t a constant &mdash; it feeds back</h2></div>
+      <div class="sec-body">
+        <div class="pmap"><div class="pm-k">Trust moves<br>slowly</div><div class="pm-b"><span class="tt">And it&rsquo;s mostly earned.</span>
+          <span class="sub mod"><b>Modeled</b> Each smooth AI handoff nudges trust up; each garbled one nudges it down &mdash; a small <code>0.03</code> per interaction, so trust builds slowly and honestly. A person&rsquo;s view is <code>60%</code> their own experience and <code>40%</code> the people around them, drifting <code>15%</code> toward an influential colleague each sprint. Nobody is told how to feel.</span>
+        </div></div>
+        <div class="pmap i-rose"><div class="pm-k">Quitting<br>cascades</div><div class="pm-b"><span class="tt">One departure raises the odds of the next.</span>
+          <span class="sub mod"><b>Modeled</b> Worn-down, distrustful staff leave faster. One departure raises the odds of the next in the same group by <code>10%</code>, an effect that fades by half each sprint and is capped at <code>2&times;</code>. A rough quarter (high stress) lifts attrition on its own; when AI genuinely reduces grind, attrition drops <code>15%</code> instead.</span>
+          <span class="sub ct"><b>Why it matters</b> Fewer people means more dropped handoffs, which wears down more people. This loop is why the same plan holds in a calm run and wobbles in a stormy one &mdash; and why we re-run across many random starts before trusting any result.</span>
+        </div></div>
+      </div>
+    </section>
+
+    <!-- where numbers come from -->
+    <section class="sec">
+      <div class="sec-title"><span class="n">13</span><h2>Where the numbers come from</h2></div>
+      <div class="sec-body">
+        <div class="note"><span class="mk">Trust, but verify</span><b>Every value on this page is a named, explicit setting in the code</b> &mdash; not a hidden constant tuned to get an answer. The AI&rsquo;s success or failure on each handoff is decided identically for both teams, so any lasting gap comes from the approach, not luck. When one team was quietly handed an unearned, permanent advantage, an audit caught it and it was removed &mdash; and the whole test re-run with that thumb off the scale. The tidy answer didn&rsquo;t come back: the two teams tie in the easy conditions and the &ldquo;learn as you go&rdquo; team wins the hard ones &mdash; exactly the honest, uncomfortable result a working instrument should give.</div>
+      </div>
+    </section>
+
+    <footer class="footer">
+      <a href="../ai-transformation-experiment.html">&larr; AI Transformation Experiment</a>
+      <span>&copy; 2025-2026 Charlie Fuller</span>
+    </footer>
+
   </div>
 </div>
 
-<div class="container">
-
-  <div class="hero">
-    <h1>How the Simulation Works</h1>
-    <p class="lead">A plain-English tour. No background needed. If you can follow a game of telephone and a relay race, you can follow all of this.</p>
-    <p class="sub">Written for someone who has never touched the code &middot; every term explained</p>
-  </div>
-
-  <!-- 1 -->
-  <section>
-    <div class="lead-in">The whole point</div>
-    <h2>One question, asked fairly</h2>
-    <p>A company decides it wants to start using artificial intelligence to do some of its work. There are two very different ways to go about that. The question we care about is simple: <strong class="hl">which way ends up with less of a mess?</strong></p>
-    <p>You can't answer that honestly in the real world, because no two companies are alike. So instead we build a pretend company inside a computer, make an exact copy of it, and run both copies at the same time. One copy adopts AI the first way. The other copy adopts it the second way. Everything else about them is identical: same customers, same staff, same good and bad luck.</p>
-    <p>Because the two copies are the same in every way except their approach, any difference at the end had to come from the approach. That is the entire trick.</p>
-  </section>
-
-  <!-- 2 -->
-  <section>
-    <div class="lead-in">The pretend company</div>
-    <h2>It's an insurance company</h2>
-    <p>We picked an insurance company because its work is easy to picture. Here are the only three ideas you need.</p>
-    <div class="def">
-      <span class="term">A claim</span>
-      <p>Someone's car gets dented. They call their insurer and say, "please pay to fix this." That request is a <em>claim</em>. Inside the company, a claim doesn't get handled by one person. It moves from desk to desk: someone checks it, someone estimates the cost, someone approves the payment, someone closes it out.</p>
-    </div>
-    <div class="def">
-      <span class="term">Underwriting</span>
-      <p>Deciding whether to insure a new customer in the first place, and what to charge them. Think of it as the company's version of "should we say yes to this person, and for how much?"</p>
-    </div>
-    <div class="def">
-      <span class="term">Subrogation</span>
-      <p>A long word for a simple thing: chasing down the <em>other</em> party's insurer to get money back. If the other driver caused the crash, your insurer pays you now and then goes and collects from their insurer later.</p>
-    </div>
-    <p>That's it. Requests come in, and they travel through a chain of desks until they're finished.</p>
-  </section>
-
-  <!-- 3 -->
-  <section>
-    <div class="lead-in">The most important idea on the page</div>
-    <h2>The game of telephone</h2>
-    <p>Every time a piece of work passes from one desk to the next, that handoff is what we call a <strong class="hl">seam</strong>. Two words carry most of this whole project, so here they are, plainly:</p>
-    <div class="def">
-      <span class="term">Seam</span>
-      <p>A <strong>handoff</strong> &mdash; the exact point where work passes from one person to the next, or from the AI to a person. It's the stitch where two people's work meets. Seams are where meaning leaks, so they're where the whole contest is decided.</p>
-    </div>
-    <div class="def">
-      <span class="term">Tacit</span>
-      <p>Knowledge that lives in someone's head and is <strong>hard to write down</strong>. A checklist is the opposite of tacit &mdash; anyone can follow it. A veteran adjuster's gut feel for whether a claim smells wrong is deeply tacit. This matters because AI is good at the checklist kind of handoff and bad at the tacit kind &mdash; and that one difference is what splits the two teams.</p>
-    </div>
-    <p>Put those two words together and you get the two kinds of seam the whole experiment turns on:</p>
-    <div class="def" style="border-left-color:var(--secondary)">
-      <span class="term" style="color:var(--secondary)">Codifiable seam</span>
-      <p>A handoff whose knowledge <strong>can be written down</strong> as a rule or checklist &mdash; so a computer, or a plan made in advance, can standardize it without ever watching it fail. Think routing a claim by its data fields, or applying a fixed repair-cost schedule. Low tacitness. This is the "big plan first" team's home turf: it can prepare for these before day one.</p>
-    </div>
-    <div class="def" style="border-left-color:var(--amber)">
-      <span class="term" style="color:var(--amber)">Tacit seam</span>
-      <p>A handoff that runs on <strong>judgment you can't fully write down</strong> &mdash; negotiating with a claimant, weighing disputed fault, reading a borderline case. High tacitness. No plan made in advance can capture it, and AI stumbles on it. The only way to fix a tacit seam is to watch it break and learn from the specifics &mdash; which is the "learn as you go" team's home turf.</p>
-    </div>
-    <p>Now remember the childhood game of telephone. You whisper a sentence to the next person, they whisper it to the next, and by the end it has turned into nonsense. The same thing happens at a seam. The work arrives at the next desk slightly garbled, missing a detail, unclear. So the next person has to stop and untangle it before they can do their own job.</p>
-    <p>That wasted untangling time is the thing we measure. We give it a name:</p>
-    <div class="callout">
-      <div class="k">The number that decides everything</div>
-      <p><strong>Translation debt</strong> is the extra cleanup work created every time meaning gets lost at a handoff. Less of it is better. Whichever team ends up with less translation debt is the team that ran its company more smoothly. This one number picks the winner.</p>
-    </div>
-  </section>
-
-  <!-- 4 -->
-  <section>
-    <div class="lead-in">The two contestants</div>
-    <h2>Two teams, two philosophies</h2>
-    <p>Both teams run an identical copy of the insurance company. The only thing that differs is <em>how</em> they bring AI in.</p>
-    <div class="team-grid">
-      <div class="team-card a">
-        <div class="tname">Team A</div>
-        <div class="tnick">Learn as you go</div>
-        <p>Start tiny. Put AI into one small corner of the work. Watch closely to see what actually breaks. Fix only the things you've seen break with your own eyes. Then, and only then, grow a little bigger.</p>
-        <p class="catch">Careful and grounded, but slow &mdash; and blind to any problem it hasn't personally run into yet.</p>
-      </div>
-      <div class="team-card b">
-        <div class="tname">Team B</div>
-        <div class="tnick">Big plan first</div>
-        <p>Do it the way big companies usually do. Pick the technology, design the whole future setup on paper, and roll it out everywhere at once. Manage people's resistance as you go.</p>
-        <p class="catch">Covers a lot of ground fast &mdash; but it's all based on a plan, not on watching what really happens.</p>
-      </div>
-    </div>
-    <p style="margin-top:16px;">One team learns by doing. The other plans, then acts. Which produces less mess? That's the race.</p>
-  </section>
-
-  <!-- 5 -->
-  <section>
-    <div class="lead-in">One round of the game</div>
-    <h2>What happens in a single round</h2>
-    <p>The simulation runs in rounds. Each round is a stretch of time, like a couple of weeks at the office. Here is everything that happens in one round. The exact same round happens to both teams at the same moment.</p>
-    <div class="steps">
-      <div class="step"><span class="n">1</span><span><strong>The day's weather is rolled.</strong> The computer decides what's going on in the world this round: maybe a flood of new claims, maybe a budget freeze, maybe a quiet stretch. Whatever it is, both teams get the exact same weather. Nobody gets an easier day.</span></div>
-      <div class="step"><span class="n">2</span><span><strong>Each team makes its move.</strong> Team A looks at what broke last round and fixes one thing it has real evidence for. Team B follows the next step of its big plan. This is where the two philosophies actually differ.</span></div>
-      <div class="step"><span class="n">3</span><span><strong>The work arrives.</strong> A fresh pile of claims lands on both teams' desks &mdash; the identical pile for each, so it's a fair comparison.</span></div>
-      <div class="step"><span class="n">4</span><span><strong>Every claim travels its chain of desks.</strong> At the desks where AI does the work, the computer tries to handle the claim. Sometimes it works cleanly. Sometimes it "loses the thread" at a handoff, and a human has to step in and sort out the mess. (That mess is the translation debt from earlier.)</span></div>
-      <div class="step"><span class="n">5</span><span><strong>People react.</strong> When the AI helps smoothly, the staff trust it a little more. When it hands them garbled work, they trust it a little less. Trust goes up and down based on real experience, not on what anyone was told to feel.</span></div>
-      <div class="step"><span class="n">6</span><span><strong>Some people quit.</strong> Staff who get worn down and stop trusting the tools eventually leave. And when one person leaves, it makes their teammates more likely to leave too. Fewer people means more dropped handoffs, which wears down more people. It snowballs.</span></div>
-      <div class="step"><span class="n">7</span><span><strong>Tally the mess.</strong> At the end of the round, we measure how much translation debt each team piled up, plus a few other health numbers. Then the next round begins.</span></div>
-    </div>
-    <p style="margin-top:16px;">Repeat this for many rounds and you get two full stories: how each version of the company fared over time.</p>
-  </section>
-
-  <!-- 6 -->
-  <section>
-    <div class="lead-in">Zooming in</div>
-    <h2>Following one claim through the office</h2>
-    <p>Step 4 above is the heart of it. Here's what a single claim's trip looks like when it reaches an AI desk.</p>
-    <div class="flow">
-      <div class="flow-col">
-        <div class="fbox start">A claim arrives<small>someone wants their dented car paid for</small></div>
-        <div class="farrow">&darr;</div>
-        <div class="fbox start">Sorted into a lane<small>simple ones go to the AI, tricky ones go to a person</small></div>
-        <div class="farrow">&darr;</div>
-        <div class="fbox ai">The AI takes a turn<small>it tries to handle this step of the work</small></div>
-        <div class="farrow">&darr;</div>
-        <div class="fsplit">
-          <div class="leg g">
-            <div class="leg-label">&#9679; it went cleanly</div>
-            <div class="fbox good">Handoff is clear<small>the next desk gets exactly what it needs</small></div>
-          </div>
-          <div class="leg b">
-            <div class="leg-label">&#9679; it got garbled</div>
-            <div class="fbox bad">Meaning was lost<small>a human must stop and untangle it &mdash; that's translation debt</small></div>
-          </div>
-        </div>
-        <div class="farrow">&darr;</div>
-        <div class="fbox end">Approved, paid, closed<small>the claim is finished, one way or the other</small></div>
-      </div>
-    </div>
-    <p style="margin-top:16px;">A smooth trip costs almost nothing. A garbled one costs real cleanup time and chips away at the staff's trust. Multiply that across thousands of claims over many rounds, and the small differences add up into a clear winner &mdash; or a genuine tie.</p>
-  </section>
-
-  <!-- 7 -->
-  <section>
-    <div class="lead-in">Why it's a fair test</div>
-    <h2>The referee treats both teams identically</h2>
-    <p>Here's the clever part. Whether the AI succeeds or stumbles on a given handoff is decided the <strong class="hl">exact same way for both teams, at the exact same moment</strong>. If Team A's AI trips over a particular claim, Team B's AI trips over that identical claim too. Neither team gets luckier.</p>
-    <p>That means any <em>lasting</em> difference between the two companies can only come from how each philosophy fixes its handoffs over time. Not from a good roll of the dice. That's what makes this an honest measuring stick instead of a coin flip.</p>
-    <div class="callout">
-      <div class="k">The catch we spend most of our time chasing</div>
-      <p>If one team secretly gets a free, permanent fix that the other team can't earn, the fairness quietly breaks &mdash; and the test just tells you whatever you were hoping to hear. Finding those hidden thumbs on the scale, and removing them, is most of the real work. A recent audit caught exactly one, and the whole re-run you may have seen me doing is checking the result now that it's gone.</p>
-    </div>
-  </section>
-
-  <!-- 8 -->
-  <section>
-    <div class="lead-in">Calling it</div>
-    <h2>How the winner is decided</h2>
-    <p>We let both companies run all the way to the end. Then we ignore the early rounds &mdash; every new setup is clumsy at first &mdash; and look only at the settled second half.</p>
-    <p>Whichever team has clearly less translation debt over that settled stretch wins. If they're close enough that you can't confidently tell them apart, we call it an honest <strong class="hl">tie</strong>. We don't crown a winner on a hair's difference, because a hair's difference is just noise.</p>
-    <div class="callout">
-      <div class="k">In one sentence</div>
-      <p>Build the same company twice, adopt AI two different ways, give both the identical customers and the identical luck, and see which one wastes less effort cleaning up after itself.</p>
-    </div>
-  </section>
-
-  <hr class="section-rule">
-
-  <!-- UNDER THE HOOD -->
-  <section>
-    <div class="lead-in">Under the hood</div>
-    <h2>How each part is actually simulated</h2>
-    <p class="uh-intro">Everything above is the shape. Here is the machine. <strong>Nothing below is a metaphor</strong> &mdash; it's what the engine does, sprint by sprint, and every number is a real setting in the code. Read it if you want to know exactly where a result comes from before you trust it.</p>
-  </section>
-
-  <!-- The unit of work -->
-  <section>
-    <div class="lead-in">The unit of work</div>
-    <h2>Every claim is a chain of handoffs, and each seam carries two numbers</h2>
-    <p>A claim runs through a fixed chain of desks &mdash; intake, routing, damage estimate, coverage check, approval, payment, closure &mdash; across three real insurance workflows: <strong class="hl">auto claims, commercial underwriting, and subrogation</strong>. Every desk-to-desk handoff is a seam, and each seam is stamped with two independent numbers set before the run starts.</p>
-    <div class="mech-lever">
-      <h4>Seam risk</h4>
-      <span class="knob">how likely meaning breaks at this handoff &middot; 0 to 1</span>
-      <div class="mech-row">
-        <dt>Modeled</dt>
-        <dd>Set per handoff from how the real job works. Subrogation is the riskiest in the building (<code>0.9</code>) because it sits downstream of everything; coverage verification is <code>0.8</code>; the AI damage estimate is <code>0.7</code>. Payment execution is near zero &mdash; it runs on standardized rails.</dd>
-      </div>
-    </div>
-    <div class="mech-lever">
-      <h4>Seam tacitness</h4>
-      <span class="knob">how much of the judgment is irreducibly human &middot; 0 to 1</span>
-      <div class="mech-row">
-        <dt>Modeled</dt>
-        <dd><code>0</code> means a checklist a computer can codify (routing on structured data is <code>0.20</code>). <code>1</code> means pure human judgment (live negotiation with a claimant is <code>0.85</code>). This is <strong>deliberately separate from seam risk</strong>: a handoff can be risky <em>and</em> codifiable. AI is strong where tacitness is low and fails where it's high &mdash; which is exactly where the two teams split.</dd>
-      </div>
-    </div>
-    <p style="margin-top:16px;">This is why the company leaks value unevenly. The cheap, standardized steps are safe. The expensive human-judgment steps are where a confident-looking AI handoff is most likely to be quietly wrong.</p>
-  </section>
-
-  <!-- How a handoff breaks and is counted -->
-  <section>
-    <div class="lead-in">The three quality signals</div>
-    <h2>How a broken handoff is modeled, and how it's counted</h2>
-    <div class="mech-lever">
-      <h4>Handoff failure</h4>
-      <div class="mech-row">
-        <dt>Modeled</dt>
-        <dd>When the AI handles a step it can do, it either succeeds or <strong>loses meaning at the handoff</strong>. Whether it fails isn't a coin flip &mdash; it's fixed by a fingerprint of the exact <code>(claim, step, sprint)</code>, so the same claim at the same moment always resolves the same way for <strong>both teams</strong>. A volume spike pushes failures up (<code>&times;(1 + 0.5 &times; surge)</code>); a handoff whose context has been standardized fails about <code>30%</code> less often. The rate is held between <code>0.01</code> and <code>0.95</code>.</dd>
-        <dt class="measured">Counted</dt>
-        <dd><strong>Translation Debt Index</strong> = broken handoffs + reconciliation incidents + "quick alignment" meetings, per 100 claims. Starts around <code>100</code>, and a healthy target is <code>30</code>. This is the headline number that decides the winner.</dd>
-      </div>
-    </div>
-    <div class="mech-lever">
-      <h4>Exception rate</h4>
-      <div class="mech-row">
-        <dt>Modeled</dt>
-        <dd>Any claim that had to be kicked to a human beyond the normal path &mdash; the tail of the work turning into supervision and rescue.</dd>
-        <dt class="measured">Counted</dt>
-        <dd><strong>Exception rate</strong> = escalated decisions &divide; all decisions that sprint.</dd>
-      </div>
-    </div>
-    <div class="mech-lever">
-      <h4>Cost per claim</h4>
-      <div class="mech-row">
-        <dt>Modeled</dt>
-        <dd>Every reconciliation and every rework pass adds real handling cost on top of the base processing.</dd>
-        <dt class="measured">Counted</dt>
-        <dd><strong>Cost per claim</strong>, used as a tie-breaker when the debt numbers are close. More broken seams means more cleanup means higher cost.</dd>
-      </div>
-    </div>
-  </section>
-
-  <!-- The two teams mechanically -->
-  <section>
-    <div class="lead-in">The two teams, mechanically</div>
-    <h2>What each philosophy actually does to a seam</h2>
-    <p class="section-lead">Both teams are trying to close the same gappy handoffs. They just go about it in opposite ways &mdash; and the difference in the code is small, specific, and decisive.</p>
-    <div class="mech-lever">
-      <h4>Team A &middot; Learn as you go</h4>
-      <span class="knob">fixes only what it has personally watched break</span>
-      <div class="mech-row">
-        <dt>Modeled</dt>
-        <dd>A can only touch a seam it has <strong>actually observed failing</strong>. Each fix cycle it standardizes the worst observed broken handoff, and cuts the error rate of its worst observed AI seam to <code>60%</code> of what it was (a 40% cut), floored at <code>0.02</code>. The catch: it's blind to seams it hasn't hit yet, so early on it's fixing a short list. The payoff: <strong>its fixes never regress</strong> &mdash; the team built them from its own evidence, so they stick.</dd>
-      </div>
-    </div>
-    <div class="mech-lever">
-      <h4>Team B &middot; Big plan first</h4>
-      <span class="knob">standardizes a-priori, in five planned waves, blind to what's actually broken</span>
-      <div class="mech-row">
-        <dt>Modeled</dt>
-        <dd>B commits to a plan before running anything, ranking seams by their <em>designed</em> risk. It rolls out in <code>5</code> waves. Its odds of nailing a given seam are <code>0.85 &times; (1 &minus; tacitness)</code> &mdash; so it cleanly codifies explicit seams and keeps missing the tacit ones it's blind to. A hit lowers that seam's error rate by up to <code>0.4 &times; vendor_quality</code> (about a third, with a good vendor). A miss <em>raises</em> friction <code>10%</code> &mdash; a rigid template imposed where judgment was needed.</dd>
-        <dt>Modeled</dt>
-        <dd>And B's wins don't fully stick. Completed seams <strong>revert</strong> under change fatigue and turbulence (base <code>8%</code> per sprint, scaled by how rough the quarter is). This is the honest cost of speed and breadth &mdash; the real-world finding that most big transformations don't sustain their gains.</dd>
-      </div>
-    </div>
-    <p style="margin-top:16px;">That's the whole contest in one line: A is slow, narrow, and permanent; B is fast, broad, and leaky. Which wins depends entirely on the seam mix and the weather &mdash; which is what the experiment is built to find.</p>
-  </section>
-
-  <!-- The human loop -->
-  <section>
-    <div class="lead-in">The human loop</div>
-    <h2>People aren't a constant &mdash; they respond, and it feeds back</h2>
-    <div class="mech-lever">
-      <h4>Trust moves slowly, and it's mostly earned</h4>
-      <div class="mech-row">
-        <dt>Modeled</dt>
-        <dd>Each smooth AI handoff nudges a worker's trust up; each garbled one nudges it down &mdash; a small <code>0.03</code> per interaction, so trust builds slowly and honestly. A person's view is <code>60%</code> their own experience and <code>40%</code> the people around them, and it drifts <code>15%</code> toward an influential colleague each sprint. Nobody is told how to feel.</dd>
-      </div>
-    </div>
-    <div class="mech-lever">
-      <h4>Quitting cascades</h4>
-      <div class="mech-row">
-        <dt>Modeled</dt>
-        <dd>Worn-down, distrustful staff leave faster. And one departure raises the odds of the next in the same group by <code>10%</code>, an effect that fades by half each sprint and is capped at <code>2&times;</code>. A rough quarter (high stress) lifts attrition on its own. When AI genuinely reduces grind, attrition drops <code>15%</code> instead.</dd>
-        <dt class="measured">Why it matters</dt>
-        <dd>Fewer people means more dropped handoffs, which wears down more people. This feedback loop is why the same plan can hold in a calm run and wobble in a stormy one &mdash; and why we re-run across many random starts before trusting any result.</dd>
-      </div>
-    </div>
-  </section>
-
-  <!-- Where the numbers come from -->
-  <section>
-    <div class="callout">
-      <div class="k">Where the numbers come from</div>
-      <p>Every value on this page &mdash; the error rates, the 40% cut, the vendor strength, the regression rate, the trust step &mdash; is a named, explicit setting in the code, not a hidden constant tuned to get an answer. The AI's success or failure on each handoff is decided the identical way for both teams, so any lasting gap between them comes from the approach, not luck. When one team was quietly handed an unearned, permanent advantage, an audit caught it and it was removed &mdash; and the whole test was then re-run with that thumb off the scale. The tidy answer didn't come back: the two teams tie in the easy conditions and the "learn as you go" team wins the hard ones, which is exactly the honest, uncomfortable result a working instrument is supposed to give.</p>
-    </div>
-  </section>
-
-  <div class="footer">&copy; 2025&ndash;2026 Charlie Fuller</div>
-
-</div>
-
-<script>
-  const toggle = document.getElementById('themeToggle');
-  const iconLight = toggle.querySelector('.icon-light');
-  const iconDark = toggle.querySelector('.icon-dark');
-  function setTheme(d) {
-    document.documentElement.classList.toggle('dark', d);
-    iconLight.style.display = d ? 'none' : '';
-    iconDark.style.display = d ? '' : 'none';
-    try { localStorage.setItem('diagram-theme', d ? 'dark' : 'light'); } catch(e) {}
-  }
-  toggle.addEventListener('click', () => setTheme(!document.documentElement.classList.contains('dark')));
-  try { if (localStorage.getItem('diagram-theme') === 'dark') setTheme(true); } catch(e) {}
-</script>
 </body>
 </html>
