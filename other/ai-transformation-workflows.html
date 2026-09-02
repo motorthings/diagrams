@@ -2,661 +2,244 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<meta name="description" content="The three business workflows simulated in the AI Transformation Experiment — auto claims, commercial underwriting, and subrogation — how they connect and where AI inserts into each.">
-<title>AI Transformation Experiment — Workflow Architecture</title>
 <link rel="icon" type="image/svg+xml" href="../icon.svg">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AI Transformation Experiment &mdash; Workflow Architecture</title>
+<meta name="description" content="The three business workflows simulated in the AI Transformation Experiment — auto claims, commercial underwriting, and subrogation — how they connect and where AI inserts into each.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,wght@0,400;0,500;0,600;0,700;0,800;1,400&family=Source+Code+Pro:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Public+Sans:wght@400;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
 <style>
   :root {
-    --font-display: 'Fraunces', Georgia, serif;
-    --font-mono: 'Source Code Pro', 'SF Mono', Consolas, monospace;
-    --bg: #eef4f9; --surface: #ffffff; --surface2: #f5f8fc;
-    --border: #c8daea; --border-bright: #a0bedb;
-    --text: #0a1628; --text-dim: #3d5a7a; --text-muted: #7a9ab8;
-    --primary: #e8621a; --primary-dim: rgba(232,98,26,0.08);
-    --secondary: #4a90c4; --secondary-dim: rgba(74,144,196,0.08);
-    --metric: #0f766e; --metric-dim: rgba(15,118,110,0.06);
-    --amber: #b45309; --amber-dim: rgba(180,83,9,0.08);
-    --violet: #7c3aed; --violet-dim: rgba(124,58,237,0.08);
-    --rose: #e11d48; --rose-dim: rgba(225,29,72,0.08);
-    --slate: #475569; --slate-dim: rgba(71,85,105,0.08);
-    --flow-ai: #e0eef7; --flow-ai-stroke: #4a90c4;
-    --flow-human: #fde8d8; --flow-human-stroke: #c84d0e;
-    --flow-gate: #fef0d7; --flow-gate-stroke: #b45309;
+    --font-display: 'Instrument Serif', Georgia, serif;
+    --font-body: 'Public Sans', system-ui, sans-serif;
+    --font-mono: 'JetBrains Mono', 'SF Mono', monospace;
+    --ink: #1a2740; --graphite: #2c3b57; --body: #3f4f6b; --muted: #7a879c;
+    --rule: #c8c5b2; --row: #e6e3d2; --sheet: #f7f7f2; --desk: #ebeae0;
+    --spine: #1a2740; --spine-fg: #f7f7f2;
+    --accent: #b45309; --amber: #a16207; --blue: #4f46e5; --teal: #0f766e; --violet: #7a3ea0; --rose: #b3342a;
   }
-  html.dark {
-    --bg: #0a1628; --surface: #132240; --surface2: #1a2d52;
-    --border: #1a2d52; --border-bright: #2d4570;
-    --text: #e8edf5; --text-dim: #9bb0d4; --text-muted: #5e7aa3;
-    --primary: #f37021; --primary-dim: rgba(243,112,33,0.12);
-    --secondary: #6cace4; --secondary-dim: rgba(108,172,228,0.12);
-    --metric: #2dd4bf; --metric-dim: rgba(45,212,191,0.08);
-    --amber: #f59e0b; --amber-dim: rgba(245,158,11,0.12);
-    --violet: #a78bfa; --violet-dim: rgba(167,139,250,0.12);
-    --rose: #fb7185; --rose-dim: rgba(251,113,133,0.12);
-    --slate: #94a3b8; --slate-dim: rgba(148,163,184,0.12);
-    --flow-ai: rgba(108,172,228,0.14); --flow-ai-stroke: #6cace4;
-    --flow-human: rgba(243,112,33,0.14); --flow-human-stroke: #f37021;
-    --flow-gate: rgba(251,191,36,0.14); --flow-gate-stroke: #fbbf24;
-  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { background: var(--desk); color: var(--body); font-family: var(--font-body); font-size: 17px; line-height: 1.62; -webkit-font-smoothing: antialiased; text-rendering: optimizeLegibility; }
+  .topbar { max-width: 1160px; margin: 0 auto; padding: 18px 28px 6px; }
+  .backlink a { font-size: 14px; color: var(--muted); text-decoration: none; }
+  .backlink a:hover { color: var(--ink); }
+  .backlink .arr { color: var(--accent); font-size: 15px; margin-right: 2px; }
 
-  * { margin:0; padding:0; box-sizing:border-box; }
+  .sheet { max-width: 1160px; margin: 6px auto 72px; background: var(--sheet); display: grid; grid-template-columns: 56px 1fr; }
+  .spine { background: var(--spine); display: flex; align-items: flex-end; justify-content: center; padding: 26px 0; }
+  .spine-label { writing-mode: vertical-rl; transform: rotate(180deg); font-family: var(--font-mono); font-size: 13px; letter-spacing: 0.22em; color: var(--spine-fg); white-space: nowrap; text-transform: uppercase; }
+  .content { padding: 48px 60px 6px; min-width: 0; }
 
-  body {
-    background: var(--bg);
-    background-image:
-      radial-gradient(ellipse at 80% 0%, var(--primary-dim) 0%, transparent 50%),
-      radial-gradient(ellipse at 20% 60%, var(--secondary-dim) 0%, transparent 40%);
-    color: var(--text); font-family: var(--font-display);
-    min-height: 100vh; line-height: 1.7; padding: 0 32px 64px;
-    transition: background 0.3s, color 0.3s;
-  }
+  .masthead { border-bottom: 3px solid var(--ink); padding-bottom: 16px; }
+  .masthead h1 { font-family: var(--font-display); font-weight: 400; font-size: 50px; line-height: 0.97; letter-spacing: -0.028em; color: var(--ink); }
+  .tagline { font-family: var(--font-mono); font-size: 11.5px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.14em; color: var(--accent); margin: 10px 0 14px; }
+  .lede { font-family: var(--font-display); font-style: italic; font-size: 19px; line-height: 1.5; color: var(--graphite); max-width: 940px; }
+  .lede b { color: var(--ink); }
 
-  .backlink {
-    position: fixed; top: 12px; left: 16px; z-index: 101;
-    font-family: var(--font-mono); font-size: 12px; color: var(--text-dim);
-    text-decoration: none; padding: 6px 10px;
-    border: 1px solid var(--border); border-radius: 6px;
-    background: var(--surface);
-    transition: color 0.15s, border-color 0.15s;
-  }
-  .backlink:hover { color: var(--text); border-color: var(--border-bright); }
+  section.sec { border-top: 3px solid var(--ink); padding: 22px 0 4px; }
+  .sec-title { display: grid; grid-template-columns: 88px 1fr; gap: 0 22px; align-items: baseline; margin-bottom: 6px; }
+  .sec-title .n { font-family: var(--font-display); font-size: 30px; line-height: 0.9; color: var(--accent); }
+  .sec-title h2 { font-size: 23px; font-weight: 700; letter-spacing: -0.012em; color: var(--ink); }
+  .sec-body { padding: 0 0 8px 110px; }
+  .sec-body p, .sec-body p.lead { max-width: 940px; margin-bottom: 12px; }
+  .sec-body p.nb { margin-bottom: 0; }
+  .sec-body b, .sec-body strong { color: var(--ink); }
+  .close { margin-top: 16px; border-top: 1px solid var(--rule); padding-top: 12px; font-size: 14px; line-height: 1.65; color: var(--body); max-width: 940px; }
+  .close b { color: var(--ink); }
+  code { font-family: var(--font-mono); font-size: 0.86em; color: var(--accent); }
+  .rule { margin-top: 18px; border-top: 1px dashed var(--rule); }
 
-  .nav {
-    position: sticky; top: 0; z-index: 100;
-    backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px);
-    background: color-mix(in srgb, var(--surface) 85%, transparent);
-    border-bottom: 1px solid var(--border);
-    margin: 0 -32px 32px; padding: 0 32px;
-    transition: background 0.3s, border-color 0.3s;
-  }
-  .nav-inner {
-    max-width: 1000px; margin: 0 auto; padding: 12px 0;
-    display: flex; align-items: center; justify-content: space-between;
-  }
-  .nav-brand {
-    font-family: var(--font-mono); font-size: 12px; font-weight: 600;
-    letter-spacing: 0.5px; color: var(--primary); text-decoration: none;
-  }
-  .nav-brand:hover { color: var(--text); }
-  .theme-toggle {
-    width: 36px; height: 36px; border-radius: 10px;
-    border: 1px solid var(--border); background: var(--surface);
-    cursor: pointer; display: flex; align-items: center; justify-content: center;
-    font-size: 16px; color: var(--text-dim); transition: all 0.2s;
-  }
-  .theme-toggle:hover { border-color: var(--primary); color: var(--primary); }
-  .theme-toggle:focus-visible, .backlink:focus-visible, .nav-brand:focus-visible { outline: 2px solid var(--primary); outline-offset: 2px; }
+  /* overview connection */
+  .ov { display: grid; grid-template-columns: 1fr 1fr; gap: 2px 40px; margin: 4px 0 4px; }
+  .ov > div { border-top: 1px solid var(--row); padding-top: 9px; }
+  .ov .t { font-family: var(--font-mono); font-size: 9.5px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.14em; margin-bottom: 4px; }
+  .ov .t.teal { color: var(--teal); } .ov .t.blue { color: var(--blue); } .ov .t.amb { color: var(--amber); }
+  .ov h3 { font-size: 19px; font-weight: 700; color: var(--ink); margin-bottom: 5px; }
+  .ov p { font-size: 13.5px; line-height: 1.6; }
+  .edge { border-top: 1px dashed var(--rule) !important; font-size: 13.5px; line-height: 1.6; }
+  .edge b { color: var(--accent); }
 
-  .container { max-width: 1000px; margin: 0 auto; }
+  /* workflow step rows */
+  .wf { margin: 8px 0 4px; }
+  .wrow { display: grid; grid-template-columns: 34px 1fr; gap: 12px; align-items: baseline; border-top: 1px solid var(--row); padding: 8px 0; }
+  .wrow:first-child { border-top: none; }
+  .wrow .wn { font-family: var(--font-mono); font-size: 10.5px; color: var(--muted); }
+  .wrow .wt { font-size: 14px; line-height: 1.5; }
+  .wrow .wt .step { font-weight: 700; color: var(--ink); }
+  .wtag { font-family: var(--font-mono); font-size: 9px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; margin-left: 8px; vertical-align: 1px; }
+  .wtag.ai { color: var(--teal); } .wtag.hum { color: var(--amber); } .wtag.gate { color: var(--muted); }
+  .lane { font-family: var(--font-mono); font-size: 9px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em; color: var(--muted); }
 
-  .hero { text-align: center; padding: 40px 0 32px; }
-  .hero-badge {
-    display: inline-block; font-family: var(--font-mono); font-size: 11px; font-weight: 700;
-    letter-spacing: 1px; color: var(--primary); text-transform: uppercase;
-    border: 1px solid var(--border); background: var(--primary-dim);
-    padding: 5px 12px; border-radius: 999px; margin-bottom: 18px;
-  }
-  .hero h1 { font-size: 44px; font-weight: 800; letter-spacing: -0.5px; color: var(--text); margin-bottom: 14px; }
-  .hero .lead { font-size: 20px; color: var(--text-dim); max-width: 680px; margin: 0 auto; line-height: 1.55; }
+  .pmap { border-top: 1px solid var(--row); padding: 12px 0 6px; display: grid; grid-template-columns: 240px 1fr; gap: 3px 28px; align-items: baseline; }
+  .pmap:first-of-type { border-top: none; }
+  .pmap .pm-k { font-family: var(--font-mono); font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; color: var(--blue); line-height: 1.5; }
+  .pmap .pm-k .r { display: block; color: var(--accent); font-weight: 700; font-size: 11px; }
+  .pmap .pm-k .tag { display: block; color: var(--muted); font-weight: 500; font-size: 9.5px; letter-spacing: 0.14em; margin-bottom: 2px; }
+  .pmap .pm-b { font-size: 13.5px; line-height: 1.6; }
+  .pmap .pm-b b, .pmap .pm-b strong { color: var(--ink); }
+  .pmap.i-blue .pm-k { color: var(--blue); } .pmap.i-teal .pm-k { color: var(--teal); }
+  .pmap.i-vio .pm-k { color: var(--violet); } .pmap.i-amb .pm-k { color: var(--amber); }
+  .pmap.i-rose .pm-k { color: var(--rose); } .pmap.i-acc .pm-k { color: var(--accent); }
+  .pill { display:inline-block; font-family: var(--font-mono); font-size: 10px; font-weight: 700; margin: 0 3px 2px 0; padding: 1px 7px; }
+  .pill.h { color: var(--rose); border:1px solid var(--rose); }
+  .pill.m { color: var(--amber); border:1px solid var(--amber); }
+  .pill.l { color: var(--teal); border:1px solid var(--teal); }
 
-  section { margin-top: 40px; }
-  h2 { font-size: 26px; font-weight: 700; color: var(--text); margin-bottom: 8px; }
-  .section-sub { font-size: 15px; color: var(--text-dim); margin-bottom: 20px; }
+  table.tbl { width: 100%; border-collapse: collapse; margin: 4px 0 6px; }
+  .tbl th { text-align: left; font-family: var(--font-mono); font-size: 10px; font-weight: 600; color: var(--muted); padding: 6px 12px 8px 0; border-bottom: 2px solid var(--ink); letter-spacing: 0.04em; text-transform: uppercase; }
+  .tbl td { padding: 8px 12px 8px 0; border-bottom: 1px solid var(--row); vertical-align: top; font-size: 12.5px; line-height: 1.5; }
+  .tbl tr:last-child td { border-bottom: none; }
+  .tbl td.nm { font-weight: 700; color: var(--ink); }
 
-  @keyframes fadeUp { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
-  @media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation-duration: 0.01ms !important; animation-delay: 0ms !important; } }
+  .footer { border-top: 3px solid var(--ink); margin: 26px 0 0; padding: 18px 0 30px; display: flex; justify-content: space-between; gap: 20px; flex-wrap: wrap; font-family: var(--font-mono); font-size: 11.5px; color: var(--muted); }
+  .footer a { color: var(--accent); text-decoration: none; }
 
-  /* Overview connection map */
-  .overview {
-    display: grid; grid-template-columns: 1.2fr 1fr; gap: 16px; align-items: stretch;
-    margin-top: 8px;
-  }
-  @media (max-width: 760px) { .overview { grid-template-columns: 1fr; } }
-  .ov-card {
-    background: var(--surface2); border: 1px solid var(--border);
-    border-left: 3px solid var(--secondary); border-radius: 0 10px 10px 0;
-    padding: 18px 20px;
-  }
-  .ov-card .ov-role {
-    font-family: var(--font-mono); font-size: 10px; font-weight: 700;
-    text-transform: uppercase; letter-spacing: 0.6px; color: var(--text-muted);
-    margin-bottom: 4px;
-  }
-  .ov-card h3 { font-size: 20px; font-weight: 700; color: var(--text); margin-bottom: 6px; }
-  .ov-card p { font-size: 14px; color: var(--text-dim); line-height: 1.6; }
-  .ov-connect {
-    display: flex; flex-direction: column; justify-content: center; gap: 10px;
-  }
-  .ov-edge {
-    display: flex; align-items: center; gap: 10px;
-    background: var(--surface2); border: 1px dashed var(--border-bright);
-    border-radius: 8px; padding: 12px 14px;
-  }
-  .ov-edge .dir { font-family: var(--font-mono); font-size: 14px; color: var(--primary); font-weight: 700; }
-  .ov-edge .edge-label { font-size: 13px; color: var(--text-dim); line-height: 1.45; }
-  .ov-edge .edge-label strong { color: var(--primary); }
-  .ov-note {
-    margin-top: 14px; background: var(--amber-dim); border-left: 3px solid var(--amber);
-    border-radius: 0 8px 8px 0; padding: 12px 16px;
-    font-size: 14px; color: var(--text-dim); line-height: 1.6;
-  }
-  .ov-note strong { color: var(--amber); }
-
-  /* Stage cards */
-  .stage { margin-bottom: 30px; animation: fadeUp 0.4s ease-out both; }
-  .stage:nth-child(1) { animation-delay: 0.03s; } .stage:nth-child(2) { animation-delay: 0.08s; }
-  .stage:nth-child(3) { animation-delay: 0.13s; } .stage:nth-child(4) { animation-delay: 0.18s; }
-  .stage-head { display: flex; align-items: flex-start; gap: 16px; margin-bottom: 8px; }
-  .stage-num {
-    width: 38px; height: 38px; border-radius: 50%; flex-shrink: 0;
-    display: flex; align-items: center; justify-content: center;
-    font-family: var(--font-mono); font-size: 15px; font-weight: 700;
-    color: #fff; background: var(--secondary); margin-top: 2px;
-  }
-  .stage-info { flex: 1; }
-  .stage-info h3 { font-size: 22px; font-weight: 700; color: var(--text); margin-bottom: 6px; }
-  .stage-info .outcome-line {
-    font-size: 18px; color: #8b3a0a; font-weight: 600; line-height: 1.45; margin-bottom: 10px;
-  }
-  html.dark .stage-info .outcome-line { color: #f37021; }
-  .stage-info .why { font-size: 15px; color: var(--text-dim); line-height: 1.7; }
-
-  .subpanels { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 12px; }
-  @media (max-width: 640px) { .subpanels { grid-template-columns: 1fr; } }
-  .subpanel {
-    background: var(--surface2); border: 1px solid var(--border);
-    border-left: 3px solid var(--primary); border-radius: 0 8px 8px 0;
-    padding: 14px 16px; font-size: 14px; color: var(--text-dim); line-height: 1.6;
-  }
-  .subpanel strong { color: var(--primary); display: block; margin-bottom: 4px; font-size: 15px; }
-  .subpanel--blue { border-left-color: var(--secondary); }
-  .subpanel--blue strong { color: var(--secondary); }
-  .subpanel--teal { border-left-color: var(--metric); }
-  .subpanel--teal strong { color: var(--metric); }
-  .subpanel--amber { border-left-color: var(--amber); }
-  .subpanel--amber strong { color: var(--amber); }
-
-  .metric-line {
-    background: var(--metric-dim); border-left: 3px solid var(--metric);
-    border-radius: 0 8px 8px 0; padding: 10px 14px; margin-top: 12px;
-    font-size: 13px; color: var(--text-dim); line-height: 1.5;
-  }
-  .metric-line strong { color: var(--metric); }
-
-  /* Pure CSS flowchart */
-  .flowchart {
-    background: var(--surface); border: 1px solid var(--border);
-    border-radius: 12px; padding: 24px 20px; margin-top: 16px; overflow-x: auto;
-  }
-  .flow-row { display: flex; flex-direction: column; align-items: center; gap: 0; }
-  .flow-node { display: flex; flex-direction: column; align-items: center; gap: 5px; flex-shrink: 0; }
-  .flow-box {
-    border-radius: 10px; padding: 11px 15px; text-align: center;
-    font-weight: 600; font-size: 13px; line-height: 1.35; color: var(--text);
-    border: 2px solid; min-width: 150px; max-width: 240px;
-  }
-  .flow-box--ai { background: var(--flow-ai); border-color: var(--flow-ai-stroke); }
-  .flow-box--human { background: var(--flow-human); border-color: var(--flow-human-stroke); }
-  .flow-box--gate { background: var(--flow-gate); border-color: var(--flow-gate-stroke); border-style: dashed; }
-  .flow-box--ai-outline { background: transparent; border-color: var(--flow-ai-stroke); border-style: dashed; color: var(--secondary); }
-  .flow-box small { display: block; font-family: var(--font-mono); font-size: 9px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.6px; color: var(--text-muted); margin-top: 4px; }
-  .flow-tag {
-    font-family: var(--font-mono); font-size: 9px; font-weight: 600;
-    text-transform: uppercase; letter-spacing: 1px;
-  }
-  .flow-tag--ai { color: var(--secondary); }
-  .flow-tag--human { color: var(--primary); }
-  .flow-tag--gate { color: var(--amber); }
-  .flow-arrow { padding: 2px 0; font-size: 16px; color: var(--text-muted); font-family: var(--font-mono); }
-  .flow-label {
-    font-family: var(--font-mono); font-size: 10px; color: var(--text-muted);
-    padding: 2px 0 4px; letter-spacing: 0.3px;
-  }
-  .flow-branch { display: flex; gap: 18px; justify-content: center; align-items: flex-start; flex-wrap: wrap; margin-top: 2px; }
-  @media (max-width: 640px) { .flow-branch { flex-direction: column; align-items: center; } }
-  .flow-col { display: flex; flex-direction: column; align-items: center; }
-  .flow-col-head {
-    font-family: var(--font-mono); font-size: 10px; font-weight: 700;
-    text-transform: uppercase; letter-spacing: 1px; margin-bottom: 10px;
-    padding: 4px 10px; border-radius: 999px; border: 1px solid;
-  }
-  .flow-col-head--ai { color: var(--secondary); border-color: var(--flow-ai-stroke); background: var(--flow-ai); }
-  .flow-col-head--human { color: var(--primary); border-color: var(--flow-human-stroke); background: var(--flow-human); }
-  .flow-legend {
-    display: flex; align-items: center; justify-content: center; gap: 18px; flex-wrap: wrap;
-    margin-top: 14px; font-family: var(--font-mono); font-size: 10px; color: var(--text-dim);
-  }
-  .flow-legend span { display: flex; align-items: center; gap: 5px; }
-
-  /* Seam risk table */
-  .table-wrap { margin-top: 16px; overflow-x: auto; }
-  .table-scroll { min-width: 640px; }
-  table.data-table { width: 100%; border-collapse: collapse; background: var(--surface2); }
-  .data-table th {
-    font-family: var(--font-mono); font-size: 10px; font-weight: 700; text-align: left;
-    text-transform: uppercase; letter-spacing: 0.6px; color: var(--text-muted);
-    padding: 10px 14px; border-bottom: 2px solid var(--border); white-space: nowrap;
-  }
-  .data-table td {
-    font-size: 13px; color: var(--text-dim); padding: 10px 14px; border-bottom: 1px solid var(--border); line-height: 1.5;
-  }
-  .data-table tr:last-child td { border-bottom: none; }
-  .data-table td strong { color: var(--text); }
-  .risk-pill {
-    display: inline-block; font-family: var(--font-mono); font-size: 11px; font-weight: 700;
-    padding: 2px 8px; border-radius: 999px; white-space: nowrap;
-  }
-  .risk-high { background: var(--rose-dim); color: var(--rose); }
-  .risk-med { background: var(--amber-dim); color: var(--amber); }
-  .risk-low { background: var(--metric-dim); color: var(--metric); }
-
-  .callout {
-    background: var(--primary-dim); border-left: 3px solid var(--primary);
-    border-radius: 0 8px 8px 0; padding: 14px 18px; margin-top: 16px;
-    font-size: 14px; color: var(--text-dim); line-height: 1.6;
-  }
-  .callout strong { color: var(--primary); }
-
-  .footer { margin-top: 56px; padding-top: 18px; border-top: 1px solid var(--border); text-align: center; font-size: 13px; color: var(--text-muted); }
-
-  @media (max-width: 640px) {
-    body { padding: 0 16px 48px; }
-    .nav { margin: 0 -16px 24px; padding: 0 16px; }
-    .hero h1 { font-size: 28px; }
-    .hero .lead { font-size: 18px; }
+  @media (max-width: 900px) {
+    .sheet { grid-template-columns: 40px 1fr; }
+    .spine-label { font-size: 11px; }
+    .content { padding: 32px 22px 4px; }
+    .masthead h1 { font-size: 38px; }
+    .sec-title { grid-template-columns: 50px 1fr; }
+    .sec-title .n { font-size: 25px; }
+    .sec-body { padding-left: 0; }
+    .pmap { grid-template-columns: 1fr; gap: 2px; }
+    .ov { grid-template-columns: 1fr; }
+    body { font-size: 16px; }
   }
 </style>
 </head>
 <body>
 
-<a href="../ai-transformation-experiment.html" class="backlink">&larr; AI Transformation Experiment</a>
-
-<div class="nav">
-  <div class="nav-inner">
-    <a href="../index.html" class="nav-brand">AI TRANSFORMATION EXPERIMENT</a>
-    <button class="theme-toggle" id="themeToggle" aria-label="Toggle dark mode">
-      <span class="icon-light">&#9788;</span>
-      <span class="icon-dark" style="display:none">&#9790;</span>
-    </button>
-  </div>
+<div class="topbar">
+  <div class="backlink"><a href="../ai-transformation-experiment.html"><span class="arr">&larr;</span> AI Transformation Experiment</a></div>
 </div>
 
-<div class="container">
-  <div class="hero">
-    <div class="hero-badge">SWT Experiment</div>
-    <h1>Workflow Architecture</h1>
-    <p class="lead">Three business workflows simulated against the same company model &mdash; auto claims, commercial underwriting, and subrogation &mdash; each exposing different seams where translation debt accumulates when AI inserts into the flow.</p>
-  </div>
+<div class="sheet">
+  <div class="spine"><div class="spine-label">WORKFLOW ARCHITECTURE</div></div>
 
-  <section>
-    <h2>How the three workflows connect</h2>
-    <p class="section-sub">Claims is the spine. Subrogation hangs off the far end of it. Underwriting runs in parallel, feeding the same agents and the same organizational context.</p>
+  <div class="content">
 
-    <div class="overview">
-      <div class="ov-card">
-        <div class="ov-role">Primary value stream</div>
-        <h3>Auto Claims</h3>
-        <p>FNOL intake to closure, with two pipelines &mdash; AI for simple claims, human for moderate and complex. The most mature and most deeply modeled workflow in the simulation. It is the largest surface for AI insertion and the source of the subrogation cases downstream.</p>
+    <header class="masthead">
+      <h1>Workflow Architecture</h1>
+      <div class="tagline">Three business workflows, one company model</div>
+      <p class="lede">Auto claims, commercial underwriting, and subrogation &mdash; each exposing different seams where translation debt accumulates when AI inserts into the flow.</p>
+    </header>
+
+    <!-- 01 -->
+    <section class="sec">
+      <div class="sec-title"><span class="n">01</span><h2>How the three workflows connect</h2></div>
+      <div class="sec-body">
+        <p class="lead">Claims is the spine. Subrogation hangs off the far end of it. Underwriting runs in parallel, feeding the same agents and the same organizational context.</p>
+        <div class="ov">
+          <div><div class="t teal">Primary value stream</div><h3>Auto Claims</h3><p>FNOL intake to closure, with two pipelines &mdash; AI for simple claims, human for moderate and complex. The most mature, most deeply modeled workflow. It is the largest surface for AI insertion and the source of the subrogation cases downstream.</p></div>
+          <div class="edge"><div class="t amb">Connections</div><b>Claims &rarr; Subrogation.</b> Every paid claim with recovery potential becomes a subrogation case &mdash; the critical seam of the whole experiment.<br><b>Underwriting runs parallel.</b> Separate value stream, but shares agents, metrics, and the same company context.</div>
+        </div>
+        <div class="ov">
+          <div><div class="t amb">Downstream recovery</div><h3>Subrogation Recovery</h3><p>Post-claim recovery from at-fault parties. Originates from a closed claim, so it inherits every upstream failure. Highest seam risk in the model &mdash; recovery depends entirely on documentation it never produced itself.</p></div>
+          <div><div class="t blue">Parallel value stream</div><h3>Commercial Underwriting</h3><p>Application to bind. Guidewire PolicyCenter-aligned. Models the sales cycle and the broker &rarr; underwriter &rarr; actuary translation chain. AI augments risk scoring but can&rsquo;t do the actuarial sign-off or the quote.</p></div>
+        </div>
+        <p class="close"><b>The stakes of the connection:</b> underwriting is a separate value stream, so its failures don&rsquo;t contaminate claims. But subrogation is downstream of everything &mdash; a sloppy settlement decision in claims destroys recovery potential weeks later, and Tommy has no standing to fix it.</p>
       </div>
-      <div class="ov-connect">
-        <div class="ov-edge"><span class="dir">&darr;</span><span class="edge-label"><strong>Claims &rarr; Subrogation.</strong> Every paid claim with recovery potential becomes a subrogation case. The critical seam of the whole experiment.</span></div>
-        <div class="ov-edge"><span class="dir">&darr;</span><span class="edge-label"><strong>Underwriting runs parallel.</strong> Separate value stream, but shares agents, metrics, and the same company context.</span></div>
+    </section>
+
+    <!-- 02 -->
+    <section class="sec">
+      <div class="sec-title"><span class="n">02</span><h2>Auto Claims &mdash; the primary workflow</h2></div>
+      <div class="sec-body">
+        <p class="lead">FNOL intake &rarr; triage &rarr; investigation &rarr; damage estimation &rarr; coverage verification &rarr; liability &rarr; settlement &rarr; approval &rarr; payment &rarr; subrogation &rarr; closed. Two pipelines split at triage.</p>
+        <div class="wf">
+          <div class="wrow"><div class="wn">01</div><div class="wt"><span class="step">FNOL Intake</span><span class="wtag gate">GATE &middot; classify</span></div></div>
+          <div class="wrow"><div class="wn">02</div><div class="wt"><span class="step">Triage &mdash; route by complexity</span><span class="wtag gate">GATE &middot; classify</span></div></div>
+          <div class="wrow"><div class="wn">03</div><div class="wt"><span class="lane">AI LANE &middot; simple claims</span> &mdash; <span class="step">Damage estimation</span> (AI, Maria reviews) &rarr; <span class="step">Coverage verification</span> (AI, Pat reviews) &rarr; <span class="step">Liability determination</span> (AI, Maria reviews) &rarr; <span class="step">Settlement</span> (AI, &lt;$5K auto-approve)</div></div>
+          <div class="wrow"><div class="wn">04</div><div class="wt"><span class="lane">HUMAN LANE &middot; complex claims</span> &mdash; <span class="step">Investigation</span> (Diana) &rarr; <span class="step">Damage estimation</span> (Maria) &rarr; <span class="step">Coverage verification</span> (Pat) &rarr; <span class="step">Liability + settlement</span> (Diana)</div></div>
+          <div class="wrow"><div class="wn">05</div><div class="wt"><span class="step">Approval gate</span><span class="wtag gate">GATE &middot; approve</span> &mdash; &lt;$5K auto &middot; $5&ndash;100K Sanjay &middot; &gt;$100K Kathryn</div></div>
+          <div class="wrow"><div class="wn">06</div><div class="wt"><span class="step">Payment</span><span class="wtag ai">AI &middot; PAY</span> &mdash; triggers subrogation review</div></div>
+          <div class="wrow"><div class="wn">07</div><div class="wt"><span class="step">Subrogation</span><span class="wtag hum">HUMAN &middot; NEGOTIATE</span> &mdash; Tommy, recovery</div></div>
+          <div class="wrow"><div class="wn">08</div><div class="wt"><span class="step">Closed</span><span class="wtag gate">GATE &middot; classify</span></div></div>
+        </div>
+
+        <div class="pmap i-teal"><div class="pm-k">Where AI inserts</div><div class="pm-b"><b>AI owns the fast lane; humans own the judgment lane.</b> Almost every step is AI-capable, but each has a confidence threshold below which it drops to a human exception path. Triage decides the lane: simple (single vehicle, no injury, clear liability, under $10K) goes AI; everything else goes human. <b>AI runs</b> FNOL intake, triage, photo damage estimation, coverage verification, liability determination, settlement under $10K, auto-approval under $5K, payment. <b>Human only</b> complex damage, disputed liability, negotiation, and everything over the confidence thresholds.</div></div>
+        <div class="pmap i-acc"><div class="pm-k">The seams AI exposes</div><div class="pm-b">Seam risk scores every handoff. The most expensive are where AI collides with institutional judgment.
+          <br><span class="pill m">COVERAGE 0.8</span> Policy-language interpretation. Pat&rsquo;s expertise is a black box &mdash; AI reads exclusions literally that specialists know are never enforced.
+          <br><span class="pill m">DAMAGE ESTIMATION 0.7</span> AI uses database labor rates 6&ndash;18 months stale; adjusters mentally correct for it. When AI bypasses that, supplement requests spike.
+          <br><span class="pill m">APPROVAL 0.7</span> Sanjay trusts Diana&rsquo;s informal review implicitly &mdash; rejection rate jumps 18% when AI skips her.
+          <br><span class="pill h">SUBROGATION 0.9</span> Downstream of everything. Incomplete files and missing liability documentation compound here.</div></div>
       </div>
-    </div>
+    </section>
 
-    <div class="overview" style="margin-top:12px;">
-      <div class="ov-card" style="border-left-color:var(--amber);">
-        <div class="ov-role">Downstream recovery</div>
-        <h3>Subrogation Recovery</h3>
-        <p>Post-claim recovery from at-fault parties. Originates from a closed claim, so it inherits every upstream failure. Highest seam risk in the model &mdash; recovery depends entirely on documentation it never produced itself.</p>
+    <!-- 03 -->
+    <section class="sec">
+      <div class="sec-title"><span class="n">03</span><h2>Commercial Underwriting &mdash; the parallel stream</h2></div>
+      <div class="sec-body">
+        <p class="lead">Application submission &rarr; data gathering &rarr; risk assessment &rarr; actuarial pricing &rarr; quote generation &rarr; bind/issue. Guidewire PolicyCenter-aligned. The translation chain is broker &rarr; underwriter &rarr; actuary &rarr; carrier.</p>
+        <div class="wf">
+          <div class="wrow"><div class="wn">01</div><div class="wt"><span class="step">Application intake</span><span class="wtag gate">CLASSIFY</span> &mdash; Alicia, broker submission</div></div>
+          <div class="wrow"><div class="wn">02</div><div class="wt"><span class="step">Risk assessment</span><span class="wtag ai">ASSESS</span> &mdash; Nick, AI scores, Nick smells</div></div>
+          <div class="wrow"><div class="wn">03</div><div class="wt"><span class="step">Actuarial pricing</span><span class="wtag gate">ASSESS</span> &mdash; Greg, technical price</div></div>
+          <div class="wrow"><div class="wn">04</div><div class="wt"><span class="step">Quote generation</span><span class="wtag hum">NEGOTIATE</span> &mdash; Nick, market price</div></div>
+          <div class="wrow"><div class="wn">05</div><div class="wt"><span class="step">Bind / issue</span><span class="wtag gate">APPROVE</span> &mdash; Alicia, policy language</div></div>
+        </div>
+        <div class="pmap i-teal"><div class="pm-k">Where AI augments<br>vs replaces</div><div class="pm-b"><b>AI scores the data; the smell test stays human.</b> AI parses applications and scores risk factors, but the tacit knowledge that keeps a book profitable lives in Nick&rsquo;s head. AI pricing models produce a technical price; only a human bridges it to a competitive quote. <b>AI augments</b> application intake and classification, risk-factor scoring, pricing models, policy documents at bind. <b>AI cannot replace</b> quote generation and the actuarial statement of opinion &mdash; Greg won&rsquo;t certify a model he hasn&rsquo;t validated, and state DOI won&rsquo;t accept uncertified rates.</div></div>
+        <div class="pmap i-acc"><div class="pm-k">The seams</div><div class="pm-b"><b>Every translation strips context from the risk narrative.</b>
+          <br><span class="pill h">RISK ASSESSMENT 0.8</span> The Type 2 absence: AI doesn&rsquo;t know to check adjacent-building risk, prior-carrier non-renewal reasons, or application fill time. AI-written risks run 4&ndash;8% worse loss ratios after 18 months.
+          <br><span class="pill m">APPLICATION INTAKE 0.7</span> Broker language &rarr; underwriter language. AI prices &ldquo;well-managed restaurant&rdquo; the same as any restaurant.
+          <br><span class="pill m">BIND 0.7</span> &ldquo;Full coverage&rdquo; to the broker is six exclusions in the policy. AI-generated language may not match negotiated terms.
+          <br><span class="pill l">PRICING 0.6</span> Technical price &rarr; quoted price. Greg won&rsquo;t sign off on a rate that isn&rsquo;t actuarially justified, but the market may need a different number.</div></div>
       </div>
-      <div class="ov-card" style="border-left-color:var(--metric);">
-        <div class="ov-role">Parallel value stream</div>
-        <h3>Commercial Underwriting</h3>
-        <p>Application to bind. Guidewire PolicyCenter-aligned. Models the sales cycle and the broker &rarr; underwriter &rarr; actuary translation chain. AI augments risk scoring but can't do the actuarial sign-off or the quote.</p>
+    </section>
+
+    <!-- 04 -->
+    <section class="sec">
+      <div class="sec-title"><span class="n">04</span><h2>Subrogation Recovery &mdash; the downstream seam</h2></div>
+      <div class="sec-body">
+        <p class="lead">Post-claim recovery from at-fault parties, originating from a closed claim: recovery assessment &rarr; liability review &rarr; demand package &rarr; negotiation &rarr; collection &rarr; closed.</p>
+        <div class="wf">
+          <div class="wrow"><div class="wn">01</div><div class="wt"><span class="step">Recovery assessment</span><span class="wtag hum">ASSESS</span> &mdash; Tommy, screens closed claims</div></div>
+          <div class="wrow"><div class="wn">02</div><div class="wt"><span class="step">Liability review</span><span class="wtag hum">VERIFY</span> &mdash; Rachel, legal basis</div></div>
+          <div class="wrow"><div class="wn">03</div><div class="wt"><span class="step">Demand package</span><span class="wtag ai">NEGOTIATE</span> &mdash; AI assembles from structured data</div></div>
+          <div class="wrow"><div class="wn">04</div><div class="wt"><span class="step">Negotiation</span><span class="wtag hum">NEGOTIATE</span> &mdash; Rachel, up to $100K</div></div>
+          <div class="wrow"><div class="wn">05</div><div class="wt"><span class="step">Collection</span><span class="wtag ai">PAY</span> &mdash; Tommy, offsets paid claim</div></div>
+          <div class="wrow"><div class="wn">06</div><div class="wt"><span class="step">Closed</span><span class="wtag gate">CLASSIFY</span></div></div>
+        </div>
+        <div class="pmap i-acc"><div class="pm-k">Why it&rsquo;s the highest<br>seam risk</div><div class="pm-b"><b>It&rsquo;s downstream of everything.</b> Subrogation starts with a paid claim it didn&rsquo;t handle. Recovery potential exists only if the original adjuster documented liability evidence &mdash; and AI pipeline decisions often don&rsquo;t include a &ldquo;should we check for recovery?&rdquo; flag. Tommy screens what he can see, not what should be there.
+          <br><span class="pill h">ASSESSMENT 0.9</span> The core Type 2 absence. 12&ndash;18% of claims with recovery potential close with $0 because the system never asked who else is liable.
+          <br><span class="pill h">UPSTREAM DEBT</span> Incomplete files and missing police reports kill demand strength &mdash; recovery rate drops 30% when files lack evidence.
+          <br><b>AI inserts</b> screening and demand-package assembly from structured data &mdash; but can&rsquo;t do liability review or negotiation.
+          <br><b>Carrier tactics</b> Rachel&rsquo;s team knows which at-fault carriers pay fast and which fight everything. AI treating all carriers the same drops the recovery rate.</div></div>
+        <div class="pmap i-vio"><div class="pm-k">Jurisdiction<br>complexity</div><div class="pm-b"><b>State laws vary.</b> Liability review and negotiation depend on state-specific subrogation law &mdash; comparative-negligence rules, anti-subrogation doctrines, differing recovery rights. The demand package must reflect the governing state; disputes that can&rsquo;t settle move to a legal referral.
+          <br><b>Handoff to legal (0.6):</b> claims &rarr; legal is a domain boundary with different priorities &mdash; the slowest, least flexible seam in the model.</div></div>
       </div>
-    </div>
+    </section>
 
-    <div class="ov-note"><strong>The stakes of the connection:</strong> underwriting is a separate value stream, so failures there don't contaminate claims. But subrogation is downstream of everything &mdash; a sloppy settlement decision in claims destroys recovery potential weeks later, and Tommy has no standing to fix it.</div>
-  </section>
-
-  <section>
-    <h2>Auto Claims &mdash; the primary workflow</h2>
-    <p class="section-sub">FNOL intake &rarr; triage &rarr; investigation &rarr; damage estimation &rarr; coverage verification &rarr; liability determination &rarr; settlement &rarr; approval &rarr; payment &rarr; subrogation &rarr; closed. Two pipelines split at triage.</p>
-
-    <div class="flowchart">
-      <div class="flow-row">
-        <div class="flow-node">
-          <div class="flow-box flow-box--gate">FNOL Intake</div>
-          <div class="flow-tag flow-tag--gate">Gate &middot; classify</div>
+    <!-- 05 -->
+    <section class="sec">
+      <div class="sec-title"><span class="n">05</span><h2>How they interact</h2></div>
+      <div class="sec-body">
+        <p class="lead">The handoffs that define the whole experiment.</p>
+        <div class="ov">
+          <div class="edge"><b>Claims &rarr; Subrogation is the critical seam.</b> Payment triggers a subrogation review. Whether recovery is even possible depends entirely on what the claims pipeline documented and whether anyone flagged third-party liability. The single most expensive translation in the model.</div>
+          <div><b>Underwriting is parallel &mdash; but not isolated.</b> A separate value stream that shares the same agents, metrics, and organizational context. Its failures stay in underwriting; claims failures bleed into subrogation. Different exposure to downstream contamination.</div>
         </div>
-        <div class="flow-arrow">&darr;</div>
-        <div class="flow-node">
-          <div class="flow-box flow-box--gate">Triage &mdash; route by complexity</div>
-          <div class="flow-tag flow-tag--gate">Gate &middot; classify</div>
-        </div>
-        <div class="flow-arrow">&darr;</div>
+        <table class="tbl">
+          <thead><tr><th>Workflow</th><th>Position</th><th>AI insertions</th><th>Peak seam</th><th>Headline metric</th></tr></thead>
+          <tbody>
+            <tr><td class="nm">Auto Claims</td><td>Primary value stream</td><td>Both pipelines, nearly every step</td><td><span class="pill m">Subrogation 0.9</span><br><span class="pill m">Coverage 0.8</span></td><td>Cycle time, cost per claim, loss ratio</td></tr>
+            <tr><td class="nm">Underwriting</td><td>Parallel value stream</td><td>Augments scoring; cannot replace quote or actuarial sign-off</td><td><span class="pill m">Risk assessment 0.8</span></td><td>Written-book loss ratio, adverse selection</td></tr>
+            <tr><td class="nm">Subrogation</td><td>Downstream of claims</td><td>Screens recovery, assembles demand; liability and negotiation stay human</td><td><span class="pill h">Assessment 0.9</span></td><td>Recovery amount, recovery rate</td></tr>
+          </tbody>
+        </table>
+        <p class="close"><b>The thesis in one line:</b> AI transforms each workflow at its seams &mdash; and the seams that matter most are where institutional judgment, informal controls, and downstream dependencies live. Subrogation is where that thesis bites hardest.</p>
       </div>
-      <div class="flow-branch">
-        <div class="flow-col">
-          <div class="flow-col-head flow-col-head--ai">AI Pipeline &middot; simple claims</div>
-          <div class="flow-node">
-            <div class="flow-box flow-box--ai">Damage Estimation <small>AI &middot; Maria reviews</small></div>
-          </div>
-          <div class="flow-arrow">&darr;</div>
-          <div class="flow-node">
-            <div class="flow-box flow-box--ai">Coverage Verification <small>AI &middot; Pat reviews</small></div>
-          </div>
-          <div class="flow-arrow">&darr;</div>
-          <div class="flow-node">
-            <div class="flow-box flow-box--ai">Liability Determination <small>AI &middot; Maria reviews</small></div>
-          </div>
-          <div class="flow-arrow">&darr;</div>
-          <div class="flow-node">
-            <div class="flow-box flow-box--ai">Settlement <small>AI &middot; &lt;$5K auto-approve</small></div>
-          </div>
-        </div>
-        <div class="flow-col">
-          <div class="flow-col-head flow-col-head--human">Human Pipeline &middot; complex claims</div>
-          <div class="flow-node">
-            <div class="flow-box flow-box--human">Investigation <small>Diana</small></div>
-          </div>
-          <div class="flow-arrow">&darr;</div>
-          <div class="flow-node">
-            <div class="flow-box flow-box--human">Damage Estimation <small>Maria &middot; human</small></div>
-          </div>
-          <div class="flow-arrow">&darr;</div>
-          <div class="flow-node">
-            <div class="flow-box flow-box--human">Coverage Verification <small>Pat &middot; human</small></div>
-          </div>
-          <div class="flow-arrow">&darr;</div>
-          <div class="flow-node">
-            <div class="flow-box flow-box--human">Liability + Settlement <small>Diana</small></div>
-          </div>
-        </div>
-      </div>
-      <div class="flow-arrow" style="margin-top:14px;">&darr;</div>
-      <div class="flow-row">
-        <div class="flow-node">
-          <div class="flow-box flow-box--gate">Approval Gate <small>&lt;$5K auto &middot; $5-100K Sanjay &middot; &gt;$100K Kathryn</small></div>
-          <div class="flow-tag flow-tag--gate">Gate &middot; approve</div>
-        </div>
-        <div class="flow-arrow">&darr;</div>
-        <div class="flow-node">
-          <div class="flow-box flow-box--ai">Payment <small>triggers subrogation review</small></div>
-          <div class="flow-tag flow-tag--ai">pay</div>
-        </div>
-        <div class="flow-arrow">&darr;</div>
-        <div class="flow-node">
-          <div class="flow-box flow-box--human">Subrogation <small>Tommy &middot; recovery</small></div>
-          <div class="flow-tag flow-tag--human">negotiate</div>
-        </div>
-        <div class="flow-arrow">&darr;</div>
-        <div class="flow-node">
-          <div class="flow-box flow-box--gate">Closed</div>
-          <div class="flow-tag flow-tag--gate">classify</div>
-        </div>
-      </div>
-      <div class="flow-legend">
-        <span><span style="display:inline-block;width:10px;height:10px;border-radius:2px;background:var(--flow-ai-stroke)"></span> AI / automated</span>
-        <span><span style="display:inline-block;width:10px;height:10px;border-radius:2px;background:var(--flow-human-stroke)"></span> Human-led</span>
-        <span><span style="display:inline-block;width:10px;height:10px;border-radius:2px;border:2px dashed var(--flow-gate-stroke)"></span> Gate / routing</span>
-      </div>
-    </div>
+    </section>
 
-    <div class="stage">
-      <div class="stage-head">
-        <div class="stage-num">1</div>
-        <div class="stage-info">
-          <h3>Where AI inserts</h3>
-          <div class="outcome-line">AI owns the fast lane; humans own the judgment lane.</div>
-          <div class="why">
-            <p>Almost every step is AI-capable, but each has a confidence threshold below which it drops to a human exception path. The pipeline routing at triage decides which lane a claim enters: simple (single vehicle, no injury, clear liability, under $10K) goes AI; everything else goes human.</p>
-            <div class="subpanels">
-              <div class="subpanel subpanel--blue"><strong>AI runs</strong>FNOL intake, triage, photo damage estimation, coverage verification, liability determination, settlement under $10K, auto-approval under $5K, payment.</div>
-              <div class="subpanel subpanel--amber"><strong>Human only</strong>Complex damage, disputed liability, negotiation, and everything over the AI confidence thresholds &mdash; where the exception paths reroute.</div>
-            </div>
-            <div class="metric-line"><strong>&#8614; Metrics:</strong> cycle time (handoffs + processing), cost per claim including rework, first-pass accuracy, retention, supplement request rate, exceptions raised, translation incidents, ai_decision_overridden, human_review_triggered.</div>
-          </div>
-        </div>
-      </div>
-    </div>
+    <footer class="footer">
+      <a href="../ai-transformation-experiment.html">&larr; AI Transformation Experiment</a>
+      <span>&copy; 2025-2026 Charlie Fuller</span>
+    </footer>
 
-    <div class="stage">
-      <div class="stage-head">
-        <div class="stage-num">2</div>
-        <div class="stage-info">
-          <h3>The seams AI exposes</h3>
-          <div class="outcome-line">The handoffs are where the translation debt lives.</div>
-          <div class="why">
-            <p>Seam risk scores every handoff in the workflow. The most expensive ones are exactly where AI collides with institutional judgment &mdash; coverage interpretation, damage-cost reality, and the informal controls humans run underneath the formal process.</p>
-            <div class="subpanels">
-              <div class="subpanel subpanel--amber"><strong>Coverage verification (0.8)</strong>Policy language interpretation. Pat's expertise is a black box &mdash; AI reads exclusions literally that specialists know are never enforced.</div>
-              <div class="subpanel subpanel--amber"><strong>Damage estimation (0.7)</strong>AI uses database labor rates 6-18 months stale. Adjusters mentally correct for it. When AI bypasses that, supplement requests spike.</div>
-              <div class="subpanel"><strong>Approval (0.7)</strong>Sanjay's review is the bottleneck. He trusts Diana's informal review implicitly &mdash; rejection rate jumps 18% when AI skips her.</div>
-              <div class="subpanel subpanel--amber"><strong>Subrogation (0.9)</strong>Downstream of everything. Incomplete files and missing liability documentation compound here &mdash; the lagging indicator of every upstream failure.</div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-  </section>
-
-  <section>
-    <h2>Commercial Lines Underwriting &mdash; the parallel stream</h2>
-    <p class="section-sub">Application submission &rarr; data gathering &rarr; risk assessment &rarr; actuarial pricing &rarr; quote generation &rarr; bind/issue. Guidewire PolicyCenter-aligned. The translation chain is broker &rarr; underwriter &rarr; actuary &rarr; carrier.</p>
-
-    <div class="flowchart">
-      <div class="flow-row">
-        <div class="flow-node">
-          <div class="flow-box flow-box--gate">Application Intake <small>Alicia &middot; broker submission</small></div>
-          <div class="flow-tag flow-tag--gate">classify</div>
-        </div>
-        <div class="flow-arrow">&darr;</div>
-        <div class="flow-node">
-          <div class="flow-box flow-box--ai">Risk Assessment <small>Nick &middot; AI scores, Nick smells</small></div>
-          <div class="flow-tag flow-tag--ai">assess</div>
-        </div>
-        <div class="flow-arrow">&darr;</div>
-        <div class="flow-node">
-          <div class="flow-box flow-box--ai-outline">Actuarial Pricing <small>Greg &middot; technical price</small></div>
-          <div class="flow-tag flow-tag--ai">assess</div>
-        </div>
-        <div class="flow-arrow">&darr;</div>
-        <div class="flow-node">
-          <div class="flow-box flow-box--human">Quote Generation <small>Nick &middot; market price</small></div>
-          <div class="flow-tag flow-tag--human">negotiate</div>
-        </div>
-        <div class="flow-arrow">&darr;</div>
-        <div class="flow-node">
-          <div class="flow-box flow-box--gate">Bind / Issue <small>Alicia &middot; policy language</small></div>
-          <div class="flow-tag flow-tag--gate">approve</div>
-        </div>
-      </div>
-    </div>
-
-    <div class="stage">
-      <div class="stage-head">
-        <div class="stage-num">3</div>
-        <div class="stage-info">
-          <h3>Where AI augments vs replaces</h3>
-          <div class="outcome-line">AI scores the data; the smell test stays human.</div>
-          <div class="why">
-            <p>AI parses applications and scores risk factors, but the tacit knowledge that keeps a book profitable &mdash; the restaurant type that burns in year two, the contractor whose subs cause every claim, the prior carrier who quietly declined to renew &mdash; lives in Nick's head. AI pricing models produce a technical price; only a human bridges it to a competitive quote.</p>
-            <div class="subpanels">
-              <div class="subpanel subpanel--blue"><strong>AI augments</strong>Application intake and classification, risk-factor scoring, running pricing models, generating policy documents at bind.</div>
-              <div class="subpanel subpanel--amber"><strong>AI cannot replace</strong>Quote generation (competitive positioning) and the actuarial statement of opinion &mdash; Greg won't certify an AI model he hasn't validated, and state DOI won't accept uncertified rates.</div>
-            </div>
-            <div class="metric-line"><strong>&#8614; Metrics:</strong> cycle time, handoffs, translation incidents, exceptions raised, written-book loss ratio, adverse selection, rate-filing delay.</div>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <div class="stage">
-      <div class="stage-head">
-        <div class="stage-num">4</div>
-        <div class="stage-info">
-          <h3>The seams</h3>
-          <div class="outcome-line">Every translation strips context from the risk narrative.</div>
-          <div class="why">
-            <p>The broker's favorable language &mdash; "well-managed" means "owner is present," not "safe risk" &mdash; is the intake seam. The pricing seam is where actuarial rigor meets market reality. And bind is where what was sold must match what the policy says, but often doesn't.</p>
-            <div class="subpanels">
-              <div class="subpanel subpanel--amber"><strong>Risk assessment (0.8)</strong>The Type 2 absence: AI doesn't know to check adjacent-building risk, prior-carrier non-renewal reasons, or application fill time. AI-written risks run 4-8% worse loss ratios after 18 months.</div>
-              <div class="subpanel subpanel--amber"><strong>Application intake (0.7)</strong>Broker language &rarr; underwriter language. AI prices "well-managed restaurant" the same as any restaurant &mdash; the broker-speak translation is lost.</div>
-              <div class="subpanel"><strong>Bind (0.7)</strong>"Full coverage" to the broker is six exclusions in the policy. AI-generated language may not match negotiated terms.</div>
-              <div class="subpanel"><strong>Pricing (0.6)</strong>Technical price &rarr; quoted price. Greg won't sign off on a rate that isn't actuarially justified, but the market may need a different number.</div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-  </section>
-
-  <section>
-    <h2>Subrogation Recovery &mdash; the downstream seam</h2>
-    <p class="section-sub">Post-claim recovery from at-fault parties. Originates from a closed claim. Recovery assessment &rarr; liability review &rarr; demand package &rarr; negotiation &rarr; collection &rarr; closed.</p>
-
-    <div class="flowchart">
-      <div class="flow-row">
-        <div class="flow-node">
-          <div class="flow-box flow-box--human">Recovery Assessment <small>Tommy &middot; screen closed claims</small></div>
-          <div class="flow-tag flow-tag--human">assess</div>
-        </div>
-        <div class="flow-arrow">&darr;</div>
-        <div class="flow-node">
-          <div class="flow-box flow-box--human">Liability Review <small>Rachel &middot; legal basis</small></div>
-          <div class="flow-tag flow-tag--human">verify</div>
-        </div>
-        <div class="flow-arrow">&darr;</div>
-        <div class="flow-node">
-          <div class="flow-box flow-box--ai">Demand Package <small>AI assembles from structured data</small></div>
-          <div class="flow-tag flow-tag--ai">negotiate</div>
-        </div>
-        <div class="flow-arrow">&darr;</div>
-        <div class="flow-node">
-          <div class="flow-box flow-box--human">Negotiation <small>Rachel &middot; up to $100K</small></div>
-          <div class="flow-tag flow-tag--human">negotiate</div>
-        </div>
-        <div class="flow-arrow">&darr;</div>
-        <div class="flow-node">
-          <div class="flow-box flow-box--ai">Collection <small>Tommy &middot; offset paid claim</small></div>
-          <div class="flow-tag flow-tag--ai">pay</div>
-        </div>
-        <div class="flow-arrow">&darr;</div>
-        <div class="flow-node">
-          <div class="flow-box flow-box--gate">Closed</div>
-          <div class="flow-tag flow-tag--gate">classify</div>
-        </div>
-      </div>
-    </div>
-
-    <div class="stage">
-      <div class="stage-head">
-        <div class="stage-num">5</div>
-        <div class="stage-info">
-          <h3>Why it's the highest seam risk</h3>
-          <div class="outcome-line">It's downstream of everything. Every upstream failure compounds here.</div>
-          <div class="why">
-            <p>Subrogation starts with a paid claim it didn't handle. Recovery potential only exists if the original adjuster documented liability evidence &mdash; and AI pipeline decisions often don't include a "should we check for recovery?" flag. Tommy screens what he can see, not what should be there. His recovery rate is a lagging indicator, and he has no standing to fix the upstream problems that gut it.</p>
-            <div class="subpanels">
-              <div class="subpanel subpanel--amber"><strong>Assessment (0.9)</strong>The core Type 2 absence. 12-18% of claims with recovery potential close with $0 because the system never asked who else is liable.</div>
-              <div class="subpanel subpanel--amber"><strong>Upstream debt</strong>Incomplete files and missing police reports kill demand strength. Recovery rate drops 30% when files lack evidence to support the demand.</div>
-              <div class="subpanel"><strong>AI inserts</strong>Screening for recovery potential and assembling demand packages from structured data &mdash; but it can't do liability review or negotiation.</div>
-              <div class="subpanel"><strong>Carrier tactics</strong>Rachel's team knows which at-fault carriers pay fast and which fight everything. AI treating all carriers the same drops the recovery rate.</div>
-            </div>
-            <div class="metric-line"><strong>&#8614; Metrics:</strong> recovery_amount, recovery rate, translation incidents, exceptions raised, cases referred to legal.</div>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <div class="stage">
-      <div class="stage-head">
-        <div class="stage-num">6</div>
-        <div class="stage-info">
-          <h3>Jurisdiction complexity</h3>
-          <div class="outcome-line">State laws vary. The legal basis is never generic.</div>
-          <div class="why">
-            <p>Liability review and negotiation depend on state-specific subrogation law &mdash; comparative negligence rules, anti-subrogation doctrines, and differing recovery rights by jurisdiction. The demand package must reflect the governing state, and disputes that can't settle move to a legal referral for litigation or arbitration.</p>
-            <div class="callout"><strong>Handoff to legal (0.6):</strong>claims &rarr; legal is a domain boundary with different priorities. The slowest, least flexible seam in the model &mdash; and where recovery disputes ultimately land.</div>
-          </div>
-        </div>
-      </div>
-    </div>
-  </section>
-
-  <section>
-    <h2>How they interact</h2>
-    <p class="section-sub">The handoffs that define the whole experiment.</p>
-
-    <div class="subpanels">
-      <div class="subpanel subpanel--amber"><strong>Claims &rarr; Subrogation is the critical seam</strong>Payment triggers a subrogation review. Whether recovery is even possible depends entirely on what the claims pipeline documented and whether anyone flagged third-party liability. It is the single most expensive translation in the model.</div>
-      <div class="subpanel subpanel--blue"><strong>Underwriting is parallel &mdash; but not isolated</strong>A separate value stream, but it shares the same agents, metrics, and organizational context. Its failures stay in underwriting; claims failures bleed into subrogation. Different exposure to downstream contamination.</div>
-    </div>
-
-    <div class="table-wrap"><div class="table-scroll">
-      <table class="data-table">
-        <thead>
-          <tr>
-            <th>Workflow</th>
-            <th>Position</th>
-            <th>AI insertions</th>
-            <th>Peak seam</th>
-            <th>Headline metric</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr>
-            <td><strong>Auto Claims</strong></td>
-            <td>Primary value stream</td>
-            <td>Both pipelines, nearly every step</td>
-            <td><span class="risk-pill risk-med">Subrogation 0.9</span><br><span class="risk-pill risk-med">Coverage 0.8</span></td>
-            <td>Cycle time, cost per claim, loss ratio</td>
-          </tr>
-          <tr>
-            <td><strong>Underwriting</strong></td>
-            <td>Parallel value stream</td>
-            <td>Augments scoring; cannot replace quote or actuarial sign-off</td>
-            <td><span class="risk-pill risk-med">Risk assessment 0.8</span></td>
-            <td>Written-book loss ratio, adverse selection</td>
-          </tr>
-          <tr>
-            <td><strong>Subrogation</strong></td>
-            <td>Downstream of claims</td>
-            <td>Screens recovery, assembles demand; liability and negotiation stay human</td>
-            <td><span class="risk-pill risk-high">Assessment 0.9</span></td>
-            <td>Recovery amount, recovery rate</td>
-          </tr>
-        </tbody>
-      </table>
-    </div></div>
-
-    <div class="callout"><strong>The thesis in one line:</strong> AI transforms each workflow at its seams &mdash; and the seams that matter most are the ones where institutional judgment, informal controls, and downstream dependencies live. Subrogation is where that thesis bites hardest.</div>
-  </section>
-
-  <div class="footer">
-    &copy; 2025-2026 Charlie Fuller &nbsp;&middot;&nbsp; <a href="https://linkedin.com/in/charlie-fuller-colorado/" target="_blank" rel="noopener">LinkedIn</a>
   </div>
 </div>
-
-<script>
-  const toggle = document.getElementById('themeToggle');
-  const iconLight = toggle.querySelector('.icon-light');
-  const iconDark = toggle.querySelector('.icon-dark');
-  function setTheme(d) {
-    document.documentElement.classList.toggle('dark', d);
-    iconLight.style.display = d ? 'none' : '';
-    iconDark.style.display = d ? '' : 'none';
-    try { localStorage.setItem('diagram-theme', d ? 'dark' : 'light'); } catch(e) {}
-  }
-  toggle.addEventListener('click', () => setTheme(!document.documentElement.classList.contains('dark')));
-  try { if (localStorage.getItem('diagram-theme') === 'dark') setTheme(true); } catch(e) {}
-</script>
 
 </body>
 </html>
