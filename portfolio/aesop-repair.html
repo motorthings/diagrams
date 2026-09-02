@@ -4,953 +4,189 @@
 <meta charset="UTF-8">
 <link rel="icon" type="image/svg+xml" href="../icon.svg">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>AESOP — Repair</title>
+<title>AESOP &mdash; Repair</title>
+<meta name="description" content="AESOP Repair: evidence-based rewriting of AI system instructions from evaluation findings, with version tracking and regression detection.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Fraunces:wght@400;500;600;700;800&family=Source+Code+Pro:wght@400;500;600&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Public+Sans:wght@400;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
 <style>
   :root {
-    --font-body: 'Fraunces', Georgia, serif;
-    --font-mono: 'Source Code Pro', 'SF Mono', Consolas, monospace;
-
-    --bg: #fdf6ee;
-    --surface: #ffffff;
-    --surface2: #fef8f0;
-    --surface-elevated: #fff7ed;
-    --border: rgba(0, 0, 0, 0.06);
-    --border-bright: rgba(0, 0, 0, 0.12);
-    --text: #1c1917;
-    --text-dim: #78716c;
-
-    --amber: #d97706;
-    --amber-dim: rgba(217, 119, 6, 0.07);
-    --orange: #ea580c;
-    --orange-dim: rgba(234, 88, 12, 0.07);
-    --red: #dc2626;
-    --red-dim: rgba(220, 38, 38, 0.07);
-    --slate: #475569;
-    --slate-dim: rgba(71, 85, 105, 0.07);
-    --emerald: #059669;
-    --emerald-dim: rgba(5, 150, 105, 0.07);
-    --violet: #7c3aed;
-    --violet-dim: rgba(124, 58, 237, 0.07);
-    --rose: #e11d48;
-    --rose-dim: rgba(225, 29, 72, 0.07);
+    --font-display: 'Instrument Serif', Georgia, serif;
+    --font-body: 'Public Sans', system-ui, sans-serif;
+    --font-mono: 'JetBrains Mono', 'SF Mono', monospace;
+    --ink: #0a1628; --graphite: #2e4d73; --body: #3d5a7a; --muted: #7a9ab8;
+    --rule: #c6d5e6; --row: #dbe5f0; --sheet: #eef4f9; --desk: #e4ecf4;
+    --spine: #0a1628; --spine-fg: #eef4f9;
+    --accent: #e8621a; --amber: #b45309; --blue: #2f6fa8; --teal: #0f766e; --violet: #7c3aed; --rose: #c23a30;
   }
-
-  @media (prefers-color-scheme: dark) {
-    :root {
-      --bg: #1a130a;
-      --surface: #231a10;
-      --surface2: #2d2015;
-      --surface-elevated: #352718;
-      --border: rgba(255, 255, 255, 0.06);
-      --border-bright: rgba(255, 255, 255, 0.12);
-      --text: #fcecd4;
-      --text-dim: #d4b896;
-
-      --amber: #fbbf24;
-      --amber-dim: rgba(251, 191, 36, 0.12);
-      --orange: #fb923c;
-      --orange-dim: rgba(251, 146, 60, 0.12);
-      --red: #f87171;
-      --red-dim: rgba(248, 113, 113, 0.12);
-      --slate: #94a3b8;
-      --slate-dim: rgba(148, 163, 184, 0.12);
-      --emerald: #34d399;
-      --emerald-dim: rgba(52, 211, 153, 0.12);
-      --violet: #a78bfa;
-      --violet-dim: rgba(167, 139, 250, 0.12);
-      --rose: #fb7185;
-      --rose-dim: rgba(251, 113, 133, 0.12);
-    }
-  }
-
   * { margin: 0; padding: 0; box-sizing: border-box; }
-
-  body {
-    background: var(--bg);
-    background-image:
-      radial-gradient(at 30% 0%, var(--amber-dim) 0%, transparent 50%),
-      radial-gradient(at 70% 100%, var(--orange-dim) 0%, transparent 50%);
-    color: var(--text);
-    font-family: var(--font-body);
-    line-height: 1.7;
-    min-height: 100vh;
-    padding: 48px 24px 80px;
-  }
-
-  .container { max-width: 960px; margin: 0 auto; }
-
-  .hero {
-    text-align: center;
-    margin-bottom: 56px;
-    animation: fadeUp 0.6s ease-out;
-  }
-
-  .hero-badge {
-    display: inline-flex;
-    align-items: center;
-    gap: 8px;
-    padding: 6px 18px;
-    background: var(--amber-dim);
-    border: 1px solid var(--amber);
-    border-radius: 20px;
-    font-family: var(--font-mono);
-    font-size: 11px;
-    font-weight: 600;
-    color: var(--amber);
-    letter-spacing: 1px;
-    text-transform: uppercase;
-    margin-bottom: 24px;
-  }
-
-  .hero h1 {
-    font-size: 52px;
-    font-weight: 800;
-    letter-spacing: -1px;
-    margin-bottom: 12px;
-    background: linear-gradient(135deg, var(--amber), var(--orange), var(--red));
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    background-clip: text;
-  }
-
-  .hero p {
-    font-size: 20px;
-    color: var(--text-dim);
-    max-width: 640px;
-    margin: 0 auto;
-  }
-
-  .section {
-    margin-bottom: 48px;
-    opacity: 0;
-    animation: fadeUp 0.5s ease-out forwards;
-  }
-
-  .section:nth-child(2) { animation-delay: 0.1s; }
-  .section:nth-child(3) { animation-delay: 0.2s; }
-  .section:nth-child(4) { animation-delay: 0.3s; }
-  .section:nth-child(5) { animation-delay: 0.4s; }
-
-  .section-title {
-    font-family: var(--font-mono);
-    font-size: 12px;
-    font-weight: 600;
-    letter-spacing: 1px;
-    text-transform: uppercase;
-    color: var(--text-dim);
-    margin-bottom: 16px;
-  }
-
-  /* Pipeline diagram */
-  .pipeline-diagram {
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: 14px;
-    padding: 40px 32px;
-  }
-
-  .pipeline-input {
-    display: flex;
-    justify-content: center;
-  }
-
-  .pipeline-node {
-    border-radius: 14px;
-    padding: 20px 28px;
-    text-align: center;
-    border: 2px solid;
-    position: relative;
-    transition: transform 0.2s, box-shadow 0.2s;
-  }
-
-  .pipeline-node:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 8px 24px rgba(0,0,0,0.1);
-  }
-
-  .pipeline-node.input-node {
-    background: var(--orange-dim);
-    border-color: var(--orange);
-    min-width: 320px;
-  }
-
-  .pipeline-node.agent-node {
-    background: var(--amber-dim);
-    border-color: var(--amber);
-    min-width: 320px;
-  }
-
-  .pipeline-node.output-node {
-    background: var(--emerald-dim);
-    border-color: var(--emerald);
-    min-width: 320px;
-  }
-
-  .pipeline-node.version-node {
-    background: var(--violet-dim);
-    border-color: var(--violet);
-    min-width: 320px;
-  }
-
-  .pipeline-node.eval-node {
-    background: var(--slate-dim);
-    border-color: var(--slate);
-    min-width: 320px;
-  }
-
-  .pipeline-node.regression-node {
-    background: var(--red-dim);
-    border-color: var(--red);
-    min-width: 320px;
-  }
-
-  .pipeline-node.result-node {
-    background: var(--emerald-dim);
-    border-color: var(--emerald);
-    flex: 1;
-    min-width: 0;
-  }
-
-  .pipeline-node.changelog-node {
-    background: var(--slate-dim);
-    border-color: var(--slate);
-    flex: 1;
-    min-width: 0;
-  }
-
-  .node-icon {
-    font-family: var(--font-mono);
-    font-size: 12px;
-    font-weight: 600;
-    letter-spacing: 0.5px;
-    text-transform: uppercase;
-    color: var(--text-dim);
-    margin-bottom: 8px;
-  }
-
-  .node-name {
-    font-size: 17px;
-    font-weight: 700;
-    margin-bottom: 4px;
-  }
-
-  .node-version {
-    font-family: var(--font-mono);
-    font-size: 12px;
-    color: var(--text-dim);
-  }
-
-  .node-desc {
-    font-size: 13px;
-    color: var(--text-dim);
-    margin-top: 4px;
-  }
-
-  .pipeline-connector {
-    display: flex;
-    justify-content: center;
-    align-items: stretch;
-    padding: 0;
-    height: 36px;
-  }
-
-  .connector-line {
-    width: 3px;
-    border-radius: 0;
-    background: var(--amber);
-    position: relative;
-  }
-
-  .connector-line.orange { background: var(--orange); }
-  .connector-line.emerald { background: var(--emerald); }
-  .connector-line.violet { background: var(--violet); }
-  .connector-line.slate { background: var(--slate); }
-  .connector-line.red { background: var(--red); }
-
-  .connector-line::after {
-    content: '';
-    position: absolute;
-    bottom: -1px;
-    left: 50%;
-    transform: translateX(-50%);
-    border-left: 7px solid transparent;
-    border-right: 7px solid transparent;
-    border-top: 7px solid var(--amber);
-  }
-
-  .connector-line.orange::after { border-top-color: var(--orange); }
-  .connector-line.emerald::after { border-top-color: var(--emerald); }
-  .connector-line.violet::after { border-top-color: var(--violet); }
-  .connector-line.slate::after { border-top-color: var(--slate); }
-  .connector-line.red::after { border-top-color: var(--red); }
-
-  .pipeline-row {
-    display: grid;
-    gap: 16px;
-  }
-
-  .pipeline-row.two-col { grid-template-columns: repeat(2, 1fr); }
-
-  .pipeline-row-label {
-    font-family: var(--font-mono);
-    font-size: 11px;
-    font-weight: 600;
-    letter-spacing: 1px;
-    text-transform: uppercase;
-    color: var(--text-dim);
-    text-align: center;
-    margin-bottom: 12px;
-  }
-
-  .pipeline-fork {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    padding: 0;
-    position: relative;
-  }
-
-  .fork-lines {
-    position: relative;
-    width: 60%;
-    height: 36px;
-  }
-
-  .fork-lines::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 50%;
-    transform: translateX(-50%);
-    width: 3px;
-    height: 16px;
-    background: var(--emerald);
-  }
-
-  .fork-lines::after {
-    content: '';
-    position: absolute;
-    top: 16px;
-    left: 25%;
-    right: 25%;
-    height: 3px;
-    background: var(--emerald);
-  }
-
-  .fork-drop {
-    position: absolute;
-    bottom: 0;
-    width: 3px;
-    height: 17px;
-    background: var(--emerald);
-  }
-
-  .fork-drop::after {
-    content: '';
-    position: absolute;
-    bottom: -1px;
-    left: 50%;
-    transform: translateX(-50%);
-    border-left: 7px solid transparent;
-    border-right: 7px solid transparent;
-    border-top: 7px solid var(--emerald);
-  }
-
-  .fork-drop.left { left: 25%; }
-  .fork-drop.right { right: 25%; }
-
-  .merge-lines {
-    position: relative;
-    width: 60%;
-    height: 36px;
-  }
-
-  .merge-lines::after {
-    content: '';
-    position: absolute;
-    bottom: 16px;
-    left: 25%;
-    right: 25%;
-    height: 3px;
-    background: var(--slate);
-  }
-
-  .merge-lines::before {
-    content: '';
-    position: absolute;
-    bottom: 0;
-    left: 50%;
-    transform: translateX(-50%);
-    width: 3px;
-    height: 16px;
-    background: var(--violet);
-  }
-
-  .merge-drop {
-    position: absolute;
-    top: 0;
-    width: 3px;
-    height: 17px;
-    background: var(--slate);
-  }
-
-  .merge-drop.left { left: 25%; }
-  .merge-drop.right { right: 25%; }
-
-  @media (max-width: 768px) {
-    .pipeline-row.two-col { grid-template-columns: 1fr; }
-  }
-
-  /* Feature cards */
-  .feature-grid {
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 16px;
-  }
-
-  @media (max-width: 700px) { .feature-grid { grid-template-columns: 1fr; } }
-
-  .feature-card {
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: 12px;
-    padding: 20px;
-    border-left: 3px solid;
-    transition: transform 0.2s;
-  }
-
-  .feature-card:hover { transform: translateY(-2px); }
-
-  .feature-card.repair { border-left-color: var(--amber); }
-  .feature-card.version { border-left-color: var(--violet); }
-  .feature-card.regression { border-left-color: var(--red); }
-
-  .feature-label {
-    font-family: var(--font-mono);
-    font-size: 10px;
-    font-weight: 600;
-    letter-spacing: 0.5px;
-    text-transform: uppercase;
-    margin-bottom: 8px;
-  }
-
-  .feature-name {
-    font-size: 17px;
-    font-weight: 700;
-    margin-bottom: 6px;
-  }
-
-  .feature-desc {
-    font-size: 14px;
-    color: var(--text-dim);
-    line-height: 1.5;
-  }
-
-  /* Mode cards */
-  .mode-grid {
-    display: grid;
-    grid-template-columns: repeat(2, 1fr);
-    gap: 16px;
-  }
-
-  @media (max-width: 600px) { .mode-grid { grid-template-columns: 1fr; } }
-
-  .mode-card {
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: 12px;
-    padding: 20px;
-    position: relative;
-  }
-
-  .mode-icon {
-    width: 40px;
-    height: 40px;
-    border-radius: 10px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-family: var(--font-mono);
-    font-size: 12px;
-    font-weight: 700;
-    margin-bottom: 12px;
-  }
-
-  .mode-name {
-    font-size: 16px;
-    font-weight: 700;
-    margin-bottom: 4px;
-  }
-
-  .mode-desc {
-    font-size: 13px;
-    color: var(--text-dim);
-  }
-
-  .mode-tag {
-    font-family: var(--font-mono);
-    font-size: 10px;
-    font-weight: 600;
-    padding: 2px 8px;
-    border-radius: 4px;
-    position: absolute;
-    top: 16px;
-    right: 16px;
-  }
-
-  .mode-tag.default { background: var(--amber-dim); color: var(--amber); }
-  .mode-tag.advanced { background: var(--violet-dim); color: var(--violet); }
-
-  .origin-note {
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: 14px;
-    padding: 24px 28px;
-    font-size: 15px;
-    line-height: 1.6;
-    color: var(--text-dim);
-    border-left: 3px solid var(--amber);
-  }
-
-  .origin-note strong {
-    color: var(--text);
-  }
-
-  /* How to access */
-  .access-steps {
-    display: flex;
-    flex-direction: column;
-    gap: 16px;
-  }
-
-  .access-step {
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: 12px;
-    padding: 20px 24px;
-    display: flex;
-    gap: 16px;
-    align-items: flex-start;
-    transition: transform 0.2s;
-  }
-
-  .access-step:hover { transform: translateY(-2px); }
-
-  .step-number {
-    flex-shrink: 0;
-    width: 36px;
-    height: 36px;
-    border-radius: 10px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-family: var(--font-mono);
-    font-size: 14px;
-    font-weight: 700;
-  }
-
-  .step-content {
-    flex: 1;
-  }
-
-  .step-title {
-    font-size: 16px;
-    font-weight: 700;
-    margin-bottom: 4px;
-  }
-
-  .step-desc {
-    font-size: 14px;
-    color: var(--text-dim);
-    line-height: 1.5;
-  }
-
-  .pipeline-note {
-    background: var(--surface2);
-    border: 1px dashed var(--border-bright);
-    border-radius: 10px;
-    padding: 14px 20px;
-    font-size: 13px;
-    color: var(--text-dim);
-    text-align: center;
-    margin-top: 24px;
-  }
-
-  .pipeline-note strong {
-    color: var(--text);
-  }
-
-  .footer {
-    text-align: center;
-    margin-top: 60px;
-    padding-top: 24px;
-    border-top: 1px solid var(--border);
-    font-size: 14px;
-    color: var(--text-dim);
-  }
-
-  /* Tabs */
-  .tabs {
-    display: flex;
-    gap: 4px;
-    margin-bottom: 32px;
-    border-bottom: 1px solid var(--border);
-  }
-
-  .tab-btn {
-    font-family: var(--font-mono);
-    font-size: 13px;
-    font-weight: 500;
-    letter-spacing: 0.3px;
-    padding: 10px 20px;
-    background: none;
-    border: none;
-    border-bottom: 2px solid transparent;
-    color: var(--text-dim);
-    cursor: pointer;
-    transition: color 0.2s, border-color 0.2s;
-  }
-
-  .tab-btn:hover { color: var(--text); }
-
-  .tab-btn.active {
-    color: var(--amber);
-    border-bottom-color: var(--amber);
-    font-weight: 600;
-  }
-
-  .tab-panel { display: none; }
-  .tab-panel.active { display: block; }
-
-  /* Lifecycle connector */
-  .lifecycle-arrow {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    height: 48px;
-    position: relative;
-  }
-
-  .lifecycle-arrow .arrow-body {
-    width: 3px;
-    height: 100%;
-    background: var(--slate);
-    position: relative;
-  }
-
-  .lifecycle-arrow .arrow-label {
-    position: absolute;
-    left: 50%;
-    top: 50%;
-    transform: translate(-50%, -50%);
-    font-family: var(--font-mono);
-    font-size: 10px;
-    font-weight: 600;
-    letter-spacing: 0.5px;
-    text-transform: uppercase;
-    color: var(--text-dim);
-    background: var(--bg);
-    padding: 2px 12px;
-    border-radius: 4px;
-    white-space: nowrap;
+  body { background: var(--desk); color: var(--body); font-family: var(--font-body); font-size: 17px; line-height: 1.62; -webkit-font-smoothing: antialiased; text-rendering: optimizeLegibility; }
+  .topbar { max-width: 1160px; margin: 0 auto; padding: 18px 28px 6px; }
+  .backlink a { font-size: 14px; color: var(--muted); text-decoration: none; }
+  .backlink a:hover { color: var(--ink); }
+  .backlink .arr { color: var(--accent); font-size: 15px; margin-right: 2px; }
+
+  .sheet { max-width: 1160px; margin: 6px auto 72px; background: var(--sheet); display: grid; grid-template-columns: 56px 1fr; }
+  .spine { background: var(--spine); display: flex; align-items: flex-end; justify-content: center; padding: 26px 0; }
+  .spine-label { writing-mode: vertical-rl; transform: rotate(180deg); font-family: var(--font-mono); font-size: 13px; letter-spacing: 0.22em; color: var(--spine-fg); white-space: nowrap; text-transform: uppercase; }
+  .content { padding: 48px 60px 6px; min-width: 0; }
+
+  .masthead { border-bottom: 3px solid var(--ink); padding-bottom: 16px; }
+  .masthead h1 { font-family: var(--font-display); font-weight: 400; font-size: 50px; line-height: 0.97; letter-spacing: -0.028em; color: var(--ink); }
+  .tagline { font-family: var(--font-mono); font-size: 11.5px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.14em; color: var(--accent); margin: 10px 0 14px; }
+  .lede { font-family: var(--font-display); font-style: italic; font-size: 19px; line-height: 1.5; color: var(--graphite); max-width: 920px; }
+  .lede b { color: var(--ink); }
+
+  section.sec { border-top: 3px solid var(--ink); padding: 22px 0 4px; }
+  .sec-title { display: grid; grid-template-columns: 88px 1fr; gap: 0 22px; align-items: baseline; margin-bottom: 6px; }
+  .sec-title .n { font-family: var(--font-display); font-size: 30px; line-height: 0.9; color: var(--accent); }
+  .sec-title h2 { font-size: 23px; font-weight: 700; letter-spacing: -0.012em; color: var(--ink); }
+  .sec-body { padding: 0 0 8px 110px; }
+  .sec-body p, .sec-body p.lead { max-width: 920px; margin-bottom: 12px; }
+  .sec-body p.nb { margin-bottom: 0; }
+  .sec-body b, .sec-body strong { color: var(--ink); }
+  .close { margin-top: 18px; border-top: 1px solid var(--rule); padding-top: 12px; font-size: 14px; line-height: 1.6; color: var(--body); max-width: 920px; }
+  .close b { color: var(--ink); }
+
+  .pmap { border-top: 1px solid var(--row); padding: 12px 0 6px; display: grid; grid-template-columns: 230px 1fr; gap: 3px 28px; align-items: baseline; }
+  .pmap:first-of-type { border-top: none; }
+  .pmap .pm-k { font-family: var(--font-mono); font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; color: var(--blue); line-height: 1.45; }
+  .pmap .pm-k .tag { display: block; color: var(--muted); font-weight: 500; font-size: 9.5px; letter-spacing: 0.16em; margin-bottom: 3px; }
+  .pmap .pm-k .ord { display: block; color: var(--accent); font-weight: 500; font-size: 9.5px; letter-spacing: 0.16em; margin-bottom: 3px; }
+  .pmap .pm-b { font-size: 14px; line-height: 1.6; }
+  .pmap .pm-b .tt { font-weight: 700; color: var(--ink); font-size: 15.5px; }
+  .pmap .pm-b ul { list-style: none; margin: 6px 0 2px; }
+  .pmap .pm-b li { padding: 2px 0 2px 15px; position: relative; font-size: 13.5px; line-height: 1.5; }
+  .pmap .pm-b li::before { content: ''; position: absolute; left: 1px; top: 0.72em; width: 5px; height: 5px; background: var(--row); }
+  .pmap .pm-b li b { color: var(--ink); }
+  .pmap .ver { font-family: var(--font-mono); font-size: 10px; color: var(--muted); }
+  .pmap.i-blue .pm-k { color: var(--blue); } .pmap.i-teal .pm-k { color: var(--teal); }
+  .pmap.i-vio .pm-k { color: var(--violet); } .pmap.i-amb .pm-k { color: var(--amber); }
+  .pmap.i-rose .pm-k { color: var(--rose); } .pmap.i-acc .pm-k { color: var(--accent); }
+  .branch { font-size: 13px; line-height: 1.5; padding: 1px 0; }
+  .branch .bk { font-family: var(--font-mono); font-size: 10.5px; font-weight: 600; margin-right: 8px; }
+  .branch.teal .bk { color: var(--teal); } .branch.vio .bk { color: var(--violet); }
+
+  .footer { border-top: 3px solid var(--ink); margin: 26px 0 0; padding: 18px 0 30px; display: flex; justify-content: space-between; gap: 20px; flex-wrap: wrap; font-family: var(--font-mono); font-size: 11.5px; color: var(--muted); }
+  .footer a { color: var(--accent); text-decoration: none; }
+
+  @media (max-width: 900px) {
+    .sheet { grid-template-columns: 40px 1fr; }
+    .spine-label { font-size: 11px; }
+    .content { padding: 32px 22px 4px; }
+    .masthead h1 { font-size: 38px; }
+    .sec-title { grid-template-columns: 50px 1fr; }
+    .sec-title .n { font-size: 25px; }
+    .sec-body { padding-left: 0; }
+    .pmap { grid-template-columns: 1fr; gap: 2px; }
+    body { font-size: 16px; }
   }
-
-  @keyframes fadeUp {
-    from { opacity: 0; transform: translateY(16px); }
-    to { opacity: 1; transform: translateY(0); }
-  }
-
-  @media (prefers-reduced-motion: reduce) {
-    .section, .hero { animation: none; opacity: 1; }
-  }
-
-.backlink{position:fixed;top:12px;left:16px;z-index:101;font-family:var(--font-mono);font-size:11px;color:var(--text-dim);text-decoration:none;padding:6px 10px;border:1px solid var(--border);border-radius:6px;background:var(--surface);transition:color .15s,border-color .15s}
-.backlink:hover{color:var(--text);border-color:var(--border-bright)}
 </style>
 </head>
 <body>
-<a href="../aesop.html" class="backlink">&larr; AESOP Transformation OS</a>
 
-<div class="container">
-
-  <div class="hero">
-    <div class="hero-badge">Instruction Repair</div>
-    <h1>Repair</h1>
-    <p>Automatically repair AI system instructions using evaluation findings, with version tracking and regression detection</p>
-  </div>
-
-  <!-- Tabs -->
-  <div class="tabs">
-    <button class="tab-btn active" onclick="switchTab('overview')">Overview</button>
-    <button class="tab-btn" onclick="switchTab('pipeline')">Pipeline Diagram</button>
-  </div>
-
-  <!-- Overview Tab -->
-  <div id="tab-overview" class="tab-panel active">
-
-  <!-- How to Access -->
-  <div class="section" style="animation-delay: 0.08s;">
-    <div class="section-title">How to Access</div>
-    <div class="origin-note" style="margin-bottom: 20px;">
-      <strong>Repair</strong> is available after any completed evaluation that included system instructions. You can access it from the evaluation report page or from the dedicated Repair list page in the sidebar.
-    </div>
-    <div class="access-steps">
-      <div class="access-step">
-        <div class="step-number" style="background: var(--orange-dim); color: var(--orange);">1</div>
-        <div class="step-content">
-          <div class="step-title">From the Report Page</div>
-          <div class="step-desc">After an evaluation completes, click the "Repair" button on the report page. This takes you directly to the Repair repair page for that evaluation.</div>
-        </div>
-      </div>
-      <div class="access-step">
-        <div class="step-number" style="background: var(--amber-dim); color: var(--amber);">2</div>
-        <div class="step-content">
-          <div class="step-title">From the Repair List</div>
-          <div class="step-desc">Navigate to the "Repair" page in the sidebar to see all evaluations eligible for repair. Click any evaluation to open the Repair repair page.</div>
-        </div>
-      </div>
-      <div class="access-step">
-        <div class="step-number" style="background: var(--red-dim); color: var(--red);">3</div>
-        <div class="step-content">
-          <div class="step-title">Fix Regression</div>
-          <div class="step-desc">If a re-evaluation after repair shows a score drop, a red "Fix Regression" button appears on the report page. This launches Repair in regression mode with context about what went wrong.</div>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <!-- Key Features -->
-  <div class="section" style="animation-delay: 0.12s;">
-    <div class="section-title">Key Features</div>
-    <div class="feature-grid">
-      <div class="feature-card repair">
-        <div class="feature-label" style="color: var(--amber);">Core</div>
-        <div class="feature-name">Evidence-Based Repair</div>
-        <div class="feature-desc">Every change traces to a specific finding from evaluation reports. The Repair agent uses extended thinking to plan minimal, targeted fixes rather than rewriting from scratch.</div>
-      </div>
-      <div class="feature-card version">
-        <div class="feature-label" style="color: var(--violet);">Tracking</div>
-        <div class="feature-name">Version Lineage</div>
-        <div class="feature-desc">Each repair increments the instruction version (v1.0, v1.1, v1.2). Versions are tracked across evaluations so you can see how scores change over time on the Agent Trajectory page.</div>
-      </div>
-      <div class="feature-card regression">
-        <div class="feature-label" style="color: var(--red);">Safety Net</div>
-        <div class="feature-name">Regression Detection</div>
-        <div class="feature-desc">When a re-evaluation scores lower than the previous version, it is flagged as a regression. Repair can then run in regression mode, analyzing what went wrong and trying a different approach.</div>
-      </div>
-    </div>
-  </div>
-
-  <!-- Output Modes -->
-  <div class="section" style="animation-delay: 0.16s;">
-    <div class="section-title">Output Modes</div>
-    <div class="mode-grid">
-      <div class="mode-card">
-        <div class="mode-tag default">Default</div>
-        <div class="mode-icon" style="background: var(--amber-dim); color: var(--amber);">FR</div>
-        <div class="mode-name">Full Rewrite</div>
-        <div class="mode-desc">Produces the complete revised instructions with all changes applied inline. Best when you want a ready-to-use replacement for your current system prompt.</div>
-      </div>
-      <div class="mode-card">
-        <div class="mode-tag advanced">Advanced</div>
-        <div class="mode-icon" style="background: var(--violet-dim); color: var(--violet);">SP</div>
-        <div class="mode-name">Surgical Patches</div>
-        <div class="mode-desc">Shows only the changed sections as before/after patches with location references. Best when you want to review and apply changes selectively.</div>
-      </div>
-    </div>
-  </div>
-
-  <!-- What You Get -->
-  <div class="section" style="animation-delay: 0.2s;">
-    <div class="section-title">Repair Output</div>
-    <div class="origin-note">
-      Every Repair repair produces two artifacts:
-      <br><br>
-      <strong>Repaired Instructions</strong> -- The revised system instructions (full rewrite or patches depending on mode). Format is preserved: if your input uses XML tags, the output uses XML tags. If it uses markdown headers, output uses markdown headers.
-      <br><br>
-      <strong>Changelog</strong> -- Two sections: <em>instruction_changes</em> lists every modification with the source finding, what changed, and why. <em>knowledge_base_recommendations</em> lists issues that cannot be fixed in instructions alone and suggests actions like adding documents or updating retrieval configuration.
-      <br><br>
-      <strong>Tiger Team Findings</strong> (optional input) -- Paste stakeholder feedback from the Launch Package's Tiger Team review into the repair page. Repair treats these as real-world user testing data, surfacing usability and adoption issues that automated evaluation cannot detect. Tiger Team findings are weighted alongside evaluation reports when planning changes.
-    </div>
-  </div>
-
-  <!-- Version Lifecycle -->
-  <div class="section" style="animation-delay: 0.24s;">
-    <div class="section-title">Version Lifecycle</div>
-    <div class="origin-note">
-      <strong>Evaluate</strong> -- Run an evaluation against your agent's system instructions. The first evaluation establishes version v1.0.
-      <br><br>
-      <strong>Repair</strong> -- Run Repair to produce repaired instructions (v1.1). The changelog documents every change.
-      <br><br>
-      <strong>Re-evaluate</strong> -- Apply the repaired instructions and run a new evaluation. The system automatically computes the score delta (+3.2, -1.5) and flags regressions.
-      <br><br>
-      <strong>Iterate</strong> -- Continue the cycle. Each repair increments the minor version. The Agent Trajectory page shows the full history with scores, deltas, and certification levels across all versions.
-    </div>
-  </div>
-
-  </div><!-- end Overview tab -->
-
-  <!-- Pipeline Diagram Tab -->
-  <div id="tab-pipeline" class="tab-panel">
-
-    <div class="section" style="animation-delay: 0.1s;">
-      <div class="section-title"><span style="color: var(--amber);">&bull;</span> Repair Pipeline</div>
-      <div class="pipeline-diagram">
-
-        <!-- Input: Evaluation -->
-        <div class="pipeline-row-label">Input</div>
-        <div class="pipeline-input">
-          <div class="pipeline-node input-node">
-            <div class="node-icon">Source</div>
-            <div class="node-name">Completed Evaluation</div>
-            <div class="node-desc">Original instructions + specialist reports + synthesis + scenario results</div>
-          </div>
-        </div>
-
-        <div class="pipeline-connector"><div class="connector-line orange"></div></div>
-
-        <!-- Repair Agent -->
-        <div class="pipeline-input">
-          <div class="pipeline-node agent-node">
-            <div class="node-icon">Agent</div>
-            <div class="node-name">Repair Agent</div>
-            <div class="node-version">v1.0 -- Extended Thinking</div>
-            <div class="node-desc">Analyzes findings, classifies each as instruction-fixable or knowledge-base, plans minimal changes</div>
-          </div>
-        </div>
-
-        <!-- Fork to outputs -->
-        <div class="pipeline-fork">
-          <div class="fork-lines">
-            <div class="fork-drop left"></div>
-            <div class="fork-drop right"></div>
-          </div>
-        </div>
-
-        <!-- Output row -->
-        <div class="pipeline-row-label">Output</div>
-        <div class="pipeline-row two-col">
-          <div class="pipeline-node result-node">
-            <div class="node-icon">Artifact</div>
-            <div class="node-name">Repaired Instructions</div>
-            <div class="node-desc">Full rewrite or surgical patches preserving original format and voice</div>
-          </div>
-          <div class="pipeline-node changelog-node">
-            <div class="node-icon">Artifact</div>
-            <div class="node-name">Changelog</div>
-            <div class="node-desc">instruction_changes + knowledge_base_recommendations with finding traceability</div>
-          </div>
-        </div>
-
-        <!-- Merge outputs -->
-        <div class="pipeline-fork">
-          <div class="merge-lines">
-            <div class="merge-drop left"></div>
-            <div class="merge-drop right"></div>
-          </div>
-        </div>
-
-        <!-- Version Increment -->
-        <div class="pipeline-input">
-          <div class="pipeline-node version-node">
-            <div class="node-icon">System</div>
-            <div class="node-name">Version Increment</div>
-            <div class="node-version">v1.0 -> v1.1</div>
-            <div class="node-desc">Server-side version detection and increment across multiple format patterns</div>
-          </div>
-        </div>
-
-        <div class="pipeline-connector"><div class="connector-line violet"></div></div>
-
-        <!-- Re-evaluate -->
-        <div class="pipeline-input">
-          <div class="pipeline-node eval-node">
-            <div class="node-icon">Next Step</div>
-            <div class="node-name">Re-evaluate</div>
-            <div class="node-desc">Apply repaired instructions to the agent and run a new evaluation to measure improvement</div>
-          </div>
-        </div>
-
-        <div class="pipeline-connector"><div class="connector-line slate"></div></div>
-
-        <!-- Score Comparison -->
-        <div class="pipeline-input">
-          <div class="pipeline-node eval-node">
-            <div class="node-icon">Automatic</div>
-            <div class="node-name">Score Comparison</div>
-            <div class="node-desc">System computes score delta and flags regressions by comparing against previous version</div>
-          </div>
-        </div>
-
-        <!-- Regression note -->
-        <div class="pipeline-note">
-          <strong>Regression detected?</strong> If the new score is lower than the previous version, the evaluation is flagged as a regression. A "Fix Regression" button appears on the report page, launching Repair in regression mode with analysis of what the previous repair changed and why it hurt.
-        </div>
-
-      </div>
-    </div>
-
-    <!-- Regression Pipeline -->
-    <div class="section" style="animation-delay: 0.2s;">
-      <div class="section-title"><span style="color: var(--red);">&bull;</span> Regression Repair Pipeline</div>
-      <div class="pipeline-diagram">
-
-        <div class="pipeline-row-label">Regression Trigger</div>
-        <div class="pipeline-input">
-          <div class="pipeline-node regression-node">
-            <div class="node-icon">Input</div>
-            <div class="node-name">Regression Detected</div>
-            <div class="node-desc">Previous repair changelog + current evaluation reports + score delta showing decline</div>
-          </div>
-        </div>
-
-        <div class="pipeline-connector"><div class="connector-line red"></div></div>
-
-        <div class="pipeline-input">
-          <div class="pipeline-node agent-node">
-            <div class="node-icon">Agent</div>
-            <div class="node-name">Repair Agent (Regression Mode)</div>
-            <div class="node-desc">Analyzes which previous changes caused the score drop, reverts or refines the harmful changes</div>
-          </div>
-        </div>
-
-        <div class="pipeline-connector"><div class="connector-line"></div></div>
-
-        <div class="pipeline-input">
-          <div class="pipeline-node output-node">
-            <div class="node-icon">Output</div>
-            <div class="node-name">Regression Analysis + Repaired Instructions</div>
-            <div class="node-desc">Includes reverted_changes, root_cause, and new_approach alongside the corrected instructions</div>
-          </div>
-        </div>
-
-        <div class="pipeline-note">
-          <strong>Regression mode</strong> forces the Repair agent to explicitly acknowledge what went wrong. The changelog references the specific changes from the previous repair that caused the decline, explains the root cause, and documents the alternative approach taken.
-        </div>
-
-      </div>
-    </div>
-
-  </div><!-- end Pipeline tab -->
-
-
+<div class="topbar">
+  <div class="backlink"><a href="../aesop.html"><span class="arr">&larr;</span> AESOP</a></div>
 </div>
 
-<script>
-  window.switchTab = function(tab) {
-    document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
-    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
-    document.getElementById('tab-' + tab).classList.add('active');
-    document.querySelector('[onclick="switchTab(\'' + tab + '\')"]').classList.add('active');
-    document.getElementById('tab-' + tab).querySelectorAll('.section').forEach(s => {
-      s.style.animation = 'none';
-      s.offsetHeight;
-      s.style.animation = '';
-    });
-  };
-</script>
+<div class="sheet">
+  <div class="spine"><div class="spine-label">AESOP REPAIR</div></div>
+
+  <div class="content">
+
+    <header class="masthead">
+      <h1>Repair</h1>
+      <div class="tagline">Instruction repair &mdash; AESOP</div>
+      <p class="lede">Automatically repair AI system instructions from evaluation findings, with version tracking and regression detection.</p>
+    </header>
+
+    <!-- 01 -->
+    <section class="sec">
+      <div class="sec-title"><span class="n">01</span><h2>How to access it</h2></div>
+      <div class="sec-body">
+        <p class="lead"><b>Repair</b> is available after any completed evaluation that included system instructions &mdash; from the evaluation report page or the dedicated Repair list in the sidebar.</p>
+        <div class="pmap"><div class="pm-k"><span class="ord">1</span>From the<br>report page</div><div class="pm-b">After an evaluation completes, click &ldquo;Repair&rdquo; on the report page to go straight to Repair for that evaluation.</div></div>
+        <div class="pmap"><div class="pm-k"><span class="ord">2</span>From the<br>Repair list</div><div class="pm-b">Open the &ldquo;Repair&rdquo; page in the sidebar to see every evaluation eligible for repair; click any to open its Repair page.</div></div>
+        <div class="pmap"><div class="pm-k"><span class="ord">3</span>Fix<br>regression</div><div class="pm-b">If a re-evaluation after repair shows a score drop, a red &ldquo;Fix Regression&rdquo; button appears on the report page, launching Repair in regression mode with context about what went wrong.</div></div>
+      </div>
+    </section>
+
+    <!-- 02 -->
+    <section class="sec">
+      <div class="sec-title"><span class="n">02</span><h2>Key features</h2></div>
+      <div class="sec-body">
+        <div class="pmap i-amb"><div class="pm-k"><span class="tag">Core</span>Evidence-based<br>repair</div><div class="pm-b">Every change traces to a specific finding from evaluation reports. The Repair agent uses extended thinking to plan minimal, targeted fixes rather than rewriting from scratch.</div></div>
+        <div class="pmap i-vio"><div class="pm-k"><span class="tag">Tracking</span>Version<br>lineage</div><div class="pm-b">Each repair increments the instruction version (v1.0, v1.1, v1.2). Versions are tracked across evaluations so you can see how scores change over time on the Agent Trajectory page.</div></div>
+        <div class="pmap i-rose"><div class="pm-k"><span class="tag">Safety net</span>Regression<br>detection</div><div class="pm-b">When a re-evaluation scores lower than the previous version, it is flagged as a regression. Repair can then run in regression mode, analyzing what went wrong and trying a different approach.</div></div>
+      </div>
+    </section>
+
+    <!-- 03 -->
+    <section class="sec">
+      <div class="sec-title"><span class="n">03</span><h2>Output modes</h2></div>
+      <div class="sec-body">
+        <div class="pmap i-amb"><div class="pm-k"><span class="tag">Default</span>Full<br>rewrite</div><div class="pm-b">Produces the complete revised instructions with all changes applied inline. Best when you want a ready-to-use replacement for your current system prompt.</div></div>
+        <div class="pmap i-vio"><div class="pm-k"><span class="tag">Advanced</span>Surgical<br>patches</div><div class="pm-b">Shows only the changed sections as before/after patches with location references. Best when you want to review and apply changes selectively.</div></div>
+      </div>
+    </section>
+
+    <!-- 04 -->
+    <section class="sec">
+      <div class="sec-title"><span class="n">04</span><h2>Repair output</h2></div>
+      <div class="sec-body">
+        <p>Every Repair run produces two artifacts.</p>
+        <div class="pmap i-teal"><div class="pm-k"><span class="tag">Artifact 1</span>Repaired<br>instructions</div><div class="pm-b">The revised system instructions (full rewrite or patches, per mode). Format is preserved &mdash; XML in, XML out; markdown headers in, markdown headers out.</div></div>
+        <div class="pmap"><div class="pm-k"><span class="tag">Artifact 2</span>Changelog</div><div class="pm-b"><b><code>instruction_changes</code></b> lists every modification with the source finding, what changed, and why. <b><code>knowledge_base_recommendations</code></b> lists issues that can&rsquo;t be fixed in instructions alone and suggests actions like adding documents or updating retrieval configuration.</div></div>
+        <div class="pmap"><div class="pm-k"><span class="tag">Optional input</span>Tiger Team<br>findings</div><div class="pm-b">Paste stakeholder feedback from the Launch Package&rsquo;s Tiger Team review into the repair page. Repair treats it as real-world user-testing data, surfacing usability and adoption issues automated evaluation cannot detect. Tiger Team findings are weighted alongside evaluation reports when planning changes.</div></div>
+      </div>
+    </section>
+
+    <!-- 05 -->
+    <section class="sec">
+      <div class="sec-title"><span class="n">05</span><h2>Version lifecycle</h2></div>
+      <div class="sec-body">
+        <div class="pmap"><div class="pm-k"><span class="ord">1</span>Evaluate</div><div class="pm-b">Run an evaluation against your agent&rsquo;s system instructions. The first evaluation establishes v1.0.</div></div>
+        <div class="pmap"><div class="pm-k"><span class="ord">2</span>Repair</div><div class="pm-b">Run Repair to produce repaired instructions (v1.1). The changelog documents every change.</div></div>
+        <div class="pmap"><div class="pm-k"><span class="ord">3</span>Re-evaluate</div><div class="pm-b">Apply the repaired instructions and run a new evaluation. The system computes the score delta (+3.2, &minus;1.5) and flags regressions.</div></div>
+        <div class="pmap"><div class="pm-k"><span class="ord">4</span>Iterate</div><div class="pm-b">Continue the cycle. Each repair increments the minor version. The Agent Trajectory page shows the full history &mdash; scores, deltas, certification levels &mdash; across all versions.</div></div>
+      </div>
+    </section>
+
+    <!-- 06 -->
+    <section class="sec">
+      <div class="sec-title"><span class="n">06</span><h2>The repair pipeline</h2></div>
+      <div class="sec-body">
+        <div class="pmap"><div class="pm-k"><span class="tag">Input</span>Completed<br>evaluation</div><div class="pm-b">Original instructions + specialist reports + synthesis + scenario results.</div></div>
+        <div class="pmap i-amb"><div class="pm-k"><span class="tag">Agent</span>Repair agent</div><div class="pm-b"><span class="ver">v1.0 &mdash; extended thinking</span> Analyzes findings, classifies each as instruction-fixable or knowledge-base, plans minimal changes.</div></div>
+        <div class="pmap"><div class="pm-k"><span class="tag">Fork &mdash; output</span>Two<br>artifacts</div><div class="pm-b">
+          <div class="branch teal"><span class="bk">Repaired instructions</span> Full rewrite or surgical patches, preserving original format and voice.</div>
+          <div class="branch vio"><span class="bk">Changelog</span> <code>instruction_changes</code> + <code>knowledge_base_recommendations</code> with finding traceability.</div>
+        </div></div>
+        <div class="pmap i-vio"><div class="pm-k"><span class="tag">System</span>Version<br>increment</div><div class="pm-b"><span class="ver">v1.0 &rarr; v1.1</span> Server-side version detection and increment across multiple format patterns.</div></div>
+        <div class="pmap"><div class="pm-k"><span class="tag">Next step</span>Re-evaluate</div><div class="pm-b">Apply repaired instructions to the agent and run a new evaluation to measure improvement.</div></div>
+        <div class="pmap"><div class="pm-k"><span class="tag">Automatic</span>Score<br>comparison</div><div class="pm-b">The system computes the score delta and flags regressions by comparing against the previous version.</div></div>
+        <p class="close"><b>Regression detected?</b> If the new score is lower than the previous version, the evaluation is flagged as a regression. A &ldquo;Fix Regression&rdquo; button appears on the report page, launching Repair in regression mode with analysis of what the previous repair changed and why it hurt.</p>
+      </div>
+    </section>
+
+    <!-- 07 -->
+    <section class="sec">
+      <div class="sec-title"><span class="n">07</span><h2>Regression repair pipeline</h2></div>
+      <div class="sec-body">
+        <div class="pmap i-rose"><div class="pm-k"><span class="tag">Trigger</span>Regression<br>detected</div><div class="pm-b">Previous repair changelog + current evaluation reports + the score delta showing decline.</div></div>
+        <div class="pmap i-amb"><div class="pm-k"><span class="tag">Agent</span>Repair agent<br>&mdash; regression mode</div><div class="pm-b">Analyzes which previous changes caused the score drop, reverts or refines the harmful changes.</div></div>
+        <div class="pmap i-teal"><div class="pm-k"><span class="tag">Output</span>Regression analysis<br>+ repaired instructions</div><div class="pm-b">Includes <code>reverted_changes</code>, <code>root_cause</code>, and <code>new_approach</code> alongside the corrected instructions.</div></div>
+        <p class="close"><b>Regression mode</b> forces the Repair agent to explicitly acknowledge what went wrong. The changelog references the specific changes from the previous repair that caused the decline, explains the root cause, and documents the alternative approach taken.</p>
+      </div>
+    </section>
+
+    <footer class="footer">
+      <a href="../aesop.html">&larr; AESOP</a>
+      <span>&copy; 2025-2026 Charlie Fuller</span>
+    </footer>
+
+  </div>
+</div>
+
 </body>
 </html>
