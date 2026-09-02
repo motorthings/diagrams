@@ -2,300 +2,208 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>AESOP — Two-Phase Authored Discovery</title>
 <link rel="icon" type="image/svg+xml" href="../icon.svg">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AESOP &mdash; Two-Phase Authored Discovery</title>
+<meta name="description" content="How AESOP runs discovery in two phases: first it maps the process as it is, then it questions which of it still belongs before anything gets built.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,wght@0,400;0,500;0,600;0,700;1,400&family=Source+Code+Pro:wght@400;500;600&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Public+Sans:wght@400;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
 <style>
   :root {
-    --font-body: 'Fraunces', Georgia, serif;
-    --font-mono: 'Source Code Pro', 'SF Mono', Consolas, monospace;
-    --bg: #eef4f9; --surface: #ffffff; --surface2: #f5f8fc;
-    --border: rgba(0,0,0,0.07); --border-bright: rgba(0,0,0,0.13);
-    --text: #0a1628; --text-dim: #3d5a7a; --text-muted: #7a9ab8;
-    --primary: #c84d0e; --primary-dim: rgba(200,77,14,0.08);
-    --secondary: #4a90c4; --secondary-dim: rgba(74,144,196,0.08);
-    --purple: #7c3aed; --purple-dim: rgba(124,58,237,0.08); --purple-bright: #8b5cf6;
-    --amber: #d97706; --amber-dim: rgba(217,119,6,0.08);
-    --teal: #0d9488; --teal-dim: rgba(13,148,136,0.08);
-    --rose: #e11d48; --rose-dim: rgba(225,29,72,0.06);
+    --font-display: 'Instrument Serif', Georgia, serif;
+    --font-body: 'Public Sans', system-ui, sans-serif;
+    --font-mono: 'JetBrains Mono', 'SF Mono', monospace;
+    /* Gulf Stream Racing on a Ledger sheet — light only */
+    --ink: #0a1628; --graphite: #2e4d73; --body: #3d5a7a; --muted: #7a9ab8;
+    --rule: #c6d5e6; --row: #dbe5f0; --sheet: #eef4f9; --desk: #e4ecf4;
+    --spine: #0a1628; --spine-fg: #eef4f9;
+    --accent: #e8621a; --amber: #b45309; --blue: #2f6fa8; --teal: #0f766e; --violet: #6b3fa0;
   }
-  @media (prefers-color-scheme: dark) {
-    :root {
-      --bg: #0a1628; --surface: #132240; --surface2: #1a2d52;
-      --border: rgba(255,255,255,0.07); --border-bright: rgba(255,255,255,0.13);
-      --text: #e8edf5; --text-dim: #9bb0d4; --text-muted: #5e7aa3;
-      --primary: #f37021; --primary-dim: rgba(243,112,33,0.12);
-      --secondary: #6cace4; --secondary-dim: rgba(108,172,228,0.12);
-      --purple: #a78bfa; --purple-dim: rgba(167,139,250,0.12); --purple-bright: #c4b5fd;
-    }
-  }
-  * { margin:0; padding:0; box-sizing:border-box; }
-  body {
-    background: var(--bg);
-    background-image: radial-gradient(ellipse at 80% 0%, var(--primary-dim) 0%, transparent 50%), radial-gradient(ellipse at 20% 60%, var(--purple-dim) 0%, transparent 40%);
-    color: var(--text); font-family: var(--font-body);
-    min-height: 100vh; padding: 32px 24px 64px; line-height: 1.6;
-  }
-  .backlink{position:fixed;top:12px;left:16px;z-index:101;font-family:var(--font-mono);font-size:12px;color:var(--text-dim);text-decoration:none;padding:6px 10px;border:1px solid var(--border);border-radius:6px;background:var(--surface);transition:color .15s,border-color .15s}
-  .backlink:hover{color:var(--text);border-color:var(--border-bright)}
-  .container { max-width:1040px; margin:0 auto; }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { background: var(--desk); color: var(--body); font-family: var(--font-body); font-size: 17px; line-height: 1.66; -webkit-font-smoothing: antialiased; text-rendering: optimizeLegibility; }
+  .topbar { max-width: 1140px; margin: 0 auto; padding: 18px 28px 6px; }
+  .backlink a { font-size: 14px; color: var(--muted); text-decoration: none; }
+  .backlink a:hover { color: var(--ink); }
+  .backlink .arr { color: var(--accent); font-size: 15px; margin-right: 2px; }
 
-  h1 { font-size:44px; font-weight:700; letter-spacing:-0.5px; margin-bottom:8px; }
-  .subtitle { font-family:var(--font-mono); font-size:16px; color:var(--text-dim); margin-bottom:36px; }
+  .sheet { max-width: 1140px; margin: 6px auto 72px; background: var(--sheet); display: grid; grid-template-columns: 56px 1fr; }
+  .spine { background: var(--spine); display: flex; align-items: flex-end; justify-content: center; padding: 26px 0; }
+  .spine-label { writing-mode: vertical-rl; transform: rotate(180deg); font-family: var(--font-mono); font-size: 13px; letter-spacing: 0.22em; color: var(--spine-fg); white-space: nowrap; text-transform: uppercase; }
+  .content { padding: 50px 60px 6px; min-width: 0; }
 
-  /* Thesis callout */
-  .thesis {
-    background:var(--surface); border:1px solid var(--border); border-radius:12px;
-    padding:24px 32px; margin-bottom:36px;
-  }
-  .thesis h2 { font-size:20px; font-weight:700; color:var(--text); margin-bottom:10px; }
-  .thesis blockquote {
-    border-left:3px solid var(--purple); padding:6px 0 6px 16px; margin:10px 0;
-    font-style:italic; font-size:16px; color:var(--text-dim); line-height:1.6;
-  }
-  .thesis .attr { font-size:13px; color:var(--text-muted); font-family:var(--font-mono); margin-top:6px; }
-  .thesis .punch { font-size:15px; color:var(--text-dim); margin-top:10px; }
+  .masthead { border-bottom: 3px solid var(--ink); padding-bottom: 14px; }
+  .masthead h1 { font-family: var(--font-display); font-weight: 400; font-size: 58px; line-height: 0.92; letter-spacing: -0.028em; color: var(--ink); }
+  .lede { font-family: var(--font-display); font-style: italic; font-size: 20px; line-height: 1.4; color: var(--graphite); max-width: 640px; margin: 16px 0 8px; }
 
-  /* Two-column comparison */
-  .comparison { display:grid; grid-template-columns:1fr 1fr; gap:16px; margin-bottom:36px; }
-  @media(max-width:700px){ .comparison{grid-template-columns:1fr;} }
+  .sec { border-top: 1px solid var(--rule); padding: 24px 0 6px; }
+  .sec-title { display: grid; grid-template-columns: 92px 1fr; gap: 0 24px; align-items: baseline; margin-bottom: 14px; }
+  .sec-title .n { font-family: var(--font-display); font-size: 32px; line-height: 0.9; color: var(--accent); }
+  .sec-title h2 { font-size: 24px; font-weight: 700; letter-spacing: -0.012em; color: var(--ink); }
+  .sec-body { padding: 0 0 8px 116px; max-width: 720px; }
+  .sec-body p { margin-bottom: 14px; }
+  .sec-body p b, .sec-body strong { color: var(--ink); font-weight: 700; }
+  .sec-body .mute { color: var(--muted); font-size: 15px; }
+  .bigp { font-size: 18px; color: var(--ink); }
+  .biglead { font-size: 22px; line-height: 1.4; color: var(--ink); font-weight: 700; margin-bottom: 12px; }
 
-  .col {
-    background:var(--surface); border:1px solid var(--border); border-radius:12px;
-    padding:24px 28px;
-  }
-  .col.inherited { border-top:3px solid var(--primary); }
-  .col.authored { border-top:3px solid var(--purple); }
-  .col h3 { font-size:20px; font-weight:700; margin-bottom:4px; }
-  .col.inherited h3 { color:var(--primary); }
-  .col.authored h3 { color:var(--purple); }
-  .col .tagline { font-size:13px; color:var(--text-muted); font-family:var(--font-mono); margin-bottom:14px; }
-  .col ul { list-style:none; }
-  .col li {
-    font-size:15px; color:var(--text-dim); padding:6px 0;
-    border-bottom:1px solid var(--border); line-height:1.5;
-  }
-  .col li:last-child { border-bottom:none; }
-  .col li::before { content:'\2022'; margin-right:8px; font-weight:700; }
-  .col.inherited li::before { color:var(--primary); }
-  .col.authored li::before { color:var(--purple); }
+  /* two-approach comparison */
+  .two { width: 100%; border-collapse: collapse; margin: 6px 0 10px; }
+  .two th { text-align: left; font-size: 20px; font-weight: 700; padding: 2px 24px 8px 0; border-bottom: 2px solid var(--ink); }
+  .two th.p1 { color: var(--accent); }
+  .two th.p2 { color: var(--violet); }
+  .two th small { display: block; font-family: var(--font-mono); font-size: 12px; font-weight: 400; color: var(--muted); }
+  .two td { padding: 14px 24px 6px 0; vertical-align: top; width: 50%; }
+  .two td:last-child { padding-right: 0; }
+  .two li { list-style: none; position: relative; padding: 6px 0 6px 18px; font-size: 15px; line-height: 1.55; border-top: 1px solid var(--row); }
+  .two li:first-child { border-top: none; }
+  .two .p1 li::before, .two .p2 li::before { content: ''; position: absolute; left: 0; top: 13px; width: 7px; height: 7px; border-radius: 50%; }
+  .two .p1 li::before { background: var(--accent); }
+  .two .p2 li::before { background: var(--violet); }
+  .two .p2 { color: var(--body); }
 
-  /* Flow diagram */
-  .flow { margin-bottom:36px; }
-  .flow h2 { font-size:24px; font-weight:700; margin-bottom:20px; }
+  /* flow steps */
+  .steps { margin-top: 6px; }
+  .step { display: grid; grid-template-columns: 150px 1fr; gap: 4px 24px; padding: 13px 0; border-top: 1px solid var(--row); align-items: baseline; }
+  .step:first-child { border-top: none; }
+  .step .ph { font-family: var(--font-mono); font-size: 12px; font-weight: 700; }
+  .step .ph.ph1 { color: var(--accent); }
+  .step .ph.ph2 { color: var(--violet); }
+  .step .ph.out { color: var(--teal); }
+  .step .st { font-weight: 700; color: var(--ink); font-size: 16px; display: block; }
+  .step .sd { font-size: 15px; color: var(--body); line-height: 1.55; }
 
-  .flow-row { display:flex; align-items:stretch; gap:0; margin-bottom:0; }
-  @media(max-width:750px){ .flow-row{flex-direction:column;} }
+  /* why points */
+  .why { }
+  .why .point { display: grid; grid-template-columns: 150px 1fr; gap: 4px 24px; padding: 14px 0; border-top: 1px solid var(--row); align-items: baseline; }
+  .why .point .num { font-family: var(--font-display); font-size: 26px; color: var(--accent); }
+  .why .point .tt { font-weight: 700; color: var(--ink); font-size: 17px; display: block; margin-bottom: 3px; }
+  .why .point .td { font-size: 15px; color: var(--body); line-height: 1.6; }
 
-  .flow-step {
-    flex:1; background:var(--surface); border:1px solid var(--border);
-    padding:20px 18px; position:relative;
-    display:flex; flex-direction:column;
-  }
-  .flow-step:first-child { border-radius:10px 0 0 10px; }
-  .flow-step:last-child { border-radius:0 10px 10px 0; }
-  @media(max-width:750px){
-    .flow-step:first-child { border-radius:10px 10px 0 0; }
-    .flow-step:last-child { border-radius:0 0 10px 10px; }
-  }
+  .quote { margin: 34px 0 6px; padding: 6px 0; border-top: 3px solid var(--ink); border-bottom: 1px solid var(--rule); }
+  .quote .q { font-family: var(--font-display); font-size: 28px; line-height: 1.25; color: var(--ink); max-width: 760px; }
+  .quote .a { color: var(--body); font-size: 16px; margin-top: 10px; max-width: 700px; }
+  .quote .a b { color: var(--accent); }
 
-  .flow-step .phase-badge {
-    font-family:var(--font-mono); font-size:10px; font-weight:700;
-    letter-spacing:0.1em; text-transform:uppercase;
-    padding:3px 8px; border-radius:4px; display:inline-block; margin-bottom:8px; width:fit-content;
-  }
-  .flow-step.phase1 .phase-badge { background:var(--primary-dim); color:var(--primary); }
-  .flow-step.gateway .phase-badge { background:var(--amber-dim); color:var(--amber); }
-  .flow-step.phase2 .phase-badge { background:var(--purple-dim); color:var(--purple); }
-  .flow-step.output .phase-badge { background:var(--teal-dim); color:var(--teal); }
+  .footer { border-top: 3px solid var(--ink); margin: 26px 0 0; padding: 18px 0 30px; display: flex; justify-content: space-between; gap: 20px; flex-wrap: wrap; font-family: var(--font-mono); font-size: 11.5px; color: var(--muted); }
+  .footer a { color: var(--accent); text-decoration: none; }
 
-  .flow-step h4 { font-size:16px; font-weight:700; color:var(--text); margin-bottom:6px; }
-  .flow-step p { font-size:14px; color:var(--text-dim); line-height:1.5; margin-bottom:6px; }
-  .flow-step .detail { font-size:12px; color:var(--text-muted); font-family:var(--font-mono); line-height:1.5; }
-
-  .flow-arrow {
-    width:32px; flex-shrink:0; display:flex; align-items:center; justify-content:center;
-    color:var(--text-muted); font-size:20px;
+  @media (max-width: 820px) {
+    .sheet { grid-template-columns: 40px 1fr; }
+    .spine-label { font-size: 11px; }
+    .content { padding: 34px 22px 4px; }
+    .masthead h1 { font-size: 42px; }
+    .sec-title { grid-template-columns: 52px 1fr; }
+    .sec-title .n { font-size: 26px; }
+    .sec-body { padding-left: 0; }
+    .two, .two tbody { display: block; }
+    .two tr { display: grid; grid-template-columns: 1fr 1fr; }
+    .two th, .two td { display: block; width: auto; padding: 8px 12px 6px 0; }
+    .step, .why .point { grid-template-columns: 1fr; gap: 2px; }
+    body { font-size: 16px; }
   }
-  @media(max-width:750px){
-    .flow-arrow { width:100%; height:24px; transform:rotate(90deg); }
-  }
-
-  /* Gateway detail */
-  .gateway-detail {
-    background:var(--surface); border:1px solid var(--border); border-radius:10px;
-    padding:22px 28px; margin:16px 0 36px;
-  }
-  .gateway-detail h3 { font-size:16px; font-weight:700; color:var(--amber); margin-bottom:12px; }
-  .gateway-options { display:grid; grid-template-columns:1fr 1fr 1fr; gap:10px; }
-  @media(max-width:700px){ .gateway-options{grid-template-columns:1fr;} }
-  .gateway-opt {
-    background:var(--surface2); border:1px solid var(--border); border-radius:8px;
-    padding:16px 18px;
-  }
-  .gateway-opt h5 { font-size:15px; font-weight:700; color:var(--text); margin-bottom:4px; }
-  .gateway-opt p { font-size:13px; color:var(--text-dim); line-height:1.5; }
-
-  /* Why it matters */
-  .why { margin-bottom:36px; }
-  .why h2 { font-size:24px; font-weight:700; margin-bottom:16px; }
-  .replication-warning {
-    background:var(--rose-dim); border:1px solid var(--rose); border-left:3px solid var(--rose);
-    border-radius:0 8px 8px 0; padding:14px 20px; margin-bottom:16px;
-    font-size:14px; color:var(--text-dim); line-height:1.6;
-  }
-  .replication-warning strong { color:var(--rose); }
-  .why-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(230px,1fr)); gap:10px; }
-  .why-card {
-    background:var(--surface); border:1px solid var(--border); border-radius:10px; padding:18px 20px;
-  }
-  .why-card .num {
-    font-family:var(--font-mono); font-size:12px; font-weight:700; color:var(--purple);
-    margin-bottom:4px;
-  }
-  .why-card h4 { font-size:15px; font-weight:700; color:var(--text); margin-bottom:4px; }
-  .why-card p { font-size:13px; color:var(--text-dim); line-height:1.5; }
-
-  /* The diagnostic question */
-  .diagnostic {
-    background:var(--surface); border:2px solid var(--purple); border-radius:12px;
-    padding:24px 32px; margin-bottom:36px; text-align:center;
-  }
-  .diagnostic .q { font-size:20px; font-weight:700; color:var(--purple); margin-bottom:8px; line-height:1.4; }
-  .diagnostic .a { font-size:14px; color:var(--text-dim); line-height:1.5; max-width:580px; margin:0 auto; }
-
-  /* Section headers */
-  .section-h { font-family:var(--font-mono); font-size:12px; font-weight:700; letter-spacing:0.15em; text-transform:uppercase; color:var(--text-muted); margin-bottom:8px; }
-
-  /* Question panel */
-  .question-panels { display:grid; grid-template-columns:repeat(auto-fill,minmax(260px,1fr)); gap:8px; margin-bottom:36px; }
-  .qp {
-    background:var(--surface); border:1px solid var(--border); border-radius:8px;
-    padding:14px 18px; border-left:3px solid var(--purple);
-  }
-  .qp h5 { font-size:13px; font-weight:700; color:var(--text); margin-bottom:2px; }
-  .qp .n { font-size:11px; color:var(--text-muted); }
-  .qp .desc { font-size:13px; color:var(--text-dim); margin-top:3px; line-height:1.4; }
 </style>
 </head>
 <body>
 
-<a class="backlink" href="../aesop.html">&larr; AESOP Transformation OS</a>
-
-<div class="container">
-
-<h1>Two-Phase Authored Discovery</h1>
-<p class="subtitle">Map what's there. Then ask whether it should be.</p>
-
-<!-- Thesis -->
-<div class="thesis">
-  <div class="section-h">Foundation</div>
-  <h2>Your org chart is scar tissue.</h2>
-  <p style="font-size:16px;color:var(--text-dim);line-height:1.7;margin-bottom:4px;">
-    The meeting nobody remembers creating. The approval step that exists because
-    someone got burned once and built a fence. The role that exists because two
-    systems don't talk and somebody has to carry the data between them in their
-    head. None of this was architected. It accumulated. Each layer made sense at
-    the time — a response to a constraint. And the constraint was almost always
-    the same thing: the right information wasn't where it needed to be when it
-    needed to be there.
-  </p>
-  <p style="font-size:14px;color:var(--text-muted);margin-top:10px;">When those constraints dissolve, the scar tissue stays. You have to go looking for it. It will not volunteer.</p>
-  <p class="punch">Most AI deployment accelerates the scar tissue. AESOP looks for it. And asks whether it still belongs.</p>
+<div class="topbar">
+  <div class="backlink"><a href="../aesop.html"><span class="arr">&larr;</span> AESOP</a></div>
 </div>
 
-<!-- The Fork -->
-<div class="section-h">Two Approaches to Discovery</div>
-<div class="comparison">
-  <div class="col inherited">
-    <h3>Phase 1: Inherited</h3>
-    <p class="tagline">Where most platforms stop</p>
-    <ul>
-      <li>Maps the current process, step by step</li>
-      <li>Captures the roles, approvals, and meetings as they are</li>
-      <li>Asks: <em>"How does this work today?"</em></li>
-      <li>Produces a brief shaped by the existing org chart</li>
-    </ul>
+<div class="sheet">
+  <div class="spine"><div class="spine-label">AUTHORED DISCOVERY</div></div>
+
+  <div class="content">
+
+    <header class="masthead">
+      <h1>Two-Phase Authored Discovery</h1>
+      <p class="lede">Map what&rsquo;s there. Then ask whether it should be.</p>
+    </header>
+
+    <!-- 01 foundation -->
+    <section class="sec">
+      <div class="sec-title"><span class="n">01</span><h2>The foundation</h2></div>
+      <div class="sec-body">
+        <p class="biglead">Your org chart is scar tissue.</p>
+        <p>The meeting nobody remembers creating. The approval step that exists because someone got burned once and built a fence. The role that exists because two systems don&rsquo;t talk and somebody has to carry the data between them in their head. None of this was architected. It accumulated. Each layer made sense at the time &mdash; a response to a constraint. And the constraint was almost always the same thing: the right information wasn&rsquo;t where it needed to be when it needed to be there.</p>
+        <p class="mute">When those constraints dissolve, the scar tissue stays. You have to go looking for it. It will not volunteer.</p>
+        <p>Most AI deployment accelerates the scar tissue. AESOP looks for it. And asks whether it still belongs.</p>
+      </div>
+    </section>
+
+    <!-- 02 the fork -->
+    <section class="sec">
+      <div class="sec-title"><span class="n">02</span><h2>Two approaches to discovery</h2></div>
+      <div class="sec-body" style="max-width:none">
+        <table class="two">
+          <thead>
+            <tr>
+              <th class="p1">Phase 1 &mdash; Inherited <small>where most platforms stop</small></th>
+              <th class="p2">Phase 2 &mdash; Authored <small>what makes AESOP different</small></th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td class="p1">
+                <ul>
+                  <li>Maps the current process, step by step</li>
+                  <li>Captures the roles, approvals, and meetings as they are</li>
+                  <li>Asks: <em>&ldquo;How does this work today?&rdquo;</em></li>
+                  <li>Produces a brief shaped by the existing org chart</li>
+                </ul>
+              </td>
+              <td class="p2">
+                <ul>
+                  <li>Pulls at the seams. Which roles exist because of old constraints?</li>
+                  <li>Maps decisions. Not departments.</li>
+                  <li>Separates real constraints from inherited ones</li>
+                  <li>Asks: <em>&ldquo;What would you build if you were starting today?&rdquo;</em></li>
+                  <li>Enriches the brief. The assumptions get challenged.</li>
+                </ul>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- 03 how it works -->
+    <section class="sec">
+      <div class="sec-title"><span class="n">03</span><h2>How it works</h2></div>
+      <div class="sec-body" style="max-width:none">
+        <div class="steps">
+          <div class="step"><div class="ph ph1">Phase 1</div><div><span class="st">Map what&rsquo;s there</span><span class="sd">A form interview or brain dump. Captures process, pain points, roles, constraints. The current state, honest and unvarnished.</span></div></div>
+          <div class="step"><div class="ph ph2">Phase 2</div><div><span class="st">Pull the threads</span><span class="sd">Seven sections of questioning. Each references what Phase 1 captured and asks: should this exist? Or is it just scar tissue?</span></div></div>
+          <div class="step"><div class="ph out">Output</div><div><span class="st">One brief, two voices</span><span class="sd">The inherited map. The authored reframing. Side by side in one document. Design and Build consume it unchanged.</span></div></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 04 why -->
+    <section class="sec">
+      <div class="sec-title"><span class="n">04</span><h2>Why this matters</h2></div>
+      <div class="sec-body" style="max-width:none">
+        <p>The replication trap: everyone posts their agent count. &ldquo;Fourteen agents. I get updates before I wake up.&rdquo; That isn&rsquo;t transformation. It&rsquo;s a status meeting with better latency &mdash; a faster horse with a dashboard. Nobody posts about the approval layer they deleted. Nobody measures the roles they dissolved. Agent count is the vanity metric of the AI era. The question that matters: what changes when judgment and context stop being gated by headcount?</p>
+        <div class="why">
+          <div class="point"><div class="num">01</div><div><span class="tt">Structure as output, not input</span><span class="td">Inherited takes the org chart as given. Authored treats it as the thing under investigation. One designs around the structure. The other designs the structure.</span></div></div>
+          <div class="point"><div class="num">02</div><div><span class="tt">Replication vs. dissolution</span><span class="td">Two projects hide under the word &ldquo;transformation.&rdquo; If removing the agent sends you back to the old way, you automated. If the agent makes you realize the role had no reason to exist, you transformed. Same technology. Opposite outcomes.</span></div></div>
+          <div class="point"><div class="num">03</div><div><span class="tt">Legibility bias</span><span class="td">Automating a standup produces a demo you can screenshot. Asking why the standup exists produces a redesign you can&rsquo;t. The first is fundable. The second is necessary. Guess which one everyone picks.</span></div></div>
+          <div class="point"><div class="num">04</div><div><span class="tt">The only question</span><span class="td">Did this agent replace a person? Or did it dissolve the reason the role existed at all? If you don&rsquo;t know the difference, you&rsquo;re not transforming &mdash; you&rsquo;re pouring concrete over the old foundation and calling it new construction.</span></div></div>
+        </div>
+      </div>
+    </section>
+
+    <div class="quote">
+      <div class="q">&ldquo;Does this agent replace a person, or does it dissolve the reason the role existed?&rdquo;</div>
+      <p class="a">Answer the first and you&rsquo;re automating. Answer the second and you&rsquo;re authoring. AESOP forces the question <b>before anything gets built</b>.</p>
+    </div>
+
+    <footer class="footer">
+      <a href="../aesop.html">&larr; AESOP</a>
+      <span>&copy; 2025-2026 Charlie Fuller</span>
+    </footer>
+
   </div>
-  <div class="col authored">
-    <h3>Phase 2: Authored</h3>
-    <p class="tagline">What makes AESOP different</p>
-    <ul>
-      <li>Pulls at the seams. Which roles exist because of old constraints?</li>
-      <li>Maps decisions. Not departments.</li>
-      <li>Separates real constraints from inherited ones</li>
-      <li>Asks: <em>"What would you build if you were starting today?"</em></li>
-      <li>Enriches the brief. The assumptions get challenged.</li>
-    </ul>
-  </div>
-</div>
-
-<!-- The Flow -->
-<div class="flow">
-  <h2>How It Works</h2>
-
-  <div class="flow-row">
-    <div class="flow-step phase1">
-      <span class="phase-badge">Phase 1</span>
-      <h4>Map What's There</h4>
-      <p>Form interview or brain dump. Captures process, pain points, roles, constraints. The current state, honest and unvarnished.</p>
-    </div>
-    <div class="flow-arrow">&rarr;</div>
-    <div class="flow-step phase2">
-      <span class="phase-badge">Phase 2</span>
-      <h4>Pull the Threads</h4>
-      <p>Seven sections of questioning. Each one references what Phase 1 captured and asks: should this exist? Or is it just scar tissue?</p>
-    </div>
-    <div class="flow-arrow">&rarr;</div>
-    <div class="flow-step output">
-      <span class="phase-badge">Output</span>
-      <h4>One Brief, Two Voices</h4>
-      <p>The inherited map. The authored reframing. Side by side in one document. Design and Build consume it unchanged.</p>
-    </div>
-  </div>
-</div>
-
-<!-- Why it matters -->
-<div class="why">
-  <h2>Why This Matters</h2>
-
-  <div class="replication-warning">
-    <strong>The replication trap:</strong> Everyone's posting agent counts. "Fourteen agents. I get updates before I wake up." That's not transformation. That's a status meeting with better latency. A faster horse with a dashboard. Nobody posts about the approval layer they deleted. Nobody measures the roles they dissolved. Agent count is the vanity metric of the AI era. The question that matters: what changes when judgment and context stop being gated by headcount?
-  </div>
-
-  <div class="why-grid">
-    <div class="why-card">
-      <div class="num">01</div>
-      <h4>Structure as output, not input</h4>
-      <p>Inherited takes the org chart as given. Authored treats it as the thing under investigation. One designs around the structure. The other designs the structure.</p>
-    </div>
-    <div class="why-card">
-      <div class="num">02</div>
-      <h4>Replication vs. dissolution</h4>
-      <p>Two projects hide under the word "transformation." If removing the agent sends you back to the old way, you automated. If the agent makes you realize the role had no reason to exist, you transformed. Same technology. Opposite outcomes.</p>
-    </div>
-    <div class="why-card">
-      <div class="num">03</div>
-      <h4>Legibility bias</h4>
-      <p>Automating a standup produces a demo you can screenshot. Asking why the standup exists produces a redesign you can't. The first is fundable. The second is necessary. Guess which one everyone picks.</p>
-    </div>
-    <div class="why-card">
-      <div class="num">04</div>
-      <h4>The only question</h4>
-      <p>Did this agent replace a person? Or did it dissolve the reason the role existed at all? If you don't know the difference, you're not transforming. You're just pouring concrete over the old foundation and calling it new construction.</p>
-    </div>
-  </div>
-</div>
-
-<!-- Diagnostic -->
-<div class="diagnostic">
-  <div class="q">"Does this agent replace a person, or does it dissolve the reason the role existed?"</div>
-  <div class="a">Answer the first and you're automating. Answer the second and you're authoring. AESOP forces the question before anything gets built.</div>
-</div>
-
 </div>
 
 </body>

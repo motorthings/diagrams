@@ -2,371 +2,275 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
+<link rel="icon" href="../icon.svg" type="image/svg+xml" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>AESOP Build Pipeline: Current vs LangGraph</title>
+<title>AESOP &mdash; Build Pipeline: Two Paths</title>
+<meta name="description" content="Two ways to run the AESOP build pipeline: the current hand-built for-loop orchestration versus a declared LangGraph. Same outcome, different philosophy.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Libre+Baskerville:ital,wght@0,400;0,700;1,400&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Public+Sans:wght@400;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
 <style>
   :root {
-    --font-body: 'Libre Baskerville', Georgia, serif;
-    --font-mono: 'JetBrains Mono', 'SF Mono', Consolas, monospace;
-    --bg: #0b0720; --surface: #150f35; --surface2: #1f1750;
-    --border: rgba(255,255,255,0.08); --border-bright: rgba(255,255,255,0.14);
-    --text: #f0e6ff; --text-dim: #8a7fba;
-    --amber: #ff2d95; --amber-dim: rgba(255,45,149,0.12);
-    --teal: #00d4ff; --teal-dim: rgba(0,212,255,0.10);
-    --red: #ff3860; --red-dim: rgba(255,56,96,0.10);
-    --green: #39ff14; --green-dim: rgba(57,255,20,0.10);
+    --font-display: 'Instrument Serif', Georgia, serif;
+    --font-body: 'Public Sans', system-ui, sans-serif;
+    --font-mono: 'JetBrains Mono', 'SF Mono', monospace;
+    /* Gulf Stream Racing on a Ledger sheet — light only */
+    --ink: #0a1628; --graphite: #2e4d73; --body: #3d5a7a; --muted: #7a9ab8;
+    --rule: #c6d5e6; --row: #dbe5f0; --sheet: #eef4f9; --desk: #e4ecf4;
+    --spine: #0a1628; --spine-fg: #eef4f9;
+    --accent: #e8621a; --amber: #b45309; --blue: #2f6fa8; --teal: #0f766e;
+    /* figure category colors */
+    --storage: #6f8ba8; --model: #b45309; --consumer: #0f766e; --compute: #b23a30;
+    --arr-color: var(--muted); --arr-color-strong: var(--teal);
   }
-  @media (prefers-color-scheme: light) {
-    :root {
-      --bg: #f5f0ff; --surface: #ffffff; --surface2: #f0e8ff;
-      --border: rgba(0,0,0,0.06); --border-bright: rgba(0,0,0,0.12);
-      --text: #1a0a3e; --text-dim: #6b5a9a;
-      --amber: #d6006e; --amber-dim: rgba(214,0,110,0.08);
-      --teal: #6c00ff; --teal-dim: rgba(108,0,255,0.07);
-      --red: #e0003c; --red-dim: rgba(224,0,60,0.07);
-      --green: #00b341; --green-dim: rgba(0,179,65,0.08);
-    }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { background: var(--desk); color: var(--body); font-family: var(--font-body); font-size: 16px; line-height: 1.62; -webkit-font-smoothing: antialiased; text-rendering: optimizeLegibility; }
+  .topbar { max-width: 1140px; margin: 0 auto; padding: 18px 28px 6px; }
+  .backlink a { font-size: 14px; color: var(--muted); text-decoration: none; }
+  .backlink a:hover { color: var(--ink); }
+  .backlink .arr { color: var(--accent); font-size: 15px; margin-right: 2px; }
+
+  .sheet { max-width: 1140px; margin: 6px auto 72px; background: var(--sheet); display: grid; grid-template-columns: 56px 1fr; }
+  .spine { background: var(--spine); display: flex; align-items: flex-end; justify-content: center; padding: 26px 0; }
+  .spine-label { writing-mode: vertical-rl; transform: rotate(180deg); font-family: var(--font-mono); font-size: 13px; letter-spacing: 0.22em; color: var(--spine-fg); white-space: nowrap; text-transform: uppercase; }
+  .content { padding: 48px 60px 6px; min-width: 0; }
+
+  .masthead { border-bottom: 3px solid var(--ink); padding-bottom: 14px; }
+  .masthead h1 { font-family: var(--font-display); font-weight: 400; font-size: 54px; line-height: 0.92; letter-spacing: -0.028em; color: var(--ink); }
+  .lede { font-family: var(--font-display); font-style: italic; font-size: 18px; line-height: 1.45; color: var(--graphite); max-width: 680px; margin: 14px 0 8px; }
+
+  .path { border-top: 1px solid var(--rule); padding: 22px 0 4px; }
+  .path-head { display: grid; grid-template-columns: 200px 1fr; gap: 0 30px; align-items: baseline; margin-bottom: 8px; }
+  .path-head .tag { font-family: var(--font-mono); font-size: 12px; font-weight: 700; }
+  .path-head .tag.cur { color: var(--amber); }
+  .path-head .tag.lg { color: var(--teal); }
+  .path-head h2 { font-size: 24px; font-weight: 700; color: var(--ink); letter-spacing: -0.012em; }
+  .path-body { max-width: 780px; margin-bottom: 6px; }
+  .path-body p { margin-bottom: 10px; }
+  .path-body p b { color: var(--ink); font-weight: 700; }
+  .vp { font-family: var(--font-display); font-size: 19px; line-height: 1.4; color: var(--ink); margin: 4px 0 4px; }
+  .vp small { display: block; font-family: var(--font-mono); font-size: 11px; color: var(--muted); margin-bottom: 3px; }
+
+  .fig { max-width: 660px; margin: 10px 0 8px; }
+  .fig svg { display: block; width: 100%; height: auto; max-width: 620px; margin: 0 auto; }
+  .fig-note { font-family: var(--font-mono); font-size: 11px; color: var(--muted); margin: 4px 0 0 20px; }
+  .legend { display: flex; flex-wrap: wrap; gap: 6px 18px; margin: 8px 0 4px 20px; font-size: 13px; color: var(--body); }
+  .legend-swatch { display: inline-block; width: 12px; height: 12px; border-radius: 2px; border: 1px solid var(--rule); margin-right: 6px; vertical-align: -1px; }
+
+  /* svg classes */
+  .sv-box-storage { stroke: var(--storage); } .sv-box-model { stroke: var(--model); }
+  .sv-box-consumer { stroke: var(--consumer); } .sv-box-compute { stroke: var(--compute); }
+  .sv-box-storage, .sv-box-model, .sv-box-consumer, .sv-box-compute { fill: none !important; stroke-width: 1.75; }
+  .sv-title { font-family: var(--font-body); font-size: 16px; font-weight: 700; fill: var(--ink) !important; }
+  .sv-arrow { fill: none; stroke: var(--arr-color); stroke-width: 1.75; stroke-linejoin: round; stroke-linecap: round; }
+  .sv-arrow-lbl { font-family: var(--font-mono); font-size: 11px; fill: var(--text-muted, #7a9ab8); }
+  .sv-pill { fill: var(--sheet); }
+
+  section.sec { border-top: 3px solid var(--ink); padding: 22px 0 4px; }
+  .sec-title { display: grid; grid-template-columns: 92px 1fr; gap: 0 24px; align-items: baseline; margin-bottom: 12px; }
+  .sec-title .n { font-family: var(--font-display); font-size: 28px; line-height: 0.9; color: var(--accent); }
+  .sec-title h2 { font-size: 22px; font-weight: 700; color: var(--ink); letter-spacing: -0.012em; }
+  .sec-body { padding-left: 116px; max-width: 840px; }
+
+  table.cmp { width: 100%; border-collapse: collapse; }
+  table.cmp th { text-align: left; font-size: 12px; font-weight: 600; color: var(--muted); padding: 4px 12px 6px 0; border-bottom: 2px solid var(--ink); }
+  table.cmp td { padding: 12px 12px 12px 0; border-bottom: 1px solid var(--row); vertical-align: top; font-size: 14px; }
+  table.cmp tr:last-child td { border-bottom: none; }
+  table.cmp .cap { font-weight: 700; color: var(--ink); }
+  table.cmp code { font-family: var(--font-mono); font-size: 0.82em; color: var(--ink); }
+  .delta { font-family: var(--font-mono); font-size: 12px; font-weight: 700; white-space: nowrap; }
+  .delta.new { color: var(--blue); } .delta.better { color: var(--teal); } .delta.same { color: var(--muted); }
+
+  .bet { margin: 22px 0 4px; padding-top: 14px; border-top: 1px solid var(--rule); font-size: 16px; color: var(--body); max-width: 760px; }
+  .bet b { color: var(--ink); }
+
+  .footer { border-top: 3px solid var(--ink); margin: 26px 0 0; padding: 18px 0 30px; display: flex; justify-content: space-between; gap: 20px; flex-wrap: wrap; font-family: var(--font-mono); font-size: 11.5px; color: var(--muted); }
+  .footer a { color: var(--accent); text-decoration: none; }
+
+  @media (max-width: 820px) {
+    .sheet { grid-template-columns: 40px 1fr; }
+    .spine-label { font-size: 11px; }
+    .content { padding: 32px 20px 4px; }
+    .masthead h1 { font-size: 40px; }
+    .path-head { grid-template-columns: 1fr; }
+    .sec-title { grid-template-columns: 52px 1fr; }
+    .sec-body { padding-left: 0; }
+    .fig { max-width: 100%; }
+    .fig svg { max-width: 100%; }
+    table.cmp thead { display: none; }
+    table.cmp tr { display: block; padding: 10px 0; border-bottom: 1px solid var(--row); }
+    table.cmp td { display: block; padding: 2px 0; border-bottom: none; }
+    body { font-size: 15px; }
   }
-  * { margin:0; padding:0; box-sizing:border-box; }
-  body {
-    background: var(--bg);
-    background-image:
-      radial-gradient(ellipse at 20% 0%, rgba(108,0,255,0.15) 0%, transparent 50%),
-      radial-gradient(ellipse at 80% 100%, rgba(255,45,149,0.10) 0%, transparent 50%),
-      linear-gradient(rgba(255,255,255,0.02) 1px, transparent 1px),
-      linear-gradient(90deg, rgba(255,255,255,0.02) 1px, transparent 1px);
-    background-size: 100% 100%, 100% 100%, 48px 48px, 48px 48px;
-    color: var(--text); font-family: var(--font-body);
-    padding: 56px 32px; min-height: 100vh; overflow-wrap: break-word;
-  }
-  @media (prefers-color-scheme: light) {
-    body { background-image:
-      radial-gradient(ellipse at 20% 0%, rgba(108,0,255,0.06) 0%, transparent 50%),
-      radial-gradient(ellipse at 80% 100%, rgba(214,0,110,0.05) 0%, transparent 50%),
-      linear-gradient(rgba(0,0,0,0.015) 1px, transparent 1px),
-      linear-gradient(90deg, rgba(0,0,0,0.015) 1px, transparent 1px);
-    }
-  }
-  @keyframes fadeUp { from { opacity:0; transform:translateY(10px); } to { opacity:1; transform:translateY(0); } }
-  .anim { animation: fadeUp 0.5s ease-out both; animation-delay: calc(var(--i,0)*0.07s); }
-  @media (prefers-reduced-motion:reduce) { *,*::before,*::after { animation-duration:0.01ms!important; animation-delay:0ms!important; } }
-
-  .container { max-width: 1080px; margin:0 auto; }
-  h1 { font-size:36px; font-weight:700; letter-spacing:-0.5px; margin-bottom:6px; }
-  .subtitle { font-family:var(--font-mono); font-size:10px; color:var(--text-dim); text-transform:uppercase; letter-spacing:2px; margin-bottom:40px; }
-
-  /* ===== COMPARISON COLUMNS ===== */
-  .comparison { display:grid; grid-template-columns:1fr 1fr; gap:24px; margin-bottom:36px; }
-  .comparison > * { min-width:0; overflow-wrap:break-word; }
-  @media (max-width:800px) { .comparison { grid-template-columns:1fr; } }
-
-  /* ===== COLUMN ===== */
-  .col { background:var(--surface); border:1px solid var(--border); border-radius:12px; overflow:hidden; }
-  .col__head { padding:28px 28px 20px; border-bottom:1px solid var(--border); }
-  .col__tag { font-family:var(--font-mono); font-size:9px; font-weight:600; text-transform:uppercase; letter-spacing:2px; margin-bottom:8px; }
-  .col__tag--current { color:var(--amber); }
-  .col__tag--proposed { color:var(--teal); }
-  .col__headline { font-size:22px; font-weight:700; letter-spacing:-0.3px; margin-bottom:10px; line-height:1.3; }
-  .col__why { font-size:13px; line-height:1.7; color:var(--text-dim); }
-
-  /* ===== VALUE PROP CARD ===== */
-  .col__vp { margin:20px 28px 0; padding:20px 22px; border-radius:8px; }
-  .col__vp--current { background:var(--amber-dim); border:1px solid rgba(255,45,149,0.15); }
-  .col__vp--proposed { background:var(--teal-dim); border:1px solid rgba(0,212,255,0.13); }
-  .col__vp-label { font-family:var(--font-mono); font-size:8px; font-weight:600; text-transform:uppercase; letter-spacing:1.5px; margin-bottom:6px; }
-  .col__vp--current .col__vp-label { color:var(--amber); }
-  .col__vp--proposed .col__vp-label { color:var(--teal); }
-  .col__vp-title { font-size:16px; font-weight:700; margin-bottom:6px; }
-  .col__vp-text { font-size:12px; line-height:1.65; color:var(--text-dim); }
-
-  /* ===== PIPELINE DIAGRAM ===== */
-  .col__diagram { padding:24px 16px 16px; }
-  .mermaid-wrap { position:relative; background:var(--surface2); border:1px solid var(--border); border-radius:8px; padding:20px 12px; overflow:auto; scrollbar-width:thin; scrollbar-color:var(--border) transparent; }
-  .mermaid-wrap::-webkit-scrollbar { width:4px; height:4px; }
-  .mermaid-wrap::-webkit-scrollbar-thumb { background:var(--border); border-radius:2px; }
-  .mermaid-wrap .mermaid { display:flex; justify-content:center; }
-  .mermaid .nodeLabel { font-family:var(--font-mono)!important; font-size:12px!important; }
-  .mermaid .edgeLabel { font-family:var(--font-mono)!important; font-size:10px!important; }
-
-  /* ===== DIAGRAM LEGEND ===== */
-  .diagram-legend { display:flex; gap:14px; flex-wrap:wrap; margin-top:12px; padding:0 4px; }
-  .diagram-legend span { display:flex; align-items:center; gap:5px; font-family:var(--font-mono); font-size:9px; color:var(--text-dim); }
-  .diagram-legend .swatch { width:10px; height:10px; border-radius:2px; flex-shrink:0; }
-  .swatch--same { background:#8a7fba; border:1px solid #6b5a9a; }
-  .swatch--diff-current { background:var(--amber); }
-  .swatch--diff-proposed { background:var(--teal); }
-  .swatch--new { background:#00d4ff; }
-  .swatch--good { background:var(--green); }
-  .swatch--bad { background:var(--red); }
-
-  /* ===== TRADE-OFF TABLE ===== */
-  .section-head { font-size:20px; font-weight:700; letter-spacing:-0.3px; margin:40px 0 18px; }
-  .table-wrap { background:var(--surface); border:1px solid var(--border); border-radius:12px; overflow:hidden; }
-  .table-scroll { overflow-x:auto; -webkit-overflow-scrolling:touch; }
-  .data-table { width:100%; border-collapse:collapse; font-size:13px; line-height:1.5; }
-  .data-table th { background:var(--surface2); font-family:var(--font-mono); font-size:10px; font-weight:600; text-transform:uppercase; letter-spacing:1px; color:var(--text-dim); text-align:left; padding:14px 20px; border-bottom:2px solid var(--border-bright); }
-  .data-table td { padding:14px 20px; border-bottom:1px solid var(--border); vertical-align:top; }
-  .data-table tbody tr:last-child td { border-bottom:none; }
-  .badge { display:inline-flex; align-items:center; gap:5px; font-family:var(--font-mono); font-size:10px; font-weight:500; padding:3px 10px; border-radius:5px; white-space:nowrap; }
-  .badge--new { background:var(--teal-dim); color:var(--teal); }
-  .badge--same { background:var(--surface2); color:var(--text-dim); }
-  .badge--better { background:var(--green-dim); color:var(--green); }
-
-  /* ===== BOTTOM CALLOUT ===== */
-  .footnote { background:var(--surface); border:1px solid var(--border); border-left:3px solid var(--teal); border-radius:0 10px 10px 0; padding:20px 24px; font-size:13px; line-height:1.7; color:var(--text-dim); margin-top:32px; }
-  .footnote strong { color:var(--text); }
 </style>
 </head>
 <body>
-<div class="container">
 
-  <h1 class="anim" style="--i:0">AESOP Build Pipeline &mdash; Two Paths</h1>
-  <p class="subtitle anim" style="--i:1">Same outcome, different philosophy</p>
-
-  <!-- ================================================================ -->
-  <!-- SIDE-BY-SIDE -->
-  <!-- ================================================================ -->
-  <div class="comparison">
-
-    <!-- LEFT: CURRENT -->
-    <div class="col anim" style="--i:2">
-      <div class="col__head">
-        <div class="col__tag col__tag--current">Current Approach</div>
-        <div class="col__headline">Hand-built orchestration</div>
-        <div class="col__why">
-          A for-loop over 7 phases. State tracked in a Python dataclass.
-          Each phase writes its output to the database by hand. Human
-          approval gates use a database flag polled every second.
-        </div>
-      </div>
-
-      <div class="col__vp col__vp--current">
-        <div class="col__vp-label">Why we built it this way</div>
-        <div class="col__vp-title">Absolute control, zero dependencies</div>
-        <div class="col__vp-text">
-          Every line of orchestration is ours. When something breaks, the
-          stack trace points to our code&mdash;not a framework&rsquo;s internals.
-          No new concepts to learn, no dependency to track, no upgrade
-          surprises. For a small team that knows this codebase cold, that
-          means fast debugging and instant context.
-        </div>
-      </div>
-
-      <div class="col__diagram">
-        <div class="mermaid-wrap">
-          <pre class="mermaid">
-            graph TD
-              A[Build Request] --> B[Initialize State]
-              B --> C[Phase 0: Fitness]
-              C --> D{Fit?}
-              D -->|No| E[Reject Build]
-              D -->|Yes| F[Phase 1: Gap Analysis]
-              F --> G{"Approve?"
-  DB polling}
-              G -->|No| E
-              G -->|Yes| H[Phase 2: Workflow]
-              H --> I[Phase 3: Instructions]
-              I --> J[Phase 4: Artifacts]
-              J --> K[Phase 5: Summary]
-              K --> L[Phase 6: Verify]
-              L --> M[Complete]
-
-              classDef same fill:#1f1750,stroke:#8a7fba,color:#d0c8e8
-              classDef diff fill:#3d1a3a,stroke:#ff2d95,color:#ff8fc7,stroke-width:2.5px
-              classDef good fill:#1e2a1a,stroke:#39ff14,color:#7dff5e,stroke-width:2px
-              classDef bad fill:#3a1825,stroke:#ff3860,color:#ff6b87,stroke-width:2px
-              class A,B,C,F,H,I,J,K,L same
-              class D,G diff
-              class M good
-              class E bad
-          </pre>
-        </div>
-        <div class="diagram-legend">
-          <span><div class="swatch swatch--same"></div> Unchanged phase</span>
-          <span><div class="swatch swatch--diff-current"></div> Different: HITL gate</span>
-          <span><div class="swatch swatch--bad"></div> Failure</span>
-          <span><div class="swatch swatch--good"></div> Success</span>
-        </div>
-      </div>
-    </div>
-
-    <!-- RIGHT: LANGGRAPH -->
-    <div class="col anim" style="--i:3">
-      <div class="col__head">
-        <div class="col__tag col__tag--proposed">Proposed Approach</div>
-        <div class="col__headline">LangGraph orchestration</div>
-        <div class="col__why">
-          A declared graph of 7 nodes connected by edges. State typed and
-          auto-saved to disk after every step. Human approval pauses the
-          graph itself&mdash;no polling. Crashes resume where they left off.
-        </div>
-      </div>
-
-      <div class="col__vp col__vp--proposed">
-        <div class="col__vp-label">Why we&rsquo;d adopt it</div>
-        <div class="col__vp-title">Resilience we don&rsquo;t have to build</div>
-        <div class="col__vp-text">
-          LangGraph solves three hard distributed-systems problems we
-          currently don&rsquo;t handle: crash recovery (a 10-minute build
-          survives a server restart), time-travel debugging (replay any
-          phase from any point in history), and auditable state (every
-          step is a typed, serialized checkpoint). These are table-stakes
-          for production AI infrastructure&mdash;and they come free with an
-          open standard backed by 32k GitHub stars and enterprise
-          deployments at Uber, LinkedIn, and Klarna.
-        </div>
-      </div>
-
-      <div class="col__diagram">
-        <div class="mermaid-wrap">
-          <pre class="mermaid">
-            graph TD
-              A2[Build Request] --> B2[Initialize State]
-              B2 --> CK["Auto-save
-  checkpoint"]
-              B2 --> C2[Phase 0: Fitness]
-              C2 --> D2{Fit?}
-              D2 -->|No| E2[Reject]
-              D2 -->|Yes| F2[Phase 1: Gap Analysis]
-              F2 --> G2{"Pause for
-  approval"}
-              G2 -->|Approve| CK2["Auto-save
-  checkpoint"]
-              G2 -->|Reject| E2
-              CK2 --> H2[Phase 2: Workflow]
-              H2 --> I2[Phase 3: Instructions]
-              I2 --> J2[Phase 4: Artifacts]
-              J2 --> K2[Phase 5: Summary]
-              K2 --> L2[Phase 6: Verify]
-              L2 --> M2[Complete]
-
-              classDef same fill:#1f1750,stroke:#8a7fba,color:#d0c8e8
-              classDef newcap fill:#1a2a3d,stroke:#00d4ff,color:#6be4ff,stroke-width:2.5px
-              classDef diff fill:#251a3d,stroke:#8b4dff,color:#c4a8ff,stroke-width:2.5px
-              classDef good fill:#1e2a1a,stroke:#39ff14,color:#7dff5e,stroke-width:2px
-              classDef bad fill:#3a1825,stroke:#ff3860,color:#ff6b87,stroke-width:2px
-              class A2,B2,C2,F2,H2,I2,J2,K2,L2 same
-              class CK,CK2 newcap
-              class D2,G2 diff
-              class M2 good
-              class E2 bad
-          </pre>
-        </div>
-        <div class="diagram-legend">
-          <span><div class="swatch swatch--same"></div> Unchanged phase</span>
-          <span><div class="swatch swatch--new"></div> New: checkpoint</span>
-          <span><div class="swatch swatch--diff-proposed"></div> Different: HITL gate</span>
-          <span><div class="swatch swatch--bad"></div> Failure</span>
-          <span><div class="swatch swatch--good"></div> Success</span>
-        </div>
-      </div>
-    </div>
-
-  </div>
-
-  <!-- ================================================================ -->
-  <!-- TRADE-OFF TABLE -->
-  <!-- ================================================================ -->
-  <h2 class="section-head anim" style="--i:4">What changes &mdash; and what doesn&rsquo;t</h2>
-
-  <div class="table-wrap anim" style="--i:5">
-    <div class="table-scroll">
-      <table class="data-table">
-        <thead>
-          <tr><th>Capability</th><th>Today</th><th>With LangGraph</th><th></th></tr>
-        </thead>
-        <tbody>
-          <tr>
-            <td><strong>Crash recovery</strong></td>
-            <td>Build fails. Restart from scratch.</td>
-            <td>Resumes from last saved step. No data lost.</td>
-            <td><span class="badge badge--new">New</span></td>
-          </tr>
-          <tr>
-            <td><strong>Time-travel debugging</strong></td>
-            <td>Not possible. Rerun the whole build.</td>
-            <td>Rewind to any phase, tweak inputs, replay.</td>
-            <td><span class="badge badge--new">New</span></td>
-          </tr>
-          <tr>
-            <td><strong>Human approval gates</strong></td>
-            <td>Database flag polled every second</td>
-            <td>Graph pauses. API call resumes it.</td>
-            <td><span class="badge badge--better">Simpler</span></td>
-          </tr>
-          <tr>
-            <td><strong>Audit trail</strong></td>
-            <td>DB rows, manually written</td>
-            <td>Every state transition auto-serialized</td>
-            <td><span class="badge badge--better">Stronger</span></td>
-          </tr>
-          <tr>
-            <td><strong>Parallel agent execution</strong></td>
-            <td>Manual asyncio.gather</td>
-            <td>Declarative fan-out with partial-failure handling</td>
-            <td><span class="badge badge--better">Robust</span></td>
-          </tr>
-          <tr style="border-top:2px solid var(--border-bright);">
-            <td><strong>Prompts &amp; evaluation logic</strong></td>
-            <td colspan="2">Unchanged. Same prompt files, same scoring formula.</td>
-            <td><span class="badge badge--same">Same</span></td>
-          </tr>
-          <tr>
-            <td><strong>LLM provider</strong></td>
-            <td colspan="2">Unchanged. Same Anthropic/OpenAI/DeepSeek abstraction.</td>
-            <td><span class="badge badge--same">Same</span></td>
-          </tr>
-          <tr>
-            <td><strong>Frontend</strong></td>
-            <td colspan="2">Unchanged. Same SSE event stream, same UI.</td>
-            <td><span class="badge badge--same">Same</span></td>
-          </tr>
-          <tr>
-            <td><strong>Database</strong></td>
-            <td colspan="2">Unchanged. Same Supabase tables, same RLS.</td>
-            <td><span class="badge badge--same">Same</span></td>
-          </tr>
-          <tr>
-            <td><strong>Toggle mechanism</strong></td>
-            <td colspan="2">Admin setting. Per-organization. Default: current.</td>
-            <td><span class="badge badge--same">Opt-in</span></td>
-          </tr>
-        </tbody>
-      </table>
-    </div>
-  </div>
-
-  <div class="footnote anim" style="--i:6">
-    <strong>The bet.</strong> LangGraph replaces roughly 200 lines of hand-rolled
-    orchestration code. The prompts, the evaluation logic, the LLM calls, the
-    frontend&mdash;all untouched. What we gain is infrastructure-scale resilience
-    without having to build it ourselves. The toggle means we can run both
-    pipelines side by side, compare costs and completion rates, and switch
-    only when the data says we should.
-  </div>
-
+<div class="topbar">
+  <div class="backlink"><a href="../aesop.html"><span class="arr">&larr;</span> AESOP</a></div>
 </div>
 
-<script src="https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.min.js"></script>
-<script>
-  mermaid.initialize({
-    startOnLoad: true,
-    theme: 'base',
-    themeVariables: {
-      primaryColor: '#150f35',
-      primaryBorderColor: '#8a7fba',
-      primaryTextColor: '#f0e6ff',
-      secondaryColor: '#1f1750',
-      secondaryBorderColor: '#ff2d95',
-      secondaryTextColor: '#f0e6ff',
-      lineColor: '#8a7fba',
-      fontSize: '13px',
-      fontFamily: "'JetBrains Mono', monospace",
-    }
-  });
-</script>
+<div class="sheet">
+  <div class="spine"><div class="spine-label">BUILD &mdash; TWO PATHS</div></div>
+
+  <div class="content">
+
+    <header class="masthead">
+      <h1>Build Pipeline &mdash; Two Paths</h1>
+      <p class="lede">Same outcome, different philosophy. The current hand-built orchestration, and the declared-graph alternative it could become.</p>
+    </header>
+
+    <!-- CURRENT -->
+    <div class="path">
+      <div class="path-head"><span class="tag cur">Current approach</span><h2>Hand-built orchestration</h2></div>
+      <div class="path-body">
+        <p>A for-loop over seven phases, state tracked in a Python dataclass, each phase writing to the database by hand, and a human approval gate polled every second.</p>
+        <div class="vp"><small>Why we built it this way</small>Absolute control, zero dependencies.</div>
+        <p style="margin-bottom:4px">Every line of orchestration is ours. When something breaks, the stack trace points to our code, not a framework&rsquo;s internals. No new concepts to learn, no dependency to track, no upgrade surprises. For a team that knows this codebase cold, that means fast debugging and instant context.</p>
+      </div>
+      <div class="fig">
+        <svg viewBox="0 0 620 1222" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Current pipeline: hand-built orchestration">
+<defs>
+  <marker id="arr" viewBox="0 0 10 10" refX="9.5" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M 0 0 L 10 5 L 0 10 z" style="fill:var(--arr-color)"></path></marker>
+  <marker id="arrStrong" viewBox="0 0 10 10" refX="9.5" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M 0 0 L 10 5 L 0 10 z" style="fill:var(--arr-color-strong)"></path></marker>
+</defs>
+<rect x="175" y="40" width="230" height="62" rx="8" class="sv-box-storage" style="fill:var(--storage);fill-opacity:0.13" stroke-width="1.5"></rect>
+<text class="sv-title" x="290" y="68" text-anchor="middle" style="fill:var(--storage)">Build request</text>
+<rect x="175" y="144" width="230" height="62" rx="8" class="sv-box-storage" style="fill:var(--storage);fill-opacity:0.13" stroke-width="1.5"></rect>
+<text class="sv-title" x="290" y="172" text-anchor="middle" style="fill:var(--storage)">Initialize state</text>
+<rect x="175" y="248" width="230" height="62" rx="8" class="sv-box-model" style="fill:var(--model);fill-opacity:0.13" stroke-width="1.5"></rect>
+<text class="sv-title" x="290" y="276" text-anchor="middle" style="fill:var(--model)">Fit? — no rejects</text>
+<rect x="300" y="352" width="230" height="62" rx="8" class="sv-box-storage" style="fill:var(--storage);fill-opacity:0.13" stroke-width="1.5"></rect>
+<text class="sv-title" x="415" y="380" text-anchor="middle" style="fill:var(--storage)">Phase 1 Gap analysis</text>
+<rect x="300" y="456" width="230" height="62" rx="8" class="sv-box-model" style="fill:var(--model);fill-opacity:0.13" stroke-width="1.5"></rect>
+<text class="sv-title" x="415" y="484" text-anchor="middle" style="fill:var(--model)">Approve? HITL gate</text>
+<rect x="310" y="560" width="230" height="62" rx="8" class="sv-box-storage" style="fill:var(--storage);fill-opacity:0.13" stroke-width="1.5"></rect>
+<text class="sv-title" x="425" y="588" text-anchor="middle" style="fill:var(--storage)">Phase 2 Workflow</text>
+<rect x="310" y="664" width="230" height="62" rx="8" class="sv-box-storage" style="fill:var(--storage);fill-opacity:0.13" stroke-width="1.5"></rect>
+<text class="sv-title" x="425" y="692" text-anchor="middle" style="fill:var(--storage)">Phase 3 Instructions</text>
+<rect x="310" y="768" width="230" height="62" rx="8" class="sv-box-storage" style="fill:var(--storage);fill-opacity:0.13" stroke-width="1.5"></rect>
+<text class="sv-title" x="425" y="796" text-anchor="middle" style="fill:var(--storage)">Phase 4 Artifacts</text>
+<rect x="310" y="872" width="230" height="62" rx="8" class="sv-box-storage" style="fill:var(--storage);fill-opacity:0.13" stroke-width="1.5"></rect>
+<text class="sv-title" x="425" y="900" text-anchor="middle" style="fill:var(--storage)">Phase 5 Summary</text>
+<rect x="310" y="976" width="230" height="62" rx="8" class="sv-box-storage" style="fill:var(--storage);fill-opacity:0.13" stroke-width="1.5"></rect>
+<text class="sv-title" x="425" y="1004" text-anchor="middle" style="fill:var(--storage)">Phase 6 Verify</text>
+<rect x="310" y="1080" width="230" height="62" rx="8" class="sv-box-consumer" style="fill:var(--consumer);fill-opacity:0.13" stroke-width="1.5"></rect>
+<text class="sv-title" x="425" y="1108" text-anchor="middle" style="fill:var(--consumer)">Complete</text>
+<rect x="40" y="560" width="230" height="62" rx="8" class="sv-box-compute" style="fill:var(--compute);fill-opacity:0.13" stroke-width="1.5"></rect>
+<text class="sv-title" x="155" y="588" text-anchor="middle" style="fill:var(--compute)">Reject build</text>
+<path class="sv-arrow" d="M 290 102 L 290 112.5 Q 290 123 290 133.5 L 290 144" marker-end="url(#arr)" stroke-width="2"></path>
+<path class="sv-arrow" d="M 290 206 L 290 216.5 Q 290 227 290 237.5 L 290 248" marker-end="url(#arr)" stroke-width="2"></path>
+<path class="sv-arrow" d="M 405 310 L 410.48569740588033 321.5199645523487 Q 415 331 415 341.5 L 415 352" marker-end="url(#arr)" stroke-width="2"></path>
+<path class="sv-arrow" d="M 175 310 L 154.83078304622848 324.11845186764003 Q 145 331 145 343 L 145 371 Q 145 383 145 395 L 145 423 Q 145 435 145 447 L 145 475 Q 145 487 145 499 L 145 527 Q 145 539 133.23303189170895 541.3533936216583 L 40 560" marker-end="url(#arr)" stroke-width="2"></path>
+<path class="sv-arrow" d="M 415 414 L 415 424.5 Q 415 435 415 445.5 L 415 456" marker-end="url(#arr)" stroke-width="2"></path>
+<path class="sv-arrow" d="M 530 518 L 435.29609709475466 536.940780581049 Q 425 539 425 549.5 L 425 560" marker-end="url(#arr)" stroke-width="2"></path>
+<path class="sv-arrow" d="M 300 518 L 288.02048506869863 530.5784906778664 Q 280 539 275 549.5 L 270 560" marker-end="url(#arr)" stroke-width="2"></path>
+<path class="sv-arrow" d="M 425 622 L 425 632.5 Q 425 643 425 653.5 L 425 664" marker-end="url(#arr)" stroke-width="2"></path>
+<path class="sv-arrow" d="M 425 726 L 425 736.5 Q 425 747 425 757.5 L 425 768" marker-end="url(#arr)" stroke-width="2"></path>
+<path class="sv-arrow" d="M 425 830 L 425 840.5 Q 425 851 425 861.5 L 425 872" marker-end="url(#arr)" stroke-width="2"></path>
+<path class="sv-arrow" d="M 425 934 L 425 944.5 Q 425 955 425 965.5 L 425 976" marker-end="url(#arr)" stroke-width="2"></path>
+<path class="sv-arrow" d="M 425 1038 L 425 1048.5 Q 425 1059 425 1069.5 L 425 1080" marker-end="url(#arr)" stroke-width="2"></path>
+</svg>
+      </div>
+    </div>
+
+    <!-- LANGGRAPH -->
+    <div class="path">
+      <div class="path-head"><span class="tag lg">Proposed approach</span><h2>LangGraph orchestration</h2></div>
+      <div class="path-body">
+        <p>A declared graph of seven nodes connected by edges. State typed and auto-saved to disk after every step. Human approval pauses the graph itself, no polling. Crashes resume where they left off.</p>
+        <div class="vp"><small>Why we&rsquo;d adopt it</small>Resilience we don&rsquo;t have to build.</div>
+        <p style="margin-bottom:4px">LangGraph solves three hard distributed-systems problems we don&rsquo;t currently handle: crash recovery (a ten-minute build survives a restart), time-travel debugging (replay any phase from history), and auditable state (every step is a typed, serialized checkpoint). Table-stakes for production AI infrastructure &mdash; free with an open standard behind it.</p>
+      </div>
+      <div class="fig">
+        <svg viewBox="0 0 620 1430" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="LangGraph orchestration">
+<defs>
+  <marker id="arr" viewBox="0 0 10 10" refX="9.5" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M 0 0 L 10 5 L 0 10 z" style="fill:var(--arr-color)"></path></marker>
+  <marker id="arrStrong" viewBox="0 0 10 10" refX="9.5" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M 0 0 L 10 5 L 0 10 z" style="fill:var(--arr-color-strong)"></path></marker>
+</defs>
+<rect x="175" y="40" width="230" height="62" rx="8" class="sv-box-storage" style="fill:var(--storage);fill-opacity:0.13" stroke-width="1.5"></rect>
+<text class="sv-title" x="290" y="68" text-anchor="middle" style="fill:var(--storage)">Build request</text>
+<rect x="175" y="144" width="230" height="62" rx="8" class="sv-box-storage" style="fill:var(--storage);fill-opacity:0.13" stroke-width="1.5"></rect>
+<text class="sv-title" x="290" y="172" text-anchor="middle" style="fill:var(--storage)">Initialize state</text>
+<rect x="247.5" y="248" width="230" height="62" rx="8" class="sv-box-consumer" style="fill:var(--consumer);fill-opacity:0.13" stroke-width="1.5"></rect>
+<text class="sv-title" x="362.5" y="276" text-anchor="middle" style="fill:var(--consumer)">Auto-save checkpoint</text>
+<rect x="175" y="352" width="230" height="62" rx="8" class="sv-box-model" style="fill:var(--model);fill-opacity:0.13" stroke-width="1.5"></rect>
+<text class="sv-title" x="290" y="380" text-anchor="middle" style="fill:var(--model)">Fit? — no rejects</text>
+<rect x="300" y="456" width="230" height="62" rx="8" class="sv-box-storage" style="fill:var(--storage);fill-opacity:0.13" stroke-width="1.5"></rect>
+<text class="sv-title" x="415" y="484" text-anchor="middle" style="fill:var(--storage)">Phase 1 Gap analysis</text>
+<rect x="300" y="560" width="230" height="62" rx="8" class="sv-box-model" style="fill:var(--model);fill-opacity:0.13" stroke-width="1.5"></rect>
+<text class="sv-title" x="415" y="588" text-anchor="middle" style="fill:var(--model)">Pause for approval</text>
+<rect x="310" y="664" width="230" height="62" rx="8" class="sv-box-consumer" style="fill:var(--consumer);fill-opacity:0.13" stroke-width="1.5"></rect>
+<text class="sv-title" x="425" y="692" text-anchor="middle" style="fill:var(--consumer)">Auto-save checkpoint</text>
+<rect x="310" y="768" width="230" height="62" rx="8" class="sv-box-storage" style="fill:var(--storage);fill-opacity:0.13" stroke-width="1.5"></rect>
+<text class="sv-title" x="425" y="796" text-anchor="middle" style="fill:var(--storage)">Phase 2 Workflow</text>
+<rect x="310" y="872" width="230" height="62" rx="8" class="sv-box-storage" style="fill:var(--storage);fill-opacity:0.13" stroke-width="1.5"></rect>
+<text class="sv-title" x="425" y="900" text-anchor="middle" style="fill:var(--storage)">Phase 3 Instructions</text>
+<rect x="310" y="976" width="230" height="62" rx="8" class="sv-box-storage" style="fill:var(--storage);fill-opacity:0.13" stroke-width="1.5"></rect>
+<text class="sv-title" x="425" y="1004" text-anchor="middle" style="fill:var(--storage)">Phase 4 Artifacts</text>
+<rect x="310" y="1080" width="230" height="62" rx="8" class="sv-box-storage" style="fill:var(--storage);fill-opacity:0.13" stroke-width="1.5"></rect>
+<text class="sv-title" x="425" y="1108" text-anchor="middle" style="fill:var(--storage)">Phase 5 Summary</text>
+<rect x="310" y="1184" width="230" height="62" rx="8" class="sv-box-storage" style="fill:var(--storage);fill-opacity:0.13" stroke-width="1.5"></rect>
+<text class="sv-title" x="425" y="1212" text-anchor="middle" style="fill:var(--storage)">Phase 6 Verify</text>
+<rect x="310" y="1288" width="230" height="62" rx="8" class="sv-box-consumer" style="fill:var(--consumer);fill-opacity:0.13" stroke-width="1.5"></rect>
+<text class="sv-title" x="425" y="1316" text-anchor="middle" style="fill:var(--consumer)">Complete</text>
+<rect x="40" y="664" width="230" height="62" rx="8" class="sv-box-compute" style="fill:var(--compute);fill-opacity:0.13" stroke-width="1.5"></rect>
+<text class="sv-title" x="155" y="692" text-anchor="middle" style="fill:var(--compute)">Reject</text>
+<path class="sv-arrow" d="M 290 102 L 290 112.5 Q 290 123 290 133.5 L 290 144" marker-end="url(#arr)" stroke-width="2"></path>
+<path class="sv-arrow" d="M 405 206 L 371.9135305109394 222.34860845341817 Q 362.5 227 362.5 237.5 L 362.5 248" marker-end="url(#arr)" stroke-width="2"></path>
+<path class="sv-arrow" d="M 175 206 L 206.74167941606925 221.68412394676363 Q 217.5 227 217.5 239 L 217.5 267 Q 217.5 279 217.5 291 L 217.5 319 Q 217.5 331 206.74167941606925 336.31587605323637 L 175 352" marker-end="url(#arr)" stroke-width="2"></path>
+<path class="sv-arrow" d="M 362.5 310 L 362.5 320.5 Q 362.5 331 371.9135305109394 335.6513915465818 L 405 352" marker-end="url(#arr)" stroke-width="2"></path>
+<path class="sv-arrow" d="M 405 414 L 410.48569740588033 425.5199645523487 Q 415 435 415 445.5 L 415 456" marker-end="url(#arr)" stroke-width="2"></path>
+<path class="sv-arrow" d="M 175 414 L 154.83078304622848 428.11845186764003 Q 145 435 145 447 L 145 475 Q 145 487 145 499 L 145 527 Q 145 539 145 551 L 145 579 Q 145 591 145 603 L 145 631 Q 145 643 133.23303189170895 645.3533936216583 L 40 664" marker-end="url(#arr)" stroke-width="2"></path>
+<path class="sv-arrow" d="M 415 518 L 415 528.5 Q 415 539 415 549.5 L 415 560" marker-end="url(#arr)" stroke-width="2"></path>
+<path class="sv-arrow" d="M 530 622 L 435.29609709475466 640.940780581049 Q 425 643 425 653.5 L 425 664" marker-end="url(#arr)" stroke-width="2"></path>
+<path class="sv-arrow" d="M 300 622 L 288.02048506869863 634.5784906778664 Q 280 643 275 653.5 L 270 664" marker-end="url(#arr)" stroke-width="2"></path>
+<path class="sv-arrow" d="M 425 726 L 425 736.5 Q 425 747 425 757.5 L 425 768" marker-end="url(#arr)" stroke-width="2"></path>
+<path class="sv-arrow" d="M 425 830 L 425 840.5 Q 425 851 425 861.5 L 425 872" marker-end="url(#arr)" stroke-width="2"></path>
+<path class="sv-arrow" d="M 425 934 L 425 944.5 Q 425 955 425 965.5 L 425 976" marker-end="url(#arr)" stroke-width="2"></path>
+<path class="sv-arrow" d="M 425 1038 L 425 1048.5 Q 425 1059 425 1069.5 L 425 1080" marker-end="url(#arr)" stroke-width="2"></path>
+<path class="sv-arrow" d="M 425 1142 L 425 1152.5 Q 425 1163 425 1173.5 L 425 1184" marker-end="url(#arr)" stroke-width="2"></path>
+<path class="sv-arrow" d="M 425 1246 L 425 1256.5 Q 425 1267 425 1277.5 L 425 1288" marker-end="url(#arr)" stroke-width="2"></path>
+</svg>
+      </div>
+      <div class="legend">
+        <span><span class="legend-swatch" style="background:var(--storage)"></span>phase</span>
+        <span><span class="legend-swatch" style="background:var(--model)"></span>gate</span>
+        <span><span class="legend-swatch" style="background:var(--consumer)"></span>checkpoint / complete</span>
+        <span><span class="legend-swatch" style="background:var(--compute)"></span>reject</span>
+      </div>
+    </div>
+
+    <!-- WHAT CHANGES -->
+    <section class="sec">
+      <div class="sec-title"><span class="n">03</span><h2>What changes &mdash; and what doesn&rsquo;t</h2></div>
+      <div class="sec-body">
+        <table class="cmp">
+          <thead><tr><th>Capability</th><th>Today</th><th>With LangGraph</th><th></th></tr></thead>
+          <tbody>
+            <tr><td class="cap">Crash recovery</td><td>Build fails. Restart from scratch.</td><td>Resumes from the last saved step. No data lost.</td><td><span class="delta new">New</span></td></tr>
+            <tr><td class="cap">Time-travel debugging</td><td>Not possible. Rerun the whole build.</td><td>Rewind to any phase, tweak inputs, replay.</td><td><span class="delta new">New</span></td></tr>
+            <tr><td class="cap">Human approval gates</td><td>Database flag polled every second</td><td>Graph pauses. An API call resumes it.</td><td><span class="delta better">Simpler</span></td></tr>
+            <tr><td class="cap">Audit trail</td><td>DB rows, manually written</td><td>Every state transition auto-serialized</td><td><span class="delta better">Stronger</span></td></tr>
+            <tr><td class="cap">Parallel agents</td><td>Manual <code>asyncio.gather</code></td><td>Declarative fan-out with partial-failure handling</td><td><span class="delta better">Robust</span></td></tr>
+            <tr><td class="cap">Prompts &amp; evaluation</td><td colspan="3">Unchanged. Same prompt files, same scoring formula.</td></tr>
+            <tr><td class="cap">LLM provider</td><td colspan="3">Unchanged. Same Anthropic / OpenAI / DeepSeek abstraction.</td></tr>
+            <tr><td class="cap">Frontend</td><td colspan="3">Unchanged. Same SSE event stream, same UI.</td></tr>
+            <tr><td class="cap">Database</td><td colspan="3">Unchanged. Same Supabase tables, same RLS.</td></tr>
+            <tr><td class="cap">Toggle mechanism</td><td colspan="3">Admin setting, per organization. Default: current.</td></tr>
+          </tbody>
+        </table>
+        <p class="bet"><b>The bet.</b> LangGraph replaces roughly 200 lines of hand-rolled orchestration. The prompts, evaluation logic, LLM calls, and frontend all stay untouched. What we gain is infrastructure-scale resilience without building it ourselves &mdash; and the toggle lets us run both side by side, compare cost and completion rates, and switch only when the data says we should.</p>
+      </div>
+    </section>
+
+    <footer class="footer">
+      <a href="../aesop.html">&larr; AESOP</a>
+      <span>&copy; 2025-2026 Charlie Fuller</span>
+    </footer>
+
+  </div>
+</div>
+
 </body>
 </html>
