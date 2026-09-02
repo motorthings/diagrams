@@ -8,669 +8,102 @@
   <link rel="icon" href="icon.svg" type="image/svg+xml" />
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,wght@0,400;0,500;0,600;0,700;1,400&family=Source+Code+Pro:wght@400;500;600&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Anton&family=Public+Sans:wght@400;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
   <style>
     :root {
-      --font-display: 'Fraunces', Georgia, serif;
-      --font-body: 'Fraunces', Georgia, serif;
-      --font-mono: 'Source Code Pro', 'SF Mono', Consolas, monospace;
-
-      /* Light mode (default) */
-      --bg: #eef4f9;
-      --surface: #ffffff;
-      --surface2: #f5f8fc;
-      --surface-elevated: #ddeaf4;
-      --border: #c8daea;
-      --border-bright: #a0bedb;
-      --heading: #0a1628;
-      --text: #0a1628;
-      --text-dim: #3d5a7a;
-
-      --primary: #e8621a;
-      --primary-dim: rgba(232,98,26,0.08);
-      --secondary: #4a90c4;
-      --secondary-dim: rgba(74,144,196,0.08);
+      --ink: #1F1A1C; --graphite: #3D3A3C; --body: #55504E; --muted: #76716F;
+      --rule-hair: #D6D2D0; --rule-faint: #E7E4E2; --sheet: #FAF8F7; --desk: #E8E5E1;
+      --maroon: #A4093F; --amber: #EFAE42;
+      --serif: 'Instrument Serif', Georgia, serif;
+      --sans: 'Public Sans', system-ui, sans-serif;
+      --mono: 'JetBrains Mono', monospace;
+      --cond: 'Anton', Impact, sans-serif;
     }
-
-    html.dark {
-      --bg: #0a1628;
-      --surface: #132240;
-      --surface2: #1a2d52;
-      --surface-elevated: #132240;
-      --border: #1a2d52;
-      --border-bright: #2d4570;
-      --heading: #e8edf5;
-      --text: #e8edf5;
-      --text-dim: #9bb0d4;
-
-      --primary: #f37021;
-      --primary-dim: rgba(243,112,33,0.12);
-      --secondary: #6cace4;
-      --secondary-dim: rgba(108,172,228,0.12);
-    }
-
-    * { box-sizing: border-box; margin: 0; padding: 0; }
-
+    * { margin: 0; padding: 0; box-sizing: border-box; }
     body {
-      background: var(--bg);
-      background-image:
-        radial-gradient(ellipse at 80% 0%, var(--primary-dim) 0%, transparent 50%),
-        radial-gradient(ellipse at 20% 60%, var(--secondary-dim) 0%, transparent 40%);
-      color: var(--text);
-      font-family: var(--font-body);
-      min-height: 100vh;
-      line-height: 1.6;
-      transition: background 0.3s, color 0.3s;
-      padding: 0 32px 48px;
+      background: var(--desk); color: var(--ink);
+      font-family: var(--sans); font-size: 17px; line-height: 1.6;
+      -webkit-font-smoothing: antialiased; text-rendering: optimizeLegibility;
     }
+    .sheet { max-width: 1140px; margin: 48px auto 72px; background: var(--sheet); display: grid; grid-template-columns: 56px 1fr; }
+    .spine { background: var(--ink); display: flex; align-items: flex-end; justify-content: center; padding: 30px 0; }
+    .spine-label {
+      writing-mode: vertical-rl; transform: rotate(180deg);
+      font-family: var(--cond); font-size: 18px; letter-spacing: 0.2em;
+      color: var(--sheet); text-transform: uppercase; white-space: nowrap;
+    }
+    .content { padding: 54px 58px 62px; }
+    .masthead {
+      display: flex; align-items: flex-end; justify-content: space-between;
+      gap: 30px; border-bottom: 3px solid var(--ink); padding-bottom: 12px;
+    }
+    .masthead h1 { font-family: var(--serif); font-weight: 400; font-size: 72px; line-height: 0.9; letter-spacing: -0.028em; }
+    .masthead-num { font-family: var(--serif); font-size: 72px; line-height: 0.95; color: var(--amber); }
+    .lede { font-family: var(--serif); font-style: italic; font-size: 17px; line-height: 1.6; color: var(--graphite); margin: 14px 0 20px; max-width: 640px; }
 
-    /* Nav */
-    .nav {
-      position: sticky; top: 0; z-index: 100;
-      backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px);
-      background: color-mix(in srgb, var(--surface) 85%, transparent);
-      border-bottom: 1px solid var(--border);
-      margin: 0 -32px 32px; padding: 0 32px;
-      transition: background 0.3s, border-color 0.3s;
+    .links { display: flex; flex-direction: column; }
+    a.link {
+      display: grid; grid-template-columns: 40px 1fr auto;
+      gap: 16px; align-items: baseline;
+      text-decoration: none; color: inherit;
+      padding: 14px 0; border-top: 1px solid var(--rule-hair);
     }
-    .nav-inner {
-      max-width: 1240px; margin: 0 auto; padding: 14px 0;
-      display: flex; align-items: center; justify-content: space-between;
-    }
-    .nav-brand {
-      font-family: var(--font-mono); font-size: 16px; font-weight: 600;
-      letter-spacing: 0.5px; color: var(--primary); text-decoration: none;
-    }
-    .theme-toggle {
-      width: 36px; height: 36px; border-radius: 10px;
-      border: 1px solid var(--border); background: var(--surface);
-      cursor: pointer; display: flex; align-items: center; justify-content: center;
-      font-size: 20px; color: var(--text-dim); transition: all 0.2s;
-    }
-    .theme-toggle:hover { border-color: var(--primary); color: var(--primary); }
+    a.link:first-child { border-top: none; }
+    .link-num { font-family: var(--serif); font-size: 16px; color: var(--maroon); }
+    .link-title { font-size: 17px; font-weight: 700; color: var(--ink); }
+    .link-count { font-family: var(--mono); font-size: 13px; color: var(--muted); }
+    a.link:hover .link-title { color: var(--maroon); }
 
-    .container { max-width: 1240px; margin: 0 auto; }
+    .footer { border-top: 3px solid var(--ink); margin-top: 20px; padding: 24px 0 0; }
+    .footer .rule-line { font-size: 14px; color: var(--body); line-height: 1.7; }
+    .footer a { color: var(--maroon); text-decoration: none; }
+    .footer a:hover { text-decoration: underline; }
 
-    h1 {
-      font-family: var(--font-display); font-size: 48px; font-weight: 700;
-      letter-spacing: -0.5px; color: var(--heading); margin-bottom: 10px;
+    @media (max-width: 760px) {
+      .sheet { grid-template-columns: 1fr; }
+      .spine { display: none; }
+      .content { padding: 40px 24px 48px; }
+      .masthead h1 { font-size: 48px; }
+      .masthead-num { font-size: 48px; }
+      a.link { grid-template-columns: 28px 1fr; }
+      .link-count { grid-column: 2; }
     }
-    .subtitle {
-      font-family: var(--font-mono); font-size: 16px; color: var(--text-dim);
-      margin-bottom: 36px;
-    }
-
-    /* Sections */
-    details.section { margin-bottom: 2px; }
-
-    details.section > summary {
-      font-family: var(--font-mono); font-size: 15px; font-weight: 700;
-      letter-spacing: 0.15em; text-transform: uppercase;
-      color: var(--text-dim); border-bottom: 1px solid var(--border);
-      padding: 14px 0; cursor: pointer; list-style: none;
-      display: flex; align-items: center; gap: 8px;
-      user-select: none; transition: color 0.2s;
-    }
-    details.section > summary:hover { color: var(--primary); }
-    details.section > summary::-webkit-details-marker { display: none; }
-
-    details.section > summary::before {
-      content: ''; display: inline-block;
-      width: 0; height: 0;
-      border-top: 5px solid transparent;
-      border-bottom: 5px solid transparent;
-      border-left: 7px solid var(--text-dim);
-      transition: transform 0.2s, border-left-color 0.2s;
-    }
-    details.section:hover > summary::before { border-left-color: var(--primary); }
-    details.section[open] > summary::before { transform: rotate(90deg); }
-    details.section[open] > summary {
-      color: var(--primary); border-bottom-color: var(--border-bright);
-    }
-
-    .section-body { padding: 14px 0 28px; }
-
-    details.subsection { margin-bottom: 16px; }
-
-    details.subsection > summary {
-      font-family: var(--font-mono); font-size: 13px; font-weight: 600;
-      letter-spacing: 0.1em; text-transform: uppercase;
-      color: var(--text-dim); padding: 4px 0 8px; opacity: 0.7;
-      cursor: pointer; list-style: none; user-select: none;
-      display: flex; align-items: center; gap: 6px;
-      transition: color 0.2s, opacity 0.2s;
-    }
-    details.subsection > summary:hover { opacity: 1; color: var(--primary); }
-    details.subsection > summary::-webkit-details-marker { display: none; }
-
-    details.subsection > summary::before {
-      content: '';
-      display: inline-block;
-      width: 0; height: 0;
-      border-top: 4px solid transparent;
-      border-bottom: 4px solid transparent;
-      border-left: 5px solid var(--text-dim);
-      transition: transform 0.15s, border-left-color 0.15s;
-      flex-shrink: 0;
-    }
-    details.subsection:hover > summary::before { border-left-color: var(--primary); }
-    details.subsection[open] > summary::before { transform: rotate(90deg); }
-    details.subsection[open] > summary { color: var(--primary); opacity: 1; }
-
-    .subsection { margin-bottom: 16px; }
-
-    /* Sub-subsection — visually subordinate, nested inside a parent subsection */
-    details.sub-subsection { margin: 0 0 12px 20px; }
-    details.sub-subsection > summary {
-      font-family: var(--font-mono); font-size: 11px; font-weight: 500;
-      letter-spacing: 0.08em; text-transform: uppercase;
-      color: var(--text-dim); padding: 2px 0 6px; opacity: 0.55;
-      cursor: pointer; list-style: none; user-select: none;
-      display: flex; align-items: center; gap: 5px;
-      transition: color 0.2s, opacity 0.2s;
-    }
-    details.sub-subsection > summary:hover { opacity: 1; color: var(--secondary); }
-    details.sub-subsection > summary::-webkit-details-marker { display: none; }
-    details.sub-subsection > summary::before {
-      content: '';
-      display: inline-block;
-      width: 0; height: 0;
-      border-top: 3.5px solid transparent;
-      border-bottom: 3.5px solid transparent;
-      border-left: 4.5px solid var(--text-dim);
-      transition: transform 0.15s, border-left-color 0.15s;
-      flex-shrink: 0;
-    }
-    details.sub-subsection:hover > summary::before { border-left-color: var(--secondary); }
-    details.sub-subsection[open] > summary::before { transform: rotate(90deg); }
-    details.sub-subsection[open] > summary { color: var(--secondary); opacity: 0.85; }
-    details.sub-subsection .links { margin-left: 0; }
-
-    .links { display: flex; flex-direction: column; gap: 7px; }
-
-    .card-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 8px; }
-
-    .card-grid a {
-      display: block; padding: 14px 16px; background: var(--surface);
-      border: 1px solid var(--border); border-radius: 8px;
-      text-decoration: none; color: var(--text);
-      font-size: 15px; line-height: 1.5;
-      transition: border-color 0.15s, background 0.15s;
-    }
-    .card-grid a:hover {
-      border-color: var(--secondary); background: var(--secondary-dim);
-    }
-    .card-grid a .card-title {
-      font-weight: 600; font-size: 16px; color: var(--heading); margin-bottom: 3px;
-      transition: color 0.15s;
-    }
-    .card-grid a:hover .card-title { color: var(--secondary); }
-    .card-grid a .card-desc {
-      font-size: 13px; color: var(--text-dim); line-height: 1.4;
-    }
-
-    a.card-link {
-      flex-direction: column; align-items: flex-start; gap: 4px;
-    }
-    a.card-link .card-title {
-      font-weight: 600; font-size: 16px; color: var(--heading);
-      transition: color 0.15s;
-    }
-    a.card-link .card-desc {
-      font-size: 13px; color: var(--text-dim); line-height: 1.4;
-    }
-    a.card-link:hover .card-title { color: var(--secondary); }
-
-    a {
-      display: flex; align-items: center; gap: 12px;
-      padding: 12px 16px; background: var(--surface);
-      border: 1px solid var(--border); border-radius: 8px;
-      text-decoration: none; color: var(--text);
-      font-size: 18px; transition: border-color 0.15s, background 0.15s, color 0.15s;
-    }
-    a:hover {
-      border-color: var(--secondary); background: var(--secondary-dim);
-      color: var(--secondary);
-    }
-    a:hover .icon-svg { stroke: var(--secondary); }
-
-    .icon-svg {
-      flex-shrink: 0; width: 20px; height: 20px;
-      stroke: var(--text-dim); fill: none;
-      stroke-width: 1.5; stroke-linecap: round; stroke-linejoin: round;
-      transition: stroke 0.15s;
-    }
-
-    @media (max-width: 640px) {
-      body { padding: 0; }
-      .nav { margin: 0; padding: 0 16px; }
-      .container { padding: 0 16px; }
-      h1 { font-size: 34px; }
-    }
-  
-.backlink{position:fixed;top:12px;left:16px;z-index:101;font-family:var(--font-mono);font-size:12px;color:var(--text-dim);text-decoration:none;padding:6px 10px;border:1px solid var(--border);border-radius:6px;background:var(--surface);transition:color .15s,border-color .15s}
-.backlink:hover{color:var(--text);border-color:var(--border-bright)}
-</style>
+  </style>
 </head>
 <body>
 
-  <div class="container">
+<div class="sheet">
+  <div class="spine"><div class="spine-label">Charlie Fuller &nbsp;·&nbsp; Visual Explainers</div></div>
 
-    <h1>Visual Explainers</h1>
-    <p class="subtitle">Architecture overviews, process maps, maturity models, and audit reports</p>
+  <div class="content">
 
-    <!-- Overview -->
-    <details class="section" open>
-      <summary>Overview</summary>
-      <div class="section-body">
-        <div class="links">
-          <a href="ip-portfolio.html" class="card-link"><span class="card-title">The Living Corpus — Method, Insight, Style, Vision</span><span class="card-desc">How the work gets made. 2.5 years, 1.4M+ tests, 30+ workflows, 15 MVPs &amp; POCs, 4.5K+ evals &amp; iterations.</span></a>
-          <a href="portfolio-full-showcase.html" class="card-link"><span class="card-title">Full Portfolio — What Got Built</span><span class="card-desc">Everything across all projects. 6 platforms, 50+ agents, 132 visual explainers.</span></a>
-          <a href="ai-stack-operating-model.html" class="card-link"><span class="card-title">What We're Talking About When We Talk About AI Transformation</span><span class="card-desc">The three-layer stack: why the model is a commodity, the harness is replicable, and the operating model is the real constraint.</span></a>
-          <a href="cognition-vs-ai-offloading.html" class="card-link"><span class="card-title">The Offloading Line</span><span class="card-desc">Where to hold the line against AI — judgment versus production, seven seams, one border test, and the plan to keep your own cognition sharp.</span></a>
+    <div class="masthead">
+      <h1>Visual Explainers</h1>
+      <div class="masthead-num">12</div>
+    </div>
+    <p class="lede">Architecture overviews, process maps, maturity models, and audit reports</p>
 
-        </div>
-      </div>
-    </details>
+    <div class="links">
+      <a href="overview.html" class="link"><span class="link-num">01</span><span class="link-title">Overview</span><span class="link-count">4 pages</span></a>
+      <a href="aesop.html" class="link"><span class="link-num">02</span><span class="link-title">AESOP Transformation OS</span><span class="link-count">46 pages</span></a>
+      <a href="legal/index.html" class="link"><span class="link-num">03</span><span class="link-title">Legal</span><span class="link-count">portfolio</span></a>
+      <a href="csm/index.html" class="link"><span class="link-num">04</span><span class="link-title">Customer Success</span><span class="link-count">7 diagrams</span></a>
+      <a href="deal-desk/deterministic-to-probabilistic-path.html" class="link"><span class="link-num">05</span><span class="link-title">Decision Architecture</span><span class="link-count">process map</span></a>
+      <a href="initiatives.html" class="link"><span class="link-num">06</span><span class="link-title">Enterprise Initiatives</span><span class="link-count">5 pages</span></a>
+      <a href="claude-skills.html" class="link"><span class="link-num">07</span><span class="link-title">Claude Skills</span><span class="link-count">5 pages</span></a>
+      <a href="other-projects.html" class="link"><span class="link-num">08</span><span class="link-title">Other Projects</span><span class="link-count">2 pages</span></a>
+      <a href="ai-transformation-experiment.html" class="link"><span class="link-num">09</span><span class="link-title">AI Transformation Experiment</span><span class="link-count">11 pages</span></a>
+      <a href="enablement.html" class="link"><span class="link-num">10</span><span class="link-title">Enablement</span><span class="link-count">3 pages</span></a>
+      <a href="career/job-search-funnel.html" class="link"><span class="link-num">11</span><span class="link-title">Career</span><span class="link-count">funnel</span></a>
+      <a href="fitness/post-surgery-recovery.html" class="link"><span class="link-num">12</span><span class="link-title">Fitness</span><span class="link-count">recovery</span></a>
+    </div>
 
-    <!-- AESOP -->
-    <details class="section">
-      <summary>AESOP Transformation OS</summary>
-      <div class="section-body">
-
-        <details class="subsection">
-          <summary>Platform</summary>
-          <div class="links">
-            <a href="portfolio/aesop-studio-overview.html" class="card-link"><span class="card-title">AESOP — Executive Overview</span><span class="card-desc">What the platform does for the business — safety, accountability, and scale.</span></a>
-            <a href="portfolio/aesop-studio-showcase.html" class="card-link"><span class="card-title">AESOP — Full Platform Showcase</span><span class="card-desc">Complete technical walkthrough of every stage, agent, and evaluation mode.</span></a>
-            <a href="aesop/aesop-pipeline-flow.html" class="card-link"><span class="card-title">Full Pipeline Flow</span><span class="card-desc">All 10 stages from Organization Context through Monitoring, with metrics.</span></a>
-            <a href="portfolio/aesop-platform-overview.html" class="card-link"><span class="card-title">Platform Overview</span><span class="card-desc">High-level architecture and platform capabilities.</span></a>
-            <a href="portfolio/aesop-architecture.html" class="card-link"><span class="card-title">Architecture</span><span class="card-desc">System architecture and component relationships.</span></a>
-            <a href="portfolio/aesop-pipeline.html" class="card-link"><span class="card-title">Pipeline</span><span class="card-desc">Stage-by-stage pipeline mechanics and handoffs.</span></a>
-            <a href="aesop/aesop-current-vs-langgraph.html" class="card-link"><span class="card-title">Current vs LangGraph</span><span class="card-desc">Side-by-side comparison: hand-built orchestration vs declared graph with checkpointing and crash recovery.</span></a>
-            <a href="portfolio/aesop-operationalization.html" class="card-link"><span class="card-title">Operationalization</span><span class="card-desc">Launch package: RACI, Tiger Team brief, maintenance and adoption plans.</span></a>
-            <a href="portfolio/aesop-tech-agents.html" class="card-link"><span class="card-title">Technical Agents</span><span class="card-desc">The 30+ agents that power evaluation, building, and repair.</span></a>
-            <a href="aesop/aesop-os-decision-flow.html" class="card-link"><span class="card-title">Decision Flow</span><span class="card-desc">How decisions move through the platform.</span></a>
-            <a href="aesop/aesop-platform-options.html" class="card-link"><span class="card-title">Platform Options</span><span class="card-desc">All 7 platform targets — enterprise, API agents, and deployment targets — with scoring logic.</span></a>
-          </div>
-        </details>
-
-
-        <details class="subsection">
-          <summary>Discovery</summary>
-          <div class="links">
-            <a href="aesop/authored-discovery-two-phase.html" class="card-link"><span class="card-title">Two-Phase Authored Discovery</span><span class="card-desc">How AESOP moves from mapping what exists (Phase 1) to questioning structural assumptions (Phase 2) — before anything gets built.</span></a>
-            <a href="portfolio/purdy-showcase.html" class="card-link"><span class="card-title">Project Requirements Discovery</span><span class="card-desc">PRD generation pipeline — plan, gather, synthesize, export.</span></a>
-            <a href="aesop/aesop-executive-intake-pipeline.html" class="card-link"><span class="card-title">Executive Intake → Roadmap</span><span class="card-desc">How executive input flows through intake to a roadmap process map.</span></a>
-            <a href="aesop/aesop-user-input-trace.html" class="card-link"><span class="card-title">What Happens to User Input</span><span class="card-desc">Full scoring trace from user submission through triage and prioritization.</span></a>
-          </div>
-        </details>
-
-        <details class="subsection">
-          <summary>Methodology</summary>
-          <div class="links">
-            <a href="aesop/ai-maturity-model-executive.html" class="card-link"><span class="card-title">AI Maturity Model — Executive</span><span class="card-desc">Five levels of organizational AI maturity, scored and visualized.</span></a>
-            <a href="aesop/ai-maturity-model.html" class="card-link"><span class="card-title">AI Maturity Model — Full</span><span class="card-desc">Complete model with all dimensions and scoring criteria.</span></a>
-            <a href="aesop/implementation-cycle.html" class="card-link"><span class="card-title">Implementation Cycle</span><span class="card-desc">How projects move through the full lifecycle.</span></a>
-            <a href="aesop/aesop-togaf-mapping.html" class="card-link"><span class="card-title">TOGAF ↔ AESOP OS — Framework Mapping</span><span class="card-desc">Maps the TOGAF enterprise architecture framework to the AESOP Transformation OS.</span></a>
-            <a href="aesop/aesop-togaf-core.html" class="card-link"><span class="card-title">TOGAF ↔ AESOP OS — Core Mappings</span><span class="card-desc">The essential TOGAF-to-AESOP mappings, condensed.</span></a>
-          </div>
-        </details>
-
-        <details class="subsection">
-          <summary>Adoption Roadmaps</summary>
-          <div class="links">
-            <a href="portfolio/roadmap-showcase.html" class="card-link"><span class="card-title">Example Roadmap</span><span class="card-desc">Sample AI Adoption Roadmap deliverable — Gulf Coast Marine &amp; Yacht.</span></a>
-            <a href="aesop/smb-ai-readiness-roadmap.html" class="card-link"><span class="card-title">SMB AI Readiness Roadmap — Technical</span><span class="card-desc">Technical readiness assessment and staged adoption path.</span></a>
-            <a href="aesop/smb-ai-adoption-roadmap-business.html" class="card-link"><span class="card-title">SMB AI Adoption Roadmap — Business</span><span class="card-desc">Business-focused adoption stages with organizational readiness gates.</span></a>
-          </div>
-        </details>
-
-        <details class="subsection">
-          <summary>Evaluations</summary>
-          <div class="links">
-            <a href="portfolio/aesop-cave-of-shadows.html" class="card-link"><span class="card-title">Cave of Shadows</span><span class="card-desc">Red-team adversarial testing with attack personas.</span></a>
-            <a href="portfolio/aesop-hydra.html" class="card-link"><span class="card-title">Hydra</span><span class="card-desc">Functional regression testing across agent versions.</span></a>
-            <a href="portfolio/aesop-bias-probe.html" class="card-link"><span class="card-title">Bias Probe</span><span class="card-desc">Differential fairness testing across demographics.</span></a>
-            <a href="portfolio/aesop-custom-test-suite.html" class="card-link"><span class="card-title">Custom Test Suite</span><span class="card-desc">Domain-specific weighted rubrics for custom evaluations.</span></a>
-            <a href="portfolio/aesop-investigation.html" class="card-link"><span class="card-title">Investigation</span><span class="card-desc">Black-box endpoint discovery and agent analysis.</span></a>
-            <a href="portfolio/aesop-repair.html" class="card-link"><span class="card-title">Repair</span><span class="card-desc">Extended-thinking rewrite with change summary and rationale.</span></a>
-            <a href="portfolio/aesop-trace-analysis.html" class="card-link"><span class="card-title">Trace Analysis</span><span class="card-desc">Decision path inspection through qualitative failure coding.</span></a>
-            <a href="aesop/kb-audit-process.html" class="card-link"><span class="card-title">KB Audit Process</span><span class="card-desc">Knowledge base completeness and coherence audit.</span></a>
-          </div>
-        </details>
-
-        <details class="subsection">
-          <summary>Site Audit</summary>
-          <div class="links">
-            <a href="aesop/aesop-ux-audit.html" class="card-link"><span class="card-title">UX Audit</span><span class="card-desc">User experience audit across the platform.</span></a>
-            <a href="aesop/aesop-color-audit.html" class="card-link"><span class="card-title">Color Audit</span><span class="card-desc">Design system color consistency audit.</span></a>
-            <a href="aesop/aesop-testing-cicd-overview.html" class="card-link"><span class="card-title">Testing &amp; CI/CD — Overview</span><span class="card-desc">High-level testing strategy and CI/CD pipeline design.</span></a>
-            <a href="aesop/aesop-testing-cicd-detailed.html" class="card-link"><span class="card-title">Testing &amp; CI/CD — Detailed</span><span class="card-desc">Detailed test plans and CI/CD configuration.</span></a>
-          </div>
-        </details>
-
-        <details class="subsection">
-          <summary>Research &amp; Context</summary>
-          <div class="links">
-            <a href="aesop/aesop-org-research-process.html" class="card-link"><span class="card-title">Organization Research Process</span><span class="card-desc">Five-stage Deep Research pipeline: Scope → Search → Fetch → Verify → Synthesize.</span></a>
-            <a href="portfolio/aesop-portfolio.html" class="card-link"><span class="card-title">Strategic Portfolio</span><span class="card-desc">Prioritization agent that scores AI project candidates against strategic goals.</span></a>
-            <a href="portfolio/aesop-org-context.html" class="card-link"><span class="card-title">Organization Context</span><span class="card-desc">Deep research and org context capture — the foundation every agent is built against.</span></a>
-          </div>
-        </details>
-
-        <details class="subsection">
-          <summary>Governance</summary>
-          <div class="links">
-            <a href="portfolio/aesop-delegation-readiness.html" class="card-link"><span class="card-title">Delegation &amp; Readiness</span><span class="card-desc">Assesses organizational readiness for AI delegation and autonomy.</span></a>
-            <a href="portfolio/aesop-regulatory-mapping.html" class="card-link"><span class="card-title">Regulatory Mapping</span><span class="card-desc">Maps regulatory requirements to agent evaluation criteria.</span></a>
-          </div>
-        </details>
-
-        <details class="subsection">
-          <summary>Plans</summary>
-          <div class="links">
-            <a href="aesop/clarity-engine-map.html" class="card-link"><span class="card-title">Clarity Engine</span><span class="card-desc">Three-layer diagnostic map for organizational AI readiness.</span></a>
-            <a href="aesop/governance-archetype.html" class="card-link"><span class="card-title">Governance Archetype</span><span class="card-desc">Portfolio governance pipeline — intake, approvals, research, materials, and portfolio refresh — built on existing AESOP infrastructure.</span></a>
-          </div>
-        </details>
-
-        <details class="subsection">
-          <summary>Onboarding</summary>
-          <div class="links">
-            <a href="aesop/aesop-onboarding.html" class="card-link"><span class="card-title">AESOP Onboarding</span><span class="card-desc">End-to-end client onboarding flow — intake through first roadmap delivery.</span></a>
-          </div>
-        </details>
-
-        <details class="subsection">
-          <summary>Consulting</summary>
-          <div class="links">
-            <a href="portfolio/index.html" class="card-link"><span class="card-title">Consulting Portfolio</span><span class="card-desc">AESOP Transformation OS — AI agent governance and operationalization consulting. Full lifecycle, connected.</span></a>
-            <a href="portfolio/consultant-offer.html" class="card-link"><span class="card-title">Consultant Offer</span><span class="card-desc">AI transformation consulting services — what's included, pricing, and engagement model.</span></a>
-          </div>
-        </details>
-
-        <details class="subsection">
-          <summary>Integrations</summary>
-          <div class="links">
-            <a href="aesop/monday-platform-capabilities.html" class="card-link"><span class="card-title">Monday.com Integration</span><span class="card-desc">Monday.com as the work-management front-end, wired into the AESOP Transformation OS.</span></a>
-          </div>
-        </details>
-
-      </div>
-    </details>
-
-    <!-- Legal -->
-    <details class="section" id="legal">
-      <summary>Legal</summary>
-      <div class="section-body">
-        <a href="legal/index.html" class="card-link"><span class="card-title">Legal Engineering — Portfolio</span><span class="card-desc">The whole of the legal work, one page: the specialization, the shipped proof, the Descrybe-backed cite-check, the client engagement, and the economics.</span></a>
-
-      </div>
-    </details>
-
-    <!-- Customer Success -->
-    <details class="section" id="customer-success">
-      <summary>Customer Success</summary>
-      <div class="section-body">
-        <a href="csm/index.html" class="card-link"><span class="card-title">AI in Customer Success</span><span class="card-desc">Seven diagrams on one through-line &mdash; the risk math is code, the language is the model, the trust is the moat: the triage agent, the approach, the territory, the fix, the role, the time saved by the build, and the storage architecture at scale.</span></a>
-
-      </div>
-    </details>
-
-    <!-- Decision Architecture -->
-    <details class="section">
-      <summary>Decision Architecture</summary>
-      <div class="section-body">
-        <div class="links">
-          <a href="deal-desk/deterministic-to-probabilistic-path.html">
-            <svg class="icon-svg" viewBox="0 0 24 24"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
-            Deterministic to Probabilistic &mdash; Process Map
-          </a>
-        </div>
-      </div>
-    </details>
-
-    <!-- Enterprise Initiatives -->
-    <details class="section">
-      <summary>Enterprise Initiatives</summary>
-      <div class="section-body">
-        <div class="links">
-          <a href="initiatives/initiative-ranked-scores.html">
-            <svg class="icon-svg" viewBox="0 0 24 24"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
-            Ranked Scores
-          </a>
-          <a href="initiatives/initiative-scatterplot.html">
-            <svg class="icon-svg" viewBox="0 0 24 24"><circle cx="6" cy="14" r="1.5"/><circle cx="10" cy="8" r="1.5"/><circle cx="14" cy="12" r="1.5"/><circle cx="18" cy="5" r="1.5"/><circle cx="8" cy="17" r="1.5"/></svg>
-            Scatterplot
-          </a>
-          <a href="initiatives/initiative-scoring-review.html">
-            <svg class="icon-svg" viewBox="0 0 24 24"><circle cx="11" cy="11" r="6"/><line x1="16" y1="16" x2="21" y2="21"/></svg>
-            Scoring Review
-          </a>
-          <a href="initiatives/initiative-synergies.html">
-            <svg class="icon-svg" viewBox="0 0 24 24"><circle cx="6" cy="6" r="2"/><circle cx="18" cy="6" r="2"/><circle cx="12" cy="14" r="2"/><line x1="7" y1="7.5" x2="11" y2="12.5"/><line x1="17" y1="7.5" x2="13" y2="12.5"/></svg>
-            Synergies
-          </a>
-          <a href="initiatives/initiative-venn.html">
-            <svg class="icon-svg" viewBox="0 0 24 24"><circle cx="9" cy="12" r="6"/><circle cx="15" cy="12" r="6"/></svg>
-            Venn Diagram
-          </a>
-        </div>
-      </div>
-    </details>
-
-    <!-- Claude Skills -->
-    <details class="section">
-      <summary>Claude Skills</summary>
-      <div class="section-body">
-        <div class="links">
-          <a href="clode/prd-skill-stages.html" class="card-link"><span class="card-title">PRD Skill &mdash; Stages &amp; Information Flow</span><span class="card-desc">How the PRD skill runs Socratic discovery across four depth levels, seven phases, and six reference files.</span></a>
-          <a href="clode/diagrams-skill.html" class="card-link"><span class="card-title">Diagrams Skill &mdash; Page Builder Pipeline</span><span class="card-desc">How the diagrams skill builds self-contained HTML pages with Gulf Stream Racing theme, Mermaid diagrams, and theme toggle.</span></a>
-          <a href="clode/transcript-analysis-skill.html" class="card-link"><span class="card-title">Transcript Analysis Skill &mdash; Discovery Pipeline</span><span class="card-desc">How the Transcript Analysis skill transforms meeting transcripts into structured discovery reports with explicit and implicit signal detection.</span></a>
-          <a href="clode/cite-check-skill.html" class="card-link"><span class="card-title">Cite-Check Skill &mdash; Authority Verification Pipeline</span><span class="card-desc">How the cite-check skill verifies every citation and quote in a filing against Descrybe — existence, correct cite, good-law status, and word-for-word accuracy.</span></a>
-          <a href="clode/career-strategist-skill.html" class="card-link"><span class="card-title">Career Strategist Skill &mdash; Architecture &amp; Information Flow</span><span class="card-desc">How the career-strategist skill processes career questions through triage, three execution modes, tiered file loading, and guardrails.</span></a>
-        </div>
-      </div>
-    </details>
-
-    <!-- Other Projects -->
-    <details class="section">
-      <summary>Other Projects</summary>
-      <div class="section-body">
-        <div class="links">
-          <a href="portfolio/waifinder-assistant-showcase.html" class="card-link">
-            <span class="card-title">Waifinder Assistant</span>
-            <span class="card-desc">AI-powered career guidance for professionals transitioning into AI consulting</span>
-          </a>
-          <a href="supply-chain/supply-chain-agentic-demo-architecture.html" class="card-link">
-            <span class="card-title">Supply Chain Agentic Demo — System Architecture</span>
-            <span class="card-desc">Seven supply chain agents across a planning platform and a lakehouse: split-screen demo UI, human-in-the-loop approvals, and visible agent handoffs.</span>
-          </a>
-        </div>
-      </div>
-    </details>
-
-    <!-- SWT Experiment -->
-    <details class="section" open>
-      <summary>AI Transformation Experiment</summary>
-      <div class="section-body">
-        <div class="links">
-          <a href="other/ai-transformation-how-it-works.html" class="card-link">
-            <span class="card-title">How It Works (Plain English)</span>
-            <span class="card-desc">Start here. No background needed &mdash; what a claim is, what a seam is, and how one round of the two-team race runs, explained like a game of telephone and a relay race.</span>
-          </a>
-          <a href="other/ai-transformation-is-it-fair.html" class="card-link">
-            <span class="card-title">Is It Fair? (Plain English)</span>
-            <span class="card-desc">How we keep the simulation honest and grounded &mdash; the six safeguards against rigging, the real-company data it's built on, and the awkward result that proves it fights back.</span>
-          </a>
-          <a href="other/ai-transformation-report.html" class="card-link">
-            <span class="card-title">Findings Report</span>
-            <span class="card-desc">The full arc: theory, instrument, two seeds of data, and the adversarial audit that found the simulation was rigged toward the answer I wanted.</span>
-          </a>
-          <a href="other/ai-transformation-experiment.html" class="card-link">
-            <span class="card-title">Experiment Overview</span>
-            <span class="card-desc">A controlled simulation comparing organic AI discovery against traditional change management inside Progressive Insurance — 16 sprints, two tracks, one question.</span>
-          </a>
-          <a href="other/swt-track-alignment.html" class="card-link">
-            <span class="card-title">Track A — SWT Framework Alignment</span>
-            <span class="card-desc">How each SWT principle maps to a concrete simulation component, the 8 concerns we measure, and the 6 gaps we operationalized.</span>
-          </a>
-          <a href="other/trackb-alignment.html" class="card-link">
-            <span class="card-title">Track B — Traditional Change Management</span>
-            <span class="card-desc">Kotter's 8 Steps, Prosci ADKAR, McKinsey 7S — the standard enterprise playbook, executed well. What it measures, what it focuses on, what it does not do.</span>
-          </a>
-          <a href="other/measurement-validation.html" class="card-link">
-            <span class="card-title">Measurement, Validation &amp; Proof Framework</span>
-            <span class="card-desc">How we capture results, measure transformation across 6 dimensions, audit every output, and prove the simulation is valid.</span>
-          </a>
-          <a href="other/ai-transformation-workflows.html" class="card-link">
-            <span class="card-title">Workflow Architecture</span>
-            <span class="card-desc">The three simulated business workflows — auto claims, commercial underwriting, and subrogation — how they connect, where AI inserts, and the seams where translation debt accumulates.</span>
-          </a>
-          <a href="other/ai-transformation-results.html" class="card-link">
-            <span class="card-title">Results Dashboard</span>
-            <span class="card-desc">Live results from the latest simulation run — metric divergence, discovery engine outputs, THEARI phase progression, and agent behavior breakdown.</span>
-          </a>
-          <a href="other/ai-transformation-runs.html" class="card-link">
-            <span class="card-title">Cross-Run Results</span>
-            <span class="card-desc">Every run side by side — which outcome patterns hold across seeds and which are per-run noise. The "robust, not fragile" evidence.</span>
-          </a>
-          <a href="other/ai-transformation-revisions.html" class="card-link">
-            <span class="card-title">Revision Log</span>
-            <span class="card-desc">The four rounds of fixing the model itself — what each sweep showed, the mechanism behind it, and what a better Track A and Track B each teach us.</span>
-          </a>
-        </div>
-      </div>
-    </details>
-
-    <!-- Enablement -->
-    <details class="section">
-      <summary>Enablement</summary>
-      <div class="section-body">
-        <div class="links">
-          <a href="enablement/enablement-strategy.html" class="card-link"><span class="card-title">Enablement Strategy</span><span class="card-desc">How Charlie makes AI adoption real: mandate, contract, and capability at three levels, bound by measured evidence instead of enthusiasm.</span></a>
-          <a href="enablement/bedrock-curriculum.html" class="card-link"><span class="card-title">BEDROCK Curriculum</span><span class="card-desc">Five cognitive shifts that turn tacit expertise into a transferable, tool-agnostic assistant spec — your expertise is the bedrock.</span></a>
-          <a href="the-harness.html" class="card-link"><span class="card-title">The Harness</span><span class="card-desc">Agent architecture, under the hood — the model is the engine, one combustion stroke per call; the harness is everything bolted around it. What "agent" actually means.</span></a>
-        </div>
-      </div>
-    </details>
-
-    <!-- Career -->
-    <details class="section">
-      <summary>Career</summary>
-      <div class="section-body">
-        <div class="links">
-          <a href="career/job-search-funnel.html" class="card-link"><span class="card-title">Job Search Funnel</span><span class="card-desc">Sankey diagram of 79 job applications through the funnel — from LinkedIn and Indeed through ghosted, no-thanks, interviews, and offers.</span></a>
-        </div>
-      </div>
-    </details>
-
-    <!-- Fitness -->
-    <details class="section">
-      <summary>Fitness</summary>
-      <div class="section-body">
-        <div class="links">
-          <a href="fitness/post-surgery-recovery.html" class="card-link"><span class="card-title">Post-Surgery Cardiac Recovery</span><span class="card-desc">PM FTP, heart rate, efficiency, and decoupling over 4 years — tracking cardiac recovery after heart surgery with temperature and indoor/outdoor compensation.</span></a>
-        </div>
-      </div>
-    </details>
+    <div class="footer">
+      <div class="rule-line">&copy; 2025-2026 Charlie Fuller &nbsp;&middot;&nbsp; <a href="https://linkedin.com/in/charlie-fuller-colorado/" target="_blank" rel="noopener">LinkedIn</a></div>
+    </div>
 
   </div>
-
-  <script>
-    /* Theme toggle */
-    (function() {
-      var html = document.documentElement;
-      var toggle = document.getElementById('themeToggle');
-      if (!toggle) return;
-
-      var lightIcon = toggle.querySelector('.icon-light');
-      var darkIcon = toggle.querySelector('.icon-dark');
-      if (!lightIcon || !darkIcon) return;
-
-      function setTheme(isDark) {
-        if (isDark) { html.classList.add('dark'); lightIcon.style.display='none'; darkIcon.style.display='inline'; }
-        else { html.classList.remove('dark'); lightIcon.style.display='inline'; darkIcon.style.display='none'; }
-        localStorage.setItem('theme', isDark ? 'dark' : 'light');
-      }
-
-      var saved = localStorage.getItem('theme');
-      setTheme(saved === 'dark');
-
-      toggle.addEventListener('click', function() {
-        setTheme(!html.classList.contains('dark'));
-      });
-    })();
-
-    /* Remember panel + subsection open/close state */
-    (function() {
-      var SECTION_KEY = 'diagrams-index-panels';
-      var SUBSECTION_KEY = 'diagrams-index-subpanels';
-      var restoring = false;
-
-      function save() {
-        if (restoring) return;
-        // Top-level sections
-        var openSections = [];
-        document.querySelectorAll('details.section').forEach(function(d, i) {
-          if (d.open) openSections.push(i);
-        });
-        localStorage.setItem(SECTION_KEY, JSON.stringify(openSections));
-
-        // Nested subsections — keyed by section index
-        var openSubs = {};
-        document.querySelectorAll('details.section').forEach(function(section, si) {
-          var subs = section.querySelectorAll('details.subsection');
-          var openIndices = [];
-          subs.forEach(function(sub, i) { if (sub.open) openIndices.push(i); });
-          if (openIndices.length) openSubs[si] = openIndices;
-        });
-        localStorage.setItem(SUBSECTION_KEY, JSON.stringify(openSubs));
-      }
-
-      function restore() {
-        restoring = true;
-        // Restore top-level sections
-        var openSections = JSON.parse(localStorage.getItem(SECTION_KEY) || '[0]');
-        document.querySelectorAll('details.section').forEach(function(d, i) {
-          d.open = openSections.indexOf(i) !== -1;
-        });
-
-        // Restore subsections
-        var openSubs = JSON.parse(localStorage.getItem(SUBSECTION_KEY) || '{}');
-        document.querySelectorAll('details.section').forEach(function(section, si) {
-          if (!openSubs[si]) return;
-          var subs = section.querySelectorAll('details.subsection');
-          subs.forEach(function(sub, i) {
-            sub.open = openSubs[si].indexOf(i) !== -1;
-          });
-        });
-        restoring = false;
-      }
-
-      document.querySelectorAll('details.section, details.subsection').forEach(function(d) {
-        d.addEventListener('toggle', save);
-      });
-      restore();
-    })();
-
-    /* Deep-link: open a specific section via URL hash */
-    (function() {
-      var hash = location.hash.replace('#', '');
-      if (!hash) return;
-      var target = document.getElementById(hash);
-      if (!target) return;
-
-      // Close all top-level sections, open only the target
-      document.querySelectorAll('details.section').forEach(function(d) { d.open = false; });
-      target.open = true;
-
-
-      target.style.scrollMarginTop = '80px';
-      target.scrollIntoView({ block: 'start' });
-    })();
-  </script>
+</div>
 
 </body>
 </html>
