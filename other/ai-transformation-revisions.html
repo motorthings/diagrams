@@ -2,285 +2,325 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
+<link rel="icon" type="image/svg+xml" href="../icon.svg">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Simulation Revision Log — AI Transformation Experiment</title>
+<title>AI Transformation Experiment &mdash; Revision Log</title>
+<meta name="description" content="The rounds of fixing the simulation model itself: what each sweep showed, the mechanism behind it, and what a better Track A and Track B each teach us.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,wght@0,400;0,500;0,600;0,700;0,800;1,400&family=Source+Code+Pro:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Public+Sans:wght@400;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
 <style>
   :root {
-    --font-display: 'Fraunces', Georgia, serif;
-    --font-mono: 'Source Code Pro', 'SF Mono', Consolas, monospace;
-    --bg: #eef4f9; --surface: #ffffff; --surface2: #f5f8fc;
-    --border: #c8daea; --border-bright: #a0bedb;
-    --text: #0a1628; --text-dim: #3d5a7a; --text-muted: #7a9ab8;
-    --primary: #e8621a; --primary-dim: rgba(232,98,26,0.06);
-    --secondary: #4a90c4; --secondary-dim: rgba(74,144,196,0.06);
-    --metric: #0f766e; --metric-dim: rgba(15,118,110,0.06);
-    --warn: #b45309; --warn-dim: rgba(180,83,9,0.08);
-    --trackb: #7c3aed; --trackb-dim: rgba(124,58,237,0.06);
+    --font-display: 'Instrument Serif', Georgia, serif;
+    --font-body: 'Public Sans', system-ui, sans-serif;
+    --font-mono: 'JetBrains Mono', 'SF Mono', monospace;
+    --ink: #1a2740; --graphite: #2c3b57; --body: #3f4f6b; --muted: #7a879c;
+    --rule: #c8c5b2; --row: #e6e3d2; --sheet: #f7f7f2; --desk: #ebeae0;
+    --spine: #1a2740; --spine-fg: #f7f7f2;
+    --accent: #b45309; --amber: #a16207; --blue: #4f46e5; --teal: #0f766e; --violet: #7a3ea0; --rose: #b3342a;
   }
-  html.dark {
-    --bg: #0a1628; --surface: #132240; --surface2: #1a2d52;
-    --border: #1a2d52; --border-bright: #2d4570;
-    --text: #e8edf5; --text-dim: #9bb0d4; --text-muted: #5e7aa3;
-    --primary: #f37021; --primary-dim: rgba(243,112,33,0.10);
-    --secondary: #6cace4; --secondary-dim: rgba(108,172,228,0.10);
-    --metric: #2dd4bf; --metric-dim: rgba(45,212,191,0.08);
-    --warn: #f59e0b; --warn-dim: rgba(245,158,11,0.12);
-    --trackb: #a78bfa; --trackb-dim: rgba(167,139,250,0.10);
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { background: var(--desk); color: var(--body); font-family: var(--font-body); font-size: 17px; line-height: 1.66; -webkit-font-smoothing: antialiased; text-rendering: optimizeLegibility; }
+  .topbar { max-width: 1160px; margin: 0 auto; padding: 18px 28px 6px; }
+  .backlink a { font-size: 14px; color: var(--muted); text-decoration: none; }
+  .backlink a:hover { color: var(--ink); }
+  .backlink .arr { color: var(--accent); font-size: 15px; margin-right: 2px; }
+
+  .sheet { max-width: 1160px; margin: 6px auto 72px; background: var(--sheet); display: grid; grid-template-columns: 56px 1fr; }
+  .spine { background: var(--spine); display: flex; align-items: flex-end; justify-content: center; padding: 26px 0; }
+  .spine-label { writing-mode: vertical-rl; transform: rotate(180deg); font-family: var(--font-mono); font-size: 13px; letter-spacing: 0.22em; color: var(--spine-fg); white-space: nowrap; text-transform: uppercase; }
+  .content { padding: 48px 60px 6px; min-width: 0; }
+
+  .masthead { border-bottom: 3px solid var(--ink); padding-bottom: 16px; }
+  .masthead h1 { font-family: var(--font-display); font-weight: 400; font-size: 48px; line-height: 0.98; letter-spacing: -0.028em; color: var(--ink); }
+  .tagline { font-family: var(--font-mono); font-size: 11.5px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.14em; color: var(--accent); margin: 10px 0 14px; }
+  .lede { font-family: var(--font-display); font-style: italic; font-size: 19px; line-height: 1.5; color: var(--graphite); max-width: 940px; }
+  .lede b { color: var(--ink); }
+
+  section.sec { border-top: 3px solid var(--ink); padding: 20px 0 2px; }
+  .sec-title { display: grid; grid-template-columns: 88px 1fr; gap: 0 22px; align-items: baseline; margin-bottom: 4px; }
+  .sec-title .n { font-family: var(--font-display); font-size: 30px; line-height: 0.9; color: var(--accent); }
+  .sec-title h2 { font-size: 22px; font-weight: 700; letter-spacing: -0.012em; color: var(--ink); }
+  .sec-title h2 .k { font-family: var(--font-mono); font-size: 10.5px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.1em; vertical-align: middle; margin-left: 10px; padding: 2px 8px; border: 1px solid; }
+  .sec-title h2 .k.r-amb { color: var(--amber); border-color: var(--amber); }
+  .sec-title h2 .k.r-vio { color: var(--violet); border-color: var(--violet); }
+  .sec-title h2 .k.r-teal { color: var(--teal); border-color: var(--teal); }
+  .sec-body { padding: 0 0 6px 110px; }
+  .sec-body p, .sec-body p.lead { max-width: 940px; margin-bottom: 12px; }
+  .sec-body p.nb { margin-bottom: 0; }
+  .sec-body b, .sec-body strong { color: var(--ink); }
+  .sec-body em { color: var(--graphite); }
+  .score { font-family: var(--font-mono); font-size: 13px; color: var(--teal); background: var(--row); padding: 6px 12px; display: inline-block; margin: 4px 0 12px; line-height: 1.5; }
+  .score b { color: var(--ink); }
+  .lab { font-family: var(--font-mono); font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.14em; color: var(--accent); margin: 16px 0 4px; }
+  .sec-body ol { margin: 4px 0 8px 22px; max-width: 900px; }
+  .sec-body ol li { margin-bottom: 9px; font-size: 15px; line-height: 1.6; }
+  .sec-body ol li b, .sec-body ul li b { color: var(--ink); }
+  .sec-body ul { margin: 4px 0 8px 22px; max-width: 900px; }
+  .sec-body ul li { margin-bottom: 8px; font-size: 15px; line-height: 1.6; }
+  .close { margin-top: 16px; border-top: 1px solid var(--rule); padding-top: 12px; font-size: 15px; line-height: 1.65; color: var(--body); max-width: 940px; }
+  .close b { color: var(--ink); }
+  .box { border-top: 1px solid var(--row); border-bottom: 1px solid var(--row); padding: 10px 0 4px; margin: 4px 0 4px; }
+
+  table.tbl { width: 100%; border-collapse: collapse; margin: 8px 0 4px; }
+  .tbl th { text-align: left; font-family: var(--font-mono); font-size: 10px; font-weight: 600; color: var(--muted); padding: 6px 14px 8px 0; border-bottom: 2px solid var(--ink); letter-spacing: 0.04em; text-transform: uppercase; }
+  .tbl td { padding: 8px 14px 8px 0; border-bottom: 1px solid var(--row); font-family: var(--font-mono); font-size: 13px; color: var(--body); }
+  .tbl tr:last-child td { border-bottom: none; }
+  .tbl td.rn { color: var(--ink); font-weight: 600; }
+  .tbl .wA { color: var(--blue); font-weight: 700; } .tbl .wB { color: var(--violet); font-weight: 700; }
+  .tbl .tie { color: var(--teal); font-weight: 700; }
+
+  .footer { border-top: 3px solid var(--ink); margin: 26px 0 0; padding: 18px 0 30px; display: flex; justify-content: space-between; gap: 20px; flex-wrap: wrap; font-family: var(--font-mono); font-size: 11.5px; color: var(--muted); }
+  .footer a { color: var(--accent); text-decoration: none; }
+
+  @media (max-width: 900px) {
+    .sheet { grid-template-columns: 40px 1fr; }
+    .spine-label { font-size: 11px; }
+    .content { padding: 32px 22px 4px; }
+    .masthead h1 { font-size: 36px; }
+    .sec-title { grid-template-columns: 50px 1fr; }
+    .sec-title .n { font-size: 25px; }
+    .sec-body { padding-left: 0; }
+    body { font-size: 16px; }
   }
-  * { margin:0; padding:0; box-sizing:border-box; }
-  body { background:var(--bg); color:var(--text); font-family:var(--font-display); min-height:100vh; line-height:1.65; padding:0 32px 64px; }
-  .container { max-width:1080px; margin:0 auto; }
-  .backlink { position:fixed; top:12px; left:16px; z-index:101; font-family:var(--font-mono); font-size:12px; color:var(--text-dim); text-decoration:none; padding:6px 10px; border:1px solid var(--border); border-radius:6px; background:var(--surface); }
-  .backlink:hover { color:var(--primary); border-color:var(--primary); }
-  .nav { position:sticky; top:0; z-index:100; backdrop-filter:blur(16px); background:color-mix(in srgb, var(--surface) 85%, transparent); border-bottom:1px solid var(--border); margin:0 -32px 28px; padding:0 32px; }
-  .nav-inner { max-width:1080px; margin:0 auto; padding:10px 0; display:flex; align-items:center; justify-content:space-between; }
-  .nav-brand { font-family:var(--font-mono); font-size:11px; font-weight:600; letter-spacing:0.5px; color:var(--metric); }
-  .theme-toggle { width:32px; height:32px; border-radius:8px; border:1px solid var(--border); background:var(--surface); cursor:pointer; font-size:14px; color:var(--text-dim); }
-  .theme-toggle:hover { border-color:var(--primary); color:var(--primary); }
-  .hero { text-align:center; padding:36px 0 28px; }
-  .hero h1 { font-size:44px; font-weight:700; letter-spacing:-0.5px; color:var(--metric); margin-bottom:10px; }
-  .hero .lead { font-size:19px; color:var(--text-dim); max-width:720px; margin:0 auto; }
-  h2 { font-size:24px; font-weight:700; margin:44px 0 18px; color:var(--text); }
-  h3 { font-size:17px; font-weight:700; margin:20px 0 8px; color:var(--text); }
-  p { color:var(--text-dim); margin:0 0 14px; font-size:16px; }
-  p strong { color:var(--text); }
-
-  .round { background:var(--surface); border:1px solid var(--border); border-left:3px solid var(--primary); border-radius:0 10px 10px 0; padding:20px 24px; margin:18px 0; }
-  .round h3 { font-family:var(--font-mono); font-size:12px; font-weight:700; text-transform:uppercase; letter-spacing:0.6px; color:var(--primary); margin:0 0 10px; }
-  .score { font-family:var(--font-mono); font-size:13px; color:var(--metric); background:var(--metric-dim); border-radius:6px; padding:8px 12px; display:inline-block; margin:0 0 12px; }
-  .label { font-family:var(--font-mono); font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:0.5px; color:var(--text-muted); margin:14px 0 4px; }
-
-  table { width:100%; border-collapse:collapse; margin:16px 0; font-family:var(--font-mono); font-size:13px; background:var(--surface2); border:1px solid var(--border); border-radius:8px; overflow:hidden; }
-  th { text-align:left; padding:10px 14px; border-bottom:2px solid var(--border); color:var(--text-muted); font-size:11px; text-transform:uppercase; letter-spacing:0.5px; }
-  td { padding:9px 14px; border-bottom:1px solid var(--border); color:var(--text-dim); }
-  td:last-child { font-weight:700; }
-  td.win-a { color:var(--primary); }
-  td.win-b { color:var(--trackb); }
-  td.tie { color:var(--metric); }
-
-  ol { margin:0 0 16px 22px; color:var(--text-dim); }
-  ol li { margin-bottom:10px; font-size:16px; }
-  ol li strong { color:var(--text); }
-
-  .mechanism { background:var(--secondary-dim); border:1px solid var(--border); border-radius:8px; padding:14px 18px; margin:12px 0; }
-  .mechanism li { color:var(--text-dim); }
-
-  .symmetry { background:var(--trackb-dim); border:1px solid var(--border); border-radius:10px; padding:18px 22px; margin:20px 0; }
-  .symmetry p { color:var(--text-dim); }
-
-  .footer { margin-top:48px; padding-top:16px; border-top:1px solid var(--border); text-align:center; font-size:13px; color:var(--text-muted); }
 </style>
 </head>
 <body>
-<a href="../ai-transformation-experiment.html" class="backlink">&larr; AI Transformation Experiment</a>
-<div class="nav"><div class="nav-inner"><span class="nav-brand">SIMULATION REVISION LOG</span><button class="theme-toggle" id="themeToggle" aria-label="Toggle dark mode">&#9788;</button></div></div>
-<div class="container">
 
-  <div class="hero">
-    <h1>Simulation Revision Log</h1>
-    <div class="lead">How the model got aligned. Each round: the numbers, what they showed, why it happened, what we changed.</div>
-  </div>
+<div class="topbar">
+  <div class="backlink"><a href="../ai-transformation-experiment.html"><span class="arr">&larr;</span> AI Transformation Experiment</a></div>
+</div>
 
-  <p>A <strong>seam</strong> is the joint where one step hands work to the next — and where meaning can get lost in the transfer. The metric that matters is <strong>translation debt</strong>: how often meaning gets lost at those seams. Lower is better. A "win" is at least 5 points lower over the second half of the run.</p>
+<div class="sheet">
+  <div class="spine"><div class="spine-label">REVISION LOG</div></div>
 
-  <div class="round">
-    <h3>Round 1 — baseline</h3>
-    <p>Track B was a straw man. It had the phases and the committees but never touched the actual work. Track A got all the real mechanics.</p>
-    <span class="score">Score (mock, 12 sprints): trust gap B&minus;A = &minus;0.73 — the test wanted B ahead and failed</span>
-    <p class="label">What we saw</p>
-    <p>B "improved" nothing because it was wired to do nothing. The contest was decided before it started.</p>
-    <p class="label">What we revised</p>
-    <p>Gave B real mechanics — it standardizes seams in waves, planning ahead, with success on each seam tied to how predictable that seam is, and backsliding under change fatigue. Made translation debt <strong>measured from the actual state of each seam</strong> — is the information actually there or not — instead of scanning the AI's wording for keywords.</p>
-    <p class="label">Why</p>
-    <p>A comparison with one working side isn't a comparison. B needed to pull the same levers as A, just with different dynamics.</p>
-  </div>
+  <div class="content">
 
-  <div class="round">
-    <h3>Round 2 — B has mechanics (mock)</h3>
-    <span class="score">Score (mock, 16 sprints): translation debt A &rarr; 0%, B &rarr; 19%</span>
-    <p class="label">What we saw</p>
-    <p>B now acts, but A still wins on the mock. We suspected the mock flattered A (its predictable "ask for the missing information" behavior feeds A's evidence perfectly) and needed the real thing.</p>
-    <p class="label">What we revised</p>
-    <p>Wired the sweep to real runs, added the knobs that decide the winner — how predictable the seams are, how good the vendor is, how long the horizon, how turbulent the environment, how slow the decision-making.</p>
-    <p class="label">Why</p>
-    <p>The mock only exercises one scenario. The whole point was to see if B could win under B-favoring conditions, and that needs the real model.</p>
-  </div>
+    <header class="masthead">
+      <h1>Simulation Revision Log</h1>
+      <div class="tagline">How the model got aligned</div>
+      <p class="lede">How the model got aligned &mdash; each round: the numbers, what they showed, why it happened, what we changed.</p>
+    </header>
 
-  <div class="round">
-    <h3>Round 3 — first real sweep (6 runs)</h3>
-    <table>
-      <thead><tr><th>run</th><th>A debt</th><th>B debt</th><th>winner</th></tr></thead>
-      <tbody>
-        <tr><td>Predictable &middot; seed 19</td><td>4.6</td><td>22.6</td><td class="win-a">A</td></tr>
-        <tr><td>Predictable &middot; seed 34</td><td>5.7</td><td>23.4</td><td class="win-a">A</td></tr>
-        <tr><td>Judgment &middot; seed 26</td><td>3.2</td><td>25.5</td><td class="win-a">A</td></tr>
-        <tr><td>Judgment &middot; seed 11</td><td>3.1</td><td>26.6</td><td class="win-a">A</td></tr>
-        <tr><td>Mixed &middot; seed 13</td><td>1.9</td><td>21.5</td><td class="win-a">A</td></tr>
-        <tr><td>Mixed &middot; seed 30</td><td>3.6</td><td>21.9</td><td class="win-a">A</td></tr>
-      </tbody>
-    </table>
-    <p class="label">What we saw</p>
-    <p>A won all six, even the "B should win" cell. B's debt pinned at ~21&ndash;27% in every scenario, insensitive to every knob — the signature of a structural bias.</p>
-    <p class="label">Mechanism (from the trace)</p>
-    <p>B's waves standardized the <em>wrong</em> seams — it polished the high-risk-but-already-clean steps while <em>missing</em> the actually-broken predictable one (the coverage check) outright. And the seams it did fix backslid almost instantly (claim intake was fixed and reverted in the same sprint). A, meanwhile, fixed the actually-broken seams durably, one observed failure at a time.</p>
-    <p class="label">What we revised (three bugs)</p>
-    <div class="mechanism">
-      <ol>
-        <li><strong>B fixed the wrong seams</strong> — ranked by a static risk score, not by what was actually broken.</li>
-        <li><strong>B's fixes washed off</strong> — backsliding on a flat timer, self-reinforcing.</li>
-        <li><strong>B got one chance</strong> — a missed seam stayed broken forever.</li>
-      </ol>
-    </div>
-    <p class="label">Why</p>
-    <p>Each fix is grounded in what real change management does. Fix what's broken. Backslide under pressure, not on a timer. Keep working what slips.</p>
-  </div>
+    <!-- 00 -->
+    <section class="sec">
+      <div class="sec-title"><span class="n">00</span><h2>Reading the scores</h2></div>
+      <div class="sec-body">
+        <p>A <b>seam</b> is the joint where one step hands work to the next &mdash; and where meaning can get lost in the transfer. The metric that matters is <b>translation debt</b>: how often meaning gets lost at those seams. Lower is better. A &ldquo;win&rdquo; is at least 5 points lower over the second half of the run.</p>
+      </div>
+    </section>
 
-  <div class="round">
-    <h3>Round 4 — fairness fixes (re-running)</h3>
-    <table>
-      <thead><tr><th>run</th><th>A debt</th><th>B debt</th><th>winner</th></tr></thead>
-      <tbody>
-        <tr><td>Predictable &middot; seed 19</td><td>4.9</td><td>5.1</td><td class="tie">tie</td></tr>
-        <tr><td>Predictable &middot; seed 34</td><td>7.6</td><td>7.6</td><td class="tie">tie</td></tr>
-        <tr><td>Judgment &middot; seed 26</td><td>4.1</td><td>17.3</td><td class="win-a">A</td></tr>
-        <tr><td>Judgment &middot; seed 11</td><td>3.4</td><td>14.6</td><td class="win-a">A</td></tr>
-        <tr><td>Mixed &middot; seed 13</td><td>2.0</td><td>9.1</td><td class="win-a">A</td></tr>
-        <tr><td>Mixed &middot; seed 30</td><td>3.3</td><td>12.2</td><td class="win-a">A</td></tr>
-      </tbody>
-    </table>
-    <p class="label">What we saw</p>
-    <p>B's debt collapsed from ~23 to ~5 in the predictable cell — a tie, not an 18-point loss. B is now genuinely competitive where it should be, and A still wins the judgment cell. But the predictable cell ties rather than flips, and the mixed cell still goes to A on both runs.</p>
-    <p class="label">Mechanism (from the trace)</p>
-    <ul>
-      <li><strong>Predictable:</strong> B completed all four broken seams (intake, coverage check, settlement, payment), retrying the ones it initially missed, with <strong>zero backsliding</strong> in the calm environment. That's why it tied A.</li>
-      <li><strong>Judgment:</strong> B hammered the seams it can't see — the human negotiation step missed <strong>10 times</strong> — and the few it landed reverted. A's evidence-built fixes held. A wins.</li>
-    </ul>
-    <p class="label">What this means <span style="font-weight:400;color:var(--text-muted);">(revised by Round 5)</span></p>
-    <p>The three fixes made B competitive (no longer a guaranteed loser), but they didn't reach a clean B-win. At the time we read this as an honest verdict: B is no longer rigged to lose, but it's a contest B still doesn't win. <strong>Round 5 showed that verdict was premature</strong> — the predictable cell tied instead of flipping because Track A still had a hidden head start we hadn't found yet.</p>
-  </div>
+    <!-- 01 -->
+    <section class="sec">
+      <div class="sec-title"><span class="n">01</span><h2>Round 1 &mdash; baseline<span class="k r-amb">straw man</span></h2></div>
+      <div class="sec-body">
+        <p>Track B was a straw man. It had the phases and the committees but never touched the actual work. Track A got all the real mechanics.</p>
+        <span class="score"><b>Score (mock, 12 sprints):</b> trust gap B&minus;A = &minus;0.73 &mdash; the test wanted B ahead and failed</span>
+        <div class="lab">What we saw</div>
+        <p>B &ldquo;improved&rdquo; nothing because it was wired to do nothing. The contest was decided before it started.</p>
+        <div class="lab">What we revised</div>
+        <p>Gave B real mechanics &mdash; it standardizes seams in waves, planning ahead, with success on each seam tied to how predictable that seam is, and backsliding under change fatigue. Made translation debt <b>measured from the actual state of each seam</b> &mdash; is the information actually there or not &mdash; instead of scanning the AI&rsquo;s wording for keywords.</p>
+        <div class="lab">Why</div>
+        <p>A comparison with one working side isn&rsquo;t a comparison. B needed to pull the same levers as A, just with different dynamics.</p>
+      </div>
+    </section>
 
-  <div class="round" style="border-left-color:var(--trackb);">
-    <h3 style="color:var(--trackb);">Round 5 — adversarial audit &amp; de-rigging</h3>
-    <p>An independent, adversarial review audited the whole model with one question: is either side <em>still</em> favored by construction rather than by conditions? It found two places where the outcome was quietly written in — both pointing at Track A — plus a reproducibility bug.</p>
-    <p class="label">What the audit found</p>
-    <div class="mechanism">
-      <ol>
-        <li><strong>A could sharpen a seam it had never watched break.</strong> A's rule is that it's blind to failures it hasn't observed — that blindness is its honest cost. But the code let A improve the worst AI seam every cycle whether or not it had seen that seam fail: a free, recurring head start that bypassed A's own constraint. <em>This is why the predictable cell tied instead of flipping to B.</em></li>
-        <li><strong>Employee trust-in-AI was hand-set to drift apart.</strong> Two tuned constants nudged B's trust up and held A's flat every sprint — the comment literally said they were "calibrated so B climbs and A holds." The outcome was an input.</li>
-        <li><strong>Same seed didn't reproduce.</strong> Three sources of randomness on A's side were unseeded, so two identical runs could diverge.</li>
-      </ol>
-    </div>
-    <p class="label">What we changed</p>
-    <p>A can now only sharpen seams it has actually watched fail — <strong>kept the durability</strong> (its fixes still don't wash off; that's legitimate) and <strong>removed the omniscience</strong>. Trust now emerges for <strong>both sides from the same thing</strong>: what agents actually experience when the AI succeeds or fails. And every source of randomness is seeded.</p>
-    <p class="label">Verified</p>
-    <ul>
-      <li>Two same-seed runs now match <strong>within a single process</strong> (they didn't before). <em>Round 6 found this check was too weak and hardened it.</em></li>
-      <li>Trust comes out <strong>close and earned</strong> — A 6.8, B 6.7 — instead of forced apart.</li>
-      <li>Both sides now share the <strong>same starting debt</strong> and separate only by conditions, not by construction.</li>
-    </ul>
-    <p class="label">Result — the real 6-run sweep (DeepSeek)</p>
-    <table>
-      <thead><tr><th>run</th><th>A debt</th><th>B debt</th><th>Δ(A−B)</th><th>winner</th></tr></thead>
-      <tbody>
-        <tr><td>Predictable &middot; seed 19</td><td>5.85</td><td>5.53</td><td>+0.32</td><td class="tie">tie</td></tr>
-        <tr><td>Predictable &middot; seed 34</td><td>6.00</td><td>5.60</td><td>+0.40</td><td class="tie">tie</td></tr>
-        <tr><td>Judgment &middot; seed 26</td><td>3.88</td><td>15.29</td><td>&minus;11.41</td><td class="win-a">A</td></tr>
-        <tr><td>Judgment &middot; seed 11</td><td>2.23</td><td>2.23</td><td>+0.00</td><td class="tie">tie</td></tr>
-        <tr><td>Mixed &middot; seed 13</td><td>2.20</td><td>8.37</td><td>&minus;6.17</td><td class="win-a">A</td></tr>
-        <tr><td>Mixed &middot; seed 30</td><td>4.07</td><td>12.01</td><td>&minus;7.95</td><td class="win-a">A</td></tr>
-      </tbody>
-    </table>
-    <p class="label">What actually happened — my prediction was wrong on both counts</p>
-    <p>I predicted the predictable cell would <em>flip to B</em> and the judgment cell would <em>stay a clean A-win</em>. Neither held. The predictable cell stayed a <strong>tie</strong> (though both seeds now lean B, where before they were even) — removing A's crutch narrowed the gap but didn't hand B the win. And the judgment cell went from a clean A-sweep to <strong>A + tie</strong> — one of A's two tacit wins softened to a dead heat once its free head-start was gone. Three A-wins, three ties, zero clean B-wins.</p>
-    <p class="label">The honest read — a map, not a scoreboard</p>
-    <p>The point was never to make B win. It was to see whether the winner emerges from conditions. It does: <strong>A's advantage concentrates where the work is tacit or mixed and turbulent</strong> (it wins the judgment and both mixed cells, by 6&ndash;11 points) and <strong>evaporates to a tie where the work is codifiable and calm</strong> (the predictable cell is a wash). That A no longer wins <em>everything</em> — that a fake A-win collapsed to a tie the moment the crutch came out — is the de-rigging working. That B never gets a clean win is an honest limitation, not a rig: B's a-priori design accuracy is capped on judgment seams it can't template, so it converges to A on codifiable work and loses on tacit work. Disclosed, not hidden. The meaningful output is the regime map: <strong>ownership wins where meaning is tacit; the approaches converge where meaning is codifiable.</strong></p>
-  </div>
+    <!-- 02 -->
+    <section class="sec">
+      <div class="sec-title"><span class="n">02</span><h2>Round 2 &mdash; B has mechanics<span class="k r-amb">mock</span></h2></div>
+      <div class="sec-body">
+        <span class="score"><b>Score (mock, 16 sprints):</b> translation debt A &rarr; 0%, B &rarr; 19%</span>
+        <div class="lab">What we saw</div>
+        <p>B now acts, but A still wins on the mock. We suspected the mock flattered A (its predictable &ldquo;ask for the missing information&rdquo; behavior feeds A&rsquo;s evidence perfectly) and needed the real thing.</p>
+        <div class="lab">What we revised</div>
+        <p>Wired the sweep to real runs and added the knobs that decide the winner &mdash; how predictable the seams are, how good the vendor is, how long the horizon, how turbulent the environment, how slow the decision-making.</p>
+        <div class="lab">Why</div>
+        <p>The mock only exercises one scenario. The point was to see whether B could win under B-favoring conditions, and that needs the real model.</p>
+      </div>
+    </section>
 
-  <div class="round" style="border-left-color:var(--metric);">
-    <h3 style="color:var(--metric);">Round 6 — can someone else get the same numbers?</h3>
-    <p>A scientific result should be repeatable: run it again, get the same answer. A fresh review checked that — and found the sim was giving slightly <em>different</em> numbers each time it ran, even with everything set the same. That's a reproducibility bug, and it's worth fixing before anyone trusts the numbers.</p>
-    <p class="label">What we found</p>
-    <p>Same settings, run three times, three different answers — a wobble of about 12%:</p>
-    <table>
-      <thead><tr><th>same settings, 3 runs</th><th>run 1</th><th>run 2</th><th>run 3</th><th>same answer?</th></tr></thead>
-      <tbody>
-        <tr><td>before the fix</td><td>129</td><td>124</td><td>139</td><td class="win-b">no</td></tr>
-        <tr><td>after the fix</td><td>124</td><td>124</td><td>124</td><td class="win-a">yes</td></tr>
-      </tbody>
-    </table>
-    <p class="label">Why it happened</p>
-    <p>The sim decides "who leaves the company this quarter" by going down the list of employees and rolling the dice for each. The catch: the program was building that list in a slightly different order every time it started up. Same dice, dealt to people in a different order &rarr; different people left &rarr; every downstream number shifted. The randomness itself was fine; the <em>order</em> it got applied in wasn't fixed.</p>
-    <p class="label">What we changed</p>
-    <p>Put the employee list in a fixed, sorted order before rolling. Now the same dice always land on the same people, on any computer, every run.</p>
-    <p class="label">Verified</p>
-    <p>We reproduced the wobble first, applied the one-line fix, then ran it several more times — identical numbers every time. All other checks still pass.</p>
-    <p class="label">What this does and doesn't change</p>
-    <p>This was only about <em>repeatability</em> — whether you and I get the exact same number from the same run. It never touched who wins A vs B or the "no longer rigged" verdict; within any single run both approaches always played by the same rules. It just means the published numbers can now be re-checked by anyone.</p>
-  </div>
+    <!-- 03 -->
+    <section class="sec">
+      <div class="sec-title"><span class="n">03</span><h2>Round 3 &mdash; first real sweep<span class="k r-amb">6 runs</span></h2></div>
+      <div class="sec-body">
+        <table class="tbl">
+          <thead><tr><th>run</th><th>A debt</th><th>B debt</th><th>winner</th></tr></thead>
+          <tbody>
+            <tr><td class="rn">Predictable &middot; seed 19</td><td>4.6</td><td>22.6</td><td class="wA">A</td></tr>
+            <tr><td class="rn">Predictable &middot; seed 34</td><td>5.7</td><td>23.4</td><td class="wA">A</td></tr>
+            <tr><td class="rn">Judgment &middot; seed 26</td><td>3.2</td><td>25.5</td><td class="wA">A</td></tr>
+            <tr><td class="rn">Judgment &middot; seed 11</td><td>3.1</td><td>26.6</td><td class="wA">A</td></tr>
+            <tr><td class="rn">Mixed &middot; seed 13</td><td>1.9</td><td>21.5</td><td class="wA">A</td></tr>
+            <tr><td class="rn">Mixed &middot; seed 30</td><td>3.6</td><td>21.9</td><td class="wA">A</td></tr>
+          </tbody>
+        </table>
+        <div class="lab">What we saw</div>
+        <p>A won all six, even the &ldquo;B should win&rdquo; cell. B&rsquo;s debt pinned at ~21&ndash;27% in every scenario, insensitive to every knob &mdash; the signature of a structural bias.</p>
+        <div class="lab">Mechanism (from the trace)</div>
+        <p>B&rsquo;s waves standardized the <em>wrong</em> seams &mdash; it polished the high-risk-but-already-clean steps while <em>missing</em> the actually-broken predictable one (the coverage check) outright. And the seams it did fix backslid almost instantly (claim intake was fixed and reverted in the same sprint). A, meanwhile, fixed the actually-broken seams durably, one observed failure at a time.</p>
+        <div class="lab">What we revised (three bugs)</div>
+        <ol>
+          <li><b>B fixed the wrong seams</b> &mdash; ranked by a static risk score, not by what was actually broken.</li>
+          <li><b>B&rsquo;s fixes washed off</b> &mdash; backsliding on a flat timer, self-reinforcing.</li>
+          <li><b>B got one chance</b> &mdash; a missed seam stayed broken forever.</li>
+        </ol>
+        <div class="lab">Why</div>
+        <p>Each fix is grounded in what real change management does: fix what&rsquo;s broken, backslide under pressure rather than on a timer, keep working what slips.</p>
+      </div>
+    </section>
 
-  <div class="round">
-    <h3 style="color:var(--metric);">Round 7 — the trust number was lying</h3>
-    <span class="score">Score (2 canonical seeds, 16 sprints): translation debt A &rarr; 3.4, B &rarr; 17&ndash;19 &middot; trust &rarr; ~4, not 8.0</span>
-    <p class="label">What we saw</p>
-    <p>A full code review found a batch of correctness bugs quietly distorting the numbers. The loudest: trust was climbing to 8.0 in every run because an update formula multiplied and divided by the same count. Fix the arithmetic, and trust lands near baseline, ~4, where it belongs. The eleven profiles land on distinct values instead of converging.</p>
-    <p class="label">What we revised</p>
-    <p>More than a dozen fixes. The exception rate had been counting "request info" and "override AI" as exceptions — it now counts only genuine escalations and lands near-equal across tracks. The discovery engine was handed an empty metric snapshot every sprint. Political friction only ever punished Track A. Underwriting and subrogation metrics lagged a sprint. THEARI advanced a phase early.</p>
-    <p class="label">Attrition, and the fix to the fix</p>
-    <p>Attrition was ~5x too low, so nobody ever quit. Raising it made people leave — which emptied the claims department on one seed and stalled the pipeline to zero decisions. Departures now backfill a fresh hire, so churn stays visible without breaking the instrument.</p>
-    <p class="label">The seed question, closed by math</p>
-    <p>The "two seeds is underpowered" objection got a power analysis instead of just more runs. The codifiable tie is parity — mean +0.19 with a confidence interval that straddles zero — not a hidden B-edge. The tacit win is decisive at &minus;12. More seeds can't flip either.</p>
-    <p class="label">What this does and doesn't change</p>
-    <p>The core finding survived and got sharper: B doesn't escalate more, it leaks more. Translation debt is the decisive gap on both seeds. Trust, exceptions, and cost all re-baselined on two fresh canonical seeds.</p>
-  </div>
+    <!-- 04 -->
+    <section class="sec">
+      <div class="sec-title"><span class="n">04</span><h2>Round 4 &mdash; fairness fixes<span class="k r-amb">re-running</span></h2></div>
+      <div class="sec-body">
+        <table class="tbl">
+          <thead><tr><th>run</th><th>A debt</th><th>B debt</th><th>winner</th></tr></thead>
+          <tbody>
+            <tr><td class="rn">Predictable &middot; seed 19</td><td>4.9</td><td>5.1</td><td class="tie">tie</td></tr>
+            <tr><td class="rn">Predictable &middot; seed 34</td><td>7.6</td><td>7.6</td><td class="tie">tie</td></tr>
+            <tr><td class="rn">Judgment &middot; seed 26</td><td>4.1</td><td>17.3</td><td class="wA">A</td></tr>
+            <tr><td class="rn">Judgment &middot; seed 11</td><td>3.4</td><td>14.6</td><td class="wA">A</td></tr>
+            <tr><td class="rn">Mixed &middot; seed 13</td><td>2.0</td><td>9.1</td><td class="wA">A</td></tr>
+            <tr><td class="rn">Mixed &middot; seed 30</td><td>3.3</td><td>12.2</td><td class="wA">A</td></tr>
+          </tbody>
+        </table>
+        <div class="lab">What we saw</div>
+        <p>B&rsquo;s debt collapsed from ~23 to ~5 in the predictable cell &mdash; a tie, not an 18-point loss. B is now genuinely competitive where it should be, and A still wins the judgment cell. But the predictable cell ties rather than flips, and the mixed cell still goes to A on both runs.</p>
+        <div class="lab">Mechanism (from the trace)</div>
+        <ul>
+          <li><b>Predictable:</b> B completed all four broken seams (intake, coverage check, settlement, payment), retrying the ones it initially missed, with <b>zero backsliding</b> in the calm environment. That&rsquo;s why it tied A.</li>
+          <li><b>Judgment:</b> B hammered the seams it can&rsquo;t see &mdash; the human negotiation step was missed <b>10 times</b> &mdash; and the few it landed reverted. A&rsquo;s evidence-built fixes held.</li>
+        </ul>
+        <div class="lab">What this means <span style="font-weight:400;color:var(--muted)">(revised by Round 5)</span></div>
+        <p>The three fixes made B competitive &mdash; no longer a guaranteed loser &mdash; but didn&rsquo;t reach a clean B-win. At the time we read this as an honest verdict: B is no longer rigged to lose, but it&rsquo;s a contest B still doesn&rsquo;t win. <b>Round 5 showed that verdict was premature</b> &mdash; the predictable cell tied instead of flipping because Track A still had a hidden head start we hadn&rsquo;t found yet.</p>
+      </div>
+    </section>
 
-  <h2>What this teaches us about a better Track A</h2>
-  <p>Collected across the rounds, the sim is pointing at a specific design question:</p>
-  <ol>
-    <li><strong>A's edge is durability, not intelligence.</strong> A fixes the <em>root cause</em> — the seam where meaning is lost — and the fix sticks because the team built it from their own evidence. B fixes the <em>symptom</em> (a template, a dashboard) and it washes off. The winning ingredient is ownership, not speed.</li>
-    <li><strong>B's edge is breadth, not accuracy.</strong> B covers everything fast but is blind to the judgment seams and can't hold what it takes. A sees clearly but moves one seam at a time.</li>
-    <li><strong>The next model is the question between them:</strong> can you get A's durability with B's breadth? Fixes built from evidence that land fast and cover more than one seam per two sprints. The current sim is the instrument for testing that — the traces show exactly where A leaks time (slow learning, one-at-a-time throughput) and where B leaks trust (backsliding).</li>
-  </ol>
+    <!-- 05 -->
+    <section class="sec">
+      <div class="sec-title"><span class="n">05</span><h2>Round 5 &mdash; adversarial audit &amp; de-rigging<span class="k r-vio">audit</span></h2></div>
+      <div class="sec-body">
+        <p>An independent, adversarial review audited the whole model with one question: is either side <em>still</em> favored by construction rather than by conditions? It found two places where the outcome was quietly written in &mdash; both pointing at Track A &mdash; plus a reproducibility bug.</p>
+        <div class="lab">What the audit found</div>
+        <ol>
+          <li><b>A could sharpen a seam it had never watched break.</b> A&rsquo;s rule is that it&rsquo;s blind to failures it hasn&rsquo;t observed &mdash; that blindness is its honest cost. But the code let A improve the worst AI seam every cycle whether or not it had seen that seam fail: a free, recurring head start that bypassed A&rsquo;s own constraint. <em>This is why the predictable cell tied instead of flipping to B.</em></li>
+          <li><b>Employee trust-in-AI was hand-set to drift apart.</b> Two tuned constants nudged B&rsquo;s trust up and held A&rsquo;s flat every sprint &mdash; the comment literally said they were &ldquo;calibrated so B climbs and A holds.&rdquo; The outcome was an input.</li>
+          <li><b>Same seed didn&rsquo;t reproduce.</b> Three sources of randomness on A&rsquo;s side were unseeded, so two identical runs could diverge.</li>
+        </ol>
+        <div class="lab">What we changed</div>
+        <p>A can now only sharpen seams it has actually watched fail &mdash; <b>kept the durability</b> (its fixes still don&rsquo;t wash off; that&rsquo;s legitimate) and <b>removed the omniscience</b>. Trust now emerges for <b>both sides from the same thing</b>: what agents actually experience when the AI succeeds or fails. And every source of randomness is seeded.</p>
+        <div class="lab">Verified</div>
+        <ul>
+          <li>Two same-seed runs now match <b>within a single process</b> (they didn&rsquo;t before). <em>Round 6 found this check too weak and hardened it.</em></li>
+          <li>Trust comes out <b>close and earned</b> &mdash; A 6.8, B 6.7 &mdash; instead of forced apart.</li>
+          <li>Both sides now share the <b>same starting debt</b> and separate only by conditions, not by construction.</li>
+        </ul>
+        <div class="lab">Result &mdash; the real 6-run sweep (DeepSeek)</div>
+        <table class="tbl">
+          <thead><tr><th>run</th><th>A debt</th><th>B debt</th><th>&Delta;(A&minus;B)</th><th>winner</th></tr></thead>
+          <tbody>
+            <tr><td class="rn">Predictable &middot; seed 19</td><td>5.85</td><td>5.53</td><td>+0.32</td><td class="tie">tie</td></tr>
+            <tr><td class="rn">Predictable &middot; seed 34</td><td>6.00</td><td>5.60</td><td>+0.40</td><td class="tie">tie</td></tr>
+            <tr><td class="rn">Judgment &middot; seed 26</td><td>3.88</td><td>15.29</td><td>&minus;11.41</td><td class="wA">A</td></tr>
+            <tr><td class="rn">Judgment &middot; seed 11</td><td>2.23</td><td>2.23</td><td>+0.00</td><td class="tie">tie</td></tr>
+            <tr><td class="rn">Mixed &middot; seed 13</td><td>2.20</td><td>8.37</td><td>&minus;6.17</td><td class="wA">A</td></tr>
+            <tr><td class="rn">Mixed &middot; seed 30</td><td>4.07</td><td>12.01</td><td>&minus;7.95</td><td class="wA">A</td></tr>
+          </tbody>
+        </table>
+        <div class="lab">What actually happened &mdash; my prediction was wrong on both counts</div>
+        <p>I predicted the predictable cell would <em>flip to B</em> and the judgment cell would <em>stay a clean A-win</em>. Neither held. The predictable cell stayed a <b>tie</b> (though both seeds now lean B, where before they were even) &mdash; removing A&rsquo;s crutch narrowed the gap but didn&rsquo;t hand B the win. And the judgment cell went from a clean A-sweep to <b>A + tie</b> &mdash; one of A&rsquo;s two tacit wins softened to a dead heat once its free head start was gone. Three A-wins, three ties, zero clean B-wins.</p>
+        <div class="lab">The honest read &mdash; a map, not a scoreboard</div>
+        <p>The point was never to make B win. It was to see whether the winner emerges from conditions. It does: <b>A&rsquo;s advantage concentrates where the work is tacit or mixed and turbulent</b> (it wins the judgment and both mixed cells, by 6&ndash;11 points) and <b>evaporates to a tie where the work is codifiable and calm</b>. That A no longer wins <em>everything</em> &mdash; that a fake A-win collapsed to a tie the moment the crutch came out &mdash; is the de-rigging working. That B never gets a clean win is an honest limitation, not a rig: B&rsquo;s a-priori design accuracy is capped on judgment seams it can&rsquo;t template, so it converges to A on codifiable work and loses on tacit work. Disclosed, not hidden. The meaningful output is the regime map: <b>ownership wins where meaning is tacit; the approaches converge where meaning is codifiable.</b></p>
+      </div>
+    </section>
 
-  <h2>What this teaches us about a better Track B</h2>
-  <p>The same trace reads the other way. B's failures aren't random; each one names a specific fix.</p>
-  <ol>
-    <li><strong>Keep the breadth, aim it.</strong> B's structural edge is covering everything fast. Its mistake was ranking by a static risk score and polishing already-clean seams while the broken ones leaked. A better B keeps the big-bang coverage but spends it on the seams where debt actually lives — the broken ones.</li>
-    <li><strong>Actually do Consolidate and Anchor.</strong> Kotter's model has two whole phases for re-sustaining change that slips. B's implementation skipped them — it fired a flat backslide timer instead of following up. The sim showed claim intake completed and reverted in the same sprint. A better B measures adoption and re-anchors when it dips, instead of letting it wash off.</li>
-    <li><strong>Know what you can't standardize.</strong> B is blind to the judgment seams — the trace shows it missing the human negotiation step ten times, hammering judgment work it can't template. A better B would spend its upfront budget on the predictable seams (schemas, thresholds, payment rails) where its design is accurate, and <em>not</em> impose a process template on negotiation and liability where it isn't. Honesty about the limit is the fix.</li>
-    <li><strong>Measure absorption, not activation.</strong> B's steering committee reviews licenses and training completions — vanity metrics. The SWT warning is exact here: usage means people have access; absorption means the org can carry the change. A better B wires the committee to the outcome (translation debt) so governance closes the loop instead of spinning.</li>
-  </ol>
+    <!-- 06 -->
+    <section class="sec">
+      <div class="sec-title"><span class="n">06</span><h2>Round 6 &mdash; can someone else get the same numbers?<span class="k r-teal">reproducibility</span></h2></div>
+      <div class="sec-body">
+        <p>A scientific result should be repeatable: run it again, get the same answer. A fresh review checked that &mdash; and found the sim was giving slightly <em>different</em> numbers each time it ran, even with everything set the same. Same settings, three runs, three answers &mdash; a wobble of about 12%:</p>
+        <table class="tbl">
+          <thead><tr><th>same settings, 3 runs</th><th>run 1</th><th>run 2</th><th>run 3</th><th>same answer?</th></tr></thead>
+          <tbody>
+            <tr><td class="rn">before the fix</td><td>129</td><td>124</td><td>139</td><td class="wB">no</td></tr>
+            <tr><td class="rn">after the fix</td><td>124</td><td>124</td><td>124</td><td class="wA">yes</td></tr>
+          </tbody>
+        </table>
+        <div class="lab">Why it happened</div>
+        <p>The sim decides &ldquo;who leaves the company this quarter&rdquo; by going down the list of employees and rolling the dice for each. The catch: the program was building that list in a slightly different order every time it started up. Same dice, dealt to people in a different order &rarr; different people left &rarr; every downstream number shifted. The randomness itself was fine; the <em>order</em> it got applied in wasn&rsquo;t fixed.</p>
+        <div class="lab">What we changed</div>
+        <p>Put the employee list in a fixed, sorted order before rolling. Now the same dice always land on the same people, on any computer, every run.</p>
+        <div class="lab">Verified</div>
+        <p>We reproduced the wobble first, applied the one-line fix, then ran it several more times &mdash; identical numbers every time. All other checks still pass.</p>
+        <div class="lab">What this does and doesn&rsquo;t change</div>
+        <p>This was only about <em>repeatability</em> &mdash; whether you and I get the exact same number from the same run. It never touched who wins A vs B or the &ldquo;no longer rigged&rdquo; verdict; within any single run both approaches always played by the same rules. It just means the published numbers can now be re-checked by anyone.</p>
+      </div>
+    </section>
 
-  <div class="symmetry">
-    <p>The symmetry is the point. A better A leans toward B's breadth. A better B leans toward A's ownership. They're two ends of one axis — speed versus absorption — and the best transformation is the one that refuses to choose.</p>
-    <p>Each round of revision tightens the model. The winner is the least interesting output; the <em>how and why</em> is what lets us build a better Track A, a better Track B, and a more faithful sim.</p>
-  </div>
+    <!-- 07 -->
+    <section class="sec">
+      <div class="sec-title"><span class="n">07</span><h2>Round 7 &mdash; the trust number was lying<span class="k r-teal">correctness</span></h2></div>
+      <div class="sec-body">
+        <span class="score"><b>Score (2 canonical seeds, 16 sprints):</b> translation debt A &rarr; 3.4, B &rarr; 17&ndash;19 &middot; trust &rarr; ~4, not 8.0</span>
+        <div class="lab">What we saw</div>
+        <p>A full code review found a batch of correctness bugs quietly distorting the numbers. The loudest: trust was climbing to 8.0 in every run because an update formula multiplied and divided by the same count. Fix the arithmetic, and trust lands near baseline, ~4, where it belongs. The eleven profiles land on distinct values instead of converging.</p>
+        <div class="lab">What we revised</div>
+        <p>More than a dozen fixes. The exception rate had been counting &ldquo;request info&rdquo; and &ldquo;override AI&rdquo; as exceptions &mdash; it now counts only genuine escalations and lands near-equal across tracks. The discovery engine was handed an empty metric snapshot every sprint. Political friction only ever punished Track A. Underwriting and subrogation metrics lagged a sprint. THEARI advanced a phase early.</p>
+        <div class="lab">Attrition, and the fix to the fix</div>
+        <p>Attrition was ~5&times; too low, so nobody ever quit. Raising it made people leave &mdash; which emptied the claims department on one seed and stalled the pipeline to zero decisions. Departures now backfill a fresh hire, so churn stays visible without breaking the instrument.</p>
+        <div class="lab">The seed question, closed by math</div>
+        <p>The &ldquo;two seeds is underpowered&rdquo; objection got a power analysis instead of just more runs. The codifiable tie is parity &mdash; mean +0.19 with a confidence interval that straddles zero &mdash; not a hidden B-edge. The tacit win is decisive at &minus;12. More seeds can&rsquo;t flip either.</p>
+        <div class="lab">What this does and doesn&rsquo;t change</div>
+        <p>The core finding survived and got sharper: B doesn&rsquo;t escalate more, it leaks more. Translation debt is the decisive gap on both seeds. Trust, exceptions, and cost all re-baselined on two fresh canonical seeds.</p>
+      </div>
+    </section>
 
-  <p style="text-align:center;margin-top:24px;font-family:var(--font-mono);font-size:13px;">
-    Authoritative full run (post-fix, 16 sprints, seed 42):
-    <a href="ai-transformation-results.html" style="color:var(--primary);">see the results dashboard &rarr;</a>
-  </p>
+    <!-- 08 -->
+    <section class="sec">
+      <div class="sec-title"><span class="n">08</span><h2>What this teaches us about a better Track A</h2></div>
+      <div class="sec-body">
+        <p>Collected across the rounds, the sim points at a specific design question:</p>
+        <ol>
+          <li><b>A&rsquo;s edge is durability, not intelligence.</b> A fixes the <em>root cause</em> &mdash; the seam where meaning is lost &mdash; and the fix sticks because the team built it from their own evidence. B fixes the <em>symptom</em> (a template, a dashboard) and it washes off. The winning ingredient is ownership, not speed.</li>
+          <li><b>B&rsquo;s edge is breadth, not accuracy.</b> B covers everything fast but is blind to the judgment seams and can&rsquo;t hold what it takes. A sees clearly but moves one seam at a time.</li>
+          <li><b>The next model is the question between them:</b> can you get A&rsquo;s durability with B&rsquo;s breadth? Fixes built from evidence that land fast and cover more than one seam per two sprints. The current sim is the instrument for testing that &mdash; the traces show exactly where A leaks time (slow learning, one-at-a-time throughput) and where B leaks trust (backsliding).</li>
+        </ol>
+      </div>
+    </section>
 
-  <div class="footer">
-    &copy; 2025-2026 Charlie Fuller &nbsp;&middot;&nbsp; <a href="https://linkedin.com/in/charlie-fuller-colorado/" target="_blank" rel="noopener">LinkedIn</a>
+    <!-- 09 -->
+    <section class="sec">
+      <div class="sec-title"><span class="n">09</span><h2>What this teaches us about a better Track B</h2></div>
+      <div class="sec-body">
+        <p>The same trace reads the other way. B&rsquo;s failures aren&rsquo;t random; each one names a specific fix.</p>
+        <ol>
+          <li><b>Keep the breadth, aim it.</b> B&rsquo;s structural edge is covering everything fast. Its mistake was ranking by a static risk score and polishing already-clean seams while the broken ones leaked. A better B keeps the big-bang coverage but spends it on the seams where debt actually lives &mdash; the broken ones.</li>
+          <li><b>Actually do Consolidate and Anchor.</b> Kotter&rsquo;s model has two whole phases for re-sustaining change that slips. B&rsquo;s implementation skipped them &mdash; it fired a flat backslide timer instead of following up. A better B measures adoption and re-anchors when it dips, instead of letting it wash off.</li>
+          <li><b>Know what you can&rsquo;t standardize.</b> B is blind to the judgment seams &mdash; the trace shows it missing the human negotiation step ten times, hammering judgment work it can&rsquo;t template. A better B would spend its upfront budget on the predictable seams where its design is accurate, and <em>not</em> impose a process template on negotiation and liability where it isn&rsquo;t. Honesty about the limit is the fix.</li>
+          <li><b>Measure absorption, not activation.</b> B&rsquo;s steering committee reviews licenses and training completions &mdash; vanity metrics. Usage means people have access; absorption means the org can carry the change. A better B wires the committee to the outcome (translation debt) so governance closes the loop instead of spinning.</li>
+        </ol>
+      </div>
+    </section>
+
+    <!-- 10 -->
+    <section class="sec">
+      <div class="sec-title"><span class="n">10</span><h2>The symmetry</h2></div>
+      <div class="sec-body">
+        <div class="box">
+          <p>The symmetry is the point. A better A leans toward B&rsquo;s breadth. A better B leans toward A&rsquo;s ownership. They&rsquo;re two ends of one axis &mdash; speed versus absorption &mdash; and the best transformation is the one that refuses to choose.</p>
+          <p class="nb">Each round of revision tightens the model. The winner is the least interesting output; the <em>how and why</em> is what lets us build a better Track A, a better Track B, and a more faithful sim.</p>
+        </div>
+        <p class="close"><b>Authoritative full run (post-fix, 16 sprints, seed 42):</b> <a href="ai-transformation-results.html" style="color:var(--accent)">see the results dashboard &rarr;</a></p>
+      </div>
+    </section>
+
+    <footer class="footer">
+      <a href="../ai-transformation-experiment.html">&larr; AI Transformation Experiment</a>
+      <span>&copy; 2025-2026 Charlie Fuller</span>
+    </footer>
+
   </div>
 </div>
-<script>
-  (function() {
-    var toggle = document.getElementById('themeToggle');
-    if (!toggle) return;
-    function setTheme(d) {
-      document.documentElement.classList.toggle('dark', d);
-      toggle.innerHTML = d ? '&#9790;' : '&#9788;';
-      try { localStorage.setItem('diagram-theme', d ? 'dark' : 'light'); } catch(e) {}
-    }
-    toggle.addEventListener('click', function() {
-      setTheme(!document.documentElement.classList.contains('dark'));
-    });
-    try { if (localStorage.getItem('diagram-theme') === 'dark') setTheme(true); } catch(e) {}
-  })();
-</script>
+
 </body>
 </html>
