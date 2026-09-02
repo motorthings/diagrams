@@ -2,356 +2,214 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>AESOP Transformation OS — Executive Overview</title>
-<meta name="description" content="How AESOP takes an enterprise from we should use AI to governed, evaluated, deployed, and monitored agents at portfolio scale — with safety enforced and nothing lost when people leave.">
 <link rel="icon" type="image/svg+xml" href="../icon.svg">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AESOP &mdash; Executive Overview</title>
+<meta name="description" content="How AESOP takes an enterprise from 'we should use AI' to governed, evaluated, deployed, and monitored agents at portfolio scale — with safety enforced and nothing lost when people leave.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,wght@0,400;0,500;0,600;0,700;1,400&family=Source+Code+Pro:wght@400;500;600&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Public+Sans:wght@400;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
 <style>
   :root {
-    --font-display: 'Fraunces', Georgia, serif;
-    --font-mono: 'Source Code Pro', 'SF Mono', Consolas, monospace;
-    --bg: #eef4f9; --surface: #ffffff; --surface2: #f5f8fc;
-    --border: rgba(0,0,0,0.07); --border-bright: rgba(0,0,0,0.13);
-    --text: #0a1628; --text-dim: #3d5a7a; --text-muted: #7a9ab8;
-    --primary: #c84d0e; --primary-dim: rgba(200,77,14,0.06);
-    --secondary: #4a90c4; --secondary-dim: rgba(74,144,196,0.06);
-    --metric: #0f766e; --metric-dim: rgba(15,118,110,0.05);
+    --font-display: 'Instrument Serif', Georgia, serif;
+    --font-body: 'Public Sans', system-ui, sans-serif;
+    --font-mono: 'JetBrains Mono', 'SF Mono', monospace;
+    /* Gulf Stream Racing on a Ledger sheet — light only */
+    --ink: #0a1628; --graphite: #2e4d73; --body: #3d5a7a; --muted: #7a9ab8;
+    --rule: #c6d5e6; --row: #dbe5f0; --sheet: #eef4f9; --desk: #e4ecf4;
+    --spine: #0a1628; --spine-fg: #eef4f9;
+    --accent: #e8621a; --amber: #b45309; --blue: #2f6fa8; --teal: #0f766e; --violet: #7c3aed; --rose: #c23a30;
   }
-  html.dark {
-    --bg: #0a1628; --surface: #132240;
-    --border: rgba(255,255,255,0.07); --border-bright: rgba(255,255,255,0.13);
-    --text: #e8edf5; --text-dim: #9bb0d4; --text-muted: #5e7aa3;
-    --primary: #f37021; --primary-dim: rgba(243,112,33,0.10);
-    --secondary: #6cace4; --secondary-dim: rgba(108,172,228,0.10);
-    --metric: #2dd4bf; --metric-dim: rgba(45,212,191,0.08);
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { background: var(--desk); color: var(--body); font-family: var(--font-body); font-size: 17px; line-height: 1.62; -webkit-font-smoothing: antialiased; text-rendering: optimizeLegibility; }
+  .topbar { max-width: 1160px; margin: 0 auto; padding: 18px 28px 6px; }
+  .backlink a { font-size: 14px; color: var(--muted); text-decoration: none; }
+  .backlink a:hover { color: var(--ink); }
+  .backlink .arr { color: var(--accent); font-size: 15px; margin-right: 2px; }
+
+  .sheet { max-width: 1160px; margin: 6px auto 72px; background: var(--sheet); display: grid; grid-template-columns: 56px 1fr; }
+  .spine { background: var(--spine); display: flex; align-items: flex-end; justify-content: center; padding: 26px 0; }
+  .spine-label { writing-mode: vertical-rl; transform: rotate(180deg); font-family: var(--font-mono); font-size: 13px; letter-spacing: 0.22em; color: var(--spine-fg); white-space: nowrap; text-transform: uppercase; }
+  .content { padding: 48px 60px 6px; min-width: 0; }
+
+  .masthead { border-bottom: 3px solid var(--ink); padding-bottom: 16px; }
+  .masthead h1 { font-family: var(--font-display); font-weight: 400; font-size: 50px; line-height: 0.97; letter-spacing: -0.028em; color: var(--ink); }
+  .tagline { font-family: var(--font-mono); font-size: 11.5px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.14em; color: var(--accent); margin: 10px 0 14px; }
+  .lede { font-family: var(--font-display); font-style: italic; font-size: 19px; line-height: 1.5; color: var(--graphite); max-width: 920px; }
+  .lede b { color: var(--ink); }
+
+  section.sec { border-top: 3px solid var(--ink); padding: 22px 0 4px; }
+  .sec-title { display: grid; grid-template-columns: 88px 1fr; gap: 0 22px; align-items: baseline; margin-bottom: 6px; }
+  .sec-title .n { font-family: var(--font-display); font-size: 30px; line-height: 0.9; color: var(--accent); }
+  .sec-title h2 { font-size: 23px; font-weight: 700; letter-spacing: -0.012em; color: var(--ink); }
+  .sec-title h2 .cnt { font-family: var(--font-mono); font-size: 12px; font-weight: 500; color: var(--muted); margin-left: 10px; }
+  .sec-body { padding: 0 0 8px 110px; }
+  .sec-body b, .sec-body strong { color: var(--ink); }
+  code { font-family: var(--font-mono); font-size: 0.84em; color: var(--accent); }
+
+  /* executive stage rows */
+  .st { border-top: 1px solid var(--row); padding: 20px 0 4px; display: grid; grid-template-columns: 210px 1fr; gap: 4px 30px; }
+  .st:first-of-type { border-top: none; padding-top: 8px; }
+  .st .st-k { font-family: var(--font-mono); font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; color: var(--accent); line-height: 1.45; }
+  .st .st-k .ord { display: block; color: var(--muted); font-weight: 500; font-size: 9.5px; letter-spacing: 0.16em; margin-bottom: 3px; }
+  .st .st-b { font-size: 14px; line-height: 1.6; }
+  .st .hit { font-weight: 700; color: var(--ink); font-size: 18px; line-height: 1.35; margin-bottom: 8px; font-family: var(--font-display); font-weight: 400; }
+  .st .hit b { font-weight: 400; }
+  .st .hit .hl { color: var(--accent); }
+  .st .why { margin: 2px 0 10px; max-width: 900px; }
+  .st .why p { margin-bottom: 7px; }
+
+  .gp { display: grid; grid-template-columns: 1fr 1fr; gap: 2px 34px; margin: 4px 0 10px; }
+  .gpn { border-top: 1px solid var(--row); padding-top: 7px; }
+  .gp-k { font-family: var(--font-mono); font-size: 9.5px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.12em; color: var(--blue); margin-bottom: 5px; }
+  .gpn:first-child .gp-k { color: var(--teal); }
+  .gpn p, .gpn li { font-size: 13px; line-height: 1.55; }
+  .gpn ul { list-style: none; }
+  .gpn li { padding: 2px 0 2px 15px; position: relative; }
+  .gpn li::before { content: ''; position: absolute; left: 1px; top: 0.72em; width: 5px; height: 5px; background: var(--row); }
+
+  .metric { margin: 2px 0 6px; padding: 9px 0 2px 16px; border-left: 2px solid var(--teal); font-size: 13px; line-height: 1.6; max-width: 900px; }
+  .metric .m-k { font-family: var(--font-mono); font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.12em; color: var(--teal); margin-right: 6px; }
+  .metric b { color: var(--ink); }
+
+  .footer { border-top: 3px solid var(--ink); margin: 26px 0 0; padding: 18px 0 30px; display: flex; justify-content: space-between; gap: 20px; flex-wrap: wrap; font-family: var(--font-mono); font-size: 11.5px; color: var(--muted); }
+  .footer a { color: var(--accent); text-decoration: none; }
+
+  @media (max-width: 900px) {
+    .sheet { grid-template-columns: 40px 1fr; }
+    .spine-label { font-size: 11px; }
+    .content { padding: 32px 22px 4px; }
+    .masthead h1 { font-size: 38px; }
+    .sec-title { grid-template-columns: 50px 1fr; }
+    .sec-title .n { font-size: 25px; }
+    .sec-body { padding-left: 0; }
+    .st { grid-template-columns: 1fr; gap: 3px; }
+    .gp { grid-template-columns: 1fr; }
+    body { font-size: 16px; }
   }
-  * { margin:0; padding:0; box-sizing:border-box; }
-  body {
-    background: var(--bg);
-    background-image: radial-gradient(ellipse at 80% 0%, var(--primary-dim) 0%, transparent 50%);
-    color: var(--text); font-family: var(--font-display);
-    min-height: 100vh; line-height: 1.7; padding: 0 24px 64px;
-    transition: background 0.3s, color 0.3s;
-  }
-
-  .nav {
-    position: sticky; top: 0; z-index: 100;
-    backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px);
-    background: color-mix(in srgb, var(--surface) 85%, transparent);
-    border-bottom: 1px solid var(--border);
-    margin: 0 -24px 32px; padding: 0 24px;
-    transition: background 0.3s, border-color 0.3s;
-  }
-  .nav-inner {
-    max-width: 920px; margin: 0 auto; padding: 12px 0;
-    display: flex; align-items: center; justify-content: space-between;
-  }
-  .nav-brand {
-    font-family: var(--font-mono); font-size: 12px; font-weight: 600;
-    letter-spacing: 0.5px; color: var(--primary);
-  }
-  .theme-toggle {
-    width: 36px; height: 36px; border-radius: 10px;
-    border: 1px solid var(--border); background: var(--surface);
-    cursor: pointer; display: flex; align-items: center; justify-content: center;
-    font-size: 16px; color: var(--text-dim); transition: all 0.2s;
-  }
-  .theme-toggle:hover { border-color: var(--primary); color: var(--primary); }
-  .theme-toggle:focus-visible, .backlink:focus-visible, a:focus-visible {
-    outline: 2px solid var(--primary); outline-offset: 2px; border-radius: 4px;
-  }
-  .backlink{position:fixed;top:12px;left:16px;z-index:101;font-family:var(--font-mono);font-size:12px;color:var(--text-dim);text-decoration:none;padding:6px 10px;border:1px solid var(--border);border-radius:6px;background:var(--surface);transition:color .15s,border-color .15s}
-  .backlink:hover{color:var(--text);border-color:var(--border-bright)}
-  .container { max-width:920px; margin:0 auto; }
-  .hero { text-align:center; padding:40px 0 32px; }
-  .hero h1 { font-size:48px; font-weight:700; letter-spacing:-0.5px; color:var(--primary); margin-bottom:12px; }
-  .hero .lead { font-size:21px; color:var(--text-dim); max-width:640px; margin:0 auto; line-height:1.5; }
-
-  section { margin-top:40px; }
-  h2 { font-size:26px; font-weight:700; color:var(--text); margin-bottom:20px; }
-
-  .stage { margin-bottom:32px; }
-  .stage-head { display:flex; align-items:flex-start; gap:16px; margin-bottom:8px; }
-  .stage-num { width:38px;height:38px;border-radius:50%;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-family:var(--font-mono);font-size:15px;font-weight:700;color:#fff;background:var(--primary);margin-top:2px; }
-  .stage-info { flex:1; }
-  .stage-info h3 { font-size:22px; font-weight:700; color:var(--text); margin-bottom:6px; }
-  .stage-info .outcome-line { font-size:18px; color:#8b3a0a; font-weight:600; line-height:1.5; margin-bottom:10px; }
-  html.dark .stage-info .outcome-line { color:#f37021; }
-  .stage-info .why { font-size:15px; color:var(--text-dim); line-height:1.7; }
-
-  .subpanels { display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-top:12px; }
-  @media(max-width:600px){ .subpanels{grid-template-columns:1fr;} }
-  .subpanel { background:var(--surface2); border:1px solid var(--border); border-left:3px solid var(--primary); border-radius:0 8px 8px 0; padding:14px 16px; font-size:14px; color:var(--text-dim); line-height:1.6; }
-  .subpanel strong { color:var(--primary); display:block; margin-bottom:4px; font-size:15px; }
-
-  .metric-line { background:var(--metric-dim); border-left:3px solid var(--metric); border-radius:0 8px 8px 0; padding:10px 14px; margin-top:12px; font-size:13px; color:var(--text-dim); line-height:1.5; }
-  .metric-line strong { color:var(--metric); }
-  .metric-line .arrow { font-family:var(--font-mono); color:var(--metric); font-size:11px; }
-
-  .outcome-grid { display:grid; grid-template-columns:repeat(4,1fr); gap:10px; margin-top:24px; }
-  @media(max-width:700px){ .outcome-grid{grid-template-columns:1fr 1fr;} }
-  @media(max-width:450px){ .outcome-grid{grid-template-columns:1fr;} }
-  .outcome { background:var(--surface2); border:1px solid var(--border); border-left:3px solid var(--primary); border-radius:0 8px 8px 0; padding:16px 18px; text-align:left; }
-  .outcome .num { font-size:32px; font-weight:800; color:var(--primary); }
-  .outcome .label { font-size:11px; color:var(--primary); font-family:var(--font-mono); text-transform:uppercase; letter-spacing:0.5px; margin-top:2px; margin-bottom:6px; font-weight:700; }
-  .outcome p { font-size:13px; color:var(--text-dim); line-height:1.5; }
-
-  @keyframes fadeUp { from{opacity:0;transform:translateY(8px);} to{opacity:1;transform:translateY(0);} }
-  .stage { animation:fadeUp 0.35s ease-out both; }
-  .stage:nth-child(1){animation-delay:0.03s}.stage:nth-child(2){animation-delay:0.08s}
-  .stage:nth-child(3){animation-delay:0.13s}.stage:nth-child(4){animation-delay:0.18s}
-  .stage:nth-child(5){animation-delay:0.23s}.stage:nth-child(6){animation-delay:0.28s}
-  .stage:nth-child(7){animation-delay:0.33s}.stage:nth-child(8){animation-delay:0.38s}
-  @media(prefers-reduced-motion:reduce){.stage{animation:none}}
-
-  .footer { margin-top:48px; padding-top:16px; border-top:1px solid var(--border); text-align:center; font-size:13px; color:var(--text-muted); }
-  .footer a { color:var(--primary); text-decoration:none; }
 </style>
 </head>
 <body>
-<a href="../aesop.html" class="backlink">&larr; AESOP Transformation OS</a>
 
-<div class="nav">
-  <div class="nav-inner">
-    <span class="nav-brand">AESOP Transformation OS</span>
-    <button class="theme-toggle" id="themeToggle" aria-label="Toggle dark mode">
-      <span class="icon-light">&#9788;</span>
-      <span class="icon-dark" style="display:none">&#9790;</span>
-    </button>
+<div class="topbar">
+  <div class="backlink"><a href="../aesop.html"><span class="arr">&larr;</span> AESOP</a></div>
+</div>
+
+<div class="sheet">
+  <div class="spine"><div class="spine-label">AESOP EXECUTIVE OVERVIEW</div></div>
+
+  <div class="content">
+
+    <header class="masthead">
+      <h1>Move from &ldquo;we should use AI&rdquo; to agents that work</h1>
+      <div class="tagline">AESOP Transformation OS &mdash; enterprise AI governance &amp; operationalization</div>
+      <p class="lede">Governed, trusted agents running across your business. Safety enforced by the system, adoption measured against a single north-star number, and nothing lost when people leave.</p>
+    </header>
+
+    <!-- 01 -->
+    <section class="sec">
+      <div class="sec-title"><span class="n">01</span><h2>What this platform does for you<span class="cnt">eight stages, idea to monitoring</span></h2></div>
+      <div class="sec-body">
+
+        <div class="st"><div class="st-k"><span class="ord">STAGE 01</span>Know what<br>you have</div><div class="st-b">
+          <div class="hit">Stop building AI against assumptions. Start with how your organization actually works.</div>
+          <div class="why"><p>Most AI projects fail because they solve the wrong problem. AESOP captures your org structure, strategic priorities, and where work gets stuck <em>before</em> anyone starts building. You get a living map of your organization that every subsequent AI project is grounded against.</p></div>
+          <div class="gp">
+            <div class="gpn"><div class="gp-k">What you get</div><ul><li>A single dashboard showing every AI project, its stage, and whether it&rsquo;s on track.</li><li>A department roster mapping who decides what.</li><li>An AI adoption roadmap auto-generated from your own data.</li></ul></div>
+            <div class="gpn"><div class="gp-k">Why it matters</div><p>Without this you&rsquo;re guessing. With it, every AI investment traces to a strategic priority and a named owner. When the board asks what you&rsquo;re getting from AI, you have the answer.</p></div>
+          </div>
+          <div class="metric"><span class="m-k">Measured</span> Portfolio health &mdash; how many projects, how fast they move, and whether the organization is ready for what&rsquo;s coming.</div>
+        </div></div>
+
+        <div class="st"><div class="st-k"><span class="ord">STAGE 02</span>Signed<br>commitment</div><div class="st-b">
+          <div class="hit">No project starts without a signed commitment.</div>
+          <div class="why"><p>Every AI initiative has a named sponsor, a measurable goal, and an agreed scope &mdash; signed before a dollar is spent on design. A Working Agreement locks in who is responsible, what success looks like, and how quickly stakeholders respond. Design and build are gated: until it&rsquo;s signed, no work proceeds.</p></div>
+          <div class="gp">
+            <div class="gpn"><div class="gp-k">What you get</div><ul><li>A signed document with a north-star metric &mdash; one measurable outcome.</li><li>A named executive sponsor.</li><li>Expiration tracking so commitments stay current.</li></ul></div>
+            <div class="gpn"><div class="gp-k">Why it matters</div><p>AI projects without executive sponsorship die quietly. This puts someone with authority on the hook before resources are committed. The north-star metric becomes the yardstick for every stage that follows.</p></div>
+          </div>
+          <div class="metric"><span class="m-k">Measured</span> The north-star metric is defined here. It answers &ldquo;did this work?&rdquo; and is re-checked at every gate: Design, Build, Evaluate, Monitor.</div>
+        </div></div>
+
+        <div class="st"><div class="st-k"><span class="ord">STAGE 03</span>A straight<br>answer</div><div class="st-b">
+          <div class="hit">The platform will tell you when an AI project isn&rsquo;t worth building &mdash; and give you the reasoning.</div>
+          <div class="why"><p>Before any design or build work, a structured assessment examines the problem, the stakeholders, and whether the organization can absorb the change. You get a clear verdict: GO, NO-GO, or CONDITIONAL. The platform is designed to say no when conditions aren&rsquo;t right.</p></div>
+          <div class="gp">
+            <div class="gpn"><div class="gp-k">What you get</div><ul><li>A documented Opportunity Brief.</li><li>A GO/NO-GO decision with reasoning visible.</li><li>A stakeholder map &mdash; who&rsquo;s affected, who sponsors, who owns the outcome.</li></ul></div>
+            <div class="gpn"><div class="gp-k">Why it matters</div><p>The most expensive AI mistake is building something nobody needs or uses. This gate catches it before it consumes an engineering hour. Conditional verdicts say exactly what must change before you can proceed.</p></div>
+          </div>
+          <div class="metric"><span class="m-k">Measured</span> Commitment readiness across three dimensions &mdash; team capacity, response speed, change appetite. Scores below 60 trigger a conditional verdict. North-star alignment verified against the Working Agreement.</div>
+        </div></div>
+
+        <div class="st"><div class="st-k"><span class="ord">STAGE 04</span>Right tool,<br>right job</div><div class="st-b">
+          <div class="hit">Don&rsquo;t default to whatever AI platform you already pay for.</div>
+          <div class="why"><p>AESOP generates a full PRD from the discovery work, then scores each platform option &mdash; Glean, Claude, OpenAI, or a custom build &mdash; across feasibility, capability, and fit. An 11-dimension gap analysis flags anything that can&rsquo;t be built as specified before work begins.</p></div>
+          <div class="gp">
+            <div class="gpn"><div class="gp-k">What you get</div><ul><li>A full PRD you can share with stakeholders.</li><li>A side-by-side platform comparison with rationale.</li><li>Red flags for unmet requirements &mdash; raised before money is spent, not after.</li></ul></div>
+            <div class="gpn"><div class="gp-k">Why it matters</div><p>Platform lock-in is expensive. Choosing the wrong tool because &ldquo;we already pay for it&rdquo; yields agents that underperform or can&rsquo;t do the job. This gives you an evidence-based recommendation you can defend.</p></div>
+          </div>
+        </div></div>
+
+        <div class="st"><div class="st-k"><span class="ord">STAGE 05</span>You see it,<br>you approve it</div><div class="st-b">
+          <div class="hit">No black boxes. The agent&rsquo;s instructions are visible, and a human signs off at the critical checkpoint.</div>
+          <div class="why"><p>The build process writes the agent&rsquo;s system instructions in the open. Before the agent is finalized, a human must approve the gap analysis &mdash; a hard stop, not a dismissible notification. You see what the agent will do, what could go wrong, and what ripple effects to watch.</p></div>
+          <div class="gp">
+            <div class="gpn"><div class="gp-k">What you get</div><ul><li>Visible, editable agent instructions &mdash; not a compiled black box.</li><li>A required human approval checkpoint.</li><li>A summary of what will change, what could break, who needs to know.</li></ul></div>
+            <div class="gpn"><div class="gp-k">Why it matters</div><p>Shadow AI is a governance nightmare. This makes every build transparent. When regulators ask how an agent was developed, you have a documented trail with human decision points.</p></div>
+          </div>
+        </div></div>
+
+        <div class="st"><div class="st-k"><span class="ord">STAGE 06</span>Safety is<br>enforced</div><div class="st-b">
+          <div class="hit">If an agent fails safety or bias checks, it cannot ship. Enforced by the system, not left to judgment.</div>
+          <div class="why"><p>Seven evaluation methods test every agent before deployment. Adversarial red-team probes boundary violations; bias testing checks for unfairness across demographics. A hard veto caps the total score when safety or bias falls below 75% &mdash; no exceptions, no overrides. You can prove every agent was tested before it went live.</p></div>
+          <div class="gp">
+            <div class="gpn"><div class="gp-k">What you get</div><ul><li>A certification badge &mdash; Bronze through Platinum &mdash; for every agent.</li><li>A pass/fail verdict with the veto rule visible.</li><li>Downloadable evaluation reports, findings linked to source evidence.</li></ul></div>
+            <div class="gpn"><div class="gp-k">Why it matters</div><p>One AI safety incident can cost millions in reputation and penalties. This is documented proof of due diligence. When the board asks how you know it&rsquo;s safe, you have the receipt.</p></div>
+          </div>
+          <div class="metric"><span class="m-k">Measured</span> Certification score &mdash; Bronze 75+, Silver 80+, Gold 85+, Platinum 90+. Hard veto on bias and safety. North-star outcome: did the agent actually move the needle?</div>
+        </div></div>
+
+        <div class="st"><div class="st-k"><span class="ord">STAGE 07</span>People<br>use it</div><div class="st-b">
+          <div class="hit">A technically perfect agent nobody uses is wasted money.</div>
+          <div class="why"><p>One click produces the four documents an organization needs to adopt, maintain, and get value from every agent &mdash; all generated from data the platform already collected during discovery and design.</p></div>
+          <div class="gp">
+            <div class="gpn"><div class="gp-k">What you get</div><ul><li>A RACI matrix &mdash; who owns what.</li><li>A Tiger Team brief &mdash; what changes for stakeholders.</li><li>A maintenance plan &mdash; when it&rsquo;s re-evaluated, when it&rsquo;s decommissioned.</li><li>An adoption plan &mdash; phased rollout with readiness gates.</li></ul></div>
+            <div class="gpn"><div class="gp-k">Why it matters</div><p>The #1 cause of AI failure isn&rsquo;t technical, it&rsquo;s that nobody uses the thing. This stage ships every agent with an adoption strategy, not just a deploy button. Maintenance plans stop orphaned agents running unattended.</p></div>
+          </div>
+          <div class="metric"><span class="m-k">Measured</span> Adoption tracked against the north-star metric. Baseline before rollout, weekly tracking, a clear threshold for &ldquo;adopted.&rdquo;</div>
+        </div></div>
+
+        <div class="st"><div class="st-k"><span class="ord">STAGE 08</span>Always<br>informed</div><div class="st-b">
+          <div class="hit">See every agent, its health, its cost, and whether it&rsquo;s still doing what it was built to do.</div>
+          <div class="why"><p>A portfolio dashboard shows all agents with current scores, cost tracking, and drift alerts. When performance drops or an agent hasn&rsquo;t been evaluated in 30 days, you get an alert. Every agent carries its named sponsor and product owner from the Working Agreement &mdash; they own it for life. No single-architect bottleneck.</p></div>
+          <div class="gp">
+            <div class="gpn"><div class="gp-k">What you get</div><ul><li>Score-trajectory charts for every agent.</li><li>Version history with diffs.</li><li>Drift and staleness alerts.</li><li>Per-agent and aggregate cost tracking.</li><li>North-star metric time series.</li></ul></div>
+            <div class="gpn"><div class="gp-k">Why it matters</div><p>AI agents drift and requirements change. Without continuous monitoring you only learn an agent has degraded when someone complains &mdash; or when it causes harm.</p></div>
+          </div>
+          <div class="metric"><span class="m-k">Measured</span> North-star tracked continuously; adoption monitored; drift triggers automatic repair. <code>Define &rarr; Target &rarr; Track &rarr; Repair &rarr; Re-evaluate.</code> No agent runs unattended.</div>
+        </div></div>
+
+      </div>
+    </section>
+
+    <!-- 02 -->
+    <section class="sec">
+      <div class="sec-title"><span class="n">02</span><h2>What this means for the business</h2></div>
+      <div class="sec-body">
+        <div class="st"><div class="st-k">Single<br>system</div><div class="st-b">One platform from idea to monitoring. No scattered tools, no lost context, no &ldquo;who built this?&rdquo;</div></div>
+        <div class="st"><div class="st-k">Safety<br>enforced</div><div class="st-b">Unsafe agents can&rsquo;t ship. Governance is built into the software, not left to hoping people follow policy.</div></div>
+        <div class="st"><div class="st-k">Knowledge<br>persists</div><div class="st-b">When people leave, their expertise stays. Every decision is documented and traceable. Institutional memory is built in.</div></div>
+        <div class="st"><div class="st-k">Auditable<br>&amp; monitored</div><div class="st-b">Every agent decision is documented and traceable. Continuous monitoring proves governance to regulators and the board.</div></div>
+      </div>
+    </section>
+
+    <footer class="footer">
+      <a href="../aesop.html">&larr; AESOP</a>
+      <span><a href="aesop-studio-showcase.html">Platform detail &rarr;</a> &nbsp;&middot;&nbsp; &copy; 2025-2026 Charlie Fuller</span>
+    </footer>
+
   </div>
 </div>
 
-<div class="container">
-
-  <div class="hero">
-    <h1>AESOP Transformation OS</h1>
-    <p class="lead">Move from &ldquo;we should use AI&rdquo; to governed, trusted agents running across your business &mdash; with safety enforced, adoption measured, and nothing lost when people leave.</p>
-  </div>
-
-  <section>
-    <h2>What this platform does for you</h2>
-
-    <div class="stage">
-      <div class="stage-head"><div class="stage-num">1</div><div class="stage-info">
-        <h3>Know what you have before you automate it</h3>
-        <div class="outcome-line">Stop building AI against assumptions.<br>
-Start with how your organization actually works.</div>
-        <div class="why">
-          <p>Most AI projects fail because they solve the wrong problem.<br>
-AESOP captures your org structure, strategic priorities, and where work gets stuck &mdash; <em>before</em> anyone starts building.<br>
-You get a living map of your organization that every subsequent AI project is grounded against.</p>
-          <div class="subpanels">
-            <div class="subpanel"><strong>What you get</strong>A single dashboard showing every AI project, what stage it&rsquo;s in, and whether it&rsquo;s on track.<br>
-A department roster that maps who decides what.<br>
-An AI adoption roadmap auto-generated from your own data.</div>
-            <div class="subpanel"><strong>Why it matters</strong>Without this, you&rsquo;re guessing.<br>
-With it, every AI investment is traceable to a strategic priority and a named owner.<br>
-When the board asks &ldquo;what are we getting from AI?&rdquo; you have the answer.</div>
-          </div>
-          <div class="metric-line"><strong>↦ Measured:</strong> Portfolio health &mdash; how many projects, how fast they move, and whether the organization is ready for what&rsquo;s coming.</div>
-        </div>
-      </div></div>
-    </div>
-
-    <div class="stage">
-      <div class="stage-head"><div class="stage-num">2</div><div class="stage-info">
-        <h3>No project starts without a signed commitment</h3>
-        <div class="outcome-line">Every AI initiative has a named sponsor, a measurable goal, and an agreed scope &mdash; signed before a dollar is spent on design.</div>
-        <div class="why">
-          <p>A Working Agreement locks in who is responsible, what success looks like, and how quickly stakeholders commit to respond.<br>
-Design and build are gated: until the agreement is signed, no work proceeds.<br>
-This is the accountability mechanism that prevents AI projects from drifting into endless exploration.</p>
-          <div class="subpanels">
-            <div class="subpanel"><strong>What you get</strong>A signed document with a north star metric &mdash; a single measurable outcome like &ldquo;reduce contract review from 14 days to 2 days.&rdquo;<br>
-Named executive sponsor.<br>
-Expiration tracking so commitments stay current.</div>
-            <div class="subpanel"><strong>Why it matters</strong>AI projects without executive sponsorship die quietly.<br>
-This ensures someone with authority has skin in the game before resources are committed.<br>
-The north star metric becomes the yardstick for every subsequent stage.</div>
-          </div>
-          <div class="metric-line"><strong>↦ Measured:</strong> North star metric defined here.<br>
-This single number answers &ldquo;did this work?&rdquo; and is referenced at every gate: Design (can we hit it?), Build (does the agent target it?), Evaluate (did we hit it?), Monitor (are we still hitting it?).</div>
-        </div>
-      </div></div>
-    </div>
-
-    <div class="stage">
-      <div class="stage-head"><div class="stage-num">3</div><div class="stage-info">
-        <h3>A straight answer before you spend</h3>
-        <div class="outcome-line">The platform will tell you when an AI project isn&rsquo;t worth building &mdash; and give you the reasoning behind it.</div>
-        <div class="why">
-          <p>Before any design or build work, a structured assessment examines the problem, the stakeholders, and whether the organization is ready to absorb the change.<br>
-You get a clear verdict: GO, NO-GO, or CONDITIONAL.<br>
-The platform is designed to say no when the conditions aren&rsquo;t right &mdash; saving you from expensive failures.</p>
-          <div class="subpanels">
-            <div class="subpanel"><strong>What you get</strong>A documented Opportunity Brief.<br>
-A GO/NO-GO decision with the reasoning visible.<br>
-A stakeholder map showing who is affected, who sponsors, and who owns the outcome.</div>
-            <div class="subpanel"><strong>Why it matters</strong>The most expensive AI mistake is building something nobody needs or nobody uses.<br>
-This gate catches those before they consume a single engineering hour.<br>
-Conditional verdicts tell you exactly what needs to change before you can proceed.</div>
-          </div>
-          <div class="metric-line"><strong>↦ Measured:</strong> Commitment readiness scored across three dimensions &mdash; team capacity, response speed, and change appetite.<br>
-Scores below 60 trigger a conditional verdict.<br>
-North star alignment verified against the Working Agreement.</div>
-        </div>
-      </div></div>
-    </div>
-
-    <div class="stage">
-      <div class="stage-head"><div class="stage-num">4</div><div class="stage-info">
-        <h3>The right tool for the right job</h3>
-        <div class="outcome-line">Don&rsquo;t default to whatever AI platform you already pay for.<br>
-Get a scored recommendation based on what actually fits the problem.</div>
-        <div class="why">
-          <p>AESOP generates a complete product requirements document from the discovery work, then scores each platform option &mdash; Glean, Claude, OpenAI, or a custom build &mdash; across feasibility, capability, and fit.<br>
-An 11-dimension gap analysis flags anything that can&rsquo;t be built as specified before work begins.</p>
-          <div class="subpanels">
-            <div class="subpanel"><strong>What you get</strong>A full PRD you can share with stakeholders.<br>
-A side-by-side platform comparison with rationale.<br>
-Red flags for any requirement that can&rsquo;t be met &mdash; raised before money is spent, not after.</div>
-            <div class="subpanel"><strong>Why it matters</strong>Platform lock-in is expensive.<br>
-Choosing the wrong tool because &ldquo;we already pay for it&rdquo; leads to agents that underperform or can&rsquo;t do the job.<br>
-This gives you an evidence-based recommendation you can defend.</div>
-          </div>
-        </div>
-      </div></div>
-    </div>
-
-    <div class="stage">
-      <div class="stage-head"><div class="stage-num">5</div><div class="stage-info">
-        <h3>You see what&rsquo;s being built &mdash; and you approve it</h3>
-        <div class="outcome-line">No black boxes.<br>
-The agent&rsquo;s instructions are visible.<br>
-A human sign-off is required before work proceeds past the critical checkpoint.</div>
-        <div class="why">
-          <p>The build process writes the agent&rsquo;s system instructions in the open.<br>
-Before the agent is finalized, a human must approve the gap analysis &mdash; this is a hard stop, not a notification you can ignore.<br>
-You see what the agent will do, what could go wrong, and what ripple effects to watch for.</p>
-          <div class="subpanels">
-            <div class="subpanel"><strong>What you get</strong>Visible, editable agent instructions &mdash; not a compiled black box.<br>
-A required human approval checkpoint.<br>
-A summary that tells you what will change, what could break, and who needs to know.</div>
-            <div class="subpanel"><strong>Why it matters</strong>Shadow AI is a governance nightmare.<br>
-This process ensures every agent is built with transparency.<br>
-When regulators ask &ldquo;how was this agent developed?&rdquo; you have a documented trail with human decision points.</div>
-          </div>
-        </div>
-      </div></div>
-    </div>
-
-    <div class="stage">
-      <div class="stage-head"><div class="stage-num">6</div><div class="stage-info">
-        <h3>Safety isn&rsquo;t optional &mdash; and the platform enforces it</h3>
-        <div class="outcome-line">If an agent fails safety or bias checks, it cannot ship.<br>
-This is enforced by the system, not left to human judgment.</div>
-        <div class="why">
-          <p>Seven different evaluation methods test every agent before deployment.<br>
-Adversarial red-team testing probes for boundary violations.<br>
-Bias testing checks for unfairness across demographics.<br>
-A hard veto rule caps the total score if safety or bias falls below 75% &mdash; no exceptions, no overrides.<br>
-You can prove to regulators and the board that every agent was tested before it went live.</p>
-          <div class="subpanels">
-            <div class="subpanel"><strong>What you get</strong>A certification badge (Bronze through Platinum) for every agent.<br>
-A pass/fail verdict with the veto rule visible.<br>
-Downloadable evaluation reports with findings linked to source evidence &mdash; audit-ready.</div>
-            <div class="subpanel"><strong>Why it matters</strong>One AI safety incident can cost millions in reputation and regulatory penalties.<br>
-This platform gives you documented proof of due diligence.<br>
-When the board asks &ldquo;how do we know this is safe?&rdquo; you have the receipt.</div>
-          </div>
-          <div class="metric-line"><strong>↦ Measured:</strong> Certification score (Bronze 75+, Silver 80+, Gold 85+, Platinum 90+).<br>
-Hard veto on bias and safety.<br>
-North star outcome evaluated: did the agent actually move the needle defined at commitment?</div>
-        </div>
-      </div></div>
-    </div>
-
-    <div class="stage">
-      <div class="stage-head"><div class="stage-num">7</div><div class="stage-info">
-        <h3>People actually use what you build</h3>
-        <div class="outcome-line">A technically perfect agent that nobody uses is wasted money.<br>
-AESOP generates everything your organization needs to adopt, maintain, and get value from every agent.</div>
-        <div class="why">
-          <p>One click produces four documents: who is responsible for what, a 5-minute brief for stakeholders explaining what changes for them, a maintenance plan with evaluation cadences and decommission criteria, and a phased adoption plan calibrated to how ready the organization actually is.<br>
-All generated from data the platform already collected during discovery and design.</p>
-          <div class="subpanels">
-            <div class="subpanel"><strong>What you get</strong>RACI matrix (who owns what).<br>
-Tiger Team brief (what changes for stakeholders).<br>
-Maintenance plan (when it gets re-evaluated).<br>
-Adoption plan (phased rollout with readiness gates).</div>
-            <div class="subpanel"><strong>Why it matters</strong>The #1 cause of AI project failure isn&rsquo;t technical &mdash; it&rsquo;s that nobody uses the thing.<br>
-This stage ensures every agent ships with an adoption strategy, not just a deploy button.<br>
-Maintenance plans prevent orphaned agents running unattended.</div>
-          </div>
-          <div class="metric-line"><strong>↦ Measured:</strong> Adoption tracked against the north star metric defined at commitment.<br>
-Baseline before rollout, weekly tracking, clear threshold for &ldquo;adopted.&rdquo;</div>
-        </div>
-      </div></div>
-    </div>
-
-    <div class="stage">
-      <div class="stage-head"><div class="stage-num">8</div><div class="stage-info">
-        <h3>You know what&rsquo;s happening, always</h3>
-        <div class="outcome-line">See every agent, its current health, its cost, and whether it&rsquo;s still doing what it was built to do.<br>
-If something degrades, you know immediately.</div>
-        <div class="why">
-          <p>A portfolio dashboard shows all agents with current scores, cost tracking, and drift alerts.<br>
-When an agent&rsquo;s performance drops or it hasn&rsquo;t been evaluated in 30 days, you get an alert.</p>
-          <div class="subpanels">
-            <div class="subpanel"><strong>What you get</strong>Score trajectory charts for every agent.<br>
-Version history with diffs.<br>
-Drift and staleness alerts.<br>
-Per-agent and aggregate cost tracking.<br>
-North star metric time-series charts.</div>
-            <div class="subpanel"><strong>Why it matters</strong>AI agents drift.<br>
-Requirements change.<br>
-Without continuous monitoring, you don&rsquo;t know an agent has degraded until someone complains &mdash; or worse, until it causes harm.</div>
-          </div>
-          <p style="margin-top:12px;">Every agent has a named sponsor and product owner from the Working Agreement.<br>
-They own the agent for life.<br>
-No single architect bottleneck.</p>
-          <div class="metric-line"><strong>↦ Measured:</strong> North star metric tracked continuously.<br>
-Adoption metrics monitored.<br>
-Drift triggers automatic repair.<br>
-<span class="arrow">Define → Target → Track → Repair → Re-evaluate.<br>
-No agent runs unattended.</span></div>
-        </div>
-      </div></div>
-    </div>
-  </section>
-
-  <section>
-    <h2>What this means for the business</h2>
-    <div class="outcome-grid">
-      <div class="outcome"><div class="num">1</div><div class="label">Single System</div><p>One platform from idea to monitoring.<br>
-No scattered tools, no lost context, no &ldquo;who built this?&rdquo;</p></div>
-      <div class="outcome"><div class="num">Hard Veto</div><div class="label">Safety Enforced</div><p>Unsafe agents can&rsquo;t ship.<br>
-Governance is built into the software, not left to hoping people follow policy.</p></div>
-      <div class="outcome"><div class="num">No Ghosts</div><div class="label">Knowledge Persists</div><p>When people leave, their expertise stays.<br>
-Every decision is documented and traceable.<br>
-Institutional memory is built in.</p></div>
-      <div class="outcome"><div class="num">Explainable</div><div class="label">Auditable &amp; Monitored</div><p>Every agent decision is documented and traceable.<br>
-Continuous monitoring proves governance to regulators and the board.</p></div>
-    </div>
-  </section>
-
-  <div class="footer"><a href="aesop-studio-showcase.html">Technical Details &rarr;</a> &nbsp;&middot;&nbsp; &copy; 2025-2026 Charlie Fuller &nbsp;&middot;&nbsp; <a href="https://linkedin.com/in/charlie-fuller-colorado/" target="_blank" rel="noopener">LinkedIn</a></div>
-</div>
-<script>
-  const toggle = document.getElementById('themeToggle');
-  const iconLight = toggle.querySelector('.icon-light');
-  const iconDark = toggle.querySelector('.icon-dark');
-  function setTheme(d) {
-    document.documentElement.classList.toggle('dark', d);
-    iconLight.style.display = d ? 'none' : '';
-    iconDark.style.display = d ? '' : 'none';
-    try { localStorage.setItem('diagram-theme', d ? 'dark' : 'light'); } catch(e) {}
-  }
-  toggle.addEventListener('click', () => setTheme(!document.documentElement.classList.contains('dark')));
-  try { if (localStorage.getItem('diagram-theme') === 'dark') setTheme(true); } catch(e) {}
-</script>
 </body>
 </html>
