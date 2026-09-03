@@ -56,6 +56,7 @@ Dark mode is a manual toggle via the `html.dark` class and `localStorage` key `d
 
 - **Diagram graphics follow the `visual-explainer` skill**, which delegates them to the `custom-svg-diagram` skill: machine-verified inline SVG (arrows clipped to box edges, no overlaps, no text on a line), generated from `layout()`/`assemble()` and gated with `check.mjs`. This is the default for architecture, data-flow, pipeline, and process diagrams. Don't hand-write a Mermaid chart — an unverified Mermaid is worse than none.
 - Linear A→B→C flows: pure-CSS flowchart (no library). Branching/parallel/join process diagrams: custom SVG via `custom-svg-diagram`.
+- **Never flatten a diagram into a list.** When a source page contains a rendered process/flow diagram (Mermaid, SVG, or CSS boxes), the restyled page MUST reproduce it as a real drawn diagram — an inline-SVG process map (or custom-SVG via `custom-svg-diagram`). Ruled Ledger rows (`.pmap`) are for arguments, inventories, and reference detail; they are NOT a substitute for a diagram. If the original drew the flow, you draw the flow.
 - Mermaid is reserved for where visual-explainer's rendering table calls for it (sequence, ER, state-machine). Keep it out of process/architecture maps.
 - Structured data (issue lists, risk tiers, matrices): real `<table>` inside `.table-wrap` — not CSS-grid pretending.
 - Page backlinks were standardized one step back to category pages (commit `e866e16`). When a category is renamed the content pages' backlinks follow.
@@ -63,6 +64,8 @@ Dark mode is a manual toggle via the `html.dark` class and `localStorage` key `d
 ## Verification checklist
 
 Before committing: toggle dark/light (all text readable, SVG nodes re-colored via the palette vars), follow the backlink (right parent), resize to 375px (no overflow, grids stack), confirm the diagram rendered (not blank; custom-SVG diagrams must pass `check.mjs`/`verify.mjs`), no broken links, title matches h1, meta present, no emoji, `html.dark` not `@media`, reduced-motion present.
+
+**Diagram-fidelity check:** if the page being restyled originally contained a rendered flow/process diagram (Mermaid, SVG, or CSS box pipeline), the new page must still *draw* one — it needs an `<svg>` process map with 2+ arrow connectors, not just text rows restating the flow. Grep for `mermaid`/`<script>` catching nothing does not clear this; the drawing itself has to be there.
 
 Brand voice: this is AESOP / legal / portfolio work — write like a human, call out the bullshit, short sentences, "you" not "organizations." The full voice spec lives in the `diagrams` skill and Charlie's brand-voice memory.
 
