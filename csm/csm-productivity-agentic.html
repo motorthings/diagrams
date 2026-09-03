@@ -1,0 +1,305 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Customer Success — Productivity to Agentic</title>
+<meta name="description" content="The productivity layer an AI platform shipped, the gaps it left, and the agentic layer that comes next — mapped end to end.">
+<link rel="icon" href="../icon.svg" type="image/svg+xml" />
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,650&family=Sora:wght@400;500;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --font-display: 'Fraunces', Georgia, serif;
+  --font-body: 'Sora', system-ui, sans-serif;
+  --font-mono: 'Space Mono', 'SF Mono', Consolas, monospace;
+  --bg: #f7fafc;
+  --surface: #ffffff;
+  --surface-2: #eef4f9;
+  --border: rgba(15, 23, 42, 0.08);
+  --border-bright: rgba(15, 23, 42, 0.16);
+  --text: #0f172a;
+  --text-dim: #5b6472;
+  --muted: #8a93a3;
+  --accent: #5b9bd5; --accent-deep: #3f7fb8; --accent-dim: rgba(91,155,213,0.12);
+  --det: #5b9bd5; --det-dim: rgba(91,155,213,0.12);
+  --prob: #a12bb8; --prob-dim: rgba(161,43,184,0.10);
+  --good: #16a34a; --good-dim: rgba(22,163,74,0.12);
+  --warn: #d97706; --warn-dim: rgba(217,119,6,0.12);
+  --arr-color: var(--text-dim); --arr-color-strong: var(--accent-deep);
+  --storage: #5b9bd5; --compute: #a12bb8; --model: #0f766e; --consumer: #16a34a;
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #0d1319; --surface: #151c24; --surface-2: #1b242e;
+    --border: rgba(255,255,255,0.08); --border-bright: rgba(255,255,255,0.16);
+    --text: #e6edf3; --text-dim: #9aa6b2; --muted: #6b7683;
+    --accent-dim: rgba(91,155,213,0.16); --det-dim: rgba(91,155,213,0.16);
+    --prob-dim: rgba(161,43,184,0.16); --good-dim: rgba(22,163,74,0.16); --warn-dim: rgba(217,119,6,0.16);
+    --storage: #7cb3e0; --compute: #c084fc; --model: #2dd4bf; --consumer: #4ade80;
+  }
+}
+* { box-sizing: border-box; }
+html { scroll-behavior: smooth; }
+body {
+  margin: 0; font-family: var(--font-body); color: var(--text); background: var(--bg);
+  background-image: radial-gradient(ellipse 60% 42% at 50% -6%, var(--accent-dim) 0%, transparent 62%);
+  -webkit-font-smoothing: antialiased; min-height: 100vh;
+}
+.page { max-width: 1280px; margin: 0 auto; padding: 72px 20px 96px; }
+.eyebrow { font-family: var(--font-mono); font-size: 11px; font-weight: 700; letter-spacing: 2.5px; text-transform: uppercase; color: var(--accent-deep); margin-bottom: 18px; }
+h1 { font-family: var(--font-display); font-size: clamp(34px, 5.2vw, 52px); line-height: 1.02; font-weight: 580; letter-spacing: -0.02em; margin: 0 0 16px; }
+.lede { font-size: 17px; line-height: 1.6; color: var(--text-dim); max-width: 62ch; margin: 0 0 40px; }
+.lede strong { color: var(--text); font-weight: 600; }
+
+.sec { font-family: var(--font-mono); font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 2px; color: var(--muted); margin: 52px 0 16px; display: flex; align-items: center; gap: 10px; }
+.sec .n { color: var(--accent-deep); }
+.sec::after { content: ''; flex: 1; height: 1px; background: var(--border); }
+
+/* hero statement */
+.statement { font-family: var(--font-display); font-size: 22px; font-weight: 580; line-height: 1.32; padding: 24px 28px; background: var(--surface); border: 1px solid var(--border); border-radius: 14px; margin-bottom: 32px; }
+.statement .u { color: var(--warn); }
+.statement .g { color: var(--good); }
+
+/* the arc — three stages */
+.arc { display: grid; grid-template-columns: 1fr auto 1fr auto 1fr; gap: 0; align-items: stretch; margin-bottom: 8px; }
+.arc-stage { background: var(--surface); border: 1px solid var(--border); border-radius: 14px; padding: 20px 20px 18px; min-width: 0; }
+.arc-stage .tag { font-family: var(--font-mono); font-size: 9.5px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; padding: 2px 8px; border-radius: 20px; display: inline-block; margin-bottom: 12px; }
+.arc-stage h3 { font-family: var(--font-display); font-size: 19px; font-weight: 600; margin: 0 0 6px; letter-spacing: -0.01em; }
+.arc-stage p { font-size: 13px; line-height: 1.5; color: var(--text-dim); margin: 0; }
+.arc-stage p strong { color: var(--text); font-weight: 600; }
+.arc-stage ul { list-style: none; margin: 10px 0 0; padding: 0; }
+.arc-stage li { font-size: 12.5px; line-height: 1.45; padding: 5px 0 5px 14px; position: relative; color: var(--text-dim); }
+.arc-stage li::before { content: ''; position: absolute; left: 2px; top: 11px; width: 5px; height: 5px; border-radius: 50%; }
+.arc-stage--good { background: color-mix(in srgb, var(--surface) 82%, var(--good-dim)); border-top: 3px solid var(--good); }
+.arc-stage--good .tag { background: var(--good-dim); color: var(--good); }
+.arc-stage--good li::before { background: var(--good); }
+.arc-stage--warn { background: color-mix(in srgb, var(--surface) 82%, var(--warn-dim)); border-top: 3px solid var(--warn); }
+.arc-stage--warn .tag { background: var(--warn-dim); color: var(--warn); }
+.arc-stage--warn li::before { background: var(--warn); }
+.arc-stage--det { background: color-mix(in srgb, var(--surface) 82%, var(--det-dim)); border-top: 3px solid var(--det); }
+.arc-stage--det .tag { background: var(--det-dim); color: var(--accent-deep); }
+.arc-stage--det li::before { background: var(--det); }
+.arc-arrow { align-self: center; justify-self: center; font-family: var(--font-mono); font-size: 20px; color: var(--muted); padding: 0 10px; }
+.arc-note { text-align: center; font-family: var(--font-mono); font-size: 11px; color: var(--muted); margin: 12px 0 0; }
+@media (max-width: 860px) {
+  .arc { grid-template-columns: 1fr; }
+  .arc-arrow { transform: rotate(90deg); padding: 4px 0; }
+}
+
+/* cards */
+.cards { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.card { background: var(--surface); border: 1px solid var(--border); border-radius: 14px; padding: 16px 18px; min-width: 0; }
+.card h3 { font-family: var(--font-display); font-size: 16px; font-weight: 600; margin: 0 0 6px; letter-spacing: -0.01em; }
+.card p { font-size: 13px; line-height: 1.55; color: var(--text-dim); margin: 0; }
+.card p strong { color: var(--text); font-weight: 600; }
+.card .metric { font-family: var(--font-mono); font-size: 12px; font-weight: 700; margin-top: 10px; display: inline-block; padding: 3px 9px; border-radius: 5px; }
+.card .src { font-family: var(--font-mono); font-size: 10px; color: var(--muted); margin-top: 8px; display: block; }
+.card--good { border-left: 3px solid var(--good); } .card--good .metric { background: var(--good-dim); color: var(--good); }
+.card--det { border-left: 3px solid var(--det); } .card--det .metric { background: var(--det-dim); color: var(--accent-deep); }
+.card--warn { border-left: 3px solid var(--warn); } .card--warn .metric { background: var(--warn-dim); color: var(--warn); }
+.card--prob { border-left: 3px solid var(--prob); } .card--prob .metric { background: var(--prob-dim); color: var(--prob); }
+.card ul { list-style: none; margin: 8px 0 0; padding: 0; }
+.card li { font-size: 12.5px; line-height: 1.5; color: var(--text-dim); padding: 4px 0 4px 14px; position: relative; }
+.card li::before { content: ''; position: absolute; left: 2px; top: 10px; width: 5px; height: 5px; border-radius: 50%; background: var(--muted); }
+.card--good li::before { background: var(--good); }
+.card--det li::before { background: var(--det); }
+.card--warn li::before { background: var(--warn); }
+.card--prob li::before { background: var(--prob); }
+@media (max-width: 768px) { .cards { grid-template-columns: 1fr; } }
+
+/* process map — svg */
+.svg-wrap { background: var(--surface); border: 1px solid var(--border); border-radius: 14px; padding: 22px 20px 16px; margin-bottom: 12px; overflow-x: auto; }
+.svg-wrap svg { width: 100%; height: auto; display: block; min-width: 900px; }
+.sv-title { font-family: var(--font-mono); font-size: 16px; font-weight: 700; letter-spacing: .01em; }
+.sv-sub { font-family: var(--font-mono); font-size: 13px; font-weight: 400; fill: var(--text-dim); letter-spacing: .01em; }
+.sv-arrow { fill: none; stroke: var(--arr-color); stroke-width: 2; stroke-linejoin: round; stroke-linecap: round; }
+.sv-arrow-d { fill: none; stroke: var(--arr-color); stroke-width: 2; stroke-dasharray: 3 3; stroke-linejoin: round; stroke-linecap: round; }
+.sv-box-storage { stroke: var(--storage); }
+.sv-box-compute { stroke: var(--compute); }
+.sv-box-model { stroke: var(--model); }
+.sv-box-consumer { stroke: var(--consumer); }
+.sv-pill { fill: var(--surface); }
+.sv-arrow-lbl { font-family: var(--font-mono); font-size: 12px; font-weight: 600; fill: var(--text); letter-spacing: .01em; }
+.legend { display: flex; gap: 18px; flex-wrap: wrap; font-family: var(--font-mono); font-size: 11px; color: var(--text-dim); }
+.legend span { display: inline-flex; align-items: center; gap: 6px; }
+.legend i { width: 10px; height: 10px; border-radius: 2px; display: inline-block; }
+
+/* bedrock callout */
+.bedrock { background: var(--prob-dim); border: 1px solid var(--border); border-radius: 12px; padding: 16px 22px; display: flex; align-items: baseline; gap: 14px; flex-wrap: wrap; margin-top: 14px; }
+.bedrock .blabel { font-family: var(--font-mono); font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 1.5px; color: var(--prob); white-space: nowrap; }
+.bedrock p { font-size: 13px; line-height: 1.55; color: var(--text-dim); flex: 1; min-width: 200px; margin: 0; }
+.bedrock p strong { color: var(--text); font-weight: 600; }
+
+/* plays */
+.play { background: var(--surface); border: 1px solid var(--border); border-left: 3px solid var(--accent); border-radius: 12px; padding: 18px 22px; margin-bottom: 12px; }
+.play .pnum { font-family: var(--font-mono); font-size: 11px; font-weight: 700; color: var(--accent-deep); text-transform: uppercase; letter-spacing: 1.5px; margin-bottom: 6px; }
+.play h3 { font-family: var(--font-display); font-size: 17px; font-weight: 600; margin: 0 0 6px; }
+.play blockquote { font-size: 14px; line-height: 1.6; color: var(--text-dim); font-style: italic; border-left: 2px solid var(--accent-dim); padding-left: 14px; margin: 0; }
+.play blockquote strong { color: var(--text); font-style: normal; font-weight: 600; }
+
+/* sources */
+.sources { display: flex; gap: 8px; flex-wrap: wrap; }
+.source { background: var(--surface); border: 1px solid var(--border); border-radius: 6px; padding: 6px 12px; font-family: var(--font-mono); font-size: 11px; color: var(--text-dim); }
+.source a { color: var(--accent-deep); text-decoration: none; }
+.source a:hover { text-decoration: underline; }
+.foot { margin-top: 56px; padding-top: 20px; border-top: 1px solid var(--border); font-family: var(--font-mono); font-size: 11px; color: var(--muted); }
+.backlink{position:fixed;top:12px;left:16px;z-index:101;font-family:var(--font-mono);font-size:12px;color:var(--text-dim);text-decoration:none;padding:6px 10px;border:1px solid var(--border);border-radius:6px;background:var(--surface);transition:color .15s,border-color .15s}
+.backlink:hover{color:var(--text);border-color:var(--border-bright)}
+</style>
+</head>
+<body>
+<a href="index.html" class="backlink">&larr; Customer Success</a>
+<div class="page">
+
+  <div class="eyebrow">Customer Success &middot; the arc</div>
+  <h1>Productivity today. Agentic next.</h1>
+  <p class="lede">The platform shipped the <strong>productivity layer</strong> &mdash; AI that drafts. The next layer is AI that <strong>acts</strong>. This is the arc between them.</p>
+
+  <div class="statement">Today the human is the <span class="u">integration</span>, the <span class="u">action</span>, and the <span class="u">guardrail</span> &mdash; all at once.<br>Remove the human, and all three become code. That&rsquo;s the job.</div>
+
+  <div class="arc">
+    <div class="arc-stage arc-stage--good">
+      <span class="tag">Shipped</span>
+      <h3>AI drafts, human acts</h3>
+      <p>Q Business ingests four systems and drafts follow-ups, health checks, renewals, email. Every output is a <strong>draft</strong> a human reviews and sends.</p>
+      <ul>
+        <li>Jan 2024 &rarr; Oct 2024</li>
+        <li>30+ custom Q Apps</li>
+        <li>18,300+ hrs/year reported</li>
+      </ul>
+    </div>
+    <div class="arc-arrow">&rarr;</div>
+    <div class="arc-stage arc-stage--warn">
+      <span class="tag">The gap</span>
+      <h3>The human is the seam</h3>
+      <p>It retrieves and generates. It doesn&rsquo;t <strong>execute</strong>, <strong>decide</strong>, or <strong>safely fail</strong> &mdash; the human does all three.</p>
+      <ul>
+        <li>Last mile is manual</li>
+        <li>No guardrail but a human eyeball</li>
+        <li>Measured in hours, not outcomes</li>
+      </ul>
+    </div>
+    <div class="arc-arrow">&rarr;</div>
+    <div class="arc-stage arc-stage--det">
+      <span class="tag">The vision</span>
+      <h3>AI acts, human judges</h3>
+      <p>Agents do the routine work end-to-end. The human moves <strong>above the loop</strong> &mdash; gate, exception, relationship.</p>
+      <ul>
+        <li>Orchestration + MCP</li>
+        <li>HITL guardrails + eval</li>
+        <li>Outcome, not hours</li>
+      </ul>
+    </div>
+  </div>
+  <div class="arc-note">Not &ldquo;remove the human.&rdquo; Move the human up.</div>
+
+  <div class="sec"><span class="n">01</span> The productivity layer &mdash; what shipped</div>
+  <div class="cards">
+    <div class="card card--good"><h3>The architecture</h3><p>A <strong>Chat UI</strong> on Amazon Q Business, four sources into one context layer.</p><ul><li>S3 &middot; Redshift &middot; SharePoint &middot; Totango</li><li>30+ custom Q Apps</li></ul><span class="src">AWS case study (co-authored)</span></div>
+    <div class="card card--good"><h3>The use cases</h3><p>All drafting and summarizing &mdash; none of it autonomous.</p><ul><li>Post-meeting follow-ups (summary + action items)</li><li>Health Check analysis</li><li>Renewal justifications</li><li>Personalized email drafts</li></ul><span class="src">AWS case study</span></div>
+    <div class="card card--good"><h3>Reported results</h3><p>Self-reported, unaudited. Say &ldquo;reported,&rdquo; never &ldquo;audited.&rdquo;</p><span class="metric">18,300+ hrs/year</span><span class="metric">40% admin gain</span><span class="src">12 hrs/week/consultant baseline</span></div>
+    <div class="card card--det"><h3>The stated roadmap</h3><p>The next move is named in the case study &mdash; and it&rsquo;s not built yet.</p><ul><li>Salesforce, Confluence, Smartsheet connectors</li><li>Agentic orchestration (Totango + Orchestrator)</li></ul><span class="metric">agentic = planned</span><span class="src">AWS case study</span></div>
+  </div>
+
+  <div class="sec"><span class="n">02</span> Where it stops &mdash; the bottlenecks</div>
+  <div class="cards">
+    <div class="card card--warn"><h3>The last mile is manual</h3><p>A Q App drafts the renewal justification; a consultant <strong>hand-copies it into the CRM</strong>. Generation is automated. The action isn&rsquo;t.</p></div>
+    <div class="card card--warn"><h3>Data answers, can&rsquo;t act</h3><p>Four systems in, Salesforce still <strong>unconnected</strong>. Worse: cross-system identity unresolved &mdash; is the Totango account the Salesforce one? Unsafe to act until IDs reconcile.</p></div>
+    <div class="card card--warn"><h3>Q Business retrieves, doesn&rsquo;t execute</h3><p>RAG answers and drafts. It has <strong>no action layer</strong> &mdash; hence Quick Automate + UnifyApps + MCP.</p></div>
+    <div class="card card--warn"><h3>The human is the only guardrail</h3><p>A draft gets an eyeball before it ships, so eval and drift-monitoring are <strong>implicit</strong>. Remove the human and you need guardrails, eval, rollback, audit &mdash; none built yet.</p></div>
+    <div class="card card--warn"><h3>Decentralized = a quality long tail</h3><p>The Program Champion network (150+ workflows, 50+ agents) drives adoption, not <strong>shared eval or security</strong>. Someone has to fold it into a governed layer.</p></div>
+    <div class="card card--warn"><h3>Hours, not outcomes</h3><p>Everything reported is <strong>hours saved</strong>. Gartner: productivity alone can&rsquo;t fund agentic AI. The missing metric is revenue &mdash; renewal, retention, upsell.</p></div>
+  </div>
+
+  <div class="sec"><span class="n">03</span> The work &mdash; what the role actually does</div>
+  <div class="cards">
+    <div class="card card--det"><h3>1 &middot; Orchestration</h3><p>Turn Q Business answers into governed executions across Salesforce, Totango, Clari, Gong via Quick Automate + UnifyApps.</p></div>
+    <div class="card card--det"><h3>2 &middot; Identity + data quality</h3><p>Make the five-plus systems share one account ID so the agent acts on the right record.</p></div>
+    <div class="card card--det"><h3>3 &middot; Guardrails + eval</h3><p>Where the human sits, approval gates, rollback, drift detection, grounding checks.</p></div>
+    <div class="card card--det"><h3>4 &middot; MCP breadth</h3><p>Expand the tool surface the agent can reach.</p></div>
+    <div class="card card--det"><h3>5 &middot; Outcome measurement</h3><p>Revenue and retention attribution, not another hours-saved dashboard.</p></div>
+    <div class="card card--det"><h3>6 &middot; Rationalize the long tail</h3><p>Fold 150+ ad-hoc workflows into a governed orchestration layer.</p></div>
+  </div>
+  <div class="bedrock">
+    <span class="blabel">The edge</span>
+    <p><strong>The CSM Health &amp; Renewals Agent already encodes #3 and #6.</strong> Deterministic engine decides, model narrates, human gates, outcome tracked. The pattern exists &mdash; not guessed at.</p>
+  </div>
+
+  <div class="sec"><span class="n">04</span> The process &mdash; the agentic loop</div>
+  <div class="svg-wrap">
+<svg viewBox="0 0 1490 352" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="agentic CS process map">
+<defs>
+  <marker id="arr" viewBox="0 0 10 10" refX="9.5" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M 0 0 L 10 5 L 0 10 z" style="fill:var(--arr-color)"></path></marker>
+  <marker id="arrStrong" viewBox="0 0 10 10" refX="9.5" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M 0 0 L 10 5 L 0 10 z" style="fill:var(--arr-color-strong)"></path></marker>
+</defs>
+<rect x="40" y="98" width="170" height="80" rx="8" class="sv-box-storage" style="fill:var(--storage);fill-opacity:0.13" stroke-width="1.5"></rect>
+<text class="sv-title" x="125" y="126.5" text-anchor="middle" style="fill:var(--storage)">Ingest</text>
+<text class="sv-sub" x="125" y="148.5" text-anchor="middle">one account ID</text>
+<rect x="280" y="98" width="170" height="80" rx="8" class="sv-box-compute" style="fill:var(--compute);fill-opacity:0.13" stroke-width="1.5"></rect>
+<text class="sv-title" x="365" y="126.5" text-anchor="middle" style="fill:var(--compute)">Score</text>
+<text class="sv-sub" x="365" y="148.5" text-anchor="middle">code decides</text>
+<rect x="520" y="98" width="170" height="80" rx="8" class="sv-box-model" style="fill:var(--model);fill-opacity:0.13" stroke-width="1.5"></rect>
+<text class="sv-title" x="605" y="126.5" text-anchor="middle" style="fill:var(--model)">Propose</text>
+<text class="sv-sub" x="605" y="148.5" text-anchor="middle">agent narrates</text>
+<rect x="760" y="98" width="170" height="80" rx="8" class="sv-box-compute" style="fill:var(--compute);fill-opacity:0.13" stroke-width="1.5"></rect>
+<text class="sv-title" x="845" y="126.5" text-anchor="middle" style="fill:var(--compute)">Gate</text>
+<text class="sv-sub" x="845" y="148.5" text-anchor="middle">human above loop</text>
+<rect x="1000" y="156" width="170" height="80" rx="8" class="sv-box-compute" style="fill:var(--compute);fill-opacity:0.13" stroke-width="1.5"></rect>
+<text class="sv-title" x="1085" y="184.5" text-anchor="middle" style="fill:var(--compute)">Auto-fly</text>
+<text class="sv-sub" x="1085" y="206.5" text-anchor="middle">low-risk</text>
+<rect x="1000" y="40" width="170" height="80" rx="8" class="sv-box-consumer" style="fill:var(--consumer);fill-opacity:0.13" stroke-width="1.5"></rect>
+<text class="sv-title" x="1085" y="68.5" text-anchor="middle" style="fill:var(--consumer)">Human approves</text>
+<text class="sv-sub" x="1085" y="90.5" text-anchor="middle">high-risk</text>
+<rect x="1240" y="98" width="170" height="80" rx="8" class="sv-box-consumer" style="fill:var(--consumer);fill-opacity:0.13" stroke-width="1.5"></rect>
+<text class="sv-title" x="1325" y="126.5" text-anchor="middle" style="fill:var(--consumer)">Track</text>
+<text class="sv-sub" x="1325" y="148.5" text-anchor="middle">outcome, not hours</text>
+<path class="sv-arrow" d="M 210 138 L 233 138 Q 245 138 257 138 L 280 138" marker-end="url(#arr)" stroke-width="2"></path>
+<rect class="sv-pill" x="185.46" y="68" width="72.08" height="18" rx="9"></rect>
+<text class="sv-arrow-lbl" x="221.5" y="82" text-anchor="middle">signals</text>
+<path class="sv-arrow" d="M 450 138 L 473 138 Q 485 138 497 138 L 520 138" marker-end="url(#arr)" stroke-width="2"></path>
+<rect class="sv-pill" x="436.62" y="68" width="49.76" height="18" rx="9"></rect>
+<text class="sv-arrow-lbl" x="461.5" y="82" text-anchor="middle">flag</text>
+<path class="sv-arrow" d="M 690 138 L 713 138 Q 725 138 737 138 L 760 138" marker-end="url(#arr)" stroke-width="2"></path>
+<rect class="sv-pill" x="672.9" y="68" width="57.2" height="18" rx="9"></rect>
+<text class="sv-arrow-lbl" x="701.5" y="82" text-anchor="middle">draft</text>
+<path class="sv-arrow" d="M 930 178 L 954.3285463721822 190.51182384855088 Q 965 196 977 196 L 1000 196" marker-end="url(#arr)" stroke-width="2"></path>
+<rect class="sv-pill" x="948.74" y="126" width="79.52" height="18" rx="9"></rect>
+<text class="sv-arrow-lbl" x="988.5" y="140" text-anchor="middle">low-risk</text>
+<path class="sv-arrow" d="M 930 98 L 954.3285463721822 85.48817615144914 Q 965 80 977 80 L 1000 80" marker-end="url(#arr)" stroke-width="2"></path>
+<rect class="sv-pill" x="945.02" y="10" width="86.96" height="18" rx="9"></rect>
+<text class="sv-arrow-lbl" x="988.5" y="24" text-anchor="middle">high-risk</text>
+<path class="sv-arrow" d="M 1170 196 L 1193 196 Q 1205 196 1215.6714536278178 190.51182384855088 L 1240 178" marker-end="url(#arr)" stroke-width="2"></path>
+<rect class="sv-pill" x="1145.46" y="126" width="72.08" height="18" rx="9"></rect>
+<text class="sv-arrow-lbl" x="1181.5" y="140" text-anchor="middle">execute</text>
+<path class="sv-arrow" d="M 1170 80 L 1193 80 Q 1205 80 1215.6714536278178 85.48817615144914 L 1240 98" marker-end="url(#arr)" stroke-width="2"></path>
+<rect class="sv-pill" x="1145.46" y="10" width="72.08" height="18" rx="9"></rect>
+<text class="sv-arrow-lbl" x="1181.5" y="24" text-anchor="middle">approve</text>
+<path class="sv-arrow-d" d="M 1325 178 L 1325 296 L 365 296 L 365 178" marker-end="url(#arr)" stroke-width="2"></path>
+<rect class="sv-pill" x="801.52" y="274" width="86.96" height="18" rx="9"></rect>
+<text class="sv-arrow-lbl" x="845" y="288" text-anchor="middle">eval loop</text>
+</svg>
+  </div>
+  <div class="legend">
+    <span><i style="background:var(--storage)"></i> Data</span>
+    <span><i style="background:var(--compute)"></i> Decides</span>
+    <span><i style="background:var(--model)"></i> Narrates</span>
+    <span><i style="background:var(--consumer)"></i> Human / outcome</span>
+  </div>
+  <div class="bedrock">
+    <span class="blabel">Through-line</span>
+    <p><strong>Risk math is code. The model narrates. The human gates.</strong> That&rsquo;s the guardrail pattern Q Business never built &mdash; and the exact shape of the CSM Health &amp; Renewals Agent.</p>
+  </div>
+
+  <div class="sec"><span class="n">05</span> Sources</div>
+  <div class="sources">
+    <span class="source">AWS case study</span>
+    <span class="source">Amazon Quick (Q Business)</span>
+  </div>
+
+  <div class="foot">&copy; 2025-2026 Charlie Fuller</div>
+
+</div>
+</body>
+</html>
