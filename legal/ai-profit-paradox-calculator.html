@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en" data-theme="dark">
+<html lang="en" data-theme="light">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -8,6 +8,12 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Mulish:ital,wght@0,300;0,400;0,600;0,700;0,800;1,400&display=swap" rel="stylesheet">
 <style>
+.crumbs{font-family:var(--font-mono,monospace);font-size:13px;font-weight:600;display:flex;align-items:center;gap:8px;flex-wrap:wrap;min-width:0}
+.crumbs a{color:var(--accent);text-decoration:none}
+.crumbs a:hover,.crumbs a:focus-visible{text-decoration:underline;outline:none}
+.crumbs .sep{color:var(--muted)}
+.crumbs .current{color:var(--muted);font-weight:400}
+
   :root{
     --paper:#171416; --card:#1E1A1D;
     --ink:#F5F2F1; --body:#C9C3C1; --muted:#948E8C;
@@ -162,13 +168,17 @@
 
 <div class="nav">
   <div class="nav-inner">
-    <a href="index.html" class="nav-brand" style="text-decoration:none;cursor:pointer">Charlie Fuller — <b>Legal AI Architect</b></a>
+    <nav class="crumbs" aria-label="Breadcrumb">
+  <a href="../index.html">Index</a>
+  <span class="sep">/</span>
+  <a href="index.html">Legal</a>
+  <span class="sep">/</span>
+  <span class="current" aria-current="page">The AI Profit Paradox</span>
+</nav>
+    
     <div class="nav-actions">
       <button class="btn" id="printBtn">Print / Save PDF</button>
-      <button class="theme-toggle" id="themeToggle" aria-label="Toggle theme">
-        <span class="icon-dark">&#9790;</span>
-        <span class="icon-light" style="display:none">&#9788;</span>
-      </button>
+      
     </div>
   </div>
 </div>
@@ -288,144 +298,6 @@
   </div>
 </div>
 
-<script>
-  const $ = id => document.getElementById(id);
-  const usd = n => (n < 0 ? "−$" : "$") + Math.abs(Math.round(n)).toLocaleString();
-  const usdM = n => { const s = n < 0 ? "−$" : "$"; const a = Math.abs(n);
-    return a >= 1e6 ? s + (a/1e6).toFixed(1) + "M" : a >= 1e3 ? s + (a/1e3).toFixed(0) + "K" : s + Math.round(a); };
 
-  // set by the Seam Finder handoff; carries the estimate's low/high into the money
-  let seamRange = null;
-
-  function calc() {
-    const rate = +$('rate').value, hours = +$('hours').value, lawyers = +$('lawyers').value,
-          aiCost = +$('aicost').value, addr = +$('addr').value/100, comp = +$('comp').value/100,
-          refill = +$('refill').value/100, pass = +$('pass').value/100,
-          check = +$('check').value/100, uplift = +$('uplift').value/100;
-
-    // gross hours AI removes, then net after you spend a share verifying the output
-    const freed  = hours * addr * comp;
-    const netFreed = freed * (1 - check);
-    // redeployed hours bill at (1 + uplift) × rate, not base rate
-    const hourly = -rate*netFreed*(1-refill) - aiCost;
-    const fixed  =  rate*netFreed*refill*(1+uplift) - rate*netFreed*pass - aiCost;
-    const swing  = fixed - hourly; // = rate·netFreed·(1 + refill·uplift − pass)
-    const beHourly = netFreed > 0 ? 1 + aiCost/(rate*netFreed) : Infinity;
-
-    $('rateV').textContent = "$" + rate + "/hr";
-    $('hoursV').textContent = hours.toLocaleString();
-    $('lawyersV').textContent = lawyers.toLocaleString();
-    $('aicostV').textContent = "$" + aiCost.toLocaleString();
-    $('addrV').textContent = Math.round(addr*100) + "%";
-    $('compV').textContent = Math.round(comp*100) + "%";
-    $('refillV').textContent = Math.round(refill*100) + "%";
-    $('passV').textContent = Math.round(pass*100) + "%";
-    $('checkV').textContent = Math.round(check*100) + "%";
-    $('upliftV').textContent = Math.round(uplift*100) + "%";
-
-    $('hourlyBig').textContent = usd(hourly);
-    $('fixedBig').textContent  = usd(fixed);
-    $('hourlyCard').className = 'card ' + (hourly >= 0 ? 'win' : 'loss');
-    $('fixedCard').className  = 'card ' + (fixed  >= 0 ? 'win' : 'loss');
-
-    $('swingBig').textContent = usd(swing) + " / lawyer / year";
-    $('firmLine').textContent = "Across " + lawyers.toLocaleString() + " lawyers, that's "
-        + usdM(swing*lawyers) + " a year in self-inflicted profit swing.";
-
-    // propagate the seam's uncertainty into the money when present
-    const rangeEl = $('seamRangeLine');
-    if (seamRange && rangeEl) {
-      const [aLo, aHi] = seamRange;
-      const freedLo = hours*(aLo/100)*comp*(1-check), freedHi = hours*(aHi/100)*comp*(1-check);
-      const swingLo = rate*freedLo*(1 + refill*uplift - pass), swingHi = rate*freedHi*(1 + refill*uplift - pass);
-      rangeEl.style.display = 'block';
-      rangeEl.textContent = "Seam-only uncertainty: at " + aLo + "% addressable, the swing is "
-        + usd(swingLo) + "; at " + aHi + "%, it's " + usd(swingHi)
-        + ". Only the seam varies; rate, hours, compression, refill and giveback are held at the values you entered. The number above is the center, not the truth.";
-    } else if (rangeEl) {
-      rangeEl.style.display = 'none';
-    }
-
-    const beTxt = isFinite(beHourly) ? Math.round(beHourly*100) + "%" : "impossible";
-    const gapPerLawyer = rate*netFreed*(1 + refill*uplift - pass);
-    $('verdict').innerHTML = "Hourly billing needs a <b>" + beTxt + " refill rate</b> just to break even "
-      + "— you'd have to resell every hour AI frees and then some. Your stated refill is "
-      + Math.round(refill*100) + "%. Fixed fee beats hourly by " + usd(gapPerLawyer)
-      + " per lawyer regardless"
-      + (uplift > 0 ? ", and redeploying freed hours to higher-value work adds "
-        + usd(rate*netFreed*refill*uplift) + " of that" : "")
-      + ". The check-back drag trims the gross hours by " + Math.round(check*100)
-      + "% before any of this counts. That gap is the paradox.";
-
-    const rows = [
-      ["Blended rate", "$" + rate + "/hr"],
-      ["Billable hours / lawyer", hours.toLocaleString()],
-      ["Firm size", lawyers.toLocaleString() + " lawyers"],
-      ["AI tooling / lawyer", "$" + aiCost.toLocaleString()],
-      ["Addressable work", Math.round(addr*100) + "%"],
-      ["Compression", Math.round(comp*100) + "%"],
-      ["Refill rate", Math.round(refill*100) + "%"],
-      ["Client giveback", Math.round(pass*100) + "%"],
-      ["Check-back drag", Math.round(check*100) + "%"],
-      ["Upsell uplift", Math.round(uplift*100) + "%"],
-      ["Freed hours / lawyer / yr", Math.round(freed).toLocaleString()],
-      ["Net freed (after check-back)", Math.round(netFreed).toLocaleString()],
-    ];
-    $('inputsGrid').innerHTML = rows.map(r =>
-      '<div class="irow"><span class="k">' + r[0] + '</span><span class="v">' + r[1] + '</span></div>').join('');
-  }
-
-  document.querySelectorAll('input[type=range]').forEach(el => el.addEventListener('input', calc));
-  $('printBtn').addEventListener('click', () => window.print());
-  try {
-    $('stamp').textContent = "Generated " + new Date().toLocaleDateString(undefined,
-      { year: 'numeric', month: 'long', day: 'numeric' });
-  } catch(e) {}
-
-  // theme toggle — data-theme on <html>, matching the portfolio
-  const root = document.documentElement;
-  const toggle = $('themeToggle');
-  const iconLight = toggle.querySelector('.icon-light');
-  const iconDark = toggle.querySelector('.icon-dark');
-  function setTheme(mode) {
-    root.setAttribute('data-theme', mode);
-    const light = mode === 'light';
-    iconLight.style.display = light ? '' : 'none';
-    iconDark.style.display  = light ? 'none' : '';
-    try { localStorage.setItem('paradox-theme', mode); } catch(e) {}
-  }
-  toggle.addEventListener('click', () =>
-    setTheme(root.getAttribute('data-theme') === 'light' ? 'dark' : 'light'));
-  try { const t = localStorage.getItem('paradox-theme'); if (t) setTheme(t); } catch(e) {}
-
-  // Seam Finder handoff — accept ?addr=N&addrLow=&addrHigh=&source=seam to prefill addressable work as an estimate
-  try {
-    const p = new URLSearchParams(location.search);
-    const seamAddr = parseFloat(p.get('addr'));
-    if (!isNaN(seamAddr) && seamAddr >= 0 && seamAddr <= 100) {
-      $('addr').value = Math.round(seamAddr);
-      if (p.get('source') === 'seam') {
-        let note = document.getElementById('seamNote');
-        if (!note) {
-          note = document.createElement('div');
-          note.id = 'seamNote';
-          note.style.cssText = 'font-size:12px;color:var(--win);margin:-4px 0 12px;line-height:1.4';
-          $('addr').closest('label').after(note);
-        }
-        const lo = p.get('addrLow'), hi = p.get('addrHigh');
-        if (lo && hi) {
-          const l = Math.max(0, Math.min(100, parseFloat(lo)));
-          const h = Math.max(0, Math.min(100, parseFloat(hi)));
-          if (!isNaN(l) && !isNaN(h) && h >= l) seamRange = [l, h];
-        }
-        note.textContent = 'Addressable work loaded from the Seam Finder as a rubric estimate'
-          + (lo && hi ? ' (sensitivity range ' + lo + '&ndash;' + hi + '%). ' : '. ')
-          + 'Not measured, treat as directional. Drag to adjust.';
-      }
-    }
-  } catch(e) {}
-
-  calc();
-</script>
 </body>
 </html>
