@@ -362,5 +362,202 @@
 </div>
 
 
+
+<script>
+  const $ = id => document.getElementById(id);
+  const clamp = (n,lo,hi) => Math.max(lo, Math.min(hi, n));
+  const W = { r:.40, d:.30, t:.30 };
+
+  const PRESETS = {
+    nda:  { label:'NDA triage', tasks:[
+      {name:'Triage &amp; rights parse', hours:45, r:95, d:90, t:100},
+      {name:'Clause identification', hours:35, r:90, d:85, t:95},
+      {name:'Business-point flags', hours:20, r:50, d:55, t:40}]},
+    memo: { label:'Research memo', tasks:[
+      {name:'Retrieval &amp; cite assembly', hours:50, r:85, d:70, t:60},
+      {name:'Synthesis &amp; structure', hours:30, r:40, d:55, t:70},
+      {name:'The analysis', hours:20, r:20, d:35, t:30}]},
+    depo: { label:'Deposition prep', tasks:[
+      {name:'Fact &amp; document review', hours:40, r:75, d:70, t:45},
+      {name:'Witness themes &amp; outline', hours:35, r:35, d:45, t:40},
+      {name:'Strategy &amp; judgment', hours:25, r:15, d:30, t:20}]},
+    deal: { label:'Deal markup', tasks:[
+      {name:'Precedent markup', hours:35, r:70, d:65, t:85},
+      {name:'Risk &amp; business-point resolution', hours:30, r:35, d:35, t:40},
+      {name:'Negotiation &amp; trade-offs', hours:35, r:10, d:20, t:15}]},
+    nego: { label:'Client negotiation', tasks:[
+      {name:'Matter &amp; document intake', hours:20, r:60, d:50, t:45},
+      {name:'Position &amp; leverage strategy', hours:40, r:15, d:25, t:15},
+      {name:'The call / judgment', hours:40, r:5, d:15, t:10}]},
+  };
+
+  let tasks = [ {name:'Retrieval &amp; cite assembly', hours:50, r:85, d:70, t:60},
+                {name:'Synthesis &amp; structure', hours:30, r:40, d:55, t:70},
+                {name:'The analysis', hours:20, r:20, d:35, t:30} ];
+  let SENS = 8; // how far each rating could be off, set by the confidence control
+
+  function readTasks(){
+    return tasks.map((t,i)=>{
+      const g = id => +document.getElementById(id).value;
+      const nameEl = document.querySelectorAll('.task-name')[i];
+      return { name: nameEl ? nameEl.value : t.name,
+        hours: g('hours-'+i), r:g('r-'+i), d:g('d-'+i), t:g('t-'+i) };
+    });
+  }
+
+  function rebuild(){
+    const list = $('taskList');
+    list.innerHTML = tasks.map((t,i)=>`
+      <div class="task">
+        <div class="task-head">
+          <input class="task-name" value="${t.name}" aria-label="Task name">
+          <button class="task-del" data-i="${i}" ${tasks.length<=1?'disabled':''} title="Remove task">&#215;</button>
+        </div>
+        <div class="task-grid">
+          <div class="tg-cell hours">
+            <span class="tg-lab">Hours</span><span class="tg-val" id="vH${i}"></span>
+            <input type="range" id="hours-${i}" min="0" max="100" step="5" value="${t.hours}">
+          </div>
+          <div class="tg-cell">
+            <span class="tg-lab">Retrieval</span><span class="tg-val" id="vR${i}"></span>
+            <input type="range" id="r-${i}" min="0" max="100" step="5" value="${t.r}">
+          </div>
+          <div class="tg-cell">
+            <span class="tg-lab">Checkable</span><span class="tg-val" id="vD${i}"></span>
+            <input type="range" id="d-${i}" min="0" max="100" step="5" value="${t.d}">
+          </div>
+          <div class="tg-cell">
+            <span class="tg-lab">Templated</span><span class="tg-val" id="vT${i}"></span>
+            <input type="range" id="t-${i}" min="0" max="100" step="5" value="${t.t}">
+          </div>
+        </div>
+      </div>`).join('');
+    bindTaskEvents();
+    calc();
+  }
+
+  function bindTaskEvents(){
+    document.querySelectorAll('#taskList input[type=range]').forEach(el => el.addEventListener('input', calc));
+    document.querySelectorAll('#taskList .task-name').forEach(el => el.addEventListener('input', calc));
+    document.querySelectorAll('#taskList .task-del').forEach(el => el.addEventListener('click', ()=>{
+      const i = +el.dataset.i;
+      if (tasks.length <= 1) return;
+      tasks.splice(i,1); rebuild();
+    }));
+  }
+
+  function bandFor(s){
+    if (s >= 75) return {cls:'band-codifiable', label:'Codifiable · machine work at the core',
+      v:'The retrieval-heavy core of this workflow is machine work by the questions above. That is about whether the work <i>can</i> be compressed, not a promise that a given tool already delivers it. Whether a specific product reaches it is a separate, unmodeled question.'};
+    if (s >= 55) return {cls:'band-semi', label:'Semi-codifiable · pipeline ready',
+      v:'The seam runs under it. The retrieval and assembly tasks compress; the analysis task stays yours. Because it is hour-weighted, the share tells you how much of your actual time sits on each side.'};
+    if (s >= 35) return {cls:'band-mixed', label:'Mixed · the seam cuts through it',
+      v:'Half the billed hours are machine work, half are judgment. Expect partial compression: AI drafts and organizes, the reasoning that makes it defensible stays human.'};
+    if (s >= 15) return {cls:'band-tacit', label:'Mostly tacit · partner-heavy',
+      v:'Most of the billed hours sit in judgment the firm will not delegate. Compress the intake and the edges, not the core.'};
+    return {cls:'band-tacit', label:'Tacit · stalls at the partner',
+      v:'This one does not yield. The weight is in position and judgment, where the cost of being wrong is carried by a person. That is not a limitation. It is the boundary.'};
+  }
+
+  function calc(){
+    const ts = readTasks();
+    const totalH = ts.reduce((s,t)=>s+t.hours,0) || 1;
+    let addr = 0;
+    ts.forEach(t=>{ const cod = W.r*t.r + W.d*t.d + W.t*t.t; t._cod=cod; t._w=t.hours/totalH; t._cont=cod*t._w; addr += t._cont; });
+    const center = Math.round(addr);
+
+    // sensitivity range: every content rating off by SENS in the same direction
+    let lo=0, hi=0;
+    ts.forEach(t=>{
+      const w=t._w;
+      lo += w*(W.r*clamp(t.r-SENS,0,100) + W.d*clamp(t.d-SENS,0,100) + W.t*clamp(t.t-SENS,0,100));
+      hi += w*(W.r*clamp(t.r+SENS,0,100) + W.d*clamp(t.d+SENS,0,100) + W.t*clamp(t.t+SENS,0,100));
+    });
+    const loR = Math.round(lo), hiR = Math.round(hi);
+
+    // readouts
+    ts.forEach((t,i)=>{
+      $('vH'+i).textContent = t.hours + '%';
+      $('vR'+i).textContent = t.r + '%';
+      $('vD'+i).textContent = t.d + '%';
+      $('vT'+i).textContent = t.t + '%';
+    });
+
+    $('scoreNum').textContent = center;
+    $('scoreRange').innerHTML = 'Range if each rating was off by up to ' + SENS + ' pts (your stated confidence): <b>' + loR + '&ndash;' + hiR + '%</b>';
+    $('addrPct').textContent = center + '%';
+    $('addrEst').textContent = 'Rubric-estimated. Not measured. Treat as directional, not exact.';
+
+    const band = bandFor(center);
+    const b = $('scoreBand');
+    b.className = 'score-band ' + band.cls;
+    b.textContent = band.label;
+    const bandLo = bandFor(loR), bandHi = bandFor(hiR);
+    const straddle = bandLo.label !== bandHi.label
+      ? '<span class="gate-note">Your confidence range spans two bands (<b>' + bandLo.label + '</b> to <b>' + bandHi.label + '</b>). Read the narrative loosely; the boundary is a judgment, not a fact.</span>'
+      : '';
+    $('verdict').innerHTML = band.v +
+      '<span class="gate-note">The partner gate is not scored here. It is why your <b>refill rate</b> matters in the calculator, not your addressability.</span>' + straddle;
+    $('verdict').style.borderLeftColor = band.cls === 'band-codifiable' ? 'var(--win)'
+      : band.cls === 'band-tacit' ? 'var(--loss)' : 'var(--amber)';
+
+    $('marker').style.left = 'calc(' + center + '% - 1.5px)';
+    $('rangeBand').style.left = 'calc(' + loR + '% - 1px)';
+    $('rangeBand').style.width = 'calc(' + (hiR-loR) + '% + 2px)';
+
+    $('openCalc').href = 'ai-profit-paradox-calculator.html?addr=' + center + '&addrLow=' + loR + '&addrHigh=' + hiR + '&source=seam';
+
+    $('btBody').innerHTML = ts.map(t=>{
+      const dot = t._cod >= 60 ? 'var(--win)' : t._cod >= 35 ? 'var(--amber)' : 'var(--loss)';
+      return '<tr>' +
+        '<td><span class="dot" style="background:'+dot+'"></span>'+t.name+'</td>' +
+        '<td class="num">'+Math.round(t._w*100)+'%</td>' +
+        '<td><div class="tbar"><div class="tfill" style="width:'+Math.round(t._cod)+'%"></div></div></td>' +
+        '<td class="num">'+Math.round(t._cont)+'</td></tr>';
+    }).join('');
+  }
+
+  // presets
+  document.querySelectorAll('.chip').forEach(chip => {
+    chip.addEventListener('click', ()=>{
+      document.querySelectorAll('.chip').forEach(c=>c.classList.remove('active'));
+      chip.classList.add('active');
+      tasks = PRESETS[chip.dataset.p].tasks.map(t=>({...t}));
+      rebuild();
+    });
+  });
+
+  document.querySelectorAll('#confOpts .conf').forEach(btn => btn.addEventListener('click', ()=>{
+    document.querySelectorAll('#confOpts .conf').forEach(b=>b.classList.remove('active'));
+    btn.classList.add('active');
+    SENS = +btn.dataset.s;
+    calc();
+  }));
+
+  $('addTask').addEventListener('click', ()=>{
+    if (tasks.length >= 6) return;
+    tasks.push({name:'New task', hours:20, r:50, d:50, t:50});
+    rebuild();
+  });
+
+  document.querySelectorAll('input[type=range]').forEach(el => el.addEventListener('input', ()=>{
+    document.querySelectorAll('.chip').forEach(c=>c.classList.remove('active'));
+    calc();
+  }));
+
+  $('printBtn').addEventListener('click', ()=>window.print());
+  $('copyBtn').addEventListener('click', ()=>{
+    const txt = $('addrPct').textContent;
+    const done = ()=>{ $('copyBtn').textContent='Copied'; setTimeout(()=>{$('copyBtn').textContent='Copy value';},1400); };
+    if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(txt).then(done).catch(done); else done();
+  });
+
+  try { $('stamp').textContent = "Generated " + new Date().toLocaleDateString(undefined,{year:'numeric',month:'long',day:'numeric'}); } catch(e){}
+
+  // open on the research memo calibration so the default is mid-range and honest
+  document.querySelector('.chip[data-p="memo"]').classList.add('active');
+  tasks = PRESETS.memo.tasks.map(t=>({...t}));
+  rebuild();
+</script>
 </body>
 </html>
