@@ -1,0 +1,332 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<link rel="icon" type="image/svg+xml" href="../icon.svg">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="How the Legal-AI Fault-Line Radar forecasts where the next legal-AI rulings land — weighted by source authority, not volume, and graded against its own track record.">
+<title>Legal-AI Fault-Line Radar — Forecasting the Next Rulings</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Mulish:ital,wght@0,300;0,400;0,600;0,700;0,800;1,400&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --font-body: 'Mulish', 'Segoe UI', Helvetica, sans-serif;
+    --font-mono: 'Mulish', ui-monospace, 'SF Mono', Consolas, monospace;
+
+    --bg: #171416; --surface: #1E1A1D; --surface2: #262024;
+    --border: #332D31; --border-bright: #463D42;
+    --text: #F5F2F1; --text-dim: #C9C3C1; --text-faint: #8A8481;
+
+    --slate: #948E8C; --slate-dim: rgba(148,142,140,0.12);
+    --blue: #60a5fa; --blue-dim: rgba(96,165,250,0.12);
+    --violet: #C9A3B8; --violet-dim: rgba(201,163,184,0.12);
+    --teal: #2dd4bf; --teal-dim: rgba(45,212,191,0.12);
+    --emerald: #34d399; --emerald-dim: rgba(52,211,153,0.12);
+    --amber: #D9A05B; --amber-dim: rgba(217,160,91,0.12);
+    --orange: #fb923c; --orange-dim: rgba(251,146,60,0.12);
+    --red: #f87171; --red-dim: rgba(248,113,113,0.12);
+    --indigo: #818cf8; --indigo-dim: rgba(129,140,248,0.12);
+    --rose: #E36C89; --rose-dim: rgba(227,108,137,0.12);
+  }
+  html.light {
+    --bg: #F5F2F1; --surface: #FFFFFF; --surface2: #EDE8E6;
+    --border: #D9D2CE; --border-bright: #C4B9B4;
+    --text: #171416; --text-dim: #4A4442; --text-faint: #8A8481;
+    --slate: #6A6461; --slate-dim: rgba(106,100,97,0.10);
+    --blue: #2563eb; --blue-dim: rgba(37,99,235,0.08);
+    --violet: #8A5A76; --violet-dim: rgba(138,90,118,0.10);
+    --teal: #1E8A6A; --teal-dim: rgba(30,138,106,0.10);
+    --emerald: #059669; --emerald-dim: rgba(5,150,105,0.08);
+    --amber: #B07C2E; --amber-dim: rgba(176,124,46,0.10);
+    --orange: #ea580c; --orange-dim: rgba(234,88,12,0.08);
+    --red: #C4506B; --red-dim: rgba(196,80,107,0.10);
+    --indigo: #4f46e5; --indigo-dim: rgba(79,70,229,0.08);
+    --rose: #C4506B; --rose-dim: rgba(196,80,107,0.10);
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    background: var(--bg);
+    background-image:
+      radial-gradient(at 10% 0%, var(--indigo-dim) 0%, transparent 40%),
+      radial-gradient(at 90% 80%, var(--teal-dim) 0%, transparent 40%);
+    color: var(--text); font-family: var(--font-body);
+    font-size: 15px; line-height: 1.7; min-height: 100vh;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  .nav {
+    position: sticky; top: 0; z-index: 100;
+    backdrop-filter: blur(16px);
+    background: color-mix(in srgb, var(--surface) 85%, transparent);
+    border-bottom: 1px solid var(--border);
+  }
+  .nav-inner {
+    max-width: 1000px; margin: 0 auto; padding: 12px 24px;
+    display: flex; align-items: center; justify-content: space-between;
+  }
+  .nav-brand { font-family: var(--font-mono); font-size: 13px; font-weight: 600; color: var(--indigo); text-decoration: none; }
+  .theme-toggle {
+    width: 36px; height: 36px; border-radius: 10px;
+    border: 1px solid var(--border); background: var(--surface);
+    cursor: pointer; display: flex; align-items: center; justify-content: center;
+    font-size: 16px; color: var(--text-dim); transition: all 0.2s;
+  }
+  .theme-toggle:hover, .theme-toggle:focus-visible { border-color: var(--indigo); color: var(--indigo); outline: none; }
+  .backlink{position:fixed;top:12px;left:16px;z-index:101;font-family:var(--font-mono);font-size:12px;color:var(--text-dim);text-decoration:none;padding:6px 10px;border:1px solid var(--border);border-radius:6px;background:var(--surface);transition:color .15s,border-color .15s}
+  .backlink:hover{color:var(--text);border-color:var(--border-bright)}
+
+  .container { max-width: 1000px; margin: 0 auto; padding: 48px 24px 80px; }
+  @keyframes fadeUp { from { opacity: 0; transform: translateY(16px); } to { opacity: 1; transform: translateY(0); } }
+
+  .hero { text-align: center; margin-bottom: 40px; animation: fadeUp 0.5s ease both; }
+  .hero .kicker { font-family: var(--font-mono); font-size: 11px; font-weight: 700; letter-spacing: 0.2em; text-transform: uppercase; color: var(--text-faint); margin-bottom: 12px; }
+  .hero h1 {
+    font-size: 42px; font-weight: 800; letter-spacing: -1px; margin-bottom: 10px;
+    background: linear-gradient(135deg, var(--indigo), var(--teal));
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+  }
+  .hero p { font-size: 17px; color: var(--text-dim); max-width: 680px; margin: 0 auto; }
+
+  .lede { max-width: 720px; margin: 0 auto 44px; text-align: center; font-size: 15px; color: var(--text-dim); }
+  .lede .land { display: block; margin-top: 12px; font-size: 18px; font-weight: 700; color: var(--text); }
+
+  .section { margin-bottom: 44px; animation: fadeUp 0.5s ease both; }
+  .section-title { font-family: var(--font-mono); font-size: 12px; font-weight: 700; letter-spacing: 0.15em; text-transform: uppercase; color: var(--text-dim); margin-bottom: 16px; }
+  .panel { background: var(--surface); border: 1px solid var(--border); border-radius: 14px; padding: 26px; }
+  .panel h3 { font-size: 19px; font-weight: 700; margin-bottom: 6px; }
+  .panel p { font-size: 14px; color: var(--text-dim); }
+  .panel p + p { margin-top: 10px; }
+
+  /* two curves */
+  .curves { display: block; width: 100%; height: 220px; }
+  .curve-gap { fill: var(--rose-dim); }
+  .curve-cap { fill: none; stroke: var(--rose); stroke-width: 3; }
+  .curve-gov { fill: none; stroke: var(--teal); stroke-width: 3; }
+  .curve-lbl { font-family: var(--font-mono); font-size: 12px; font-weight: 700; }
+  .legend { display: flex; gap: 22px; justify-content: center; margin-top: 12px; font-family: var(--font-mono); font-size: 11px; color: var(--text-dim); flex-wrap: wrap; }
+  .legend span { display: flex; align-items: center; gap: 6px; }
+  .sw { width: 12px; height: 12px; border-radius: 3px; display: inline-block; }
+
+  /* tiers */
+  .tiers { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px,1fr)); gap: 12px; }
+  .tier { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 16px 14px; }
+  .tier .w { font-family: var(--font-mono); font-size: 24px; font-weight: 800; }
+  .tier .tname { font-size: 13px; font-weight: 700; margin: 4px 0; }
+  .tier .tdesc { font-size: 12px; color: var(--text-dim); line-height: 1.45; }
+  .t1 .w { color: var(--rose); } .t2 .w { color: var(--amber); } .t3 .w { color: var(--teal); }
+  .t4 .w { color: var(--slate); } .t5 .w { color: var(--text-faint); }
+  .rules { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 16px; }
+  .rule { font-family: var(--font-mono); font-size: 11px; color: var(--text-dim); background: var(--surface2); border: 1px solid var(--border); border-radius: 6px; padding: 6px 10px; }
+  .rule b { color: var(--text); }
+
+  /* fault line table */
+  .table-wrap { overflow-x: auto; border: 1px solid var(--border); border-radius: 12px; }
+  table { width: 100%; border-collapse: collapse; font-size: 13.5px; }
+  th, td { text-align: left; padding: 11px 14px; border-bottom: 1px solid var(--border); }
+  th { font-family: var(--font-mono); font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--text-faint); font-weight: 700; }
+  tbody tr:last-child td { border-bottom: none; }
+  .fl-name { font-weight: 600; color: var(--text); }
+  .fl-rule { font-family: var(--font-mono); font-size: 11px; color: var(--text-faint); white-space: nowrap; }
+  .pcell { display: flex; align-items: center; gap: 9px; min-width: 150px; }
+  .pbar { flex: 1; height: 7px; border-radius: 4px; background: var(--surface2); overflow: hidden; }
+  .pbar > i { display: block; height: 100%; border-radius: 4px; }
+  .pnum { font-family: var(--font-mono); font-size: 12px; font-weight: 700; min-width: 26px; }
+  .hz { font-family: var(--font-mono); font-size: 11px; color: var(--text-dim); white-space: nowrap; }
+
+  /* calibration */
+  .cal-head { display: flex; align-items: baseline; gap: 14px; flex-wrap: wrap; margin-bottom: 4px; }
+  .hitrate { font-family: var(--font-mono); font-size: 30px; font-weight: 800; color: var(--emerald); }
+  .cal-rows { margin-top: 16px; display: grid; gap: 8px; }
+  .cal-row { display: grid; grid-template-columns: 92px 74px 1fr auto; gap: 12px; align-items: center; padding: 10px 12px; background: var(--surface2); border: 1px solid var(--border); border-radius: 8px; font-size: 13px; }
+  .called { font-family: var(--font-mono); font-size: 11px; font-weight: 700; color: var(--emerald); }
+  .cal-date { font-family: var(--font-mono); font-size: 11px; color: var(--text-faint); }
+  .cal-p { font-family: var(--font-mono); font-size: 12px; color: var(--text-dim); text-align: right; white-space: nowrap; }
+  .cal-p b { color: var(--text); }
+
+  /* pipeline */
+  .flow { display: flex; align-items: stretch; gap: 0; overflow-x: auto; padding-bottom: 6px; }
+  .stage { flex: 1; min-width: 140px; background: var(--surface2); border: 1px solid var(--border); border-radius: 10px; padding: 14px 13px; }
+  .stage .sfile { font-family: var(--font-mono); font-size: 10px; color: var(--indigo); }
+  .stage .sname { font-weight: 700; font-size: 13px; margin: 4px 0; }
+  .stage .sdesc { font-size: 12px; color: var(--text-dim); line-height: 1.4; }
+  .arrow { align-self: center; padding: 0 8px; color: var(--text-faint); font-size: 18px; font-family: var(--font-mono); }
+  .phase2 { margin-top: 14px; border: 1px dashed var(--border-bright); border-radius: 10px; padding: 12px 14px; font-size: 12.5px; color: var(--text-dim); }
+  .phase2 b { color: var(--text); font-family: var(--font-mono); font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase; }
+
+  .why { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+  .why .card { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 20px; }
+  .why .card h4 { font-size: 15px; font-weight: 700; margin-bottom: 6px; }
+  .why .card p { font-size: 13px; color: var(--text-dim); }
+  .why .card.kill { border-left: 3px solid var(--rose); }
+  .why .card.keep { border-left: 3px solid var(--emerald); }
+
+  .footer { margin-top: 48px; padding-top: 16px; border-top: 1px solid var(--border); text-align: center; font-size: 12px; color: var(--text-faint); }
+
+  @media (max-width: 768px) {
+    .hero h1 { font-size: 28px; }
+    .why { grid-template-columns: 1fr; }
+    .cal-row { grid-template-columns: 1fr; gap: 4px; }
+    .cal-p { text-align: left; }
+  }
+  @media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation-duration: 0.01ms !important; } }
+</style>
+</head>
+<body>
+<a href="index.html" class="backlink">&larr; Index</a>
+
+<div class="nav">
+  <div class="nav-inner">
+    <a href="index.html" class="nav-brand">&larr; Charlie Fuller — Visual Explainers</a>
+    <button class="theme-toggle" id="themeToggle" aria-label="Toggle light mode">
+      <span class="icon-light">&#9788;</span>
+      <span class="icon-dark" style="display:none">&#9790;</span>
+    </button>
+  </div>
+</div>
+
+<div class="container">
+
+  <div class="hero">
+    <div class="kicker">legal-os &middot; governance monitoring</div>
+    <h1>Fault-Line Radar</h1>
+    <p>A governance-grade engine that forecasts where the next legal-AI rulings will land — and grades itself on whether it called them.</p>
+  </div>
+
+  <div class="lede">
+    <p>Rulings don&rsquo;t come from nowhere. They land on <strong>fault lines</strong> — the places where an AI capability outruns a legal duty a lawyer already owes. Hallucinated citations meet the duty of candor. Autonomous agents meet the duty to supervise. You can&rsquo;t predict the exact wording of a rule that hasn&rsquo;t been written. You can predict the fault line it lands on.</p>
+    <span class="land">Forecast the fault line, not the ruling.</span>
+  </div>
+
+  <!-- TWO CURVES -->
+  <div class="section">
+    <div class="section-title">The core idea &mdash; two curves</div>
+    <div class="panel">
+      <h3>Capability moves faster than governance</h3>
+      <p>The radar tracks two coupled trajectories. <strong>Capability</strong> — what AI can actually do in legal work. <strong>Governance</strong> — what the rules currently allow. Capability climbs fast. Governance climbs slow. The gap between them is where every fault line lives, and where every ruling eventually lands to close it.</p>
+      <svg class="curves" viewBox="0 0 800 220" role="img" aria-label="Capability curve rising steeply above a slower governance curve; the widening gap between them is shaded and labeled as the fault-line zone.">
+        <path class="curve-gap" d="M40,180 C220,150 420,150 760,40 L760,150 C420,168 220,178 40,182 Z"></path>
+        <path class="curve-cap" d="M40,180 C220,150 420,150 760,40"></path>
+        <path class="curve-gov" d="M40,182 C260,176 520,168 760,150"></path>
+        <text class="curve-lbl" x="600" y="60" fill="var(--rose)">Capability</text>
+        <text class="curve-lbl" x="600" y="140" fill="var(--teal)">Governance</text>
+        <text class="curve-lbl" x="330" y="120" fill="var(--text-faint)" style="font-size:11px">fault-line zone</text>
+      </svg>
+      <div class="legend">
+        <span><i class="sw" style="background:var(--rose)"></i> Capability — what AI can do</span>
+        <span><i class="sw" style="background:var(--teal)"></i> Governance — what the law allows</span>
+        <span><i class="sw" style="background:var(--rose-dim)"></i> The gap — where rulings land</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- AUTHORITY -->
+  <div class="section">
+    <div class="section-title">How it scores &mdash; authority, not volume</div>
+    <p style="font-size:14px;color:var(--text-dim);margin-bottom:16px;max-width:760px;">A legal-AI news feed is mostly vendors selling tools. If the loudest source won, the forecast would just track marketing. So evidence is weighted by the authority it has <em>earned</em>. A vendor blog carries about <strong>1/100</strong> of an ABA opinion.</p>
+    <div class="tiers">
+      <div class="tier t1"><div class="w">1.0</div><div class="tname">T1 &middot; Binding</div><div class="tdesc">Court rulings, sanctions orders, statutes, regulations. This is the landscape.</div></div>
+      <div class="tier t2"><div class="w">0.8</div><div class="tname">T2 &middot; Guidance</div><div class="tdesc">ABA &amp; state bar ethics opinions, judicial standing orders.</div></div>
+      <div class="tier t3"><div class="w">0.6</div><div class="tname">T3 &middot; Empirical</div><div class="tdesc">Peer research, trackers, insurer/market actions carrying data.</div></div>
+      <div class="tier t4"><div class="w">0.35</div><div class="tname">T4 &middot; Commentary</div><div class="tdesc">Firm client alerts, bar magazines, established legal press.</div></div>
+      <div class="tier t5"><div class="w">0.008</div><div class="tname">T5 &middot; Vendor</div><div class="tdesc">Vendor blogs, SEO, hot takes. Narrative signal only.</div></div>
+    </div>
+    <div class="rules">
+      <span class="rule"><b>Conflict discount</b> — a source selling what it comments on</span>
+      <span class="rule"><b>Empirical boost</b> — items carrying hard data</span>
+      <span class="rule"><b>Corroboration</b> — agreement across independent tiers</span>
+      <span class="rule"><b>Recency decay</b> — momentum fades; binding law never does</span>
+      <span class="rule"><b>Full provenance</b> — every score cites its evidence and weight</span>
+    </div>
+  </div>
+
+  <!-- FAULT LINES -->
+  <div class="section">
+    <div class="section-title">The 11 fault lines &mdash; current pressure</div>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Fault line</th><th>Duty</th><th>Pressure (0&ndash;10)</th><th>Horizon</th></tr></thead>
+        <tbody>
+          <tr><td class="fl-name">Disclosure &amp; certification standardize</td><td class="fl-rule">3.3 / R.11</td><td><div class="pcell"><div class="pbar"><i style="width:95%;background:var(--rose)"></i></div><span class="pnum" style="color:var(--rose)">9.5</span></div></td><td class="hz">near</td></tr>
+          <tr><td class="fl-name">&ldquo;A human reviewed it&rdquo; stops being enough</td><td class="fl-rule">5.1 / 5.3</td><td><div class="pcell"><div class="pbar"><i style="width:94%;background:var(--rose)"></i></div><span class="pnum" style="color:var(--rose)">9.4</span></div></td><td class="hz">near&ndash;mid</td></tr>
+          <tr><td class="fl-name">Competence becomes a governance duty</td><td class="fl-rule">1.1</td><td><div class="pcell"><div class="pbar"><i style="width:93%;background:var(--rose)"></i></div><span class="pnum" style="color:var(--rose)">9.3</span></div></td><td class="hz">mid</td></tr>
+          <tr><td class="fl-name">Confidentiality hardens into data governance</td><td class="fl-rule">1.6 / 1.9</td><td><div class="pcell"><div class="pbar"><i style="width:90%;background:var(--rose)"></i></div><span class="pnum" style="color:var(--rose)">9.0</span></div></td><td class="hz">near</td></tr>
+          <tr><td class="fl-name">Insurance becomes the real regulator</td><td class="fl-rule">1.1 / 5.1</td><td><div class="pcell"><div class="pbar"><i style="width:88%;background:var(--rose)"></i></div><span class="pnum" style="color:var(--rose)">8.8</span></div></td><td class="hz">near</td></tr>
+          <tr><td class="fl-name">Regulatory convergence forces one model</td><td class="fl-rule">1.1 / 1.6</td><td><div class="pcell"><div class="pbar"><i style="width:87%;background:var(--rose)"></i></div><span class="pnum" style="color:var(--rose)">8.7</span></div></td><td class="hz">near</td></tr>
+          <tr><td class="fl-name">Benchmark / tool-certification standard</td><td class="fl-rule">1.1</td><td><div class="pcell"><div class="pbar"><i style="width:72%;background:var(--amber)"></i></div><span class="pnum" style="color:var(--amber)">7.2</span></div></td><td class="hz">mid</td></tr>
+          <tr><td class="fl-name">Agentic autonomy reopens supervision &amp; UPL</td><td class="fl-rule">5.3 / 5.5</td><td><div class="pcell"><div class="pbar"><i style="width:71%;background:var(--amber)"></i></div><span class="pnum" style="color:var(--amber)">7.1</span></div></td><td class="hz">mid</td></tr>
+          <tr><td class="fl-name">Judicial / litigation analytics regulated</td><td class="fl-rule">3.5 / 8.4</td><td><div class="pcell"><div class="pbar"><i style="width:64%;background:var(--violet)"></i></div><span class="pnum" style="color:var(--violet)">6.4</span></div></td><td class="hz">mid</td></tr>
+          <tr><td class="fl-name">The billable hour cracks under AI</td><td class="fl-rule">1.5</td><td><div class="pcell"><div class="pbar"><i style="width:58%;background:var(--violet)"></i></div><span class="pnum" style="color:var(--violet)">5.8</span></div></td><td class="hz">mid&ndash;far</td></tr>
+          <tr><td class="fl-name">Liability shifts partway to vendors</td><td class="fl-rule">&mdash;</td><td><div class="pcell"><div class="pbar"><i style="width:35%;background:var(--slate)"></i></div><span class="pnum" style="color:var(--slate)">3.5</span></div></td><td class="hz">far</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p style="font-size:12px;color:var(--text-faint);margin-top:10px;">Pressure is an analyst seed moved by weighted evidence, not a measured probability. Snapshot figures; each reading on the live page cites the evidence behind it.</p>
+  </div>
+
+  <!-- CALIBRATION -->
+  <div class="section">
+    <div class="section-title">Calibration &mdash; the engine grades itself</div>
+    <div class="panel">
+      <div class="cal-head">
+        <span class="hitrate">100%</span>
+        <h3 style="margin:0;">Called before they landed</h3>
+      </div>
+      <p>Anyone can have opinions about where the law is heading. Almost nobody grades their own. For each ruling that actually landed, the radar replays itself <strong>90 days earlier</strong>, using only the evidence available then, and checks whether the right fault line was already flagged. It earns trust by being scored, not by sounding confident.</p>
+      <div class="cal-rows">
+        <div class="cal-row"><span class="cal-date">2025-12-15</span><span class="called">&#9679; called</span><span>Couvrette &mdash; ~$110K sanction, 15 fake cases</span><span class="cal-p">disclosure <b>8.7 &rarr; 8.7</b></span></div>
+        <div class="cal-row"><span class="cal-date">2026-04-15</span><span class="called">&#9679; called</span><span>Nebraska suspends attorney &mdash; 57/63 bad cites</span><span class="cal-p">verification <b>8.9 &rarr; 9.2</b></span></div>
+        <div class="cal-row"><span class="cal-date">2026-08-01</span><span class="called">&#9679; called</span><span>EU AI Act obligations take effect</span><span class="cal-p">convergence <b>8.2 &rarr; 8.7</b></span></div>
+      </div>
+      <p style="margin-top:14px;font-size:12px;color:var(--text-faint);">Seed set is small and honest — this is the track record so far, and it grows every run. Every run also writes an immutable audit artifact: the knobs, the evidence, the weights, the math, the predictions, and this backtest. Fully replayable.</p>
+    </div>
+  </div>
+
+  <!-- ARCHITECTURE -->
+  <div class="section">
+    <div class="section-title">Architecture &mdash; the data flow</div>
+    <div class="panel">
+      <div class="flow">
+        <div class="stage"><div class="sfile">sources/feed.jsonl</div><div class="sname">Curated feed</div><div class="sdesc">Tier-tagged rulings, opinions, and actions.</div></div>
+        <div class="arrow">&rarr;</div>
+        <div class="stage"><div class="sfile">score.py</div><div class="sname">Weighted scorer</div><div class="sdesc">Deterministic, point-in-time, provenance-transparent.</div></div>
+        <div class="arrow">&rarr;</div>
+        <div class="stage"><div class="sfile">build.py</div><div class="sname">Static page</div><div class="sdesc">Self-contained HTML + data.json. Served by Pages.</div></div>
+        <div class="arrow">&rarr;</div>
+        <div class="stage"><div class="sfile">calibration.py</div><div class="sname">Backtest &amp; audit</div><div class="sdesc">Snapshots, called-vs-actual, immutable run artifacts.</div></div>
+      </div>
+      <div class="phase2"><b>Runs in the background</b> &middot; GitHub Actions, weekly, zero infrastructure &mdash; or local watch mode. &nbsp;<b>Phase 2 seam</b> &middot; allowlist-only harvester &rarr; admission gate (anti-noise) &rarr; Voyage <code>voyage-law-2</code> embeddings into Supabase pgvector.</div>
+    </div>
+  </div>
+
+  <!-- WHY -->
+  <div class="section">
+    <div class="section-title">Why it matters</div>
+    <div class="why">
+      <div class="card kill"><h4>What it isn&rsquo;t</h4><p>It isn&rsquo;t clairvoyance. The people who live in this already see what&rsquo;s coming. A dashboard doesn&rsquo;t out-think a good knowledge lawyer, and nobody buys a forecast.</p></div>
+      <div class="card keep"><h4>What it is</h4><p>Preparation that&rsquo;s systematic, authority-weighted, self-grading, and auditable — instead of a smart partner&rsquo;s gut that walks out the door when they leave.</p></div>
+      <div class="card keep"><h4>The defensible trail</h4><p>When a regulator or a carrier asks &ldquo;why didn&rsquo;t you prepare for this,&rdquo; a calibrated, evidence-graded record answers. Intuition can&rsquo;t be shown to a board.</p></div>
+      <div class="card keep"><h4>Fits the pillars</h4><p>Deterministic replay, explainable, traceable. The radar is legal-os&rsquo;s own governance discipline pointed at the future instead of a single agent.</p></div>
+    </div>
+  </div>
+
+  <div class="footer">&copy; 2025-2026 Charlie Fuller &middot; part of the legal-os platform</div>
+
+</div>
+
+<script>
+  const toggle = document.getElementById('themeToggle');
+  const iconLight = toggle.querySelector('.icon-light');
+  const iconDark = toggle.querySelector('.icon-dark');
+  function setTheme(d) {
+    document.documentElement.classList.toggle('light', d);
+    iconLight.style.display = d ? '' : 'none';
+    iconDark.style.display = d ? 'none' : '';
+    try { localStorage.setItem('diagram-theme', d ? 'light' : 'dark'); } catch(e) {}
+  }
+  toggle.addEventListener('click', () => setTheme(!document.documentElement.classList.contains('light')));
+  try { if (localStorage.getItem('diagram-theme') === 'light') setTheme(true); } catch(e) {}
+</script>
+</body>
+</html>
