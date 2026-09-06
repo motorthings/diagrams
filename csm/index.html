@@ -1,107 +1,181 @@
 <!DOCTYPE html>
-<html lang="en">
+<html class="light">
 <head>
 <meta charset="UTF-8">
+<link rel="icon" type="image/svg+xml" href="../icon.svg">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Customer Success — AI in Customer Success</title>
-<meta name="description" content="Eight diagrams on AI in customer success: the triage agent, the approach, the landscape, the data fix, the role, the time saved, the storage architecture, the productivity-to-agentic arc, and the Amazon Quick solution.">
-<link rel="icon" href="../icon.svg" type="image/svg+xml">
+<meta name="description" content="AI in customer success, mapped. Charlie Fuller: what's solved, what's a trap, where the edge is. Eight diagrams on one through-line — the risk math is code, the language is the model, the trust is the moat.">
+<title>Charlie Fuller &mdash; AI in Customer Success</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Anton&family=Public+Sans:wght@400;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Mulish:ital,wght@0,300;0,400;0,600;0,700;0,800;1,400&display=swap" rel="stylesheet">
 <style>
-:root {
-  /* Ledger structure, tinted to CSM's blue identity */
-  --ink:#0B1F33; --graphite:#2A3A4D; --body:#3E4B5A; --muted:#6B7A8C;
-  --rule-hair:#CBD5E0; --rule-faint:#E2E8F0; --sheet:#FBFCFE; --desk:#EDF1F6;
-  --accent:#4A90C4; --accent-deep:#2A6FA8;
-  --serif:'Instrument Serif',Georgia,serif; --sans:'Public Sans',system-ui,sans-serif;
-  --mono:'JetBrains Mono',monospace; --cond:'Anton',Impact,sans-serif;
-}
-* { margin:0; padding:0; box-sizing:border-box; }
-body { background:var(--desk); color:var(--ink); font-family:var(--sans); font-size:17px; line-height:1.6; -webkit-font-smoothing:antialiased; text-rendering:optimizeLegibility; }
-.crumbs-at-top{max-width:1140px;margin:0 auto;padding:14px 28px 8px}
-.crumbs{font-family:var(--mono);font-size:12.5px;font-weight:500;display:flex;align-items:center;gap:8px;flex-wrap:wrap;min-width:0}
-.crumbs a{color:var(--muted);text-decoration:none}
-.crumbs a:hover,.crumbs a:focus-visible{color:var(--accent);text-decoration:underline;outline:none}
-.crumbs .sep{color:var(--muted)}
-.crumbs .current{color:var(--accent-deep);font-weight:700}
-.sheet { max-width:1140px; margin:0 auto 72px; background:var(--sheet); display:grid; grid-template-columns:56px 1fr; }
-.spine { background:var(--ink); display:flex; align-items:flex-end; justify-content:center; padding:30px 0; }
-.spine-label { writing-mode:vertical-rl; transform:rotate(180deg); font-family:var(--cond); font-size:16px; letter-spacing:0.2em; color:var(--sheet); text-transform:uppercase; white-space:nowrap; }
-.content { padding:54px 58px 62px; }
-.masthead { display:flex; align-items:flex-end; justify-content:space-between; gap:30px; border-bottom:3px solid var(--ink); padding-bottom:12px; }
-.masthead h1 { font-family:var(--serif); font-weight:400; font-size:46px; line-height:1.02; letter-spacing:-0.014em; max-width:760px; }
-.masthead h1 .emp { color:var(--accent-deep); }
-.masthead-num { font-family:var(--serif); font-size:76px; line-height:0.95; color:var(--accent); }
-.lede { font-family:var(--sans); font-size:16px; color:var(--body); max-width:74ch; padding:18px 0 6px; }
-.lede strong { color:var(--ink); font-weight:600; }
+  :root {
+    --font-body: 'Mulish', 'Segoe UI', Helvetica, sans-serif;
+    --font-mono: 'Mulish', ui-monospace, 'SF Mono', Consolas, monospace;
+    --bg: #11161c; --surface: #1B212A; --surface2: #232B36;
+    --border: #303B49; --border-bright: #42506B;
+    --text: #F4F6F8; --text-dim: #CBD3DC; --text-faint: #8492A4;
+    --primary: #6FB3E0; --primary-dim: rgba(111,179,224,0.12);
+    --metric: #55D1AD; --metric-dim: rgba(85,209,173,0.12);
+    --rose: #E36C89;
+  }
+  html.light {
+    --bg: #F4F7FA; --surface: #FFFFFF; --surface2: #EAF0F6;
+    --border: #D5DEE9; --border-bright: #BFCCDC;
+    --text: #10233A; --text-dim: #44566E; --text-faint: #8492A4;
+    --primary: #1F6FB2; --primary-dim: rgba(31,111,178,0.10);
+    --metric: #0E7C6E; --metric-dim: rgba(14,124,110,0.10);
+    --rose: #C4506B;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    background: var(--bg);
+    background-image:
+      radial-gradient(at 10% 0%, var(--primary-dim) 0%, transparent 40%),
+      radial-gradient(at 90% 80%, var(--metric-dim) 0%, transparent 40%);
+    color: var(--text); font-family: var(--font-body);
+    font-size: 15px; line-height: 1.7; min-height: 100vh; -webkit-font-smoothing: antialiased;
+  }
+  .nav { position: sticky; top: 0; z-index: 100; backdrop-filter: blur(16px);
+    background: color-mix(in srgb, var(--surface) 85%, transparent); border-bottom: 1px solid var(--border); }
+  .nav-inner { max-width: 1040px; margin: 0 auto; padding: 12px 24px; display: flex; align-items: center; justify-content: space-between; }
+  .crumbs { font-family: var(--font-mono); font-size: 13px; font-weight: 600; display: flex; align-items: center; gap: 8px; }
+  .crumbs a { color: var(--primary); text-decoration: none; }
+  .crumbs a:hover, .crumbs a:focus-visible { text-decoration: underline; outline: none; }
+  .crumbs .sep { color: var(--text-faint); }
+  .crumbs .current { color: var(--text-dim); font-weight: 400; }
 
-/* collapsible catalog categories */
-.cat { }
-summary.cat-head { list-style:none; display:flex; align-items:baseline; gap:14px; cursor:pointer; padding:26px 0 8px; user-select:none;
-  font-family:var(--serif); font-style:italic; font-size:22px; color:var(--muted); transition:color .15s; }
-summary.cat-head::-webkit-details-marker { display:none; }
-summary.cat-head:hover { color:var(--ink); }
-summary.cat-head .lab { letter-spacing:0; }
-summary.cat-head .plus { margin-left:auto; font-family:var(--mono); font-style:normal; font-size:16px; font-weight:400; color:var(--accent); }
-.cat[open] summary.cat-head { color:var(--ink); }
-.cat[open] summary.cat-head .plus { transform:rotate(45deg); }
-.crows { padding-bottom:6px; }
-a.link { position:relative; display:block; padding:14px 8px 14px 34px; border-top:1px solid var(--rule-faint); text-decoration:none; color:inherit; }
-.cat:not([open]) a.link { display:none; }
-a.link .n { position:absolute; left:0; top:16px; font-family:var(--mono); font-size:11px; color:var(--accent-deep); }
-a.link .ct { display:block; font-family:var(--sans); font-weight:700; font-size:16px; color:var(--ink); line-height:1.35; transition:color .15s; }
-a.link .cd { display:block; font-family:var(--sans); font-size:14px; color:var(--body); line-height:1.5; margin-top:2px; max-width:78ch; }
-a.link:hover .ct { color:var(--accent-deep); }
+  .container { max-width: 1040px; margin: 0 auto; padding: 44px 24px 80px; }
+  @keyframes fadeUp { from { opacity: 0; transform: translateY(16px); } to { opacity: 1; transform: translateY(0); } }
 
-.footer { border-top:3px solid var(--ink); margin-top:16px; padding:22px 0 0; }
-.footer .rule-line { font-size:13.5px; color:var(--body); line-height:1.7; }
-.footer a { color:var(--accent-deep); text-decoration:none; }
-.footer a:hover { text-decoration:underline; }
-@media (max-width:760px) { .sheet { grid-template-columns:1fr; } .spine { display:none; } .content { padding:40px 24px 48px; } .masthead h1 { font-size:32px; } .masthead-num { font-size:52px; } a.link { padding-left:26px; } }
-@media (prefers-reduced-motion: reduce) { *, *::before, *::after { transition:none !important; } }
+  .hero { margin-bottom: 24px; animation: fadeUp 0.5s ease both; }
+  .hero .kicker { font-family: var(--font-mono); font-size: 11px; font-weight: 700; letter-spacing: 0.2em; text-transform: uppercase; color: var(--text-faint); margin-bottom: 12px; }
+  .hero h1 { font-size: 42px; font-weight: 800; letter-spacing: -1px; margin-bottom: 10px; max-width: 760px;
+    background: linear-gradient(135deg, var(--primary), var(--metric));
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+  .hero p { font-size: 17px; color: var(--text-dim); max-width: 720px; }
+
+  /* the "why to dig in" panel */
+  .ammo { background: var(--surface); border: 1px solid var(--border); border-radius: 14px; padding: 22px 24px; margin-bottom: 20px; animation: fadeUp 0.5s ease both; }
+  .ammo .pts { display: grid; grid-template-columns: 1fr 1fr; gap: 12px 26px; }
+  .ammo .pt { padding-left: 16px; position: relative; }
+  .ammo .pt::before { content: ""; position: absolute; left: 0; top: 7px; width: 6px; height: 6px; border-radius: 2px; background: var(--primary); }
+  .ammo .pt b { color: var(--text); }
+  .ammo .pt span { color: var(--text-dim); font-size: 14px; }
+  .frameworks { display: flex; flex-wrap: wrap; gap: 8px; margin: 18px 0 6px; padding-top: 16px; border-top: 1px solid var(--border); }
+  .fw { font-family: var(--font-mono); font-size: 11.5px; color: var(--text-dim); background: var(--surface2); border: 1px solid var(--border); border-radius: 6px; padding: 5px 10px; }
+  .fw b { color: var(--text); }
+  .verified { font-size: 13px; color: var(--metric); font-weight: 600; margin-top: 4px; }
+
+  .cta { display: flex; gap: 12px; flex-wrap: wrap; margin-bottom: 36px; }
+  .btn { font-family: var(--font-mono); font-size: 13px; font-weight: 700; text-decoration: none; border-radius: 8px; padding: 12px 20px; transition: all 0.15s; }
+  .btn.primary { background: var(--primary); color: #F4F7FA; }
+  .btn.primary:hover { filter: brightness(1.08); }
+  .btn.ghost { border: 1px solid var(--border-bright); color: var(--text); }
+  .btn.ghost:hover { border-color: var(--primary); color: var(--primary); }
+
+  /* collapsible subcategory groups — single rows */
+  .group { border: 1px solid var(--border); border-radius: 12px; background: var(--surface); overflow: hidden; }
+  .group + .group { margin-top: 12px; }
+  summary.group-title { cursor: pointer; list-style: none; display: flex; align-items: center; justify-content: space-between; gap: 12px;
+    font-family: var(--font-mono); font-size: 12px; font-weight: 700; letter-spacing: 0.15em; text-transform: uppercase; color: var(--text-dim);
+    padding: 15px 18px; user-select: none; transition: color 0.15s; }
+  summary.group-title::-webkit-details-marker { display: none; }
+  summary.group-title:hover { color: var(--text); }
+  summary.group-title::after { content: "+"; font-family: var(--font-mono); font-weight: 400; font-size: 18px; line-height: 1; color: var(--text-faint); letter-spacing: 0; }
+  details[open] summary.group-title { color: var(--text); border-bottom: 1px solid var(--border); }
+  details[open] summary.group-title::after { content: "\2212"; }
+  .list { display: flex; flex-direction: column; }
+  a.row { display: flex; align-items: center; gap: 20px; padding: 13px 18px; text-decoration: none; color: inherit; transition: background 0.15s; }
+  a.row + a.row { border-top: 1px solid var(--border); }
+  a.row:hover { background: var(--surface2); }
+  .row .rt { min-width: 240px; max-width: 300px; flex-shrink: 0; }
+  .row .n { font-family: var(--font-mono); font-size: 11px; font-weight: 700; color: var(--primary); }
+  .row .ct { font-size: 15.5px; font-weight: 700; color: var(--text); display: block; }
+  .row .cd { font-size: 13.5px; color: var(--text-dim); flex: 1; }
+  a.row:hover .ct { color: var(--primary); }
+  .row .open { font-family: var(--font-mono); font-size: 11px; font-weight: 700; color: var(--text-faint); white-space: nowrap; }
+  a.row:hover .open { color: var(--primary); }
+
+  .footer { margin-top: 40px; padding-top: 18px; border-top: 1px solid var(--border); font-size: 13.5px; color: var(--text-dim); }
+  .footer a { color: var(--primary); text-decoration: none; }
+  .footer a:hover { text-decoration: underline; }
+
+  @media (max-width: 900px) { a.row { align-items: flex-start; flex-direction: column; gap: 6px; } .row .rt { min-width: 0; max-width: none; } }
+  @media (max-width: 768px) { .hero h1 { font-size: 30px; } .ammo .pts { grid-template-columns: 1fr; } }
+  @media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation-duration: 0.01ms !important; } }
 </style>
 </head>
 <body>
-<nav class="crumbs crumbs-at-top" aria-label="Breadcrumb">
-  <a href="../index.html">Index</a>
-  <span class="sep">/</span>
-  <span class="current" aria-current="page">Customer Success</span>
-</nav>
-
-<div class="sheet">
-  <div class="spine"><div class="spine-label">Charlie Fuller &nbsp;·&nbsp; AI in Customer Success</div></div>
-  <div class="content">
-    <div class="masthead"><h1>AI in customer success, <span class="emp">mapped.</span></h1><div class="masthead-num">08</div></div>
-    <p class="lede">What&rsquo;s solved, what&rsquo;s a trap, and where the edge is. Eight diagrams on one through-line: <strong>the risk math is code, the language is the model, and the trust is the moat.</strong></p>
-
-    <div class="catalog">
-
-      <details class="cat" open>
-        <summary class="cat-head"><span class="lab">The story</span><span class="plus">+</span></summary>
-        <div class="crows">
-          <a href="csm-landscape.html" class="link"><span class="n">01</span><span class="ct">The territory</span><span class="cd">Solved for drafting and surfacing. Not solved for churn prediction. A quadrant map of the whole landscape.</span></a>
-          <a href="csm-health-explainer.html" class="link"><span class="n">02</span><span class="ct">CSM Health &amp; Renewals Agent</span><span class="cd">The fix, built. A triage agent that reads the account weekly and hands the CSM a call they can defend &mdash; no black-box score, no model inventing things.</span></a>
-          <a href="csm-productivity-agentic.html" class="link"><span class="n">03</span><span class="ct">Productivity to agentic</span><span class="cd">The arc from drafting to acting: the productivity layer a platform shipped, the gaps it left, and the agentic work that comes next.</span></a>
-        </div>
-      </details>
-
-      <details class="cat">
-        <summary class="cat-head"><span class="lab">Deep dive</span><span class="plus">+</span></summary>
-        <div class="crows">
-          <a href="csm-battle-plan.html" class="link"><span class="n">04</span><span class="ct">The Architect</span><span class="cd">The shape of the role: an operator who closes the action gap, proves the ROI, and builds the governance moat.</span></a>
-          <a href="csm-build-process.html" class="link"><span class="n">05</span><span class="ct">The approach</span><span class="cd">Capture the real org, write the PRD, run the AESOP build with a platform choice &mdash; then prove it on synthetic data.</span></a>
-          <a href="csm-time-saved.html" class="link"><span class="n">06</span><span class="ct">The time saved</span><span class="cd">What the AESOP build was worth: 12&ndash;19 hours of scaffold compressed to minutes, and the honest caveat on what it didn&rsquo;t save.</span></a>
-          <a href="csm-storage-scale.html" class="link"><span class="n">07</span><span class="ct">Data storage at scale</span><span class="cd">Where the record lives at 10,000 accounts. Raw stays in S3, the account record moves to Snowflake, and four agents become one incremental loop &mdash; plus the unknowns that still block the plan.</span></a>
-          <a href="csm-quick-solution.html" class="link"><span class="n">08</span><span class="ct">The Quick solution, mapped</span><span class="cd">How Amazon Quick turns sources into actions &mdash; the connections, the built-in actions, and the four gaps Quick doesn&rsquo;t fill.</span></a>
-        </div>
-      </details>
-
-    </div>
-
-    <div class="footer"><div class="rule-line">&copy; 2025&ndash;2026 Charlie Fuller &nbsp;&middot;&nbsp; <a href="https://linkedin.com/in/charlie-fuller-colorado/" target="_blank" rel="noopener">LinkedIn</a></div></div>
+<div class="nav">
+  <div class="nav-inner">
+    <nav class="crumbs" aria-label="Breadcrumb">
+      <a href="../index.html">Index</a>
+      <span class="sep">/</span>
+      <span class="current" aria-current="page">Customer Success</span>
+    </nav>
   </div>
 </div>
+
+<div class="container">
+
+  <div class="hero">
+    <div class="kicker">Charlie Fuller &middot; AI in customer success</div>
+    <h1>AI in customer success, mapped.</h1>
+    <p>What&rsquo;s solved, what&rsquo;s a trap, and where the edge is. Eight diagrams on one through-line: <b style="color:var(--text)">the risk math is code, the language is the model, and the trust is the moat.</b></p>
+  </div>
+
+  <div class="ammo">
+    <div class="pts">
+      <div class="pt"><span><b>Solved for drafting.</b> Summarizing, surfacing, briefing, pre-call. The productivity layer a platform ships &mdash; and the ceiling it hits.</span></div>
+      <div class="pt"><span><b>Not solved for prediction.</b> Churn forecasting fails on context. The agent that reads the account weekly and hands the CSM a call they can defend.</span></div>
+      <div class="pt"><span><b>Code decides, model narrates.</b> The risk math stays deterministic and auditable; the LLM only writes, grounded and human-gated.</span></div>
+      <div class="pt"><span><b>Trust is the moat.</b> Shipped evidence, not claims. The agent never sends; a human does. Outcome measured in revenue, not hours.</span></div>
+    </div>
+    <div class="frameworks">
+      <span class="fw"><b>Deterministic</b> code-first</span>
+      <span class="fw"><b>Human</b> above the loop</span>
+      <span class="fw"><b>Grounded</b> cites the signal</span>
+      <span class="fw"><b>Honest eval</b> 85.7%, not 100%</span>
+    </div>
+    <p class="verified">The fix is four moves, and the agent is all four.</p>
+  </div>
+
+  <div class="cta">
+    <a class="btn primary" href="csm-health-explainer.html">Start here: the health agent &rarr;</a>
+    <a class="btn ghost" href="csm-landscape.html">Read the territory &rarr;</a>
+  </div>
+
+  <details class="group" open>
+    <summary class="group-title">The story</summary>
+    <div class="list">
+      <a class="row" href="csm-landscape.html"><div class="rt"><span class="n">01</span><span class="ct">The territory</span></div><span class="cd">Solved for drafting and surfacing. Not solved for churn prediction. A quadrant map of the whole landscape.</span><span class="open">Open &rarr;</span></a>
+      <a class="row" href="csm-health-explainer.html"><div class="rt"><span class="n">02</span><span class="ct">CSM Health &amp; Renewals Agent</span></div><span class="cd">The fix, built. A triage agent that reads the account weekly and hands the CSM a call they can defend.</span><span class="open">Open &rarr;</span></a>
+      <a class="row" href="csm-productivity-agentic.html"><div class="rt"><span class="n">03</span><span class="ct">Productivity to agentic</span></div><span class="cd">The arc from drafting to acting: the layer a platform shipped, the gaps it left, the work that comes next.</span><span class="open">Open &rarr;</span></a>
+    </div>
+  </details>
+
+  <details class="group">
+    <summary class="group-title">Deep dive</summary>
+    <div class="list">
+      <a class="row" href="csm-battle-plan.html"><div class="rt"><span class="n">04</span><span class="ct">The Architect</span></div><span class="cd">The shape of the role: an operator who closes the action gap, proves the ROI, and builds the governance moat.</span><span class="open">Open &rarr;</span></a>
+      <a class="row" href="csm-build-process.html"><div class="rt"><span class="n">05</span><span class="ct">The approach</span></div><span class="cd">Capture the real org, write the PRD, run the AESOP build with a platform choice &mdash; then prove it on synthetic data.</span><span class="open">Open &rarr;</span></a>
+      <a class="row" href="csm-time-saved.html"><div class="rt"><span class="n">06</span><span class="ct">The time saved</span></div><span class="cd">What the AESOP build was worth: 12&ndash;19 hours of scaffold compressed to minutes, and the honest caveat on what it didn&rsquo;t save.</span><span class="open">Open &rarr;</span></a>
+      <a class="row" href="csm-storage-scale.html"><div class="rt"><span class="n">07</span><span class="ct">Data storage at scale</span></div><span class="cd">Where the record lives at 10,000 accounts &mdash; raw in S3, the record in Snowflake, four agents as one incremental loop.</span><span class="open">Open &rarr;</span></a>
+      <a class="row" href="csm-quick-solution.html"><div class="rt"><span class="n">08</span><span class="ct">The Quick solution, mapped</span></div><span class="cd">How Amazon Quick turns sources into actions &mdash; and the four gaps Quick doesn&rsquo;t fill.</span><span class="open">Open &rarr;</span></a>
+    </div>
+  </details>
+
+  <div class="footer">
+    <b style="color:var(--text)">Let&rsquo;s talk the CS layer.</b> Open to AI-automation and customer-success-operations roles. &nbsp;
+    <a href="https://www.linkedin.com/in/charlie-fuller-colorado">Connect on LinkedIn</a> &middot;
+    <a href="https://github.com/motorthings">github.com/motorthings</a> &middot;
+    <a href="../index.html">All diagrams</a>
+    <div style="margin-top:8px;color:var(--text-faint);font-size:12px;">&copy; 2025&ndash;2026 Charlie Fuller</div>
+  </div>
+
+</div>
+
 </body>
 </html>
