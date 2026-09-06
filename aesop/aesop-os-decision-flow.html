@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" class="light">
 <head>
 <meta charset="UTF-8">
 <link rel="icon" type="image/svg+xml" href="../icon.svg">
@@ -8,553 +8,561 @@
 <meta name="description" content="How the AESOP OS engine decides what to build and how: build-class selection, build-path routing, and architecture-pattern selection from a PRD to a deployable agent.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Public+Sans:wght@400;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Mulish:ital,wght@0,300;0,400;0,600;0,700;0,800;1,400&display=swap" rel="stylesheet">
 <style>
-  :root {
-    --font-display: 'Instrument Serif', Georgia, serif;
-    --font-body: 'Public Sans', system-ui, sans-serif;
-    --font-mono: 'JetBrains Mono', 'SF Mono', monospace;
-    /* Gulf Stream Racing on a Ledger sheet — light only */
-    --ink: #0a1628; --graphite: #2e4d73; --body: #3d5a7a; --muted: #7a9ab8;
-    --rule: #c6d5e6; --row: #dbe5f0; --sheet: #eef4f9; --desk: #e4ecf4;
-    --spine: #0a1628; --spine-fg: #eef4f9;
-    --accent: #e8621a; --amber: #b45309; --blue: #2f6fa8; --teal: #0f766e; --violet: #7c3aed; --rose: #c23a30;
-  }
-  * { margin: 0; padding: 0; box-sizing: border-box; }
-  body { background: var(--desk); color: var(--body); font-family: var(--font-body); font-size: 16.5px; line-height: 1.6; -webkit-font-smoothing: antialiased; text-rendering: optimizeLegibility; }
-  .topbar { max-width: 1180px; margin: 0 auto; padding: 18px 28px 6px; }
-  .backlink a { font-size: 14px; color: var(--muted); text-decoration: none; }
-  .backlink a:hover { color: var(--ink); }
-  .backlink .arr { color: var(--accent); font-size: 15px; margin-right: 2px; }
+  :root{--font-body:'Mulish','Segoe UI',Helvetica,sans-serif;--font-mono:'Mulish',ui-monospace,'SF Mono',Consolas,monospace;
+    --bg:#14181C;--surface:#1B2127;--surface2:#232B33;--border:#303A43;--border-bright:#42505C;
+    --text:#F4F5F6;--text-dim:#CBD0D6;--text-faint:#87919B;
+    --primary:#F58A4E;--primary-dim:rgba(245,138,78,0.12);--metric:#45C7A6;--metric-dim:rgba(69,199,166,0.12);
+    --blue:#6CACE4;--blue-dim:rgba(108,172,228,0.12);
+    --amber:#E8B54D;--amber-dim:rgba(232,181,77,0.12);
+    --rose:#E88280;--rose-dim:rgba(232,130,128,0.12);
+    --violet:#B9A0E8;--violet-dim:rgba(185,160,232,0.12);}
+  html.light{--bg:#F7F3EF;--surface:#FFFFFF;--surface2:#F0E9E1;--border:#E1D6CB;--border-bright:#CDBBA8;
+    --text:#241A12;--text-dim:#574A3C;--text-faint:#8C7E6E;
+    --primary:#C64A11;--primary-dim:rgba(198,74,17,0.10);--metric:#0E7C66;--metric-dim:rgba(14,124,102,0.09);
+    --blue:#2F6FA8;--blue-dim:rgba(47,111,168,0.08);
+    --amber:#A5650A;--amber-dim:rgba(165,101,10,0.08);
+    --rose:#C23A30;--rose-dim:rgba(194,58,48,0.08);
+    --violet:#7C3AED;--violet-dim:rgba(124,58,237,0.07);}
+  *{margin:0;padding:0;box-sizing:border-box}
+  html{scroll-behavior:smooth}
+  body{background:
+      radial-gradient(at 10% 0%,var(--primary-dim),transparent 55%),
+      radial-gradient(at 90% 80%,var(--metric-dim),transparent 55%),
+      var(--bg);
+    color:var(--text);font-family:var(--font-body);font-size:16.5px;line-height:1.6;-webkit-font-smoothing:antialiased;min-height:100vh}
 
-  .sheet { max-width: 1180px; margin: 6px auto 72px; background: var(--sheet); display: grid; grid-template-columns: 56px 1fr; }
-  .spine { background: var(--spine); display: flex; align-items: flex-end; justify-content: center; padding: 26px 0; }
-  .spine-label { writing-mode: vertical-rl; transform: rotate(180deg); font-family: var(--font-mono); font-size: 13px; letter-spacing: 0.22em; color: var(--spine-fg); white-space: nowrap; text-transform: uppercase; }
-  .content { padding: 46px 58px 6px; min-width: 0; }
+  .nav{position:sticky;top:0;z-index:50;backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);background:color-mix(in srgb,var(--bg) 72%,transparent);border-bottom:1px solid var(--border)}
+  .nav-inner{max-width:1080px;margin:0 auto;padding:12px 24px;display:flex;align-items:center;gap:14px}
+  .nav-brand{font-weight:800;font-size:14px;letter-spacing:-0.01em;color:var(--text);text-decoration:none}
+  .nav-brand .dot{color:var(--primary)}
+  .nav-spacer{flex:1}
+  .nav a.go{font-size:13px;font-weight:600;color:var(--primary);text-decoration:none}
+  .nav a.go:hover{text-decoration:underline}
+  .crumbs{font-size:13px;font-weight:600;color:var(--text-dim);display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+  .crumbs a{color:var(--primary);text-decoration:none}
+  .crumbs a:hover{text-decoration:underline}
+  .crumbs .sep{color:var(--text-faint)}
+  .crumbs .current{color:var(--text-dim);font-weight:400}
+  .crumbs-top{max-width:1080px;margin:0 auto;padding:0 24px 6px}
 
-  .masthead { border-bottom: 3px solid var(--ink); padding-bottom: 14px; }
-  .masthead h1 { font-family: var(--font-display); font-weight: 400; font-size: 46px; line-height: 0.97; letter-spacing: -0.028em; color: var(--ink); max-width: 900px; }
-  .masthead h1 .mono { font-family: var(--font-mono); font-size: 0.34em; font-weight: 500; letter-spacing: 0.02em; color: var(--muted); display: block; margin-top: 8px; }
-  .lede { font-family: var(--font-display); font-style: italic; font-size: 18px; line-height: 1.5; color: var(--graphite); max-width: 860px; margin: 12px 0 8px; }
-  .lede b { color: var(--ink); }
-  .route { margin: 4px 0 0; font-family: var(--font-mono); font-size: 12px; line-height: 2; color: var(--muted); }
-  .route b { color: var(--accent); font-weight: 600; }
+  .wrap{max-width:1080px;margin:0 auto;padding:0 24px 80px}
 
-  section.sec { border-top: 3px solid var(--ink); padding: 20px 0 2px; }
-  .sec-title { display: grid; grid-template-columns: 80px 1fr; gap: 0 22px; align-items: baseline; margin-bottom: 6px; }
-  .sec-title .n { font-family: var(--font-display); font-size: 28px; line-height: 0.9; color: var(--accent); }
-  .sec-title h2 { font-size: 21px; font-weight: 700; letter-spacing: -0.012em; color: var(--ink); }
-  .sec-title h2 .lay { font-family: var(--font-mono); font-size: 10.5px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.1em; vertical-align: middle; margin-left: 10px; padding: 2px 8px; border: 1px solid; }
-  .sec-title h2 .lay.l1 { color: var(--blue); border-color: var(--blue); }
-  .sec-title h2 .lay.l2 { color: var(--teal); border-color: var(--teal); }
-  .sec-title h2 .lay.l3 { color: var(--violet); border-color: var(--violet); }
-  .sec-title h2 .lay.rev { color: var(--rose); border-color: var(--rose); }
-  .sec-title h2 .lay.ref { color: var(--teal); border-color: var(--teal); }
-  .sec-body { padding: 0 0 8px 102px; }
-  .sec-body p.lead { max-width: 900px; margin-bottom: 12px; }
-  .sec-body p.lead em, .sec-body em { color: var(--ink); }
-  .sec-body b, .sec-body strong { color: var(--ink); }
-  code { font-family: var(--font-mono); font-size: 0.84em; color: var(--accent); }
-  .seccap { font-family: var(--font-mono); font-size: 10.5px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.12em; color: var(--muted); margin: 14px 0 2px; }
+  .hero{padding:44px 0 22px}
+  .hero .kicker{font-size:12px;font-weight:700;letter-spacing:0.16em;text-transform:uppercase;color:var(--primary);margin-bottom:12px}
+  .hero h1{font-size:44px;line-height:1.02;letter-spacing:-0.03em;font-weight:800;
+    background:linear-gradient(135deg,var(--primary),var(--metric));-webkit-background-clip:text;background-clip:text;color:transparent}
+  .hero .mono{font-family:var(--font-mono);font-size:13px;font-weight:600;color:var(--text-faint);display:block;margin-top:10px}
+  .hero .lede{font-size:17px;line-height:1.6;color:var(--text-dim);max-width:900px;margin-top:12px}
+  .hero .lede b{color:var(--text)}
+  .hero .route{margin-top:10px;font-family:var(--font-mono);font-size:12.5px;line-height:2;color:var(--text-faint)}
+  .hero .route b{color:var(--primary);font-weight:700}
 
-  /* process map rows (phase vs gate) */
-  .pmap { border-top: 1px solid var(--row); padding: 10px 0; display: grid; grid-template-columns: 200px 1fr; gap: 3px 24px; align-items: baseline; }
-  .pmap:first-of-type { border-top: none; }
-  .pmap .pm-k { font-family: var(--font-mono); font-size: 10.5px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; color: var(--blue); }
-  .pmap.gate { border-top: 1px dashed var(--rule); }
-  .pmap.gate .pm-k { color: var(--amber); }
-  .pmap.fail .pm-k { color: var(--rose); }
-  .pmap.wk .pm-k { color: var(--violet); }
-  .pmap .pm-b { font-size: 13.5px; line-height: 1.55; }
-  .pmap .pm-b code { font-size: 0.9em; }
-  .pmap .pm-b .cls { font-family: var(--font-mono); font-size: 11px; font-weight: 600; color: var(--ink); }
-  .branch { font-size: 13px; line-height: 1.5; padding: 1px 0; }
-  .branch .bk { font-family: var(--font-mono); font-size: 10.5px; font-weight: 600; margin-right: 8px; }
-  .branch.pass .bk { color: var(--teal); } .branch.fail .bk { color: var(--rose); }
-  .branch.auto .bk { color: var(--blue); } .branch.wk .bk { color: var(--violet); }
-  .branch.gate .bk { color: var(--amber); }
+  .sec{margin-top:26px;background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:26px 30px}
+  .sec-head{display:flex;align-items:baseline;gap:12px;flex-wrap:wrap;border-bottom:1px solid var(--border);padding-bottom:12px;margin-bottom:8px}
+  .sec-num{font-size:23px;font-weight:800;color:var(--primary);font-family:var(--font-mono)}
+  .sec-title{font-size:21px;font-weight:800;color:var(--text);letter-spacing:-0.01em}
+  .lay{font-family:var(--font-mono);font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.08em;padding:2px 9px;border:1px solid;border-radius:999px;vertical-align:middle}
+  .lay.l1{color:var(--blue);border-color:var(--blue)}
+  .lay.l2{color:var(--metric);border-color:var(--metric)}
+  .lay.l3{color:var(--violet);border-color:var(--violet)}
+  .lay.rev{color:var(--rose);border-color:var(--rose)}
+  .lay.ref{color:var(--metric);border-color:var(--metric)}
+  .sec-lead{max-width:900px;margin:4px 0 12px;color:var(--text-dim)}
+  .sec-lead em,.sec-body em{color:var(--text);font-style:italic}
+  .sec-body b,.sec-body strong{color:var(--text)}
+  code{font-family:var(--font-mono);font-size:0.85em;color:var(--primary)}
+  .seccap{font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:0.12em;color:var(--text-faint);margin:16px 0 4px}
+
+  /* process rows */
+  .pmap{padding:11px 0;border-top:1px solid var(--border);display:grid;grid-template-columns:210px 1fr;gap:3px 24px;align-items:baseline}
+  .pmap:first-of-type{border-top:none}
+  .pmap .pm-k{font-family:var(--font-mono);font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.07em;color:var(--blue)}
+  .pmap.gate{border-top:1px dashed var(--border-bright)}
+  .pmap.gate .pm-k{color:var(--amber)}
+  .pmap .pm-b{font-size:13.5px;line-height:1.6;color:var(--text-dim)}
+  .pmap .pm-b b{color:var(--text)}
+  .pmap .pm-b .cls{font-family:var(--font-mono);font-size:11px;font-weight:700;color:var(--text)}
+  .branch{display:block;font-size:13px;line-height:1.55;padding:1px 0;color:var(--text-dim)}
+  .branch .bk{font-family:var(--font-mono);font-size:10.5px;font-weight:800;margin-right:8px}
+  .branch.pass .bk{color:var(--metric)}.branch.fail .bk{color:var(--rose)}
+  .branch.auto .bk{color:var(--blue)}.branch.wk .bk{color:var(--violet)}
+  .branch.gate .bk{color:var(--amber)}
 
   /* disclosures */
-  details.drill { border-top: 1px solid var(--row); }
-  details.drill:last-of-type { border-bottom: 1px solid var(--row); }
-  details.drill summary { cursor: pointer; list-style: none; padding: 11px 0; display: flex; align-items: baseline; gap: 10px; }
-  details.drill summary::-webkit-details-marker { display: none; }
-  details.drill summary .dc { font-family: var(--font-mono); font-size: 10px; color: var(--muted); }
-  details.drill summary .dtag { font-family: var(--font-mono); font-size: 9.5px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.04em; margin-left: auto; color: var(--accent); white-space: nowrap; }
-  details.drill summary .dtag.t-rose { color: var(--rose); } details.drill summary .dtag.t-amb { color: var(--amber); }
-  details.drill summary .dtag.t-blue { color: var(--blue); } details.drill summary .dtag.t-teal { color: var(--teal); }
-  details.drill summary .dtag.t-vio { color: var(--violet); }
-  details.drill summary .tt { font-weight: 700; color: var(--ink); font-size: 15px; }
-  details.drill summary::after { content: '\25BE'; font-family: var(--font-mono); font-size: 11px; color: var(--muted); flex-shrink: 0; }
-  details.drill[open] summary::after { content: '\25B4'; }
-  details.drill .dbody { padding: 2px 0 14px 22px; font-size: 13.5px; line-height: 1.6; }
-  details.drill .dbody b { color: var(--ink); }
-  details.drill .dbody p { margin-bottom: 6px; }
-  details.drill .dbody ul { list-style: none; margin: 6px 0; }
-  details.drill .dbody li { padding: 2px 0 2px 16px; position: relative; }
-  details.drill .dbody li::before { content: ''; position: absolute; left: 2px; top: 0.66em; width: 4px; height: 4px; background: var(--row); }
-  details.drill .dbody code { font-size: 0.9em; }
-  details.drill .dbody .corr { color: var(--teal); font-weight: 600; }
-  details.drill .dbody .wron { color: var(--rose); font-weight: 600; }
-  .ex { border-top: 1px dotted var(--rule); margin-top: 8px; padding-top: 6px; font-size: 12.5px; }
-  .ex .ex-l { font-family: var(--font-mono); font-size: 9.5px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em; color: var(--teal); }
-  .ex b { color: var(--ink); }
+  .tw{overflow-x:auto}
+  details.drill{border-top:1px solid var(--border)}
+  details.drill:last-of-type{border-bottom:1px solid var(--border)}
+  details.drill summary{cursor:pointer;list-style:none;padding:13px 4px;display:flex;align-items:baseline;gap:10px;flex-wrap:wrap}
+  details.drill summary::-webkit-details-marker{display:none}
+  details.drill summary .dc{font-family:var(--font-mono);font-size:11px;color:var(--text-faint)}
+  details.drill summary .dtag{font-family:var(--font-mono);font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.03em;margin-left:auto;white-space:nowrap}
+  details.drill summary .dtag.t-rose{color:var(--rose)}.details summary .dtag.t-rose{}
+  details.drill summary .dtag.t-amb{color:var(--amber)}
+  details.drill summary .dtag.t-blue{color:var(--blue)}.details summary .dtag.t-teal{}
+  details.drill summary .dtag.t-teal{color:var(--metric)}.details summary .dtag.t-vio{}
+  details.drill summary .dtag.t-vio{color:var(--violet)}
+  details.drill summary .tt{font-weight:800;color:var(--text);font-size:15px}
+  details.drill summary::after{content:'\25BE';font-family:var(--font-mono);font-size:12px;color:var(--text-faint);flex-shrink:0}
+  details.drill[open] summary::after{content:'\25B4'}
+  details.drill .dbody{padding:2px 0 16px 20px;font-size:13.5px;line-height:1.65;color:var(--text-dim)}
+  details.drill .dbody b{color:var(--text)}
+  details.drill .dbody p{margin-bottom:8px}
+  details.drill .dbody ul{list-style:none;margin:8px 0}
+  details.drill .dbody li{padding:3px 0 3px 16px;position:relative}
+  details.drill .dbody li::before{content:'';position:absolute;left:2px;top:.7em;width:5px;height:5px;border-radius:2px;background:var(--border-bright)}
+  details.drill .dbody code{font-size:0.9em}
+  .corr{color:var(--metric);font-weight:700}
+  .wron{color:var(--rose);font-weight:700}
+  .ex{border-top:1px dotted var(--border-bright);margin-top:9px;padding-top:7px;font-size:12.5px}
+  .ex .ex-l{font-family:var(--font-mono);font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.08em;color:var(--metric);margin-right:6px}
+  .ex b{color:var(--text)}
 
-  /* scoring grid */
-  table.grid { width: 100%; border-collapse: collapse; margin: 6px 0 10px; }
-  .grid th { text-align: left; font-family: var(--font-mono); font-size: 10px; font-weight: 600; color: var(--muted); border-bottom: 1px solid var(--ink); padding: 4px 10px 4px 0; }
-  .grid th.r { text-align: center; }
-  .grid td { border-bottom: 1px solid var(--row); padding: 6px 10px 6px 0; font-size: 12.5px; }
-  .grid td.dn { font-weight: 600; color: var(--ink); }
-  .grid td.r { text-align: center; font-family: var(--font-mono); }
+  /* scoring table */
+  table.grid{width:100%;border-collapse:collapse;margin:8px 0;min-width:460px}
+  .grid th{text-align:left;font-family:var(--font-mono);font-size:10px;font-weight:700;color:var(--text-faint);border-bottom:1px solid var(--border-bright);padding:4px 10px 7px 0}
+  .grid th.r{text-align:center}
+  .grid td{border-bottom:1px solid var(--border);padding:7px 10px 7px 0;font-size:12.5px;color:var(--text-dim)}
+  .grid tr:last-child td{border-bottom:none}
+  .grid td.dn{font-weight:700;color:var(--text)}
+  .grid td.r{text-align:center;font-family:var(--font-mono)}
 
-  table.tbl { width: 100%; border-collapse: collapse; margin: 4px 0 6px; }
-  .tbl th { text-align: left; font-size: 10.5px; font-weight: 600; color: var(--muted); padding: 4px 10px 6px 0; border-bottom: 2px solid var(--ink); }
-  .tbl td { padding: 9px 10px 9px 0; border-bottom: 1px solid var(--row); vertical-align: top; font-size: 12.5px; line-height: 1.5; }
-  .tbl tr:last-child td { border-bottom: none; }
-  .tbl .name { font-weight: 700; color: var(--ink); }
-  .tbl code { font-size: 0.9em; }
-  .tbl small { display: block; color: var(--muted); font-size: 11px; margin-top: 2px; }
-  .tbl .num { font-family: var(--font-mono); color: var(--accent); font-weight: 600; }
-  .mode { font-family: var(--font-mono); font-size: 9.5px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.04em; white-space: nowrap; padding: 2px 7px; border: 1px solid; }
-  .mode.auto { color: var(--blue); border-color: var(--blue); }
-  .mode.wk { color: var(--violet); border-color: var(--violet); }
-  .mode.beta { color: var(--amber); border-color: var(--amber); }
-  .mode.none { color: var(--rose); border-color: var(--rose); }
+  table.tbl{width:100%;border-collapse:collapse;margin:4px 0;min-width:640px}
+  .tbl th{text-align:left;font-size:10.5px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--text-faint);padding:5px 12px 8px 0;border-bottom:1px solid var(--border-bright)}
+  .tbl td{padding:10px 12px 10px 0;border-bottom:1px solid var(--border);vertical-align:top;font-size:12.5px;line-height:1.55;color:var(--text-dim)}
+  .tbl tr:last-child td{border-bottom:none}
+  .tbl .name{font-weight:800;color:var(--text)}
+  .tbl code{font-size:0.9em}
+  .tbl small{display:block;color:var(--text-faint);font-size:11px;margin-top:2px}
+  .tbl .num{font-family:var(--font-mono);color:var(--primary);font-weight:800}
+  .mode{font-family:var(--font-mono);font-size:9.5px;font-weight:800;text-transform:uppercase;letter-spacing:.04em;white-space:nowrap;padding:3px 9px;border:1px solid;border-radius:999px}
+  .mode.auto{color:var(--blue);border-color:var(--blue)}
+  .mode.wk{color:var(--violet);border-color:var(--violet)}
+  .mode.beta{color:var(--amber);border-color:var(--amber)}
+  .mode.none{color:var(--rose);border-color:var(--rose)}
 
-  .close { margin: 18px 0 2px; padding-top: 14px; border-top: 1px solid var(--rule); font-size: 15px; line-height: 1.6; color: var(--body); max-width: 900px; }
-  .close b { color: var(--ink); }
-  .footer { border-top: 3px solid var(--ink); margin: 24px 0 0; padding: 18px 0 30px; display: flex; justify-content: space-between; gap: 20px; flex-wrap: wrap; font-family: var(--font-mono); font-size: 11.5px; color: var(--muted); }
-  .footer a { color: var(--accent); text-decoration: none; }
+  .close{margin-top:22px;padding:16px 18px;border-left:3px solid var(--primary);background:var(--primary-dim);border-radius:0 10px 10px 0;font-size:15px;line-height:1.65;color:var(--text-dim)}
+  .close b{color:var(--text)}
 
-  @media (max-width: 920px) {
-    .sheet { grid-template-columns: 40px 1fr; }
-    .spine-label { font-size: 11px; }
-    .content { padding: 30px 22px 4px; }
-    .masthead h1 { font-size: 38px; }
-    .pmap { grid-template-columns: 1fr; gap: 2px; }
-    .sec-title { grid-template-columns: 48px 1fr; }
-    .sec-title .n { font-size: 24px; }
-    .sec-body { padding-left: 0; }
-    body { font-size: 15.5px; }
+  .footer{margin-top:30px;border-top:1px solid var(--border);padding:18px 0 0;display:flex;justify-content:space-between;gap:20px;flex-wrap:wrap;font-family:var(--font-mono);font-size:12px;color:var(--text-faint)}
+  .footer a{color:var(--primary);text-decoration:none}
+  .footer a:hover{text-decoration:underline}
+
+  @media(max-width:920px){
+    .wrap{padding:0 16px 60px}
+    .hero h1{font-size:33px}
+    .sec{padding:20px 18px}
+    .pmap{grid-template-columns:1fr;gap:3px}
+    .lay{margin-left:0}
+    body{font-size:15.5px}
   }
+  @media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
 </style>
 </head>
 <body>
-<style>
-.crumbs-at-top{max-width:1100px;margin:0 auto;padding:14px 24px 0}
-.crumbs{font-family:var(--font-mono,monospace);font-size:13px;font-weight:600;display:flex;align-items:center;gap:8px;flex-wrap:wrap;min-width:0}
-.crumbs a{color:var(--accent);text-decoration:none}
-.crumbs a:hover,.crumbs a:focus-visible{text-decoration:underline;outline:none}
-.crumbs .sep{color:var(--muted)}
-.crumbs .current{color:var(--muted);font-weight:400}
-</style>
-<nav class="crumbs crumbs-at-top" aria-label="Breadcrumb">
-  <a href="../index.html">Index</a>
-  <span class="sep">/</span>
-  <a href="../aesop.html">AESOP</a>
-  <span class="sep">/</span>
-  <span class="current" aria-current="page">Build Decision Flowaesop-os / backend / engine — from PRD to…</span>
-</nav>
 
-
-</div>
-
-<div class="sheet">
-  <div class="spine"><div class="spine-label">BUILD DECISION FLOW</div></div>
-
-  <div class="content">
-
-    <header class="masthead">
-      <h1>Build Decision Flow<span class="mono">aesop-os / backend / engine &mdash; from PRD to buildable agent</span></h1>
-      <p class="lede">How the AESOP OS engine decides <b>what to build</b> and <b>how to build it</b>. Every PRD enters at Phase 0 and exits as either a paste-ready brief (Auto Mode) or importable JSON (Workflow Mode). The flow spans three layers: build-class selection, build-path routing, and architecture-pattern selection.</p>
-      <p class="route">PRD &rarr; <b>Layer 1</b> build class &rarr; <b>Layer 2</b> path &rarr; <b>Layer 3</b> pattern &rarr; buildable agent</p>
-    </header>
-
-    <!-- 01 -->
-    <section class="sec">
-      <div class="sec-title"><span class="n">01</span><h2>Overview &mdash; the three layers</h2></div>
-      <div class="sec-body">
-        <p class="lead">Three stacked decisions turn a PRD into a deployable agent. <b>Not every build produces an agent:</b> one output type hands a full-stack developer a decision-complete spec &mdash; a thin brief plus a full implementation reference &mdash; and lets them own the build. The developer, not AESOP, picks the stack, schema, and API.</p>
-        <div class="pmap"><div class="pm-k" style="color:var(--blue)">Layer 1</div><div class="pm-b"><b>Build-class selection</b> &mdash; what kind of thing to build. Phase 0 fitness check, quick scoring, hard gates, then a class: A1 Assistant, A2 Assistant + routing, G1&ndash;G4 agents, or N1 not-ready.</div></div>
-        <div class="pmap"><div class="pm-k" style="color:var(--teal)">Layer 2</div><div class="pm-b"><b>Build-path routing</b> &mdash; which phases run. Auto Mode (Phase 2A + 3A) for A1/A2/G1; Workflow Mode (Phase 2 + 3 + 4) for G2/G3/G4. Both end at Phase 5 summary.</div></div>
-        <div class="pmap"><div class="pm-k" style="color:var(--violet)">Layer 3</div><div class="pm-b"><b>Architecture-pattern selection</b> &mdash; which structural template inside Workflow Mode. Six base patterns, optional hybrid modifiers, branching rules, and a sub-agent decision.</div></div>
-      </div>
-    </section>
-
-    <!-- 02 -->
-    <section class="sec">
-      <div class="sec-title"><span class="n">02</span><h2>Layer 1 &mdash; build-class selection<span class="lay l1">decision gate</span></h2></div>
-      <div class="sec-body">
-        <div class="pmap"><div class="pm-k">PRD submitted</div><div class="pm-b">Lowercased PRD text scored against 10 built-in patterns by keyword count.</div></div>
-        <div class="pmap"><div class="pm-k">Pattern matcher</div><div class="pm-b">Returns the top 3 patterns as hints &mdash; a suggestion, never a binding decision.</div></div>
-        <div class="pmap gate"><div class="pm-k">Phase 0 &mdash; fitness</div><div class="pm-b"><span class="branch fail"><span class="bk">fail</span>N1: not ready.</span><span class="branch pass"><span class="bk">go / conditional</span>Proceed to quick scoring.</span></div></div>
-        <div class="pmap"><div class="pm-k">Quick score</div><div class="pm-b">Eight dimensions, 0&ndash;2 each, on a 0&ndash;16 scale.</div></div>
-        <div class="pmap gate"><div class="pm-k">Hard gates</div><div class="pm-b">Override the score when forced conditions hold. Map to a class:
-          <span class="branch gate"><span class="bk">0&ndash;4 broad Q&amp;A</span>A1 Assistant</span>
-          <span class="branch gate"><span class="bk">14&ndash;16 multi-domain</span>A2 Assistant + routing</span>
-          <span class="branch gate"><span class="bk">5&ndash;9 domain chat</span>G1 Conversational</span>
-          <span class="branch gate"><span class="bk">10&ndash;13 form + steps</span>G2 Input form</span>
-          <span class="branch gate"><span class="bk">schedule trigger</span>G3 Scheduled</span>
-          <span class="branch gate"><span class="bk">content trigger</span>G4 Content-triggered</span>
-        </div></div>
-        <div class="pmap"><div class="pm-k" style="color:var(--rose)">Phase 1 gap analysis</div><div class="pm-b">Re-validates the class against 12 gap categories (category 12 validates build class) and can override Phase 0.</div></div>
-        <div class="pmap gate"><div class="pm-k">HITL checkpoint</div><div class="pm-b"><span class="branch fail"><span class="bk">block</span>N1, requires explicit override.</span>
-          <span class="branch auto"><span class="bk">A1, A2, G1</span>Auto Mode path (Phase 2A + 3A).</span>
-          <span class="branch wk"><span class="bk">G2, G3, G4</span>Workflow Mode path (Phase 2 + 3 + 4).</span>
-        </div></div>
-
-        <details class="drill">
-          <summary><span class="tt">Pattern matcher</span><span class="dc">patterns.py</span></summary>
-          <div class="dbody">
-            <p>Keyword-scores the PRD against 10 built-in patterns and returns the top 3 as hints. Each pattern carries a keyword list (8&ndash;10 terms); the matcher counts hits in the lowercased PRD. Score &gt; 0 is a match. <b>Limitation:</b> keyword matching is shallow &mdash; the LLM in Phase 0 makes the real decision; the matcher only primes it.</p>
-            <ul>
-              <li><b>1 Q&amp;A Bot</b> &mdash; question, answer, knowledge base, search, FAQ</li>
-              <li><b>2 Workflow Agent</b> &mdash; form, workflow, collect, process, generate</li>
-              <li><b>3 Scheduled Reporter</b> &mdash; report, weekly, daily, digest, recurring</li>
-              <li><b>4 Approval Workflow</b> &mdash; approval, route, triage, classify, escalate</li>
-              <li><b>5 Data Sync Agent</b> &mdash; sync, migrate, transfer, ETL, pipeline</li>
-              <li><b>6 Alert Monitor</b> &mdash; monitor, alert, threshold, detect, anomaly</li>
-              <li><b>7 Document Generator</b> &mdash; document, template, memo, draft, compose</li>
-              <li><b>8 Conversational Assistant</b> &mdash; chat, conversation, multi-turn, coach</li>
-              <li><b>9 Onboarding / Guided Flow</b> &mdash; onboarding, walkthrough, checklist, training</li>
-              <li><b>10 Decision Tree Agent</b> &mdash; decision tree, evaluate, criteria, gate, eligibility</li>
-            </ul>
-          </div>
-        </details>
-
-        <details class="drill">
-          <summary><span class="tt">Phase 0 fitness check &mdash; fail conditions</span><span class="dtag t-rose">mandatory stops</span></summary>
-          <div class="dbody">
-            <p><b>Any one of these triggers an automatic FAIL:</b></p>
-            <ul>
-              <li>Required data source has no connector AND no viable workaround (no remote template, API action, or export path)</li>
-              <li>Core workflow requires storing or caching data outside the platform</li>
-              <li>Use case requires real-time bidirectional sync</li>
-              <li>Problem is better solved by process change, policy change, or a non-AI tool</li>
-              <li>Problem-solution fit is misaligned</li>
-            </ul>
-            <p><b>Conditional pass</b> is appropriate only when all connectors exist and the gaps are about PRD clarity, not platform capability.</p>
-          </div>
-        </details>
-
-        <details class="drill">
-          <summary><span class="tt">Quick scoring model &mdash; 8 dimensions</span><span class="dtag t-blue">0&ndash;16</span></summary>
-          <div class="dbody">
-            <p>Score each 0&ndash;2, then sum.</p>
-            <table class="grid">
-              <thead><tr><th>Dimension</th><th class="r">0</th><th class="r">1</th><th class="r">2</th></tr></thead>
-              <tbody>
-                <tr><td class="dn">Repeatability</td><td class="r">rare</td><td class="r">recurring</td><td class="r">high-vol</td></tr>
-                <tr><td class="dn">Workflow clarity</td><td class="r">unclear</td><td class="r">partial</td><td class="r">defined</td></tr>
-                <tr><td class="dn">Standard output</td><td class="r">no</td><td class="r">somewhat</td><td class="r">yes</td></tr>
-                <tr><td class="dn">Branching / logic</td><td class="r">none</td><td class="r">limited</td><td class="r">significant</td></tr>
-                <tr><td class="dn">Actions / integrations</td><td class="r">none</td><td class="r">future</td><td class="r">required</td></tr>
-                <tr><td class="dn">Risk / governance</td><td class="r">low</td><td class="r">medium</td><td class="r">high</td></tr>
-                <tr><td class="dn">Specialized KB</td><td class="r">broad</td><td class="r">mixed</td><td class="r">narrow</td></tr>
-                <tr><td class="dn">Single entry point</td><td class="r">no</td><td class="r">maybe</td><td class="r">yes</td></tr>
-              </tbody>
-            </table>
-            <p><b>Interpretation:</b> 0&ndash;4 &rarr; A1. 5&ndash;9 &rarr; A1 or lean A2. 10&ndash;13 &rarr; agent (G1&ndash;G4 by trigger). 14&ndash;16 &rarr; A2.</p>
-          </div>
-        </details>
-
-        <details class="drill">
-          <summary><span class="tt">Hard gates &mdash; override the score</span><span class="dtag t-amb">binding rules</span></summary>
-          <div class="dbody">
-            <p>These override the numeric score when triggered.</p>
-            <ul>
-              <li><b>Force A1</b> when mostly true: broad Q&amp;A / synthesis is the value; no strict process; no action in another system; freeform conversation helps; retrieval can stay dynamic.</li>
-              <li><b>Force agent (G1&ndash;G4)</b> when any are true: repeatable steps; deterministic inputs + structured outputs; authoritative docs + system logic; must classify and respond differently; must route / escalate; requires system actions; must run in Slack, scheduled, or triggered.</li>
-              <li><b>Force A2</b> when all are true: users shouldn&rsquo;t pick the specialist; 2+ domain use cases; real quality gain from specialization; a single front door is wanted.</li>
-            </ul>
-            <p><b>PRD-prescribed override:</b> if the PRD prescribes workflow steps but the problem maps to Auto Mode, recommend Auto Mode and note the override &mdash; PRDs often carry forward legacy design decisions.</p>
-          </div>
-        </details>
-
-        <details class="drill">
-          <summary><span class="tt">Phase 1 gap analysis &mdash; build-class validation</span><span class="dtag t-blue">can override Phase 0</span></summary>
-          <div class="dbody">
-            <p>Phase 1 re-evaluates the Phase 0 classification using 12 gap categories; category 12 validates the class.</p>
-            <ul>
-              <li><b>A1 recommended?</b> Do requirements need repeatable steps, deterministic outputs, or system actions? If yes, upgrade to G1/G2.</li>
-              <li><b>A2 recommended?</b> Are there really 2+ distinct domains? If not, downgrade to A1/G1.</li>
-              <li><b>G1 recommended?</b> Need branching, gates, multi-step data flow, or &gt;20 actions? If yes, upgrade to G2.</li>
-              <li><b>G2/G3/G4 recommended?</b> Is every step necessary, or could it be a single instruction block? If over-engineered, downgrade to G1/A1.</li>
-            </ul>
-            <p><b>Rule:</b> always choose the lowest-complexity class that reliably solves the problem.</p>
-          </div>
-        </details>
-
-        <details class="drill">
-          <summary><span class="tt">HITL checkpoint &mdash; human override</span><span class="dtag t-amb">UI checkpoint</span></summary>
-          <div class="dbody">
-            <ul>
-              <li><b>Block</b> &mdash; red UI, requires an explicit checkbox to continue. Critical gaps that may produce a broken agent.</li>
-              <li><b>Caution</b> &mdash; amber UI, standard approve / reject. Gaps exist but are manageable.</li>
-              <li><b>Proceed</b> &mdash; green UI. No significant gaps.</li>
-            </ul>
-            <p>The user can approve and continue, reject and halt, or override the classification before proceeding.</p>
-          </div>
-        </details>
-      </div>
-    </section>
-
-    <!-- 03 -->
-    <section class="sec">
-      <div class="sec-title"><span class="n">03</span><h2>Layer 2 &mdash; build-path routing<span class="lay l2">parallel paths</span></h2></div>
-      <div class="sec-body">
-        <div class="pmap gate"><div class="pm-k">HITL approved</div><div class="pm-b">
-          <span class="branch auto"><span class="bk">A1, A2, G1</span><b>Auto Mode path</b> &mdash; Phase 2A instruction design &rarr; Phase 3A build brief.</span>
-          <span class="branch wk"><span class="bk">G2, G3, G4</span><b>Workflow Mode path</b> &mdash; Phase 2 workflow design &rarr; Phase 3 task instructions &rarr; Phase 4 generate outputs.</span>
-          <span class="branch pass"><span class="bk">both &rarr;</span>Phase 5 summary.</span>
-        </div></div>
-
-        <details class="drill">
-          <summary><span class="tt">Auto Mode path &mdash; Phase 2A + 3A</span><span class="dtag t-blue">A1, A2, G1</span></summary>
-          <div class="dbody">
-            <p><b>Phase 2A &mdash; instruction design:</b> write the instruction block (scope, persona, knowledge sources, response format). Action budget &mdash; max 20 actions per agent; MCP tools consume action slots, so split or switch to Workflow Mode if exceeded. Design for adoption &mdash; don&rsquo;t over-specify behavior that should adapt through traces. Context health check for distraction, clash, confusion.</p>
-            <p><b>Phase 3A &mdash; build brief:</b> a paste-ready configuration for the UI &mdash; instructions, knowledge sources, conversation starters, action selections, LLM config. For A2, adds routing conditions and agent specs per domain. <b>Auto Mode agents cannot be imported via JSON &mdash; manual paste only.</b></p>
-          </div>
-        </details>
-
-        <details class="drill">
-          <summary><span class="tt">Workflow Mode path &mdash; Phase 2 + 3 + 4</span><span class="dtag t-vio">G2, G3, G4</span></summary>
-          <div class="dbody">
-            <p><b>Phase 2 &mdash; workflow design:</b> select the base architecture pattern (Layer 3), apply hybrid modifiers if needed, design branching architecture, sub-agent decisions, MCP integration. Context health check and skill/action detection. Output: step-by-step architecture with types, dependencies, tool assignments.</p>
-            <p><b>Phase 3 &mdash; task instructions:</b> write each step&rsquo;s instruction template using the Goal&ndash;Return&ndash;Format&ndash;Warnings&ndash;Context framework. Target 4,000 chars per step (warn at 6K, hard limit 8K). Wire variable references <code>[[step_id]]</code> and <code>[[field_name]]</code>.</p>
-            <p><b>Phase 4 &mdash; generate outputs:</b> produce importable JSON matching the exact schema &mdash; UUIDs per step, correct <code>type</code> (BRANCH / TOOL / AGENT), <code>memoryConfig: ALL_DEPENDENCIES</code>. Post-build validation: schema checks, dependency integrity, variable syntax, budget audit.</p>
-          </div>
-        </details>
-
-        <details class="drill">
-          <summary><span class="tt">Knowledge docs per phase</span><span class="dtag t-blue">PHASE_KNOWLEDGE</span></summary>
-          <div class="dbody">
-            <p>Each phase gets only the docs it needs (token-budget management), controlled by the <code>PHASE_KNOWLEDGE</code> map. Phase 3 and 4 use the full platform reference (~45K chars) because they emit JSON; all others use the slim version (~9K chars).</p>
-            <ul>
-              <li><b>Phase 0:</b> feasibility-rules, connector-registry, platform-ref-slim, prd-decision-framework, external-integrations</li>
-              <li><b>Phase 1:</b> feasibility-rules, connector-registry, platform-ref-slim, community-patterns-slim</li>
-              <li><b>Phase 2:</b> actions-catalog, connector-registry, platform-ref-slim, prompt-engineering, hybrid-patterns-slim, orchestration-decisions-slim, community-patterns-slim, platform-best-practices</li>
-              <li><b>Phase 3:</b> platform-ref (full), prompt-engineering, orchestration-decisions-slim</li>
-              <li><b>Phase 4:</b> actions-catalog, json-schema, platform-ref (full), orchestration-decisions-slim</li>
-              <li><b>Phase 2A:</b> actions-catalog, platform-ref-slim, prompt-engineering, orchestration-decisions-slim</li>
-              <li><b>Phase 3A:</b> actions-catalog, platform-ref-slim, orchestration-decisions-slim</li>
-            </ul>
-          </div>
-        </details>
-      </div>
-    </section>
-
-    <!-- 04 -->
-    <section class="sec">
-      <div class="sec-title"><span class="n">04</span><h2>Layer 3 &mdash; architecture-pattern selection<span class="lay l3">workflow mode</span></h2></div>
-      <div class="sec-body">
-        <p class="lead">During Phase 2 the engine picks one of six base patterns, then optionally layers hybrid modifiers. The pattern matcher gives a keyword hint, but the LLM makes the final call with full PRD context.</p>
-        <div class="pmap"><div class="pm-k">Select base</div><div class="pm-b">
-          <span class="branch"><span class="bk">prescriptive</span>1 Cohesive Synthesis</span>
-          <span class="branch"><span class="bk">3+ stages</span>2 Decision Tree Pipeline</span>
-          <span class="branch"><span class="bk">type routing</span>3 Conditional Enterprise</span>
-          <span class="branch"><span class="bk">template + data</span>4 Document Generator</span>
-          <span class="branch"><span class="bk">exploratory</span>5 Dynamic Research</span>
-          <span class="branch"><span class="bk">trivial</span>6 Single-Step Agent</span>
-        </div></div>
-        <div class="pmap gate"><div class="pm-k">Hybrid modifier?</div><div class="pm-b">
-          <span class="branch gate"><span class="bk">compute</span>Compute Bridge</span>
-          <span class="branch gate"><span class="bk">qa</span>Validation Gate</span>
-          <span class="branch gate"><span class="bk">webhook / mcp</span>External Orchestration</span>
-          <span class="branch gate"><span class="bk">isolation</span>Memory Isolation Sandwich</span>
-          <span class="branch pass"><span class="bk">none</span>Proceed to branching design.</span>
-        </div></div>
-        <div class="pmap"><div class="pm-k">Branching design</div><div class="pm-b">Apply the three binding branching rules (branch-first routing, deterministic computation, depth and convergence).</div></div>
-        <div class="pmap gate"><div class="pm-k">Sub-agent?</div><div class="pm-b"><span class="branch"><span class="bk">yes / no</span>Either resolves to the workflow architecture.</span></div></div>
-
-        <details class="drill">
-          <summary><span class="tt">Pattern 1 &mdash; Cohesive Synthesis</span><span class="dtag t-teal">most common</span></summary>
-          <div class="dbody">
-            <p><b>Flow:</b> Search + Think + Respond. <b>Use when:</b> known inputs, defined outputs, standardized process. Think is the synthesis step &mdash; deterministic and controllable, it reads dependency outputs via memory and compiles a structured result. <b>Do not</b> use Plan and Execute here; that is only for genuinely exploratory work.</p>
-            <div class="ex"><span class="ex-l">Example &mdash; Job Description Generator</span><br><b>Trigger:</b> form (role, level, department, location). <b>Flow:</b> search JD templates and comp data &rarr; Think synthesizes a standardized JD &rarr; Respond. <b>Why:</b> every input known, output standardized, always search-then-synthesize.</div>
-            <div class="ex"><span class="ex-l">Example &mdash; Policy Compliance Checker</span><br><b>Trigger:</b> form (policy area, document). <b>Flow:</b> read document &rarr; search policy docs &rarr; Think compares and outputs a pass/fail compliance report &rarr; Respond. <b>Why:</b> clear inputs, authoritative source, deterministic output.</div>
-          </div>
-        </details>
-
-        <details class="drill">
-          <summary><span class="tt">Pattern 2 &mdash; Decision Tree Pipeline</span><span class="dtag t-teal">multi-stage gates</span></summary>
-          <div class="dbody">
-            <p><b>Flow:</b> [Classify + Branch + Validate]* + Recommend. <b>Use when:</b> 3+ decision stages with STOP/REVIEW gates and terminal outcomes. Each classification is a Think step, each gate a Branch step, terminal outcomes get dedicated Respond steps, and the final recommendation is a Think step consuming validated outputs. <b>Critical rule:</b> gate enforcement must be structural (Branch steps), not behavioral. A decision-tree PRD with 3+ stages must produce multiple steps &mdash; a single TOOL step holding all the logic is always wrong.</p>
-            <div class="ex"><span class="ex-l">Example &mdash; Technology Platform Selector</span><br>Classify need &rarr; branch (STOP if out of scope) &rarr; assess scale &rarr; branch (REVIEW if enterprise) &rarr; check compliance &rarr; branch (STOP if non-compliant) &rarr; final Think recommendation &rarr; Respond.</div>
-            <div class="ex"><span class="ex-l">Example &mdash; Vendor Qualification Pipeline</span><br>Search &rarr; classify risk &rarr; branch (HIGH &rarr; manual review; MEDIUM continues) &rarr; check insurance &rarr; branch (INCOMPLETE &rarr; request docs) &rarr; score and recommend.</div>
-          </div>
-        </details>
-
-        <details class="drill">
-          <summary><span class="tt">Pattern 3 &mdash; Conditional Enterprise Action</span><span class="dtag t-teal">type-based routing</span></summary>
-          <div class="dbody">
-            <p><b>Flow:</b> Classify + Branch + per-type processing. <b>Use when:</b> the request type determines entirely different paths, actions, output formats, or compliance rules. First step classifies type; a branch routes to type-specific sub-workflows; a convergence step merges outputs.</p>
-            <div class="ex"><span class="ex-l">Example &mdash; HR Request Router</span><br>Classify (benefits / leave / verification / payroll) &rarr; branch &rarr; each path searches its own sources and generates its own output &rarr; convergence formats the response with per-type disclaimers.</div>
-            <div class="ex"><span class="ex-l">Example &mdash; Separation Agreement Generator</span><br>Classify by jurisdiction (US / EMEA / Australia) &rarr; branch &rarr; each path calculates per its own law and template &rarr; convergence QA &amp; delivery to a legal reviewer.</div>
-          </div>
-        </details>
-
-        <details class="drill">
-          <summary><span class="tt">Pattern 4 &mdash; Document Generator</span><span class="dtag t-teal">template-based</span></summary>
-          <div class="dbody">
-            <p><b>Flow:</b> Gather data + Generate + Deliver. <b>Use when:</b> output is a formatted deliverable built from a template. The intelligence is in gathering the right data and filling sections accurately, not in deciding what to do.</p>
-            <div class="ex"><span class="ex-l">Example &mdash; Quarterly Business Review</span><br>Search quarterly metrics &rarr; read dashboards &rarr; Think fills the review template (summary, KPIs, highlights, risks, priorities) &rarr; create a document.</div>
-            <div class="ex"><span class="ex-l">Example &mdash; New-Hire Onboarding Packet</span><br>Search role checklist, department resources, IT provisioning &rarr; Think compiles the personalized packet &rarr; Respond.</div>
-          </div>
-        </details>
-
-        <details class="drill">
-          <summary><span class="tt">Pattern 5 &mdash; Dynamic Research</span><span class="dtag t-teal">rare &mdash; exploratory only</span></summary>
-          <div class="dbody">
-            <p><b>Flow:</b> Plan and Execute. <b>Use only when</b> the problem is genuinely open-ended with no known path &mdash; source material may be thin and the agent must autonomously re-query, the workflow is conversational and exploratory, and no defined output format exists. <b>Never</b> for defined inputs plus expected output, prescriptive steps, or standardized documents &mdash; those are Think (Pattern 1) workflows.</p>
-            <div class="ex"><span class="ex-l">Example &mdash; Competitive Intelligence Researcher</span><br>The agent autonomously decides what to search, evaluates sufficiency, re-queries if thin, and produces an analysis. No predefined template.</div>
-            <div class="ex"><span class="ex-l">Example &mdash; Root-Cause Investigator</span><br>Each investigation is unique; the agent follows the evidence, not a script.</div>
-          </div>
-        </details>
-
-        <details class="drill">
-          <summary><span class="tt">Pattern 6 &mdash; Single-Step Agent</span><span class="dtag t-teal">minimal</span></summary>
-          <div class="dbody">
-            <p><b>Flow:</b> one instruction block. <b>Use when:</b> trivial 1&ndash;2 step workflows where orchestration adds no value. <b>Note:</b> if a workflow seems single-step but has decision logic or classification, it belongs in Pattern 1 or 2. Don&rsquo;t collapse complexity into one step just because it fits in 8K characters.</p>
-            <div class="ex"><span class="ex-l">Example &mdash; Meeting Summary Formatter</span><br>Pasted transcript &rarr; one instruction extracts attendees, decisions, action items, and next steps into a structured summary.</div>
-            <div class="ex"><span class="ex-l">Example &mdash; Email Draft Helper</span><br>Draft in company voice &mdash; no search, no branching, no external systems.</div>
-          </div>
-        </details>
-
-        <details class="drill">
-          <summary><span class="tt">Hybrid modifiers &mdash; applied on top of base patterns</span><span class="dtag t-amb">optional layer</span></summary>
-          <div class="dbody">
-            <p>Hybrid modifiers close the gap between deterministic and non-deterministic steps. Apply one or more when the base pattern doesn&rsquo;t fully cover the workflow.</p>
-            <ul>
-              <li><b>Compute Bridge</b> &mdash; a Custom Action step before a Branch step, when the branch needs exact computed values. <b>Never</b> use Think to compute routing values (non-deterministic). <span class="ex"><span class="ex-l">Example:</span> days-until-renewal computed by a Custom Action; Think might say &ldquo;about a month&rdquo; and misroute.</span></li>
-              <li><b>Validation Gate</b> &mdash; a Think step (FACTUAL) between synthesis and delivery when output is externally visible or multi-step. Checks completeness, consistency, compliance. <span class="ex"><span class="ex-l">Example:</span> a QA step after the JD generator confirms sections, comp range, and EEO statement.</span></li>
-              <li><b>External Orchestration Bridge</b> &mdash; a webhook or MCP call between deterministic steps. <b>Constraint:</b> MCP tools only exist in Plan and Execute and Auto Mode, not explicit workflow steps &mdash; use Custom Actions or webhooks in Workflow Mode. <span class="ex"><span class="ex-l">Example:</span> a PO that calls an approval API, then branches on approved / denied / pending.</span></li>
-              <li><b>Memory Isolation Sandwich</b> &mdash; a sub-agent within the parent workflow for batch processing or modular encapsulation. Only the Respond step returns to the parent; no native parent-to-child variable mapping. <span class="ex"><span class="ex-l">Example:</span> a CSV Splitter spawns per-row sub-agents that enrich data; or parallel US/EU/APAC compliance sub-agents aggregate into one report.</span></li>
-            </ul>
-          </div>
-        </details>
-
-        <details class="drill">
-          <summary><span class="tt">Branching design rules</span><span class="dtag t-amb">critical constraints</span></summary>
-          <div class="dbody">
-            <p><b>Branch-first routing</b> &mdash; branch on raw search output, never on Think interpretation. Think may reclassify, soften, or alter the routing signal.</p>
-            <p><span class="corr">Correct:</span> Search &rarr; Branch &rarr; per-branch Think. &nbsp;<span class="wron">Wrong:</span> Search &rarr; Think &rarr; Branch.</p>
-            <p><b>Deterministic computation</b> &mdash; route calculated values through a Custom Action before the Branch. LLM arithmetic is unreliable.</p>
-            <p><span class="corr">Correct:</span> Custom Action (compute) &rarr; Branch. &nbsp;<span class="wron">Wrong:</span> Think (compute and decide) &rarr; Branch.</p>
-            <p><b>Depth and convergence</b> &mdash; max 3 levels of nesting; deeper means flatten or delegate inner branches to a sub-agent. Convergence steps must handle missing inputs from branches that didn&rsquo;t fire &mdash; check each dependency&rsquo;s status with a sentinel before including its output.</p>
-          </div>
-        </details>
-
-        <details class="drill">
-          <summary><span class="tt">Sub-agent decision framework</span><span class="dtag t-blue">when to delegate</span></summary>
-          <div class="dbody">
-            <p><b>Use a sub-agent when:</b> memory isolation matters (no context pollution); batch processing (CSV Splitter); modular domain encapsulation (updating it doesn&rsquo;t rebuild the parent); reusable across parents.</p>
-            <p><b>Don&rsquo;t use one when:</b> the parent needs intermediate outputs (only Respond returns); the task is 1&ndash;2 steps tightly coupled to parent context; the overhead exceeds the encapsulation benefit.</p>
-            <p><b>Scoping:</b> single purpose, max 2 nesting levels, branch logic inside sub-agents to avoid duplication. Start with &ldquo;triage agent plus one or two specialists.&rdquo; Don&rsquo;t over-architect.</p>
-          </div>
-        </details>
-      </div>
-    </section>
-
-    <!-- 05 -->
-    <section class="sec">
-      <div class="sec-title"><span class="n">05</span><h2>Review &mdash; key anti-patterns<span class="lay rev">platform lead + community</span></h2></div>
-      <div class="sec-body">
-        <p class="lead">The five most common failures in AESOP OS output &mdash; the highest-value items to review with the platform lead.</p>
-        <details class="drill">
-          <summary><span class="tt">1 &mdash; Plan and Execute for prescriptive workflows</span><span class="dtag t-rose">most common mistake</span></summary>
-          <div class="dbody"><p><span class="wron">Wrong:</span> Plan and Execute with defined inputs, expected output, prescriptive steps. <span class="corr">Right:</span> Search + Think + Respond. Plan and Execute is non-deterministic; Think is controllable and reads dependencies via memory.</p></div>
-        </details>
-        <details class="drill">
-          <summary><span class="tt">2 &mdash; Think between Search and Branch</span><span class="dtag t-rose">the platform lead&rsquo;s rule</span></summary>
-          <div class="dbody"><p><span class="wron">Wrong:</span> Search &rarr; Think (interpret) &rarr; Branch. <span class="corr">Right:</span> Search &rarr; Branch &rarr; per-branch Think. Think may reclassify or soften the routing signal; branch on raw output.</p></div>
-        </details>
-        <details class="drill">
-          <summary><span class="tt">3 &mdash; Think for branch-routing computation</span><span class="dtag t-rose">unreliable</span></summary>
-          <div class="dbody"><p><span class="wron">Wrong:</span> Think computes a score / date / threshold that Branch reads. <span class="corr">Right:</span> a Custom Action computes it; Branch reads the deterministic result.</p></div>
-        </details>
-        <details class="drill">
-          <summary><span class="tt">4 &mdash; TEXT inputs for constrained fields</span><span class="dtag t-rose">UI problem</span></summary>
-          <div class="dbody"><p><span class="wron">Wrong:</span> free text for locations, departments, job levels. <span class="corr">Right:</span> a SELECT with the valid options. Typos and variations break downstream classification and branching.</p></div>
-        </details>
-        <details class="drill">
-          <summary><span class="tt">5 &mdash; Deep branch nesting without sub-agents</span><span class="dtag t-rose">complexity trap</span></summary>
-          <div class="dbody"><p><span class="wron">Wrong:</span> 4+ nested branch levels in one workflow. <span class="corr">Right:</span> max 3; delegate inner branches to sub-agents. Deep nesting makes convergence fragile.</p></div>
-        </details>
-        <details class="drill">
-          <summary><span class="tt">More from community practice</span><span class="dtag t-blue">community-patterns-slim.md</span></summary>
-          <div class="dbody">
-            <ul>
-              <li><b>Silent context truncation</b> &mdash; the platform auto-truncates tokens with no indicator. Design with progressive memory scoping.</li>
-              <li><b>Read-document token bloat</b> &mdash; full-doc reads exhaust context; use snippet-based search.</li>
-              <li><b>Large-PDF failure</b> &mdash; ~1,000-page PDFs fail in agents; split or extract sections first.</li>
-              <li><b>8K character limit</b> &mdash; hard limit per instruction template. Move stable conventions to reference docs.</li>
-              <li><b>OAuth switches break agents</b> &mdash; changing auth methods globally broke existing connected agents.</li>
-              <li><b>Slack bot limitation</b> &mdash; agents don&rsquo;t respond to bot / workflow messages. A human initiates, or use the Agent API.</li>
-            </ul>
-          </div>
-        </details>
-      </div>
-    </section>
-
-    <!-- 06 -->
-    <section class="sec">
-      <div class="sec-title"><span class="n">06</span><h2>Reference &mdash; quick tables<span class="lay ref">reference</span></h2></div>
-      <div class="sec-body" style="max-width:1060px">
-
-        <div class="seccap">Build classes</div>
-        <table class="tbl">
-          <thead><tr><th>Class</th><th>Name</th><th>Mode</th><th>Trigger</th><th>Output</th><th>When to use</th></tr></thead>
-          <tbody>
-            <tr><td class="num">A1</td><td class="name">Assistant</td><td><span class="mode auto">Auto</span></td><td>Chat</td><td>Paste-ready brief</td><td>Broad Q&amp;A, summarization, drafting.<small>Synthesis not execution &mdash; variable sources, follow-ups matter.</small></td></tr>
-            <tr><td class="num">A2</td><td class="name">Assistant + Routing</td><td><span class="mode auto">Auto</span></td><td>Chat</td><td>Routing + agent specs</td><td>Single front door, 2+ domains.<small>Company help desk routes HR / IT / facilities questions to specialists.</small></td></tr>
-            <tr><td class="num">G1</td><td class="name">Conversational Agent</td><td><span class="mode auto">Auto</span></td><td>Chat</td><td>Paste-ready brief</td><td>Domain chat, narrow KB, decision logic.<small>Sales-policy Q&amp;A with classification and per-type responses.</small></td></tr>
-            <tr><td class="num">G2</td><td class="name">Input Form Agent</td><td><span class="mode wk">Workflow</span></td><td>Form</td><td>Importable JSON</td><td>Structured inputs, sequential steps.<small>JD generator: form in, policy search, standardized output.</small></td></tr>
-            <tr><td class="num">G3</td><td class="name">Scheduled Agent</td><td><span class="mode wk">Workflow</span></td><td>Schedule</td><td>JSON + schedule</td><td>Time-triggered, no user initiation.<small>Weekly compliance digest posts to Slack each Monday.</small></td></tr>
-            <tr><td class="num">G4</td><td class="name">Content-Triggered</td><td><span class="mode wk">Workflow</span></td><td>Event</td><td>JSON + trigger</td><td>File / folder event triggers.<small>Contract review fires when a PDF lands in a Drive folder.</small></td></tr>
-            <tr><td class="num">S1</td><td class="name">Skill</td><td><span class="mode beta">Beta</span></td><td>AI-routed</td><td>SKILL.md</td><td>Narrow reusable single task.<small>Severance calculator reused across HR agents.</small></td></tr>
-            <tr><td class="num">N1</td><td class="name">Not Ready</td><td><span class="mode none">None</span></td><td>&mdash;</td><td>Gap summary</td><td>Missing sources, unresolved governance.<small>No budget data, no approval API, no defined process.</small></td></tr>
-          </tbody>
-        </table>
-
-        <div class="seccap">Architecture patterns</div>
-        <table class="tbl">
-          <thead><tr><th>#</th><th>Pattern</th><th>Flow</th><th>Selection signal</th></tr></thead>
-          <tbody>
-            <tr><td class="num">1</td><td class="name">Cohesive Synthesis</td><td><code>Search + Think + Respond</code></td><td>Prescriptive: known inputs, defined outputs</td></tr>
-            <tr><td class="num">2</td><td class="name">Decision Tree Pipeline</td><td><code>[Classify+Branch+Validate]*</code></td><td>3+ stages with STOP/REVIEW gates</td></tr>
-            <tr><td class="num">3</td><td class="name">Conditional Enterprise</td><td><code>Classify+Branch+Per-type</code></td><td>Request type determines different paths</td></tr>
-            <tr><td class="num">4</td><td class="name">Document Generator</td><td><code>Gather+Generate+Deliver</code></td><td>Template output from gathered data</td></tr>
-            <tr><td class="num">5</td><td class="name">Dynamic Research</td><td><code>Plan and Execute</code></td><td>Genuinely exploratory (rare)</td></tr>
-            <tr><td class="num">6</td><td class="name">Single-Step</td><td><code>One block</code></td><td>Trivial, no orchestration needed</td></tr>
-          </tbody>
-        </table>
-
-        <div class="seccap">Orchestration decision matrix</div>
-        <table class="tbl">
-          <thead><tr><th>Criterion</th><th>Skill</th><th>Custom Action</th><th>Action Pack</th><th>Sub-Agent</th></tr></thead>
-          <tbody>
-            <tr><td class="name">Reusable across agents?</td><td>Yes (company-wide)</td><td>Yes (global)</td><td>Yes (system-wide)</td><td>Yes (published)</td></tr>
-            <tr><td class="name">External side effects?</td><td>No</td><td>Yes (API call)</td><td>Yes (system write)</td><td>Depends</td></tr>
-            <tr><td class="name">Structured I/O?</td><td>No (AI-routed)</td><td>Yes (OpenAPI)</td><td>Yes (fixed params)</td><td>Yes (form/memory)</td></tr>
-            <tr><td class="name">Memory isolation?</td><td>N/A</td><td>No</td><td>No</td><td>Yes</td></tr>
-            <tr><td class="name">Token cost?</td><td>Low (~100)</td><td>Minimal</td><td>Minimal</td><td>High (full exec)</td></tr>
-            <tr><td class="name">Deterministic?</td><td>No</td><td>Yes</td><td>Yes</td><td>Depends</td></tr>
-          </tbody>
-        </table>
-      </div>
-    </section>
-
-    <p class="close"><b>One decision, three layers deep.</b> The OS never guesses what to build. It scores the problem, forces the right class through hard gates and a human checkpoint, routes it down the matching path, and picks a structural pattern before a single instruction is written. The discipline that keeps the output reliable is the same throughout: <b>branch on deterministic signal, gate structurally, and let a human override at the one moment it matters.</b></p>
-
-    <footer class="footer">
-      <a href="../aesop.html">&larr; AESOP</a>
-      <span>&copy; 2025-2026 Charlie Fuller</span>
-    </footer>
-
+<nav class="nav" aria-label="Primary">
+  <div class="nav-inner">
+    <a class="nav-brand" href="../aesop.html">AESOP<span class="dot">.</span></a>
+    <div class="nav-spacer"></div>
+    <a class="go" href="../aesop.html">&larr; AESOP</a>
   </div>
+</nav>
+<div class="crumbs crumbs-top" aria-label="Breadcrumb">
+  <a href="../index.html">Index</a><span class="sep">/</span>
+  <a href="../aesop.html">AESOP</a><span class="sep">/</span>
+  <span class="current" aria-current="page">Build Decision Flow</span>
 </div>
 
+<main class="wrap">
+
+  <header class="hero">
+    <div class="kicker">Build decision flow</div>
+    <h1>Build Decision Flow</h1>
+    <div class="mono">aesop-os / backend / engine &mdash; from PRD to buildable agent</div>
+    <p class="lede">How the AESOP OS engine decides <b>what to build</b> and <b>how to build it</b>. Every PRD enters at Phase 0 and exits as either a paste-ready brief (Auto Mode) or importable JSON (Workflow Mode). The flow spans three layers: build-class selection, build-path routing, and architecture-pattern selection.</p>
+    <p class="route">PRD &rarr; <b>Layer 1</b> build class &rarr; <b>Layer 2</b> path &rarr; <b>Layer 3</b> pattern &rarr; buildable agent</p>
+  </header>
+
+  <!-- 01 -->
+  <section class="sec">
+    <div class="sec-head"><span class="sec-num">01</span><h2 class="sec-title">Overview &mdash; the three layers</h2></div>
+    <p class="sec-lead">Three stacked decisions turn a PRD into a deployable agent. <b>Not every build produces an agent:</b> one output type hands a full-stack developer a decision-complete spec &mdash; a thin brief plus a full implementation reference &mdash; and lets them own the build. The developer, not AESOP, picks the stack, schema, and API.</p>
+    <div class="pmap"><div class="pm-k" style="color:var(--blue)">Layer 1</div><div class="pm-b"><b>Build-class selection</b> &mdash; what kind of thing to build. Phase 0 fitness check, quick scoring, hard gates, then a class: A1 Assistant, A2 Assistant + routing, G1&ndash;G4 agents, or N1 not-ready.</div></div>
+    <div class="pmap"><div class="pm-k" style="color:var(--metric)">Layer 2</div><div class="pm-b"><b>Build-path routing</b> &mdash; which phases run. Auto Mode (Phase 2A + 3A) for A1/A2/G1; Workflow Mode (Phase 2 + 3 + 4) for G2/G3/G4. Both end at Phase 5 summary.</div></div>
+    <div class="pmap"><div class="pm-k" style="color:var(--violet)">Layer 3</div><div class="pm-b"><b>Architecture-pattern selection</b> &mdash; which structural template inside Workflow Mode. Six base patterns, optional hybrid modifiers, branching rules, and a sub-agent decision.</div></div>
+  </section>
+
+  <!-- 02 -->
+  <section class="sec">
+    <div class="sec-head"><span class="sec-num">02</span><h2 class="sec-title">Layer 1 &mdash; build-class selection</h2><span class="lay l1">decision gate</span></div>
+    <div class="pmap"><div class="pm-k">PRD submitted</div><div class="pm-b">Lowercased PRD text scored against 10 built-in patterns by keyword count.</div></div>
+    <div class="pmap"><div class="pm-k">Pattern matcher</div><div class="pm-b">Returns the top 3 patterns as hints &mdash; a suggestion, never a binding decision.</div></div>
+    <div class="pmap gate"><div class="pm-k">Phase 0 &mdash; fitness</div><div class="pm-b"><span class="branch fail"><span class="bk">fail</span>N1: not ready.</span><span class="branch pass"><span class="bk">go / conditional</span>Proceed to quick scoring.</span></div></div>
+    <div class="pmap"><div class="pm-k">Quick score</div><div class="pm-b">Eight dimensions, 0&ndash;2 each, on a 0&ndash;16 scale.</div></div>
+    <div class="pmap gate"><div class="pm-k">Hard gates</div><div class="pm-b">Override the score when forced conditions hold. Map to a class:
+      <span class="branch gate"><span class="bk">0&ndash;4 broad Q&amp;A</span>A1 Assistant</span>
+      <span class="branch gate"><span class="bk">14&ndash;16 multi-domain</span>A2 Assistant + routing</span>
+      <span class="branch gate"><span class="bk">5&ndash;9 domain chat</span>G1 Conversational</span>
+      <span class="branch gate"><span class="bk">10&ndash;13 form + steps</span>G2 Input form</span>
+      <span class="branch gate"><span class="bk">schedule trigger</span>G3 Scheduled</span>
+      <span class="branch gate"><span class="bk">content trigger</span>G4 Content-triggered</span>
+    </div></div>
+    <div class="pmap"><div class="pm-k" style="color:var(--rose)">Phase 1 gap analysis</div><div class="pm-b">Re-validates the class against 12 gap categories (category 12 validates build class) and can override Phase 0.</div></div>
+    <div class="pmap gate"><div class="pm-k">HITL checkpoint</div><div class="pm-b"><span class="branch fail"><span class="bk">block</span>N1, requires explicit override.</span>
+      <span class="branch auto"><span class="bk">A1, A2, G1</span>Auto Mode path (Phase 2A + 3A).</span>
+      <span class="branch wk"><span class="bk">G2, G3, G4</span>Workflow Mode path (Phase 2 + 3 + 4).</span>
+    </div></div>
+
+    <details class="drill">
+      <summary><span class="tt">Pattern matcher</span><span class="dc">patterns.py</span></summary>
+      <div class="dbody">
+        <p>Keyword-scores the PRD against 10 built-in patterns and returns the top 3 as hints. Each pattern carries a keyword list (8&ndash;10 terms); the matcher counts hits in the lowercased PRD. Score &gt; 0 is a match. <b>Limitation:</b> keyword matching is shallow &mdash; the LLM in Phase 0 makes the real decision; the matcher only primes it.</p>
+        <ul>
+          <li><b>1 Q&amp;A Bot</b> &mdash; question, answer, knowledge base, search, FAQ</li>
+          <li><b>2 Workflow Agent</b> &mdash; form, workflow, collect, process, generate</li>
+          <li><b>3 Scheduled Reporter</b> &mdash; report, weekly, daily, digest, recurring</li>
+          <li><b>4 Approval Workflow</b> &mdash; approval, route, triage, classify, escalate</li>
+          <li><b>5 Data Sync Agent</b> &mdash; sync, migrate, transfer, ETL, pipeline</li>
+          <li><b>6 Alert Monitor</b> &mdash; monitor, alert, threshold, detect, anomaly</li>
+          <li><b>7 Document Generator</b> &mdash; document, template, memo, draft, compose</li>
+          <li><b>8 Conversational Assistant</b> &mdash; chat, conversation, multi-turn, coach</li>
+          <li><b>9 Onboarding / Guided Flow</b> &mdash; onboarding, walkthrough, checklist, training</li>
+          <li><b>10 Decision Tree Agent</b> &mdash; decision tree, evaluate, criteria, gate, eligibility</li>
+        </ul>
+      </div>
+    </details>
+
+    <details class="drill">
+      <summary><span class="tt">Phase 0 fitness check &mdash; fail conditions</span><span class="dtag t-rose">mandatory stops</span></summary>
+      <div class="dbody">
+        <p><b>Any one of these triggers an automatic FAIL:</b></p>
+        <ul>
+          <li>Required data source has no connector AND no viable workaround (no remote template, API action, or export path)</li>
+          <li>Core workflow requires storing or caching data outside the platform</li>
+          <li>Use case requires real-time bidirectional sync</li>
+          <li>Problem is better solved by process change, policy change, or a non-AI tool</li>
+          <li>Problem-solution fit is misaligned</li>
+        </ul>
+        <p><b>Conditional pass</b> is appropriate only when all connectors exist and the gaps are about PRD clarity, not platform capability.</p>
+      </div>
+    </details>
+
+    <details class="drill">
+      <summary><span class="tt">Quick scoring model &mdash; 8 dimensions</span><span class="dtag t-blue">0&ndash;16</span></summary>
+      <div class="dbody">
+        <p>Score each 0&ndash;2, then sum.</p>
+        <div class="tw">
+          <table class="grid">
+            <thead><tr><th>Dimension</th><th class="r">0</th><th class="r">1</th><th class="r">2</th></tr></thead>
+            <tbody>
+              <tr><td class="dn">Repeatability</td><td class="r">rare</td><td class="r">recurring</td><td class="r">high-vol</td></tr>
+              <tr><td class="dn">Workflow clarity</td><td class="r">unclear</td><td class="r">partial</td><td class="r">defined</td></tr>
+              <tr><td class="dn">Standard output</td><td class="r">no</td><td class="r">somewhat</td><td class="r">yes</td></tr>
+              <tr><td class="dn">Branching / logic</td><td class="r">none</td><td class="r">limited</td><td class="r">significant</td></tr>
+              <tr><td class="dn">Actions / integrations</td><td class="r">none</td><td class="r">future</td><td class="r">required</td></tr>
+              <tr><td class="dn">Risk / governance</td><td class="r">low</td><td class="r">medium</td><td class="r">high</td></tr>
+              <tr><td class="dn">Specialized KB</td><td class="r">broad</td><td class="r">mixed</td><td class="r">narrow</td></tr>
+              <tr><td class="dn">Single entry point</td><td class="r">no</td><td class="r">maybe</td><td class="r">yes</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <p><b>Interpretation:</b> 0&ndash;4 &rarr; A1. 5&ndash;9 &rarr; A1 or lean A2. 10&ndash;13 &rarr; agent (G1&ndash;G4 by trigger). 14&ndash;16 &rarr; A2.</p>
+      </div>
+    </details>
+
+    <details class="drill">
+      <summary><span class="tt">Hard gates &mdash; override the score</span><span class="dtag t-amb">binding rules</span></summary>
+      <div class="dbody">
+        <p>These override the numeric score when triggered.</p>
+        <ul>
+          <li><b>Force A1</b> when mostly true: broad Q&amp;A / synthesis is the value; no strict process; no action in another system; freeform conversation helps; retrieval can stay dynamic.</li>
+          <li><b>Force agent (G1&ndash;G4)</b> when any are true: repeatable steps; deterministic inputs + structured outputs; authoritative docs + system logic; must classify and respond differently; must route / escalate; requires system actions; must run in Slack, scheduled, or triggered.</li>
+          <li><b>Force A2</b> when all are true: users shouldn&rsquo;t pick the specialist; 2+ domain use cases; real quality gain from specialization; a single front door is wanted.</li>
+        </ul>
+        <p><b>PRD-prescribed override:</b> if the PRD prescribes workflow steps but the problem maps to Auto Mode, recommend Auto Mode and note the override &mdash; PRDs often carry forward legacy design decisions.</p>
+      </div>
+    </details>
+
+    <details class="drill">
+      <summary><span class="tt">Phase 1 gap analysis &mdash; build-class validation</span><span class="dtag t-blue">can override Phase 0</span></summary>
+      <div class="dbody">
+        <p>Phase 1 re-evaluates the Phase 0 classification using 12 gap categories; category 12 validates the class.</p>
+        <ul>
+          <li><b>A1 recommended?</b> Do requirements need repeatable steps, deterministic outputs, or system actions? If yes, upgrade to G1/G2.</li>
+          <li><b>A2 recommended?</b> Are there really 2+ distinct domains? If not, downgrade to A1/G1.</li>
+          <li><b>G1 recommended?</b> Need branching, gates, multi-step data flow, or &gt;20 actions? If yes, upgrade to G2.</li>
+          <li><b>G2/G3/G4 recommended?</b> Is every step necessary, or could it be a single instruction block? If over-engineered, downgrade to G1/A1.</li>
+        </ul>
+        <p><b>Rule:</b> always choose the lowest-complexity class that reliably solves the problem.</p>
+      </div>
+    </details>
+
+    <details class="drill">
+      <summary><span class="tt">HITL checkpoint &mdash; human override</span><span class="dtag t-amb">UI checkpoint</span></summary>
+      <div class="dbody">
+        <ul>
+          <li><b>Block</b> &mdash; red UI, requires an explicit checkbox to continue. Critical gaps that may produce a broken agent.</li>
+          <li><b>Caution</b> &mdash; amber UI, standard approve / reject. Gaps exist but are manageable.</li>
+          <li><b>Proceed</b> &mdash; green UI. No significant gaps.</li>
+        </ul>
+        <p>The user can approve and continue, reject and halt, or override the classification before proceeding.</p>
+      </div>
+    </details>
+  </section>
+
+  <!-- 03 -->
+  <section class="sec">
+    <div class="sec-head"><span class="sec-num">03</span><h2 class="sec-title">Layer 2 &mdash; build-path routing</h2><span class="lay l2">parallel paths</span></div>
+    <div class="pmap gate"><div class="pm-k">HITL approved</div><div class="pm-b">
+      <span class="branch auto"><span class="bk">A1, A2, G1</span><b>Auto Mode path</b> &mdash; Phase 2A instruction design &rarr; Phase 3A build brief.</span>
+      <span class="branch wk"><span class="bk">G2, G3, G4</span><b>Workflow Mode path</b> &mdash; Phase 2 workflow design &rarr; Phase 3 task instructions &rarr; Phase 4 generate outputs.</span>
+      <span class="branch pass"><span class="bk">both &rarr;</span>Phase 5 summary.</span>
+    </div></div>
+
+    <details class="drill">
+      <summary><span class="tt">Auto Mode path &mdash; Phase 2A + 3A</span><span class="dtag t-blue">A1, A2, G1</span></summary>
+      <div class="dbody">
+        <p><b>Phase 2A &mdash; instruction design:</b> write the instruction block (scope, persona, knowledge sources, response format). Action budget &mdash; max 20 actions per agent; MCP tools consume action slots, so split or switch to Workflow Mode if exceeded. Design for adoption &mdash; don&rsquo;t over-specify behavior that should adapt through traces. Context health check for distraction, clash, confusion.</p>
+        <p><b>Phase 3A &mdash; build brief:</b> a paste-ready configuration for the UI &mdash; instructions, knowledge sources, conversation starters, action selections, LLM config. For A2, adds routing conditions and agent specs per domain. <b>Auto Mode agents cannot be imported via JSON &mdash; manual paste only.</b></p>
+      </div>
+    </details>
+
+    <details class="drill">
+      <summary><span class="tt">Workflow Mode path &mdash; Phase 2 + 3 + 4</span><span class="dtag t-vio">G2, G3, G4</span></summary>
+      <div class="dbody">
+        <p><b>Phase 2 &mdash; workflow design:</b> select the base architecture pattern (Layer 3), apply hybrid modifiers if needed, design branching architecture, sub-agent decisions, MCP integration. Context health check and skill/action detection. Output: step-by-step architecture with types, dependencies, tool assignments.</p>
+        <p><b>Phase 3 &mdash; task instructions:</b> write each step&rsquo;s instruction template using the Goal&ndash;Return&ndash;Format&ndash;Warnings&ndash;Context framework. Target 4,000 chars per step (warn at 6K, hard limit 8K). Wire variable references <code>[[step_id]]</code> and <code>[[field_name]]</code>.</p>
+        <p><b>Phase 4 &mdash; generate outputs:</b> produce importable JSON matching the exact schema &mdash; UUIDs per step, correct <code>type</code> (BRANCH / TOOL / AGENT), <code>memoryConfig: ALL_DEPENDENCIES</code>. Post-build validation: schema checks, dependency integrity, variable syntax, budget audit.</p>
+      </div>
+    </details>
+
+    <details class="drill">
+      <summary><span class="tt">Knowledge docs per phase</span><span class="dtag t-blue">PHASE_KNOWLEDGE</span></summary>
+      <div class="dbody">
+        <p>Each phase gets only the docs it needs (token-budget management), controlled by the <code>PHASE_KNOWLEDGE</code> map. Phase 3 and 4 use the full platform reference (~45K chars) because they emit JSON; all others use the slim version (~9K chars).</p>
+        <ul>
+          <li><b>Phase 0:</b> feasibility-rules, connector-registry, platform-ref-slim, prd-decision-framework, external-integrations</li>
+          <li><b>Phase 1:</b> feasibility-rules, connector-registry, platform-ref-slim, community-patterns-slim</li>
+          <li><b>Phase 2:</b> actions-catalog, connector-registry, platform-ref-slim, prompt-engineering, hybrid-patterns-slim, orchestration-decisions-slim, community-patterns-slim, platform-best-practices</li>
+          <li><b>Phase 3:</b> platform-ref (full), prompt-engineering, orchestration-decisions-slim</li>
+          <li><b>Phase 4:</b> actions-catalog, json-schema, platform-ref (full), orchestration-decisions-slim</li>
+          <li><b>Phase 2A:</b> actions-catalog, platform-ref-slim, prompt-engineering, orchestration-decisions-slim</li>
+          <li><b>Phase 3A:</b> actions-catalog, platform-ref-slim, orchestration-decisions-slim</li>
+        </ul>
+      </div>
+    </details>
+  </section>
+
+  <!-- 04 -->
+  <section class="sec">
+    <div class="sec-head"><span class="sec-num">04</span><h2 class="sec-title">Layer 3 &mdash; architecture-pattern selection</h2><span class="lay l3">workflow mode</span></div>
+    <p class="sec-lead">During Phase 2 the engine picks one of six base patterns, then optionally layers hybrid modifiers. The pattern matcher gives a keyword hint, but the LLM makes the final call with full PRD context.</p>
+    <div class="pmap"><div class="pm-k">Select base</div><div class="pm-b">
+      <span class="branch"><span class="bk">prescriptive</span>1 Cohesive Synthesis</span>
+      <span class="branch"><span class="bk">3+ stages</span>2 Decision Tree Pipeline</span>
+      <span class="branch"><span class="bk">type routing</span>3 Conditional Enterprise</span>
+      <span class="branch"><span class="bk">template + data</span>4 Document Generator</span>
+      <span class="branch"><span class="bk">exploratory</span>5 Dynamic Research</span>
+      <span class="branch"><span class="bk">trivial</span>6 Single-Step Agent</span>
+    </div></div>
+    <div class="pmap gate"><div class="pm-k">Hybrid modifier?</div><div class="pm-b">
+      <span class="branch gate"><span class="bk">compute</span>Compute Bridge</span>
+      <span class="branch gate"><span class="bk">qa</span>Validation Gate</span>
+      <span class="branch gate"><span class="bk">webhook / mcp</span>External Orchestration</span>
+      <span class="branch gate"><span class="bk">isolation</span>Memory Isolation Sandwich</span>
+      <span class="branch pass"><span class="bk">none</span>Proceed to branching design.</span>
+    </div></div>
+    <div class="pmap"><div class="pm-k">Branching design</div><div class="pm-b">Apply the three binding branching rules (branch-first routing, deterministic computation, depth and convergence).</div></div>
+    <div class="pmap gate"><div class="pm-k">Sub-agent?</div><div class="pm-b"><span class="branch"><span class="bk">yes / no</span>Either resolves to the workflow architecture.</span></div></div>
+
+    <details class="drill">
+      <summary><span class="tt">Pattern 1 &mdash; Cohesive Synthesis</span><span class="dtag t-teal">most common</span></summary>
+      <div class="dbody">
+        <p><b>Flow:</b> Search + Think + Respond. <b>Use when:</b> known inputs, defined outputs, standardized process. Think is the synthesis step &mdash; deterministic and controllable, it reads dependency outputs via memory and compiles a structured result. <b>Do not</b> use Plan and Execute here; that is only for genuinely exploratory work.</p>
+        <div class="ex"><span class="ex-l">Example &mdash; Job Description Generator</span><b>Trigger:</b> form (role, level, department, location). <b>Flow:</b> search JD templates and comp data &rarr; Think synthesizes a standardized JD &rarr; Respond. <b>Why:</b> every input known, output standardized, always search-then-synthesize.</div>
+        <div class="ex"><span class="ex-l">Example &mdash; Policy Compliance Checker</span><b>Trigger:</b> form (policy area, document). <b>Flow:</b> read document &rarr; search policy docs &rarr; Think compares and outputs a pass/fail compliance report &rarr; Respond. <b>Why:</b> clear inputs, authoritative source, deterministic output.</div>
+      </div>
+    </details>
+
+    <details class="drill">
+      <summary><span class="tt">Pattern 2 &mdash; Decision Tree Pipeline</span><span class="dtag t-teal">multi-stage gates</span></summary>
+      <div class="dbody">
+        <p><b>Flow:</b> [Classify + Branch + Validate]* + Recommend. <b>Use when:</b> 3+ decision stages with STOP/REVIEW gates and terminal outcomes. Each classification is a Think step, each gate a Branch step, terminal outcomes get dedicated Respond steps, and the final recommendation is a Think step consuming validated outputs. <b>Critical rule:</b> gate enforcement must be structural (Branch steps), not behavioral. A decision-tree PRD with 3+ stages must produce multiple steps &mdash; a single TOOL step holding all the logic is always wrong.</p>
+        <div class="ex"><span class="ex-l">Example &mdash; Technology Platform Selector</span>Classify need &rarr; branch (STOP if out of scope) &rarr; assess scale &rarr; branch (REVIEW if enterprise) &rarr; check compliance &rarr; branch (STOP if non-compliant) &rarr; final Think recommendation &rarr; Respond.</div>
+        <div class="ex"><span class="ex-l">Example &mdash; Vendor Qualification Pipeline</span>Search &rarr; classify risk &rarr; branch (HIGH &rarr; manual review; MEDIUM continues) &rarr; check insurance &rarr; branch (INCOMPLETE &rarr; request docs) &rarr; score and recommend.</div>
+      </div>
+    </details>
+
+    <details class="drill">
+      <summary><span class="tt">Pattern 3 &mdash; Conditional Enterprise Action</span><span class="dtag t-teal">type-based routing</span></summary>
+      <div class="dbody">
+        <p><b>Flow:</b> Classify + Branch + per-type processing. <b>Use when:</b> the request type determines entirely different paths, actions, output formats, or compliance rules. First step classifies type; a branch routes to type-specific sub-workflows; a convergence step merges outputs.</p>
+        <div class="ex"><span class="ex-l">Example &mdash; HR Request Router</span>Classify (benefits / leave / verification / payroll) &rarr; branch &rarr; each path searches its own sources and generates its own output &rarr; convergence formats the response with per-type disclaimers.</div>
+        <div class="ex"><span class="ex-l">Example &mdash; Separation Agreement Generator</span>Classify by jurisdiction (US / EMEA / Australia) &rarr; branch &rarr; each path calculates per its own law and template &rarr; convergence QA &amp; delivery to a legal reviewer.</div>
+      </div>
+    </details>
+
+    <details class="drill">
+      <summary><span class="tt">Pattern 4 &mdash; Document Generator</span><span class="dtag t-teal">template-based</span></summary>
+      <div class="dbody">
+        <p><b>Flow:</b> Gather data + Generate + Deliver. <b>Use when:</b> output is a formatted deliverable built from a template. The intelligence is in gathering the right data and filling sections accurately, not in deciding what to do.</p>
+        <div class="ex"><span class="ex-l">Example &mdash; Quarterly Business Review</span>Search quarterly metrics &rarr; read dashboards &rarr; Think fills the review template (summary, KPIs, highlights, risks, priorities) &rarr; create a document.</div>
+        <div class="ex"><span class="ex-l">Example &mdash; New-Hire Onboarding Packet</span>Search role checklist, department resources, IT provisioning &rarr; Think compiles the personalized packet &rarr; Respond.</div>
+      </div>
+    </details>
+
+    <details class="drill">
+      <summary><span class="tt">Pattern 5 &mdash; Dynamic Research</span><span class="dtag t-teal">rare &mdash; exploratory only</span></summary>
+      <div class="dbody">
+        <p><b>Flow:</b> Plan and Execute. <b>Use only when</b> the problem is genuinely open-ended with no known path &mdash; source material may be thin and the agent must autonomously re-query, the workflow is conversational and exploratory, and no defined output format exists. <b>Never</b> for defined inputs plus expected output, prescriptive steps, or standardized documents &mdash; those are Think (Pattern 1) workflows.</p>
+        <div class="ex"><span class="ex-l">Example &mdash; Competitive Intelligence Researcher</span>The agent autonomously decides what to search, evaluates sufficiency, re-queries if thin, and produces an analysis. No predefined template.</div>
+        <div class="ex"><span class="ex-l">Example &mdash; Root-Cause Investigator</span>Each investigation is unique; the agent follows the evidence, not a script.</div>
+      </div>
+    </details>
+
+    <details class="drill">
+      <summary><span class="tt">Pattern 6 &mdash; Single-Step Agent</span><span class="dtag t-teal">minimal</span></summary>
+      <div class="dbody">
+        <p><b>Flow:</b> one instruction block. <b>Use when:</b> trivial 1&ndash;2 step workflows where orchestration adds no value. <b>Note:</b> if a workflow seems single-step but has decision logic or classification, it belongs in Pattern 1 or 2. Don&rsquo;t collapse complexity into one step just because it fits in 8K characters.</p>
+        <div class="ex"><span class="ex-l">Example &mdash; Meeting Summary Formatter</span>Pasted transcript &rarr; one instruction extracts attendees, decisions, action items, and next steps into a structured summary.</div>
+        <div class="ex"><span class="ex-l">Example &mdash; Email Draft Helper</span>Draft in company voice &mdash; no search, no branching, no external systems.</div>
+      </div>
+    </details>
+
+    <details class="drill">
+      <summary><span class="tt">Hybrid modifiers &mdash; applied on top of base patterns</span><span class="dtag t-amb">optional layer</span></summary>
+      <div class="dbody">
+        <p>Hybrid modifiers close the gap between deterministic and non-deterministic steps. Apply one or more when the base pattern doesn&rsquo;t fully cover the workflow.</p>
+        <ul>
+          <li><b>Compute Bridge</b> &mdash; a Custom Action step before a Branch step, when the branch needs exact computed values. <b>Never</b> use Think to compute routing values (non-deterministic). <span class="ex"><span class="ex-l">Example:</span> days-until-renewal computed by a Custom Action; Think might say &ldquo;about a month&rdquo; and misroute.</span></li>
+          <li><b>Validation Gate</b> &mdash; a Think step (FACTUAL) between synthesis and delivery when output is externally visible or multi-step. Checks completeness, consistency, compliance. <span class="ex"><span class="ex-l">Example:</span> a QA step after the JD generator confirms sections, comp range, and EEO statement.</span></li>
+          <li><b>External Orchestration Bridge</b> &mdash; a webhook or MCP call between deterministic steps. <b>Constraint:</b> MCP tools only exist in Plan and Execute and Auto Mode, not explicit workflow steps &mdash; use Custom Actions or webhooks in Workflow Mode. <span class="ex"><span class="ex-l">Example:</span> a PO that calls an approval API, then branches on approved / denied / pending.</span></li>
+          <li><b>Memory Isolation Sandwich</b> &mdash; a sub-agent within the parent workflow for batch processing or modular encapsulation. Only the Respond step returns to the parent; no native parent-to-child variable mapping. <span class="ex"><span class="ex-l">Example:</span> a CSV Splitter spawns per-row sub-agents that enrich data; or parallel US/EU/APAC compliance sub-agents aggregate into one report.</span></li>
+        </ul>
+      </div>
+    </details>
+
+    <details class="drill">
+      <summary><span class="tt">Branching design rules</span><span class="dtag t-amb">critical constraints</span></summary>
+      <div class="dbody">
+        <p><b>Branch-first routing</b> &mdash; branch on raw search output, never on Think interpretation. Think may reclassify, soften, or alter the routing signal.</p>
+        <p><span class="corr">Correct:</span> Search &rarr; Branch &rarr; per-branch Think. &nbsp;<span class="wron">Wrong:</span> Search &rarr; Think &rarr; Branch.</p>
+        <p><b>Deterministic computation</b> &mdash; route calculated values through a Custom Action before the Branch. LLM arithmetic is unreliable.</p>
+        <p><span class="corr">Correct:</span> Custom Action (compute) &rarr; Branch. &nbsp;<span class="wron">Wrong:</span> Think (compute and decide) &rarr; Branch.</p>
+        <p><b>Depth and convergence</b> &mdash; max 3 levels of nesting; deeper means flatten or delegate inner branches to a sub-agent. Convergence steps must handle missing inputs from branches that didn&rsquo;t fire &mdash; check each dependency&rsquo;s status with a sentinel before including its output.</p>
+      </div>
+    </details>
+
+    <details class="drill">
+      <summary><span class="tt">Sub-agent decision framework</span><span class="dtag t-blue">when to delegate</span></summary>
+      <div class="dbody">
+        <p><b>Use a sub-agent when:</b> memory isolation matters (no context pollution); batch processing (CSV Splitter); modular domain encapsulation (updating it doesn&rsquo;t rebuild the parent); reusable across parents.</p>
+        <p><b>Don&rsquo;t use one when:</b> the parent needs intermediate outputs (only Respond returns); the task is 1&ndash;2 steps tightly coupled to parent context; the overhead exceeds the encapsulation benefit.</p>
+        <p><b>Scoping:</b> single purpose, max 2 nesting levels, branch logic inside sub-agents to avoid duplication. Start with &ldquo;triage agent plus one or two specialists.&rdquo; Don&rsquo;t over-architect.</p>
+      </div>
+    </details>
+  </section>
+
+  <!-- 05 -->
+  <section class="sec">
+    <div class="sec-head"><span class="sec-num">05</span><h2 class="sec-title">Review &mdash; key anti-patterns</h2><span class="lay rev">platform lead + community</span></div>
+    <p class="sec-lead">The five most common failures in AESOP OS output &mdash; the highest-value items to review with the platform lead.</p>
+    <details class="drill">
+      <summary><span class="tt">1 &mdash; Plan and Execute for prescriptive workflows</span><span class="dtag t-rose">most common mistake</span></summary>
+      <div class="dbody"><p><span class="wron">Wrong:</span> Plan and Execute with defined inputs, expected output, prescriptive steps. <span class="corr">Right:</span> Search + Think + Respond. Plan and Execute is non-deterministic; Think is controllable and reads dependencies via memory.</p></div>
+    </details>
+    <details class="drill">
+      <summary><span class="tt">2 &mdash; Think between Search and Branch</span><span class="dtag t-rose">the platform lead&rsquo;s rule</span></summary>
+      <div class="dbody"><p><span class="wron">Wrong:</span> Search &rarr; Think (interpret) &rarr; Branch. <span class="corr">Right:</span> Search &rarr; Branch &rarr; per-branch Think. Think may reclassify or soften the routing signal; branch on raw output.</p></div>
+    </details>
+    <details class="drill">
+      <summary><span class="tt">3 &mdash; Think for branch-routing computation</span><span class="dtag t-rose">unreliable</span></summary>
+      <div class="dbody"><p><span class="wron">Wrong:</span> Think computes a score / date / threshold that Branch reads. <span class="corr">Right:</span> a Custom Action computes it; Branch reads the deterministic result.</p></div>
+    </details>
+    <details class="drill">
+      <summary><span class="tt">4 &mdash; TEXT inputs for constrained fields</span><span class="dtag t-rose">UI problem</span></summary>
+      <div class="dbody"><p><span class="wron">Wrong:</span> free text for locations, departments, job levels. <span class="corr">Right:</span> a SELECT with the valid options. Typos and variations break downstream classification and branching.</p></div>
+    </details>
+    <details class="drill">
+      <summary><span class="tt">5 &mdash; Deep branch nesting without sub-agents</span><span class="dtag t-rose">complexity trap</span></summary>
+      <div class="dbody"><p><span class="wron">Wrong:</span> 4+ nested branch levels in one workflow. <span class="corr">Right:</span> max 3; delegate inner branches to sub-agents. Deep nesting makes convergence fragile.</p></div>
+    </details>
+    <details class="drill">
+      <summary><span class="tt">More from community practice</span><span class="dtag t-blue">community-patterns-slim.md</span></summary>
+      <div class="dbody">
+        <ul>
+          <li><b>Silent context truncation</b> &mdash; the platform auto-truncates tokens with no indicator. Design with progressive memory scoping.</li>
+          <li><b>Read-document token bloat</b> &mdash; full-doc reads exhaust context; use snippet-based search.</li>
+          <li><b>Large-PDF failure</b> &mdash; ~1,000-page PDFs fail in agents; split or extract sections first.</li>
+          <li><b>8K character limit</b> &mdash; hard limit per instruction template. Move stable conventions to reference docs.</li>
+          <li><b>OAuth switches break agents</b> &mdash; changing auth methods globally broke existing connected agents.</li>
+          <li><b>Slack bot limitation</b> &mdash; agents don&rsquo;t respond to bot / workflow messages. A human initiates, or use the Agent API.</li>
+        </ul>
+      </div>
+    </details>
+  </section>
+
+  <!-- 06 -->
+  <section class="sec">
+    <div class="sec-head"><span class="sec-num">06</span><h2 class="sec-title">Reference &mdash; quick tables</h2><span class="lay ref">reference</span></div>
+
+    <div class="seccap">Build classes</div>
+    <div class="tw">
+      <table class="tbl">
+        <thead><tr><th>Class</th><th>Name</th><th>Mode</th><th>Trigger</th><th>Output</th><th>When to use</th></tr></thead>
+        <tbody>
+          <tr><td class="num">A1</td><td class="name">Assistant</td><td><span class="mode auto">Auto</span></td><td>Chat</td><td>Paste-ready brief</td><td>Broad Q&amp;A, summarization, drafting.<small>Synthesis not execution &mdash; variable sources, follow-ups matter.</small></td></tr>
+          <tr><td class="num">A2</td><td class="name">Assistant + Routing</td><td><span class="mode auto">Auto</span></td><td>Chat</td><td>Routing + agent specs</td><td>Single front door, 2+ domains.<small>Company help desk routes HR / IT / facilities questions to specialists.</small></td></tr>
+          <tr><td class="num">G1</td><td class="name">Conversational Agent</td><td><span class="mode auto">Auto</span></td><td>Chat</td><td>Paste-ready brief</td><td>Domain chat, narrow KB, decision logic.<small>Sales-policy Q&amp;A with classification and per-type responses.</small></td></tr>
+          <tr><td class="num">G2</td><td class="name">Input Form Agent</td><td><span class="mode wk">Workflow</span></td><td>Form</td><td>Importable JSON</td><td>Structured inputs, sequential steps.<small>JD generator: form in, policy search, standardized output.</small></td></tr>
+          <tr><td class="num">G3</td><td class="name">Scheduled Agent</td><td><span class="mode wk">Workflow</span></td><td>Schedule</td><td>JSON + schedule</td><td>Time-triggered, no user initiation.<small>Weekly compliance digest posts to Slack each Monday.</small></td></tr>
+          <tr><td class="num">G4</td><td class="name">Content-Triggered</td><td><span class="mode wk">Workflow</span></td><td>Event</td><td>JSON + trigger</td><td>File / folder event triggers.<small>Contract review fires when a PDF lands in a Drive folder.</small></td></tr>
+          <tr><td class="num">S1</td><td class="name">Skill</td><td><span class="mode beta">Beta</span></td><td>AI-routed</td><td>SKILL.md</td><td>Narrow reusable single task.<small>Severance calculator reused across HR agents.</small></td></tr>
+          <tr><td class="num">N1</td><td class="name">Not Ready</td><td><span class="mode none">None</span></td><td>&mdash;</td><td>Gap summary</td><td>Missing sources, unresolved governance.<small>No budget data, no approval API, no defined process.</small></td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="seccap">Architecture patterns</div>
+    <div class="tw">
+      <table class="tbl">
+        <thead><tr><th>#</th><th>Pattern</th><th>Flow</th><th>Selection signal</th></tr></thead>
+        <tbody>
+          <tr><td class="num">1</td><td class="name">Cohesive Synthesis</td><td><code>Search + Think + Respond</code></td><td>Prescriptive: known inputs, defined outputs</td></tr>
+          <tr><td class="num">2</td><td class="name">Decision Tree Pipeline</td><td><code>[Classify+Branch+Validate]*</code></td><td>3+ stages with STOP/REVIEW gates</td></tr>
+          <tr><td class="num">3</td><td class="name">Conditional Enterprise</td><td><code>Classify+Branch+Per-type</code></td><td>Request type determines different paths</td></tr>
+          <tr><td class="num">4</td><td class="name">Document Generator</td><td><code>Gather+Generate+Deliver</code></td><td>Template output from gathered data</td></tr>
+          <tr><td class="num">5</td><td class="name">Dynamic Research</td><td><code>Plan and Execute</code></td><td>Genuinely exploratory (rare)</td></tr>
+          <tr><td class="num">6</td><td class="name">Single-Step</td><td><code>One block</code></td><td>Trivial, no orchestration needed</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="seccap">Orchestration decision matrix</div>
+    <div class="tw">
+      <table class="tbl">
+        <thead><tr><th>Criterion</th><th>Skill</th><th>Custom Action</th><th>Action Pack</th><th>Sub-Agent</th></tr></thead>
+        <tbody>
+          <tr><td class="name">Reusable across agents?</td><td>Yes (company-wide)</td><td>Yes (global)</td><td>Yes (system-wide)</td><td>Yes (published)</td></tr>
+          <tr><td class="name">External side effects?</td><td>No</td><td>Yes (API call)</td><td>Yes (system write)</td><td>Depends</td></tr>
+          <tr><td class="name">Structured I/O?</td><td>No (AI-routed)</td><td>Yes (OpenAPI)</td><td>Yes (fixed params)</td><td>Yes (form/memory)</td></tr>
+          <tr><td class="name">Memory isolation?</td><td>N/A</td><td>No</td><td>No</td><td>Yes</td></tr>
+          <tr><td class="name">Token cost?</td><td>Low (~100)</td><td>Minimal</td><td>Minimal</td><td>High (full exec)</td></tr>
+          <tr><td class="name">Deterministic?</td><td>No</td><td>Yes</td><td>Yes</td><td>Depends</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <p class="close"><b>One decision, three layers deep.</b> The OS never guesses what to build. It scores the problem, forces the right class through hard gates and a human checkpoint, routes it down the matching path, and picks a structural pattern before a single instruction is written. The discipline that keeps the output reliable is the same throughout: <b>branch on deterministic signal, gate structurally, and let a human override at the one moment it matters.</b></p>
+
+  <footer class="footer">
+    <a href="../aesop.html">&larr; AESOP</a>
+    <span>&copy; 2025-2026 Charlie Fuller</span>
+  </footer>
+
+</main>
 </body>
 </html>

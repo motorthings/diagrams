@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" class="light">
 <head>
 <meta charset="UTF-8">
 <link rel="icon" href="../icon.svg" type="image/svg+xml" />
@@ -8,169 +8,175 @@
 <meta name="description" content="Two ways to run the AESOP build pipeline: the current hand-built for-loop orchestration versus a declared LangGraph. Same outcome, different philosophy.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Public+Sans:wght@400;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Mulish:ital,wght@0,300;0,400;0,600;0,700;0,800;1,400&display=swap" rel="stylesheet">
 <style>
-  :root {
-    --font-display: 'Instrument Serif', Georgia, serif;
-    --font-body: 'Public Sans', system-ui, sans-serif;
-    --font-mono: 'JetBrains Mono', 'SF Mono', monospace;
-    /* Gulf Stream Racing on a Ledger sheet — light only */
-    --ink: #0a1628; --graphite: #2e4d73; --body: #3d5a7a; --muted: #7a9ab8;
-    --rule: #c6d5e6; --row: #dbe5f0; --sheet: #eef4f9; --desk: #e4ecf4;
-    --spine: #0a1628; --spine-fg: #eef4f9;
-    --accent: #e8621a; --amber: #b45309; --blue: #2f6fa8; --teal: #0f766e;
-    /* figure category colors */
-    --storage: #6f8ba8; --model: #b45309; --consumer: #0f766e; --compute: #b23a30;
-    --arr-color: var(--muted); --arr-color-strong: var(--teal);
-  }
-  * { margin: 0; padding: 0; box-sizing: border-box; }
-  body { background: var(--desk); color: var(--body); font-family: var(--font-body); font-size: 16px; line-height: 1.62; -webkit-font-smoothing: antialiased; text-rendering: optimizeLegibility; }
-  .topbar { max-width: 1140px; margin: 0 auto; padding: 18px 28px 6px; }
-  .backlink a { font-size: 14px; color: var(--muted); text-decoration: none; }
-  .backlink a:hover { color: var(--ink); }
-  .backlink .arr { color: var(--accent); font-size: 15px; margin-right: 2px; }
+  :root{--font-body:'Mulish','Segoe UI',Helvetica,sans-serif;--font-mono:'Mulish',ui-monospace,'SF Mono',Consolas,monospace;
+    --bg:#14181C;--surface:#1B2127;--surface2:#232B33;--border:#303A43;--border-bright:#42505C;
+    --text:#F4F5F6;--text-dim:#CBD0D6;--text-faint:#87919B;
+    --primary:#F58A4E;--primary-dim:rgba(245,138,78,0.12);--metric:#45C7A6;--metric-dim:rgba(69,199,166,0.12);
+    /* diagram semantic tokens — phase / gate / checkpoint / reject */
+    --storage:#7E9BC0;--model:#E8A23D;--consumer:#45C7A6;--compute:#D96A5E;
+    --storage-dim:rgba(126,155,192,0.13);--model-dim:rgba(232,162,61,0.13);--consumer-dim:rgba(69,199,166,0.13);--compute-dim:rgba(217,106,94,0.13);
+    --delta-new:#7E9BC0;--delta-better:#45C7A6;
+    --arr-color:#87919B;--arr-color-strong:#45C7A6;}
+  html.light{--bg:#F7F3EF;--surface:#FFFFFF;--surface2:#F0E9E1;--border:#E1D6CB;--border-bright:#CDBBA8;
+    --text:#241A12;--text-dim:#574A3C;--text-faint:#8C7E6E;
+    --primary:#C64A11;--primary-dim:rgba(198,74,17,0.10);--metric:#0E7C66;--metric-dim:rgba(14,124,102,0.10);
+    --storage:#5B7FA6;--model:#A5650A;--consumer:#0E7C66;--compute:#B23A30;
+    --storage-dim:rgba(91,127,166,0.12);--model-dim:rgba(165,101,10,0.12);--consumer-dim:rgba(14,124,102,0.12);--compute-dim:rgba(178,58,48,0.12);
+    --delta-new:#2F6FA8;--delta-better:#0E7C66;
+    --arr-color:#8C7E6E;--arr-color-strong:#0E7C66;}
+  *{margin:0;padding:0;box-sizing:border-box}
+  html{scroll-behavior:smooth}
+  body{background:
+      radial-gradient(at 10% 0%,var(--primary-dim),transparent 55%),
+      radial-gradient(at 90% 80%,var(--metric-dim),transparent 55%),
+      var(--bg);
+    color:var(--text);font-family:var(--font-body);font-size:16px;line-height:1.62;-webkit-font-smoothing:antialiased;min-height:100vh}
 
-  .sheet { max-width: 1140px; margin: 6px auto 72px; background: var(--sheet); display: grid; grid-template-columns: 56px 1fr; }
-  .spine { background: var(--spine); display: flex; align-items: flex-end; justify-content: center; padding: 26px 0; }
-  .spine-label { writing-mode: vertical-rl; transform: rotate(180deg); font-family: var(--font-mono); font-size: 13px; letter-spacing: 0.22em; color: var(--spine-fg); white-space: nowrap; text-transform: uppercase; }
-  .content { padding: 48px 60px 6px; min-width: 0; }
+  /* sticky nav */
+  .nav{position:sticky;top:0;z-index:50;backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);background:color-mix(in srgb,var(--bg) 72%,transparent);border-bottom:1px solid var(--border)}
+  .nav-inner{max-width:1060px;margin:0 auto;padding:12px 24px;display:flex;align-items:center;gap:14px}
+  .nav-brand{font-weight:800;font-size:14px;letter-spacing:-0.01em;color:var(--text);text-decoration:none}
+  .nav-brand .dot{color:var(--primary)}
+  .nav-spacer{flex:1}
+  .nav a.go{font-size:13px;font-weight:600;color:var(--primary);text-decoration:none}
+  .nav a.go:hover{text-decoration:underline}
+  .crumbs{font-size:13px;font-weight:600;color:var(--text-dim);display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+  .crumbs a{color:var(--primary);text-decoration:none}
+  .crumbs a:hover{text-decoration:underline}
+  .crumbs .sep{color:var(--text-faint)}
+  .crumbs .current{color:var(--text-dim);font-weight:400}
+  .crumbs-top{max-width:1060px;margin:0 auto;padding:0 24px 6px}
 
-  .masthead { border-bottom: 3px solid var(--ink); padding-bottom: 14px; }
-  .masthead h1 { font-family: var(--font-display); font-weight: 400; font-size: 54px; line-height: 0.92; letter-spacing: -0.028em; color: var(--ink); }
-  .lede { font-family: var(--font-display); font-style: italic; font-size: 18px; line-height: 1.45; color: var(--graphite); max-width: 680px; margin: 14px 0 8px; }
+  .wrap{max-width:1060px;margin:0 auto;padding:0 24px 80px}
 
-  .path { border-top: 1px solid var(--rule); padding: 22px 0 4px; }
-  .path-head { display: grid; grid-template-columns: 200px 1fr; gap: 0 30px; align-items: baseline; margin-bottom: 8px; }
-  .path-head .tag { font-family: var(--font-mono); font-size: 12px; font-weight: 700; }
-  .path-head .tag.cur { color: var(--amber); }
-  .path-head .tag.lg { color: var(--teal); }
-  .path-head h2 { font-size: 24px; font-weight: 700; color: var(--ink); letter-spacing: -0.012em; }
-  .path-body { max-width: 780px; margin-bottom: 6px; }
-  .path-body p { margin-bottom: 10px; }
-  .path-body p b { color: var(--ink); font-weight: 700; }
-  .vp { font-family: var(--font-display); font-size: 19px; line-height: 1.4; color: var(--ink); margin: 4px 0 4px; }
-  .vp small { display: block; font-family: var(--font-mono); font-size: 11px; color: var(--muted); margin-bottom: 3px; }
+  .hero{padding:48px 0 34px;text-align:center}
+  .hero .kicker{font-size:12px;font-weight:700;letter-spacing:0.16em;text-transform:uppercase;color:var(--primary);margin-bottom:14px}
+  .hero h1{font-size:46px;line-height:1.02;letter-spacing:-0.03em;font-weight:800;margin:0 auto 16px;max-width:820px;
+    background:linear-gradient(135deg,var(--primary),var(--metric));-webkit-background-clip:text;background-clip:text;color:transparent}
+  .hero .lede{font-size:18px;line-height:1.5;color:var(--text-dim);max-width:720px;margin:0 auto}
 
-  .fig { max-width: 660px; margin: 10px 0 8px; }
-  .fig svg { display: block; width: 100%; height: auto; max-width: 620px; margin: 0 auto; }
-  .fig-note { font-family: var(--font-mono); font-size: 11px; color: var(--muted); margin: 4px 0 0 20px; }
-  .legend { display: flex; flex-wrap: wrap; gap: 6px 18px; margin: 8px 0 4px 20px; font-size: 13px; color: var(--body); }
-  .legend-swatch { display: inline-block; width: 12px; height: 12px; border-radius: 2px; border: 1px solid var(--rule); margin-right: 6px; vertical-align: -1px; }
+  /* the two paths */
+  .path{margin-top:22px;background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:26px 30px}
+  .path-head{display:flex;align-items:baseline;gap:16px;flex-wrap:wrap;margin-bottom:6px}
+  .tag{font-family:var(--font-mono);font-size:12px;font-weight:700;letter-spacing:0.02em;padding:3px 10px;border-radius:999px}
+  .tag.cur{background:var(--model-dim);color:var(--model)}
+  .tag.lg{background:var(--metric-dim);color:var(--metric)}
+  .path-head h2{font-size:22px;font-weight:800;color:var(--text);letter-spacing:-0.01em}
+  .path-body{max-width:820px;margin:6px 0 4px;color:var(--text-dim)}
+  .path-body p{margin-bottom:12px}
+  .path-body p b{color:var(--text);font-weight:700}
+  .vp{font-size:18px;font-weight:700;line-height:1.35;color:var(--text);margin:6px 0 12px}
+  .vp small{display:block;font-family:var(--font-mono);font-size:11px;font-weight:600;color:var(--text-faint);margin-bottom:2px;text-transform:uppercase;letter-spacing:0.12em}
+
+  .fig{max-width:660px;margin:14px auto 6px}
+  .fig svg{display:block;width:100%;height:auto;max-width:620px;margin:0 auto}
+  .legend{display:flex;flex-wrap:wrap;gap:6px 18px;margin:8px auto 4px;max-width:620px;font-size:13px;color:var(--text-dim)}
+  .legend-swatch{display:inline-block;width:12px;height:12px;border-radius:2px;margin-right:6px;vertical-align:-1px}
 
   /* svg classes */
-  .sv-box-storage { stroke: var(--storage); } .sv-box-model { stroke: var(--model); }
-  .sv-box-consumer { stroke: var(--consumer); } .sv-box-compute { stroke: var(--compute); }
-  .sv-box-storage, .sv-box-model, .sv-box-consumer, .sv-box-compute { fill: none !important; stroke-width: 1.75; }
-  .sv-title { font-family: var(--font-body); font-size: 16px; font-weight: 700; fill: var(--ink) !important; }
-  .sv-arrow { fill: none; stroke: var(--arr-color); stroke-width: 1.75; stroke-linejoin: round; stroke-linecap: round; }
-  .sv-arrow-lbl { font-family: var(--font-mono); font-size: 11px; fill: var(--text-muted, #7a9ab8); }
-  .sv-pill { fill: var(--sheet); }
+  .sv-box-storage,.sv-box-model,.sv-box-consumer,.sv-box-compute{fill:none!important;stroke-width:1.75}
+  .sv-box-storage{stroke:var(--storage)}.sv-box-model{stroke:var(--model)}
+  .sv-box-consumer{stroke:var(--consumer)}.sv-box-compute{stroke:var(--compute)}
+  .sv-title{font-family:var(--font-body);font-size:16px;font-weight:800;fill:var(--text)}
+  .sv-arrow{fill:none;stroke:var(--arr-color);stroke-width:1.75;stroke-linejoin:round;stroke-linecap:round}
+  .sv-arrow-lbl{font-family:var(--font-mono);font-size:11px;fill:var(--text-faint)}
 
-  section.sec { border-top: 3px solid var(--ink); padding: 22px 0 4px; }
-  .sec-title { display: grid; grid-template-columns: 92px 1fr; gap: 0 24px; align-items: baseline; margin-bottom: 12px; }
-  .sec-title .n { font-family: var(--font-display); font-size: 28px; line-height: 0.9; color: var(--accent); }
-  .sec-title h2 { font-size: 22px; font-weight: 700; color: var(--ink); letter-spacing: -0.012em; }
-  .sec-body { padding-left: 116px; max-width: 840px; }
+  .sec{margin-top:22px;background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:30px}
+  .sec-head{display:flex;align-items:baseline;gap:14px;border-bottom:1px solid var(--border);padding-bottom:14px;margin-bottom:18px}
+  .sec-num{font-size:24px;font-weight:800;color:var(--primary);font-family:var(--font-mono)}
+  .sec-title{font-size:22px;font-weight:800;color:var(--text);letter-spacing:-0.01em}
 
-  table.cmp { width: 100%; border-collapse: collapse; }
-  table.cmp th { text-align: left; font-size: 12px; font-weight: 600; color: var(--muted); padding: 4px 12px 6px 0; border-bottom: 2px solid var(--ink); }
-  table.cmp td { padding: 12px 12px 12px 0; border-bottom: 1px solid var(--row); vertical-align: top; font-size: 14px; }
-  table.cmp tr:last-child td { border-bottom: none; }
-  table.cmp .cap { font-weight: 700; color: var(--ink); }
-  table.cmp code { font-family: var(--font-mono); font-size: 0.82em; color: var(--ink); }
-  .delta { font-family: var(--font-mono); font-size: 12px; font-weight: 700; white-space: nowrap; }
-  .delta.new { color: var(--blue); } .delta.better { color: var(--teal); } .delta.same { color: var(--muted); }
+  table.cmp{width:100%;border-collapse:collapse}
+  table.cmp th{text-align:left;font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;color:var(--text-faint);padding:6px 14px 10px 0;border-bottom:1px solid var(--border-bright)}
+  table.cmp td{padding:12px 14px 12px 0;border-bottom:1px solid var(--border);vertical-align:top;font-size:14px;color:var(--text-dim)}
+  table.cmp tr:last-child td{border-bottom:none}
+  table.cmp .cap{font-weight:700;color:var(--text);white-space:nowrap}
+  table.cmp code{font-family:var(--font-mono);font-size:0.85em;color:var(--text)}
+  .delta{font-family:var(--font-mono);font-size:11px;font-weight:700;white-space:nowrap}
+  .delta.new{color:var(--delta-new)}.delta.better{color:var(--delta-better)}.delta.same{color:var(--text-faint)}
 
-  .bet { margin: 22px 0 4px; padding-top: 14px; border-top: 1px solid var(--rule); font-size: 16px; color: var(--body); max-width: 760px; }
-  .bet b { color: var(--ink); }
+  .bet{margin-top:20px;padding:16px 18px;border-left:3px solid var(--primary);background:var(--primary-dim);border-radius:0 10px 10px 0;font-size:15px;line-height:1.6;color:var(--text-dim);max-width:820px}
+  .bet b{color:var(--text)}
 
-  .footer { border-top: 3px solid var(--ink); margin: 26px 0 0; padding: 18px 0 30px; display: flex; justify-content: space-between; gap: 20px; flex-wrap: wrap; font-family: var(--font-mono); font-size: 11.5px; color: var(--muted); }
-  .footer a { color: var(--accent); text-decoration: none; }
+  .footer{margin-top:30px;border-top:1px solid var(--border);padding:18px 0 0;display:flex;justify-content:space-between;gap:20px;flex-wrap:wrap;font-family:var(--font-mono);font-size:12px;color:var(--text-faint)}
+  .footer a{color:var(--primary);text-decoration:none}
+  .footer a:hover{text-decoration:underline}
 
-  @media (max-width: 820px) {
-    .sheet { grid-template-columns: 40px 1fr; }
-    .spine-label { font-size: 11px; }
-    .content { padding: 32px 20px 4px; }
-    .masthead h1 { font-size: 40px; }
-    .path-head { grid-template-columns: 1fr; }
-    .sec-title { grid-template-columns: 52px 1fr; }
-    .sec-body { padding-left: 0; }
-    .fig { max-width: 100%; }
-    .fig svg { max-width: 100%; }
-    table.cmp thead { display: none; }
-    table.cmp tr { display: block; padding: 10px 0; border-bottom: 1px solid var(--row); }
-    table.cmp td { display: block; padding: 2px 0; border-bottom: none; }
-    body { font-size: 15px; }
+  @media(max-width:720px){
+    .wrap{padding:0 16px 60px}
+    .hero h1{font-size:34px}
+    .path{padding:20px 16px}
+    table.cmp thead{display:none}
+    table.cmp tr{display:block;padding:8px 0;border-bottom:1px solid var(--border)}
+    table.cmp td{display:block;padding:3px 0;border-bottom:none;font-size:14px}
+    table.cmp .cap{font-size:13px;margin-bottom:2px}
+    body{font-size:15px}
   }
+  @media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
 </style>
 </head>
 <body>
-<style>
-.crumbs-at-top{max-width:1100px;margin:0 auto;padding:14px 24px 0}
-.crumbs{font-family:var(--font-mono,monospace);font-size:13px;font-weight:600;display:flex;align-items:center;gap:8px;flex-wrap:wrap;min-width:0}
-.crumbs a{color:var(--accent);text-decoration:none}
-.crumbs a:hover,.crumbs a:focus-visible{text-decoration:underline;outline:none}
-.crumbs .sep{color:var(--text-muted)}
-.crumbs .current{color:var(--text-muted);font-weight:400}
-</style>
-<nav class="crumbs crumbs-at-top" aria-label="Breadcrumb">
-  <a href="../index.html">Index</a>
-  <span class="sep">/</span>
-  <a href="../aesop.html">AESOP</a>
-  <span class="sep">/</span>
-  <span class="current" aria-current="page">Build Pipeline — Two Paths</span>
+
+<nav class="nav" aria-label="Primary">
+  <div class="nav-inner">
+    <a class="nav-brand" href="../aesop.html">AESOP<span class="dot">.</span></a>
+    <div class="nav-spacer"></div>
+    <a class="go" href="../aesop.html">&larr; AESOP</a>
+  </div>
 </nav>
-
-
+<div class="crumbs crumbs-top" aria-label="Breadcrumb">
+  <a href="../index.html">Index</a><span class="sep">/</span>
+  <a href="../aesop.html">AESOP</a><span class="sep">/</span>
+  <span class="current" aria-current="page">Build Pipeline &mdash; Two Paths</span>
 </div>
 
-<div class="sheet">
-  <div class="spine"><div class="spine-label">BUILD &mdash; TWO PATHS</div></div>
+<main class="wrap">
 
-  <div class="content">
+  <header class="hero">
+    <div class="kicker">Build pipeline</div>
+    <h1>Build Pipeline &mdash; Two Paths</h1>
+    <p class="lede">Same outcome, different philosophy. The current hand-built orchestration, and the declared-graph alternative it could become.</p>
+  </header>
 
-    <header class="masthead">
-      <h1>Build Pipeline &mdash; Two Paths</h1>
-      <p class="lede">Same outcome, different philosophy. The current hand-built orchestration, and the declared-graph alternative it could become.</p>
-    </header>
-
-    <!-- CURRENT -->
-    <div class="path">
-      <div class="path-head"><span class="tag cur">Current approach</span><h2>Hand-built orchestration</h2></div>
-      <div class="path-body">
-        <p>A for-loop over seven phases, state tracked in a Python dataclass, each phase writing to the database by hand, and a human approval gate polled every second.</p>
-        <div class="vp"><small>Why we built it this way</small>Absolute control, zero dependencies.</div>
-        <p style="margin-bottom:4px">Every line of orchestration is ours. When something breaks, the stack trace points to our code, not a framework&rsquo;s internals. No new concepts to learn, no dependency to track, no upgrade surprises. For a team that knows this codebase cold, that means fast debugging and instant context.</p>
-      </div>
-      <div class="fig">
-        <svg viewBox="0 0 620 1222" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Current pipeline: hand-built orchestration">
+  <!-- CURRENT -->
+  <div class="path">
+    <div class="path-head"><span class="tag cur">Current approach</span><h2>Hand-built orchestration</h2></div>
+    <div class="path-body">
+      <p>A for-loop over seven phases, state tracked in a Python dataclass, each phase writing to the database by hand, and a human approval gate polled every second.</p>
+      <div class="vp"><small>Why we built it this way</small>Absolute control, zero dependencies.</div>
+      <p style="margin-bottom:4px">Every line of orchestration is ours. When something breaks, the stack trace points to our code, not a framework&rsquo;s internals. No new concepts to learn, no dependency to track, no upgrade surprises. For a team that knows this codebase cold, that means fast debugging and instant context.</p>
+    </div>
+    <div class="fig">
+      <svg viewBox="0 0 620 1222" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Current pipeline: hand-built orchestration">
 <defs>
   <marker id="arr" viewBox="0 0 10 10" refX="9.5" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M 0 0 L 10 5 L 0 10 z" style="fill:var(--arr-color)"></path></marker>
   <marker id="arrStrong" viewBox="0 0 10 10" refX="9.5" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M 0 0 L 10 5 L 0 10 z" style="fill:var(--arr-color-strong)"></path></marker>
 </defs>
-<rect x="175" y="40" width="230" height="62" rx="8" class="sv-box-storage" style="fill:var(--storage);fill-opacity:0.13" stroke-width="1.5"></rect>
+<rect x="175" y="40" width="230" height="62" rx="8" class="sv-box-storage" style="fill:var(--storage-dim)" stroke-width="1.5"></rect>
 <text class="sv-title" x="290" y="68" text-anchor="middle" style="fill:var(--storage)">Build request</text>
-<rect x="175" y="144" width="230" height="62" rx="8" class="sv-box-storage" style="fill:var(--storage);fill-opacity:0.13" stroke-width="1.5"></rect>
+<rect x="175" y="144" width="230" height="62" rx="8" class="sv-box-storage" style="fill:var(--storage-dim)" stroke-width="1.5"></rect>
 <text class="sv-title" x="290" y="172" text-anchor="middle" style="fill:var(--storage)">Initialize state</text>
-<rect x="175" y="248" width="230" height="62" rx="8" class="sv-box-model" style="fill:var(--model);fill-opacity:0.13" stroke-width="1.5"></rect>
+<rect x="175" y="248" width="230" height="62" rx="8" class="sv-box-model" style="fill:var(--model-dim)" stroke-width="1.5"></rect>
 <text class="sv-title" x="290" y="276" text-anchor="middle" style="fill:var(--model)">Fit? — no rejects</text>
-<rect x="300" y="352" width="230" height="62" rx="8" class="sv-box-storage" style="fill:var(--storage);fill-opacity:0.13" stroke-width="1.5"></rect>
+<rect x="300" y="352" width="230" height="62" rx="8" class="sv-box-storage" style="fill:var(--storage-dim)" stroke-width="1.5"></rect>
 <text class="sv-title" x="415" y="380" text-anchor="middle" style="fill:var(--storage)">Phase 1 Gap analysis</text>
-<rect x="300" y="456" width="230" height="62" rx="8" class="sv-box-model" style="fill:var(--model);fill-opacity:0.13" stroke-width="1.5"></rect>
+<rect x="300" y="456" width="230" height="62" rx="8" class="sv-box-model" style="fill:var(--model-dim)" stroke-width="1.5"></rect>
 <text class="sv-title" x="415" y="484" text-anchor="middle" style="fill:var(--model)">Approve? HITL gate</text>
-<rect x="310" y="560" width="230" height="62" rx="8" class="sv-box-storage" style="fill:var(--storage);fill-opacity:0.13" stroke-width="1.5"></rect>
+<rect x="310" y="560" width="230" height="62" rx="8" class="sv-box-storage" style="fill:var(--storage-dim)" stroke-width="1.5"></rect>
 <text class="sv-title" x="425" y="588" text-anchor="middle" style="fill:var(--storage)">Phase 2 Workflow</text>
-<rect x="310" y="664" width="230" height="62" rx="8" class="sv-box-storage" style="fill:var(--storage);fill-opacity:0.13" stroke-width="1.5"></rect>
+<rect x="310" y="664" width="230" height="62" rx="8" class="sv-box-storage" style="fill:var(--storage-dim)" stroke-width="1.5"></rect>
 <text class="sv-title" x="425" y="692" text-anchor="middle" style="fill:var(--storage)">Phase 3 Instructions</text>
-<rect x="310" y="768" width="230" height="62" rx="8" class="sv-box-storage" style="fill:var(--storage);fill-opacity:0.13" stroke-width="1.5"></rect>
+<rect x="310" y="768" width="230" height="62" rx="8" class="sv-box-storage" style="fill:var(--storage-dim)" stroke-width="1.5"></rect>
 <text class="sv-title" x="425" y="796" text-anchor="middle" style="fill:var(--storage)">Phase 4 Artifacts</text>
-<rect x="310" y="872" width="230" height="62" rx="8" class="sv-box-storage" style="fill:var(--storage);fill-opacity:0.13" stroke-width="1.5"></rect>
+<rect x="310" y="872" width="230" height="62" rx="8" class="sv-box-storage" style="fill:var(--storage-dim)" stroke-width="1.5"></rect>
 <text class="sv-title" x="425" y="900" text-anchor="middle" style="fill:var(--storage)">Phase 5 Summary</text>
-<rect x="310" y="976" width="230" height="62" rx="8" class="sv-box-storage" style="fill:var(--storage);fill-opacity:0.13" stroke-width="1.5"></rect>
+<rect x="310" y="976" width="230" height="62" rx="8" class="sv-box-storage" style="fill:var(--storage-dim)" stroke-width="1.5"></rect>
 <text class="sv-title" x="425" y="1004" text-anchor="middle" style="fill:var(--storage)">Phase 6 Verify</text>
-<rect x="310" y="1080" width="230" height="62" rx="8" class="sv-box-consumer" style="fill:var(--consumer);fill-opacity:0.13" stroke-width="1.5"></rect>
+<rect x="310" y="1080" width="230" height="62" rx="8" class="sv-box-consumer" style="fill:var(--consumer-dim)" stroke-width="1.5"></rect>
 <text class="sv-title" x="425" y="1108" text-anchor="middle" style="fill:var(--consumer)">Complete</text>
-<rect x="40" y="560" width="230" height="62" rx="8" class="sv-box-compute" style="fill:var(--compute);fill-opacity:0.13" stroke-width="1.5"></rect>
+<rect x="40" y="560" width="230" height="62" rx="8" class="sv-box-compute" style="fill:var(--compute-dim)" stroke-width="1.5"></rect>
 <text class="sv-title" x="155" y="588" text-anchor="middle" style="fill:var(--compute)">Reject build</text>
 <path class="sv-arrow" d="M 290 102 L 290 112.5 Q 290 123 290 133.5 L 290 144" marker-end="url(#arr)" stroke-width="2"></path>
 <path class="sv-arrow" d="M 290 206 L 290 216.5 Q 290 227 290 237.5 L 290 248" marker-end="url(#arr)" stroke-width="2"></path>
@@ -184,51 +190,51 @@
 <path class="sv-arrow" d="M 425 830 L 425 840.5 Q 425 851 425 861.5 L 425 872" marker-end="url(#arr)" stroke-width="2"></path>
 <path class="sv-arrow" d="M 425 934 L 425 944.5 Q 425 955 425 965.5 L 425 976" marker-end="url(#arr)" stroke-width="2"></path>
 <path class="sv-arrow" d="M 425 1038 L 425 1048.5 Q 425 1059 425 1069.5 L 425 1080" marker-end="url(#arr)" stroke-width="2"></path>
-</svg>
-      </div>
+      </svg>
     </div>
+  </div>
 
-    <!-- LANGGRAPH -->
-    <div class="path">
-      <div class="path-head"><span class="tag lg">Proposed approach</span><h2>LangGraph orchestration</h2></div>
-      <div class="path-body">
-        <p>A declared graph of seven nodes connected by edges. State typed and auto-saved to disk after every step. Human approval pauses the graph itself, no polling. Crashes resume where they left off.</p>
-        <div class="vp"><small>Why we&rsquo;d adopt it</small>Resilience we don&rsquo;t have to build.</div>
-        <p style="margin-bottom:4px">LangGraph solves three hard distributed-systems problems we don&rsquo;t currently handle: crash recovery (a ten-minute build survives a restart), time-travel debugging (replay any phase from history), and auditable state (every step is a typed, serialized checkpoint). Table-stakes for production AI infrastructure &mdash; free with an open standard behind it.</p>
-      </div>
-      <div class="fig">
-        <svg viewBox="0 0 620 1430" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="LangGraph orchestration">
+  <!-- LANGGRAPH -->
+  <div class="path">
+    <div class="path-head"><span class="tag lg">Proposed approach</span><h2>LangGraph orchestration</h2></div>
+    <div class="path-body">
+      <p>A declared graph of seven nodes connected by edges. State typed and auto-saved to disk after every step. Human approval pauses the graph itself, no polling. Crashes resume where they left off.</p>
+      <div class="vp"><small>Why we&rsquo;d adopt it</small>Resilience we don&rsquo;t have to build.</div>
+      <p style="margin-bottom:4px">LangGraph solves three hard distributed-systems problems we don&rsquo;t currently handle: crash recovery (a ten-minute build survives a restart), time-travel debugging (replay any phase from history), and auditable state (every step is a typed, serialized checkpoint). Table-stakes for production AI infrastructure &mdash; free with an open standard behind it.</p>
+    </div>
+    <div class="fig">
+      <svg viewBox="0 0 620 1430" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="LangGraph orchestration">
 <defs>
   <marker id="arr" viewBox="0 0 10 10" refX="9.5" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M 0 0 L 10 5 L 0 10 z" style="fill:var(--arr-color)"></path></marker>
   <marker id="arrStrong" viewBox="0 0 10 10" refX="9.5" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M 0 0 L 10 5 L 0 10 z" style="fill:var(--arr-color-strong)"></path></marker>
 </defs>
-<rect x="175" y="40" width="230" height="62" rx="8" class="sv-box-storage" style="fill:var(--storage);fill-opacity:0.13" stroke-width="1.5"></rect>
+<rect x="175" y="40" width="230" height="62" rx="8" class="sv-box-storage" style="fill:var(--storage-dim)" stroke-width="1.5"></rect>
 <text class="sv-title" x="290" y="68" text-anchor="middle" style="fill:var(--storage)">Build request</text>
-<rect x="175" y="144" width="230" height="62" rx="8" class="sv-box-storage" style="fill:var(--storage);fill-opacity:0.13" stroke-width="1.5"></rect>
+<rect x="175" y="144" width="230" height="62" rx="8" class="sv-box-storage" style="fill:var(--storage-dim)" stroke-width="1.5"></rect>
 <text class="sv-title" x="290" y="172" text-anchor="middle" style="fill:var(--storage)">Initialize state</text>
-<rect x="247.5" y="248" width="230" height="62" rx="8" class="sv-box-consumer" style="fill:var(--consumer);fill-opacity:0.13" stroke-width="1.5"></rect>
+<rect x="247.5" y="248" width="230" height="62" rx="8" class="sv-box-consumer" style="fill:var(--consumer-dim)" stroke-width="1.5"></rect>
 <text class="sv-title" x="362.5" y="276" text-anchor="middle" style="fill:var(--consumer)">Auto-save checkpoint</text>
-<rect x="175" y="352" width="230" height="62" rx="8" class="sv-box-model" style="fill:var(--model);fill-opacity:0.13" stroke-width="1.5"></rect>
+<rect x="175" y="352" width="230" height="62" rx="8" class="sv-box-model" style="fill:var(--model-dim)" stroke-width="1.5"></rect>
 <text class="sv-title" x="290" y="380" text-anchor="middle" style="fill:var(--model)">Fit? — no rejects</text>
-<rect x="300" y="456" width="230" height="62" rx="8" class="sv-box-storage" style="fill:var(--storage);fill-opacity:0.13" stroke-width="1.5"></rect>
+<rect x="300" y="456" width="230" height="62" rx="8" class="sv-box-storage" style="fill:var(--storage-dim)" stroke-width="1.5"></rect>
 <text class="sv-title" x="415" y="484" text-anchor="middle" style="fill:var(--storage)">Phase 1 Gap analysis</text>
-<rect x="300" y="560" width="230" height="62" rx="8" class="sv-box-model" style="fill:var(--model);fill-opacity:0.13" stroke-width="1.5"></rect>
+<rect x="300" y="560" width="230" height="62" rx="8" class="sv-box-model" style="fill:var(--model-dim)" stroke-width="1.5"></rect>
 <text class="sv-title" x="415" y="588" text-anchor="middle" style="fill:var(--model)">Pause for approval</text>
-<rect x="310" y="664" width="230" height="62" rx="8" class="sv-box-consumer" style="fill:var(--consumer);fill-opacity:0.13" stroke-width="1.5"></rect>
+<rect x="310" y="664" width="230" height="62" rx="8" class="sv-box-consumer" style="fill:var(--consumer-dim)" stroke-width="1.5"></rect>
 <text class="sv-title" x="425" y="692" text-anchor="middle" style="fill:var(--consumer)">Auto-save checkpoint</text>
-<rect x="310" y="768" width="230" height="62" rx="8" class="sv-box-storage" style="fill:var(--storage);fill-opacity:0.13" stroke-width="1.5"></rect>
+<rect x="310" y="768" width="230" height="62" rx="8" class="sv-box-storage" style="fill:var(--storage-dim)" stroke-width="1.5"></rect>
 <text class="sv-title" x="425" y="796" text-anchor="middle" style="fill:var(--storage)">Phase 2 Workflow</text>
-<rect x="310" y="872" width="230" height="62" rx="8" class="sv-box-storage" style="fill:var(--storage);fill-opacity:0.13" stroke-width="1.5"></rect>
+<rect x="310" y="872" width="230" height="62" rx="8" class="sv-box-storage" style="fill:var(--storage-dim)" stroke-width="1.5"></rect>
 <text class="sv-title" x="425" y="900" text-anchor="middle" style="fill:var(--storage)">Phase 3 Instructions</text>
-<rect x="310" y="976" width="230" height="62" rx="8" class="sv-box-storage" style="fill:var(--storage);fill-opacity:0.13" stroke-width="1.5"></rect>
+<rect x="310" y="976" width="230" height="62" rx="8" class="sv-box-storage" style="fill:var(--storage-dim)" stroke-width="1.5"></rect>
 <text class="sv-title" x="425" y="1004" text-anchor="middle" style="fill:var(--storage)">Phase 4 Artifacts</text>
-<rect x="310" y="1080" width="230" height="62" rx="8" class="sv-box-storage" style="fill:var(--storage);fill-opacity:0.13" stroke-width="1.5"></rect>
+<rect x="310" y="1080" width="230" height="62" rx="8" class="sv-box-storage" style="fill:var(--storage-dim)" stroke-width="1.5"></rect>
 <text class="sv-title" x="425" y="1108" text-anchor="middle" style="fill:var(--storage)">Phase 5 Summary</text>
-<rect x="310" y="1184" width="230" height="62" rx="8" class="sv-box-storage" style="fill:var(--storage);fill-opacity:0.13" stroke-width="1.5"></rect>
+<rect x="310" y="1184" width="230" height="62" rx="8" class="sv-box-storage" style="fill:var(--storage-dim)" stroke-width="1.5"></rect>
 <text class="sv-title" x="425" y="1212" text-anchor="middle" style="fill:var(--storage)">Phase 6 Verify</text>
-<rect x="310" y="1288" width="230" height="62" rx="8" class="sv-box-consumer" style="fill:var(--consumer);fill-opacity:0.13" stroke-width="1.5"></rect>
+<rect x="310" y="1288" width="230" height="62" rx="8" class="sv-box-consumer" style="fill:var(--consumer-dim)" stroke-width="1.5"></rect>
 <text class="sv-title" x="425" y="1316" text-anchor="middle" style="fill:var(--consumer)">Complete</text>
-<rect x="40" y="664" width="230" height="62" rx="8" class="sv-box-compute" style="fill:var(--compute);fill-opacity:0.13" stroke-width="1.5"></rect>
+<rect x="40" y="664" width="230" height="62" rx="8" class="sv-box-compute" style="fill:var(--compute-dim)" stroke-width="1.5"></rect>
 <text class="sv-title" x="155" y="692" text-anchor="middle" style="fill:var(--compute)">Reject</text>
 <path class="sv-arrow" d="M 290 102 L 290 112.5 Q 290 123 290 133.5 L 290 144" marker-end="url(#arr)" stroke-width="2"></path>
 <path class="sv-arrow" d="M 405 206 L 371.9135305109394 222.34860845341817 Q 362.5 227 362.5 237.5 L 362.5 248" marker-end="url(#arr)" stroke-width="2"></path>
@@ -245,46 +251,42 @@
 <path class="sv-arrow" d="M 425 1038 L 425 1048.5 Q 425 1059 425 1069.5 L 425 1080" marker-end="url(#arr)" stroke-width="2"></path>
 <path class="sv-arrow" d="M 425 1142 L 425 1152.5 Q 425 1163 425 1173.5 L 425 1184" marker-end="url(#arr)" stroke-width="2"></path>
 <path class="sv-arrow" d="M 425 1246 L 425 1256.5 Q 425 1267 425 1277.5 L 425 1288" marker-end="url(#arr)" stroke-width="2"></path>
-</svg>
-      </div>
-      <div class="legend">
-        <span><span class="legend-swatch" style="background:var(--storage)"></span>phase</span>
-        <span><span class="legend-swatch" style="background:var(--model)"></span>gate</span>
-        <span><span class="legend-swatch" style="background:var(--consumer)"></span>checkpoint / complete</span>
-        <span><span class="legend-swatch" style="background:var(--compute)"></span>reject</span>
-      </div>
+      </svg>
     </div>
-
-    <!-- WHAT CHANGES -->
-    <section class="sec">
-      <div class="sec-title"><span class="n">03</span><h2>What changes &mdash; and what doesn&rsquo;t</h2></div>
-      <div class="sec-body">
-        <table class="cmp">
-          <thead><tr><th>Capability</th><th>Today</th><th>With LangGraph</th><th></th></tr></thead>
-          <tbody>
-            <tr><td class="cap">Crash recovery</td><td>Build fails. Restart from scratch.</td><td>Resumes from the last saved step. No data lost.</td><td><span class="delta new">New</span></td></tr>
-            <tr><td class="cap">Time-travel debugging</td><td>Not possible. Rerun the whole build.</td><td>Rewind to any phase, tweak inputs, replay.</td><td><span class="delta new">New</span></td></tr>
-            <tr><td class="cap">Human approval gates</td><td>Database flag polled every second</td><td>Graph pauses. An API call resumes it.</td><td><span class="delta better">Simpler</span></td></tr>
-            <tr><td class="cap">Audit trail</td><td>DB rows, manually written</td><td>Every state transition auto-serialized</td><td><span class="delta better">Stronger</span></td></tr>
-            <tr><td class="cap">Parallel agents</td><td>Manual <code>asyncio.gather</code></td><td>Declarative fan-out with partial-failure handling</td><td><span class="delta better">Robust</span></td></tr>
-            <tr><td class="cap">Prompts &amp; evaluation</td><td colspan="3">Unchanged. Same prompt files, same scoring formula.</td></tr>
-            <tr><td class="cap">LLM provider</td><td colspan="3">Unchanged. Same Anthropic / OpenAI / DeepSeek abstraction.</td></tr>
-            <tr><td class="cap">Frontend</td><td colspan="3">Unchanged. Same SSE event stream, same UI.</td></tr>
-            <tr><td class="cap">Database</td><td colspan="3">Unchanged. Same Supabase tables, same RLS.</td></tr>
-            <tr><td class="cap">Toggle mechanism</td><td colspan="3">Admin setting, per organization. Default: current.</td></tr>
-          </tbody>
-        </table>
-        <p class="bet"><b>The bet.</b> LangGraph replaces roughly 200 lines of hand-rolled orchestration. The prompts, evaluation logic, LLM calls, and frontend all stay untouched. What we gain is infrastructure-scale resilience without building it ourselves &mdash; and the toggle lets us run both side by side, compare cost and completion rates, and switch only when the data says we should.</p>
-      </div>
-    </section>
-
-    <footer class="footer">
-      <a href="../aesop.html">&larr; AESOP</a>
-      <span>&copy; 2025-2026 Charlie Fuller</span>
-    </footer>
-
+    <div class="legend">
+      <span><span class="legend-swatch" style="background:var(--storage)"></span>phase</span>
+      <span><span class="legend-swatch" style="background:var(--model)"></span>gate</span>
+      <span><span class="legend-swatch" style="background:var(--consumer)"></span>checkpoint / complete</span>
+      <span><span class="legend-swatch" style="background:var(--compute)"></span>reject</span>
+    </div>
   </div>
-</div>
 
+  <!-- WHAT CHANGES -->
+  <section class="sec">
+    <div class="sec-head"><span class="sec-num">03</span><h2 class="sec-title">What changes &mdash; and what doesn&rsquo;t</h2></div>
+    <table class="cmp">
+      <thead><tr><th>Capability</th><th>Today</th><th>With LangGraph</th><th></th></tr></thead>
+      <tbody>
+        <tr><td class="cap">Crash recovery</td><td>Build fails. Restart from scratch.</td><td>Resumes from the last saved step. No data lost.</td><td><span class="delta new">New</span></td></tr>
+        <tr><td class="cap">Time-travel debugging</td><td>Not possible. Rerun the whole build.</td><td>Rewind to any phase, tweak inputs, replay.</td><td><span class="delta new">New</span></td></tr>
+        <tr><td class="cap">Human approval gates</td><td>Database flag polled every second</td><td>Graph pauses. An API call resumes it.</td><td><span class="delta better">Simpler</span></td></tr>
+        <tr><td class="cap">Audit trail</td><td>DB rows, manually written</td><td>Every state transition auto-serialized</td><td><span class="delta better">Stronger</span></td></tr>
+        <tr><td class="cap">Parallel agents</td><td>Manual <code>asyncio.gather</code></td><td>Declarative fan-out with partial-failure handling</td><td><span class="delta better">Robust</span></td></tr>
+        <tr><td class="cap">Prompts &amp; evaluation</td><td colspan="3">Unchanged. Same prompt files, same scoring formula.</td></tr>
+        <tr><td class="cap">LLM provider</td><td colspan="3">Unchanged. Same Anthropic / OpenAI / DeepSeek abstraction.</td></tr>
+        <tr><td class="cap">Frontend</td><td colspan="3">Unchanged. Same SSE event stream, same UI.</td></tr>
+        <tr><td class="cap">Database</td><td colspan="3">Unchanged. Same Supabase tables, same RLS.</td></tr>
+        <tr><td class="cap">Toggle mechanism</td><td colspan="3">Admin setting, per organization. Default: current.</td></tr>
+      </tbody>
+    </table>
+    <p class="bet"><b>The bet.</b> LangGraph replaces roughly 200 lines of hand-rolled orchestration. The prompts, evaluation logic, LLM calls, and frontend all stay untouched. What we gain is infrastructure-scale resilience without building it ourselves &mdash; and the toggle lets us run both side by side, compare cost and completion rates, and switch only when the data says we should.</p>
+  </section>
+
+  <footer class="footer">
+    <a href="../aesop.html">&larr; AESOP</a>
+    <span>&copy; 2025-2026 Charlie Fuller</span>
+  </footer>
+
+</main>
 </body>
 </html>

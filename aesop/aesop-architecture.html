@@ -1,628 +1,194 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" class="light">
 <head>
 <meta charset="UTF-8">
 <link rel="icon" type="image/svg+xml" href="../icon.svg">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>AESOP Transformation OS — System Architecture</title>
+<title>AESOP &mdash; System Architecture</title>
+<meta name="description" content="Full-lifecycle agent development platform — Discover, Design, Build, Evaluate, Repair, Track. Multi-agent evaluation across 6 dimensions, portfolio management, and strategic prioritization.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600;9..144,700&family=Source+Code+Pro:wght@400;500;600" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Mulish:ital,wght@0,300;0,400;0,600;0,700;0,800;1,400&display=swap" rel="stylesheet">
 <style>
-  :root {
-    --font-body: 'Fraunces', Georgia, serif;
-    --font-mono: 'Source Code Pro', 'SF Mono', Consolas, monospace;
+  :root{--font-body:'Mulish','Segoe UI',Helvetica,sans-serif;--font-mono:'Mulish',ui-monospace,'SF Mono',Consolas,monospace;
+    --bg:#14181C;--surface:#1B2127;--surface2:#232B33;--surface-elevated:#263039;--border:#303A43;--border-bright:#42505C;
+    --text:#F4F5F6;--text-dim:#CBD0D6;--text-muted:#87919B;
+    --primary:#F58A4E;--primary-dim:rgba(245,138,78,0.12);--metric:#45C7A6;--metric-dim:rgba(69,199,166,0.12);
+    /* eval-mode semantic */
+    --teal:var(--metric);--teal-dim:var(--metric-dim);
+    --blue:#6CACE4;--blue-dim:rgba(108,172,228,0.12);
+    --violet:#B9A0E8;--violet-dim:rgba(185,160,232,0.12);
+    --red:#E88280;--red-dim:rgba(232,130,128,0.12);
+    --emerald:var(--metric);--emerald-dim:var(--metric-dim);
+    --amber:#E8B54D;--amber-dim:rgba(232,181,77,0.12);
+    --rose:var(--red);--rose-dim:var(--red-dim);
+    --platinum:#9AA3F0;--gold:#E8C54D;--silver:#9AA4B0;--bronze:#C97B2D;}
+  html.light{--bg:#FBF3EE;--surface:#FFFFFF;--surface2:#F6ECE2;--surface-elevated:#FFFFFF;--border:rgba(0,0,0,0.08);--border-bright:rgba(0,0,0,0.14);
+    --text:#241A12;--text-dim:#6B5246;--text-muted:#A08D7E;
+    --primary:#C64A11;--primary-dim:rgba(198,74,17,0.09);--metric:#0E7C66;--metric-dim:rgba(14,124,102,0.08);
+    --teal:#0d9488;--teal-dim:rgba(13,148,136,0.08);
+    --blue:#2563eb;--blue-dim:rgba(37,99,235,0.08);
+    --violet:#7c3aed;--violet-dim:rgba(124,58,237,0.08);
+    --red:#dc2626;--red-dim:rgba(220,38,38,0.08);
+    --emerald:#059669;--emerald-dim:rgba(5,150,105,0.08);
+    --amber:#b45309;--amber-dim:rgba(180,83,9,0.09);
+    --rose:#e11d48;--rose-dim:rgba(225,29,72,0.07);
+    --platinum:#6366f1;--gold:#ca8a04;--silver:#64748b;--bronze:#b45309;}
+  *{margin:0;padding:0;box-sizing:border-box}
+  html{scroll-behavior:smooth}
+  body{background:
+      radial-gradient(at 20% 10%,var(--metric-dim),transparent 55%),
+      radial-gradient(at 80% 80%,var(--primary-dim),transparent 55%),
+      var(--bg);
+    color:var(--text);font-family:var(--font-body);line-height:1.6;-webkit-font-smoothing:antialiased;min-height:100vh}
 
-    --bg: #f8fafb;
-    --surface: #ffffff;
-    --surface2: #f1f5f9;
-    --surface-elevated: #ffffff;
-    --border: rgba(0, 0, 0, 0.06);
-    --border-bright: rgba(0, 0, 0, 0.12);
-    --text: #0f172a;
-    --text-dim: #64748b;
+  .nav{position:sticky;top:0;z-index:100;backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);background:color-mix(in srgb,var(--bg) 74%,transparent);border-bottom:1px solid var(--border)}
+  .nav-inner{max-width:1100px;margin:0 auto;padding:12px 24px;display:flex;align-items:center;gap:14px}
+  .nav-brand{font-weight:800;font-size:14px;letter-spacing:-0.01em;color:var(--text);text-decoration:none}
+  .nav-brand .dot{color:var(--primary)}
+  .nav-spacer{flex:1}
+  .nav a.go{font-size:13px;font-weight:600;color:var(--primary);text-decoration:none}
+  .nav a.go:hover{text-decoration:underline}
+  .crumbs{font-size:13px;font-weight:600;color:var(--text-dim);display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+  .crumbs a{color:var(--primary);text-decoration:none}
+  .crumbs a:hover{text-decoration:underline}
+  .crumbs .sep{color:var(--text-muted)}
+  .crumbs .current{color:var(--text-dim);font-weight:400}
+  .crumbs-top{max-width:1100px;margin:0 auto;padding:0 24px 6px}
 
-    --teal: #0d9488;
-    --teal-dim: rgba(13, 148, 136, 0.08);
-    --blue: #2563eb;
-    --blue-dim: rgba(37, 99, 235, 0.08);
-    --violet: #7c3aed;
-    --violet-dim: rgba(124, 58, 237, 0.08);
-    --orange: #ea580c;
-    --orange-dim: rgba(234, 88, 12, 0.08);
-    --red: #dc2626;
-    --red-dim: rgba(220, 38, 38, 0.08);
-    --emerald: #059669;
-    --emerald-dim: rgba(5, 150, 105, 0.08);
-    --amber: #d97706;
-    --amber-dim: rgba(217, 119, 6, 0.08);
-    --rose: #e11d48;
-    --rose-dim: rgba(225, 29, 72, 0.08);
+  .container{max-width:1100px;margin:0 auto;padding:0 24px 80px}
+  @keyframes fadeUp{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:translateY(0)}}
 
-    --platinum: #6366f1;
-    --gold: #eab308;
-    --silver: #94a3b8;
-    --bronze: #b45309;
+  .hero{text-align:center;padding:52px 0 44px;animation:fadeUp .6s ease-out}
+  .hero-badge{display:inline-flex;align-items:center;gap:6px;padding:6px 16px;background:var(--metric-dim);border:1px solid var(--metric);border-radius:999px;font-family:var(--font-mono);font-size:12px;font-weight:700;color:var(--metric);letter-spacing:.5px;text-transform:uppercase;margin-bottom:20px}
+  .hero h1{font-size:52px;font-weight:800;letter-spacing:-0.03em;line-height:1.05;margin-bottom:16px;
+    background:linear-gradient(135deg,var(--primary),var(--metric));-webkit-background-clip:text;background-clip:text;color:transparent}
+  .hero p{font-size:18px;color:var(--text-dim);max-width:640px;margin:0 auto}
+
+  .section{margin-bottom:48px;opacity:0;animation:fadeUp .5s ease-out forwards}
+  .section:nth-of-type(3){animation-delay:.1s}.section:nth-of-type(4){animation-delay:.2s}
+  .section:nth-of-type(5){animation-delay:.3s}.section:nth-of-type(6){animation-delay:.4s}
+  .section-title{font-size:13px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--text-muted);margin-bottom:16px;display:flex;align-items:center;gap:8px}
+
+  .modes-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:20px}
+  .mode-card{background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:24px;position:relative;overflow:hidden}
+  .mode-card::before{content:'';position:absolute;top:0;left:0;right:0;height:4px}
+  .mode-card.standard::before{background:linear-gradient(90deg,var(--teal),var(--blue))}
+  .mode-card.cave::before{background:linear-gradient(90deg,var(--red),var(--amber))}
+  .mode-card.rubric::before{background:linear-gradient(90deg,var(--violet),var(--rose))}
+  .mode-icon{width:48px;height:48px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:22px;margin-bottom:16px}
+  .mode-name{font-size:19px;font-weight:800;margin-bottom:6px;color:var(--text)}
+  .mode-desc{font-size:14px;color:var(--text-dim);margin-bottom:16px;line-height:1.55}
+  .mode-flow{display:flex;flex-wrap:wrap;gap:6px;align-items:center}
+  .flow-chip{font-family:var(--font-mono);font-size:11px;font-weight:600;padding:4px 11px;border-radius:7px;background:var(--surface2);border:1px solid var(--border);white-space:nowrap;color:var(--text-dim)}
+  .flow-arrow{font-size:12px;color:var(--text-muted)}
+
+  /* mermaid */
+  .mermaid-wrap{position:relative;background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:26px;overflow:hidden}
+  .mermaid-inner{overflow:auto;cursor:grab;transform-origin:0 0}
+  .mermaid-inner:active{cursor:grabbing}
+  .zoom-controls{position:absolute;top:14px;right:14px;display:flex;gap:4px;z-index:10}
+  .zoom-btn{width:32px;height:32px;border-radius:9px;border:1px solid var(--border-bright);background:var(--surface);color:var(--text-dim);font-size:16px;cursor:pointer;display:flex;align-items:center;justify-content:center}
+  .zoom-btn:hover{background:var(--surface2);color:var(--text)}
+  .mermaid .nodeLabel{color:var(--text)!important}
+  .mermaid .edgeLabel{color:var(--text-dim)!important;background-color:var(--bg)!important}
+  .mermaid .edgeLabel rect{fill:var(--bg)!important}
+  .mermaid{font-family:var(--font-body)}
+
+  /* certification */
+  .cert-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:16px}
+  .cert-badge{background:var(--surface);border:1px solid var(--border);border-radius:13px;padding:22px 16px;text-align:center}
+  .cert-medal{width:52px;height:52px;border-radius:50%;margin:0 auto 12px;display:flex;align-items:center;justify-content:center;font-size:24px;font-weight:800;color:#fff}
+  .cert-medal.platinum{background:linear-gradient(135deg,#6366f1,#8b5cf6)}
+  .cert-medal.gold{background:linear-gradient(135deg,#eab308,#f59e0b)}
+  .cert-medal.silver{background:linear-gradient(135deg,#94a3b8,#cbd5e1);color:#334155}
+  .cert-medal.bronze{background:linear-gradient(135deg,#b45309,#d97706)}
+  .cert-name{font-size:15px;font-weight:800;margin-bottom:4px;color:var(--text)}
+  .cert-range{font-family:var(--font-mono);font-size:14px;color:var(--text-dim)}
+
+  .formula-card{background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:28px;margin-top:20px}
+  .formula-title{font-size:18px;font-weight:800;margin-bottom:16px;color:var(--text)}
+  .formula-tiers{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+  .tier{padding:18px;border-radius:12px;border:1px solid var(--border)}
+  .tier.t1{background:var(--red-dim)}
+  .tier.t2{background:var(--blue-dim)}
+  .tier-label{font-family:var(--font-mono);font-size:11px;font-weight:800;letter-spacing:.5px;text-transform:uppercase;margin-bottom:12px}
+  .tier-items{display:flex;flex-direction:column;gap:10px}
+  .tier-item{display:flex;justify-content:space-between;align-items:center;font-size:14px;color:var(--text-dim)}
+  .tier-weight{font-family:var(--font-mono);font-size:14px;font-weight:800}
+  .veto-warning{margin-top:16px;padding:13px 16px;background:var(--red-dim);border:1px solid var(--red);border-radius:10px;font-size:13.5px;color:var(--red);font-weight:700}
+
+  /* stack */
+  .stack-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:16px}
+  .stack-card{background:var(--surface);border:1px solid var(--border);border-radius:13px;padding:18px 20px}
+  .stack-label{font-family:var(--font-mono);font-size:11px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;color:var(--text-muted);margin-bottom:9px}
+  .stack-items{display:flex;flex-wrap:wrap;gap:6px}
+  .stack-chip{font-family:var(--font-mono);font-size:12px;font-weight:600;padding:5px 11px;border-radius:7px;background:var(--surface2);border:1px solid var(--border);color:var(--text-dim)}
+
+  .footer{text-align:center;margin-top:52px;padding-top:24px;border-top:1px solid var(--border);font-size:13px;color:var(--text-muted)}
+
+  @media(max-width:768px){.modes-grid{grid-template-columns:1fr}}
+  @media(max-width:600px){
+    .container{padding:0 16px 60px}
+    .hero h1{font-size:34px}
+    .cert-grid,.formula-tiers,.stack-grid{grid-template-columns:1fr}
   }
-
-  @media (prefers-color-scheme: dark) {
-    :root {
-      --bg: #0c1222;
-      --surface: #131c31;
-      --surface2: #1a2744;
-      --surface-elevated: #1e2d4f;
-      --border: rgba(255, 255, 255, 0.06);
-      --border-bright: rgba(255, 255, 255, 0.12);
-      --text: #e2e8f0;
-      --text-dim: #94a3b8;
-
-      --teal: #2dd4bf;
-      --teal-dim: rgba(45, 212, 191, 0.12);
-      --blue: #60a5fa;
-      --blue-dim: rgba(96, 165, 250, 0.12);
-      --violet: #a78bfa;
-      --violet-dim: rgba(167, 139, 250, 0.12);
-      --orange: #fb923c;
-      --orange-dim: rgba(251, 146, 60, 0.12);
-      --red: #f87171;
-      --red-dim: rgba(248, 113, 113, 0.12);
-      --emerald: #34d399;
-      --emerald-dim: rgba(52, 211, 153, 0.12);
-      --amber: #fbbf24;
-      --amber-dim: rgba(251, 191, 36, 0.12);
-      --rose: #fb7185;
-      --rose-dim: rgba(251, 113, 133, 0.12);
-    }
-  }
-
-  * { margin: 0; padding: 0; box-sizing: border-box; }
-
-  body {
-    background: var(--bg);
-    background-image:
-      radial-gradient(at 20% 10%, var(--teal-dim) 0%, transparent 50%),
-      radial-gradient(at 80% 80%, var(--violet-dim) 0%, transparent 50%);
-    color: var(--text);
-    font-family: var(--font-body);
-    line-height: 1.6;
-    min-height: 100vh;
-    padding: 40px 24px 80px;
-  }
-
-  .container { max-width: 1100px; margin: 0 auto; }
-
-  /* Hero */
-  .hero {
-    text-align: center;
-    margin-bottom: 60px;
-    animation: fadeUp 0.6s ease-out;
-  }
-
-  .hero-badge {
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
-    padding: 6px 16px;
-    background: var(--teal-dim);
-    border: 1px solid var(--teal);
-    border-radius: 20px;
-    font-family: var(--font-mono);
-    font-size: 12px;
-    font-weight: 500;
-    color: var(--teal);
-    letter-spacing: 0.5px;
-    text-transform: uppercase;
-    margin-bottom: 20px;
-  }
-
-  .hero h1 {
-    font-size: 48px;
-    font-weight: 800;
-    letter-spacing: -1.5px;
-    background: linear-gradient(135deg, var(--teal), var(--blue), var(--violet));
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    background-clip: text;
-    margin-bottom: 12px;
-  }
-
-  .hero p {
-    font-size: 18px;
-    color: var(--text-dim);
-    max-width: 600px;
-    margin: 0 auto;
-  }
-
-  /* Section */
-  .section {
-    margin-bottom: 48px;
-    opacity: 0;
-    animation: fadeUp 0.5s ease-out forwards;
-  }
-
-  .section:nth-child(2) { animation-delay: 0.1s; }
-  .section:nth-child(3) { animation-delay: 0.2s; }
-  .section:nth-child(4) { animation-delay: 0.3s; }
-  .section:nth-child(5) { animation-delay: 0.4s; }
-
-  .section-title {
-    font-size: 13px;
-    font-weight: 600;
-    letter-spacing: 1px;
-    text-transform: uppercase;
-    color: var(--text-dim);
-    margin-bottom: 16px;
-    display: flex;
-    align-items: center;
-    gap: 8px;
-  }
-
-  .section-title::before {
-    content: '';
-    width: 20px;
-    height: 2px;
-    border-radius: 1px;
-  }
-
-  /* Pipeline */
-  .pipeline {
-    display: flex;
-    gap: 0;
-    align-items: stretch;
-    overflow-x: auto;
-    padding: 4px;
-  }
-
-  .pipeline-step {
-    flex: 1;
-    min-width: 180px;
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: 12px;
-    padding: 20px 16px;
-    text-align: center;
-    position: relative;
-    transition: transform 0.2s, box-shadow 0.2s;
-  }
-
-  .pipeline-step:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 8px 24px rgba(0,0,0,0.08);
-  }
-
-  .pipeline-arrow {
-    display: flex;
-    align-items: center;
-    padding: 0 4px;
-    color: var(--text-dim);
-    font-size: 20px;
-    flex-shrink: 0;
-  }
-
-  .step-icon {
-    width: 44px;
-    height: 44px;
-    border-radius: 10px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    margin: 0 auto 12px;
-    font-size: 20px;
-  }
-
-  .step-name {
-    font-size: 14px;
-    font-weight: 600;
-    margin-bottom: 4px;
-  }
-
-  .step-version {
-    font-family: var(--font-mono);
-    font-size: 11px;
-    color: var(--text-dim);
-  }
-
-  .step-weight {
-    font-family: var(--font-mono);
-    font-size: 11px;
-    color: var(--text-dim);
-    margin-top: 8px;
-    padding-top: 8px;
-    border-top: 1px solid var(--border);
-  }
-
-  /* Modes grid */
-  .modes-grid {
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 20px;
-  }
-
-  @media (max-width: 768px) {
-    .modes-grid { grid-template-columns: 1fr; }
-    .pipeline { flex-direction: column; }
-    .pipeline-arrow { transform: rotate(90deg); justify-content: center; }
-  }
-
-  .mode-card {
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: 14px;
-    padding: 24px;
-    position: relative;
-    overflow: hidden;
-    transition: transform 0.2s, box-shadow 0.2s;
-  }
-
-  .mode-card:hover {
-    transform: translateY(-3px);
-    box-shadow: 0 12px 32px rgba(0,0,0,0.1);
-  }
-
-  .mode-card::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    height: 3px;
-  }
-
-  .mode-card.standard::before { background: linear-gradient(90deg, var(--teal), var(--blue)); }
-  .mode-card.cave::before { background: linear-gradient(90deg, var(--red), var(--orange)); }
-  .mode-card.rubric::before { background: linear-gradient(90deg, var(--violet), var(--rose)); }
-
-  .mode-icon {
-    width: 48px;
-    height: 48px;
-    border-radius: 12px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 22px;
-    margin-bottom: 16px;
-  }
-
-  .mode-name {
-    font-size: 18px;
-    font-weight: 700;
-    margin-bottom: 6px;
-  }
-
-  .mode-desc {
-    font-size: 14px;
-    color: var(--text-dim);
-    margin-bottom: 16px;
-    line-height: 1.5;
-  }
-
-  .mode-flow {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 6px;
-    align-items: center;
-  }
-
-  .flow-chip {
-    font-family: var(--font-mono);
-    font-size: 11px;
-    padding: 3px 10px;
-    border-radius: 6px;
-    background: var(--surface2);
-    border: 1px solid var(--border);
-    white-space: nowrap;
-  }
-
-  .flow-arrow {
-    font-size: 12px;
-    color: var(--text-dim);
-  }
-
-  /* Certification badges */
-  .cert-grid {
-    display: grid;
-    grid-template-columns: repeat(4, 1fr);
-    gap: 16px;
-  }
-
-  @media (max-width: 600px) {
-    .cert-grid { grid-template-columns: repeat(2, 1fr); }
-  }
-
-  .cert-badge {
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: 12px;
-    padding: 20px 16px;
-    text-align: center;
-    transition: transform 0.2s;
-  }
-
-  .cert-badge:hover { transform: scale(1.03); }
-
-  .cert-medal {
-    width: 50px;
-    height: 50px;
-    border-radius: 50%;
-    margin: 0 auto 12px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 24px;
-    font-weight: 800;
-    color: white;
-  }
-
-  .cert-medal.platinum { background: linear-gradient(135deg, #6366f1, #8b5cf6); }
-  .cert-medal.gold { background: linear-gradient(135deg, #eab308, #f59e0b); }
-  .cert-medal.silver { background: linear-gradient(135deg, #94a3b8, #cbd5e1); color: #334155; }
-  .cert-medal.bronze { background: linear-gradient(135deg, #b45309, #d97706); }
-
-  .cert-name {
-    font-size: 15px;
-    font-weight: 600;
-    margin-bottom: 4px;
-  }
-
-  .cert-range {
-    font-family: var(--font-mono);
-    font-size: 13px;
-    color: var(--text-dim);
-  }
-
-  /* Scoring formula */
-  .formula-card {
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: 14px;
-    padding: 28px;
-    margin-top: 20px;
-  }
-
-  .formula-title {
-    font-size: 16px;
-    font-weight: 700;
-    margin-bottom: 16px;
-  }
-
-  .formula-tiers {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 16px;
-  }
-
-  @media (max-width: 600px) {
-    .formula-tiers { grid-template-columns: 1fr; }
-  }
-
-  .tier {
-    padding: 16px;
-    border-radius: 10px;
-    border: 1px solid var(--border);
-  }
-
-  .tier-label {
-    font-family: var(--font-mono);
-    font-size: 11px;
-    font-weight: 600;
-    letter-spacing: 0.5px;
-    text-transform: uppercase;
-    margin-bottom: 10px;
-  }
-
-  .tier-items {
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
-  }
-
-  .tier-item {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    font-size: 14px;
-  }
-
-  .tier-weight {
-    font-family: var(--font-mono);
-    font-size: 13px;
-    font-weight: 600;
-  }
-
-  .veto-warning {
-    margin-top: 16px;
-    padding: 12px 16px;
-    background: var(--red-dim);
-    border: 1px solid var(--red);
-    border-radius: 8px;
-    font-size: 13px;
-    color: var(--red);
-    font-weight: 500;
-  }
-
-  /* Tech stack */
-  .stack-grid {
-    display: grid;
-    grid-template-columns: repeat(2, 1fr);
-    gap: 16px;
-  }
-
-  @media (max-width: 600px) {
-    .stack-grid { grid-template-columns: 1fr; }
-  }
-
-  .stack-card {
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: 10px;
-    padding: 18px 20px;
-  }
-
-  .stack-label {
-    font-family: var(--font-mono);
-    font-size: 11px;
-    font-weight: 600;
-    letter-spacing: 0.5px;
-    text-transform: uppercase;
-    color: var(--text-dim);
-    margin-bottom: 8px;
-  }
-
-  .stack-items {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 6px;
-  }
-
-  .stack-chip {
-    font-family: var(--font-mono);
-    font-size: 12px;
-    padding: 4px 10px;
-    border-radius: 6px;
-    background: var(--surface2);
-    border: 1px solid var(--border);
-  }
-
-  /* Mermaid container */
-  .mermaid-wrap {
-    position: relative;
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: 14px;
-    padding: 24px;
-    overflow: hidden;
-  }
-
-  .mermaid-inner {
-    overflow: auto;
-    cursor: grab;
-    transform-origin: 0 0;
-  }
-
-  .mermaid-inner:active { cursor: grabbing; }
-
-  .zoom-controls {
-    position: absolute;
-    top: 12px;
-    right: 12px;
-    display: flex;
-    gap: 4px;
-    z-index: 10;
-  }
-
-  .zoom-btn {
-    width: 32px;
-    height: 32px;
-    border-radius: 8px;
-    border: 1px solid var(--border-bright);
-    background: var(--surface);
-    color: var(--text-dim);
-    font-size: 16px;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    transition: background 0.15s;
-  }
-
-  .zoom-btn:hover {
-    background: var(--surface2);
-    color: var(--text);
-  }
-
-  .mermaid .nodeLabel { color: var(--text) !important; }
-  .mermaid .edgeLabel { color: var(--text-dim) !important; background-color: var(--bg) !important; }
-  .mermaid .edgeLabel rect { fill: var(--bg) !important; }
-
-  /* Animations */
-  @keyframes fadeUp {
-    from { opacity: 0; transform: translateY(16px); }
-    to { opacity: 1; transform: translateY(0); }
-  }
-
-  @media (prefers-reduced-motion: reduce) {
-    .section, .hero { animation: none; opacity: 1; }
-  }
-
-  /* Footer */
-  .footer {
-    text-align: center;
-    margin-top: 60px;
-    padding-top: 24px;
-    border-top: 1px solid var(--border);
-    font-size: 13px;
-    color: var(--text-dim);
-  }
-.backlink{position:fixed;top:12px;left:16px;z-index:200;font-family:var(--font-mono,monospace);font-size:11px;color:var(--text-dim,#8b949e);text-decoration:none;padding:6px 10px;border:1px solid var(--border,rgba(255,255,255,0.08));border-radius:6px;background:var(--surface,#161b22);transition:color .15s,border-color .15s}.backlink:hover{color:var(--text,#e6edf3);border-color:var(--text-dim,#8b949e)}
+  @media(prefers-reduced-motion:reduce){.section,.hero{animation:none;opacity:1}}
 </style>
 </head>
 <body>
-<a href="../index.html" class="backlink" title="Back to Index"><body>
+
+<nav class="nav" aria-label="Primary">
+  <div class="nav-inner">
+    <a class="nav-brand" href="../aesop.html">AESOP<span class="dot">.</span></a>
+    <div class="nav-spacer"></div>
+    <a class="go" href="../aesop.html">&larr; AESOP</a>
+  </div>
+</nav>
+<div class="crumbs crumbs-top" aria-label="Breadcrumb">
+  <a href="../index.html">Index</a><span class="sep">/</span>
+  <a href="../aesop.html">AESOP</a><span class="sep">/</span>
+  <span class="current" aria-current="page">System Architecture</span>
+</div>
+
 <div class="container">
 
-  <!-- Hero -->
   <div class="hero">
     <div class="hero-badge">&#9670; Organization-Scale AI Agent Platform</div>
     <h1>AESOP Transformation OS</h1>
-    <p>Full-lifecycle agent development platform — Discover, Design, Build, Evaluate, Repair, Track. Multi-agent evaluation across 6 dimensions, portfolio management with department-level Kanban, org context ingestion, and strategic prioritization.</p>
+    <p>Full-lifecycle agent development platform &mdash; Discover, Design, Build, Evaluate, Repair, Track. Multi-agent evaluation across 6 dimensions, portfolio management with department-level Kanban, org context ingestion, and strategic prioritization.</p>
   </div>
 
   <!-- Evaluation Modes -->
-  <div class="section" style="animation-delay: 0.1s;">
-    <div class="section-title" style="--c: var(--teal);"><span style="color: var(--teal);">&#9679;</span> Three Evaluation Modes</div>
+  <div class="section">
+    <div class="section-title"><span style="color:var(--teal)">&#9679;</span> Three Evaluation Modes</div>
     <div class="modes-grid">
       <div class="mode-card standard">
-        <div class="mode-icon" style="background: var(--teal-dim); color: var(--teal);"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M14.5 10L5 19.5a2 2 0 0 1-2.8 0l-.7-.7a2 2 0 0 1 0-2.8L11 6.5"/><rect x="11" y="2" width="4" height="7" rx="1"/></svg></div>
+        <div class="mode-icon" style="background:var(--teal-dim);color:var(--teal)"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M14.5 10L5 19.5a2 2 0 0 1-2.8 0l-.7-.7a2 2 0 0 1 0-2.8L11 6.5"/><rect x="11" y="2" width="4" height="7" rx="1"/></svg></div>
         <div class="mode-name">Standard Analysis</div>
         <div class="mode-desc">Full 5-agent pipeline evaluating instructions across 4 dimensions with weighted scoring and certification.</div>
-        <div class="mode-flow">
-          <span class="flow-chip">Instructions</span>
-          <span class="flow-arrow">&#8594;</span>
-          <span class="flow-chip">Ethos</span>
-          <span class="flow-arrow">&#8594;</span>
-          <span class="flow-chip">Bias</span>
-          <span class="flow-arrow">&#8594;</span>
-          <span class="flow-chip">Safety</span>
-          <span class="flow-arrow">&#8594;</span>
-          <span class="flow-chip">Synthesis</span>
-        </div>
+        <div class="mode-flow"><span class="flow-chip">Instructions</span><span class="flow-arrow">&#8594;</span><span class="flow-chip">Ethos</span><span class="flow-arrow">&#8594;</span><span class="flow-chip">Bias</span><span class="flow-arrow">&#8594;</span><span class="flow-chip">Safety</span><span class="flow-arrow">&#8594;</span><span class="flow-chip">Synthesis</span></div>
       </div>
 
       <div class="mode-card cave">
-        <div class="mode-icon" style="background: var(--red-dim); color: var(--red);"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M13 19l6-6M17 16l3 3M3 3l11.5 11.5"/><path d="M14 7l6 6M7 14l3 3"/></svg></div>
+        <div class="mode-icon" style="background:var(--red-dim);color:var(--red)"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M13 19l6-6M17 16l3 3M3 3l11.5 11.5"/><path d="M14 7l6 6M7 14l3 3"/></svg></div>
         <div class="mode-name">Cave of Shadows</div>
         <div class="mode-desc">Red-team testing. Generate adversarial scenarios from analysis reports, then execute them against a live chatbot.</div>
-        <div class="mode-flow">
-          <span class="flow-chip">Reports</span>
-          <span class="flow-arrow">&#8594;</span>
-          <span class="flow-chip">Scenarios</span>
-          <span class="flow-arrow">&#8594;</span>
-          <span class="flow-chip">Execute</span>
-          <span class="flow-arrow">&#8594;</span>
-          <span class="flow-chip">Results</span>
-        </div>
+        <div class="mode-flow"><span class="flow-chip">Reports</span><span class="flow-arrow">&#8594;</span><span class="flow-chip">Scenarios</span><span class="flow-arrow">&#8594;</span><span class="flow-chip">Execute</span><span class="flow-arrow">&#8594;</span><span class="flow-chip">Results</span></div>
       </div>
 
       <div class="mode-card rubric">
-        <div class="mode-icon" style="background: var(--violet-dim); color: var(--violet);"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="8"/><circle cx="12" cy="12" r="3"/><path d="M12 2v4M12 18v4M2 12h4M18 12h4"/></svg></div>
+        <div class="mode-icon" style="background:var(--violet-dim);color:var(--violet)"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="8"/><circle cx="12" cy="12" r="3"/><path d="M12 2v4M12 18v4M2 12h4M18 12h4"/></svg></div>
         <div class="mode-name">Custom Rubric</div>
         <div class="mode-desc">PRAXIS generates a tailored rubric, THESIS creates test scenarios. Optionally test against a live chatbot.</div>
-        <div class="mode-flow">
-          <span class="flow-chip">PRAXIS</span>
-          <span class="flow-arrow">&#8594;</span>
-          <span class="flow-chip">Rubric</span>
-          <span class="flow-arrow">&#8594;</span>
-          <span class="flow-chip">THESIS</span>
-          <span class="flow-arrow">&#8594;</span>
-          <span class="flow-chip">Scenarios</span>
-        </div>
+        <div class="mode-flow"><span class="flow-chip">PRAXIS</span><span class="flow-arrow">&#8594;</span><span class="flow-chip">Rubric</span><span class="flow-arrow">&#8594;</span><span class="flow-chip">THESIS</span><span class="flow-arrow">&#8594;</span><span class="flow-chip">Scenarios</span></div>
       </div>
     </div>
   </div>
 
-  <!-- Core Pipeline (Mermaid) -->
-  <div class="section" style="animation-delay: 0.2s;">
-    <div class="section-title"><span style="color: var(--blue);">&#9679;</span> Standard Analysis Pipeline</div>
+  <!-- Standard Pipeline -->
+  <div class="section">
+    <div class="section-title"><span style="color:var(--blue)">&#9679;</span> Standard Analysis Pipeline</div>
     <div class="mermaid-wrap">
       <div class="zoom-controls">
         <button class="zoom-btn" onclick="zoomIn()">+</button>
@@ -662,58 +228,30 @@ graph TD
   </div>
 
   <!-- Scoring -->
-  <div class="section" style="animation-delay: 0.3s;">
-    <div class="section-title"><span style="color: var(--amber);">&#9679;</span> Scoring &amp; Certification</div>
+  <div class="section">
+    <div class="section-title"><span style="color:var(--amber)">&#9679;</span> Scoring &amp; Certification</div>
     <div class="cert-grid">
-      <div class="cert-badge">
-        <div class="cert-medal platinum">P</div>
-        <div class="cert-name">Platinum</div>
-        <div class="cert-range">&ge; 90</div>
-      </div>
-      <div class="cert-badge">
-        <div class="cert-medal gold">G</div>
-        <div class="cert-name">Gold</div>
-        <div class="cert-range">&ge; 85</div>
-      </div>
-      <div class="cert-badge">
-        <div class="cert-medal silver">S</div>
-        <div class="cert-name">Silver</div>
-        <div class="cert-range">&ge; 80</div>
-      </div>
-      <div class="cert-badge">
-        <div class="cert-medal bronze">B</div>
-        <div class="cert-name">Bronze</div>
-        <div class="cert-range">&ge; 75</div>
-      </div>
+      <div class="cert-badge"><div class="cert-medal platinum">P</div><div class="cert-name">Platinum</div><div class="cert-range">&ge; 90</div></div>
+      <div class="cert-badge"><div class="cert-medal gold">G</div><div class="cert-name">Gold</div><div class="cert-range">&ge; 85</div></div>
+      <div class="cert-badge"><div class="cert-medal silver">S</div><div class="cert-name">Silver</div><div class="cert-range">&ge; 80</div></div>
+      <div class="cert-badge"><div class="cert-medal bronze">B</div><div class="cert-name">Bronze</div><div class="cert-range">&ge; 75</div></div>
     </div>
 
     <div class="formula-card">
       <div class="formula-title">Weighted Scoring Formula</div>
       <div class="formula-tiers">
-        <div class="tier" style="background: var(--red-dim);">
-          <div class="tier-label" style="color: var(--red);">Tier 1 — Critical (1.5x)</div>
+        <div class="tier t1">
+          <div class="tier-label" style="color:var(--red)">Tier 1 &mdash; Critical (1.5x)</div>
           <div class="tier-items">
-            <div class="tier-item">
-              <span>Safety</span>
-              <span class="tier-weight" style="color: var(--red);">1.5x</span>
-            </div>
-            <div class="tier-item">
-              <span>Bias</span>
-              <span class="tier-weight" style="color: var(--red);">1.5x</span>
-            </div>
+            <div class="tier-item"><span>Safety</span><span class="tier-weight" style="color:var(--red)">1.5x</span></div>
+            <div class="tier-item"><span>Bias</span><span class="tier-weight" style="color:var(--red)">1.5x</span></div>
           </div>
         </div>
-        <div class="tier" style="background: var(--blue-dim);">
-          <div class="tier-label" style="color: var(--blue);">Tier 2 — Foundation (1.0x)</div>
+        <div class="tier t2">
+          <div class="tier-label" style="color:var(--blue)">Tier 2 &mdash; Foundation (1.0x)</div>
           <div class="tier-items">
-            <div class="tier-item">
-              <span>Instructions</span>
-              <span class="tier-weight" style="color: var(--blue);">1.0x</span>
-            </div>
-            <div class="tier-item">
-              <span>Ethos</span>
-              <span class="tier-weight" style="color: var(--blue);">1.0x</span>
-            </div>
+            <div class="tier-item"><span>Instructions</span><span class="tier-weight" style="color:var(--blue)">1.0x</span></div>
+            <div class="tier-item"><span>Ethos</span><span class="tier-weight" style="color:var(--blue)">1.0x</span></div>
           </div>
         </div>
       </div>
@@ -722,93 +260,48 @@ graph TD
   </div>
 
   <!-- Tech Stack -->
-  <div class="section" style="animation-delay: 0.4s;">
-    <div class="section-title"><span style="color: var(--emerald);">&#9679;</span> Technology Stack</div>
+  <div class="section">
+    <div class="section-title"><span style="color:var(--emerald)">&#9679;</span> Technology Stack</div>
     <div class="stack-grid">
-      <div class="stack-card">
-        <div class="stack-label">Frontend</div>
-        <div class="stack-items">
-          <span class="stack-chip">Next.js 16</span>
-          <span class="stack-chip">React 19</span>
-          <span class="stack-chip">TypeScript</span>
-          <span class="stack-chip">Tailwind v4</span>
-          <span class="stack-chip">Lucide</span>
-          <span class="stack-chip">Recharts</span>
-        </div>
-      </div>
-      <div class="stack-card">
-        <div class="stack-label">Backend</div>
-        <div class="stack-items">
-          <span class="stack-chip">FastAPI</span>
-          <span class="stack-chip">Uvicorn</span>
-          <span class="stack-chip">Anthropic SDK</span>
-          <span class="stack-chip">httpx</span>
-          <span class="stack-chip">SSE</span>
-        </div>
-      </div>
-      <div class="stack-card">
-        <div class="stack-label">Database &amp; Auth</div>
-        <div class="stack-items">
-          <span class="stack-chip">Supabase</span>
-          <span class="stack-chip">PostgreSQL</span>
-          <span class="stack-chip">JWT</span>
-          <span class="stack-chip">RLS</span>
-        </div>
-      </div>
-      <div class="stack-card">
-        <div class="stack-label">AI</div>
-        <div class="stack-items">
-          <span class="stack-chip">Claude Sonnet 4.5</span>
-          <span class="stack-chip">3 Evaluation Modes</span>
-          <span class="stack-chip">Sequential Pipeline</span>
-        </div>
-      </div>
+      <div class="stack-card"><div class="stack-label">Frontend</div><div class="stack-items"><span class="stack-chip">Next.js 16</span><span class="stack-chip">React 19</span><span class="stack-chip">TypeScript</span><span class="stack-chip">Tailwind v4</span><span class="stack-chip">Lucide</span><span class="stack-chip">Recharts</span></div></div>
+      <div class="stack-card"><div class="stack-label">Backend</div><div class="stack-items"><span class="stack-chip">FastAPI</span><span class="stack-chip">Uvicorn</span><span class="stack-chip">Anthropic SDK</span><span class="stack-chip">httpx</span><span class="stack-chip">SSE</span></div></div>
+      <div class="stack-card"><div class="stack-label">Database &amp; Auth</div><div class="stack-items"><span class="stack-chip">Supabase</span><span class="stack-chip">PostgreSQL</span><span class="stack-chip">JWT</span><span class="stack-chip">RLS</span></div></div>
+      <div class="stack-card"><div class="stack-label">AI</div><div class="stack-items"><span class="stack-chip">Claude Sonnet 4.5</span><span class="stack-chip">3 Evaluation Modes</span><span class="stack-chip">Sequential Pipeline</span></div></div>
     </div>
   </div>
 
   <div class="footer">
-    AESOP — AI Ethical System Optimization Protocol &middot; Created by Charlie Fuller &middot; charlie@waifinder.org
+    AESOP &mdash; AI Ethical System Optimization Protocol &middot; Created by Charlie Fuller &middot; charlie@waifinder.org
   </div>
 
 </div>
 
 <script type="module">
   import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs';
-
-  const isDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-
   mermaid.initialize({
     startOnLoad: true,
     theme: 'base',
     look: 'classic',
     themeVariables: {
-      primaryColor: isDark ? '#1a2744' : '#eff6ff',
-      primaryBorderColor: isDark ? '#60a5fa' : '#2563eb',
-      primaryTextColor: isDark ? '#e2e8f0' : '#0f172a',
-      secondaryColor: isDark ? '#1e1338' : '#f5f3ff',
-      secondaryBorderColor: isDark ? '#a78bfa' : '#7c3aed',
-      tertiaryColor: isDark ? '#1a2218' : '#f0fdf4',
-      tertiaryBorderColor: isDark ? '#34d399' : '#059669',
-      lineColor: isDark ? '#475569' : '#94a3b8',
+      primaryColor: '#FFFFFF',
+      primaryBorderColor: '#0d9488',
+      primaryTextColor: '#241A12',
+      secondaryColor: '#F6EDE5',
+      secondaryBorderColor: '#7c3aed',
+      tertiaryColor: '#EFF8F3',
+      tertiaryBorderColor: '#0E7C66',
+      lineColor: '#A08D7E',
       fontSize: '14px',
-      fontFamily: "'Sora', system-ui, sans-serif",
+      fontFamily: "'Mulish', system-ui, sans-serif",
     }
   });
-
-  // Zoom controls
   let scale = 1;
   const container = document.getElementById('mermaidContainer');
-
   window.zoomIn = () => { scale = Math.min(scale * 1.2, 3); container.style.transform = `scale(${scale})`; };
   window.zoomOut = () => { scale = Math.max(scale / 1.2, 0.3); container.style.transform = `scale(${scale})`; };
   window.zoomReset = () => { scale = 1; container.style.transform = 'scale(1)'; };
-
   container.addEventListener('wheel', (e) => {
-    if (e.ctrlKey || e.metaKey) {
-      e.preventDefault();
-      if (e.deltaY < 0) window.zoomIn();
-      else window.zoomOut();
-    }
+    if (e.ctrlKey || e.metaKey) { e.preventDefault(); e.deltaY < 0 ? window.zoomIn() : window.zoomOut(); }
   }, { passive: false });
 </script>
 </body>

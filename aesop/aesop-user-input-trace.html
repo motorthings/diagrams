@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html class="light">
 <head>
 <meta charset="UTF-8">
 <link rel="icon" type="image/svg+xml" href="../icon.svg">
@@ -8,268 +8,184 @@
 <meta name="description" content="The full trace of 19 executive intake fields: parsing into four context rows, confidence scoring with per-field gap impacts, a three-pass LLM analysis, validation, and the roadmap that results.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Public+Sans:wght@400;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Mulish:ital,wght@0,300;0,400;0,600;0,700;0,800;1,400&display=swap" rel="stylesheet">
 <style>
-  :root {
-    --font-display: 'Instrument Serif', Georgia, serif;
-    --font-body: 'Public Sans', system-ui, sans-serif;
-    --font-mono: 'JetBrains Mono', 'SF Mono', monospace;
-    /* Gulf Stream Racing on a Ledger sheet — light only */
-    --ink: #0a1628; --graphite: #2e4d73; --body: #3d5a7a; --muted: #7a9ab8;
-    --rule: #c6d5e6; --row: #dbe5f0; --sheet: #eef4f9; --desk: #e4ecf4;
-    --spine: #0a1628; --spine-fg: #eef4f9;
-    --accent: #e8621a; --amber: #b45309; --blue: #2f6fa8; --teal: #0f766e; --violet: #7c3aed; --rose: #c23a30;
-  }
-  * { margin: 0; padding: 0; box-sizing: border-box; }
-  body { background: var(--desk); color: var(--body); font-family: var(--font-body); font-size: 16px; line-height: 1.6; -webkit-font-smoothing: antialiased; text-rendering: optimizeLegibility; }
-  .topbar { max-width: 1160px; margin: 0 auto; padding: 18px 28px 6px; }
-  .backlink a { font-size: 14px; color: var(--muted); text-decoration: none; }
-  .backlink a:hover { color: var(--ink); }
-  .backlink .arr { color: var(--accent); font-size: 15px; margin-right: 2px; }
-
-  .sheet { max-width: 1160px; margin: 6px auto 72px; background: var(--sheet); display: grid; grid-template-columns: 56px 1fr; }
-  .spine { background: var(--spine); display: flex; align-items: flex-end; justify-content: center; padding: 26px 0; }
-  .spine-label { writing-mode: vertical-rl; transform: rotate(180deg); font-family: var(--font-mono); font-size: 13px; letter-spacing: 0.22em; color: var(--spine-fg); white-space: nowrap; text-transform: uppercase; }
-  .content { padding: 46px 60px 6px; min-width: 0; }
-
-  .masthead { display: grid; grid-template-columns: 1fr auto; gap: 30px; align-items: end; border-bottom: 3px solid var(--ink); padding-bottom: 14px; }
-  .masthead h1 { font-family: var(--font-display); font-weight: 400; font-size: 54px; line-height: 0.92; letter-spacing: -0.028em; color: var(--ink); }
-  .lede { font-family: var(--font-display); font-style: italic; font-size: 18px; line-height: 1.45; color: var(--graphite); max-width: 760px; margin: 14px 0 6px; }
-  .masthead .rule-facts { font-family: var(--font-mono); font-size: 12px; line-height: 1.8; color: var(--muted); text-align: right; }
-
-  .strip { display: grid; grid-template-columns: repeat(5,1fr); border-top: 1px solid var(--rule); border-bottom: 3px solid var(--ink); margin: 14px 0 6px; }
-  .strip .s { padding: 12px 16px 14px 0; }
-  .strip .v { font-family: var(--font-display); font-size: 34px; line-height: .9; color: var(--accent); }
-  .strip .l { font-family: var(--font-mono); font-size: 10.5px; color: var(--muted); margin-top: 6px; }
-
-  section.sec { border-top: 3px solid var(--ink); padding: 20px 0 4px; }
-  .sec-title { display: grid; grid-template-columns: 88px 1fr; gap: 0 22px; align-items: baseline; margin-bottom: 6px; }
-  .sec-title .n { font-family: var(--font-display); font-size: 28px; line-height: 0.9; color: var(--accent); }
-  .sec-title h2 { font-size: 21px; font-weight: 700; letter-spacing: -0.012em; color: var(--ink); }
-  .sec-body { padding: 0 0 8px 110px; max-width: 860px; }
-  .sec-body p { margin-bottom: 11px; }
-  .sec-body p b, .sec-body strong { color: var(--ink); }
-  .sec-body p em { font-style: italic; }
-  code { font-family: var(--font-mono); font-size: 0.82em; color: var(--ink); }
-
-  .ruled { border-top: 1px solid var(--row); }
-  .ruled > div { border-bottom: 1px solid var(--row); padding: 11px 0; }
-  .ruled .k { font-weight: 700; color: var(--ink); font-size: 16px; margin-bottom: 3px; }
-  .ruled .v { font-size: 14.5px; line-height: 1.55; }
-  .rg2 { display: grid; grid-template-columns: repeat(2,1fr); gap: 0 34px; }
-  .rg2 .k { font-family: var(--font-mono); font-size: 11px; color: var(--accent); font-weight: 600; }
-  .rg2 .v code { white-space: normal; }
-
-  table.tbl { width: 100%; border-collapse: collapse; margin: 4px 0 10px; }
-  .tbl th { text-align: left; font-size: 11.5px; font-weight: 600; color: var(--muted); padding: 4px 12px 6px 0; border-bottom: 2px solid var(--ink); }
-  .tbl td { padding: 9px 12px 9px 0; border-bottom: 1px solid var(--row); vertical-align: top; font-size: 13.5px; line-height: 1.5; }
-  .tbl tr:last-child td { border-bottom: none; }
-  .tbl .fw { font-weight: 700; color: var(--ink); }
-  .tbl code { font-size: 11px; }
-
-  .formula { font-family: var(--font-mono); font-size: 14px; line-height: 2; color: var(--ink); border-top: 1px solid var(--rule); border-bottom: 1px solid var(--rule); padding: 12px 2px; margin: 8px 0; }
-  .formula b { color: var(--violet); } .formula i { color: var(--teal); font-style: normal; }
-
-  .line { border-top: 1px solid var(--row); padding: 10px 0; font-size: 14.5px; line-height: 1.6; }
-  .line .tt { font-weight: 700; color: var(--ink); }
-  .line .meta { font-family: var(--font-mono); font-size: 11px; color: var(--muted); }
-  .line p { font-size: 14.5px; line-height: 1.6; margin-top: 4px; }
-  .line p b { color: var(--ink); }
-  .line ul { list-style: none; margin: 5px 0 0; }
-  .line ul li { padding-left: 14px; position: relative; font-size: 14px; line-height: 1.55; }
-  .line ul li::before { content: '&rarr;'; position: absolute; left: 0; top: 0; color: var(--accent); font-size: 12px; }
-
-  .summary { margin: 8px 0 2px; padding-top: 12px; border-top: 1px solid var(--row); font-size: 15.5px; line-height: 1.65; }
-  .summary b { color: var(--ink); }
-
-  .footer { border-top: 3px solid var(--ink); margin: 24px 0 0; padding: 18px 0 30px; display: flex; justify-content: space-between; gap: 20px; flex-wrap: wrap; font-family: var(--font-mono); font-size: 11.5px; color: var(--muted); }
-  .footer a { color: var(--accent); text-decoration: none; }
-
-  @media (max-width: 860px) {
-    .sheet { grid-template-columns: 40px 1fr; }
-    .spine-label { font-size: 11px; }
-    .content { padding: 32px 22px 4px; }
-    .masthead { grid-template-columns: 1fr; }
-    .masthead h1 { font-size: 40px; }
-    .masthead .rule-facts { text-align: left; }
-    .strip { grid-template-columns: repeat(3,1fr); }
-    .sec-title { grid-template-columns: 50px 1fr; }
-    .sec-title .n { font-size: 24px; }
-    .sec-body { padding-left: 0; }
-    .rg2 { grid-template-columns: 1fr; }
-    body { font-size: 15px; }
-  }
+  :root{--font-body:'Mulish','Segoe UI',Helvetica,sans-serif;--font-mono:'Mulish',ui-monospace,'SF Mono',Consolas,monospace;
+    --bg:#14181C;--surface:#1B2127;--surface2:#232B33;--border:#303A43;--border-bright:#42505C;
+    --text:#F4F5F6;--text-dim:#CBD0D6;--text-faint:#87919B;
+    --primary:#F58A4E;--primary-dim:rgba(245,138,78,0.12);--metric:#45C7A6;--metric-dim:rgba(69,199,166,0.12);
+    --count:#6FB3E0;}
+  html.light{--bg:#F7F3EF;--surface:#FFFFFF;--surface2:#F0E9E1;--border:#E1D6CB;--border-bright:#CDBBA8;
+    --text:#241A12;--text-dim:#574A3C;--text-faint:#8C7E6E;
+    --primary:#C64A11;--primary-dim:rgba(198,74,17,0.10);--metric:#0E7C66;--metric-dim:rgba(14,124,102,0.10);
+    --count:#2F6FA8;}
+  *{margin:0;padding:0;box-sizing:border-box}
+  body{background:var(--bg);background-image:radial-gradient(at 10% 0%,var(--primary-dim) 0%,transparent 40%),radial-gradient(at 90% 80%,var(--metric-dim) 0%,transparent 40%);color:var(--text);font-family:var(--font-body);font-size:15px;line-height:1.7;min-height:100vh;-webkit-font-smoothing:antialiased}
+  .nav{position:sticky;top:0;z-index:100;backdrop-filter:blur(16px);background:color-mix(in srgb,var(--surface) 85%,transparent);border-bottom:1px solid var(--border)}
+  .nav-inner{max-width:1120px;margin:0 auto;padding:12px 24px}
+  .crumbs{font-family:var(--font-mono);font-size:13px;font-weight:600;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+  .crumbs a{color:var(--primary);text-decoration:none}.crumbs a:hover{text-decoration:underline}.crumbs .sep{color:var(--text-faint)}.crumbs .current{color:var(--text-faint);font-weight:400}
+  .container{max-width:1120px;margin:0 auto;padding:48px 24px 80px}
+  @keyframes fadeUp{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
+  .hero{text-align:center;margin-bottom:22px;animation:fadeUp .5s ease both}
+  .hero .facts{font-family:var(--font-mono);font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--primary);margin-bottom:12px}
+  .hero h1{font-size:44px;font-weight:800;letter-spacing:-1px;margin:0 0 14px;background:linear-gradient(135deg,var(--primary),var(--metric));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+  .hero .lede{font-size:15.5px;color:var(--text-dim);max-width:820px;margin:0 auto}.hero .lede b{color:var(--text)}
+  .strip{display:grid;grid-template-columns:repeat(5,1fr);gap:12px;animation:fadeUp .5s ease both}
+  .strip>div{background:var(--surface);border:1px solid var(--border);border-top:3px solid var(--primary);border-radius:12px;padding:12px 14px}
+  .strip .v{font-size:28px;font-weight:800;letter-spacing:-1px;line-height:1;color:var(--primary)}
+  .strip .l{font-family:var(--font-mono);font-size:10px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;color:var(--text-faint);margin-top:5px}
+  .section{margin-top:34px;animation:fadeUp .5s ease both}
+  .sec-head{display:flex;align-items:baseline;gap:14px;margin-bottom:14px}
+  .sec-num{font-family:var(--font-mono);font-size:13px;font-weight:800;color:var(--primary)}
+  .sec-title{font-size:22px;font-weight:800;letter-spacing:-.4px;color:var(--text)}
+  .sec-body p{font-size:14.5px;color:var(--text-dim);margin:8px 0;max-width:880px}.sec-body p b,.sec-body strong{color:var(--text)}
+  code{font-family:var(--font-mono);font-size:.86em;color:var(--text)}
+  .rg2{display:grid;grid-template-columns:repeat(2,1fr);gap:0 34px;background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:4px 20px;overflow:hidden}
+  .rg2>div{padding:12px 0;border-top:1px solid var(--border)}
+  .rg2>div:nth-child(1),.rg2>div:nth-child(2){border-top:none}
+  .rg2 .k{font-family:var(--font-mono);font-size:11px;font-weight:800;letter-spacing:.05em;text-transform:uppercase;color:var(--primary);margin-bottom:4px}
+  .rg2 .v{font-size:13.5px;color:var(--text-dim);line-height:1.55}
+  table{width:100%;border-collapse:collapse;background:var(--surface);border:1px solid var(--border);border-radius:12px;overflow:hidden;font-size:12.5px}
+  thead th{font-family:var(--font-mono);font-size:10.5px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;text-align:left;padding:10px 14px;color:var(--text-faint);background:var(--surface2);border-bottom:1px solid var(--border)}
+  tbody td{padding:10px 14px;border-bottom:1px solid var(--border);vertical-align:top;color:var(--text-dim);line-height:1.5}
+  tbody tr:last-child td{border-bottom:none}
+  .fw{font-weight:800;color:var(--text)}
+  .formula{font-family:var(--font-mono);font-size:13px;line-height:2.1;color:var(--text);background:var(--surface);border:1px solid var(--border);border-left:3px solid var(--primary);border-radius:12px;padding:16px 20px;margin:10px 0}
+  .formula b{color:var(--primary)}.formula i{color:var(--metric);font-style:normal}
+  .line{border-left:3px solid var(--border);background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:13px 16px;margin-top:10px}
+  .line .tt{font-weight:800;color:var(--text);font-size:15px}
+  .line .meta{font-family:var(--font-mono);font-size:11px;color:var(--text-faint)}
+  .line p{font-size:13.5px;line-height:1.6;color:var(--text-dim);margin-top:4px}.line p b{color:var(--text)}
+  .summary{margin-top:30px;padding-top:16px;border-top:1px solid var(--border);font-size:15px;line-height:1.7;color:var(--text-dim)}.summary b{color:var(--text)}
+  .footer{margin-top:36px;padding-top:16px;border-top:1px solid var(--border);display:flex;justify-content:space-between;gap:20px;flex-wrap:wrap;font-family:var(--font-mono);font-size:11.5px;color:var(--text-faint)}.footer a{color:var(--primary);text-decoration:none}
+  @media(max-width:760px){.strip{grid-template-columns:repeat(3,1fr)}.rg2{grid-template-columns:1fr}.rg2>div:nth-child(2){border-top:1px solid var(--border)}.rg2>div:nth-child(3){border-top:none}}
+  @media(max-width:768px){.hero h1{font-size:36px}}
+  @media(prefers-reduced-motion:reduce){*,*::before,*::after{animation-duration:.01ms !important}}
 </style>
 </head>
 <body>
-<style>
-.crumbs-at-top{max-width:1100px;margin:0 auto;padding:14px 24px 0}
-.crumbs{font-family:var(--font-mono,monospace);font-size:13px;font-weight:600;display:flex;align-items:center;gap:8px;flex-wrap:wrap;min-width:0}
-.crumbs a{color:var(--accent);text-decoration:none}
-.crumbs a:hover,.crumbs a:focus-visible{text-decoration:underline;outline:none}
-.crumbs .sep{color:var(--muted)}
-.crumbs .current{color:var(--muted);font-weight:400}
-</style>
-<nav class="crumbs crumbs-at-top" aria-label="Breadcrumb">
-  <a href="../index.html">Index</a>
-  <span class="sep">/</span>
-  <a href="../aesop.html">AESOP</a>
-  <span class="sep">/</span>
-  <span class="current" aria-current="page">What Happens to User Input</span>
-</nav>
+<div class="nav"><div class="nav-inner">
+  <nav class="crumbs" aria-label="Breadcrumb"><a href="../index.html">Index</a><span class="sep">/</span><a href="../aesop.html">AESOP</a><span class="sep">/</span><span class="current">What Happens to User Input</span></nav>
+</div></div>
 
-
-</div>
-
-<div class="sheet">
-  <div class="spine"><div class="spine-label">USER INPUT TRACE</div></div>
-
-  <div class="content">
-
-    <header class="masthead">
-      <div>
-        <h1>What Happens to User Input</h1>
-        <p class="lede">The full trace: 19 executive intake fields through parsing, scoring, multi-pass analysis, and roadmap generation. Every heuristic, decision, and confidence signal at the point it is injected.</p>
-      </div>
-      <div class="rule-facts">executive intake &middot; v1.0<br>19 fields &middot; 4 rows &middot; 3 passes</div>
-    </header>
-
-    <div class="strip">
-      <div class="s"><div class="v">19</div><div class="l">input fields</div></div>
-      <div class="s"><div class="v">4</div><div class="l">context rows</div></div>
-      <div class="s"><div class="v">12</div><div class="l">heuristics</div></div>
-      <div class="s"><div class="v">3</div><div class="l">LLM passes</div></div>
-      <div class="s"><div class="v">95</div><div class="l">confidence cap</div></div>
-    </div>
-
-    <!-- 01 -->
-    <section class="sec">
-      <div class="sec-title"><span class="n">01</span><h2>What goes in &mdash; the 19-field executive intake</h2></div>
-      <div class="sec-body">
-        <div class="rg2 ruled">
-          <div class="k">About your business</div><div class="v"><code>business_name, industry, employee_count, what_they_do, what_makes_different</code></div>
-          <div class="k">What&rsquo;s working</div><div class="v"><code>biggest_bottleneck, time_consuming_tasks, success_definition, top_priorities, business_impact</code></div>
-          <div class="k">How work gets done</div><div class="v"><code>founder_role, team_description, delegation_gap, decision_style</code></div>
-          <div class="k">Tools &amp; guardrails</div><div class="v"><code>essential_tools, document_storage, compliance_requirements, investment_comfort, non_negotiables</code></div>
-          <div class="k">Dysfunctionality</div><div class="v"><code>knowledge_in_heads, unwritten_rules, rework_loops, broken_handoffs, founder_blocking, decision_latency &hellip;</code></div>
-        </div>
-      </div>
-    </section>
-
-    <!-- 02 -->
-    <section class="sec">
-      <div class="sec-title"><span class="n">02</span><h2>Parse &amp; classify &mdash; 19 fields into 4 context rows</h2></div>
-      <div class="sec-body">
-        <p>Each of the 19 fields maps deterministically to one of four <code>org_context</code> rows. No AI here &mdash; <code>_create_org_context_entries()</code> unpacks the flat dict into typed records (title, content, content_summary). The business name becomes a slug and an <code>organizations</code> row (<code>org_type="smb"</code>) with the submitter added as admin, best effort.</p>
-        <table class="tbl">
-          <thead><tr><th>Context type</th><th>Source fields</th><th>Example content</th></tr></thead>
-          <tbody>
-            <tr><td class="fw"><code>company_profile</code></td><td><code>business_name, industry, employee_count, what_they_do, what_makes_different</code></td><td>&ldquo;Founded in 2012, Acme produces industrial adhesives for the automotive sector with 47 employees.&rdquo;</td></tr>
-            <tr><td class="fw"><code>strategic_goals</code></td><td><code>biggest_bottleneck, time_consuming_tasks, success_definition, top_priorities, business_impact</code></td><td>&ldquo;Their biggest bottleneck is estimating &mdash; complex quotes take 3&ndash;4 hours and only the founder can price them.&rdquo;</td></tr>
-            <tr><td class="fw"><code>smb_operations</code></td><td><code>founder_role, team_description, delegation_gap, decision_style</code></td><td>&ldquo;The founder spends 60% of time on estimating. Team of 12 includes 4 crew leads.&rdquo;</td></tr>
-            <tr><td class="fw"><code>smb_constraints</code></td><td><code>essential_tools, document_storage, compliance_requirements, investment_comfort, non_negotiables</code></td><td>&ldquo;They use QuickBooks and Excel; documents live in a shared Drive, inconsistently organized.&rdquo;</td></tr>
-          </tbody>
-        </table>
-      </div>
-    </section>
-
-    <!-- 03 -->
-    <section class="sec">
-      <div class="sec-title"><span class="n">03</span><h2>Confidence scoring &mdash; how much we trust the output</h2></div>
-      <div class="sec-body">
-        <p><b>Every empty field reduces confidence &mdash; and each reduction is tied to a specific, hand-authored impact statement naming exactly what the roadmap can&rsquo;t say because of that gap.</b> Not a generic score: a gap-by-gap audit trail.</p>
-        <div class="formula">
-          <b>Section score</b> = 20 &times; (filled / total fields in section)<br>
-          <b>Raw total</b> = sum of 5 section scores<br>
-          <b>Final</b> = min(Raw total, <i>95</i>)<br>
-          <b>Level</b> = high &ge;75 &nbsp;|&nbsp; medium &ge;50 &nbsp;|&nbsp; low &lt;50
-        </div>
-        <p>The cap at 95 is deliberate: perfect confidence is a false signal. Even fully filled, self-reported data carries uncertainty. Each of the 19 fields has a unique hand-written impact in <code>_executive_gap_impact()</code> &mdash; e.g. &ldquo;without the founder&rsquo;s day-to-day role, the roadmap cannot identify delegation opportunities.&rdquo; High means well-grounded; medium, direction sound but recommendations may shift; low, a conversation starter whose gaps become cohort exercises.</p>
-      </div>
-    </section>
-
-    <!-- 04 -->
-    <section class="sec">
-      <div class="sec-title"><span class="n">04</span><h2>Multi-pass LLM analysis &mdash; three agents, three perspectives</h2></div>
-      <div class="sec-body">
-        <p>A single &ldquo;write a roadmap&rdquo; prompt is fragile &mdash; it skips evidence, invents details, or collapses into generic advice. Three independent passes with narrow lenses force claims to be grounded before synthesis. If a pass fails, the pipeline degrades gracefully.</p>
-        <div class="ruled">
-          <div class="line">
-            <span class="tt">Pass 1 &mdash; Dysfunctionality traits agent</span> <span class="meta">&middot; temperature 0.2</span>
-            <p>Input: all four context rows + confidence. Produces a 5&times;5 maturity assessment scored with specific intake evidence, dysfunctionality severity on five 1&ndash;10 axes, ranked confidence gaps, and boundary cases where better data would shift a level.</p>
-          </div>
-          <div class="line">
-            <span class="tt">Pass 2 &mdash; Roadmap synthesis agent</span> <span class="meta">&middot; temperature 0.2</span>
-            <p>Input: Pass 1 traits + context + confidence. Produces three strategic movements (each with risk signals, dependencies, success indicators), the honest truth, the one move, and a before/after picture.</p>
-          </div>
-          <div class="line">
-            <span class="tt">Pass 3 &mdash; Prose roadmap agent</span> <span class="meta">&middot; temperature 0.2</span>
-            <p>Input: Pass 1 + Pass 2 + context + confidence. Renders the maturity snapshot with a stage-by-stage gap map, the one move, what changes, the honest truth, and a source manifest of which fields informed which claims.</p>
-          </div>
-        </div>
-        <p style="margin-top:8px"><b>Graceful degradation:</b> Pass 1 fails &rarr; single-pass Pass 3. Pass 2 fails &rarr; Pass 3 on Pass 1 data only. Each pass is persisted independently (<code>adoption_roadmap_traits</code>, <code>adoption_roadmap_synthesis</code>) for audit.</p>
-      </div>
-    </section>
-
-    <!-- 05 -->
-    <section class="sec">
-      <div class="sec-title"><span class="n">05</span><h2>Validation, persistence &amp; output</h2></div>
-      <div class="sec-body">
-        <div class="rg2 ruled">
-          <div class="k">JSON validation</div><div class="v">Output validated against the expected schema. Up to 2 automatic retries on malformed JSON or missing fields, each with the specific validation error.</div>
-          <div class="k">Persistence</div><div class="v"><code>adoption_roadmaps</code> (final roadmap), <code>_traits</code> and <code>_synthesis</code> (audit), <code>smb_intake_submissions</code> &rarr; completed.</div>
-          <div class="k">The 5-page roadmap</div><div class="v">&asymp;1,900 words of founder-ready prose: maturity placement, bottleneck dimension, stage-gap map, three movements with risk signals, the one move, the honest truth, what changes, and the source manifest.</div>
-          <div class="k">Confidence &ne; maturity</div><div class="v">Confidence says how much to trust the roadmap; maturity says where the organization sits. A low-confidence roadmap with high maturity is flagged suspect. Each Pass 1 dimension score carries a <code>confidence_modifier</code> for how far placement could shift.</div>
-        </div>
-      </div>
-    </section>
-
-    <!-- 06 -->
-    <section class="sec">
-      <div class="sec-title"><span class="n">06</span><h2>What the pipeline does <em>not</em> do</h2></div>
-      <div class="sec-body">
-        <div class="ruled">
-          <div class="line"><span class="tt">Guess at missing data</span><p>Empty fields are named as gaps, never inferred. The no-assumptions rule is enforced at every pass.</p></div>
-          <div class="line"><span class="tt">Recommend specific AI tools</span><p>It says &ldquo;you need a way to capture estimating rules,&rdquo; not &ldquo;buy Tool X.&rdquo; Tool names without context are forbidden.</p></div>
-          <div class="line"><span class="tt">Claim 100% confidence</span><p>The 95-cap keeps the system honest: this could always be sharper.</p></div>
-          <div class="line"><span class="tt">Use one framework for everyone</span><p>The model is universal but every score is grounded in that organization&rsquo;s intake &mdash; two businesses at &ldquo;AI Ready&rdquo; got there differently, and the output says so.</p></div>
-        </div>
-      </div>
-    </section>
-
-    <!-- heuristics -->
-    <section class="sec">
-      <div class="sec-title"><span class="n">07</span><h2>Every heuristic &amp; decision point</h2></div>
-      <div class="sec-body" style="max-width:920px">
-        <table class="tbl">
-          <thead><tr><th>#</th><th>Decision point</th><th>What it does</th><th>Where it lives</th></tr></thead>
-          <tbody>
-            <tr><td>1</td><td class="fw">Field completeness check</td><td>Binary &mdash; is each field non-empty? Drives confidence and gap analysis.</td><td><code>_compute_confidence_executive()</code></td></tr>
-            <tr><td>2</td><td class="fw">Section weighting</td><td>5 sections &times; 20 pts, equal &mdash; company profile matters as much as dysfunctionality.</td><td><code>_compute_confidence_executive()</code></td></tr>
-            <tr><td>3</td><td class="fw">Confidence cap at 95</td><td>Deliberate ceiling &mdash; even 19/19 fields carry inherent uncertainty.</td><td><code>min(total, 95)</code></td></tr>
-            <tr><td>4</td><td class="fw">Gap impact mapping</td><td>19 hand-authored impact statements, each naming what the roadmap can&rsquo;t determine.</td><td><code>_executive_gap_impact()</code></td></tr>
-            <tr><td>5</td><td class="fw">Confidence tiering</td><td>High &ge;75 / Medium &ge;50 / Low &lt;50, each with a plain-language summary.</td><td><code>_executive_confidence_summary()</code></td></tr>
-            <tr><td>6</td><td class="fw">Maturity bottleneck principle</td><td>Overall maturity = lowest dimension. Prevents cherry-picking the strongest.</td><td>maturity_model prompt section</td></tr>
-            <tr><td>7</td><td class="fw">No assumptions rule</td><td>Before every claim: did they tell us this? Otherwise flag it as a gap.</td><td>design principle #5</td></tr>
-            <tr><td>8</td><td class="fw">5&times;5 dimension scoring</td><td>Each dimension at each level, evidence required, boundary cases flagged.</td><td>Pass 1 agent</td></tr>
-            <tr><td>9</td><td class="fw">Dysfunctionality severity 1&ndash;10</td><td>Five axes scored independently, not averaged; high signals trigger specific moves.</td><td>Pass 1 agent</td></tr>
-            <tr><td>10</td><td class="fw">Multi-pass triangulation</td><td>Pass 1 &rarr; 2 &rarr; 3, each challenged to challenge, graceful degradation.</td><td><code>_generate_roadmap_background()</code></td></tr>
-            <tr><td>11</td><td class="fw">Jargon ban</td><td>No LLM, API, vector database, embedding, token, agent, platform &mdash; enforced and retried.</td><td>design principle #4</td></tr>
-            <tr><td>12</td><td class="fw">Source manifest</td><td>Every claim traces to a specific intake field; an audit trail for system and reviewer.</td><td>output JSON</td></tr>
-          </tbody>
-        </table>
-      </div>
-    </section>
-
-    <p class="summary"><b>19 fields enter</b> &rarr; deterministic parsing into four context records &rarr; confidence scoring with hand-authored gap impacts &rarr; three-pass LLM analysis grounded and cross-validated &rarr; JSON validated with retries &rarr; persisted with a full audit trail &rarr; a 1,900-word founder-ready roadmap with maturity placement, bottleneck identification, stage gaps, movements, the honest truth, and a source manifest of which intake field informed every claim.</p>
-
-    <footer class="footer">
-      <a href="../aesop.html">&larr; AESOP</a>
-      <span>&copy; 2025-2026 Charlie Fuller</span>
-    </footer>
-
+<div class="container">
+  <div class="hero">
+    <div class="facts">executive intake &middot; v1.0 &middot; 19 fields &middot; 4 rows &middot; 3 passes</div>
+    <h1>What Happens to User Input</h1>
+    <p class="lede">The full trace: 19 executive intake fields through parsing, scoring, multi-pass analysis, and roadmap generation. Every heuristic, decision, and confidence signal at the point it is injected.</p>
   </div>
-</div>
 
+  <div class="strip">
+    <div><div class="v">19</div><div class="l">input fields</div></div>
+    <div><div class="v">4</div><div class="l">context rows</div></div>
+    <div><div class="v">12</div><div class="l">heuristics</div></div>
+    <div><div class="v">3</div><div class="l">LLM passes</div></div>
+    <div><div class="v">95</div><div class="l">confidence cap</div></div>
+  </div>
+
+  <div class="section">
+    <div class="sec-head"><span class="sec-num">01</span><span class="sec-title">What goes in &mdash; the 19-field executive intake</span></div>
+    <div class="sec-body">
+      <div class="rg2">
+        <div><div class="k">About your business</div><div class="v"><code>business_name, industry, employee_count, what_they_do, what_makes_different</code></div></div>
+        <div><div class="k">What&rsquo;s working</div><div class="v"><code>biggest_bottleneck, time_consuming_tasks, success_definition, top_priorities, business_impact</code></div></div>
+        <div><div class="k">How work gets done</div><div class="v"><code>founder_role, team_description, delegation_gap, decision_style</code></div></div>
+        <div><div class="k">Tools &amp; guardrails</div><div class="v"><code>essential_tools, document_storage, compliance_requirements, investment_comfort, non_negotiables</code></div></div>
+        <div><div class="k">Dysfunctionality</div><div class="v"><code>knowledge_in_heads, unwritten_rules, rework_loops, broken_handoffs, founder_blocking, decision_latency &hellip;</code></div></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="sec-head"><span class="sec-num">02</span><span class="sec-title">Parse &amp; classify &mdash; 19 fields into 4 context rows</span></div>
+    <div class="sec-body">
+      <p>Each of the 19 fields maps deterministically to one of four <code>org_context</code> rows. No AI here &mdash; <code>_create_org_context_entries()</code> unpacks the flat dict into typed records (title, content, content_summary). The business name becomes a slug and an <code>organizations</code> row (<code>org_type="smb"</code>) with the submitter added as admin, best effort.</p>
+      <table>
+        <thead><tr><th>Context type</th><th>Source fields</th><th>Example content</th></tr></thead>
+        <tbody>
+          <tr><td class="fw"><code>company_profile</code></td><td><code>business_name, industry, employee_count, what_they_do, what_makes_different</code></td><td>&ldquo;Founded in 2012, Acme produces industrial adhesives for the automotive sector with 47 employees.&rdquo;</td></tr>
+          <tr><td class="fw"><code>strategic_goals</code></td><td><code>biggest_bottleneck, time_consuming_tasks, success_definition, top_priorities, business_impact</code></td><td>&ldquo;Their biggest bottleneck is estimating &mdash; complex quotes take 3&ndash;4 hours and only the founder can price them.&rdquo;</td></tr>
+          <tr><td class="fw"><code>smb_operations</code></td><td><code>founder_role, team_description, delegation_gap, decision_style</code></td><td>&ldquo;The founder spends 60% of time on estimating. Team of 12 includes 4 crew leads.&rdquo;</td></tr>
+          <tr><td class="fw"><code>smb_constraints</code></td><td><code>essential_tools, document_storage, compliance_requirements, investment_comfort, non_negotiables</code></td><td>&ldquo;They use QuickBooks and Excel; documents live in a shared Drive, inconsistently organized.&rdquo;</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="sec-head"><span class="sec-num">03</span><span class="sec-title">Confidence scoring &mdash; how much we trust the output</span></div>
+    <div class="sec-body">
+      <p><b>Every empty field reduces confidence &mdash; and each reduction is tied to a specific, hand-authored impact statement naming exactly what the roadmap can&rsquo;t say because of that gap.</b> Not a generic score: a gap-by-gap audit trail.</p>
+      <div class="formula">
+        <b>Section score</b> = 20 &times; (filled / total fields in section)<br>
+        <b>Raw total</b> = sum of 5 section scores<br>
+        <b>Final</b> = min(Raw total, <i>95</i>)<br>
+        <b>Level</b> = high &ge;75 &nbsp;|&nbsp; medium &ge;50 &nbsp;|&nbsp; low &lt;50
+      </div>
+      <p>The cap at 95 is deliberate: perfect confidence is a false signal. Even fully filled, self-reported data carries uncertainty. Each of the 19 fields has a unique hand-written impact in <code>_executive_gap_impact()</code> &mdash; e.g. &ldquo;without the founder&rsquo;s day-to-day role, the roadmap cannot identify delegation opportunities.&rdquo; High means well-grounded; medium, direction sound but recommendations may shift; low, a conversation starter whose gaps become cohort exercises.</p>
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="sec-head"><span class="sec-num">04</span><span class="sec-title">Multi-pass LLM analysis &mdash; three agents, three perspectives</span></div>
+    <div class="sec-body">
+      <p>A single &ldquo;write a roadmap&rdquo; prompt is fragile &mdash; it skips evidence, invents details, or collapses into generic advice. Three independent passes with narrow lenses force claims to be grounded before synthesis. If a pass fails, the pipeline degrades gracefully.</p>
+      <div class="line"><span class="tt">Pass 1 &mdash; Dysfunctionality traits agent</span> <span class="meta">&middot; temperature 0.2</span><p>Input: all four context rows + confidence. Produces a 5&times;5 maturity assessment scored with specific intake evidence, dysfunctionality severity on five 1&ndash;10 axes, ranked confidence gaps, and boundary cases where better data would shift a level.</p></div>
+      <div class="line"><span class="tt">Pass 2 &mdash; Roadmap synthesis agent</span> <span class="meta">&middot; temperature 0.2</span><p>Input: Pass 1 traits + context + confidence. Produces three strategic movements (each with risk signals, dependencies, success indicators), the honest truth, the one move, and a before/after picture.</p></div>
+      <div class="line"><span class="tt">Pass 3 &mdash; Prose roadmap agent</span> <span class="meta">&middot; temperature 0.2</span><p>Input: Pass 1 + Pass 2 + context + confidence. Renders the maturity snapshot with a stage-by-stage gap map, the one move, what changes, the honest truth, and a source manifest of which fields informed which claims.</p></div>
+      <p style="margin-top:10px"><b>Graceful degradation:</b> Pass 1 fails &rarr; single-pass Pass 3. Pass 2 fails &rarr; Pass 3 on Pass 1 data only. Each pass is persisted independently (<code>adoption_roadmap_traits</code>, <code>adoption_roadmap_synthesis</code>) for audit.</p>
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="sec-head"><span class="sec-num">05</span><span class="sec-title">Validation, persistence &amp; output</span></div>
+    <div class="sec-body">
+      <div class="rg2">
+        <div><div class="k">JSON validation</div><div class="v">Output validated against the expected schema. Up to 2 automatic retries on malformed JSON or missing fields, each with the specific validation error.</div></div>
+        <div><div class="k">Persistence</div><div class="v"><code>adoption_roadmaps</code> (final roadmap), <code>_traits</code> and <code>_synthesis</code> (audit), <code>smb_intake_submissions</code> &rarr; completed.</div></div>
+        <div><div class="k">The 5-page roadmap</div><div class="v">&asymp;1,900 words of founder-ready prose: maturity placement, bottleneck dimension, stage-gap map, three movements with risk signals, the one move, the honest truth, what changes, and the source manifest.</div></div>
+        <div><div class="k">Confidence &ne; maturity</div><div class="v">Confidence says how much to trust the roadmap; maturity says where the organization sits. A low-confidence roadmap with high maturity is flagged suspect. Each Pass 1 dimension score carries a <code>confidence_modifier</code> for how far placement could shift.</div></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="sec-head"><span class="sec-num">06</span><span class="sec-title">What the pipeline does <em>not</em> do</span></div>
+    <div class="sec-body">
+      <div class="line"><span class="tt">Guess at missing data</span><p>Empty fields are named as gaps, never inferred. The no-assumptions rule is enforced at every pass.</p></div>
+      <div class="line"><span class="tt">Recommend specific AI tools</span><p>It says &ldquo;you need a way to capture estimating rules,&rdquo; not &ldquo;buy Tool X.&rdquo; Tool names without context are forbidden.</p></div>
+      <div class="line"><span class="tt">Claim 100% confidence</span><p>The 95-cap keeps the system honest: this could always be sharper.</p></div>
+      <div class="line"><span class="tt">Use one framework for everyone</span><p>The model is universal but every score is grounded in that organization&rsquo;s intake &mdash; two businesses at &ldquo;AI Ready&rdquo; got there differently, and the output says so.</p></div>
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="sec-head"><span class="sec-num">07</span><span class="sec-title">Every heuristic &amp; decision point</span></div>
+    <div class="sec-body">
+      <table>
+        <thead><tr><th>#</th><th>Decision point</th><th>What it does</th><th>Where it lives</th></tr></thead>
+        <tbody>
+          <tr><td>1</td><td class="fw">Field completeness check</td><td>Binary &mdash; is each field non-empty? Drives confidence and gap analysis.</td><td><code>_compute_confidence_executive()</code></td></tr>
+          <tr><td>2</td><td class="fw">Section weighting</td><td>5 sections &times; 20 pts, equal &mdash; company profile matters as much as dysfunctionality.</td><td><code>_compute_confidence_executive()</code></td></tr>
+          <tr><td>3</td><td class="fw">Confidence cap at 95</td><td>Deliberate ceiling &mdash; even 19/19 fields carry inherent uncertainty.</td><td><code>min(total, 95)</code></td></tr>
+          <tr><td>4</td><td class="fw">Gap impact mapping</td><td>19 hand-authored impact statements, each naming what the roadmap can&rsquo;t determine.</td><td><code>_executive_gap_impact()</code></td></tr>
+          <tr><td>5</td><td class="fw">Confidence tiering</td><td>High &ge;75 / Medium &ge;50 / Low &lt;50, each with a plain-language summary.</td><td><code>_executive_confidence_summary()</code></td></tr>
+          <tr><td>6</td><td class="fw">Maturity bottleneck principle</td><td>Overall maturity = lowest dimension. Prevents cherry-picking the strongest.</td><td>maturity_model prompt section</td></tr>
+          <tr><td>7</td><td class="fw">No assumptions rule</td><td>Before every claim: did they tell us this? Otherwise flag it as a gap.</td><td>design principle #5</td></tr>
+          <tr><td>8</td><td class="fw">5&times;5 dimension scoring</td><td>Each dimension at each level, evidence required, boundary cases flagged.</td><td>Pass 1 agent</td></tr>
+          <tr><td>9</td><td class="fw">Dysfunctionality severity 1&ndash;10</td><td>Five axes scored independently, not averaged; high signals trigger specific moves.</td><td>Pass 1 agent</td></tr>
+          <tr><td>10</td><td class="fw">Multi-pass triangulation</td><td>Pass 1 &rarr; 2 &rarr; 3, each challenged to challenge, graceful degradation.</td><td><code>_generate_roadmap_background()</code></td></tr>
+          <tr><td>11</td><td class="fw">Jargon ban</td><td>No LLM, API, vector database, embedding, token, agent, platform &mdash; enforced and retried.</td><td>design principle #4</td></tr>
+          <tr><td>12</td><td class="fw">Source manifest</td><td>Every claim traces to a specific intake field; an audit trail for system and reviewer.</td><td>output JSON</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <p class="summary"><b>19 fields enter</b> &rarr; deterministic parsing into four context records &rarr; confidence scoring with hand-authored gap impacts &rarr; three-pass LLM analysis grounded and cross-validated &rarr; JSON validated with retries &rarr; persisted with a full audit trail &rarr; a 1,900-word founder-ready roadmap with maturity placement, bottleneck identification, stage gaps, movements, the honest truth, and a source manifest of which intake field informed every claim.</p>
+
+  <div class="footer"><a href="../aesop.html">&larr; AESOP</a><span>&copy; 2025&ndash;2026 Charlie Fuller</span></div>
+</div>
 </body>
 </html>

@@ -1,386 +1,136 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" class="light">
 <head>
 <meta charset="UTF-8">
 <link rel="icon" type="image/svg+xml" href="../icon.svg">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>AESOP Transformation OS — Custom Rubric Evaluation</title>
+<title>AESOP &mdash; Custom Rubric Evaluation</title>
+<meta name="description" content="Generate a tailored evaluation framework for any AI system, then transform it into executable test scenarios with PRAXIS and THESIS.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600;9..144,700&family=Source+Code+Pro:wght@400;500;600" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Mulish:ital,wght@0,300;0,400;0,600;0,700;0,800;1,400&display=swap" rel="stylesheet">
 <style>
-  :root {
-    --font-body: 'Fraunces', Georgia, serif;
-    --font-mono: 'Source Code Pro', 'SF Mono', Consolas, monospace;
+  :root{--font-body:'Mulish','Segoe UI',Helvetica,sans-serif;--font-mono:'Mulish',ui-monospace,'SF Mono',Consolas,monospace;
+    --bg:#14181C;--surface:#1B2127;--surface2:#232B33;--surface-elevated:#263039;--border:#303A43;--border-bright:#42505C;
+    --text:#F4F5F6;--text-dim:#CBD0D6;--text-faint:#87919B;
+    --primary:#F58A4E;--primary-dim:rgba(245,138,78,0.12);--metric:#45C7A6;--metric-dim:rgba(69,199,166,0.12);
+    --violet:#B9A0E8;--violet-dim:rgba(185,160,232,0.12);
+    --amber:#E8B54D;--amber-dim:rgba(232,181,77,0.12);
+    --rose:#E88280;--rose-dim:rgba(232,130,128,0.12);}
+  html.light{--bg:#FBF6F1;--surface:#FFFFFF;--surface2:#F7EEE6;--surface-elevated:#FBF3EC;--border:#EAD9CE;--border-bright:#D8BBA6;
+    --text:#241A12;--text-dim:#6B5143;--text-faint:#9A8173;
+    --primary:#C64A11;--primary-dim:rgba(198,74,17,0.08);--metric:#0E7C66;--metric-dim:rgba(14,124,102,0.08);
+    --violet:#7C3AED;--violet-dim:rgba(124,58,237,0.06);
+    --amber:#A5650A;--amber-dim:rgba(165,101,10,0.08);
+    --rose:#C23A30;--rose-dim:rgba(194,58,48,0.07);}
+  *{margin:0;padding:0;box-sizing:border-box}
+  html{scroll-behavior:smooth}
+  body{background:
+      radial-gradient(at 25% 15%,var(--primary-dim),transparent 50%),
+      radial-gradient(at 75% 85%,var(--metric-dim),transparent 50%),
+      var(--bg);
+    color:var(--text);font-family:var(--font-body);line-height:1.7;-webkit-font-smoothing:antialiased;min-height:100vh}
 
-    --bg: #faf5ff;
-    --surface: #ffffff;
-    --surface2: #f5f0ff;
-    --surface-elevated: #faf5ff;
-    --border: rgba(0, 0, 0, 0.06);
-    --border-bright: rgba(0, 0, 0, 0.12);
-    --text: #1e1b2e;
-    --text-dim: #6b6580;
+  .nav{position:sticky;top:0;z-index:100;backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);background:color-mix(in srgb,var(--bg) 72%,transparent);border-bottom:1px solid var(--border)}
+  .nav-inner{max-width:1020px;margin:0 auto;padding:12px 24px;display:flex;align-items:center;gap:14px}
+  .nav-brand{font-weight:800;font-size:14px;letter-spacing:-0.01em;color:var(--text);text-decoration:none}
+  .nav-brand .dot{color:var(--primary)}
+  .nav-spacer{flex:1}
+  .nav a.go{font-size:13px;font-weight:600;color:var(--primary);text-decoration:none}
+  .nav a.go:hover{text-decoration:underline}
+  .crumbs{font-size:13px;font-weight:600;color:var(--text-dim);display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+  .crumbs a{color:var(--primary);text-decoration:none}
+  .crumbs a:hover{text-decoration:underline}
+  .crumbs .sep{color:var(--text-faint)}
+  .crumbs .current{color:var(--text-dim);font-weight:400}
+  .crumbs-top{max-width:1020px;margin:0 auto;padding:0 24px 6px}
 
-    --violet: #7c3aed;
-    --violet-dim: rgba(124, 58, 237, 0.07);
-    --indigo: #4f46e5;
-    --indigo-dim: rgba(79, 70, 229, 0.07);
-    --fuchsia: #c026d3;
-    --fuchsia-dim: rgba(192, 38, 211, 0.07);
-    --rose: #e11d48;
-    --rose-dim: rgba(225, 29, 72, 0.07);
-    --amber: #d97706;
-    --amber-dim: rgba(217, 119, 6, 0.07);
-    --emerald: #059669;
-    --emerald-dim: rgba(5, 150, 105, 0.07);
-    --teal: #0d9488;
-    --teal-dim: rgba(13, 148, 136, 0.07);
-    --blue: #2563eb;
-    --blue-dim: rgba(37, 99, 235, 0.07);
+  .container{max-width:1020px;margin:0 auto;padding:0 24px 80px}
+
+  .hero{text-align:center;padding:50px 0 40px;animation:fadeUp .6s ease-out}
+  .hero-badges{display:flex;gap:12px;justify-content:center;margin-bottom:22px;flex-wrap:wrap}
+  .hero-badge{display:inline-flex;align-items:center;gap:6px;padding:6px 16px;border-radius:999px;font-family:var(--font-mono);font-size:11px;font-weight:700;letter-spacing:.5px;text-transform:uppercase}
+  .hero-badge.praxis{background:var(--amber-dim);border:1px solid var(--amber);color:var(--amber)}
+  .hero-badge.thesis{background:var(--metric-dim);border:1px solid var(--metric);color:var(--metric)}
+  .hero h1{font-size:48px;font-weight:800;letter-spacing:-0.03em;line-height:1.05;margin-bottom:14px;
+    background:linear-gradient(135deg,var(--primary),var(--metric));-webkit-background-clip:text;background-clip:text;color:transparent}
+  .hero p{font-size:19px;color:var(--text-dim);max-width:660px;margin:0 auto}
+
+  .section{margin-bottom:44px;opacity:0;animation:fadeUp .5s ease-out forwards}
+  .section:nth-of-type(3){animation-delay:.1s}.section:nth-of-type(4){animation-delay:.2s}
+  .section:nth-of-type(5){animation-delay:.3s}.section:nth-of-type(6){animation-delay:.4s}
+  .section-title{font-family:var(--font-mono);font-size:12px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--text-faint);margin-bottom:16px}
+
+  /* mermaid */
+  .mermaid-wrap{position:relative;background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:28px;overflow:hidden}
+  .mermaid-inner{overflow:auto;cursor:grab;transform-origin:0 0}
+  .mermaid-inner:active{cursor:grabbing}
+  .zoom-controls{position:absolute;top:14px;right:14px;display:flex;gap:4px;z-index:10}
+  .zoom-btn{width:32px;height:32px;border-radius:9px;border:1px solid var(--border-bright);background:var(--surface);color:var(--text-dim);font-size:16px;cursor:pointer;display:flex;align-items:center;justify-content:center}
+  .zoom-btn:hover{background:var(--surface2);color:var(--text)}
+  .mermaid .nodeLabel{color:var(--text)!important}
+  .mermaid .edgeLabel{color:var(--text-dim)!important;background-color:var(--bg)!important}
+  .mermaid .edgeLabel rect{fill:var(--bg)!important}
+  .mermaid{font-family:var(--font-body)}
+
+  /* agent compare */
+  .agents-compare{display:grid;grid-template-columns:1fr 1fr;gap:20px}
+  .agent-detail{background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:28px;position:relative;overflow:hidden}
+  .agent-detail::before{content:'';position:absolute;top:0;left:0;right:0;height:4px}
+  .agent-detail.praxis::before{background:linear-gradient(90deg,var(--primary),var(--violet))}
+  .agent-detail.thesis::before{background:linear-gradient(90deg,var(--metric),var(--blue,var(--metric)))}
+  .agent-icon{width:54px;height:54px;border-radius:14px;display:flex;align-items:center;justify-content:center;font-size:26px;font-weight:800;margin-bottom:16px}
+  .agent-name{font-size:24px;font-weight:800;margin-bottom:4px;color:var(--text)}
+  .agent-version{font-family:var(--font-mono);font-size:12px;color:var(--text-dim);margin-bottom:12px}
+  .agent-purpose{font-size:16px;color:var(--text-dim);margin-bottom:20px;line-height:1.5}
+  .agent-features{display:flex;flex-direction:column;gap:9px}
+  .feature{display:flex;align-items:flex-start;gap:10px;font-size:14px;color:var(--text-dim)}
+  .feature-dot{width:7px;height:7px;border-radius:50%;margin-top:9px;flex-shrink:0}
+
+  /* rubric */
+  .rubric-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+  .rubric-cat{background:var(--surface);border:1px solid var(--border);border-radius:13px;padding:18px;text-align:center}
+  .rubric-cat.core{border-top:3px solid var(--violet)}
+  .rubric-cat.dynamic{border-top:3px solid var(--amber)}
+  .rubric-label{font-family:var(--font-mono);font-size:10px;font-weight:800;letter-spacing:.5px;text-transform:uppercase;margin-bottom:6px}
+  .rubric-name{font-size:15.5px;font-weight:800;margin-bottom:2px;color:var(--text)}
+  .rubric-desc{font-size:12px;color:var(--text-dim)}
+
+  /* vs */
+  .vs-card{background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:30px;display:grid;grid-template-columns:1fr auto 1fr;gap:24px;align-items:center}
+  .vs-side h3{font-size:18px;font-weight:800;margin-bottom:8px}
+  .vs-side p{font-size:14px;color:var(--text-dim);line-height:1.6}
+  .vs-divider{font-size:26px;font-weight:800;color:var(--text-faint);text-align:center}
+
+  .footer{text-align:center;margin-top:52px;padding-top:24px;border-top:1px solid var(--border);font-size:14px;color:var(--text-faint)}
+
+  @keyframes fadeUp{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:translateY(0)}}
+  @media(max-width:700px){
+    .container{padding:0 16px 60px}
+    .hero h1{font-size:34px}
+    .agents-compare{grid-template-columns:1fr}
+    .rubric-grid{grid-template-columns:1fr}
+    .vs-card{grid-template-columns:1fr}
+    .vs-divider{display:none}
+    .mermaid-wrap{padding:18px}
   }
-
-  
-
-  * { margin: 0; padding: 0; box-sizing: border-box; }
-
-  body {
-    background: var(--bg);
-    background-image:
-      radial-gradient(at 25% 15%, var(--violet-dim) 0%, transparent 50%),
-      radial-gradient(at 75% 85%, var(--fuchsia-dim) 0%, transparent 50%);
-    color: var(--text);
-    font-family: var(--font-body);
-    line-height: 1.7;
-    min-height: 100vh;
-    padding: 48px 24px 80px;
-  }
-
-  .container { max-width: 960px; margin: 0 auto; }
-
-  .hero {
-    text-align: center;
-    margin-bottom: 56px;
-    animation: fadeUp 0.6s ease-out;
-  }
-
-  .hero-badges {
-    display: flex;
-    gap: 12px;
-    justify-content: center;
-    margin-bottom: 24px;
-    flex-wrap: wrap;
-  }
-
-  .hero-badge {
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
-    padding: 6px 16px;
-    border-radius: 20px;
-    font-family: var(--font-mono);
-    font-size: 11px;
-    font-weight: 600;
-    letter-spacing: 0.5px;
-    text-transform: uppercase;
-  }
-
-  .hero-badge.praxis {
-    background: var(--amber-dim);
-    border: 1px solid var(--amber);
-    color: var(--amber);
-  }
-
-  .hero-badge.thesis {
-    background: var(--teal-dim);
-    border: 1px solid var(--teal);
-    color: var(--teal);
-  }
-
-  .hero h1 {
-    font-size: 48px;
-    font-weight: 800;
-    letter-spacing: -1px;
-    margin-bottom: 12px;
-    background: linear-gradient(135deg, var(--amber), var(--violet), var(--fuchsia));
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    background-clip: text;
-  }
-
-  .hero p {
-    font-size: 19px;
-    color: var(--text-dim);
-    max-width: 640px;
-    margin: 0 auto;
-  }
-
-  .section {
-    margin-bottom: 48px;
-    opacity: 0;
-    animation: fadeUp 0.5s ease-out forwards;
-  }
-
-  .section:nth-child(2) { animation-delay: 0.1s; }
-  .section:nth-child(3) { animation-delay: 0.2s; }
-  .section:nth-child(4) { animation-delay: 0.3s; }
-  .section:nth-child(5) { animation-delay: 0.4s; }
-  .section:nth-child(6) { animation-delay: 0.5s; }
-
-  .section-title {
-    font-family: var(--font-mono);
-    font-size: 12px;
-    font-weight: 600;
-    letter-spacing: 1px;
-    text-transform: uppercase;
-    color: var(--text-dim);
-    margin-bottom: 16px;
-  }
-
-  /* Mermaid */
-  .mermaid-wrap {
-    position: relative;
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: 14px;
-    padding: 28px;
-    overflow: hidden;
-  }
-
-  .mermaid-inner {
-    overflow: auto;
-    cursor: grab;
-    transform-origin: 0 0;
-  }
-
-  .mermaid-inner:active { cursor: grabbing; }
-
-  .zoom-controls {
-    position: absolute;
-    top: 12px;
-    right: 12px;
-    display: flex;
-    gap: 4px;
-    z-index: 10;
-  }
-
-  .zoom-btn {
-    width: 32px;
-    height: 32px;
-    border-radius: 8px;
-    border: 1px solid var(--border-bright);
-    background: var(--surface);
-    color: var(--text-dim);
-    font-size: 16px;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-  }
-
-  .zoom-btn:hover { background: var(--surface2); color: var(--text); }
-
-  .mermaid .nodeLabel { color: var(--text) !important; }
-  .mermaid .edgeLabel { color: var(--text-dim) !important; background-color: var(--bg) !important; }
-  .mermaid .edgeLabel rect { fill: var(--bg) !important; }
-
-  /* Agent comparison */
-  .agents-compare {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 20px;
-  }
-
-  @media (max-width: 700px) { .agents-compare { grid-template-columns: 1fr; } }
-
-  .agent-detail {
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: 14px;
-    padding: 28px;
-    position: relative;
-    overflow: hidden;
-  }
-
-  .agent-detail::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    height: 3px;
-  }
-
-  .agent-detail.praxis::before { background: linear-gradient(90deg, var(--amber), var(--violet)); }
-  .agent-detail.thesis::before { background: linear-gradient(90deg, var(--teal), var(--blue)); }
-
-  .agent-icon {
-    width: 52px;
-    height: 52px;
-    border-radius: 12px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 26px;
-    margin-bottom: 16px;
-  }
-
-  .agent-name {
-    font-size: 24px;
-    font-weight: 800;
-    margin-bottom: 4px;
-  }
-
-  .agent-version {
-    font-family: var(--font-mono);
-    font-size: 12px;
-    color: var(--text-dim);
-    margin-bottom: 12px;
-  }
-
-  .agent-purpose {
-    font-size: 16px;
-    color: var(--text-dim);
-    margin-bottom: 20px;
-    line-height: 1.5;
-  }
-
-  .agent-features {
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
-  }
-
-  .feature {
-    display: flex;
-    align-items: flex-start;
-    gap: 10px;
-    font-size: 14px;
-  }
-
-  .feature-dot {
-    width: 6px;
-    height: 6px;
-    border-radius: 50%;
-    margin-top: 8px;
-    flex-shrink: 0;
-  }
-
-  /* Rubric categories */
-  .rubric-grid {
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 12px;
-  }
-
-  @media (max-width: 600px) { .rubric-grid { grid-template-columns: 1fr; } }
-
-  .rubric-cat {
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: 10px;
-    padding: 16px;
-    text-align: center;
-    transition: transform 0.2s;
-  }
-
-  .rubric-cat:hover { transform: translateY(-2px); }
-
-  .rubric-cat.core { border-top: 3px solid var(--violet); }
-  .rubric-cat.dynamic { border-top: 3px solid var(--amber); }
-
-  .rubric-label {
-    font-family: var(--font-mono);
-    font-size: 10px;
-    font-weight: 600;
-    letter-spacing: 0.5px;
-    text-transform: uppercase;
-    margin-bottom: 6px;
-  }
-
-  .rubric-name {
-    font-size: 15px;
-    font-weight: 700;
-    margin-bottom: 2px;
-  }
-
-  .rubric-desc {
-    font-size: 12px;
-    color: var(--text-dim);
-  }
-
-  /* vs comparison */
-  .vs-card {
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: 14px;
-    padding: 28px;
-    display: grid;
-    grid-template-columns: 1fr auto 1fr;
-    gap: 24px;
-    align-items: center;
-  }
-
-  @media (max-width: 600px) {
-    .vs-card { grid-template-columns: 1fr; }
-    .vs-divider { display: none; }
-  }
-
-  .vs-side h3 {
-    font-size: 18px;
-    font-weight: 700;
-    margin-bottom: 8px;
-  }
-
-  .vs-side p {
-    font-size: 14px;
-    color: var(--text-dim);
-    line-height: 1.5;
-  }
-
-  .vs-divider {
-    font-size: 28px;
-    font-weight: 800;
-    color: var(--text-dim);
-    text-align: center;
-  }
-
-  .footer {
-    text-align: center;
-    margin-top: 60px;
-    padding-top: 24px;
-    border-top: 1px solid var(--border);
-    font-size: 14px;
-    color: var(--text-dim);
-  }
-
-  @keyframes fadeUp {
-    from { opacity: 0; transform: translateY(16px); }
-    to { opacity: 1; transform: translateY(0); }
-  }
-
-  @media (prefers-reduced-motion: reduce) {
-    .section, .hero { animation: none; opacity: 1; }
-  }
-.backlink{position:fixed;top:12px;left:16px;z-index:200;font-family:var(--font-mono,monospace);font-size:11px;color:var(--text-dim,#8b949e);text-decoration:none;padding:6px 10px;border:1px solid var(--border,rgba(255,255,255,0.08));border-radius:6px;background:var(--surface,#161b22);transition:color .15s,border-color .15s}.backlink:hover{color:var(--text,#e6edf3);border-color:var(--text-dim,#8b949e)}
+  @media(prefers-reduced-motion:reduce){.section,.hero{animation:none;opacity:1}}
 </style>
 </head>
 <body>
-<style>
-.crumbs-at-top{max-width:1100px;margin:0 auto;padding:14px 24px 0}
-.crumbs{font-family:var(--font-mono,monospace);font-size:13px;font-weight:600;display:flex;align-items:center;gap:8px;flex-wrap:wrap;min-width:0}
-.crumbs a{color:#e8621a;text-decoration:none}
-.crumbs a:hover,.crumbs a:focus-visible{text-decoration:underline;outline:none}
-.crumbs .sep{color:var(--text-dim)}
-.crumbs .current{color:var(--text-dim);font-weight:400}
-</style>
-<nav class="crumbs crumbs-at-top" aria-label="Breadcrumb">
-  <a href="../index.html">Index</a>
-  <span class="sep">/</span>
-  <a href="../aesop.html">AESOP</a>
-  <span class="sep">/</span>
-  <span class="current" aria-current="page">AESOP Transformation OS — Custom Rubric Evaluation</span>
+
+<nav class="nav" aria-label="Primary">
+  <div class="nav-inner">
+    <a class="nav-brand" href="../aesop.html">AESOP<span class="dot">.</span></a>
+    <div class="nav-spacer"></div>
+    <a class="go" href="../aesop.html">&larr; AESOP</a>
+  </div>
 </nav>
+<div class="crumbs crumbs-top" aria-label="Breadcrumb">
+  <a href="../index.html">Index</a><span class="sep">/</span>
+  <a href="../aesop.html">AESOP</a><span class="sep">/</span>
+  <span class="current" aria-current="page">Custom Rubric Evaluation</span>
+</div>
 
 <div class="container">
 
@@ -389,28 +139,28 @@
       <div class="hero-badge praxis">PRAXIS v1.4</div>
       <div class="hero-badge thesis">THESIS v1.0</div>
     </div>
-    <h1>AESOP Transformation OS — Custom Rubric Evaluation</h1>
+    <h1>AESOP Transformation OS &mdash; Custom Rubric Evaluation</h1>
     <p>Generate a tailored evaluation framework for any AI system, then transform it into executable test scenarios.</p>
   </div>
 
-  <!-- Why custom rubrics -->
-  <div class="section" style="animation-delay: 0.1s;">
+  <!-- Standard vs custom -->
+  <div class="section">
     <div class="section-title">Standard vs. Custom Evaluation</div>
     <div class="vs-card">
       <div class="vs-side">
-        <h3 style="color: var(--teal);">Standard AESOP</h3>
+        <h3 style="color:var(--metric)">Standard AESOP</h3>
         <p>Monolithic 4-agent pipeline. Fixed dimensions: Instructions, Ethos, Bias, Safety. Same rubric for every AI system. Great for general evaluation.</p>
       </div>
       <div class="vs-divider">vs</div>
       <div class="vs-side">
-        <h3 style="color: var(--violet);">PRAXIS + THESIS</h3>
+        <h3 style="color:var(--primary)">PRAXIS + THESIS</h3>
         <p>Custom rubric generated per system. Dynamic categories based on the AI's actual purpose. Tailored test scenarios that match the system's domain.</p>
       </div>
     </div>
   </div>
 
   <!-- Pipeline Flow -->
-  <div class="section" style="animation-delay: 0.2s;">
+  <div class="section">
     <div class="section-title">Pipeline Flow</div>
     <div class="mermaid-wrap">
       <div class="zoom-controls">
@@ -439,10 +189,10 @@ graph TD
   DECIDE -->|No| REVIEW["Review\nScenarios Only"]
   EXECUTE --> RESULTS["Test\nResults"]
 
-  classDef input fill:#7c3aed22,stroke:#7c3aed,stroke-width:2px
-  classDef praxis fill:#d9770622,stroke:#d97706,stroke-width:1.5px
-  classDef thesis fill:#0d948822,stroke:#0d9488,stroke-width:1.5px
-  classDef decision fill:#4f46e522,stroke:#4f46e5,stroke-width:1.5px
+  classDef input fill:#C64A1122,stroke:#C64A11,stroke-width:2px
+  classDef praxis fill:#A5650A22,stroke:#A5650A,stroke-width:1.5px
+  classDef thesis fill:#0E7C6622,stroke:#0E7C66,stroke-width:1.5px
+  classDef decision fill:#7C3AED22,stroke:#7C3AED,stroke-width:1.5px
   classDef exec fill:#05966922,stroke:#059669,stroke-width:2px
 
   class INPUT input
@@ -456,103 +206,49 @@ graph TD
   </div>
 
   <!-- Agent Details -->
-  <div class="section" style="animation-delay: 0.3s;">
+  <div class="section">
     <div class="section-title">Agent Profiles</div>
     <div class="agents-compare">
       <div class="agent-detail praxis">
-        <div class="agent-icon" style="background: var(--amber-dim); color: var(--amber);">&#9881;</div>
+        <div class="agent-icon" style="background:var(--primary-dim);color:var(--primary)">&#9881;</div>
         <div class="agent-name">PRAXIS</div>
-        <div class="agent-version">v1.4 — Custom Rubric Generator</div>
+        <div class="agent-version">v1.4 &mdash; Custom Rubric Generator</div>
         <div class="agent-purpose">Analyzes AI system instructions and generates a tailored evaluation rubric with weighted scoring categories.</div>
         <div class="agent-features">
-          <div class="feature">
-            <div class="feature-dot" style="background: var(--amber);"></div>
-            <span>3 core categories always included (Safety, Core Function, Structure)</span>
-          </div>
-          <div class="feature">
-            <div class="feature-dot" style="background: var(--amber);"></div>
-            <span>Up to 4 dynamic categories based on the system's purpose</span>
-          </div>
-          <div class="feature">
-            <div class="feature-dot" style="background: var(--amber);"></div>
-            <span>Confidence scoring and gap analysis</span>
-          </div>
-          <div class="feature">
-            <div class="feature-dot" style="background: var(--amber);"></div>
-            <span>Comprehensive safety_framework with universal tests</span>
-          </div>
-          <div class="feature">
-            <div class="feature-dot" style="background: var(--amber);"></div>
-            <span>Outputs markdown analysis + JSON rubric</span>
-          </div>
+          <div class="feature"><div class="feature-dot" style="background:var(--primary)"></div><span>3 core categories always included (Safety, Core Function, Structure)</span></div>
+          <div class="feature"><div class="feature-dot" style="background:var(--primary)"></div><span>Up to 4 dynamic categories based on the system's purpose</span></div>
+          <div class="feature"><div class="feature-dot" style="background:var(--primary)"></div><span>Confidence scoring and gap analysis</span></div>
+          <div class="feature"><div class="feature-dot" style="background:var(--primary)"></div><span>Comprehensive safety_framework with universal tests</span></div>
+          <div class="feature"><div class="feature-dot" style="background:var(--primary)"></div><span>Outputs markdown analysis + JSON rubric</span></div>
         </div>
       </div>
 
       <div class="agent-detail thesis">
-        <div class="agent-icon" style="background: var(--teal-dim); color: var(--teal);">T</div>
+        <div class="agent-icon" style="background:var(--metric-dim);color:var(--metric)">T</div>
         <div class="agent-name">THESIS</div>
-        <div class="agent-version">v1.0 — Scenario Generator</div>
+        <div class="agent-version">v1.0 &mdash; Scenario Generator</div>
         <div class="agent-purpose">Transforms PRAXIS rubrics into comprehensive test scenarios with realistic personas and conversation starters.</div>
         <div class="agent-features">
-          <div class="feature">
-            <div class="feature-dot" style="background: var(--teal);"></div>
-            <span>Scenario count weighted by rubric category priorities</span>
-          </div>
-          <div class="feature">
-            <div class="feature-dot" style="background: var(--teal);"></div>
-            <span>Realistic personas with clear testing objectives</span>
-          </div>
-          <div class="feature">
-            <div class="feature-dot" style="background: var(--teal);"></div>
-            <span>Universal safety tests always included</span>
-          </div>
-          <div class="feature">
-            <div class="feature-dot" style="background: var(--teal);"></div>
-            <span>Both cooperative and adversarial persona types</span>
-          </div>
-          <div class="feature">
-            <div class="feature-dot" style="background: var(--teal);"></div>
-            <span>JSON output compatible with Cave of Shadows format</span>
-          </div>
+          <div class="feature"><div class="feature-dot" style="background:var(--metric)"></div><span>Scenario count weighted by rubric category priorities</span></div>
+          <div class="feature"><div class="feature-dot" style="background:var(--metric)"></div><span>Realistic personas with clear testing objectives</span></div>
+          <div class="feature"><div class="feature-dot" style="background:var(--metric)"></div><span>Universal safety tests always included</span></div>
+          <div class="feature"><div class="feature-dot" style="background:var(--metric)"></div><span>Both cooperative and adversarial persona types</span></div>
+          <div class="feature"><div class="feature-dot" style="background:var(--metric)"></div><span>JSON output compatible with Cave of Shadows format</span></div>
         </div>
       </div>
     </div>
   </div>
 
   <!-- PRAXIS Rubric Categories -->
-  <div class="section" style="animation-delay: 0.4s;">
+  <div class="section">
     <div class="section-title">PRAXIS Rubric Framework</div>
     <div class="rubric-grid">
-      <div class="rubric-cat core">
-        <div class="rubric-label" style="color: var(--violet);">Core</div>
-        <div class="rubric-name">Safety &amp; Boundaries</div>
-        <div class="rubric-desc">Always included</div>
-      </div>
-      <div class="rubric-cat core">
-        <div class="rubric-label" style="color: var(--violet);">Core</div>
-        <div class="rubric-name">Core Functionality</div>
-        <div class="rubric-desc">Always included</div>
-      </div>
-      <div class="rubric-cat core">
-        <div class="rubric-label" style="color: var(--violet);">Core</div>
-        <div class="rubric-name">Structural Integrity</div>
-        <div class="rubric-desc">Always included</div>
-      </div>
-      <div class="rubric-cat dynamic">
-        <div class="rubric-label" style="color: var(--amber);">Dynamic</div>
-        <div class="rubric-name">Domain-Specific</div>
-        <div class="rubric-desc">Based on AI purpose</div>
-      </div>
-      <div class="rubric-cat dynamic">
-        <div class="rubric-label" style="color: var(--amber);">Dynamic</div>
-        <div class="rubric-name">Interaction Quality</div>
-        <div class="rubric-desc">If user-facing</div>
-      </div>
-      <div class="rubric-cat dynamic">
-        <div class="rubric-label" style="color: var(--amber);">Dynamic</div>
-        <div class="rubric-name">+ Up to 2 More</div>
-        <div class="rubric-desc">Context-dependent</div>
-      </div>
+      <div class="rubric-cat core"><div class="rubric-label" style="color:var(--violet)">Core</div><div class="rubric-name">Safety &amp; Boundaries</div><div class="rubric-desc">Always included</div></div>
+      <div class="rubric-cat core"><div class="rubric-label" style="color:var(--violet)">Core</div><div class="rubric-name">Core Functionality</div><div class="rubric-desc">Always included</div></div>
+      <div class="rubric-cat core"><div class="rubric-label" style="color:var(--violet)">Core</div><div class="rubric-name">Structural Integrity</div><div class="rubric-desc">Always included</div></div>
+      <div class="rubric-cat dynamic"><div class="rubric-label" style="color:var(--amber)">Dynamic</div><div class="rubric-name">Domain-Specific</div><div class="rubric-desc">Based on AI purpose</div></div>
+      <div class="rubric-cat dynamic"><div class="rubric-label" style="color:var(--amber)">Dynamic</div><div class="rubric-name">Interaction Quality</div><div class="rubric-desc">If user-facing</div></div>
+      <div class="rubric-cat dynamic"><div class="rubric-label" style="color:var(--amber)">Dynamic</div><div class="rubric-name">+ Up to 2 More</div><div class="rubric-desc">Context-dependent</div></div>
     </div>
   </div>
 
@@ -564,22 +260,21 @@ graph TD
 
 <script type="module">
   import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs';
-  const isDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
   mermaid.initialize({
     startOnLoad: true,
     theme: 'base',
     look: 'classic',
     themeVariables: {
-      primaryColor: isDark ? '#271f3d' : '#f5f0ff',
-      primaryBorderColor: isDark ? '#a78bfa' : '#7c3aed',
-      primaryTextColor: isDark ? '#ede5ff' : '#1e1b2e',
-      secondaryColor: isDark ? '#1a2218' : '#f0fdf4',
-      secondaryBorderColor: isDark ? '#34d399' : '#059669',
-      tertiaryColor: isDark ? '#27201a' : '#fffbeb',
-      tertiaryBorderColor: isDark ? '#fbbf24' : '#d97706',
-      lineColor: isDark ? '#6b6580' : '#a8a29e',
+      primaryColor: '#FFFFFF',
+      primaryBorderColor: '#C64A11',
+      primaryTextColor: '#241A12',
+      secondaryColor: '#F1FDF7',
+      secondaryBorderColor: '#0E7C66',
+      tertiaryColor: '#FEF4E4',
+      tertiaryBorderColor: '#A5650A',
+      lineColor: '#9A8173',
       fontSize: '14px',
-      fontFamily: "'Fraunces', Georgia, serif",
+      fontFamily: "'Mulish', Georgia, serif",
     }
   });
 

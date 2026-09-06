@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" class="light">
 <head>
 <meta charset="UTF-8">
 <link rel="icon" type="image/svg+xml" href="../icon.svg">
@@ -8,394 +8,378 @@
 <meta name="description" content="The executive intake pipeline: a 19-field form to a founder-ready roadmap through four stages, with the prompt engine, confidence scoring, and provenance shown at each injection point.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Public+Sans:wght@400;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Mulish:ital,wght@0,300;0,400;0,600;0,700;0,800;1,400&display=swap" rel="stylesheet">
 <style>
-  :root {
-    --font-display: 'Instrument Serif', Georgia, serif;
-    --font-body: 'Public Sans', system-ui, sans-serif;
-    --font-mono: 'JetBrains Mono', 'SF Mono', monospace;
-    /* Gulf Stream Racing on a Ledger sheet — light only */
-    --ink: #0a1628; --graphite: #2e4d73; --body: #3d5a7a; --muted: #7a9ab8;
-    --rule: #c6d5e6; --row: #dbe5f0; --sheet: #eef4f9; --desk: #e4ecf4;
-    --spine: #0a1628; --spine-fg: #eef4f9;
-    --accent: #e8621a; --amber: #b45309; --blue: #2f6fa8; --teal: #0f766e; --violet: #7c3aed; --rose: #c23a30;
-    /* stage cues */
-    --st1: var(--blue); --st2: var(--teal); --st3: var(--amber); --st4: var(--violet);
-  }
-  * { margin: 0; padding: 0; box-sizing: border-box; }
-  body { background: var(--desk); color: var(--body); font-family: var(--font-body); font-size: 16.5px; line-height: 1.6; -webkit-font-smoothing: antialiased; text-rendering: optimizeLegibility; }
-  .topbar { max-width: 1180px; margin: 0 auto; padding: 18px 28px 6px; }
-  .backlink a { font-size: 14px; color: var(--muted); text-decoration: none; }
-  .backlink a:hover { color: var(--ink); }
-  .backlink .arr { color: var(--accent); font-size: 15px; margin-right: 2px; }
+  :root{--font-body:'Mulish','Segoe UI',Helvetica,sans-serif;--font-mono:'Mulish',ui-monospace,'SF Mono',Consolas,monospace;
+    --bg:#14181C;--surface:#1B2127;--surface2:#232B33;--border:#303A43;--border-bright:#42505C;
+    --text:#F4F5F6;--text-dim:#CBD0D6;--text-faint:#87919B;
+    --primary:#F58A4E;--primary-dim:rgba(245,138,78,0.12);--metric:#45C7A6;--metric-dim:rgba(69,199,166,0.12);
+    /* semantic tokens */
+    --blue:#6CACE4;--blue-dim:rgba(108,172,228,0.12);
+    --amber:#E8B54D;--amber-dim:rgba(232,181,77,0.12);
+    --rose:#E88280;--rose-dim:rgba(232,130,128,0.12);
+    --violet:#B9A0E8;--violet-dim:rgba(185,160,232,0.12);
+    --st1:var(--blue);--st2:var(--metric);--st3:var(--amber);--st4:var(--violet);}
+  html.light{--bg:#F7F3EF;--surface:#FFFFFF;--surface2:#F0E9E1;--border:#E1D6CB;--border-bright:#CDBBA8;
+    --text:#241A12;--text-dim:#574A3C;--text-faint:#8C7E6E;
+    --primary:#C64A11;--primary-dim:rgba(198,74,17,0.10);--metric:#0E7C66;--metric-dim:rgba(14,124,102,0.10);
+    --blue:#2F6FA8;--blue-dim:rgba(47,111,168,0.10);
+    --amber:#A5650A;--amber-dim:rgba(165,101,10,0.10);
+    --rose:#C23A30;--rose-dim:rgba(194,58,48,0.10);
+    --violet:#7C3AED;--violet-dim:rgba(124,58,237,0.08);}
+  *{margin:0;padding:0;box-sizing:border-box}
+  html{scroll-behavior:smooth}
+  body{background:
+      radial-gradient(at 10% 0%,var(--primary-dim),transparent 55%),
+      radial-gradient(at 90% 80%,var(--metric-dim),transparent 55%),
+      var(--bg);
+    color:var(--text);font-family:var(--font-body);font-size:16.5px;line-height:1.6;-webkit-font-smoothing:antialiased;min-height:100vh}
 
-  .sheet { max-width: 1180px; margin: 6px auto 72px; background: var(--sheet); display: grid; grid-template-columns: 56px 1fr; }
-  .spine { background: var(--spine); display: flex; align-items: flex-end; justify-content: center; padding: 26px 0; }
-  .spine-label { writing-mode: vertical-rl; transform: rotate(180deg); font-family: var(--font-mono); font-size: 13px; letter-spacing: 0.22em; color: var(--spine-fg); white-space: nowrap; text-transform: uppercase; }
-  .content { padding: 46px 60px 6px; min-width: 0; }
+  .nav{position:sticky;top:0;z-index:50;backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);background:color-mix(in srgb,var(--bg) 72%,transparent);border-bottom:1px solid var(--border)}
+  .nav-inner{max-width:1080px;margin:0 auto;padding:12px 24px;display:flex;align-items:center;gap:14px}
+  .nav-brand{font-weight:800;font-size:14px;letter-spacing:-0.01em;color:var(--text);text-decoration:none}
+  .nav-brand .dot{color:var(--primary)}
+  .nav-spacer{flex:1}
+  .nav a.go{font-size:13px;font-weight:600;color:var(--primary);text-decoration:none}
+  .nav a.go:hover{text-decoration:underline}
+  .crumbs{font-size:13px;font-weight:600;color:var(--text-dim);display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+  .crumbs a{color:var(--primary);text-decoration:none}
+  .crumbs a:hover{text-decoration:underline}
+  .crumbs .sep{color:var(--text-faint)}
+  .crumbs .current{color:var(--text-dim);font-weight:400}
+  .crumbs-top{max-width:1080px;margin:0 auto;padding:0 24px 6px}
 
-  .masthead { border-bottom: 3px solid var(--ink); padding-bottom: 14px; }
-  .masthead h1 { font-family: var(--font-display); font-weight: 400; font-size: 48px; line-height: 0.97; letter-spacing: -0.028em; color: var(--ink); max-width: 900px; }
-  .lede { font-family: var(--font-display); font-style: italic; font-size: 18px; line-height: 1.45; color: var(--graphite); max-width: 860px; margin: 13px 0 8px; }
-  .route { margin: 4px 0 18px; font-family: var(--font-mono); font-size: 12px; line-height: 2; color: var(--muted); }
-  .route b { color: var(--accent); font-weight: 600; }
+  .wrap{max-width:1080px;margin:0 auto;padding:0 24px 80px}
 
-  .kpis { display: grid; grid-template-columns: repeat(4, 1fr); gap: 0 36px; border-top: 1px solid var(--row); border-bottom: 3px solid var(--ink); }
-  .kpi { padding: 15px 2px 13px; }
-  .kpi .k-v { font-family: var(--font-display); font-size: 36px; line-height: 0.9; }
-  .kpi:nth-child(1) .k-v { color: var(--blue); } .kpi:nth-child(2) .k-v { color: var(--amber); }
-  .kpi:nth-child(3) .k-v { color: var(--teal); } .kpi:nth-child(4) .k-v { color: var(--violet); }
-  .kpi .k-l { font-family: var(--font-mono); font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.12em; color: var(--muted); margin-top: 5px; }
+  .hero{padding:44px 0 20px}
+  .hero .kicker{font-size:12px;font-weight:700;letter-spacing:0.16em;text-transform:uppercase;color:var(--primary);margin-bottom:12px}
+  .hero h1{font-size:44px;line-height:1.03;letter-spacing:-0.03em;font-weight:800;max-width:920px;
+    background:linear-gradient(135deg,var(--primary),var(--metric));-webkit-background-clip:text;background-clip:text;color:transparent}
+  .hero .lede{font-size:17px;line-height:1.5;color:var(--text-dim);max-width:860px;margin-top:12px}
 
-  section.sec { border-top: 3px solid var(--ink); padding: 20px 0 2px; }
-  .sec-title { display: grid; grid-template-columns: 80px 1fr; gap: 0 22px; align-items: baseline; margin-bottom: 6px; }
-  .sec-title .n { font-family: var(--font-display); font-size: 28px; line-height: 0.9; color: var(--accent); }
-  .sec-title h2 { font-size: 22px; font-weight: 700; letter-spacing: -0.012em; color: var(--ink); }
-  .sec-body { padding: 0 0 8px 102px; }
-  .sec-body p.lead { max-width: 860px; margin-bottom: 12px; }
-  .sec-body p.lead em, .sec-body em { color: var(--ink); }
-  .sec-body b, .sec-body strong { color: var(--ink); }
-  code { font-family: var(--font-mono); font-size: 0.84em; color: var(--accent); }
-  .seccap { font-family: var(--font-mono); font-size: 10.5px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.12em; color: var(--muted); margin: 14px 0 2px; }
+  .kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:0 36px;background:var(--surface);border:1px solid var(--border);border-radius:16px;margin-top:20px;overflow:hidden}
+  .kpi{padding:17px 24px;border-right:1px solid var(--border)}
+  .kpi:last-child{border-right:none}
+  .kpi .k-v{font-size:38px;line-height:0.9;font-weight:800}
+  .kpi:nth-child(1) .k-v{color:var(--blue)}.kpi:nth-child(2) .k-v{color:var(--amber)}
+  .kpi:nth-child(3) .k-v{color:var(--metric)}.kpi:nth-child(4) .k-v{color:var(--violet)}
+  .kpi .k-l{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.1em;color:var(--text-faint);margin-top:6px}
+
+  .sec{margin-top:26px;background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:26px 30px}
+  .sec-head{display:flex;align-items:baseline;gap:14px;border-bottom:1px solid var(--border);padding-bottom:12px;margin-bottom:8px}
+  .sec-num{font-size:23px;font-weight:800;color:var(--primary);font-family:var(--font-mono)}
+  .sec-title{font-size:22px;font-weight:800;color:var(--text);letter-spacing:-0.01em}
+  .sec-lead{max-width:860px;margin:4px 0 12px;color:var(--text-dim)}
+  .sec-lead em,.sec-body em{color:var(--text);font-style:italic}
+  .sec-body b,.sec-body strong{color:var(--text)}
+  code{font-family:var(--font-mono);font-size:0.85em;color:var(--primary)}
+  .lbl{font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:0.12em;margin:20px 0 8px;color:var(--text-faint)}
+  .lbl.l-st2{color:var(--metric)}.lbl.l-st3{color:var(--amber)}.lbl.l-st4{color:var(--violet)}
 
   /* stage rows */
-  .srow { display: grid; grid-template-columns: 210px 1fr 120px; gap: 4px 22px; align-items: baseline; border-top: 1px solid var(--row); padding: 11px 0; }
-  .srow:first-child { border-top: none; }
-  .srow .so-n { font-family: var(--font-mono); font-size: 10.5px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em; }
-  .srow .so-t { font-weight: 700; color: var(--ink); font-size: 16px; }
-  .srow .so-t .d { display: block; font-weight: 400; color: var(--body); font-size: 13.5px; line-height: 1.5; margin-top: 2px; }
-  .srow .so-f { font-family: var(--font-mono); font-size: 10.5px; color: var(--muted); text-align: right; }
-  .srow.s1 .so-n { color: var(--st1); } .srow.s2 .so-n { color: var(--st2); }
-  .srow.s3 .so-n { color: var(--st3); } .srow.s4 .so-n { color: var(--st4); }
+  .srow{display:grid;grid-template-columns:210px 1fr 150px;gap:4px 22px;align-items:baseline;border-top:1px solid var(--border);padding:13px 0}
+  .srow:first-child{border-top:none}
+  .srow .so-n{font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:0.1em;font-family:var(--font-mono)}
+  .srow.s1 .so-n{color:var(--blue)}.srow.s2 .so-n{color:var(--metric)}
+  .srow.s3 .so-n{color:var(--amber)}.srow.s4 .so-n{color:var(--violet)}
+  .srow .so-t{font-weight:800;color:var(--text);font-size:16px}
+  .srow .so-t .d{display:block;font-weight:400;color:var(--text-dim);font-size:13.5px;line-height:1.5;margin-top:2px}
+  .srow .so-f{font-family:var(--font-mono);font-size:11px;color:var(--text-faint);text-align:right;white-space:nowrap}
 
-  .sub { display: grid; grid-template-columns: 220px 1fr; gap: 4px 24px; align-items: baseline; border-top: 1px solid var(--row); padding: 9px 0; }
-  .sub:first-of-type { border-top: none; }
-  .sub .su-l { font-weight: 700; color: var(--ink); font-size: 14.5px; }
-  .sub .su-l .m { display: block; font-family: var(--font-mono); font-size: 10px; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 2px; }
-  .sub .su-b { font-size: 13.5px; line-height: 1.55; }
-  .sub .su-b b { color: var(--ink); }
-  .sub .su-b code { font-size: 0.9em; }
+  .sub{display:grid;grid-template-columns:230px 1fr;gap:4px 24px;align-items:baseline;border-top:1px solid var(--border);padding:10px 0}
+  .sub:first-of-type{border-top:none}
+  .sub .su-l{font-weight:800;color:var(--text);font-size:14.5px}
+  .sub .su-l .m{display:block;font-family:var(--font-mono);font-size:10px;font-weight:700;color:var(--text-faint);text-transform:uppercase;letter-spacing:0.06em;margin-bottom:2px}
+  .sub .su-b{font-size:13.5px;line-height:1.6;color:var(--text-dim)}
 
-  /* 2col and 3col grids of ruled cells */
-  .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 0 36px; margin-top: 6px; }
-  .grid3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 0 30px; margin-top: 6px; }
-  .cell { border-top: 2px solid var(--ink); padding-top: 9px; }
-  .cell.c-st1 { border-top-color: var(--st1); } .cell.c-st2 { border-top-color: var(--st2); }
-  .cell.c-st3 { border-top-color: var(--st3); } .cell.c-st4 { border-top-color: var(--st4); }
-  .cell .c-t { font-weight: 700; color: var(--ink); font-size: 15px; margin-bottom: 4px; }
-  .cell .c-b { font-size: 13px; line-height: 1.55; }
-  .cell .c-b code { font-size: 0.9em; }
-  .cell .c-b b { color: var(--ink); }
-  .cell ul { list-style: none; }
-  .cell li { font-size: 13px; line-height: 1.5; padding: 2px 0 2px 12px; position: relative; }
-  .cell li::before { content: ''; position: absolute; left: 2px; top: 0.66em; width: 4px; height: 4px; background: var(--row); }
+  .grid2{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:8px}
+  .grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-top:8px}
+  .cell{border:1px solid var(--border);border-top:3px solid var(--border-bright);border-radius:12px;padding:18px 20px;background:var(--surface2)}
+  .cell .c-t{font-weight:800;color:var(--text);font-size:15px;margin-bottom:7px}
+  .cell .c-b{font-size:13px;line-height:1.6;color:var(--text-dim)}
+  .cell .c-b code{font-size:0.92em}
+  .cell .c-b b{color:var(--text)}
+  .cell .c-b em{color:var(--text);font-style:italic}
+  .cell ul{list-style:none}
+  .cell li{font-size:13px;line-height:1.55;color:var(--text-dim);padding:2px 0}
 
-  .callout { border-top: 1px solid var(--rule); border-bottom: 1px solid var(--row); padding: 12px 0 13px; margin-top: 6px; }
-  .callout .c-l { font-family: var(--font-mono); font-size: 10.5px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.12em; color: var(--amber); margin-bottom: 4px; }
-  .callout p { font-size: 14px; line-height: 1.6; }
-  .callout p b { color: var(--ink); }
+  .callout{border:1px solid var(--border);border-left:3px solid var(--amber);background:var(--amber-dim);border-radius:12px;padding:18px 22px;margin-top:4px}
+  .callout .c-l{font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:0.12em;color:var(--amber);margin-bottom:6px}
+  .callout p{font-size:14px;line-height:1.6;color:var(--text-dim)}
+  .callout p b{color:var(--text)}
 
-  .banned { border-top: 1px solid var(--row); padding-top: 8px; margin-top: 4px; font-family: var(--font-mono); font-size: 12.5px; line-height: 1.9; }
-  .banned span { color: var(--rose); }
-  .banned .sep { color: var(--rule); }
-  .lbl { font-family: var(--font-mono); font-size: 10.5px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em; margin: 16px 0 6px; }
-  .lbl.b-st1 { color: var(--st1); } .lbl.b-st2 { color: var(--st2); } .lbl.b-st3 { color: var(--st3); } .lbl.b-st4 { color: var(--st4); }
+  .banned{border:1px solid var(--border);border-radius:10px;padding:14px 18px;margin-top:4px;font-family:var(--font-mono);font-size:13px;line-height:2;background:var(--surface2)}
+  .banned span{color:var(--rose)}
+  .banned .sep{color:var(--text-faint)}
 
   /* validation loop */
-  .vloop { display: grid; grid-template-columns: repeat(6, 1fr); gap: 0 12px; margin-top: 4px; }
-  .vs { border-top: 2px solid var(--rule); padding-top: 8px; }
-  .vs.ok { border-top-color: var(--st3); } .vs.fail { border-top-color: var(--rose); } .vs.retry { border-top-color: var(--amber); }
-  .vs .v-k { font-family: var(--font-mono); font-size: 10.5px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; }
-  .vs.ok .v-k { color: var(--amber); } .vs.fail .v-k { color: var(--rose); } .vs.retry .v-k { color: var(--accent); }
-  .vs .v-b { font-size: 11.5px; line-height: 1.45; margin-top: 2px; }
-  .vs .v-arr { font-family: var(--font-mono); font-size: 12px; color: var(--rule); }
+  .vloop{display:grid;grid-template-columns:repeat(6,1fr);gap:14px;margin-top:4px}
+  .vs{border:1px solid var(--border);border-top:3px solid var(--border-bright);border-radius:10px;padding:12px 14px;background:var(--surface2)}
+  .vs.ok{border-top-color:var(--amber)}.vs.fail{border-top-color:var(--rose)}.vs.retry{border-top-color:var(--amber)}
+  .vs.good{border-top-color:var(--metric)}
+  .vs .v-k{font-size:10.5px;font-weight:800;text-transform:uppercase;letter-spacing:0.05em;font-family:var(--font-mono)}
+  .vs.ok .v-k{color:var(--amber)}.vs.fail .v-k{color:var(--rose)}.vs.retry .v-k{color:var(--primary)}.vs.good .v-k{color:var(--metric)}
+  .vs .v-b{font-size:12px;line-height:1.5;margin-top:4px;color:var(--text-dim)}
 
   /* rules grid */
-  .rules { display: grid; grid-template-columns: repeat(3, 1fr); gap: 0 30px; margin-top: 4px; }
-  .rules .rul { border-top: 1px solid var(--row); padding-top: 7px; }
-  .rules .rul .r-k { font-weight: 700; color: var(--ink); font-size: 13.5px; margin-bottom: 3px; }
-  .rules .rul .r-b { font-size: 12px; line-height: 1.5; }
-  .rules .rul .r-b code { font-size: 0.9em; }
+  .rules{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-top:4px}
+  .rules .rul{border:1px solid var(--border);border-top:3px solid var(--border-bright);border-radius:10px;padding:14px 18px;background:var(--surface2)}
+  .rules .rul .r-k{font-weight:800;color:var(--text);font-size:14px;margin-bottom:6px}
+  .rules .rul .r-b{font-size:12.5px;line-height:1.6;color:var(--text-dim)}
+  .rules .rul .r-b b{color:var(--text)}
 
-  .manifest { display: grid; grid-template-columns: 1fr 1fr; gap: 0 30px; margin-top: 4px; }
-  .mani { border-top: 1px solid var(--row); padding-top: 7px; font-family: var(--font-mono); font-size: 11px; line-height: 1.5; }
-  .mani .m-k { font-weight: 700; color: var(--ink); display: block; margin-bottom: 2px; text-transform: uppercase; font-size: 10px; letter-spacing: 0.06em; }
+  .manifest{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:4px}
+  .mani{border:1px solid var(--border);border-radius:10px;padding:13px 16px;font-family:var(--font-mono);font-size:12px;line-height:1.6;color:var(--text-dim);background:var(--surface2)}
+  .mani .m-k{font-weight:800;color:var(--text);display:block;margin-bottom:3px;text-transform:uppercase;font-size:10.5px;letter-spacing:0.08em}
 
-  .kbs { display: grid; grid-template-columns: repeat(2, 1fr); gap: 0 30px; margin-top: 4px; }
-  .kb { border-top: 1px solid var(--row); padding-top: 7px; }
-  .kb .k-n { font-family: var(--font-mono); font-size: 11.5px; font-weight: 600; color: var(--amber); }
-  .kb .k-d { font-size: 12.5px; line-height: 1.5; }
+  .kbs{display:grid;grid-template-columns:repeat(2,1fr);gap:0 30px;margin-top:4px}
+  .kb{border-top:1px solid var(--border);padding:11px 0}
+  .kb .k-n{font-family:var(--font-mono);font-size:12.5px;font-weight:700;color:var(--primary)}
+  .kb .k-d{font-size:13px;line-height:1.55;color:var(--text-dim);margin-top:2px}
 
-  .rigor { border-top: 1px solid var(--row); padding: 10px 0; display: grid; grid-template-columns: 46px 1fr; gap: 0 18px; align-items: baseline; }
-  .rigor:first-of-type { border-top: none; }
-  .rigor .r-no { font-family: var(--font-display); font-size: 24px; color: var(--violet); }
-  .rigor .r-t { font-weight: 700; color: var(--ink); font-size: 15.5px; margin-bottom: 2px; }
-  .rigor .r-b { font-size: 13.5px; line-height: 1.55; }
+  .rigor{border-left:3px solid var(--border-bright);padding:12px 0 12px 18px;margin-top:14px}
+  .rigor:first-of-type{margin-top:2px}
+  .rigor .r-no{font-size:24px;font-weight:800;color:var(--violet);font-family:var(--font-mono);margin-bottom:2px}
+  .rigor .r-t{font-weight:800;color:var(--text);font-size:15.5px;margin-bottom:2px}
+  .rigor .r-b{font-size:13.5px;line-height:1.6;color:var(--text-dim)}
 
-  .close { margin: 20px 0 2px; padding-top: 14px; border-top: 1px solid var(--rule); font-size: 15.5px; line-height: 1.6; color: var(--body); max-width: 880px; }
-  .close b { color: var(--ink); }
-  .footer { border-top: 3px solid var(--ink); margin: 24px 0 0; padding: 18px 0 30px; display: flex; justify-content: space-between; gap: 20px; flex-wrap: wrap; font-family: var(--font-mono); font-size: 11.5px; color: var(--muted); }
-  .footer a { color: var(--accent); text-decoration: none; }
+  .close{margin-top:22px;padding:16px 18px;border-left:3px solid var(--primary);background:var(--primary-dim);border-radius:0 10px 10px 0;font-size:15px;line-height:1.6;color:var(--text-dim)}
+  .close b{color:var(--text)}
 
-  @media (max-width: 920px) {
-    .sheet { grid-template-columns: 40px 1fr; }
-    .spine-label { font-size: 11px; }
-    .content { padding: 30px 22px 4px; }
-    .masthead h1 { font-size: 38px; }
-    .kpis { grid-template-columns: 1fr 1fr; gap: 0 18px; }
-    .srow { grid-template-columns: 1fr; gap: 2px; }
-    .srow .so-f { text-align: left; }
-    .sub { grid-template-columns: 1fr; gap: 2px; }
-    .grid2, .grid3, .rules, .manifest, .kbs { grid-template-columns: 1fr; gap: 14px; }
-    .vloop { grid-template-columns: 1fr 1fr; gap: 12px; }
-    .sec-title { grid-template-columns: 48px 1fr; }
-    .sec-title .n { font-size: 24px; }
-    .sec-body { padding-left: 0; }
-    body { font-size: 15.5px; }
+  .footer{margin-top:30px;border-top:1px solid var(--border);padding:18px 0 0;display:flex;justify-content:space-between;gap:20px;flex-wrap:wrap;font-family:var(--font-mono);font-size:12px;color:var(--text-faint)}
+  .footer a{color:var(--primary);text-decoration:none}
+  .footer a:hover{text-decoration:underline}
+
+  @media(max-width:920px){
+    .wrap{padding:0 16px 60px}
+    .hero h1{font-size:32px}
+    .sec{padding:20px 18px}
+    .kpis{grid-template-columns:1fr 1fr;gap:0 18px}
+    .kpi{border-right:none;border-bottom:1px solid var(--border)}
+    .srow{grid-template-columns:1fr;gap:3px}
+    .srow .so-f{text-align:left}
+    .sub{grid-template-columns:1fr;gap:3px}
+    .grid2,.grid3,.rules,.manifest,.kbs{grid-template-columns:1fr;gap:12px}
+    .vloop{grid-template-columns:1fr 1fr;gap:12px}
+    body{font-size:15.5px}
   }
+  @media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
 </style>
 </head>
 <body>
-<style>
-.crumbs-at-top{max-width:1100px;margin:0 auto;padding:14px 24px 0}
-.crumbs{font-family:var(--font-mono,monospace);font-size:13px;font-weight:600;display:flex;align-items:center;gap:8px;flex-wrap:wrap;min-width:0}
-.crumbs a{color:var(--accent);text-decoration:none}
-.crumbs a:hover,.crumbs a:focus-visible{text-decoration:underline;outline:none}
-.crumbs .sep{color:var(--muted)}
-.crumbs .current{color:var(--muted);font-weight:400}
-</style>
-<nav class="crumbs crumbs-at-top" aria-label="Breadcrumb">
-  <a href="../index.html">Index</a>
-  <span class="sep">/</span>
-  <a href="../aesop.html">AESOP</a>
-  <span class="sep">/</span>
-  <span class="current" aria-current="page">Executive Intake → AI Adoption Roadmap</span>
-</nav>
 
-
-</div>
-
-<div class="sheet">
-  <div class="spine"><div class="spine-label">EXEC INTAKE PIPELINE</div></div>
-
-  <div class="content">
-
-    <header class="masthead">
-      <h1>Executive Intake &rarr; AI Adoption Roadmap</h1>
-      <p class="lede">A 19-field executive form becomes a founder-ready roadmap through four stages. Every heuristic, knowledge base, rubric, and guidance document is shown at the point it is injected.</p>
-      <div class="kpis">
-        <div class="kpi"><div class="k-v">19</div><div class="k-l">Intake fields</div></div>
-        <div class="kpi"><div class="k-v">4</div><div class="k-l">Processing stages</div></div>
-        <div class="kpi"><div class="k-v">11</div><div class="k-l">Knowledge docs</div></div>
-        <div class="kpi"><div class="k-v">~1,900</div><div class="k-l">Target output words</div></div>
-      </div>
-    </header>
-
-    <!-- 01 -->
-    <section class="sec">
-      <div class="sec-title"><span class="n">01</span><h2>Pipeline flow</h2></div>
-      <div class="sec-body">
-        <div class="srow s1"><div class="so-n">Stage 1</div><div class="so-t">Intake Processing<div class="d">19 fields &rarr; 4 <code>org_context</code> rows. Confidence scoring and gap analysis.</div></div><div class="so-f">smb_intake_executive_service.py</div></div>
-        <div class="srow s2"><div class="so-n">Stage 2</div><div class="so-t">Prompt Engine<div class="d">A ~220-line system prompt &mdash; 11 tenets, 5 principles, 14 rules.</div></div><div class="so-f">adoption_roadmap_agent_executive.txt</div></div>
-        <div class="srow s3"><div class="so-n">Stage 3</div><div class="so-t">LLM Generation<div class="d">Claude Sonnet 4.5, validation loop with up to 2 retries.</div></div><div class="so-f">adoption_roadmap_agent_executive.py</div></div>
-        <div class="srow s4"><div class="so-n">Stage 4</div><div class="so-t">Post-Processing<div class="d">Confidence merge, phase extraction, source manifest, email notification.</div></div><div class="so-f">adoption_roadmap_executive_service.py</div></div>
-      </div>
-    </section>
-
-    <!-- 02 -->
-    <section class="sec">
-      <div class="sec-title"><span class="n">02</span><h2>Stage 1 &mdash; intake processing</h2></div>
-      <div class="sec-body">
-        <div class="grid2">
-          <div class="cell c-st1">
-            <div class="c-t">19 fields across four sections</div>
-            <div class="c-b">
-              <b>About your business</b> (5): business_name, industry, employee_count, what_they_do, what_makes_different.<br>
-              <b>What&rsquo;s working, what&rsquo;s not</b> (5): biggest_bottleneck, time_consuming_tasks, success_definition, top_priorities, business_impact.<br>
-              <b>How work gets done</b> (4): founder_role, team_description, delegation_gap, decision_style.<br>
-              <b>Tools &amp; guardrails</b> (5): essential_tools, document_storage, compliance_requirements, investment_comfort, non_negotiables.
-            </div>
-          </div>
-          <div class="cell c-st1">
-            <div class="c-t">Four <code>org_context</code> rows + confidence</div>
-            <div class="c-b">
-              <code>company_profile</code> &mdash; business snapshot. <code>strategic_goals</code> &mdash; goals &amp; ambition. <code>smb_operations</code> &mdash; how work gets done. <code>smb_constraints</code> &mdash; constraints &amp; guardrails.
-              <p style="margin-top:6px"><b>Confidence engine:</b> four sections &times; 25 points = 100 max (capped at 95). 19 field-level completeness checks. Field fill ratio &rarr; section score &rarr; total. Level: high &ge;75, medium &ge;50, low &lt;50.</p>
-            </div>
-          </div>
-        </div>
-      </div>
-    </section>
-
-    <!-- 03 -->
-    <section class="sec">
-      <div class="sec-title"><span class="n">03</span><h2>Gap analysis</h2></div>
-      <div class="sec-body">
-        <p class="lead">Fires for every missing field &mdash; 19 field-specific impact statements plus 19 cohort exercises.</p>
-        <div class="grid3">
-          <div class="cell c-st1"><div class="c-t">Plain-language impact</div><div class="c-b">Each missing field gets a specific statement of what it affects. Example: <em>&ldquo;Without the founder&rsquo;s role, the roadmap cannot identify delegation opportunities.&rdquo;</em> All 19 are hand-authored, not templated.</div></div>
-          <div class="cell c-st1"><div class="c-t">Cohort exercise</div><div class="c-b">Each missing field maps to a concrete, week-numbered exercise. Example for delegation gaps: <em>&ldquo;Week 2: for one week, every time you do something someone else could handle, write it down.&rdquo;</em></div></div>
-          <div class="cell c-st1"><div class="c-t">Confidence summary</div><div class="c-b">Three-tier plain-language summary. High: &ldquo;the roadmap is well-grounded.&rdquo; Medium: &ldquo;direction is sound but recommendations may shift.&rdquo; Low: &ldquo;a starting point, not a finished plan.&rdquo;</div></div>
-        </div>
-      </div>
-    </section>
-
-    <!-- 04 -->
-    <section class="sec">
-      <div class="sec-title"><span class="n">04</span><h2>Stage 2 &mdash; the prompt engine</h2></div>
-      <div class="sec-body">
-        <div class="callout">
-          <div class="c-l">Core IP</div>
-          <p>A ~220-line system prompt containing embedded knowledge frameworks, design principles, an output schema, and generation rules. Not a generic &ldquo;write a roadmap&rdquo; prompt &mdash; it encodes a complete methodology for honest, evidence-grounded AI adoption guidance.</p>
-        </div>
-
-        <div class="lbl b-st2">Embedded knowledge frameworks</div>
-        <div class="grid2">
-          <div class="cell c-st2">
-            <div class="c-t">AI maturity model (5 &times; 5)</div>
-            <div class="c-b">Five levels &mdash; Aware &rarr; Ready &rarr; Capable &rarr; Mature &rarr; Native. Five dimensions &mdash; Information Readiness, Process Clarity, Decision Governance, Team Capability, Tool Foundation. <b>Bottleneck principle:</b> overall maturity equals the lowest dimension score &mdash; prevents inflating the assessment by cherry-picking the strongest dimension. Backed by <code>ai-maturity-model.md</code>.</div>
-          </div>
-          <div class="cell c-st2">
-            <div class="c-t">The eleven tenets (AESOP methodology)</div>
-            <div class="c-b">1 State Change &middot; 2 Problems Before Solutions &middot; 3 Evidence Over Eloquence &middot; 4 Know What You Need &middot; 5 People Are the Center &middot; 6 Humans Decide &middot; 7 Multiple Perspectives &middot; 8 Context and Brevity &middot; 9 Guardrails Not Gates &middot; 10 Trace the Connections &middot; 11 The Questions Stay the Same.</div>
-          </div>
-        </div>
-
-        <div class="lbl b-st2">Five non-negotiable design principles</div>
-        <div class="grid2">
-          <div class="cell c-st2"><div class="c-t">CLEAR</div><div class="c-b">Skimmable at 6am. Short words, short sentences &mdash; under 20 words per sentence. Business language, not academic.</div></div>
-          <div class="cell c-st2"><div class="c-t">CONCISE</div><div class="c-b">Five pages maximum. Every paragraph earns its place. Substantial and detailed, never padded.</div></div>
-          <div class="cell c-st2"><div class="c-t">ACTIONABLE</div><div class="c-b">Every section points to something they can do. No passive observation without a practical implication.</div></div>
-          <div class="cell c-st2"><div class="c-t">NO JARGON</div><div class="c-b">Banned: LLM, API, vector database, embedding, token, agent, platform, ecosystem, solution. Write for a business founder.</div></div>
-          <div class="cell c-st2" style="border-top-color:var(--rose)"><div class="c-t">NO ASSUMPTIONS &mdash; the hardest rule</div><div class="c-b">Only say what the intake data supports. If they didn&rsquo;t tell you about their customers, don&rsquo;t describe their customers. Thin data &rarr; shorter, more tentative output. Before every claim: <em>&ldquo;did they tell us this?&rdquo;</em></div></div>
-        </div>
-
-        <div class="lbl b-st2">Writing discipline &mdash; banned words</div>
-        <div class="banned"><span>significant</span><span class="sep"> &middot; </span><span>particularly</span><span class="sep"> &middot; </span><span>exceptionally</span><span class="sep"> &middot; </span><span>demonstrates</span><span class="sep"> &middot; </span><span>comprehensive</span><span class="sep"> &middot; </span><span>sophisticated</span><span class="sep"> &middot; </span><span>leverage</span><span class="sep"> &middot; </span><span>synergy</span><span class="sep"> &middot; </span><span>paradigm</span><span class="sep"> &middot; </span><span>automation</span><span class="sep"> &middot; </span><span>solution</span><span class="sep"> &middot; </span><span>platform</span><span class="sep"> &middot; </span><span>ecosystem</span><span class="sep"> &middot; </span><span>integration</span><span class="sep"> &middot; </span><span>implementation</span></div>
-
-        <div class="lbl b-st2">Output validation schema &mdash; the rubric</div>
-        <div class="grid2">
-          <div class="cell c-st2">
-            <div class="c-t"><code>maturity_snapshot</code></div>
-            <div class="c-b">current_level + current_level_number. bottleneck_dimension + bottleneck_why (2&ndash;3 sentences) + bottleneck_what_this_means (2&ndash;3 sentences). Four <b>stage_gaps</b> (1&rarr;2, 2&rarr;3, 3&rarr;4, 4&rarr;5), each with whats_missing + what_it_unlocks. Three <b>confidence_gaps</b>, each with gap name, why_it_matters, how_to_close.</div>
-          </div>
-          <div class="cell c-st2">
-            <div class="c-t"><code>movements[]</code> + insights</div>
-            <div class="c-b">Three movements &mdash; name, rough_timeframe, focus, why_first &mdash; each with 4&ndash;5 practical guidance bullets, 2&ndash;3 what_to_avoid anti-patterns, and one observable risk_signal. Plus <code>the_honest_truth</code> (2&ndash;3 uncomfortable sentences), <code>the_one_move</code> (single highest-leverage 30-day action), and <code>what_changes</code> (3&ndash;4 tangible outcomes).</div>
-          </div>
-        </div>
-      </div>
-    </section>
-
-    <!-- 05 -->
-    <section class="sec">
-      <div class="sec-title"><span class="n">05</span><h2>Fourteen generation rules &mdash; self-enforced</h2></div>
-      <div class="sec-body">
-        <div class="rules">
-          <div class="rul"><div class="r-k">Quality constraints</div><div class="r-b"><b>1.</b> Target ~1,900 words (1,600&ndash;2,200).<br><b>2.</b> Maturity snapshot gets real word count &mdash; each gap 2&ndash;3 sentences, not bullets.<br><b>3.</b> Exactly 3 movements with detailed guidance.<br><b>4.</b> Exactly 3 confidence gaps ranked by roadmap impact.<br><b>5.</b> No assumptions: 80%+ of claims traceable to intake fields.</div></div>
-          <div class="rul"><div class="r-k">Voice constraints</div><div class="r-b"><b>6.</b> Mirror without announcing &mdash; never say &ldquo;you told us&rdquo; or &ldquo;from your intake.&rdquo;<br><b>7.</b> The honest truth: direct, not cruel, grounded in their specifics.<br><b>8.</b> What changes: [Person] can [do thing] without [current bottleneck].<br><b>9.</b> What to avoid: concrete anti-patterns, never generic advice.<br><b>10.</b> Risk signals: observable warnings, not abstract risks.</div></div>
-          <div class="rul"><div class="r-k">Guardrails</div><div class="r-b"><b>11.</b> Banned: specific products, AI model names, internal scaffolding language.<br><b>12.</b> Thin intake (&lt;12 of 19 fields) &rarr; shorter, more tentative output.<br><b>13.</b> Self-check before output: count claims, scan for jargon, check sentence length, verify sections present.<br><b>14.</b> why_first never opens with &ldquo;why this phase comes&rdquo; &mdash; substantive content first.</div></div>
-        </div>
-      </div>
-    </section>
-
-    <!-- 06 -->
-    <section class="sec">
-      <div class="sec-title"><span class="n">06</span><h2>Stage 3 &mdash; LLM generation + validation</h2></div>
-      <div class="sec-body">
-        <div class="grid2">
-          <div class="cell c-st3">
-            <div class="c-t">Model configuration</div>
-            <div class="c-b"><b>Model:</b> Claude Sonnet 4.5 (Anthropic API, streaming). <b>Temperature:</b> 0.2 &mdash; factual, consistent. <b>Max tokens:</b> 32,000. <b>Provider:</b> configurable &mdash; Anthropic or DeepSeek. <b>Agent:</b> <code>AdoptionRoadmapAgentExecutive</code>.</div>
-          </div>
-          <div class="cell c-st3">
-            <div class="c-t">User message construction</div>
-            <div class="c-b">Builds from the four <code>org_context</code> sections (content_summary, falling back to full content), the confidence assessment (score, level, known gaps). If total characters exceed 30,000, warns about the model input budget. Appends: &ldquo;Produce an executive AI adoption roadmap as JSON. See the system prompt for the exact output format and generation rules.&rdquo;</div>
-          </div>
-        </div>
-        <div class="lbl b-st3">Structured validation loop &mdash; up to 2 retries</div>
-        <div class="vloop">
-          <div class="vs ok"><div class="v-k">Attempt 1</div><div class="v-b">LLM generates the full roadmap JSON.</div></div>
-          <div class="vs ok"><div class="v-k">Parse</div><div class="v-b">Extract JSON &mdash; handles markdown wrapping, regex fallback.</div></div>
-          <div class="vs ok"><div class="v-k">Validate</div><div class="v-b">20+ schema rules: maturity fields, 4 gaps, 3 confidence gaps, 3 movements, honest truth, one move, what changes (3+), word-count range.</div></div>
-          <div class="vs fail"><div class="v-k">Failed?</div><div class="v-b">A specific violation list returns to the LLM with a retry prompt.</div></div>
-          <div class="vs retry"><div class="v-k">Retry &times;2 max</div><div class="v-b">Full multi-turn. Each retry ~$0.02&ndash;0.04. Warnings attached if still failing after two retries.</div></div>
-          <div class="vs ok" style="border-top-color:var(--teal)"><div class="v-k">Pass</div><div class="v-b">Validated JSON proceeds to post-processing.</div></div>
-        </div>
-      </div>
-    </section>
-
-    <!-- 07 -->
-    <section class="sec">
-      <div class="sec-title"><span class="n">07</span><h2>Stage 4 &mdash; post-processing &amp; delivery</h2></div>
-      <div class="sec-body">
-        <div class="grid3">
-          <div class="cell c-st4"><div class="c-t">Phase extraction</div><div class="c-b">Movements &rarr; structured phase objects with phase_number, name, timeframe, focus, why_first, guidance (preserved as a bullet list), what_to_avoid, risk_signal. Timeline computed from first/last movement timeframes.</div></div>
-          <div class="cell c-st4"><div class="c-t">Confidence merging</div><div class="c-b">Heuristic score (field completeness) adjusted downward by LLM-identified gaps &mdash; each gap deducts 5 points (min 5, max 40). Produces base_score + adjusted_score + adjusted_level + a merged summary.</div></div>
-          <div class="cell c-st4"><div class="c-t">Executive insights extraction</div><div class="c-b">the_one_move, what_changes[], the_honest_truth, stage_gaps, confidence_gaps &rarr; an <code>executive_insights</code> JSONB column. Separates v3.0 fields from legacy columns for forward compatibility.</div></div>
-        </div>
-        <div class="lbl b-st4">Source manifest &mdash; full provenance</div>
-        <div class="manifest">
-          <div class="mani"><span class="m-k">org_context</span>document_count + document_types + provenance (&ldquo;org_context table, is_active=true, all types&rdquo;).</div>
-          <div class="mani"><span class="m-k">confidence</span>score, level, gap_count, provenance (&ldquo;compute_confidence_executive() &mdash; field completeness from 19-field executive intake&rdquo;).</div>
-          <div class="mani"><span class="m-k">agent</span>name, temperature, prompt_file, max_tokens, input_tokens_used, output_tokens_used, cost.</div>
-          <div class="mani"><span class="m-k">validation</span>warnings list + warning_count.</div>
-        </div>
-        <div class="lbl b-st4">What the founder receives</div>
-        <div class="grid3">
-          <div class="cell c-st4"><div class="c-t">Maturity snapshot</div><div class="c-b">Current level + bottleneck + four stage-gap maps.</div></div>
-          <div class="cell c-st4"><div class="c-t">Three movements</div><div class="c-b">Practical phases with guidance, anti-patterns, risk signals.</div></div>
-          <div class="cell c-st4"><div class="c-t">Honest truth</div><div class="c-b">2&ndash;3 uncomfortable sentences grounded in their data &mdash; plus the one move for the next 30 days.</div></div>
-        </div>
-      </div>
-    </section>
-
-    <!-- 08 -->
-    <section class="sec">
-      <div class="sec-title"><span class="n">08</span><h2>Knowledge base</h2></div>
-      <div class="sec-body">
-        <p class="lead">Eleven reference documents in <code>backend/engine/knowledge/</code> provide the methodological foundation. They exist independently as versioned, auditable assets &mdash; updatable without retraining or rebuilding the pipeline.</p>
-        <div class="kbs">
-          <div class="kb"><div class="k-n">aesop-methodology.md</div><div class="k-d">The eleven tenets, autonomy classification (4 levels), build summary artifacts (5 types).</div></div>
-          <div class="kb"><div class="k-n">ai-maturity-model.md</div><div class="k-d">5 levels &times; 5 dimensions, bottleneck principle, full scoring protocol with evidence requirements.</div></div>
-          <div class="kb"><div class="k-n">prd-decision-framework.md</div><div class="k-d">Assistant vs agent classification, 8-dimension scoring, decision tree, hard gates.</div></div>
-          <div class="kb"><div class="k-n">feasibility-rules.md</div><div class="k-d">Platform connector registry, constraint rules, trigger compatibility matrix, file-format support.</div></div>
-          <div class="kb"><div class="k-n">hybrid-architecture-patterns.md</div><div class="k-d">9 patterns for combining deterministic + non-deterministic logic, and anti-patterns.</div></div>
-          <div class="kb"><div class="k-n">discovery/triage-questions.md</div><div class="k-d">7 triage questions, red flags, complexity signals, routing rules.</div></div>
-          <div class="kb"><div class="k-n">discovery/capability-thresholds.md</div><div class="k-d">7 capability domains with quantitative breaking points, migration paths, cost implications.</div></div>
-          <div class="kb"><div class="k-n">discovery/project-failures.md</div><div class="k-d">7 common failure patterns with early warning signs and red-flag signals.</div></div>
-          <div class="kb"><div class="k-n">discovery/trade-off-frameworks.md</div><div class="k-d">Decision frameworks for scope, quality, and speed trade-offs in AI adoption.</div></div>
-          <div class="kb"><div class="k-n">discovery/question-banks.md</div><div class="k-d">Structured question banks for discovery interviews across domains.</div></div>
-          <div class="kb"><div class="k-n">discovery/platform-capabilities.md</div><div class="k-d">Platform-specific capability matrices and constraints for build targeting.</div></div>
-        </div>
-      </div>
-    </section>
-
-    <!-- 09 -->
-    <section class="sec">
-      <div class="sec-title"><span class="n">09</span><h2>Why the output is quality</h2></div>
-      <div class="sec-body">
-        <div class="rigor"><div class="r-no">1</div><div><div class="r-t">Multi-layered confidence</div><div class="r-b">Heuristic field-completeness score, adjusted by LLM-identified gaps, merged with provenance. No single source of truth about quality.</div></div></div>
-        <div class="rigor"><div class="r-no">2</div><div><div class="r-t">Bottleneck principle</div><div class="r-b">Overall maturity equals the weakest dimension. Prevents inflating the assessment by cherry-picking. Backed by an explicit scoring protocol in ai-maturity-model.md.</div></div></div>
-        <div class="rigor"><div class="r-no">3</div><div><div class="r-t">Structured validation with retries</div><div class="r-b">20+ schema rules checked programmatically. Up to two automatic retries with specific violation feedback; warnings attached if still failing.</div></div></div>
-        <div class="rigor"><div class="r-no">4</div><div><div class="r-t">Evidence traceability</div><div class="r-b">80%+ of claims must trace to specific intake fields, enforced in the prompt. &ldquo;Did they tell us this?&rdquo; before every claim.</div></div></div>
-        <div class="rigor"><div class="r-no">5</div><div><div class="r-t">No-jargon enforcement</div><div class="r-b">15+ banned words keep out generic consulting language. Written for someone who runs a business, not a technology department.</div></div></div>
-        <div class="rigor"><div class="r-no">6</div><div><div class="r-t">Mirror without announcing</div><div class="r-b">References their specifics naturally, never &ldquo;you told us&rdquo; or &ldquo;from your intake.&rdquo; They feel seen, not analyzed.</div></div></div>
-        <div class="rigor"><div class="r-no">7</div><div><div class="r-t">Compass, not GPS</div><div class="r-b">Direction with enough texture for Monday morning, but no false precision. Three movements, not twelve steps. Risk signals, not risk matrices.</div></div></div>
-        <div class="rigor"><div class="r-no">8</div><div><div class="r-t">Gap &rarr; impact &rarr; exercise chain</div><div class="r-b">Every missing field produces a plain-language impact and a concrete cohort exercise with a week number. Actionable, not diagnostic.</div></div></div>
-        <div class="rigor"><div class="r-no">9</div><div><div class="r-t">Full source provenance</div><div class="r-b">The source manifest records every input: org_context types and counts, confidence provenance, agent config, token usage, cost, validation warnings.</div></div></div>
-        <div class="rigor"><div class="r-no">10</div><div><div class="r-t">Eleven Tenets foundation</div><div class="r-b">Philosophical rigor from aesop-methodology.md &mdash; People Are the Center, Evidence Over Eloquence, Guardrails Not Gates, Trace the Connections &mdash; so every output embodies a coherent methodology, not ad-hoc heuristics.</div></div></div>
-        <p class="close" style="margin-top:10px"><b>Architecture note.</b> This is the <em>executive</em> path &mdash; a lightweight variant of the full AESOP Build Pipeline. The full pipeline adds readiness assessment, portfolio with strategic prioritization, department context, multi-agent quality analysis, interviews, custom rubric + scenario generation, adversarial red-team, functional testing, and synthesis reporting. The executive path exists for founders who need a focused, honest, actionable roadmap &mdash; not an enterprise-scale analysis.</p>
-      </div>
-    </section>
-
-    <footer class="footer">
-      <a href="../aesop.html">&larr; AESOP</a>
-      <span>&copy; 2025-2026 Charlie Fuller</span>
-    </footer>
-
+<nav class="nav" aria-label="Primary">
+  <div class="nav-inner">
+    <a class="nav-brand" href="../aesop.html">AESOP<span class="dot">.</span></a>
+    <div class="nav-spacer"></div>
+    <a class="go" href="../aesop.html">&larr; AESOP</a>
   </div>
+</nav>
+<div class="crumbs crumbs-top" aria-label="Breadcrumb">
+  <a href="../index.html">Index</a><span class="sep">/</span>
+  <a href="../aesop.html">AESOP</a><span class="sep">/</span>
+  <span class="current" aria-current="page">Executive Intake &rarr; AI Adoption Roadmap</span>
 </div>
 
+<main class="wrap">
+
+  <header class="hero">
+    <div class="kicker">Exec intake pipeline</div>
+    <h1>Executive Intake &rarr; AI Adoption Roadmap</h1>
+    <p class="lede">A 19-field executive form becomes a founder-ready roadmap through four stages. Every heuristic, knowledge base, rubric, and guidance document is shown at the point it is injected.</p>
+    <div class="kpis">
+      <div class="kpi"><div class="k-v">19</div><div class="k-l">Intake fields</div></div>
+      <div class="kpi"><div class="k-v">4</div><div class="k-l">Processing stages</div></div>
+      <div class="kpi"><div class="k-v">11</div><div class="k-l">Knowledge docs</div></div>
+      <div class="kpi"><div class="k-v">~1,900</div><div class="k-l">Target output words</div></div>
+    </div>
+  </header>
+
+  <!-- 01 -->
+  <section class="sec">
+    <div class="sec-head"><span class="sec-num">01</span><h2 class="sec-title">Pipeline flow</h2></div>
+    <div class="srow s1"><div class="so-n">Stage 1</div><div class="so-t">Intake Processing<div class="d">19 fields &rarr; 4 <code>org_context</code> rows. Confidence scoring and gap analysis.</div></div><div class="so-f">smb_intake_executive_service.py</div></div>
+    <div class="srow s2"><div class="so-n">Stage 2</div><div class="so-t">Prompt Engine<div class="d">A ~220-line system prompt &mdash; 11 tenets, 5 principles, 14 rules.</div></div><div class="so-f">adoption_roadmap_agent_executive.txt</div></div>
+    <div class="srow s3"><div class="so-n">Stage 3</div><div class="so-t">LLM Generation<div class="d">Claude Sonnet 4.5, validation loop with up to 2 retries.</div></div><div class="so-f">adoption_roadmap_agent_executive.py</div></div>
+    <div class="srow s4"><div class="so-n">Stage 4</div><div class="so-t">Post-Processing<div class="d">Confidence merge, phase extraction, source manifest, email notification.</div></div><div class="so-f">adoption_roadmap_executive_service.py</div></div>
+  </section>
+
+  <!-- 02 -->
+  <section class="sec">
+    <div class="sec-head"><span class="sec-num">02</span><h2 class="sec-title">Stage 1 &mdash; intake processing</h2></div>
+    <div class="grid2">
+      <div class="cell">
+        <div class="c-t">19 fields across four sections</div>
+        <div class="c-b">
+          <b>About your business</b> (5): business_name, industry, employee_count, what_they_do, what_makes_different.<br>
+          <b>What&rsquo;s working, what&rsquo;s not</b> (5): biggest_bottleneck, time_consuming_tasks, success_definition, top_priorities, business_impact.<br>
+          <b>How work gets done</b> (4): founder_role, team_description, delegation_gap, decision_style.<br>
+          <b>Tools &amp; guardrails</b> (5): essential_tools, document_storage, compliance_requirements, investment_comfort, non_negotiables.
+        </div>
+      </div>
+      <div class="cell">
+        <div class="c-t">Four <code>org_context</code> rows + confidence</div>
+        <div class="c-b">
+          <code>company_profile</code> &mdash; business snapshot. <code>strategic_goals</code> &mdash; goals &amp; ambition. <code>smb_operations</code> &mdash; how work gets done. <code>smb_constraints</code> &mdash; constraints &amp; guardrails.
+          <p style="margin-top:8px"><b>Confidence engine:</b> four sections &times; 25 points = 100 max (capped at 95). 19 field-level completeness checks. Field fill ratio &rarr; section score &rarr; total. Level: high &ge;75, medium &ge;50, low &lt;50.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 03 -->
+  <section class="sec">
+    <div class="sec-head"><span class="sec-num">03</span><h2 class="sec-title">Gap analysis</h2></div>
+    <p class="sec-lead">Fires for every missing field &mdash; 19 field-specific impact statements plus 19 cohort exercises.</p>
+    <div class="grid3">
+      <div class="cell"><div class="c-t">Plain-language impact</div><div class="c-b">Each missing field gets a specific statement of what it affects. Example: <em>&ldquo;Without the founder&rsquo;s role, the roadmap cannot identify delegation opportunities.&rdquo;</em> All 19 are hand-authored, not templated.</div></div>
+      <div class="cell"><div class="c-t">Cohort exercise</div><div class="c-b">Each missing field maps to a concrete, week-numbered exercise. Example for delegation gaps: <em>&ldquo;Week 2: for one week, every time you do something someone else could handle, write it down.&rdquo;</em></div></div>
+      <div class="cell"><div class="c-t">Confidence summary</div><div class="c-b">Three-tier plain-language summary. High: &ldquo;the roadmap is well-grounded.&rdquo; Medium: &ldquo;direction is sound but recommendations may shift.&rdquo; Low: &ldquo;a starting point, not a finished plan.&rdquo;</div></div>
+    </div>
+  </section>
+
+  <!-- 04 -->
+  <section class="sec">
+    <div class="sec-head"><span class="sec-num">04</span><h2 class="sec-title">Stage 2 &mdash; the prompt engine</h2></div>
+    <div class="callout">
+      <div class="c-l">Core IP</div>
+      <p>A ~220-line system prompt containing embedded knowledge frameworks, design principles, an output schema, and generation rules. Not a generic &ldquo;write a roadmap&rdquo; prompt &mdash; it encodes a complete methodology for honest, evidence-grounded AI adoption guidance.</p>
+    </div>
+
+    <div class="lbl">Embedded knowledge frameworks</div>
+    <div class="grid2">
+      <div class="cell" style="border-top-color:var(--metric)">
+        <div class="c-t">AI maturity model (5 &times; 5)</div>
+        <div class="c-b">Five levels &mdash; Aware &rarr; Ready &rarr; Capable &rarr; Mature &rarr; Native. Five dimensions &mdash; Information Readiness, Process Clarity, Decision Governance, Team Capability, Tool Foundation. <b>Bottleneck principle:</b> overall maturity equals the lowest dimension score &mdash; prevents inflating the assessment by cherry-picking the strongest dimension. Backed by <code>ai-maturity-model.md</code>.</div>
+      </div>
+      <div class="cell" style="border-top-color:var(--metric)">
+        <div class="c-t">The eleven tenets (AESOP methodology)</div>
+        <div class="c-b">1 State Change &middot; 2 Problems Before Solutions &middot; 3 Evidence Over Eloquence &middot; 4 Know What You Need &middot; 5 People Are the Center &middot; 6 Humans Decide &middot; 7 Multiple Perspectives &middot; 8 Context and Brevity &middot; 9 Guardrails Not Gates &middot; 10 Trace the Connections &middot; 11 The Questions Stay the Same.</div>
+      </div>
+    </div>
+
+    <div class="lbl l-st2">Five non-negotiable design principles</div>
+    <div class="grid2">
+      <div class="cell" style="border-top-color:var(--metric)"><div class="c-t">CLEAR</div><div class="c-b">Skimmable at 6am. Short words, short sentences &mdash; under 20 words per sentence. Business language, not academic.</div></div>
+      <div class="cell" style="border-top-color:var(--metric)"><div class="c-t">CONCISE</div><div class="c-b">Five pages maximum. Every paragraph earns its place. Substantial and detailed, never padded.</div></div>
+      <div class="cell" style="border-top-color:var(--metric)"><div class="c-t">ACTIONABLE</div><div class="c-b">Every section points to something they can do. No passive observation without a practical implication.</div></div>
+      <div class="cell" style="border-top-color:var(--metric)"><div class="c-t">NO JARGON</div><div class="c-b">Banned: LLM, API, vector database, embedding, token, agent, platform, ecosystem, solution. Write for a business founder.</div></div>
+      <div class="cell" style="border-top-color:var(--rose)"><div class="c-t">NO ASSUMPTIONS &mdash; the hardest rule</div><div class="c-b">Only say what the intake data supports. If they didn&rsquo;t tell you about their customers, don&rsquo;t describe their customers. Thin data &rarr; shorter, more tentative output. Before every claim: <em>&ldquo;did they tell us this?&rdquo;</em></div></div>
+    </div>
+
+    <div class="lbl l-st2">Writing discipline &mdash; banned words</div>
+    <div class="banned"><span>significant</span><span class="sep"> &middot; </span><span>particularly</span><span class="sep"> &middot; </span><span>exceptionally</span><span class="sep"> &middot; </span><span>demonstrates</span><span class="sep"> &middot; </span><span>comprehensive</span><span class="sep"> &middot; </span><span>sophisticated</span><span class="sep"> &middot; </span><span>leverage</span><span class="sep"> &middot; </span><span>synergy</span><span class="sep"> &middot; </span><span>paradigm</span><span class="sep"> &middot; </span><span>automation</span><span class="sep"> &middot; </span><span>solution</span><span class="sep"> &middot; </span><span>platform</span><span class="sep"> &middot; </span><span>ecosystem</span><span class="sep"> &middot; </span><span>integration</span><span class="sep"> &middot; </span><span>implementation</span></div>
+
+    <div class="lbl l-st2">Output validation schema &mdash; the rubric</div>
+    <div class="grid2">
+      <div class="cell" style="border-top-color:var(--metric)">
+        <div class="c-t"><code>maturity_snapshot</code></div>
+        <div class="c-b">current_level + current_level_number. bottleneck_dimension + bottleneck_why (2&ndash;3 sentences) + bottleneck_what_this_means (2&ndash;3 sentences). Four <b>stage_gaps</b> (1&rarr;2, 2&rarr;3, 3&rarr;4, 4&rarr;5), each with whats_missing + what_it_unlocks. Three <b>confidence_gaps</b>, each with gap name, why_it_matters, how_to_close.</div>
+      </div>
+      <div class="cell" style="border-top-color:var(--metric)">
+        <div class="c-t"><code>movements[]</code> + insights</div>
+        <div class="c-b">Three movements &mdash; name, rough_timeframe, focus, why_first &mdash; each with 4&ndash;5 practical guidance bullets, 2&ndash;3 what_to_avoid anti-patterns, and one observable risk_signal. Plus <code>the_honest_truth</code> (2&ndash;3 uncomfortable sentences), <code>the_one_move</code> (single highest-leverage 30-day action), and <code>what_changes</code> (3&ndash;4 tangible outcomes).</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 05 -->
+  <section class="sec">
+    <div class="sec-head"><span class="sec-num">05</span><h2 class="sec-title">Fourteen generation rules &mdash; self-enforced</h2></div>
+    <div class="rules">
+      <div class="rul"><div class="r-k">Quality constraints</div><div class="r-b"><b>1.</b> Target ~1,900 words (1,600&ndash;2,200).<br><b>2.</b> Maturity snapshot gets real word count &mdash; each gap 2&ndash;3 sentences, not bullets.<br><b>3.</b> Exactly 3 movements with detailed guidance.<br><b>4.</b> Exactly 3 confidence gaps ranked by roadmap impact.<br><b>5.</b> No assumptions: 80%+ of claims traceable to intake fields.</div></div>
+      <div class="rul"><div class="r-k">Voice constraints</div><div class="r-b"><b>6.</b> Mirror without announcing &mdash; never say &ldquo;you told us&rdquo; or &ldquo;from your intake.&rdquo;<br><b>7.</b> The honest truth: direct, not cruel, grounded in their specifics.<br><b>8.</b> What changes: [Person] can [do thing] without [current bottleneck].<br><b>9.</b> What to avoid: concrete anti-patterns, never generic advice.<br><b>10.</b> Risk signals: observable warnings, not abstract risks.</div></div>
+      <div class="rul"><div class="r-k">Guardrails</div><div class="r-b"><b>11.</b> Banned: specific products, AI model names, internal scaffolding language.<br><b>12.</b> Thin intake (&lt;12 of 19 fields) &rarr; shorter, more tentative output.<br><b>13.</b> Self-check before output: count claims, scan for jargon, check sentence length, verify sections present.<br><b>14.</b> why_first never opens with &ldquo;why this phase comes&rdquo; &mdash; substantive content first.</div></div>
+    </div>
+  </section>
+
+  <!-- 06 -->
+  <section class="sec">
+    <div class="sec-head"><span class="sec-num">06</span><h2 class="sec-title">Stage 3 &mdash; LLM generation + validation</h2></div>
+    <div class="grid2">
+      <div class="cell" style="border-top-color:var(--amber)">
+        <div class="c-t">Model configuration</div>
+        <div class="c-b"><b>Model:</b> Claude Sonnet 4.5 (Anthropic API, streaming). <b>Temperature:</b> 0.2 &mdash; factual, consistent. <b>Max tokens:</b> 32,000. <b>Provider:</b> configurable &mdash; Anthropic or DeepSeek. <b>Agent:</b> <code>AdoptionRoadmapAgentExecutive</code>.</div>
+      </div>
+      <div class="cell" style="border-top-color:var(--amber)">
+        <div class="c-t">User message construction</div>
+        <div class="c-b">Builds from the four <code>org_context</code> sections (content_summary, falling back to full content), the confidence assessment (score, level, known gaps). If total characters exceed 30,000, warns about the model input budget. Appends: &ldquo;Produce an executive AI adoption roadmap as JSON. See the system prompt for the exact output format and generation rules.&rdquo;</div>
+      </div>
+    </div>
+    <div class="lbl l-st3">Structured validation loop &mdash; up to 2 retries</div>
+    <div class="vloop">
+      <div class="vs ok"><div class="v-k">Attempt 1</div><div class="v-b">LLM generates the full roadmap JSON.</div></div>
+      <div class="vs ok"><div class="v-k">Parse</div><div class="v-b">Extract JSON &mdash; handles markdown wrapping, regex fallback.</div></div>
+      <div class="vs ok"><div class="v-k">Validate</div><div class="v-b">20+ schema rules: maturity fields, 4 gaps, 3 confidence gaps, 3 movements, honest truth, one move, what changes (3+), word-count range.</div></div>
+      <div class="vs fail"><div class="v-k">Failed?</div><div class="v-b">A specific violation list returns to the LLM with a retry prompt.</div></div>
+      <div class="vs retry"><div class="v-k">Retry &times;2 max</div><div class="v-b">Full multi-turn. Each retry ~$0.02&ndash;0.04. Warnings attached if still failing after two retries.</div></div>
+      <div class="vs good"><div class="v-k">Pass</div><div class="v-b">Validated JSON proceeds to post-processing.</div></div>
+    </div>
+  </section>
+
+  <!-- 07 -->
+  <section class="sec">
+    <div class="sec-head"><span class="sec-num">07</span><h2 class="sec-title">Stage 4 &mdash; post-processing &amp; delivery</h2></div>
+    <div class="grid3">
+      <div class="cell" style="border-top-color:var(--violet)"><div class="c-t">Phase extraction</div><div class="c-b">Movements &rarr; structured phase objects with phase_number, name, timeframe, focus, why_first, guidance (preserved as a bullet list), what_to_avoid, risk_signal. Timeline computed from first/last movement timeframes.</div></div>
+      <div class="cell" style="border-top-color:var(--violet)"><div class="c-t">Confidence merging</div><div class="c-b">Heuristic score (field completeness) adjusted downward by LLM-identified gaps &mdash; each gap deducts 5 points (min 5, max 40). Produces base_score + adjusted_score + adjusted_level + a merged summary.</div></div>
+      <div class="cell" style="border-top-color:var(--violet)"><div class="c-t">Executive insights extraction</div><div class="c-b">the_one_move, what_changes[], the_honest_truth, stage_gaps, confidence_gaps &rarr; an <code>executive_insights</code> JSONB column. Separates v3.0 fields from legacy columns for forward compatibility.</div></div>
+    </div>
+    <div class="lbl l-st4">Source manifest &mdash; full provenance</div>
+    <div class="manifest">
+      <div class="mani"><span class="m-k">org_context</span>document_count + document_types + provenance (&ldquo;org_context table, is_active=true, all types&rdquo;).</div>
+      <div class="mani"><span class="m-k">confidence</span>score, level, gap_count, provenance (&ldquo;compute_confidence_executive() &mdash; field completeness from 19-field executive intake&rdquo;).</div>
+      <div class="mani"><span class="m-k">agent</span>name, temperature, prompt_file, max_tokens, input_tokens_used, output_tokens_used, cost.</div>
+      <div class="mani"><span class="m-k">validation</span>warnings list + warning_count.</div>
+    </div>
+    <div class="lbl l-st4">What the founder receives</div>
+    <div class="grid3">
+      <div class="cell" style="border-top-color:var(--violet)"><div class="c-t">Maturity snapshot</div><div class="c-b">Current level + bottleneck + four stage-gap maps.</div></div>
+      <div class="cell" style="border-top-color:var(--violet)"><div class="c-t">Three movements</div><div class="c-b">Practical phases with guidance, anti-patterns, risk signals.</div></div>
+      <div class="cell" style="border-top-color:var(--violet)"><div class="c-t">Honest truth</div><div class="c-b">2&ndash;3 uncomfortable sentences grounded in their data &mdash; plus the one move for the next 30 days.</div></div>
+    </div>
+  </section>
+
+  <!-- 08 -->
+  <section class="sec">
+    <div class="sec-head"><span class="sec-num">08</span><h2 class="sec-title">Knowledge base</h2></div>
+    <p class="sec-lead">Eleven reference documents in <code>backend/engine/knowledge/</code> provide the methodological foundation. They exist independently as versioned, auditable assets &mdash; updatable without retraining or rebuilding the pipeline.</p>
+    <div class="kbs">
+      <div class="kb"><div class="k-n">aesop-methodology.md</div><div class="k-d">The eleven tenets, autonomy classification (4 levels), build summary artifacts (5 types).</div></div>
+      <div class="kb"><div class="k-n">ai-maturity-model.md</div><div class="k-d">5 levels &times; 5 dimensions, bottleneck principle, full scoring protocol with evidence requirements.</div></div>
+      <div class="kb"><div class="k-n">prd-decision-framework.md</div><div class="k-d">Assistant vs agent classification, 8-dimension scoring, decision tree, hard gates.</div></div>
+      <div class="kb"><div class="k-n">feasibility-rules.md</div><div class="k-d">Platform connector registry, constraint rules, trigger compatibility matrix, file-format support.</div></div>
+      <div class="kb"><div class="k-n">hybrid-architecture-patterns.md</div><div class="k-d">9 patterns for combining deterministic + non-deterministic logic, and anti-patterns.</div></div>
+      <div class="kb"><div class="k-n">discovery/triage-questions.md</div><div class="k-d">7 triage questions, red flags, complexity signals, routing rules.</div></div>
+      <div class="kb"><div class="k-n">discovery/capability-thresholds.md</div><div class="k-d">7 capability domains with quantitative breaking points, migration paths, cost implications.</div></div>
+      <div class="kb"><div class="k-n">discovery/project-failures.md</div><div class="k-d">7 common failure patterns with early warning signs and red-flag signals.</div></div>
+      <div class="kb"><div class="k-n">discovery/trade-off-frameworks.md</div><div class="k-d">Decision frameworks for scope, quality, and speed trade-offs in AI adoption.</div></div>
+      <div class="kb"><div class="k-n">discovery/question-banks.md</div><div class="k-d">Structured question banks for discovery interviews across domains.</div></div>
+      <div class="kb"><div class="k-n">discovery/platform-capabilities.md</div><div class="k-d">Platform-specific capability matrices and constraints for build targeting.</div></div>
+    </div>
+  </section>
+
+  <!-- 09 -->
+  <section class="sec">
+    <div class="sec-head"><span class="sec-num">09</span><h2 class="sec-title">Why the output is quality</h2></div>
+    <div class="rigor"><div class="r-no">1</div><div class="r-t">Multi-layered confidence</div><div class="r-b">Heuristic field-completeness score, adjusted by LLM-identified gaps, merged with provenance. No single source of truth about quality.</div></div>
+    <div class="rigor"><div class="r-no">2</div><div class="r-t">Bottleneck principle</div><div class="r-b">Overall maturity equals the weakest dimension. Prevents inflating the assessment by cherry-picking. Backed by an explicit scoring protocol in ai-maturity-model.md.</div></div>
+    <div class="rigor"><div class="r-no">3</div><div class="r-t">Structured validation with retries</div><div class="r-b">20+ schema rules checked programmatically. Up to two automatic retries with specific violation feedback; warnings attached if still failing.</div></div>
+    <div class="rigor"><div class="r-no">4</div><div class="r-t">Evidence traceability</div><div class="r-b">80%+ of claims must trace to specific intake fields, enforced in the prompt. &ldquo;Did they tell us this?&rdquo; before every claim.</div></div>
+    <div class="rigor"><div class="r-no">5</div><div class="r-t">No-jargon enforcement</div><div class="r-b">15+ banned words keep out generic consulting language. Written for someone who runs a business, not a technology department.</div></div>
+    <div class="rigor"><div class="r-no">6</div><div class="r-t">Mirror without announcing</div><div class="r-b">References their specifics naturally, never &ldquo;you told us&rdquo; or &ldquo;from your intake.&rdquo; They feel seen, not analyzed.</div></div>
+    <div class="rigor"><div class="r-no">7</div><div class="r-t">Compass, not GPS</div><div class="r-b">Direction with enough texture for Monday morning, but no false precision. Three movements, not twelve steps. Risk signals, not risk matrices.</div></div>
+    <div class="rigor"><div class="r-no">8</div><div class="r-t">Gap &rarr; impact &rarr; exercise chain</div><div class="r-b">Every missing field produces a plain-language impact and a concrete cohort exercise with a week number. Actionable, not diagnostic.</div></div>
+    <div class="rigor"><div class="r-no">9</div><div class="r-t">Full source provenance</div><div class="r-b">The source manifest records every input: org_context types and counts, confidence provenance, agent config, token usage, cost, validation warnings.</div></div>
+    <div class="rigor"><div class="r-no">10</div><div class="r-t">Eleven Tenets foundation</div><div class="r-b">Philosophical rigor from aesop-methodology.md &mdash; People Are the Center, Evidence Over Eloquence, Guardrails Not Gates, Trace the Connections &mdash; so every output embodies a coherent methodology, not ad-hoc heuristics.</div></div>
+    <p class="close"><b>Architecture note.</b> This is the <em>executive</em> path &mdash; a lightweight variant of the full AESOP Build Pipeline. The full pipeline adds readiness assessment, portfolio with strategic prioritization, department context, multi-agent quality analysis, interviews, custom rubric + scenario generation, adversarial red-team, functional testing, and synthesis reporting. The executive path exists for founders who need a focused, honest, actionable roadmap &mdash; not an enterprise-scale analysis.</p>
+  </section>
+
+  <footer class="footer">
+    <a href="../aesop.html">&larr; AESOP</a>
+    <span>&copy; 2025-2026 Charlie Fuller</span>
+  </footer>
+
+</main>
 </body>
 </html>

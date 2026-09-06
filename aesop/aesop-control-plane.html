@@ -1,334 +1,144 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" class="light">
 <head>
 <meta charset="UTF-8">
 <link rel="icon" type="image/svg+xml" href="../icon.svg">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AESOP Control Plane &mdash; Domain Architecture</title>
 <meta name="description" content="How AESOP governs domain apps through a thin integration protocol — control plane for evaluation and portfolio, execution plane for domain functions.">
-<title>AESOP Control Plane — Domain Architecture</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,wght@0,400;0,500;0,600;0,700;0,800;1,400&family=Source+Code+Pro:wght@400;500;600&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Mulish:ital,wght@0,300;0,400;0,600;0,700;0,800;1,400&display=swap" rel="stylesheet">
 <style>
-.crumbs{font-family:var(--font-mono,monospace);font-size:13px;font-weight:600;display:flex;align-items:center;gap:8px;flex-wrap:wrap;min-width:0}
-.crumbs a{color:#e8621a;text-decoration:none}
-.crumbs a:hover,.crumbs a:focus-visible{text-decoration:underline;outline:none}
-.crumbs .sep{color:var(--text-dim)}
-.crumbs .current{color:var(--text-dim);font-weight:400}
+  :root{--font-body:'Mulish','Segoe UI',Helvetica,sans-serif;--font-mono:'Mulish',ui-monospace,'SF Mono',Consolas,monospace;
+    --bg:#14181C;--surface:#1B2127;--surface2:#232B33;--border:#303A43;--border-bright:#42505C;
+    --text:#F4F5F6;--text-dim:#CBD0D6;--text-faint:#87919B;
+    --primary:#F58A4E;--primary-dim:rgba(245,138,78,0.12);--metric:#45C7A6;--metric-dim:rgba(69,199,166,0.12);
+    --violet:#B9A0E8;--violet-dim:rgba(185,160,232,0.12);
+    --blue:#6CACE4;--blue-dim:rgba(108,172,228,0.12);
+    --slate:#87919B;--slate-dim:rgba(135,145,155,0.10);
+    --amber:#E8B54D;--amber-dim:rgba(232,181,77,0.12);
+    --orange:var(--primary);--orange-dim:var(--primary-dim);}
+  html.light{--bg:#F7F3EF;--surface:#FFFFFF;--surface2:#F0E9E1;--border:#E1D6CB;--border-bright:#CDBBA8;
+    --text:#241A12;--text-dim:#574A3C;--text-faint:#8C7E6E;
+    --primary:#C64A11;--primary-dim:rgba(198,74,17,0.09);--metric:#0E7C66;--metric-dim:rgba(14,124,102,0.08);
+    --violet:#7C3AED;--violet-dim:rgba(124,58,237,0.07);
+    --blue:#2F6FA8;--blue-dim:rgba(47,111,168,0.08);
+    --slate:#475569;--slate-dim:rgba(71,85,105,0.07);
+    --amber:#A5650A;--amber-dim:rgba(165,101,10,0.08);
+    --orange:#C64A11;--orange-dim:rgba(198,74,17,0.09);}
+  *{margin:0;padding:0;box-sizing:border-box}
+  html{scroll-behavior:smooth}
+  body{background:
+      radial-gradient(at 10% 0%,var(--primary-dim),transparent 45%),
+      radial-gradient(at 90% 80%,var(--metric-dim),transparent 45%),
+      var(--bg);
+    color:var(--text);font-family:var(--font-body);font-size:15px;line-height:1.7;-webkit-font-smoothing:antialiased;min-height:100vh}
 
-  :root {
-    --font-body: 'Fraunces', Georgia, serif;
-    --font-mono: 'Source Code Pro', 'SF Mono', Consolas, monospace;
+  .nav{position:sticky;top:0;z-index:100;backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);background:color-mix(in srgb,var(--bg) 72%,transparent);border-bottom:1px solid var(--border)}
+  .nav-inner{max-width:1000px;margin:0 auto;padding:12px 24px;display:flex;align-items:center;gap:14px}
+  .nav-brand{font-weight:800;font-size:14px;letter-spacing:-0.01em;color:var(--text);text-decoration:none}
+  .nav-brand .dot{color:var(--primary)}
+  .nav-spacer{flex:1}
+  .nav a.go{font-size:13px;font-weight:600;color:var(--primary);text-decoration:none}
+  .nav a.go:hover{text-decoration:underline}
+  .crumbs{font-size:13px;font-weight:600;color:var(--text-dim);display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+  .crumbs a{color:var(--primary);text-decoration:none}
+  .crumbs a:hover{text-decoration:underline}
+  .crumbs .sep{color:var(--text-faint)}
+  .crumbs .current{color:var(--text-dim);font-weight:400}
 
-    --bg: #f6f7fb;
-    --surface: #ffffff;
-    --surface2: #f0f2f7;
-    --border: rgba(0, 0, 0, 0.06);
-    --border-bright: rgba(0, 0, 0, 0.12);
-    --text: #0f172a;
-    --text-dim: #64748b;
+  .container{max-width:1000px;margin:0 auto;padding:48px 24px 80px}
 
-    --slate: #475569;
-    --slate-dim: rgba(71, 85, 105, 0.08);
-    --blue: #2563eb;
-    --blue-dim: rgba(37, 99, 235, 0.08);
-    --violet: #7c3aed;
-    --violet-dim: rgba(124, 58, 237, 0.08);
-    --teal: #0d9488;
-    --teal-dim: rgba(13, 148, 136, 0.08);
-    --emerald: #059669;
-    --emerald-dim: rgba(5, 150, 105, 0.08);
-    --amber: #d97706;
-    --amber-dim: rgba(217, 119, 6, 0.08);
-    --orange: #ea580c;
-    --orange-dim: rgba(234, 88, 12, 0.08);
-    --indigo: #4f46e5;
-    --indigo-dim: rgba(79, 70, 229, 0.08);
-  }
+  @keyframes fadeUp{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:translateY(0)}}
 
-  
+  .hero{text-align:center;margin-bottom:48px;animation:fadeUp .5s ease both}
+  .hero h1{font-size:44px;font-weight:800;letter-spacing:-0.03em;line-height:1.05;margin-bottom:12px;
+    background:linear-gradient(135deg,var(--primary),var(--metric));-webkit-background-clip:text;background-clip:text;color:transparent}
+  .hero p{font-size:17px;color:var(--text-dim);max-width:650px;margin:0 auto}
 
-  * { margin: 0; padding: 0; box-sizing: border-box; }
+  .section{margin-bottom:44px;animation:fadeUp .5s ease both}
+  .section-title{font-family:var(--font-mono);font-size:12px;font-weight:800;letter-spacing:.15em;text-transform:uppercase;color:var(--primary);margin-bottom:16px}
 
-  body {
-    background: var(--bg);
-    background-image:
-      radial-gradient(at 10% 0%, var(--violet-dim) 0%, transparent 40%),
-      radial-gradient(at 90% 80%, var(--teal-dim) 0%, transparent 40%);
-    color: var(--text);
-    font-family: var(--font-body);
-    font-size: 15px;
-    line-height: 1.7;
-    min-height: 100vh;
-    -webkit-font-smoothing: antialiased;
-  }
+  /* architecture diagram */
+  .arch{background:var(--surface);border:1px solid var(--border);border-radius:18px;overflow:hidden}
+  .control-plane{padding:26px 28px 22px;border-bottom:1px solid var(--border);background:var(--surface2)}
+  .plane-label{font-family:var(--font-mono);font-size:10px;font-weight:800;letter-spacing:.15em;text-transform:uppercase;color:var(--violet);margin-bottom:14px}
+  .plane-title{font-size:22px;font-weight:800;margin-bottom:4px;color:var(--text)}
+  .plane-sub{font-size:13.5px;color:var(--text-dim);margin-bottom:16px}
 
-  .nav {
-    position: sticky; top: 0; z-index: 100;
-    backdrop-filter: blur(16px);
-    background: color-mix(in srgb, var(--surface) 85%, transparent);
-    border-bottom: 1px solid var(--border);
-  }
-  .nav-inner {
-    max-width: 1000px; margin: 0 auto; padding: 12px 24px;
-    display: flex; align-items: center; justify-content: space-between;
-  }
-  .nav-brand {
-    font-family: var(--font-mono); font-size: 13px; font-weight: 600;
-    color: var(--indigo); text-decoration: none;
-  }
+  .cp-columns{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;margin-bottom:16px}
+  .cp-col{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:15px}
+  .cp-col-title{font-family:var(--font-mono);font-size:10.5px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;margin-bottom:9px}
+  .cp-tags{display:flex;flex-wrap:wrap;gap:5px}
+  .cp-tag{font-family:var(--font-mono);font-size:10px;font-weight:600;padding:3px 9px;border-radius:6px}
 
-  .container { max-width: 1000px; margin: 0 auto; padding: 48px 24px 80px; }
+  .registry{display:flex;align-items:center;gap:14px;flex-wrap:wrap;padding:11px 18px;background:var(--surface);border:1px solid var(--border);border-radius:12px;margin:0 28px}
+  .reg-label{font-family:var(--font-mono);font-size:10px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:var(--violet);white-space:nowrap}
+  .reg-pills{display:flex;flex-wrap:wrap;gap:6px}
+  .reg-pill{font-family:var(--font-mono);font-size:10px;font-weight:700;padding:4px 11px;border-radius:999px;border:1px solid var(--border);background:var(--surface2);color:var(--text-dim)}
+  .reg-pill.active{border-color:var(--primary);background:var(--primary-dim);color:var(--primary)}
+  .reg-note{font-size:11px;color:var(--text-faint);margin-left:auto}
 
-  @keyframes fadeUp { from { opacity: 0; transform: translateY(16px); } to { opacity: 1; transform: translateY(0); } }
+  .arrow-down{text-align:center;padding:10px 0 6px;font-family:var(--font-mono);font-size:18px;color:var(--text-faint)}
+  .exec-plane{padding:22px 28px 30px}
 
-  .hero { text-align: center; margin-bottom: 56px; animation: fadeUp 0.5s ease both; }
-  .hero h1 {
-    font-size: 42px; font-weight: 800; letter-spacing: -1px; margin-bottom: 8px;
-    background: linear-gradient(135deg, var(--indigo), var(--teal));
-    -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
-  }
-  .hero p { font-size: 17px; color: var(--text-dim); max-width: 650px; margin: 0 auto; }
+  .function-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+  .func-card{border:1px solid var(--border);border-top:3px solid var(--border-bright);border-radius:13px;padding:17px;background:var(--surface)}
+  .func-card.built{border-top-color:var(--metric);background:var(--metric-dim)}
+  .func-card.next{border-top-color:var(--amber);background:var(--amber-dim)}
+  .func-card.road{border-top-color:var(--slate);background:var(--slate-dim)}
+  .func-status{font-family:var(--font-mono);font-size:9px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;padding:2px 8px;border-radius:999px;display:inline-block;margin-bottom:9px}
+  .status-built{background:var(--metric);color:#fff}
+  .status-next{background:var(--amber);color:#fff}
+  .status-road{background:var(--slate);color:#fff}
+  .func-name{font-size:15.5px;font-weight:800;color:var(--text);margin-bottom:5px}
+  .func-desc{font-size:12.5px;color:var(--text-dim);line-height:1.55;margin-bottom:11px}
+  .func-integration{font-family:var(--font-mono);font-size:10.5px;color:var(--violet);background:var(--violet-dim);padding:4px 9px;border-radius:6px;display:inline-block}
 
-  .section { margin-bottom: 48px; animation: fadeUp 0.5s ease both; }
-  .section-title {
-    font-family: var(--font-mono); font-size: 12px; font-weight: 700;
-    letter-spacing: 0.15em; text-transform: uppercase; color: var(--indigo);
-    margin-bottom: 16px;
-  }
+  /* protocol */
+  .protocol-section{background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:26px}
+  .proto-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px;margin-top:16px}
+  .proto-card{padding:16px;border-radius:12px;background:var(--surface2);border:1px solid var(--border);border-left:3px solid var(--border-bright)}
+  .proto-card.em{border-left-color:var(--metric)}.proto-card.bl{border-left-color:var(--blue)}.proto-card.vi{border-left-color:var(--violet)}
+  .proto-name{font-size:15px;font-weight:800;color:var(--text);margin-bottom:5px}
+  .proto-desc{font-size:12.5px;color:var(--text-dim);line-height:1.55}
+  .proto-tech{font-family:var(--font-mono);font-size:10.5px;color:var(--primary);margin-top:8px}
 
-  /* === ARCHITECTURE DIAGRAM === */
-  .arch {
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: 16px;
-    padding: 0;
-    overflow: hidden;
-  }
+  /* principles */
+  .principle-callout{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:8px}
+  .principle{background:var(--surface);border:1px solid var(--border);border-radius:13px;padding:20px}
+  .principle-num{font-family:var(--font-mono);font-size:12px;font-weight:800;color:var(--primary);margin-bottom:5px}
+  .principle-title{font-size:15.5px;font-weight:800;color:var(--text);margin-bottom:5px}
+  .principle-desc{font-size:13px;color:var(--text-dim);line-height:1.6}
 
-  /* Control Plane */
-  .control-plane {
-    padding: 24px 28px 20px;
-    border-bottom: 1px solid var(--border);
-    background: var(--surface2);
-  }
-  .plane-label {
-    font-family: var(--font-mono); font-size: 10px; font-weight: 700;
-    letter-spacing: 0.15em; text-transform: uppercase;
-    color: var(--violet); margin-bottom: 14px;
-  }
-  .plane-title {
-    font-size: 20px; font-weight: 700; margin-bottom: 4px; color: var(--text);
-  }
-  .plane-sub {
-    font-size: 13px; color: var(--text-dim); margin-bottom: 16px;
-  }
+  .footer{margin-top:44px;padding-top:18px;border-top:1px solid var(--border);text-align:center;font-family:var(--font-mono);font-size:12px;color:var(--text-faint)}
+  .footer a{color:var(--primary);text-decoration:none}
+  .footer a:hover{text-decoration:underline}
 
-  /* Three AESOP columns */
-  .cp-columns {
-    display: grid; grid-template-columns: 1fr 1fr 1fr;
-    gap: 12px; margin-bottom: 16px;
+  @media(max-width:768px){
+    .container{padding:36px 16px 60px}
+    .hero h1{font-size:30px}
+    .cp-columns,.function-grid,.proto-grid,.principle-callout{grid-template-columns:1fr}
+    .registry{margin:0 16px}
   }
-  .cp-col {
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: 10px;
-    padding: 14px;
-  }
-  .cp-col-title {
-    font-family: var(--font-mono); font-size: 10px; font-weight: 700;
-    letter-spacing: 0.08em; text-transform: uppercase; margin-bottom: 8px;
-  }
-  .cp-tags { display: flex; flex-wrap: wrap; gap: 5px; }
-  .cp-tag {
-    font-family: var(--font-mono); font-size: 10px; font-weight: 500;
-    padding: 3px 8px; border-radius: 5px;
-  }
-
-  /* Registry bar */
-  .registry {
-    display: flex; align-items: center; gap: 14px;
-    padding: 10px 18px;
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: 8px;
-    margin: 0 28px;
-  }
-  .reg-label {
-    font-family: var(--font-mono); font-size: 10px; font-weight: 700;
-    letter-spacing: 0.1em; text-transform: uppercase;
-    color: var(--violet); white-space: nowrap;
-  }
-  .reg-pills { display: flex; flex-wrap: wrap; gap: 6px; }
-  .reg-pill {
-    font-family: var(--font-mono); font-size: 10px; font-weight: 600;
-    padding: 4px 10px; border-radius: 20px;
-    border: 1px solid var(--border);
-    background: var(--surface2);
-  }
-  .reg-pill.active {
-    border-color: color-mix(in srgb, var(--indigo) 30%, transparent);
-    background: var(--indigo-dim);
-    color: var(--indigo);
-  }
-
-  /* Arrow down */
-  .arrow-down {
-    text-align: center; padding: 8px 0 4px;
-    font-family: var(--font-mono); font-size: 18px; color: var(--border-bright);
-  }
-
-  /* Execution Plane */
-  .exec-plane {
-    padding: 20px 28px 28px;
-  }
-  .exec-header {
-    display: flex; align-items: center; gap: 10px; margin-bottom: 16px;
-  }
-
-  /* Function apps grid */
-  .function-grid {
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 12px;
-  }
-  .func-card {
-    border: 1px solid var(--border);
-    border-radius: 10px;
-    padding: 16px;
-    background: var(--surface);
-  }
-  .func-card.built {
-    border-top: 3px solid var(--emerald);
-    background: var(--emerald-dim);
-  }
-  .func-card.next {
-    border-top: 3px solid var(--amber);
-    background: var(--amber-dim);
-  }
-  .func-card.road {
-    border-top: 3px solid var(--slate);
-    background: var(--slate-dim);
-  }
-  .func-status {
-    font-family: var(--font-mono); font-size: 9px; font-weight: 700;
-    letter-spacing: 0.1em; text-transform: uppercase;
-    padding: 2px 7px; border-radius: 4px; display: inline-block; margin-bottom: 8px;
-  }
-  .status-built { background: var(--emerald); color: #fff; }
-  .status-next { background: var(--amber); color: #fff; }
-  .status-road { background: var(--slate); color: #fff; }
-  .func-name {
-    font-size: 15px; font-weight: 700; color: var(--text); margin-bottom: 4px;
-  }
-  .func-desc {
-    font-size: 12px; color: var(--text-dim); line-height: 1.5; margin-bottom: 10px;
-  }
-  .func-integration {
-    font-family: var(--font-mono); font-size: 10px; color: var(--violet);
-    background: var(--violet-dim);
-    padding: 4px 8px; border-radius: 4px;
-    display: inline-block;
-  }
-
-  /* Protocol detail */
-  .protocol-section {
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: 12px;
-    padding: 24px;
-    margin-top: 20px;
-  }
-  .proto-grid {
-    display: grid; grid-template-columns: 1fr 1fr 1fr;
-    gap: 16px;
-    margin-top: 14px;
-  }
-  .proto-card {
-    padding: 14px;
-    border-radius: 8px;
-    background: var(--surface2);
-    border: 1px solid var(--border);
-  }
-  .proto-icon {
-    font-family: var(--font-mono); font-size: 18px; margin-bottom: 6px;
-  }
-  .proto-name {
-    font-size: 14px; font-weight: 700; color: var(--text); margin-bottom: 4px;
-  }
-  .proto-desc {
-    font-size: 12px; color: var(--text-dim); line-height: 1.5;
-  }
-  .proto-tech {
-    font-family: var(--font-mono); font-size: 10px; color: var(--indigo);
-    margin-top: 6px;
-  }
-
-  .principle-callout {
-    display: grid; grid-template-columns: 1fr 1fr;
-    gap: 12px; margin-top: 24px;
-  }
-  .principle {
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: 10px;
-    padding: 18px;
-  }
-  .principle-num {
-    font-family: var(--font-mono); font-size: 11px; font-weight: 700;
-    color: var(--indigo); margin-bottom: 4px;
-  }
-  .principle-title {
-    font-size: 15px; font-weight: 700; color: var(--text); margin-bottom: 4px;
-  }
-  .principle-desc {
-    font-size: 13px; color: var(--text-dim); line-height: 1.5;
-  }
-
-  .footer {
-    margin-top: 48px; padding-top: 16px;
-    border-top: 1px solid var(--border);
-    text-align: center; font-size: 12px; color: var(--text-dim);
-  }
-  .footer a { color: var(--indigo); text-decoration: none; }
-
-  @media (max-width: 768px) {
-    .cp-columns, .function-grid, .proto-grid, .principle-callout {
-      grid-template-columns: 1fr;
-    }
-    .hero h1 { font-size: 28px; }
-  }
-.theme-toggle {
-  width: 36px; height: 36px; border-radius: 10px;
-  border: 1px solid var(--border); background: var(--surface);
-  cursor: pointer; display: flex; align-items: center; justify-content: center;
-  font-size: 16px; color: var(--text-dim); transition: all 0.2s;
-}
-.theme-toggle:hover { border-color: var(--indigo); color: var(--indigo); }
-
-@media (prefers-reduced-motion: reduce) {
-  *, *::before, *::after { animation-duration: 0.01ms !important; animation-delay: 0ms !important; }
-}
-.backlink{position:fixed;top:12px;left:16px;z-index:101;font-family:var(--font-mono);font-size:12px;color:var(--text-dim);text-decoration:none;padding:6px 10px;border:1px solid var(--border);border-radius:6px;background:var(--surface);transition:color .15s,border-color .15s}
-.backlink:hover{color:var(--text);border-color:var(--border-bright)}
+  @media(prefers-reduced-motion:reduce){*{animation-duration:.01ms!important;animation-delay:0ms!important}}
 </style>
 </head>
 <body>
 
-
-<div class="nav">
+<nav class="nav" aria-label="Primary">
   <div class="nav-inner">
-    <nav class="crumbs" aria-label="Breadcrumb">
-  <a href="../index.html">Index</a>
-  <span class="sep">/</span>
-  <a href="../aesop.html">AESOP</a>
-  <span class="sep">/</span>
+    <a class="nav-brand" href="../aesop.html">AESOP<span class="dot">.</span></a>
+    <div class="nav-spacer"></div>
+    <a class="go" href="../aesop.html">&larr; AESOP</a>
+  </div>
+</nav>
+<nav class="crumbs" aria-label="Breadcrumb" style="max-width:1000px;margin:0 auto;padding:0 24px 8px">
+  <a href="../index.html">Index</a><span class="sep">/</span>
+  <a href="../aesop.html">AESOP</a><span class="sep">/</span>
   <span class="current" aria-current="page">AESOP Control Plane</span>
 </nav>
-    
-
-  </div>
-</div>
 
 <div class="container">
 
@@ -337,44 +147,44 @@
     <p>AESOP governs. Domain apps execute. A thin integration protocol keeps them connected without either side getting fat.</p>
   </div>
 
-  <!-- Main Architecture -->
+  <!-- Architecture -->
   <div class="section">
     <div class="section-title">Architecture</div>
     <div class="arch">
 
       <!-- Control Plane -->
       <div class="control-plane">
-        <div class="plane-label">Control Plane — One Instance</div>
+        <div class="plane-label">Control Plane &mdash; One Instance</div>
         <div class="plane-title">AESOP Transformation OS</div>
         <div class="plane-sub">Domain-agnostic. Evaluates agents, tracks portfolios, generates operationalization plans. Does not render domain UIs.</div>
 
         <div class="cp-columns">
           <div class="cp-col">
-            <div class="cp-col-title" style="color: var(--violet);">Evaluate</div>
+            <div class="cp-col-title" style="color:var(--violet)">Evaluate</div>
             <div class="cp-tags">
-              <span class="cp-tag" style="background: var(--violet-dim); color: var(--violet);">Multi-agent scoring</span>
-              <span class="cp-tag" style="background: var(--violet-dim); color: var(--violet);">Bias & safety</span>
-              <span class="cp-tag" style="background: var(--violet-dim); color: var(--violet);">Hard veto rules</span>
-              <span class="cp-tag" style="background: var(--violet-dim); color: var(--violet);">Drift detection</span>
-              <span class="cp-tag" style="background: var(--violet-dim); color: var(--violet);">Regulatory mapping</span>
+              <span class="cp-tag" style="background:var(--violet-dim);color:var(--violet)">Multi-agent scoring</span>
+              <span class="cp-tag" style="background:var(--violet-dim);color:var(--violet)">Bias &amp; safety</span>
+              <span class="cp-tag" style="background:var(--violet-dim);color:var(--violet)">Hard veto rules</span>
+              <span class="cp-tag" style="background:var(--violet-dim);color:var(--violet)">Drift detection</span>
+              <span class="cp-tag" style="background:var(--violet-dim);color:var(--violet)">Regulatory mapping</span>
             </div>
           </div>
           <div class="cp-col">
-            <div class="cp-col-title" style="color: var(--blue);">Portfolio</div>
+            <div class="cp-col-title" style="color:var(--blue)">Portfolio</div>
             <div class="cp-tags">
-              <span class="cp-tag" style="background: var(--blue-dim); color: var(--blue);">Cross-domain dashboard</span>
-              <span class="cp-tag" style="background: var(--blue-dim); color: var(--blue);">Adoption metrics</span>
-              <span class="cp-tag" style="background: var(--blue-dim); color: var(--blue);">ROI tracking</span>
-              <span class="cp-tag" style="background: var(--blue-dim); color: var(--blue);">Status across all agents</span>
+              <span class="cp-tag" style="background:var(--blue-dim);color:var(--blue)">Cross-domain dashboard</span>
+              <span class="cp-tag" style="background:var(--blue-dim);color:var(--blue)">Adoption metrics</span>
+              <span class="cp-tag" style="background:var(--blue-dim);color:var(--blue)">ROI tracking</span>
+              <span class="cp-tag" style="background:var(--blue-dim);color:var(--blue)">Status across all agents</span>
             </div>
           </div>
           <div class="cp-col">
-            <div class="cp-col-title" style="color: var(--orange);">Operationalize</div>
+            <div class="cp-col-title" style="color:var(--orange)">Operationalize</div>
             <div class="cp-tags">
-              <span class="cp-tag" style="background: var(--orange-dim); color: var(--orange);">RACI generation</span>
-              <span class="cp-tag" style="background: var(--orange-dim); color: var(--orange);">Adoption plans</span>
-              <span class="cp-tag" style="background: var(--orange-dim); color: var(--orange);">Maintenance plans</span>
-              <span class="cp-tag" style="background: var(--orange-dim); color: var(--orange);">Roadmap generation</span>
+              <span class="cp-tag" style="background:var(--orange-dim);color:var(--orange)">RACI generation</span>
+              <span class="cp-tag" style="background:var(--orange-dim);color:var(--orange)">Adoption plans</span>
+              <span class="cp-tag" style="background:var(--orange-dim);color:var(--orange)">Maintenance plans</span>
+              <span class="cp-tag" style="background:var(--orange-dim);color:var(--orange)">Roadmap generation</span>
             </div>
           </div>
         </div>
@@ -389,62 +199,59 @@
             <span class="reg-pill">HR</span>
             <span class="reg-pill">Operations</span>
           </div>
-          <span style="font-size:11px;color:var(--text-dim);margin-left:auto;">filter portfolio · scope evals · route agents</span>
+          <span class="reg-note">filter portfolio &middot; scope evals &middot; route agents</span>
         </div>
       </div>
 
-      <!-- Arrow -->
       <div class="arrow-down">&darr;</div>
 
       <!-- Execution Plane -->
       <div class="exec-plane">
-        <div class="exec-header">
-          <span class="plane-label" style="margin-bottom:0;color:var(--teal);">Execution Plane — Many Apps</span>
-        </div>
-        <p style="font-size:13px;color:var(--text-dim);margin-bottom:18px;">Each domain function is its own focused app. Own UI. Own workflow. Thin integration back to AESOP for governance and portfolio tracking.</p>
+        <div class="plane-label" style="margin-bottom:10px;color:var(--metric)">Execution Plane &mdash; Many Apps</div>
+        <p style="font-size:13px;color:var(--text-dim);margin-bottom:18px">Each domain function is its own focused app. Own UI. Own workflow. Thin integration back to AESOP for governance and portfolio tracking.</p>
 
         <div class="function-grid">
 
           <div class="func-card built">
             <span class="func-status status-built">Built</span>
             <div class="func-name">Contract Review</div>
-            <div class="func-desc">Upload → classify → extract → score → flag. 5 specialized agents. Human-in-the-loop review workflow. Legal standards library.</div>
-            <span class="func-integration">→ AESOP: eval hooks + portfolio endpoint</span>
+            <div class="func-desc">Upload &rarr; classify &rarr; extract &rarr; score &rarr; flag. 5 specialized agents. Human-in-the-loop review workflow. Legal standards library.</div>
+            <span class="func-integration">&rarr; AESOP: eval hooks + portfolio endpoint</span>
           </div>
 
           <div class="func-card built">
             <span class="func-status status-built">Built</span>
             <div class="func-name">Employment Legal</div>
             <div class="func-desc">Separation agreement generator (US/EMEA/Australia). Legal metrics agent for outside-counsel spend. Built inside a large corporate legal department.</div>
-            <span class="func-integration">→ AESOP: portfolio registration</span>
+            <span class="func-integration">&rarr; AESOP: portfolio registration</span>
           </div>
 
           <div class="func-card next">
             <span class="func-status status-next">Next</span>
-            <div class="func-name">Matter Intake & Triage</div>
+            <div class="func-name">Matter Intake &amp; Triage</div>
             <div class="func-desc">Practice area classification. Urgency scoring. Conflict check triggers. Staffing recommendation. Routes to the right partner.</div>
-            <span class="func-integration">→ AESOP: eval on day 1 + portfolio</span>
+            <span class="func-integration">&rarr; AESOP: eval on day 1 + portfolio</span>
           </div>
 
           <div class="func-card road">
             <span class="func-status status-road">Roadmap</span>
             <div class="func-name">Due Diligence</div>
             <div class="func-desc">Bulk document review. Clause-level comparison against target standards. Deltas only to reviewer.</div>
-            <span class="func-integration">→ AESOP: eval + portfolio</span>
+            <span class="func-integration">&rarr; AESOP: eval + portfolio</span>
           </div>
 
           <div class="func-card road">
             <span class="func-status status-road">Roadmap</span>
             <div class="func-name">Regulatory Monitor</div>
             <div class="func-desc">Monitors regulatory updates. Maps to active client matters. Surfaces affected engagements.</div>
-            <span class="func-integration">→ AESOP: eval + portfolio</span>
+            <span class="func-integration">&rarr; AESOP: eval + portfolio</span>
           </div>
 
           <div class="func-card road">
             <span class="func-status status-road">Roadmap</span>
             <div class="func-name">Knowledge Mgmt + Reporting</div>
             <div class="func-desc">Precedent search. Clause libraries that learn. Client-facing outcome reports as retention asset.</div>
-            <span class="func-integration">→ AESOP: portfolio</span>
+            <span class="func-integration">&rarr; AESOP: portfolio</span>
           </div>
 
         </div>
@@ -455,24 +262,21 @@
 
   <!-- Integration Protocol -->
   <div class="section">
-    <div class="section-title">Integration Protocol — The Thin Contract</div>
+    <div class="section-title">Integration Protocol &mdash; The Thin Contract</div>
     <div class="protocol-section">
-      <p style="font-size:14px;color:var(--text-dim);">Each function app exposes three endpoints. AESOP polls them. That's it. No shared database. No UI embedding. Each side stays focused.</p>
-
+      <p style="font-size:14px;color:var(--text-dim)">Each function app exposes three endpoints. AESOP polls them. That's it. No shared database. No UI embedding. Each side stays focused.</p>
       <div class="proto-grid">
-        <div class="proto-card" style="border-left: 3px solid var(--emerald);">
+        <div class="proto-card em">
           <div class="proto-name">Health + Status</div>
           <div class="proto-desc">Is the agent running? What's its last evaluation score? Any drift detected? Uptime and error rate.</div>
           <div class="proto-tech">GET /api/aesop/health</div>
         </div>
-
-        <div class="proto-card" style="border-left: 3px solid var(--blue);">
+        <div class="proto-card bl">
           <div class="proto-name">Metrics + Outcomes</div>
           <div class="proto-desc">Adoption rate, throughput, time saved, cost impact, user satisfaction. Domain-specific KPIs in a standard schema.</div>
           <div class="proto-tech">GET /api/aesop/metrics</div>
         </div>
-
-        <div class="proto-card" style="border-left: 3px solid var(--violet);">
+        <div class="proto-card vi">
           <div class="proto-name">Evaluation Target</div>
           <div class="proto-desc">AESOP hits this endpoint to run evaluation suites against the agent. Returns agent config, instructions, and test surface.</div>
           <div class="proto-tech">POST /api/aesop/eval-target</div>
@@ -488,7 +292,7 @@
       <div class="principle">
         <div class="principle-num">01</div>
         <div class="principle-title">Render domain UIs</div>
-        <div class="principle-desc">AESOP doesn't show contract details, matter forms, or diligence checklists. Each function app owns its UX. AESOP shows scores, status, and trends — the governance view.</div>
+        <div class="principle-desc">AESOP doesn't show contract details, matter forms, or diligence checklists. Each function app owns its UX. AESOP shows scores, status, and trends &mdash; the governance view.</div>
       </div>
       <div class="principle">
         <div class="principle-num">02</div>
@@ -498,7 +302,7 @@
       <div class="principle">
         <div class="principle-num">03</div>
         <div class="principle-title">Store domain data</div>
-        <div class="principle-desc">Each function app owns its database. AESOP stores evaluation results, portfolio state, and operationalization plans — metadata about agents, not the agents' data.</div>
+        <div class="principle-desc">Each function app owns its database. AESOP stores evaluation results, portfolio state, and operationalization plans &mdash; metadata about agents, not the agents' data.</div>
       </div>
       <div class="principle">
         <div class="principle-num">04</div>
@@ -510,14 +314,13 @@
 
   <div class="footer">
     AESOP Control Plane Architecture
-    &nbsp;·&nbsp;
+    &nbsp;&middot;&nbsp;
     <a href="../legal/legal-ai-os-ashurst-perkins-coie.html">Legal AI OS &rarr;</a>
-    &nbsp;·&nbsp;
-    <a href="../index.html">All Diagrams →</a>
+    &nbsp;&middot;&nbsp;
+    <a href="../index.html">All Diagrams &rarr;</a>
   </div>
 
 </div>
-
 
 </body>
 </html>

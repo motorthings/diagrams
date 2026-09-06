@@ -1,669 +1,228 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" class="light">
 <head>
 <meta charset="UTF-8">
 <link rel="icon" type="image/svg+xml" href="../icon.svg">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>AESOP Transformation OS</title>
+<title>AESOP &mdash; Transformation OS Pipeline</title>
+<meta name="description" content="Discover, Design, Build, Evaluate, Repair, Track — organization-scale agent development with portfolio management and strategic prioritization.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600;9..144,700&family=Source+Code+Pro:wght@400;500;600" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Mulish:ital,wght@0,300;0,400;0,600;0,700;0,800;1,400&display=swap" rel="stylesheet">
 <style>
-  /* ============ THEME — Neon Dashboard, dark-first ============ */
-  :root {
-    --font-body: 'Fraunces', Georgia, serif;
-    --font-mono: 'Source Code Pro', 'SF Mono', Consolas, monospace;
+  :root{--font-body:'Mulish','Segoe UI',Helvetica,sans-serif;--font-mono:'Mulish',ui-monospace,'SF Mono',Consolas,monospace;
+    --bg:#14181C;--surface:#1B2127;--surface2:#232B33;--surface-elevated:#263039;--border:#303A43;--border-bright:#42505C;
+    --text:#F4F5F6;--text-dim:#CBD0D6;--text-muted:#87919B;
+    --primary:#F58A4E;--primary-dim:rgba(245,138,78,0.13);--metric:#45C7A6;--metric-dim:rgba(69,199,166,0.12);
+    --primary-glow:rgba(245,138,78,0.22);}
+  html.light{--bg:#FBF3EE;--surface:#FFFFFF;--surface2:#F7EDE4;--surface-elevated:#FFFFFF;--border:rgba(0,0,0,0.08);--border-bright:rgba(0,0,0,0.14);
+    --text:#241A12;--text-dim:#6B5246;--text-muted:#A08D7E;
+    --primary:#C64A11;--primary-dim:rgba(198,74,17,0.09);--metric:#0E7C66;--metric-dim:rgba(14,124,102,0.08);
+    --primary-glow:rgba(198,74,17,0.15);}
+  *{margin:0;padding:0;box-sizing:border-box}
+  html{scroll-behavior:smooth}
+  body{background:
+      radial-gradient(ellipse at 15% 0%,var(--primary-glow),transparent 55%),
+      radial-gradient(ellipse at 85% 100%,var(--metric-dim),transparent 55%),
+      var(--bg);
+    color:var(--text);font-family:var(--font-body);min-height:100vh;overflow-wrap:break-word;-webkit-font-smoothing:antialiased}
 
-    --bg: #0d0b14;
-    --surface: #15121f;
-    --surface2: #1c1829;
-    --surface-elevated: #211d30;
-    --border: rgba(255, 255, 255, 0.06);
-    --border-bright: rgba(255, 255, 255, 0.12);
-    --text: #ede5ff;
-    --text-dim: #7a6f94;
-    --text-muted: #4a4260;
+  .nav{position:sticky;top:0;z-index:100;backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);background:color-mix(in srgb,var(--bg) 74%,transparent);border-bottom:1px solid var(--border)}
+  .nav-inner{max-width:1240px;margin:0 auto;padding:12px 24px;display:flex;align-items:center;gap:14px}
+  .nav-brand{font-weight:800;font-size:14px;letter-spacing:-0.01em;color:var(--text);text-decoration:none}
+  .nav-brand .dot{color:var(--primary)}
+  .nav-spacer{flex:1}
+  .nav a.go{font-size:13px;font-weight:600;color:var(--primary);text-decoration:none}
+  .nav a.go:hover{text-decoration:underline}
+  .crumbs{font-size:13px;font-weight:600;color:var(--text-dim);display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+  .crumbs a{color:var(--primary);text-decoration:none}
+  .crumbs a:hover{text-decoration:underline}
+  .crumbs .sep{color:var(--text-muted)}
+  .crumbs .current{color:var(--text-dim);font-weight:400}
+  .crumbs-top{max-width:1240px;margin:0 auto;padding:0 24px 6px}
 
-    /* Stage accents */
-    --discover: #a855f7;
-    --discover-dim: rgba(168, 85, 247, 0.12);
-    --discover-glow: rgba(168, 85, 247, 0.25);
+  .wrap{max-width:1240px;margin:0 auto;padding:20px 40px 60px}
 
-    --design: #3b82f6;
-    --design-dim: rgba(59, 130, 246, 0.12);
-    --design-glow: rgba(59, 130, 246, 0.25);
+  @keyframes fadeUp{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:translateY(0)}}
+  .animate-up{animation:fadeUp .5s ease-out both;animation-delay:calc(var(--i,0)*.07s)}
+  @media(prefers-reduced-motion:reduce){*{animation-duration:.01ms!important;animation-delay:0ms!important;transition-duration:.01ms!important}}
 
-    --kbaudit: #06b6d4;
-    --kbaudit-dim: rgba(6, 182, 212, 0.12);
-    --kbaudit-glow: rgba(6, 182, 212, 0.25);
+  .header{text-align:center;margin-bottom:52px}
+  .wordmark{display:inline-flex;align-items:center;gap:10px;margin-bottom:22px}
+  .wordmark-icon{width:38px;height:38px;background:linear-gradient(135deg,var(--primary),var(--metric));border-radius:10px;display:flex;align-items:center;justify-content:center}
+  .wordmark-icon svg{width:21px;height:21px;fill:#fff}
+  .wordmark-text{font-size:18px;font-weight:800;letter-spacing:-.3px}
+  h1{font-size:46px;font-weight:800;letter-spacing:-0.03em;line-height:1.08;margin-bottom:16px;
+    background:linear-gradient(135deg,var(--primary),var(--metric));-webkit-background-clip:text;background-clip:text;color:transparent}
+  .subtitle{font-family:var(--font-mono);font-size:13px;color:var(--text-dim);letter-spacing:.3px;max-width:760px;margin:0 auto}
 
-    --build: #f97316;
-    --build-dim: rgba(249, 115, 22, 0.12);
-    --build-glow: rgba(249, 115, 22, 0.25);
+  .flow-row{display:flex;align-items:center;justify-content:center;gap:8px;margin-bottom:24px;font-family:var(--font-mono);font-size:11px;color:var(--text-muted);letter-spacing:1px;text-transform:uppercase;flex-wrap:wrap}
+  .flow-row-stage{color:var(--text-dim);font-weight:600}
+  .flow-row-arrow{color:var(--primary);font-size:14px}
 
-    --evaluate: #22c55e;
-    --evaluate-dim: rgba(34, 197, 94, 0.12);
-    --evaluate-glow: rgba(34, 197, 94, 0.25);
+  .pipeline{display:grid;grid-template-columns:repeat(6,1fr);gap:14px;margin-bottom:48px}
 
-    --repair: #f43f5e;
-    --repair-dim: rgba(244, 63, 94, 0.12);
-    --repair-glow: rgba(244, 63, 94, 0.25);
+  .stage{background:var(--surface);border:1px solid var(--border);border-radius:16px;overflow:hidden;position:relative;border-top:3px solid var(--primary)}
+  .stage:nth-child(even){border-top-color:var(--metric)}
+  .stage-body{padding:22px 20px 24px}
+  .stage-num{font-family:var(--font-mono);font-size:10px;font-weight:800;letter-spacing:1px;text-transform:uppercase;margin-bottom:12px;display:flex;align-items:center;gap:8px;color:var(--primary)}
+  .stage:nth-child(even) .stage-num{color:var(--metric)}
+  .num-badge{width:21px;height:21px;border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:800;background:var(--primary-dim);color:var(--primary);flex-shrink:0}
+  .stage:nth-child(even) .num-badge{background:var(--metric-dim);color:var(--metric)}
+  .stage-icon{width:42px;height:42px;border-radius:11px;display:flex;align-items:center;justify-content:center;margin-bottom:14px;background:var(--primary-dim)}
+  .stage:nth-child(even) .stage-icon{background:var(--metric-dim)}
+  .stage-icon svg{width:22px;height:22px;stroke-width:1.75;fill:none;stroke-linecap:round;stroke-linejoin:round;stroke:var(--primary)}
+  .stage:nth-child(even) .stage-icon svg{stroke:var(--metric)}
+  .stage-name{font-size:17px;font-weight:800;letter-spacing:-.3px;margin-bottom:6px;color:var(--primary)}
+  .stage:nth-child(even) .stage-name{color:var(--metric)}
+  .stage-desc{font-size:12px;color:var(--text-dim);line-height:1.6;margin-bottom:16px}
+  .stage-divider{height:1px;background:var(--border);margin-bottom:14px}
+  .cap-list{list-style:none;font-size:11.5px;line-height:1.7;color:var(--text-dim)}
+  .cap-list li{padding-left:14px;position:relative}
+  .cap-list li::before{content:'›';position:absolute;left:0;font-weight:800;color:var(--primary)}
+
+  .methodology{margin:0 auto}
+  .method-label{font-family:var(--font-mono);font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:2px;color:var(--text-muted);margin-bottom:20px;text-align:center}
+  .tenets{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+  .tenet{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:16px 18px;font-size:12.5px;color:var(--text-dim);line-height:1.6;border-left:3px solid var(--border-bright)}
+  .tenet:nth-child(3n+1){border-left-color:var(--primary)}
+  .tenet:nth-child(3n+2){border-left-color:var(--metric)}
+  .tenet strong{display:block;color:var(--text);font-size:12.5px;font-weight:800;margin-bottom:3px}
+
+  .footer{text-align:center;margin-top:48px;font-family:var(--font-mono);font-size:11px;color:var(--text-muted);border-top:1px solid var(--border);padding-top:20px}
+
+  @media(max-width:1240px){.pipeline{grid-template-columns:repeat(3,1fr)}}
+  @media(max-width:1024px){.tenets{grid-template-columns:repeat(2,1fr)}}
+  @media(max-width:700px){
+    .wrap{padding:8px 16px 48px}
+    h1{font-size:30px}
+    .pipeline{grid-template-columns:1fr}
+    .tenets{grid-template-columns:1fr}
+    .flow-row{display:none}
   }
-
-  @media (prefers-color-scheme: light) {
-    :root {
-      --bg: #f5f3ff;
-      --surface: #ffffff;
-      --surface2: #f0ecff;
-      --surface-elevated: #ffffff;
-      --border: rgba(0, 0, 0, 0.07);
-      --border-bright: rgba(0, 0, 0, 0.14);
-      --text: #1a1530;
-      --text-dim: #6b5f8a;
-      --text-muted: #a89ec0;
-
-      --discover-dim: rgba(168, 85, 247, 0.08);
-      --discover-glow: rgba(168, 85, 247, 0.15);
-      --design-dim: rgba(59, 130, 246, 0.08);
-      --design-glow: rgba(59, 130, 246, 0.15);
-      --kbaudit-dim: rgba(6, 182, 212, 0.08);
-      --kbaudit-glow: rgba(6, 182, 212, 0.15);
-      --build-dim: rgba(249, 115, 22, 0.08);
-      --build-glow: rgba(249, 115, 22, 0.15);
-      --evaluate-dim: rgba(34, 197, 94, 0.08);
-      --evaluate-glow: rgba(34, 197, 94, 0.15);
-      --repair-dim: rgba(244, 63, 94, 0.08);
-      --repair-glow: rgba(244, 63, 94, 0.15);
-    }
-  }
-
-  /* ============ RESET ============ */
-  * { margin: 0; padding: 0; box-sizing: border-box; }
-
-  body {
-    background: var(--bg);
-    background-image:
-      radial-gradient(ellipse at 15% 0%, rgba(168, 85, 247, 0.08) 0%, transparent 50%),
-      radial-gradient(ellipse at 85% 100%, rgba(244, 63, 94, 0.06) 0%, transparent 50%),
-      radial-gradient(ellipse at 50% 50%, rgba(59, 130, 246, 0.04) 0%, transparent 60%);
-    color: var(--text);
-    font-family: var(--font-body);
-    min-height: 100vh;
-    padding: 48px 40px;
-    overflow-wrap: break-word;
-  }
-
-  /* ============ ANIMATIONS ============ */
-  @keyframes fadeUp {
-    from { opacity: 0; transform: translateY(16px); }
-    to { opacity: 1; transform: translateY(0); }
-  }
-
-  @keyframes fadeScale {
-    from { opacity: 0; transform: scale(0.94); }
-    to { opacity: 1; transform: scale(1); }
-  }
-
-  @keyframes glowPulse {
-    0%, 100% { opacity: 0.4; }
-    50% { opacity: 0.7; }
-  }
-
-  .animate-up {
-    animation: fadeUp 0.5s ease-out both;
-    animation-delay: calc(var(--i, 0) * 0.07s);
-  }
-
-  .animate-scale {
-    animation: fadeScale 0.4s ease-out both;
-    animation-delay: calc(var(--i, 0) * 0.07s);
-  }
-
-  @media (prefers-reduced-motion: reduce) {
-    *, *::before, *::after {
-      animation-duration: 0.01ms !important;
-      animation-delay: 0ms !important;
-      transition-duration: 0.01ms !important;
-    }
-  }
-
-  /* ============ HEADER ============ */
-  .header {
-    text-align: center;
-    margin-bottom: 56px;
-  }
-
-  .wordmark {
-    display: inline-flex;
-    align-items: center;
-    gap: 10px;
-    margin-bottom: 20px;
-  }
-
-  .wordmark-icon {
-    width: 36px;
-    height: 36px;
-    background: linear-gradient(135deg, #a855f7, #3b82f6);
-    border-radius: 8px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-  }
-
-  .wordmark-icon svg {
-    width: 20px;
-    height: 20px;
-    fill: white;
-  }
-
-  .wordmark-text {
-    font-size: 18px;
-    font-weight: 700;
-    letter-spacing: -0.3px;
-    color: var(--text);
-  }
-
-  h1 {
-    font-size: 42px;
-    font-weight: 700;
-    letter-spacing: -1.5px;
-    line-height: 1.1;
-    margin-bottom: 12px;
-    background: linear-gradient(135deg, var(--text) 0%, var(--text-dim) 100%);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    background-clip: text;
-  }
-
-  .subtitle {
-    font-family: var(--font-mono);
-    font-size: 13px;
-    color: var(--text-dim);
-    letter-spacing: 0.5px;
-  }
-
-  /* ============ FLOW LABEL ROW ============ */
-  .flow-row {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 8px;
-    margin-bottom: 20px;
-    font-family: var(--font-mono);
-    font-size: 11px;
-    color: var(--text-muted);
-    letter-spacing: 1px;
-    text-transform: uppercase;
-    flex-wrap: wrap;
-  }
-
-  .flow-row-stage {
-    color: var(--text-dim);
-  }
-
-  .flow-row-arrow {
-    color: var(--text-muted);
-    font-size: 14px;
-  }
-
-  /* ============ PIPELINE GRID ============ */
-  .pipeline {
-    display: grid;
-    grid-template-columns: repeat(6, 1fr);
-    gap: 12px;
-    max-width: 1200px;
-    margin: 0 auto 48px;
-  }
-
-  /* ============ STAGE CARD ============ */
-  .stage {
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: 14px;
-    overflow: hidden;
-    position: relative;
-    transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
-    cursor: default;
-  }
-
-  .stage:hover {
-    transform: translateY(-4px);
-  }
-
-  /* Colored top bar */
-  .stage-bar {
-    height: 3px;
-    width: 100%;
-  }
-
-  /* Glow effect on hover */
-  .stage::after {
-    content: '';
-    position: absolute;
-    inset: 0;
-    border-radius: 14px;
-    opacity: 0;
-    transition: opacity 0.3s ease;
-    pointer-events: none;
-  }
-
-  .stage:hover::after { opacity: 1; }
-
-  /* Stage body */
-  .stage-body {
-    padding: 20px 18px 22px;
-  }
-
-  /* Stage number badge */
-  .stage-num {
-    font-family: var(--font-mono);
-    font-size: 10px;
-    font-weight: 600;
-    letter-spacing: 1px;
-    text-transform: uppercase;
-    margin-bottom: 12px;
-    display: flex;
-    align-items: center;
-    gap: 6px;
-  }
-
-  .num-badge {
-    width: 20px;
-    height: 20px;
-    border-radius: 5px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 10px;
-    font-weight: 700;
-    flex-shrink: 0;
-  }
-
-  /* Stage icon */
-  .stage-icon {
-    width: 40px;
-    height: 40px;
-    border-radius: 10px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    margin-bottom: 14px;
-  }
-
-  .stage-icon svg {
-    width: 22px;
-    height: 22px;
-    stroke-width: 1.75;
-    fill: none;
-    stroke-linecap: round;
-    stroke-linejoin: round;
-  }
-
-  /* Stage name */
-  .stage-name {
-    font-size: 16px;
-    font-weight: 700;
-    letter-spacing: -0.3px;
-    margin-bottom: 6px;
-  }
-
-  /* Stage description */
-  .stage-desc {
-    font-size: 12px;
-    color: var(--text-dim);
-    line-height: 1.55;
-    margin-bottom: 16px;
-  }
-
-  /* Divider */
-  .stage-divider {
-    height: 1px;
-    background: var(--border);
-    margin-bottom: 14px;
-  }
-
-  /* Capabilities list */
-  .cap-list {
-    list-style: none;
-    font-size: 11.5px;
-    line-height: 1.7;
-    color: var(--text-dim);
-  }
-
-  .cap-list li {
-    padding-left: 14px;
-    position: relative;
-  }
-
-  .cap-list li::before {
-    content: '›';
-    position: absolute;
-    left: 0;
-    font-weight: 600;
-    color: var(--text-muted);
-  }
-
-  /* ============ DISCOVER ============ */
-  .stage--discover .stage-bar { background: var(--discover); }
-  .stage--discover .num-badge { background: var(--discover-dim); color: var(--discover); }
-  .stage--discover .stage-num { color: var(--discover); }
-  .stage--discover .stage-icon { background: var(--discover-dim); }
-  .stage--discover .stage-icon svg { stroke: var(--discover); }
-  .stage--discover .stage-name { color: var(--discover); }
-  .stage--discover::after { box-shadow: 0 8px 32px var(--discover-glow), inset 0 0 0 1px rgba(168,85,247,0.2); }
-
-  /* ============ DESIGN ============ */
-  .stage--design .stage-bar { background: var(--design); }
-  .stage--design .num-badge { background: var(--design-dim); color: var(--design); }
-  .stage--design .stage-num { color: var(--design); }
-  .stage--design .stage-icon { background: var(--design-dim); }
-  .stage--design .stage-icon svg { stroke: var(--design); }
-  .stage--design .stage-name { color: var(--design); }
-  .stage--design::after { box-shadow: 0 8px 32px var(--design-glow), inset 0 0 0 1px rgba(59,130,246,0.2); }
-
-  /* ============ KB AUDIT ============ */
-  .stage--kbaudit .stage-bar { background: var(--kbaudit); }
-  .stage--kbaudit .num-badge { background: var(--kbaudit-dim); color: var(--kbaudit); }
-  .stage--kbaudit .stage-num { color: var(--kbaudit); }
-  .stage--kbaudit .stage-icon { background: var(--kbaudit-dim); }
-  .stage--kbaudit .stage-icon svg { stroke: var(--kbaudit); }
-  .stage--kbaudit .stage-name { color: var(--kbaudit); }
-  .stage--kbaudit::after { box-shadow: 0 8px 32px var(--kbaudit-glow), inset 0 0 0 1px rgba(6,182,212,0.2); }
-
-  /* ============ BUILD ============ */
-  .stage--build .stage-bar { background: var(--build); }
-  .stage--build .num-badge { background: var(--build-dim); color: var(--build); }
-  .stage--build .stage-num { color: var(--build); }
-  .stage--build .stage-icon { background: var(--build-dim); }
-  .stage--build .stage-icon svg { stroke: var(--build); }
-  .stage--build .stage-name { color: var(--build); }
-  .stage--build::after { box-shadow: 0 8px 32px var(--build-glow), inset 0 0 0 1px rgba(249,115,22,0.2); }
-
-  /* ============ EVALUATE ============ */
-  .stage--evaluate .stage-bar { background: var(--evaluate); }
-  .stage--evaluate .num-badge { background: var(--evaluate-dim); color: var(--evaluate); }
-  .stage--evaluate .stage-num { color: var(--evaluate); }
-  .stage--evaluate .stage-icon { background: var(--evaluate-dim); }
-  .stage--evaluate .stage-icon svg { stroke: var(--evaluate); }
-  .stage--evaluate .stage-name { color: var(--evaluate); }
-  .stage--evaluate::after { box-shadow: 0 8px 32px var(--evaluate-glow), inset 0 0 0 1px rgba(34,197,94,0.2); }
-
-  /* ============ REPAIR ============ */
-  .stage--repair .stage-bar { background: var(--repair); }
-  .stage--repair .num-badge { background: var(--repair-dim); color: var(--repair); }
-  .stage--repair .stage-num { color: var(--repair); }
-  .stage--repair .stage-icon { background: var(--repair-dim); }
-  .stage--repair .stage-icon svg { stroke: var(--repair); }
-  .stage--repair .stage-name { color: var(--repair); }
-  .stage--repair::after { box-shadow: 0 8px 32px var(--repair-glow), inset 0 0 0 1px rgba(244,63,94,0.2); }
-
-  /* ============ METHODOLOGY SECTION ============ */
-  .methodology {
-    max-width: 1200px;
-    margin: 0 auto;
-  }
-
-  .method-label {
-    font-family: var(--font-mono);
-    font-size: 10px;
-    font-weight: 600;
-    text-transform: uppercase;
-    letter-spacing: 2px;
-    color: var(--text-muted);
-    margin-bottom: 20px;
-    text-align: center;
-  }
-
-  .tenets {
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 10px;
-  }
-
-  .tenet {
-    background: var(--surface2);
-    border: 1px solid var(--border);
-    border-radius: 10px;
-    padding: 14px 16px;
-    font-size: 12px;
-    color: var(--text-dim);
-    line-height: 1.5;
-  }
-
-  .tenet strong {
-    display: block;
-    color: var(--text);
-    font-size: 12px;
-    font-weight: 600;
-    margin-bottom: 3px;
-  }
-
-  /* ============ FOOTER ============ */
-  .footer {
-    text-align: center;
-    margin-top: 48px;
-    font-family: var(--font-mono);
-    font-size: 11px;
-    color: var(--text-muted);
-  }
-
-  /* ============ RESPONSIVE ============ */
-  @media (max-width: 1024px) {
-    .pipeline { grid-template-columns: repeat(3, 1fr); }
-    .tenets { grid-template-columns: repeat(2, 1fr); }
-  }
-
-  @media (max-width: 640px) {
-    body { padding: 24px 16px; }
-    h1 { font-size: 28px; }
-    .pipeline { grid-template-columns: repeat(2, 1fr); }
-    .tenets { grid-template-columns: 1fr; }
-    .flow-row { display: none; }
-  }
-.backlink{position:fixed;top:12px;left:16px;z-index:200;font-family:var(--font-mono,monospace);font-size:11px;color:var(--text-dim,#8b949e);text-decoration:none;padding:6px 10px;border:1px solid var(--border,rgba(255,255,255,0.08));border-radius:6px;background:var(--surface,#161b22);transition:color .15s,border-color .15s}.backlink:hover{color:var(--text,#e6edf3);border-color:var(--text-dim,#8b949e)}
 </style>
 </head>
 <body>
-<style>
-.crumbs-at-top{max-width:1100px;margin:0 auto;padding:14px 24px 0}
-.crumbs{font-family:var(--font-mono,monospace);font-size:13px;font-weight:600;display:flex;align-items:center;gap:8px;flex-wrap:wrap;min-width:0}
-.crumbs a{color:#e8621a;text-decoration:none}
-.crumbs a:hover,.crumbs a:focus-visible{text-decoration:underline;outline:none}
-.crumbs .sep{color:var(--text-dim)}
-.crumbs .current{color:var(--text-dim);font-weight:400}
-</style>
-<nav class="crumbs crumbs-at-top" aria-label="Breadcrumb">
-  <a href="../index.html">Index</a>
-  <span class="sep">/</span>
-  <a href="../aesop.html">AESOP</a>
-  <span class="sep">/</span>
-  <span class="current" aria-current="page">AESOP Transformation OS</span>
+
+<nav class="nav" aria-label="Primary">
+  <div class="nav-inner">
+    <a class="nav-brand" href="../aesop.html">AESOP<span class="dot">.</span></a>
+    <div class="nav-spacer"></div>
+    <a class="go" href="../aesop.html">&larr; AESOP</a>
+  </div>
 </nav>
-
-
-<div class="header animate-up" style="--i:0">
-  <div class="wordmark">
-    <div class="wordmark-icon">
-      <svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
-    </div>
-    <span class="wordmark-text">AESOP Studio</span>
-  </div>
-  <h1>AESOP Transformation OS</h1>
-  <p class="subtitle">Discover → Design → Build → Evaluate → Repair → Track — organization-scale agent development with portfolio management, org context ingestion, and strategic prioritization</p>
+<div class="crumbs crumbs-top" aria-label="Breadcrumb">
+  <a href="../index.html">Index</a><span class="sep">/</span>
+  <a href="../aesop.html">AESOP</a><span class="sep">/</span>
+  <span class="current" aria-current="page">AESOP Transformation OS</span>
 </div>
 
-<div class="flow-row animate-up" style="--i:1">
-  <span class="flow-row-stage">Discover</span>
-  <span class="flow-row-arrow">→</span>
-  <span class="flow-row-stage">Design</span>
-  <span class="flow-row-arrow">→</span>
-  <span class="flow-row-stage">KB Audit</span>
-  <span class="flow-row-arrow">→</span>
-  <span class="flow-row-stage">Build</span>
-  <span class="flow-row-arrow">→</span>
-  <span class="flow-row-stage">Evaluate</span>
-  <span class="flow-row-arrow">→</span>
-  <span class="flow-row-stage">Repair</span>
-</div>
+<div class="wrap">
 
-<div class="pipeline">
+  <div class="header animate-up" style="--i:0">
+    <div class="wordmark">
+      <div class="wordmark-icon"><svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg></div>
+      <span class="wordmark-text">AESOP Studio</span>
+    </div>
+    <h1>AESOP Transformation OS</h1>
+    <p class="subtitle">Discover &rarr; Design &rarr; Build &rarr; Evaluate &rarr; Repair &rarr; Track &mdash; organization-scale agent development with portfolio management, org context ingestion, and strategic prioritization</p>
+  </div>
 
-  <!-- DISCOVER -->
-  <div class="stage stage--discover animate-scale" style="--i:2">
-    <div class="stage-bar"></div>
-    <div class="stage-body">
-      <div class="stage-num">
-        <div class="num-badge">01</div>
-        Stage One
+  <div class="flow-row animate-up" style="--i:1">
+    <span class="flow-row-stage">Discover</span><span class="flow-row-arrow">&rarr;</span>
+    <span class="flow-row-stage">Design</span><span class="flow-row-arrow">&rarr;</span>
+    <span class="flow-row-stage">KB Audit</span><span class="flow-row-arrow">&rarr;</span>
+    <span class="flow-row-stage">Build</span><span class="flow-row-arrow">&rarr;</span>
+    <span class="flow-row-stage">Evaluate</span><span class="flow-row-arrow">&rarr;</span>
+    <span class="flow-row-stage">Repair</span>
+  </div>
+
+  <div class="pipeline">
+
+    <div class="stage animate-up" style="--i:2">
+      <div class="stage-body">
+        <div class="stage-num"><div class="num-badge">01</div>Stage One</div>
+        <div class="stage-icon"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/><line x1="11" y1="8" x2="11" y2="14"/><line x1="8" y1="11" x2="14" y2="11"/></svg></div>
+        <div class="stage-name">Discover</div>
+        <div class="stage-desc">Structured problem-first interview. Validate the opportunity before writing a single instruction.</div>
+        <div class="stage-divider"></div>
+        <ul class="cap-list"><li>Guided intake interview</li><li>Problem validation</li><li>Opportunity brief</li><li>Platform fitness check</li></ul>
       </div>
-      <div class="stage-icon">
-        <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/><line x1="11" y1="8" x2="11" y2="14"/><line x1="8" y1="11" x2="14" y2="11"/></svg>
+    </div>
+
+    <div class="stage animate-up" style="--i:3">
+      <div class="stage-body">
+        <div class="stage-num"><div class="num-badge">02</div>Stage Two</div>
+        <div class="stage-icon"><svg viewBox="0 0 24 24"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg></div>
+        <div class="stage-name">Design</div>
+        <div class="stage-desc">Generate a full PRD and get architecture recommendations across platforms.</div>
+        <div class="stage-divider"></div>
+        <ul class="cap-list"><li>PRD generation</li><li>Architecture scoring</li><li>Platform selection</li><li>Feasibility review</li></ul>
       </div>
-      <div class="stage-name">Discover</div>
-      <div class="stage-desc">Structured problem-first interview. Validate the opportunity before writing a single instruction.</div>
-      <div class="stage-divider"></div>
-      <ul class="cap-list">
-        <li>Guided intake interview</li>
-        <li>Problem validation</li>
-        <li>Opportunity brief</li>
-        <li>Platform fitness check</li>
-      </ul>
+    </div>
+
+    <div class="stage animate-up" style="--i:4">
+      <div class="stage-body">
+        <div class="stage-num"><div class="num-badge">03</div>Stage Three</div>
+        <div class="stage-icon"><svg viewBox="0 0 24 24"><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"/><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"/></svg></div>
+        <div class="stage-name">KB Audit</div>
+        <div class="stage-desc">Scan your knowledge base for quality issues before they corrupt agent responses.</div>
+        <div class="stage-divider"></div>
+        <ul class="cap-list"><li>Per-doc quality scoring</li><li>Gap analysis</li><li>Conflict detection</li><li>Markdown report export</li></ul>
+      </div>
+    </div>
+
+    <div class="stage animate-up" style="--i:5">
+      <div class="stage-body">
+        <div class="stage-num"><div class="num-badge">04</div>Stage Four</div>
+        <div class="stage-icon"><svg viewBox="0 0 24 24"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg></div>
+        <div class="stage-name">Build</div>
+        <div class="stage-desc">Phase-by-phase instruction writing with human-in-the-loop checkpoints and artifact export.</div>
+        <div class="stage-divider"></div>
+        <ul class="cap-list"><li>5-phase build pipeline</li><li>HITL checkpoint</li><li>Platform artifacts</li><li>JSON schema export</li></ul>
+      </div>
+    </div>
+
+    <div class="stage animate-up" style="--i:6">
+      <div class="stage-body">
+        <div class="stage-num"><div class="num-badge">05</div>Stage Five</div>
+        <div class="stage-icon"><svg viewBox="0 0 24 24"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg></div>
+        <div class="stage-name">Evaluate</div>
+        <div class="stage-desc">Multi-agent scoring, red-team testing, bias probes, and certification across 6 dimensions.</div>
+        <div class="stage-divider"></div>
+        <ul class="cap-list"><li>20+ evaluation agents</li><li>Red-team (Cave)</li><li>Bias probe</li><li>Platinum certification</li></ul>
+      </div>
+    </div>
+
+    <div class="stage animate-up" style="--i:7">
+      <div class="stage-body">
+        <div class="stage-num"><div class="num-badge">06</div>Stage Six</div>
+        <div class="stage-icon"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M12 1v4M12 19v4M4.22 4.22l2.83 2.83M16.95 16.95l2.83 2.83M1 12h4M19 12h4M4.22 19.78l2.83-2.83M16.95 7.05l2.83-2.83"/></svg></div>
+        <div class="stage-name">Repair</div>
+        <div class="stage-desc">AI-powered instruction rewrite using full evaluation context. Tracks regression across versions.</div>
+        <div class="stage-divider"></div>
+        <ul class="cap-list"><li>Extended thinking rewrite</li><li>Targeted patches</li><li>Regression detection</li><li>Version history</li></ul>
+      </div>
+    </div>
+
+  </div>
+
+  <div class="methodology animate-up" style="--i:8">
+    <div class="method-label">The AESOP Methodology &mdash; Problem First, Always</div>
+    <div class="tenets">
+      <div class="tenet"><strong>Problem Primacy</strong>No tool is selected before the problem is fully understood.</div>
+      <div class="tenet"><strong>Evidence Over Intuition</strong>Every architectural decision is tied to validated user signals.</div>
+      <div class="tenet"><strong>Build to Measure</strong>Instructions without an evaluation plan are hypotheses, not agents.</div>
+      <div class="tenet"><strong>Versioned Truth</strong>Every change is tracked. Every regression is detectable.</div>
+      <div class="tenet"><strong>Platform Agnostic</strong>The best platform is the one that fits the problem, not the team's default.</div>
+      <div class="tenet"><strong>Repair as Ritual</strong>Evaluation is only valuable if it drives improvement.</div>
     </div>
   </div>
 
-  <!-- DESIGN -->
-  <div class="stage stage--design animate-scale" style="--i:3">
-    <div class="stage-bar"></div>
-    <div class="stage-body">
-      <div class="stage-num">
-        <div class="num-badge">02</div>
-        Stage Two
-      </div>
-      <div class="stage-icon">
-        <svg viewBox="0 0 24 24"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
-      </div>
-      <div class="stage-name">Design</div>
-      <div class="stage-desc">Generate a full PRD and get architecture recommendations across platforms.</div>
-      <div class="stage-divider"></div>
-      <ul class="cap-list">
-        <li>PRD generation</li>
-        <li>Architecture scoring</li>
-        <li>Platform selection</li>
-        <li>Feasibility review</li>
-      </ul>
-    </div>
-  </div>
-
-  <!-- KB AUDIT -->
-  <div class="stage stage--kbaudit animate-scale" style="--i:4">
-    <div class="stage-bar"></div>
-    <div class="stage-body">
-      <div class="stage-num">
-        <div class="num-badge">03</div>
-        Stage Three
-      </div>
-      <div class="stage-icon">
-        <svg viewBox="0 0 24 24"><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"/><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"/></svg>
-      </div>
-      <div class="stage-name">KB Audit</div>
-      <div class="stage-desc">Scan your knowledge base for quality issues before they corrupt agent responses.</div>
-      <div class="stage-divider"></div>
-      <ul class="cap-list">
-        <li>Per-doc quality scoring</li>
-        <li>Gap analysis</li>
-        <li>Conflict detection</li>
-        <li>Markdown report export</li>
-      </ul>
-    </div>
-  </div>
-
-  <!-- BUILD -->
-  <div class="stage stage--build animate-scale" style="--i:5">
-    <div class="stage-bar"></div>
-    <div class="stage-body">
-      <div class="stage-num">
-        <div class="num-badge">04</div>
-        Stage Four
-      </div>
-      <div class="stage-icon">
-        <svg viewBox="0 0 24 24"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg>
-      </div>
-      <div class="stage-name">Build</div>
-      <div class="stage-desc">Phase-by-phase instruction writing with human-in-the-loop checkpoints and artifact export.</div>
-      <div class="stage-divider"></div>
-      <ul class="cap-list">
-        <li>5-phase build pipeline</li>
-        <li>HITL checkpoint</li>
-        <li>Platform artifacts</li>
-        <li>JSON schema export</li>
-      </ul>
-    </div>
-  </div>
-
-  <!-- EVALUATE -->
-  <div class="stage stage--evaluate animate-scale" style="--i:6">
-    <div class="stage-bar"></div>
-    <div class="stage-body">
-      <div class="stage-num">
-        <div class="num-badge">05</div>
-        Stage Five
-      </div>
-      <div class="stage-icon">
-        <svg viewBox="0 0 24 24"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
-      </div>
-      <div class="stage-name">Evaluate</div>
-      <div class="stage-desc">Multi-agent scoring, red-team testing, bias probes, and certification across 6 dimensions.</div>
-      <div class="stage-divider"></div>
-      <ul class="cap-list">
-        <li>20+ evaluation agents</li>
-        <li>Red-team (Cave)</li>
-        <li>Bias probe</li>
-        <li>Platinum certification</li>
-      </ul>
-    </div>
-  </div>
-
-  <!-- REPAIR -->
-  <div class="stage stage--repair animate-scale" style="--i:7">
-    <div class="stage-bar"></div>
-    <div class="stage-body">
-      <div class="stage-num">
-        <div class="num-badge">06</div>
-        Stage Six
-      </div>
-      <div class="stage-icon">
-        <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M12 1v4M12 19v4M4.22 4.22l2.83 2.83M16.95 16.95l2.83 2.83M1 12h4M19 12h4M4.22 19.78l2.83-2.83M16.95 7.05l2.83-2.83"/></svg>
-      </div>
-      <div class="stage-name">Repair</div>
-      <div class="stage-desc">AI-powered instruction rewrite using full evaluation context. Tracks regression across versions.</div>
-      <div class="stage-divider"></div>
-      <ul class="cap-list">
-        <li>Extended thinking rewrite</li>
-        <li>Targeted patches</li>
-        <li>Regression detection</li>
-        <li>Version history</li>
-      </ul>
-    </div>
+  <div class="footer animate-up" style="--i:9">
+    AESOP Studio &mdash; Unified AI Agent Development Platform
   </div>
 
 </div>
-
-<!-- Methodology section -->
-<div class="methodology animate-up" style="--i:8">
-  <div class="method-label">The AESOP Methodology — Problem First, Always</div>
-  <div class="tenets">
-    <div class="tenet"><strong>Problem Primacy</strong>No tool is selected before the problem is fully understood.</div>
-    <div class="tenet"><strong>Evidence Over Intuition</strong>Every architectural decision is tied to validated user signals.</div>
-    <div class="tenet"><strong>Build to Measure</strong>Instructions without an evaluation plan are hypotheses, not agents.</div>
-    <div class="tenet"><strong>Versioned Truth</strong>Every change is tracked. Every regression is detectable.</div>
-    <div class="tenet"><strong>Platform Agnostic</strong>The best platform is the one that fits the problem, not the team's default.</div>
-    <div class="tenet"><strong>Repair as Ritual</strong>Evaluation is only valuable if it drives improvement.</div>
-  </div>
-</div>
-
-<div class="footer animate-up" style="--i:9">
-  AESOP Studio &mdash; Unified AI Agent Development Platform
-</div>
-
 </body>
 </html>
