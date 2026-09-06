@@ -1,0 +1,475 @@
+<!DOCTYPE html>
+<html class="light">
+<head>
+<meta charset="UTF-8">
+<link rel="icon" type="image/svg+xml" href="../icon.svg">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="A walk through the Fault-Line Radar screen inside Legal AI OS: the build-now radar map, the force-ranked queue, and the calibration record that grades every call.">
+<title>Legal AI OS — Fault-Line Radar (the app screen)</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Mulish:ital,wght@0,300;0,400;0,600;0,700;0,800;1,400&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --font-body: 'Mulish', 'Segoe UI', Helvetica, sans-serif;
+    --font-mono: 'Mulish', ui-monospace, 'SF Mono', Consolas, monospace;
+
+    --bg: #171416; --surface: #1E1A1D; --surface2: #262024;
+    --border: #332D31; --border-bright: #463D42;
+    --text: #F5F2F1; --text-dim: #C9C3C1; --text-faint: #8A8481;
+
+    --primary: #E39CB2; --primary-dim: rgba(227,156,178,0.12);
+    --metric: #5FBF9B; --metric-dim: rgba(95,191,155,0.12);
+
+    --slate: #948E8C; --slate-dim: rgba(148,142,140,0.12);
+    --blue: #60a5fa; --blue-dim: rgba(96,165,250,0.12);
+    --violet: #C9A3B8; --violet-dim: rgba(201,163,184,0.12);
+    --teal: #2dd4bf; --teal-dim: rgba(45,212,191,0.12);
+    --emerald: #34d399; --emerald-dim: rgba(52,211,153,0.12);
+    --amber: #D9A05B; --amber-dim: rgba(217,160,91,0.12);
+    --orange: #fb923c; --orange-dim: rgba(251,146,60,0.12);
+    --red: #f87171; --red-dim: rgba(248,113,113,0.12);
+    --rose: #E36C89; --rose-dim: rgba(227,108,137,0.12);
+  }
+  html.light {
+    --bg: #F5F2F1; --surface: #FFFFFF; --surface2: #EDE8E6;
+    --border: #D9D2CE; --border-bright: #C4B9B4;
+    --text: #171416; --text-dim: #4A4442; --text-faint: #8A8481;
+    --primary: #B83159; --primary-dim: rgba(184,49,89,0.10);
+    --metric: #1E8A6A; --metric-dim: rgba(30,138,106,0.10);
+    --slate: #6A6461; --slate-dim: rgba(106,100,97,0.10);
+    --blue: #2563eb; --blue-dim: rgba(37,99,235,0.08);
+    --violet: #8A5A76; --violet-dim: rgba(138,90,118,0.10);
+    --teal: #1E8A6A; --teal-dim: rgba(30,138,106,0.10);
+    --emerald: #059669; --emerald-dim: rgba(5,150,105,0.08);
+    --amber: #B07C2E; --amber-dim: rgba(176,124,46,0.10);
+    --orange: #ea580c; --orange-dim: rgba(234,88,12,0.08);
+    --red: #C4506B; --red-dim: rgba(196,80,107,0.10);
+    --rose: #C4506B; --rose-dim: rgba(196,80,107,0.10);
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    background: var(--bg);
+    background-image:
+      radial-gradient(at 10% 0%, var(--primary-dim) 0%, transparent 40%),
+      radial-gradient(at 90% 80%, var(--teal-dim) 0%, transparent 40%);
+    color: var(--text); font-family: var(--font-body);
+    font-size: 15px; line-height: 1.7; min-height: 100vh;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  .nav {
+    position: sticky; top: 0; z-index: 100;
+    backdrop-filter: blur(16px);
+    background: color-mix(in srgb, var(--surface) 85%, transparent);
+    border-bottom: 1px solid var(--border);
+  }
+  .nav-inner {
+    max-width: 1000px; margin: 0 auto; padding: 12px 24px;
+    display: flex; align-items: center; justify-content: space-between;
+  }
+  .nav-brand { font-family: var(--font-mono); font-size: 13px; font-weight: 600; color: var(--primary); text-decoration: none; }
+  .crumbs { font-family: var(--font-mono); font-size: 13px; font-weight: 600; display: flex; align-items: center; gap: 8px; flex-wrap: wrap; min-width: 0; }
+  .crumbs a { color: var(--primary); text-decoration: none; }
+  .crumbs a:hover, .crumbs a:focus-visible { text-decoration: underline; outline: none; }
+  .crumbs .sep { color: var(--text-faint); }
+  .crumbs .current { color: var(--text-dim); font-weight: 400; }
+  .theme-toggle {
+    width: 36px; height: 36px; border-radius: 10px;
+    border: 1px solid var(--border); background: var(--surface);
+    cursor: pointer; display: flex; align-items: center; justify-content: center;
+    font-size: 16px; color: var(--text-dim); transition: all 0.2s;
+  }
+  .theme-toggle:hover, .theme-toggle:focus-visible { border-color: var(--primary); color: var(--primary); outline: none; }
+  .backlink{position:fixed;top:12px;left:16px;z-index:101;font-family:var(--font-mono);font-size:12px;color:var(--text-dim);text-decoration:none;padding:6px 10px;border:1px solid var(--border);border-radius:6px;background:var(--surface);transition:color .15s,border-color .15s}
+  .backlink:hover{color:var(--text);border-color:var(--border-bright)}
+
+  .container { max-width: 1000px; margin: 0 auto; padding: 48px 24px 80px; }
+  @keyframes fadeUp { from { opacity: 0; transform: translateY(16px); } to { opacity: 1; transform: translateY(0); } }
+
+  .hero { text-align: center; margin-bottom: 40px; animation: fadeUp 0.5s ease both; }
+  .hero .kicker { font-family: var(--font-mono); font-size: 11px; font-weight: 700; letter-spacing: 0.2em; text-transform: uppercase; color: var(--text-faint); margin-bottom: 12px; }
+  .hero h1 {
+    font-size: 42px; font-weight: 800; letter-spacing: -1px; margin-bottom: 10px;
+    background: linear-gradient(135deg, var(--primary), var(--metric));
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+  }
+  .hero p { font-size: 17px; color: var(--text-dim); max-width: 880px; margin: 0 auto; }
+
+  .lede { max-width: 760px; margin: 0 auto 44px; text-align: left; font-size: 15.5px; color: var(--text-dim); }
+  .lede > p { margin: 0 0 14px; }
+  .lede .lead-in { font-size: 17px; color: var(--text); }
+  .lede .land { display: block; margin-top: 20px; padding-top: 16px; border-top: 1px solid var(--border);
+    font-size: 21px; font-weight: 800; letter-spacing: -0.3px; color: var(--text); }
+  .lede-list { list-style: none; margin: 0 0 14px; display: grid; gap: 9px; }
+  .lede-list li { position: relative; padding-left: 24px; }
+  .lede-list li::before { content: "\2192"; position: absolute; left: 0; top: 0; color: var(--primary); font-family: var(--font-mono); font-weight: 700; }
+
+  .section { margin-bottom: 44px; animation: fadeUp 0.5s ease both; }
+  .section-title { font-family: var(--font-mono); font-size: 12px; font-weight: 700; letter-spacing: 0.15em; text-transform: uppercase; color: var(--text-dim); margin-bottom: 16px; }
+  .panel { background: var(--surface); border: 1px solid var(--border); border-radius: 14px; padding: 26px; }
+  .panel h3 { font-size: 19px; font-weight: 700; margin-bottom: 6px; }
+  .panel p { font-size: 14px; color: var(--text-dim); }
+  .panel p + p { margin-top: 10px; }
+
+  /* two curves */
+  .curves { display: block; width: 100%; height: 220px; }
+  .curve-gap { fill: var(--rose-dim); }
+  .curve-cap { fill: none; stroke: var(--rose); stroke-width: 3; }
+  .curve-gov { fill: none; stroke: var(--teal); stroke-width: 3; }
+  .curve-lbl { font-family: var(--font-mono); font-size: 12px; font-weight: 700; }
+  .legend { display: flex; gap: 22px; justify-content: center; margin-top: 12px; font-family: var(--font-mono); font-size: 11px; color: var(--text-dim); flex-wrap: wrap; }
+  .legend span { display: flex; align-items: center; gap: 6px; }
+  .sw { width: 12px; height: 12px; border-radius: 3px; display: inline-block; }
+
+  /* three orders (cascade) */
+  .orders { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 0; align-items: stretch; }
+  .order { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 18px 16px; position: relative; }
+  .order .ord-k { font-family: var(--font-mono); font-size: 11px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; color: var(--text-faint); }
+  .order h4 { font-size: 16px; font-weight: 700; margin: 6px 0 4px; }
+  .order p { font-size: 13px; color: var(--text-dim); margin: 0; }
+  .order .tag { display: inline-block; margin-top: 10px; font-family: var(--font-mono); font-size: 10px; font-weight: 700; padding: 3px 8px; border-radius: 5px; }
+  .order.l1 { border-left: 3px solid var(--slate); } .order.l1 .tag { background: var(--slate-dim); color: var(--slate); }
+  .order.l2 { border-left: 3px solid var(--rose); } .order.l2 .tag { background: var(--rose-dim); color: var(--rose); }
+  .order.l3 { border-left: 3px solid var(--metric); } .order.l3 .tag { background: var(--metric-dim); color: var(--metric); }
+  .ord-arrow { align-self: center; padding: 0 6px; color: var(--text-faint); font-family: var(--font-mono); font-size: 18px; }
+  .ord-note { text-align: center; font-size: 13px; color: var(--text-dim); margin-top: 14px; }
+  .ord-note b { color: var(--text); }
+
+  /* operating-model queue */
+  .qwrap { overflow-x: auto; border: 1px solid var(--border); border-radius: 12px; }
+  .qtable { width: 100%; border-collapse: collapse; font-size: 13.5px; }
+  .qtable th, .qtable td { text-align: left; padding: 11px 14px; border-bottom: 1px solid var(--border); }
+  .qtable th { font-family: var(--font-mono); font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--text-faint); font-weight: 700; }
+  .qtable tbody tr:last-child td { border-bottom: none; }
+  .qtable .num { font-family: var(--font-mono); font-weight: 700; text-align: center; }
+  .qtable .q { font-family: var(--font-mono); font-weight: 800; text-align: center; }
+  .qtable .lead { font-family: var(--font-mono); font-size: 11px; color: var(--text-dim); white-space: nowrap; }
+  .qtable .now { color: var(--rose); }
+  @media (max-width: 768px) { .orders { grid-template-columns: 1fr; } .ord-arrow { transform: rotate(90deg); padding: 6px 0; } }
+
+  /* tiers */
+  .tiers { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px,1fr)); gap: 12px; }
+  .tier { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 16px 14px; }
+  .tier .w { font-family: var(--font-mono); font-size: 24px; font-weight: 800; }
+  .tier .tname { font-size: 13px; font-weight: 700; margin: 4px 0; }
+  .tier .tdesc { font-size: 12px; color: var(--text-dim); line-height: 1.45; }
+  .t1 .w { color: var(--rose); } .t2 .w { color: var(--amber); } .t3 .w { color: var(--teal); }
+  .t4 .w { color: var(--slate); } .t5 .w { color: var(--text-faint); }
+  .rules { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 16px; }
+  .rule { font-family: var(--font-mono); font-size: 11px; color: var(--text-dim); background: var(--surface2); border: 1px solid var(--border); border-radius: 6px; padding: 6px 10px; }
+  .rule b { color: var(--text); }
+
+  /* fault line table */
+  .table-wrap { overflow-x: auto; border: 1px solid var(--border); border-radius: 12px; }
+  table { width: 100%; border-collapse: collapse; font-size: 13.5px; }
+  th, td { text-align: left; padding: 11px 14px; border-bottom: 1px solid var(--border); }
+  th { font-family: var(--font-mono); font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--text-faint); font-weight: 700; }
+  tbody tr:last-child td { border-bottom: none; }
+  .fl-name { font-weight: 600; color: var(--text); }
+  .fl-rule { font-family: var(--font-mono); font-size: 11px; color: var(--text-faint); white-space: nowrap; }
+  .pcell { display: flex; align-items: center; gap: 9px; min-width: 150px; }
+  .pbar { flex: 1; height: 7px; border-radius: 4px; background: var(--surface2); overflow: hidden; }
+  .pbar > i { display: block; height: 100%; border-radius: 4px; }
+  .pnum { font-family: var(--font-mono); font-size: 12px; font-weight: 700; min-width: 26px; }
+  .hz { font-family: var(--font-mono); font-size: 11px; color: var(--text-dim); white-space: nowrap; }
+
+  /* calibration */
+  .cal-head { display: flex; align-items: baseline; gap: 14px; flex-wrap: wrap; margin-bottom: 4px; }
+  .hitrate { font-family: var(--font-mono); font-size: 30px; font-weight: 800; color: var(--emerald); }
+  .cal-rows { margin-top: 16px; display: grid; gap: 8px; }
+  .cal-row { display: grid; grid-template-columns: 92px 92px 1fr auto; gap: 12px; align-items: center; padding: 10px 12px; background: var(--surface2); border: 1px solid var(--border); border-radius: 8px; font-size: 13px; }
+  .called { font-family: var(--font-mono); font-size: 11px; font-weight: 700; color: var(--emerald); }
+  .cal-date { font-family: var(--font-mono); font-size: 11px; color: var(--text-faint); }
+  .cal-p { font-family: var(--font-mono); font-size: 12px; color: var(--text-dim); text-align: right; white-space: nowrap; }
+  .cal-p b { color: var(--text); }
+
+  /* worked example */
+  .sig-list { margin-top: 16px; display: grid; gap: 8px; }
+  .sig-row { display: grid; grid-template-columns: 78px 1fr; gap: 14px; align-items: baseline; padding: 11px 13px; background: var(--surface2); border: 1px solid var(--border); border-radius: 8px; }
+  .sig-tier { font-family: var(--font-mono); font-size: 11px; font-weight: 700; white-space: nowrap; }
+  .sig-row p { font-size: 13px; color: var(--text-dim); margin: 0; }
+  .sig-row b { color: var(--text); }
+  @media (max-width: 768px) { .sig-row { grid-template-columns: 1fr; gap: 4px; } }
+
+  /* pipeline */
+  .flow { display: flex; align-items: stretch; gap: 0; overflow-x: auto; padding-bottom: 6px; }
+  .stage { flex: 1; min-width: 140px; background: var(--surface2); border: 1px solid var(--border); border-radius: 10px; padding: 14px 13px; }
+  .stage .sfile { font-family: var(--font-mono); font-size: 10px; color: var(--primary); }
+  .stage .sname { font-weight: 700; font-size: 13px; margin: 4px 0; }
+  .stage .sdesc { font-size: 12px; color: var(--text-dim); line-height: 1.4; }
+  .arrow { align-self: center; padding: 0 8px; color: var(--text-faint); font-size: 18px; font-family: var(--font-mono); }
+  .phase2 { margin-top: 14px; border: 1px dashed var(--border-bright); border-radius: 10px; padding: 12px 14px; font-size: 12.5px; color: var(--text-dim); }
+  .phase2 b { color: var(--text); font-family: var(--font-mono); font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase; }
+
+  .why { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+  .why .card { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 20px; }
+  .why .card h4 { font-size: 15px; font-weight: 700; margin-bottom: 6px; }
+  .why .card p { font-size: 13px; color: var(--text-dim); }
+  .why .card.kill { border-left: 3px solid var(--rose); }
+  .why .card.keep { border-left: 3px solid var(--emerald); }
+
+  .footer { margin-top: 48px; padding-top: 16px; border-top: 1px solid var(--border); text-align: center; font-size: 12px; color: var(--text-faint); }
+
+  @media (max-width: 768px) {
+    .hero h1 { font-size: 28px; }
+    .why { grid-template-columns: 1fr; }
+    .cal-row { grid-template-columns: 1fr; gap: 4px; }
+    .cal-p { text-align: left; }
+  }
+  @media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation-duration: 0.01ms !important; } }
+</style>
+</head>
+<style>
+  /* app-screen walkthrough additions */
+  .plotcard { background: var(--surface); border: 1px solid var(--border); border-radius: 14px; padding: 20px; }
+  .plot svg { width: 100%; height: auto; display: block; }
+  .ax { font-family: var(--font-mono); font-size: 10px; fill: var(--text-faint); }
+  .thr { font-family: var(--font-mono); font-size: 9px; font-weight: 700; fill: var(--primary); }
+  .bn { font-size: 11px; font-weight: 800; letter-spacing: 0.06em; fill: var(--primary); }
+  .dn { font-size: 10px; font-weight: 700; fill: #fff; }
+  .cap { font-size: 11px; fill: var(--text-faint); }
+  .yaxlbl { text-align: center; font-family: var(--font-mono); font-size: 11px; color: var(--text-faint); margin-bottom: 8px; }
+  .leadlegend { display: flex; gap: 20px; flex-wrap: wrap; margin-top: 12px; font-family: var(--font-mono); font-size: 11px; color: var(--text-dim); }
+  .leadlegend span { display: flex; align-items: center; gap: 6px; }
+  .ldot { width: 12px; height: 12px; border-radius: 50%; display: inline-block; }
+  .lookup { list-style: none; margin: 14px 0 0; padding: 0; display: grid; grid-template-columns: 1fr 1fr; gap: 6px 22px; }
+  .lookup li { display: flex; align-items: baseline; gap: 9px; font-size: 13px; color: var(--text-dim); }
+  .lookup .n { font-family: var(--font-mono); font-weight: 800; font-size: 12px; color: var(--text); min-width: 18px; }
+  .lookup b { color: var(--text); font-weight: 600; }
+  @media (max-width: 640px) { .lookup { grid-template-columns: 1fr; } }
+
+  .anat { display: grid; gap: 12px; }
+  .anat .row { display: grid; grid-template-columns: 34px 1fr; gap: 14px; align-items: start; background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 15px 16px; }
+  .anat .k { font-family: var(--font-mono); font-weight: 800; font-size: 15px; color: var(--primary); }
+  .anat h4 { font-size: 15px; font-weight: 700; margin: 0 0 3px; }
+  .anat p { font-size: 13.5px; color: var(--text-dim); margin: 0; }
+
+  .bncards { display: grid; grid-template-columns: repeat(3,1fr); gap: 14px; }
+  .bncard { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 16px; border-top: 3px solid var(--rose); }
+  .bncard .top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
+  .bncard .rk { font-family: var(--font-mono); font-weight: 800; font-size: 17px; color: var(--primary); }
+  .bncard .lp { font-family: var(--font-mono); font-size: 10px; font-weight: 700; text-transform: uppercase; padding: 2px 9px; border-radius: 999px; }
+  .bncard h4 { font-size: 14.5px; font-weight: 700; margin: 0 0 6px; line-height: 1.35; }
+  .bncard p { font-size: 12.5px; color: var(--text-dim); margin: 0; }
+  .bncard .ft { font-family: var(--font-mono); font-size: 11px; color: var(--text-faint); margin-top: 10px; padding-top: 10px; border-top: 1px solid var(--border); }
+  .bncard .ft b { color: var(--primary); }
+  @media (max-width: 768px) { .bncards { grid-template-columns: 1fr; } }
+
+  .steps { display: grid; gap: 9px; margin-top: 4px; }
+  .step { display: grid; grid-template-columns: 26px 1fr; gap: 12px; align-items: baseline; font-size: 14px; color: var(--text-dim); }
+  .step .sn { font-family: var(--font-mono); font-weight: 800; color: var(--primary); }
+  .step b { color: var(--text); }
+</style>
+
+
+<body>
+<a class="backlink" href="index.html">&larr; Legal</a>
+<div class="nav">
+  <div class="nav-inner">
+    <nav class="crumbs" aria-label="Breadcrumb">
+      <a href="../index.html">Index</a>
+      <span class="sep">/</span>
+      <a href="index.html">Legal</a>
+      <span class="sep">/</span>
+      <span class="current" aria-current="page">Fault-Line Radar &middot; the screen</span>
+    </nav>
+    <button class="theme-toggle" id="themeToggle" aria-label="Toggle light and dark theme">&#9788;</button>
+  </div>
+</div>
+
+<div class="container">
+
+  <div class="hero">
+    <div class="kicker">legal-os &middot; leader view</div>
+    <h1>Fault-Line Radar &mdash; the screen</h1>
+    <p>The page a leader opens inside Legal AI OS. One chart, three things to build now, and a record that grades every call. This is a tour of what you actually see.</p>
+  </div>
+
+  <div class="lede">
+    <p class="lead-in">The screen answers one question before you scroll: <strong>what should we build before the rules land?</strong></p>
+    <ul class="lede-list">
+      <li>The radar map is the first thing on the page. No preamble.</li>
+      <li>The top-right corner is the queue. High legal pressure and high market adoption together.</li>
+      <li>Everything below the chart is the same list, ranked, with the evidence one click away.</li>
+    </ul>
+    <span class="land">See the corner. Build the corner.</span>
+  </div>
+
+  <!-- THE MAP -->
+  <div class="section">
+    <div class="section-title">The radar map</div>
+    <div class="plotcard">
+      <div class="yaxlbl">Up = the market made the fix table stakes &#8594;</div>
+      <div class="plot">
+        <svg viewBox="0 0 760 470" role="img" aria-label="Scatter of eleven fault lines by legal ruling pressure and market adoption, with a build-now quadrant above threshold seven on both axes">
+<rect x="533.8" y="18.0" width="208.2" height="123.0" fill="var(--primary-dim)"/>
+<line x1="48.0" y1="18" x2="48.0" y2="428" stroke="var(--border)"/>
+<line x1="48" y1="428.0" x2="742" y2="428.0" stroke="var(--border)"/>
+<text x="48.0" y="443" text-anchor="middle" class="ax">0</text>
+<text x="41" y="431.0" text-anchor="end" class="ax">0</text>
+<line x1="186.8" y1="18" x2="186.8" y2="428" stroke="var(--border)"/>
+<line x1="48" y1="346.0" x2="742" y2="346.0" stroke="var(--border)"/>
+<text x="186.8" y="443" text-anchor="middle" class="ax">2</text>
+<text x="41" y="349.0" text-anchor="end" class="ax">2</text>
+<line x1="325.6" y1="18" x2="325.6" y2="428" stroke="var(--border)"/>
+<line x1="48" y1="264.0" x2="742" y2="264.0" stroke="var(--border)"/>
+<text x="325.6" y="443" text-anchor="middle" class="ax">4</text>
+<text x="41" y="267.0" text-anchor="end" class="ax">4</text>
+<line x1="464.4" y1="18" x2="464.4" y2="428" stroke="var(--border)"/>
+<line x1="48" y1="182.0" x2="742" y2="182.0" stroke="var(--border)"/>
+<text x="464.4" y="443" text-anchor="middle" class="ax">6</text>
+<text x="41" y="185.0" text-anchor="end" class="ax">6</text>
+<line x1="603.2" y1="18" x2="603.2" y2="428" stroke="var(--border)"/>
+<line x1="48" y1="100.0" x2="742" y2="100.0" stroke="var(--border)"/>
+<text x="603.2" y="443" text-anchor="middle" class="ax">8</text>
+<text x="41" y="103.0" text-anchor="end" class="ax">8</text>
+<line x1="742.0" y1="18" x2="742.0" y2="428" stroke="var(--border)"/>
+<line x1="48" y1="18.0" x2="742" y2="18.0" stroke="var(--border)"/>
+<text x="742.0" y="443" text-anchor="middle" class="ax">10</text>
+<text x="41" y="21.0" text-anchor="end" class="ax">10</text>
+<line x1="533.8" y1="18" x2="533.8" y2="428" stroke="var(--primary)" stroke-width="1.5" stroke-dasharray="5 4"/>
+<line x1="48" y1="141.0" x2="742" y2="141.0" stroke="var(--primary)" stroke-width="1.5" stroke-dasharray="5 4"/>
+<text x="538.8" y="29" class="thr">threshold 7</text>
+<text x="735.1" y="24.1" text-anchor="end" class="bn">BUILD NOW</text>
+<line x1="603.2" y1="141.0" x2="726.9" y2="103.6" stroke="var(--border-bright)" opacity="0.5"/>
+<line x1="568.5" y1="161.5" x2="722.7" y2="96.3" stroke="var(--border-bright)" opacity="0.5"/>
+<line x1="464.4" y1="202.5" x2="693.6" y2="80.4" stroke="var(--border-bright)" opacity="0.5"/>
+<line x1="637.9" y1="120.5" x2="651.8" y2="83.6" stroke="var(--border-bright)" opacity="0.5"/>
+<line x1="568.5" y1="141.0" x2="691.8" y2="113.6" stroke="var(--border-bright)" opacity="0.5"/>
+<line x1="533.8" y1="182.0" x2="701.0" y2="143.0" stroke="var(--border-bright)" opacity="0.5"/>
+<line x1="464.4" y1="202.5" x2="547.7" y2="100.0" stroke="var(--border-bright)" opacity="0.5"/>
+<line x1="499.1" y1="223.0" x2="540.7" y2="173.8" stroke="var(--border-bright)" opacity="0.5"/>
+<line x1="360.3" y1="305.0" x2="519.9" y2="235.3" stroke="var(--border-bright)" opacity="0.5"/>
+<line x1="395.0" y1="305.0" x2="492.2" y2="305.0" stroke="var(--border-bright)" opacity="0.5"/>
+<line x1="290.9" y1="325.5" x2="450.5" y2="325.5" stroke="var(--border-bright)" opacity="0.5"/>
+<circle cx="726.9" cy="103.6" r="15.1" fill="var(--rose)" fill-opacity="0.82" stroke="var(--surface)" stroke-width="1.5"/>
+<text x="726.9" y="106.9" text-anchor="middle" class="dn">1</text>
+<circle cx="722.7" cy="96.3" r="15.1" fill="var(--amber)" fill-opacity="0.82" stroke="var(--surface)" stroke-width="1.5"/>
+<text x="722.7" y="99.6" text-anchor="middle" class="dn">2</text>
+<circle cx="693.6" cy="80.4" r="15.1" fill="var(--amber)" fill-opacity="0.82" stroke="var(--surface)" stroke-width="1.5"/>
+<text x="693.6" y="83.7" text-anchor="middle" class="dn">3</text>
+<circle cx="651.8" cy="83.6" r="14.4" fill="var(--rose)" fill-opacity="0.82" stroke="var(--surface)" stroke-width="1.5"/>
+<text x="651.8" y="86.9" text-anchor="middle" class="dn">4</text>
+<circle cx="691.8" cy="113.6" r="14.3" fill="var(--rose)" fill-opacity="0.82" stroke="var(--surface)" stroke-width="1.5"/>
+<text x="691.8" y="116.9" text-anchor="middle" class="dn">5</text>
+<circle cx="701.0" cy="143.0" r="13.6" fill="var(--rose)" fill-opacity="0.82" stroke="var(--surface)" stroke-width="1.5"/>
+<text x="701.0" y="146.3" text-anchor="middle" class="dn">6</text>
+<circle cx="547.7" cy="100.0" r="12.7" fill="var(--amber)" fill-opacity="0.82" stroke="var(--surface)" stroke-width="1.5"/>
+<text x="547.7" y="103.3" text-anchor="middle" class="dn">7</text>
+<circle cx="540.7" cy="173.8" r="11.1" fill="var(--amber)" fill-opacity="0.82" stroke="var(--surface)" stroke-width="1.5"/>
+<text x="540.7" y="177.1" text-anchor="middle" class="dn">8</text>
+<circle cx="519.9" cy="235.3" r="9.7" fill="var(--metric)" fill-opacity="0.82" stroke="var(--surface)" stroke-width="1.5"/>
+<text x="519.9" y="238.6" text-anchor="middle" class="dn">9</text>
+<circle cx="492.2" cy="305.0" r="8.2" fill="var(--amber)" fill-opacity="0.82" stroke="var(--surface)" stroke-width="1.5"/>
+<text x="492.2" y="308.3" text-anchor="middle" class="dn">10</text>
+<circle cx="450.5" cy="325.5" r="7.6" fill="var(--metric)" fill-opacity="0.82" stroke="var(--surface)" stroke-width="1.5"/>
+<text x="450.5" y="328.8" text-anchor="middle" class="dn">11</text>
+<text x="395" y="467" text-anchor="middle" class="cap">Right = the law is closer to acting &#8594;</text>
+        </svg>
+      </div>
+      <div class="leadlegend">
+        <span><i class="ldot" style="background:var(--rose)"></i> now</span>
+        <span><i class="ldot" style="background:var(--amber)"></i> soon</span>
+        <span><i class="ldot" style="background:var(--metric)"></i> later</span>
+        <span>Dot size = queue score &middot; number = queue rank &middot; faint line = where it sat 90 days ago</span>
+      </div>
+      <ol class="lookup">
+        <li><span class="n">1</span><b>Verification-by-default with an audit trail</b> &mdash; disclosure &amp; certification</li>
+        <li><span class="n">2</span><b>A documented verification process</b> &mdash; the competence duty</li>
+        <li><span class="n">3</span><b>A governance program, not a tool ban</b> &mdash; competence &amp; supervision</li>
+        <li><span class="n">4</span><b>Governance as an insurable artifact</b> &mdash; insurance &amp; carriers</li>
+        <li><span class="n">5</span><b>One control set across overlapping rules</b> &mdash; convergence</li>
+        <li><span class="n">6</span><b>Confidentiality controls for AI inputs</b> &mdash; confidentiality</li>
+        <li><span class="n">7</span><b>Benchmark-backed tool claims</b> &mdash; capability benchmarks</li>
+        <li><span class="n">8</span><b>Human checkpoints on agent workflows</b> &mdash; agentic autonomy</li>
+        <li><span class="n">9</span><b>Value/fee transparency on AI work</b> &mdash; fees</li>
+        <li><span class="n">10</span><b>Judicial-analytics guardrails</b> &mdash; judicial analytics</li>
+        <li><span class="n">11</span><b>Vendor liability allocation</b> &mdash; vendor liability</li>
+      </ol>
+    </div>
+  </div>
+
+  <!-- HOW TO READ -->
+  <div class="section">
+    <div class="section-title">How to read the corner</div>
+    <div class="orders">
+      <div class="order l2"><div class="ord-k">x-axis</div><h4>L2 ruling pressure</h4><p>How close courts and bars are to acting. Right means closer.</p><span class="tag">right &rarr;</span></div>
+      <div class="ord-arrow">&times;</div>
+      <div class="order l3"><div class="ord-k">y-axis</div><h4>L3 adoption</h4><p>How far insurers and buyers have made the fix table stakes. Up means further.</p><span class="tag">up &uarr;</span></div>
+      <div class="ord-arrow">=</div>
+      <div class="order l1" style="border-left-color:var(--primary)"><div class="ord-k">top-right</div><h4>Build now</h4><p>Both above threshold 7. Urgent and about to be required. That is the queue.</p><span class="tag" style="background:var(--primary-dim);color:var(--primary)">the queue</span></div>
+    </div>
+    <div class="ord-note">The dashed lines sit at <b>7</b> on both axes &mdash; the same threshold the engine grades itself against below.</div>
+  </div>
+
+  <!-- BUILD NOW -->
+  <div class="section">
+    <div class="section-title">Build now &mdash; force-ranked, top three</div>
+    <div class="bncards">
+      <div class="bncard">
+        <div class="top"><span class="rk">#1</span><span class="lp" style="background:var(--rose-dim);color:var(--rose)">now</span></div>
+        <h4>Verification-by-default with an audit trail</h4>
+        <p>Courts now expect a documented check on every AI-assisted filing, not a signature after the fact.</p>
+        <div class="ft">L2 <b>9.8 +1.8</b> &middot; L3 <b>8.1 +1.1</b></div>
+      </div>
+      <div class="bncard" style="border-top-color:var(--amber)">
+        <div class="top"><span class="rk">#2</span><span class="lp" style="background:var(--amber-dim);color:var(--amber)">soon</span></div>
+        <h4>A documented verification process</h4>
+        <p>Attestation gives way to a recorded process: what was checked, how, and by whom.</p>
+        <div class="ft">L2 <b>9.8 +2.3</b> &middot; L3 <b>8.1 +1.6</b></div>
+      </div>
+      <div class="bncard" style="border-top-color:var(--amber)">
+        <div class="top"><span class="rk">#3</span><span class="lp" style="background:var(--amber-dim);color:var(--amber)">soon</span></div>
+        <h4>A governance program, not a tool ban</h4>
+        <p>The duty shifts from understanding one tool to running a program across all of them.</p>
+        <div class="ft">L2 <b>9.6 +3.6</b> &middot; L3 <b>8.2 +2.7</b></div>
+      </div>
+    </div>
+    <div class="ord-note">Everything else stays in the ranked queue below the cards. Years-out items collapse to a single <b>just watch</b> line.</div>
+  </div>
+
+  <!-- SCREEN ANATOMY -->
+  <div class="section">
+    <div class="section-title">The screen, region by region</div>
+    <div class="anat">
+      <div class="row"><div class="k">1</div><div><h4>Header + credibility chip</h4><p>Title, the as-of date and item count, and a <b>6 / 9</b> chip: real events the engine called 90 days before they landed. It anchors down to the calibration record.</p></div></div>
+      <div class="row"><div class="k">2</div><div><h4>The radar map</h4><p>First content on the page. Hover a dot to inspect it and dim the rest; click to expand its row. The faint trail shows where each fault line sat a quarter ago.</p></div></div>
+      <div class="row"><div class="k">3</div><div><h4>Build-now cards</h4><p>Exactly three, force-ranked by queue score. The control is the headline, not the jargon. Each carries its lead time and the move in L2 and L3.</p></div></div>
+      <div class="row"><div class="k">4</div><div><h4>The full queue</h4><p>One canonical list. Rank, control, lead-time dot, whole-number L1&middot;L2&middot;L3, and a queue delta. Sort by urgency or by biggest move. Rows expand to meters and the evidence.</p></div></div>
+      <div class="row"><div class="k">5</div><div><h4>Calibration record</h4><p>Three hit-rate cards and a dated table of called-vs-missed. The honest misses stay in. That is what makes the rest trustworthy.</p></div></div>
+    </div>
+  </div>
+
+  <!-- CALIBRATION -->
+  <div class="section">
+    <div class="section-title">Why the chip earns trust</div>
+    <div class="panel">
+      <div class="cal-head"><span class="hitrate">6 / 9</span><h3>real events called 90 days early</h3></div>
+      <p>Every run, the engine snapshots its readings, then checks them against what actually happened. L2 rulings: 3 of 3. L3 adoption: 2 of 3. L1 capability: 1 of 3 &mdash; and it reports those misses rather than tuning them away, because they were first-of-kind jumps with no precursor to call from.</p>
+    </div>
+  </div>
+
+  <div class="lede" style="margin-top:8px;margin-bottom:0;">
+    <p>Want the machinery behind the screen &mdash; how the scores are weighted and graded? See the <a href="legal-os-fault-line-radar.html" style="color:var(--primary)">engine explainer</a>.</p>
+  </div>
+
+  <div class="footer">&copy; 2025-2026 Charlie Fuller &middot; part of the legal-os platform</div>
+
+</div>
+
+<script>
+  (function(){
+    var root=document.documentElement;
+    if(localStorage.getItem('diagram-theme')==='dark'){root.classList.remove('light');root.classList.add('dark');}
+    var btn=document.getElementById('themeToggle');
+    if(btn) btn.addEventListener('click',function(){
+      var dark=root.classList.toggle('dark');
+      root.classList.toggle('light',!dark);
+      localStorage.setItem('diagram-theme',dark?'dark':'light');
+    });
+  })();
+</script>
+</body>
+</html>
