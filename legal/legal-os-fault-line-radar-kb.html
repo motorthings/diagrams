@@ -1,0 +1,464 @@
+<!DOCTYPE html>
+<html class="light">
+<head>
+<meta charset="UTF-8">
+<link rel="icon" type="image/svg+xml" href="../icon.svg">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="The source library inside Legal AI OS: all 25 documents the Fault-Line Radar weighs, each with what it is and why it is in the knowledge base.">
+<title>Legal AI OS — Fault-Line Radar, the source library</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Mulish:ital,wght@0,300;0,400;0,600;0,700;0,800;1,400&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --font-body: 'Mulish', 'Segoe UI', Helvetica, sans-serif;
+    --font-mono: 'Mulish', ui-monospace, 'SF Mono', Consolas, monospace;
+
+    --bg: #171416; --surface: #1E1A1D; --surface2: #262024;
+    --border: #332D31; --border-bright: #463D42;
+    --text: #F5F2F1; --text-dim: #C9C3C1; --text-faint: #8A8481;
+
+    --primary: #E39CB2; --primary-dim: rgba(227,156,178,0.12);
+    --metric: #5FBF9B; --metric-dim: rgba(95,191,155,0.12);
+
+    --slate: #948E8C; --slate-dim: rgba(148,142,140,0.12);
+    --blue: #60a5fa; --blue-dim: rgba(96,165,250,0.12);
+    --violet: #C9A3B8; --violet-dim: rgba(201,163,184,0.12);
+    --teal: #2dd4bf; --teal-dim: rgba(45,212,191,0.12);
+    --emerald: #34d399; --emerald-dim: rgba(52,211,153,0.12);
+    --amber: #D9A05B; --amber-dim: rgba(217,160,91,0.12);
+    --orange: #fb923c; --orange-dim: rgba(251,146,60,0.12);
+    --red: #f87171; --red-dim: rgba(248,113,113,0.12);
+    --rose: #E36C89; --rose-dim: rgba(227,108,137,0.12);
+  }
+  html.light {
+    --bg: #F5F2F1; --surface: #FFFFFF; --surface2: #EDE8E6;
+    --border: #D9D2CE; --border-bright: #C4B9B4;
+    --text: #171416; --text-dim: #4A4442; --text-faint: #8A8481;
+    --primary: #B83159; --primary-dim: rgba(184,49,89,0.10);
+    --metric: #1E8A6A; --metric-dim: rgba(30,138,106,0.10);
+    --slate: #6A6461; --slate-dim: rgba(106,100,97,0.10);
+    --blue: #2563eb; --blue-dim: rgba(37,99,235,0.08);
+    --violet: #8A5A76; --violet-dim: rgba(138,90,118,0.10);
+    --teal: #1E8A6A; --teal-dim: rgba(30,138,106,0.10);
+    --emerald: #059669; --emerald-dim: rgba(5,150,105,0.08);
+    --amber: #B07C2E; --amber-dim: rgba(176,124,46,0.10);
+    --orange: #ea580c; --orange-dim: rgba(234,88,12,0.08);
+    --red: #C4506B; --red-dim: rgba(196,80,107,0.10);
+    --rose: #C4506B; --rose-dim: rgba(196,80,107,0.10);
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    background: var(--bg);
+    background-image:
+      radial-gradient(at 10% 0%, var(--primary-dim) 0%, transparent 40%),
+      radial-gradient(at 90% 80%, var(--teal-dim) 0%, transparent 40%);
+    color: var(--text); font-family: var(--font-body);
+    font-size: 15px; line-height: 1.7; min-height: 100vh;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  .nav {
+    position: sticky; top: 0; z-index: 100;
+    backdrop-filter: blur(16px);
+    background: color-mix(in srgb, var(--surface) 85%, transparent);
+    border-bottom: 1px solid var(--border);
+  }
+  .nav-inner {
+    max-width: 1160px; margin: 0 auto; padding: 12px 20px;
+    display: flex; align-items: center; justify-content: space-between;
+  }
+  .nav-brand { font-family: var(--font-mono); font-size: 13px; font-weight: 600; color: var(--primary); text-decoration: none; }
+  .crumbs { font-family: var(--font-mono); font-size: 13px; font-weight: 600; display: flex; align-items: center; gap: 8px; flex-wrap: wrap; min-width: 0; }
+  .crumbs a { color: var(--primary); text-decoration: none; }
+  .crumbs a:hover, .crumbs a:focus-visible { text-decoration: underline; outline: none; }
+  .crumbs .sep { color: var(--text-faint); }
+  .crumbs .current { color: var(--text-dim); font-weight: 400; }
+  .backlink{position:fixed;top:12px;left:16px;z-index:101;font-family:var(--font-mono);font-size:12px;color:var(--text-dim);text-decoration:none;padding:6px 10px;border:1px solid var(--border);border-radius:6px;background:var(--surface);transition:color .15s,border-color .15s}
+  .backlink:hover{color:var(--text);border-color:var(--border-bright)}
+
+  .container { max-width: 1160px; margin: 0 auto; padding: 48px 20px 80px; }
+  @keyframes fadeUp { from { opacity: 0; transform: translateY(16px); } to { opacity: 1; transform: translateY(0); } }
+
+  .hero { text-align: center; margin-bottom: 40px; animation: fadeUp 0.5s ease both; }
+  .hero .kicker { font-family: var(--font-mono); font-size: 11px; font-weight: 700; letter-spacing: 0.2em; text-transform: uppercase; color: var(--text-faint); margin-bottom: 12px; }
+  .hero h1 {
+    font-size: 42px; font-weight: 800; letter-spacing: -1px; margin-bottom: 10px;
+    background: linear-gradient(135deg, var(--primary), var(--metric));
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+  }
+  .hero p { font-size: 17px; color: var(--text-dim); max-width: 880px; margin: 0 auto; }
+
+  .lede { max-width: 760px; margin: 0 auto 44px; text-align: left; font-size: 15.5px; color: var(--text-dim); }
+  .lede > p { margin: 0 0 14px; }
+  .lede .lead-in { font-size: 17px; color: var(--text); }
+  .lede .land { display: block; margin-top: 20px; padding-top: 16px; border-top: 1px solid var(--border);
+    font-size: 21px; font-weight: 800; letter-spacing: -0.3px; color: var(--text); }
+  .lede-list { list-style: none; margin: 0 0 14px; display: grid; gap: 9px; }
+  .lede-list li { position: relative; padding-left: 24px; }
+  .lede-list li::before { content: "\2192"; position: absolute; left: 0; top: 0; color: var(--primary); font-family: var(--font-mono); font-weight: 700; }
+
+  .section { margin-bottom: 44px; animation: fadeUp 0.5s ease both; }
+  .section-title { font-family: var(--font-mono); font-size: 12px; font-weight: 700; letter-spacing: 0.15em; text-transform: uppercase; color: var(--text-dim); margin-bottom: 16px; }
+  .panel { background: var(--surface); border: 1px solid var(--border); border-radius: 14px; padding: 26px; }
+  .panel h3 { font-size: 19px; font-weight: 700; margin-bottom: 6px; }
+  .panel p { font-size: 14px; color: var(--text-dim); }
+  .panel p + p { margin-top: 10px; }
+
+  /* two curves */
+  .curves { display: block; width: 100%; height: 220px; }
+  .curve-gap { fill: var(--rose-dim); }
+  .curve-cap { fill: none; stroke: var(--rose); stroke-width: 3; }
+  .curve-gov { fill: none; stroke: var(--teal); stroke-width: 3; }
+  .curve-lbl { font-family: var(--font-mono); font-size: 12px; font-weight: 700; }
+  .legend { display: flex; gap: 22px; justify-content: center; margin-top: 12px; font-family: var(--font-mono); font-size: 11px; color: var(--text-dim); flex-wrap: wrap; }
+  .legend span { display: flex; align-items: center; gap: 6px; }
+  .sw { width: 12px; height: 12px; border-radius: 3px; display: inline-block; }
+
+  /* three orders (cascade) */
+  .orders { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 0; align-items: stretch; }
+  .order { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 18px 16px; position: relative; }
+  .order .ord-k { font-family: var(--font-mono); font-size: 11px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; color: var(--text-faint); }
+  .order h4 { font-size: 16px; font-weight: 700; margin: 6px 0 4px; }
+  .order p { font-size: 13px; color: var(--text-dim); margin: 0; }
+  .order .tag { display: inline-block; margin-top: 10px; font-family: var(--font-mono); font-size: 10px; font-weight: 700; padding: 3px 8px; border-radius: 5px; }
+  .order.l1 { border-left: 3px solid var(--slate); } .order.l1 .tag { background: var(--slate-dim); color: var(--slate); }
+  .order.l2 { border-left: 3px solid var(--rose); } .order.l2 .tag { background: var(--rose-dim); color: var(--rose); }
+  .order.l3 { border-left: 3px solid var(--metric); } .order.l3 .tag { background: var(--metric-dim); color: var(--metric); }
+  .ord-arrow { align-self: center; padding: 0 6px; color: var(--text-faint); font-family: var(--font-mono); font-size: 18px; }
+  .ord-note { text-align: center; font-size: 13px; color: var(--text-dim); margin-top: 14px; }
+  .ord-note b { color: var(--text); }
+
+  /* operating-model queue */
+  .qwrap { overflow-x: auto; border: 1px solid var(--border); border-radius: 12px; }
+  .qtable { width: 100%; border-collapse: collapse; font-size: 13.5px; }
+  .qtable th, .qtable td { text-align: left; padding: 11px 14px; border-bottom: 1px solid var(--border); }
+  .qtable th { font-family: var(--font-mono); font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--text-faint); font-weight: 700; }
+  .qtable tbody tr:last-child td { border-bottom: none; }
+  .qtable .num { font-family: var(--font-mono); font-weight: 700; text-align: center; }
+  .qtable .q { font-family: var(--font-mono); font-weight: 800; text-align: center; }
+  .qtable .lead { font-family: var(--font-mono); font-size: 11px; color: var(--text-dim); white-space: nowrap; }
+  .qtable .now { color: var(--rose); }
+  @media (max-width: 768px) { .orders { grid-template-columns: 1fr; } .ord-arrow { transform: rotate(90deg); padding: 6px 0; } }
+
+  /* tiers */
+  .tiers { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px,1fr)); gap: 12px; }
+  .tier { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 16px 14px; }
+  .tier .w { font-family: var(--font-mono); font-size: 24px; font-weight: 800; }
+  .tier .tname { font-size: 13px; font-weight: 700; margin: 4px 0; }
+  .tier .tdesc { font-size: 12px; color: var(--text-dim); line-height: 1.45; }
+  .t1 .w { color: var(--rose); } .t2 .w { color: var(--amber); } .t3 .w { color: var(--teal); }
+  .t4 .w { color: var(--slate); } .t5 .w { color: var(--text-faint); }
+  .rules { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 16px; }
+  .rule { font-family: var(--font-mono); font-size: 11px; color: var(--text-dim); background: var(--surface2); border: 1px solid var(--border); border-radius: 6px; padding: 6px 10px; }
+  .rule b { color: var(--text); }
+
+  /* fault line table */
+  .table-wrap { overflow-x: auto; border: 1px solid var(--border); border-radius: 12px; }
+  table { width: 100%; border-collapse: collapse; font-size: 13.5px; }
+  th, td { text-align: left; padding: 11px 14px; border-bottom: 1px solid var(--border); }
+  th { font-family: var(--font-mono); font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--text-faint); font-weight: 700; }
+  tbody tr:last-child td { border-bottom: none; }
+  .fl-name { font-weight: 600; color: var(--text); }
+  .fl-rule { font-family: var(--font-mono); font-size: 11px; color: var(--text-faint); white-space: nowrap; }
+  .pcell { display: flex; align-items: center; gap: 9px; min-width: 150px; }
+  .pbar { flex: 1; height: 7px; border-radius: 4px; background: var(--surface2); overflow: hidden; }
+  .pbar > i { display: block; height: 100%; border-radius: 4px; }
+  .pnum { font-family: var(--font-mono); font-size: 12px; font-weight: 700; min-width: 26px; }
+  .hz { font-family: var(--font-mono); font-size: 11px; color: var(--text-dim); white-space: nowrap; }
+
+  /* calibration */
+  .cal-head { display: flex; align-items: baseline; gap: 14px; flex-wrap: wrap; margin-bottom: 4px; }
+  .hitrate { font-family: var(--font-mono); font-size: 30px; font-weight: 800; color: var(--emerald); }
+  .cal-rows { margin-top: 16px; display: grid; gap: 8px; }
+  .cal-row { display: grid; grid-template-columns: 92px 92px 1fr auto; gap: 12px; align-items: center; padding: 10px 12px; background: var(--surface2); border: 1px solid var(--border); border-radius: 8px; font-size: 13px; }
+  .called { font-family: var(--font-mono); font-size: 11px; font-weight: 700; color: var(--emerald); }
+  .cal-date { font-family: var(--font-mono); font-size: 11px; color: var(--text-faint); }
+  .cal-p { font-family: var(--font-mono); font-size: 12px; color: var(--text-dim); text-align: right; white-space: nowrap; }
+  .cal-p b { color: var(--text); }
+
+  /* worked example */
+  .sig-list { margin-top: 16px; display: grid; gap: 8px; }
+  .sig-row { display: grid; grid-template-columns: 78px 1fr; gap: 14px; align-items: baseline; padding: 11px 13px; background: var(--surface2); border: 1px solid var(--border); border-radius: 8px; }
+  .sig-tier { font-family: var(--font-mono); font-size: 11px; font-weight: 700; white-space: nowrap; }
+  .sig-row p { font-size: 13px; color: var(--text-dim); margin: 0; }
+  .sig-row b { color: var(--text); }
+  @media (max-width: 768px) { .sig-row { grid-template-columns: 1fr; gap: 4px; } }
+
+  /* pipeline */
+  .flow { display: flex; align-items: stretch; gap: 0; overflow-x: auto; padding-bottom: 6px; }
+  .stage { flex: 1; min-width: 140px; background: var(--surface2); border: 1px solid var(--border); border-radius: 10px; padding: 14px 13px; }
+  .stage .sfile { font-family: var(--font-mono); font-size: 10px; color: var(--primary); }
+  .stage .sname { font-weight: 700; font-size: 13px; margin: 4px 0; }
+  .stage .sdesc { font-size: 12px; color: var(--text-dim); line-height: 1.4; }
+  .arrow { align-self: center; padding: 0 8px; color: var(--text-faint); font-size: 18px; font-family: var(--font-mono); }
+  .phase2 { margin-top: 14px; border: 1px dashed var(--border-bright); border-radius: 10px; padding: 12px 14px; font-size: 12.5px; color: var(--text-dim); }
+  .phase2 b { color: var(--text); font-family: var(--font-mono); font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase; }
+
+  .why { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+  .why .card { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 20px; }
+  .why .card h4 { font-size: 15px; font-weight: 700; margin-bottom: 6px; }
+  .why .card p { font-size: 13px; color: var(--text-dim); }
+  .why .card.kill { border-left: 3px solid var(--rose); }
+  .why .card.keep { border-left: 3px solid var(--emerald); }
+
+  .footer { margin-top: 48px; padding-top: 16px; border-top: 1px solid var(--border); text-align: center; font-size: 12px; color: var(--text-faint); }
+
+  @media (max-width: 768px) {
+    .hero h1 { font-size: 28px; }
+    .why { grid-template-columns: 1fr; }
+    .cal-row { grid-template-columns: 1fr; gap: 4px; }
+    .cal-p { text-align: left; }
+  }
+  @media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation-duration: 0.01ms !important; } }
+
+
+  /* knowledge-base library */
+  .kbleg { display:flex; flex-wrap:wrap; gap:16px; margin-bottom:14px; font-family:var(--font-mono); font-size:11px; color:var(--text-dim); }
+  .kbleg span { display:flex; align-items:center; gap:6px; }
+  .sw { width:11px; height:11px; border-radius:3px; display:inline-block; }
+  .kblist { display:grid; gap:10px; }
+  .kb { background:var(--surface); border:1px solid var(--border); border-radius:12px; padding:15px 17px; }
+  .kb-top { display:flex; align-items:center; gap:8px; flex-wrap:wrap; }
+  .kb-pill { font-family:var(--font-mono); font-size:10px; font-weight:700; padding:2px 8px; border-radius:5px; white-space:nowrap; }
+  .kb-titlewrap { min-width:0; }
+  .kb-title { font-weight:700; font-size:14.5px; color:var(--text); text-decoration:underline; text-decoration-color:var(--border-bright); text-underline-offset:3px; }
+  .kb-title:hover { color:var(--primary); text-decoration-color:var(--primary); }
+  .kb-meta { font-family:var(--font-mono); font-size:11px; color:var(--text-faint); margin:4px 0 9px; }
+  .kb-b { font-size:13px; color:var(--text-dim); margin:0 0 7px; line-height:1.6; }
+  .kb-b b { color:var(--text); }
+  .kb-b.what, .kb-b.why { color:var(--text-dim); }
+  .kb-chips { display:flex; flex-wrap:wrap; gap:6px; }
+  .kb-chip { font-family:var(--font-mono); font-size:10px; color:var(--text-dim); background:var(--surface2); border:1px solid var(--border); border-radius:5px; padding:2px 8px; }
+</style>
+</head>
+<body>
+<a class="backlink" href="index.html">&larr; Legal</a>
+<div class="nav">
+  <div class="nav-inner">
+    <nav class="crumbs" aria-label="Breadcrumb">
+      <a href="../index.html">Index</a>
+      <span class="sep">/</span>
+      <a href="index.html">Legal</a>
+      <span class="sep">/</span>
+      <span class="current" aria-current="page">Fault-Line Radar &middot; the source library</span>
+    </nav>
+  </div>
+</div>
+
+<div class="container">
+
+  <div class="hero">
+    <div class="kicker">legal-os &middot; knowledge base</div>
+    <h1>The source library</h1>
+    <p>Every document the radar reads &mdash; with a what it is and a why it&rsquo;s in the KB.</p>
+  </div>
+
+  <div class="lede">
+    <p class="lead-in">Each reading on the radar is moved by a document below. This is the provenance behind the numbers &mdash; the source library you can replay.</p>
+    <ul class="lede-list">
+      <li>No document is in here on volume. Weight comes from authority (T1&ndash;T5), not how loudly it sells.</li>
+      <li>The <b>what</b> is what the source says. The <b>why</b> is derived, not authored: tier, the lane it feeds, the fault line it evidences, and any data or conflict flag.</li>
+      <li>Every score these sources move is deterministic &mdash; same feed, same weights, same number. Nothing about it depends on a gut.</li>
+    </ul>
+    <span class="land">Read the source, not the summary.</span>
+  </div>
+
+  <div class="section">
+    <div class="section-title">The library &mdash; 25 source docs, oldest to newest</div>
+    <div class="kbleg">
+      <span><i class="sw" style="background:var(--rose)"></i> T1 binding / primary</span>
+      <span><i class="sw" style="background:var(--amber)"></i> T2 regulatory guidance</span>
+      <span><i class="sw" style="background:var(--teal)"></i> T3 empirical / institutional</span>
+      <span style="color:var(--text-faint)">weight = authority &times; flags, never volume</span>
+    </div>
+    <div class="kblist">
+<article class="kb">
+      <div class="kb-top"><span class="kb-pill" style="color:var(--rose);background:color-mix(in srgb, var(--rose) 12%, transparent)">T1</span> <span class="kb-pill" style="color:var(--primary);background:color-mix(in srgb, var(--primary) 12%, transparent)">L2 ruling</span><span class="kb-titlewrap"><a class="kb-title" href="https://brief.steno.com/legal-ai-rules-by-state" target="_blank" rel="noreferrer">France criminalizes judicial profiling (Justice Reform Act, Art. 33)</a></span></div>
+      <div class="kb-meta">France (statute) &middot; 2019-03-23 &middot; Binding / primary authority</div>
+      <p class="kb-b what"><b>What it is.</b> France&#x27;s Justice Reform Act Article 33 prohibits the use of analytics to predict or profile the decisions of individual named judges, with criminal penalties. First national ban on judicial analytics / judicial profiling; signals a regulatory direction for litigation outcome prediction and judge simulation.</p>
+      <p class="kb-b why"><b>Why it&rsquo;s in the KB.</b> Binding / primary authority (weight 1.00). It evidences the Judicial / litigation analytics gets regulated. It is L2 ruling evidence — a court, bar, or regulator acting.</p>
+      <div class="kb-chips"><span class="kb-chip">Judicial / litigation analytics gets regulated</span></div>
+    </article>
+<article class="kb">
+      <div class="kb-top"><span class="kb-pill" style="color:var(--rose);background:color-mix(in srgb, var(--rose) 12%, transparent)">T1</span> <span class="kb-pill" style="color:var(--primary);background:color-mix(in srgb, var(--primary) 12%, transparent)">L2 ruling</span> <span class="kb-pill" style="color:var(--emerald);background:color-mix(in srgb, var(--emerald) 12%, transparent)">data</span><span class="kb-titlewrap"><a class="kb-title" href="https://law.justia.com/cases/federal/district-courts/new-york/nysdce/1:2022cv01461/575368/54/" target="_blank" rel="noreferrer">Mata v. Avianca — Rule 11 sanctions for fabricated ChatGPT citations</a></span></div>
+      <div class="kb-meta">S.D.N.Y. (Judge Castel) &middot; 2023-06-22 &middot; Binding / primary authority</div>
+      <p class="kb-b what"><b>What it is.</b> Attorney sanctioned $5,000 under Federal Rule of Civil Procedure 11 for filing a brief citing six nonexistent cases fabricated by ChatGPT. First mainstream AI hallucination sanction. Candor to the tribunal and duty to verify authority.</p>
+      <p class="kb-b why"><b>Why it&rsquo;s in the KB.</b> Binding / primary authority (weight 1.00). It evidences the Disclosure &amp; certification standardize, &#x27;A human reviewed it&#x27; stops being enough. It is L2 ruling evidence — a court, bar, or regulator acting. Note: it carries hard data (weight ×1.25).</p>
+      <div class="kb-chips"><span class="kb-chip">Disclosure &amp; certification standardize</span><span class="kb-chip">&#x27;A human reviewed it&#x27; stops being enough</span></div>
+    </article>
+<article class="kb">
+      <div class="kb-top"><span class="kb-pill" style="color:var(--amber);background:color-mix(in srgb, var(--amber) 12%, transparent)">T2</span> <span class="kb-pill" style="color:var(--primary);background:color-mix(in srgb, var(--primary) 12%, transparent)">L2 ruling</span><span class="kb-titlewrap"><a class="kb-title" href="https://www.judiciary.uk/guidance-and-resources/artificial-intelligence-ai-judicial-guidance/" target="_blank" rel="noreferrer">England &amp; Wales judiciary guidance — first formal AI guidance for judges</a></span></div>
+      <div class="kb-meta">Courts and Tribunals Judiciary (UK) &middot; 2023-12-12 &middot; Regulatory guidance authority</div>
+      <p class="kb-b what"><b>What it is.</b> First guidance of its kind to judicial office holders, issued with the Lady Chief Justice and Master of the Rolls. Permits AI as a &#x27;secondary tool&#x27; but says legal research and analysis is &#x27;not recommended&#x27;; prohibits entering confidential or private information into public AI chatbots; requires independent verification of all AI output. Extends the disclosure and verification duty to a major common-law jurisdiction.</p>
+      <p class="kb-b why"><b>Why it&rsquo;s in the KB.</b> Regulatory guidance authority (weight 0.80). It evidences the Disclosure &amp; certification standardize, &#x27;A human reviewed it&#x27; stops being enough, Confidentiality hardens into data governance. It is L2 ruling evidence — a court, bar, or regulator acting.</p>
+      <div class="kb-chips"><span class="kb-chip">Disclosure &amp; certification standardize</span><span class="kb-chip">&#x27;A human reviewed it&#x27; stops being enough</span><span class="kb-chip">Confidentiality hardens into data governance</span></div>
+    </article>
+<article class="kb">
+      <div class="kb-top"><span class="kb-pill" style="color:var(--teal);background:color-mix(in srgb, var(--teal) 12%, transparent)">T3</span> <span class="kb-pill" style="color:var(--blue);background:color-mix(in srgb, var(--blue) 12%, transparent)">L1 capability</span> <span class="kb-pill" style="color:var(--emerald);background:color-mix(in srgb, var(--emerald) 12%, transparent)">data</span><span class="kb-titlewrap"><a class="kb-title" href="https://arxiv.org/abs/2401.01301" target="_blank" rel="noreferrer">Stanford/Yale &#x27;Large Legal Fictions&#x27; — 58–88% hallucination rate on legal queries</a></span></div>
+      <div class="kb-meta">Dahl, Magesh, Suzgun &amp; Ho (Journal of Legal Analysis) &middot; 2024-01-11 &middot; Empirical / institutional authority</div>
+      <p class="kb-b what"><b>What it is.</b> Tested general-purpose LLMs against 15,000 federal court cases: hallucination rates of 58% (GPT-4) to 88% (Llama 2) on verifiable legal questions, rising with complexity and accompanied by systematic overconfidence. Foundational capability evidence that makes the error rate a measurable input to tool choice and the benchmark a compliance instrument.</p>
+      <p class="kb-b why"><b>Why it&rsquo;s in the KB.</b> Empirical / institutional authority (weight 0.60). It evidences the A tool-certification / benchmark standard emerges. It is an L1 capability signal — a demonstration that AI can now do the thing. Note: it carries hard data (weight ×1.25).</p>
+      <div class="kb-chips"><span class="kb-chip">A tool-certification / benchmark standard emerges</span></div>
+    </article>
+<article class="kb">
+      <div class="kb-top"><span class="kb-pill" style="color:var(--amber);background:color-mix(in srgb, var(--amber) 12%, transparent)">T2</span> <span class="kb-pill" style="color:var(--primary);background:color-mix(in srgb, var(--primary) 12%, transparent)">L2 ruling</span><span class="kb-titlewrap"><a class="kb-title" href="https://www.hinshawlaw.com/en/insights/lawyers-for-the-profession-alert/florida-bar-advisory-opinion-24-1-gives-green-light-to-generative-ai-use-by-lawyers-with-four-ethical-caveats" target="_blank" rel="noreferrer">Florida Bar Ethics Opinion 24-1 — self-learning AI and client confidentiality</a></span></div>
+      <div class="kb-meta">The Florida Bar Board of Governors &middot; 2024-01-19 &middot; Regulatory guidance authority</div>
+      <p class="kb-b what"><b>What it is.</b> One of the first state ethics opinions on generative AI. Requires due diligence into whether a tool is &#x27;self-learning&#x27; (retains inputs for training data), informed client consent before disclosing confidential information to a third-party tool, and treats AI like a non-lawyer assistant for supervision. Anchors the no-training clause as an ethical default and confidentiality as a data governance question.</p>
+      <p class="kb-b why"><b>Why it&rsquo;s in the KB.</b> Regulatory guidance authority (weight 0.80). It evidences the Confidentiality hardens into data governance. It is L2 ruling evidence — a court, bar, or regulator acting.</p>
+      <div class="kb-chips"><span class="kb-chip">Confidentiality hardens into data governance</span></div>
+    </article>
+<article class="kb">
+      <div class="kb-top"><span class="kb-pill" style="color:var(--teal);background:color-mix(in srgb, var(--teal) 12%, transparent)">T3</span> <span class="kb-pill" style="color:var(--blue);background:color-mix(in srgb, var(--blue) 12%, transparent)">L1 capability</span> <span class="kb-pill" style="color:var(--emerald);background:color-mix(in srgb, var(--emerald) 12%, transparent)">data</span><span class="kb-titlewrap"><a class="kb-title" href="https://arxiv.org/abs/2405.20362" target="_blank" rel="noreferrer">Stanford RegLab &#x27;Hallucination-Free?&#x27; — RAG legal research tools still hallucinate 17–34%</a></span></div>
+      <div class="kb-meta">Magesh, Surani, Dahl, Suzgun, Manning &amp; Ho (Stanford RegLab) &middot; 2024-05-23 &middot; Empirical / institutional authority</div>
+      <p class="kb-b what"><b>What it is.</b> First preregistered empirical benchmark of purpose-built, retrieval-augmented legal AI tools (Lexis+ AI, Westlaw AI-Assisted Research, Ask Practical Law): each hallucinated on 17% to 34% of queries despite vendor &#x27;hallucination-free&#x27; marketing. Confident, well-cited but wrong answers are the dominant failure mode. The authors conclude responsible use demands careful human review and independent verification of every AI output — attestation that &#x27;a human reviewed it&#x27; is insufficient when the error is a plausible fabricated citation. Establishes both the error-rate benchmark and the verification duty as measurable capability facts.</p>
+      <p class="kb-b why"><b>Why it&rsquo;s in the KB.</b> Empirical / institutional authority (weight 0.60). It evidences the A tool-certification / benchmark standard emerges, &#x27;A human reviewed it&#x27; stops being enough. It is an L1 capability signal — a demonstration that AI can now do the thing. Note: it carries hard data (weight ×1.25).</p>
+      <div class="kb-chips"><span class="kb-chip">A tool-certification / benchmark standard emerges</span><span class="kb-chip">&#x27;A human reviewed it&#x27; stops being enough</span></div>
+    </article>
+<article class="kb">
+      <div class="kb-top"><span class="kb-pill" style="color:var(--amber);background:color-mix(in srgb, var(--amber) 12%, transparent)">T2</span> <span class="kb-pill" style="color:var(--primary);background:color-mix(in srgb, var(--primary) 12%, transparent)">L2 ruling</span> <span class="kb-pill" style="color:var(--metric);background:color-mix(in srgb, var(--metric) 12%, transparent)">L3 adoption</span><span class="kb-titlewrap"><a class="kb-title" href="https://library.law.unc.edu/2025/02/aba-formal-opinion-512-the-paradigm-for-generative-ai-in-legal-practice/" target="_blank" rel="noreferrer">ABA Formal Opinion 512 — Generative AI Tools</a></span></div>
+      <div class="kb-meta">ABA Standing Committee on Ethics &middot; 2024-07-29 &middot; Regulatory guidance authority</div>
+      <p class="kb-b what"><b>What it is.</b> Maps existing Model Rules onto generative AI: competence, confidentiality, communication, supervision, meritorious claims, candor to the tribunal, reasonable fees. Lawyers must have a reasonable understanding of the tool&#x27;s capabilities and limitations and must review output. Human review required.</p>
+      <p class="kb-b why"><b>Why it&rsquo;s in the KB.</b> Regulatory guidance authority (weight 0.80). It evidences the Competence becomes an affirmative governance duty, &#x27;A human reviewed it&#x27; stops being enough, Confidentiality hardens into data governance. It is L2 ruling evidence — a court, bar, or regulator acting. It is an L3 adoption signal — evidence the control is becoming table stakes, court or no court.</p>
+      <div class="kb-chips"><span class="kb-chip">Competence becomes an affirmative governance duty</span><span class="kb-chip">&#x27;A human reviewed it&#x27; stops being enough</span><span class="kb-chip">Confidentiality hardens into data governance</span></div>
+    </article>
+<article class="kb">
+      <div class="kb-top"><span class="kb-pill" style="color:var(--rose);background:color-mix(in srgb, var(--rose) 12%, transparent)">T1</span> <span class="kb-pill" style="color:var(--primary);background:color-mix(in srgb, var(--primary) 12%, transparent)">L2 ruling</span><span class="kb-titlewrap"><a class="kb-title" href="https://eur-lex.europa.eu/eli/dir/2024/2853/oj" target="_blank" rel="noreferrer">EU Product Liability Directive (EU) 2024/2853 — software and AI are &#x27;products&#x27;</a></span></div>
+      <div class="kb-meta">European Union (Directive) &middot; 2024-12-08 &middot; Binding / primary authority</div>
+      <p class="kb-b what"><b>What it is.</b> In force December 8, 2024. Broadens &#x27;product&#x27; to include software and AI systems regardless of supply mode, making AI providers subject to strict product liability as manufacturers. Non-compliance with the EU AI Act directly informs a finding of defectiveness; rebuttable presumptions of defect/causation ease the claimant&#x27;s burden. A rare concrete shift of vendor liability onto AI suppliers rather than only the deploying lawyer.</p>
+      <p class="kb-b why"><b>Why it&rsquo;s in the KB.</b> Binding / primary authority (weight 1.00). It evidences the Liability shifts partway to vendors, Regulatory convergence forces one operating model. It is L2 ruling evidence — a court, bar, or regulator acting.</p>
+      <div class="kb-chips"><span class="kb-chip">Liability shifts partway to vendors</span><span class="kb-chip">Regulatory convergence forces one operating model</span></div>
+    </article>
+<article class="kb">
+      <div class="kb-top"><span class="kb-pill" style="color:var(--amber);background:color-mix(in srgb, var(--amber) 12%, transparent)">T2</span> <span class="kb-pill" style="color:var(--primary);background:color-mix(in srgb, var(--primary) 12%, transparent)">L2 ruling</span><span class="kb-titlewrap"><a class="kb-title" href="https://brief.steno.com/legal-ai-rules-by-state" target="_blank" rel="noreferrer">Texas Ethics Opinion 705 on generative AI</a></span></div>
+      <div class="kb-meta">Texas State Bar Professional Ethics Committee &middot; 2025-02-01 &middot; Regulatory guidance authority</div>
+      <p class="kb-b what"><b>What it is.</b> State-level ethics guidance on lawyers&#x27; use of generative AI, echoing competence, confidentiality, and supervision duties.</p>
+      <p class="kb-b why"><b>Why it&rsquo;s in the KB.</b> Regulatory guidance authority (weight 0.80). It evidences the Competence becomes an affirmative governance duty, Confidentiality hardens into data governance. It is L2 ruling evidence — a court, bar, or regulator acting.</p>
+      <div class="kb-chips"><span class="kb-chip">Competence becomes an affirmative governance duty</span><span class="kb-chip">Confidentiality hardens into data governance</span></div>
+    </article>
+<article class="kb">
+      <div class="kb-top"><span class="kb-pill" style="color:var(--amber);background:color-mix(in srgb, var(--amber) 12%, transparent)">T2</span> <span class="kb-pill" style="color:var(--primary);background:color-mix(in srgb, var(--primary) 12%, transparent)">L2 ruling</span> <span class="kb-pill" style="color:var(--metric);background:color-mix(in srgb, var(--metric) 12%, transparent)">L3 adoption</span><span class="kb-titlewrap"><a class="kb-title" href="https://www.lexology.com/library/detail.aspx?g=c65abffb-7123-4c7f-a6a1-89cde8e24945" target="_blank" rel="noreferrer">New Jersey requires technology CLE including AI — competence as a program requirement</a></span></div>
+      <div class="kb-meta">New Jersey Supreme Court &middot; 2025-04-01 &middot; Regulatory guidance authority</div>
+      <p class="kb-b what"><b>What it is.</b> Approved April 2025; effective January 1, 2027. Mandates one technology-related continuing legal education credit every two years, explicitly including developments in AI. Converts technological competence from an aspirational duty into a standing training requirement, foreshadowing broader mandatory AI CLE.</p>
+      <p class="kb-b why"><b>Why it&rsquo;s in the KB.</b> Regulatory guidance authority (weight 0.80). It evidences the Competence becomes an affirmative governance duty. It is L2 ruling evidence — a court, bar, or regulator acting. It is an L3 adoption signal — evidence the control is becoming table stakes, court or no court.</p>
+      <div class="kb-chips"><span class="kb-chip">Competence becomes an affirmative governance duty</span></div>
+    </article>
+<article class="kb">
+      <div class="kb-top"><span class="kb-pill" style="color:var(--rose);background:color-mix(in srgb, var(--rose) 12%, transparent)">T1</span> <span class="kb-pill" style="color:var(--primary);background:color-mix(in srgb, var(--primary) 12%, transparent)">L2 ruling</span><span class="kb-titlewrap"><a class="kb-title" href="https://www.cpomagazine.com/data-protection/2026-ai-legal-forecast-from-innovation-to-compliance/" target="_blank" rel="noreferrer">Colorado AI Act takes effect</a></span></div>
+      <div class="kb-meta">Colorado (statute) &middot; 2025-06-01 &middot; Binding / primary authority</div>
+      <p class="kb-b what"><b>What it is.</b> Colorado AI Act creates legal requirements for high-risk AI: risk management systems, conformity assessments, human oversight mechanisms. Formalized AI policy moves from best practice to compliance obligation.</p>
+      <p class="kb-b why"><b>Why it&rsquo;s in the KB.</b> Binding / primary authority (weight 1.00). It evidences the Regulatory convergence forces one operating model. It is L2 ruling evidence — a court, bar, or regulator acting.</p>
+      <div class="kb-chips"><span class="kb-chip">Regulatory convergence forces one operating model</span></div>
+    </article>
+<article class="kb">
+      <div class="kb-top"><span class="kb-pill" style="color:var(--teal);background:color-mix(in srgb, var(--teal) 12%, transparent)">T3</span> <span class="kb-pill" style="color:var(--primary);background:color-mix(in srgb, var(--primary) 12%, transparent)">L2 ruling</span><span class="kb-titlewrap"><a class="kb-title" href="https://natlawreview.com/article/new-federal-legislation-proposes-product-liability-standards-ai-systems" target="_blank" rel="noreferrer">AI LEAD Act (S.2937) — proposed federal AI product liability standards</a></span></div>
+      <div class="kb-meta">U.S. Senate (proposed) — Sens. Durbin &amp; Hawley &middot; 2025-09-29 &middot; Empirical / institutional authority</div>
+      <p class="kb-b what"><b>What it is.</b> Introduced September 29, 2025. Would create federal product liability causes of action for AI systems — defective design, failure to warn, breach of express warranty, strict liability — while barring Section 230 immunity and waiver clauses. A legislative push to place vendor liability and accountability on AI developers, not only on the deploying professional.</p>
+      <p class="kb-b why"><b>Why it&rsquo;s in the KB.</b> Empirical / institutional authority (weight 0.60). It evidences the Liability shifts partway to vendors. It is L2 ruling evidence — a court, bar, or regulator acting.</p>
+      <div class="kb-chips"><span class="kb-chip">Liability shifts partway to vendors</span></div>
+    </article>
+<article class="kb">
+      <div class="kb-top"><span class="kb-pill" style="color:var(--amber);background:color-mix(in srgb, var(--amber) 12%, transparent)">T2</span> <span class="kb-pill" style="color:var(--primary);background:color-mix(in srgb, var(--primary) 12%, transparent)">L2 ruling</span><span class="kb-titlewrap"><a class="kb-title" href="https://www.vacourts.gov/static/courts/scv/amendments/leo_1901.pdf" target="_blank" rel="noreferrer">Virginia LEO 1901 — value-based billing need not shrink when AI cuts time</a></span></div>
+      <div class="kb-meta">Supreme Court of Virginia / Virginia State Bar &middot; 2025-11-24 &middot; Regulatory guidance authority</div>
+      <p class="kb-b what"><b>What it is.</b> Approved November 24, 2025. Holds that a lawyer is not ethically required to reduce a non-hourly, value-based billing fee merely because generative AI reduced the time spent. Diverges from ABA Formal Opinion 512&#x27;s suggestion that charging the same flat fee may be unreasonable; efficiency gains, specialized AI skill, and professional judgment support fee reasonableness. Hourly billing must still reflect actual time. First state opinion squarely on AI and fee reasonableness.</p>
+      <p class="kb-b why"><b>Why it&rsquo;s in the KB.</b> Regulatory guidance authority (weight 0.80). It evidences the The billable hour cracks under AI. It is L2 ruling evidence — a court, bar, or regulator acting.</p>
+      <div class="kb-chips"><span class="kb-chip">The billable hour cracks under AI</span></div>
+    </article>
+<article class="kb">
+      <div class="kb-top"><span class="kb-pill" style="color:var(--rose);background:color-mix(in srgb, var(--rose) 12%, transparent)">T1</span> <span class="kb-pill" style="color:var(--primary);background:color-mix(in srgb, var(--primary) 12%, transparent)">L2 ruling</span> <span class="kb-pill" style="color:var(--emerald);background:color-mix(in srgb, var(--emerald) 12%, transparent)">data</span><span class="kb-titlewrap"><a class="kb-title" href="https://complexdiscovery.com/the-ai-sanction-wave-145k-in-q1-penalties-signals-courts-have-lost-patience-with-genai-filing-failures/" target="_blank" rel="noreferrer">Couvrette v. Wisnovsky — ~$110K penalty for 15 fake cases, 8 fabricated quotes</a></span></div>
+      <div class="kb-meta">Court order &middot; 2025-12-15 &middot; Binding / primary authority</div>
+      <p class="kb-b what"><b>What it is.</b> Largest known US AI-citation penalty: ~$110,204 across orders Dec 2025 and March 2026 against attorneys whose briefs contained 15 nonexistent cases and 8 fabricated quotations. Verify citation duty; candor.</p>
+      <p class="kb-b why"><b>Why it&rsquo;s in the KB.</b> Binding / primary authority (weight 1.00). It evidences the &#x27;A human reviewed it&#x27; stops being enough, Disclosure &amp; certification standardize. It is L2 ruling evidence — a court, bar, or regulator acting. Note: it carries hard data (weight ×1.25).</p>
+      <div class="kb-chips"><span class="kb-chip">&#x27;A human reviewed it&#x27; stops being enough</span><span class="kb-chip">Disclosure &amp; certification standardize</span></div>
+    </article>
+<article class="kb">
+      <div class="kb-top"><span class="kb-pill" style="color:var(--rose);background:color-mix(in srgb, var(--rose) 12%, transparent)">T1</span> <span class="kb-pill" style="color:var(--primary);background:color-mix(in srgb, var(--primary) 12%, transparent)">L2 ruling</span><span class="kb-titlewrap"><a class="kb-title" href="https://capitol.texas.gov/BillLookup/History.aspx?LegSess=89R&amp;Bill=HB149" target="_blank" rel="noreferrer">Texas Responsible AI Governance Act (TRAIGA) takes effect</a></span></div>
+      <div class="kb-meta">Texas (statute) &middot; 2026-01-01 &middot; Binding / primary authority</div>
+      <p class="kb-b what"><b>What it is.</b> Effective January 1, 2026. Comprehensive state AI law: intent-based prohibitions on discriminatory or manipulative AI, AG enforcement with $10,000–$200,000 penalties and a 60-day cure period, no private right of action, plus a regulatory sandbox and safe harbor. Deepens the patchwork of state AI regulation that forces multi-jurisdiction firms toward one operating model.</p>
+      <p class="kb-b why"><b>Why it&rsquo;s in the KB.</b> Binding / primary authority (weight 1.00). It evidences the Regulatory convergence forces one operating model. It is L2 ruling evidence — a court, bar, or regulator acting.</p>
+      <div class="kb-chips"><span class="kb-chip">Regulatory convergence forces one operating model</span></div>
+    </article>
+<article class="kb">
+      <div class="kb-top"><span class="kb-pill" style="color:var(--amber);background:color-mix(in srgb, var(--amber) 12%, transparent)">T2</span> <span class="kb-pill" style="color:var(--primary);background:color-mix(in srgb, var(--primary) 12%, transparent)">L2 ruling</span><span class="kb-titlewrap"><a class="kb-title" href="https://brief.steno.com/legal-ai-rules-by-state" target="_blank" rel="noreferrer">New York Formal Opinion 2025-6 — recording/transcribing client meetings with AI</a></span></div>
+      <div class="kb-meta">New York State Bar &middot; 2026-02-15 &middot; Regulatory guidance authority</div>
+      <p class="kb-b what"><b>What it is.</b> Guidance on AI recording and transcription of client meetings, emphasizing confidentiality and informed consent. Client data governance.</p>
+      <p class="kb-b why"><b>Why it&rsquo;s in the KB.</b> Regulatory guidance authority (weight 0.80). It evidences the Confidentiality hardens into data governance. It is L2 ruling evidence — a court, bar, or regulator acting.</p>
+      <div class="kb-chips"><span class="kb-chip">Confidentiality hardens into data governance</span></div>
+    </article>
+<article class="kb">
+      <div class="kb-top"><span class="kb-pill" style="color:var(--teal);background:color-mix(in srgb, var(--teal) 12%, transparent)">T3</span> <span class="kb-pill" style="color:var(--primary);background:color-mix(in srgb, var(--primary) 12%, transparent)">L2 ruling</span> <span class="kb-pill" style="color:var(--emerald);background:color-mix(in srgb, var(--emerald) 12%, transparent)">data</span><span class="kb-titlewrap"><a class="kb-title" href="https://complexdiscovery.com/the-ai-sanction-wave-145k-in-q1-penalties-signals-courts-have-lost-patience-with-genai-filing-failures/" target="_blank" rel="noreferrer">AI sanction wave: ~$145K in Q1 2026 penalties</a></span></div>
+      <div class="kb-meta">EDRM / ComplexDiscovery &middot; 2026-04-01 &middot; Empirical / institutional authority</div>
+      <p class="kb-b what"><b>What it is.</b> Courts imposed roughly $145,000 in AI fake-citation sanctions in Q1 2026, including a record Oregon penalty and the first substantial federal appellate fine tied to AI-tainted briefs. 300+ judges now require AI disclosure in filings. Reasonable inquiry and verification.</p>
+      <p class="kb-b why"><b>Why it&rsquo;s in the KB.</b> Empirical / institutional authority (weight 0.60). It evidences the Disclosure &amp; certification standardize, &#x27;A human reviewed it&#x27; stops being enough. It is L2 ruling evidence — a court, bar, or regulator acting. Note: it carries hard data (weight ×1.25).</p>
+      <div class="kb-chips"><span class="kb-chip">Disclosure &amp; certification standardize</span><span class="kb-chip">&#x27;A human reviewed it&#x27; stops being enough</span></div>
+    </article>
+<article class="kb">
+      <div class="kb-top"><span class="kb-pill" style="color:var(--rose);background:color-mix(in srgb, var(--rose) 12%, transparent)">T1</span> <span class="kb-pill" style="color:var(--primary);background:color-mix(in srgb, var(--primary) 12%, transparent)">L2 ruling</span> <span class="kb-pill" style="color:var(--emerald);background:color-mix(in srgb, var(--emerald) 12%, transparent)">data</span><span class="kb-titlewrap"><a class="kb-title" href="https://natlawreview.com/article/ten-ai-predictions-2026-what-leading-analysts-say-legal-teams-should-expect" target="_blank" rel="noreferrer">Nebraska Supreme Court suspends attorney over hallucinated appeal brief</a></span></div>
+      <div class="kb-meta">Nebraska Supreme Court &middot; 2026-04-15 &middot; Binding / primary authority</div>
+      <p class="kb-b what"><b>What it is.</b> Attorney suspended after an appeal brief contained 57 of 63 defective citations including 20 hallucinated cases; disciplinary investigation ordered. Supervision and candor. The cover-up drew the harsher response across cases.</p>
+      <p class="kb-b why"><b>Why it&rsquo;s in the KB.</b> Binding / primary authority (weight 1.00). It evidences the &#x27;A human reviewed it&#x27; stops being enough, Disclosure &amp; certification standardize. It is L2 ruling evidence — a court, bar, or regulator acting. Note: it carries hard data (weight ×1.25).</p>
+      <div class="kb-chips"><span class="kb-chip">&#x27;A human reviewed it&#x27; stops being enough</span><span class="kb-chip">Disclosure &amp; certification standardize</span></div>
+    </article>
+<article class="kb">
+      <div class="kb-top"><span class="kb-pill" style="color:var(--amber);background:color-mix(in srgb, var(--amber) 12%, transparent)">T2</span> <span class="kb-pill" style="color:var(--primary);background:color-mix(in srgb, var(--primary) 12%, transparent)">L2 ruling</span><span class="kb-titlewrap"><a class="kb-title" href="https://www.clio.com/blog/ai-legal-compliance/" target="_blank" rel="noreferrer">California updated Practical Guidance for Generative AI</a></span></div>
+      <div class="kb-meta">California Bar Board of Trustees &middot; 2026-05-14 &middot; Regulatory guidance authority</div>
+      <p class="kb-b what"><b>What it is.</b> Board approved updated practical guidance for the use of generative AI in the practice of law. Confidentiality, competence, disclosure.</p>
+      <p class="kb-b why"><b>Why it&rsquo;s in the KB.</b> Regulatory guidance authority (weight 0.80). It evidences the Disclosure &amp; certification standardize, Competence becomes an affirmative governance duty, Confidentiality hardens into data governance. It is L2 ruling evidence — a court, bar, or regulator acting.</p>
+      <div class="kb-chips"><span class="kb-chip">Disclosure &amp; certification standardize</span><span class="kb-chip">Competence becomes an affirmative governance duty</span><span class="kb-chip">Confidentiality hardens into data governance</span></div>
+    </article>
+<article class="kb">
+      <div class="kb-top"><span class="kb-pill" style="color:var(--teal);background:color-mix(in srgb, var(--teal) 12%, transparent)">T3</span> <span class="kb-pill" style="color:var(--blue);background:color-mix(in srgb, var(--blue) 12%, transparent)">L1 capability</span> <span class="kb-pill" style="color:var(--metric);background:color-mix(in srgb, var(--metric) 12%, transparent)">L3 adoption</span> <span class="kb-pill" style="color:var(--emerald);background:color-mix(in srgb, var(--emerald) 12%, transparent)">data</span><span class="kb-titlewrap"><a class="kb-title" href="https://www.cpomagazine.com/data-protection/2026-ai-legal-forecast-from-innovation-to-compliance/" target="_blank" rel="noreferrer">Stanford: Westlaw AI 34% error rate, Lexis+ AI 17%</a></span></div>
+      <div class="kb-meta">Stanford (research) &middot; 2026-06-01 &middot; Empirical / institutional authority</div>
+      <p class="kb-b what"><b>What it is.</b> Stanford research documented hallucination/error rates of 34% for Westlaw AI-Assisted Research and 17% for Lexis+ AI. Hallucination rate becomes a measurable liability input for tool selection and a benchmark question. Competence in tool choice.</p>
+      <p class="kb-b why"><b>Why it&rsquo;s in the KB.</b> Empirical / institutional authority (weight 0.60). It evidences the A tool-certification / benchmark standard emerges. It is an L1 capability signal — a demonstration that AI can now do the thing. It is an L3 adoption signal — evidence the control is becoming table stakes, court or no court. Note: it carries hard data (weight ×1.25).</p>
+      <div class="kb-chips"><span class="kb-chip">A tool-certification / benchmark standard emerges</span></div>
+    </article>
+<article class="kb">
+      <div class="kb-top"><span class="kb-pill" style="color:var(--rose);background:color-mix(in srgb, var(--rose) 12%, transparent)">T1</span> <span class="kb-pill" style="color:var(--primary);background:color-mix(in srgb, var(--primary) 12%, transparent)">L2 ruling</span> <span class="kb-pill" style="color:var(--emerald);background:color-mix(in srgb, var(--emerald) 12%, transparent)">data</span><span class="kb-titlewrap"><a class="kb-title" href="https://grllp.com/blog/All-lawyers-in-action-removed-from-the-record-for-misuse-of-AI-Withers-v.-Aberdeen-City-896" target="_blank" rel="noreferrer">Withers v. Aberdeen — both sides sanctioned, four lawyers removed for AI hallucinations</a></span></div>
+      <div class="kb-meta">N.D. Miss. (court order) &middot; 2026-06-01 &middot; Binding / primary authority</div>
+      <p class="kb-b what"><b>What it is.</b> Attorneys for both parties filed submissions containing hallucinated citations. The court revoked two pro hac vice admissions (two-year bar) and disqualified two local counsel, fining them; one attorney&#x27;s claim of not knowing AI could hallucinate was found &#x27;incredulous.&#x27; The underlying dispute concerned reasonable attorney fees. Hardens verification and disclosure duties and rejects ignorance as a defense.</p>
+      <p class="kb-b why"><b>Why it&rsquo;s in the KB.</b> Binding / primary authority (weight 1.00). It evidences the &#x27;A human reviewed it&#x27; stops being enough, Disclosure &amp; certification standardize. It is L2 ruling evidence — a court, bar, or regulator acting. Note: it carries hard data (weight ×1.25).</p>
+      <div class="kb-chips"><span class="kb-chip">&#x27;A human reviewed it&#x27; stops being enough</span><span class="kb-chip">Disclosure &amp; certification standardize</span></div>
+    </article>
+<article class="kb">
+      <div class="kb-top"><span class="kb-pill" style="color:var(--teal);background:color-mix(in srgb, var(--teal) 12%, transparent)">T3</span> <span class="kb-pill" style="color:var(--metric);background:color-mix(in srgb, var(--metric) 12%, transparent)">L3 adoption</span> <span class="kb-pill" style="color:var(--emerald);background:color-mix(in srgb, var(--emerald) 12%, transparent)">data</span><span class="kb-titlewrap"><a class="kb-title" href="https://www.aivortex.io/legal/ai-governance/ai-insurance-liability-law-firms/" target="_blank" rel="noreferrer">CNA adds AI-governance questionnaires to malpractice renewals</a></span></div>
+      <div class="kb-meta">CNA (largest US legal malpractice carrier) &middot; 2026-06-15 &middot; Empirical / institutional authority</div>
+      <p class="kb-b what"><b>What it is.</b> CNA introduced supplemental AI-usage questionnaires at renewal; firms unable to demonstrate AI governance face higher premiums or coverage restrictions. AXA XL offers an AI endorsement ~5-15% above base premium. An uncertified AI system trends toward uninsurable and therefore unusable. Insurers act as continuous private regulators.</p>
+      <p class="kb-b why"><b>Why it&rsquo;s in the KB.</b> Empirical / institutional authority (weight 0.60). It evidences the Insurance becomes the real regulator. It is an L3 adoption signal — evidence the control is becoming table stakes, court or no court. Note: it carries hard data (weight ×1.25).</p>
+      <div class="kb-chips"><span class="kb-chip">Insurance becomes the real regulator</span></div>
+    </article>
+<article class="kb">
+      <div class="kb-top"><span class="kb-pill" style="color:var(--rose);background:color-mix(in srgb, var(--rose) 12%, transparent)">T1</span> <span class="kb-pill" style="color:var(--primary);background:color-mix(in srgb, var(--primary) 12%, transparent)">L2 ruling</span> <span class="kb-pill" style="color:var(--metric);background:color-mix(in srgb, var(--metric) 12%, transparent)">L3 adoption</span><span class="kb-titlewrap"><a class="kb-title" href="https://www.corporatecomplianceinsights.com/ai-risk-2026-critical-changes-general-counsel/" target="_blank" rel="noreferrer">EU AI Act obligations take effect</a></span></div>
+      <div class="kb-meta">European Union (regulation) &middot; 2026-08-01 &middot; Binding / primary authority</div>
+      <p class="kb-b what"><b>What it is.</b> EU AI Act obligations for high-risk AI: conformity assessments, risk management systems, operational human oversight. Cross-jurisdiction convergence pressure on multinational legal departments.</p>
+      <p class="kb-b why"><b>Why it&rsquo;s in the KB.</b> Binding / primary authority (weight 1.00). It evidences the Regulatory convergence forces one operating model. It is L2 ruling evidence — a court, bar, or regulator acting. It is an L3 adoption signal — evidence the control is becoming table stakes, court or no court.</p>
+      <div class="kb-chips"><span class="kb-chip">Regulatory convergence forces one operating model</span></div>
+    </article>
+<article class="kb">
+      <div class="kb-top"><span class="kb-pill" style="color:var(--teal);background:color-mix(in srgb, var(--teal) 12%, transparent)">T3</span> <span class="kb-pill" style="color:var(--metric);background:color-mix(in srgb, var(--metric) 12%, transparent)">L3 adoption</span><span class="kb-titlewrap"><a class="kb-title" href="https://www.theregreview.org/2026/08/29/seminar-regulating-agentic-artificial-intelligence/" target="_blank" rel="noreferrer">AI AGENT Act would require scope-limited, revocable, logged agent authorization</a></span></div>
+      <div class="kb-meta">Federal legislation (proposed) / Reg Review &middot; 2026-08-29 &middot; Empirical / institutional authority</div>
+      <p class="kb-b what"><b>What it is.</b> Proposed AI AGENT Act would require covered AI agents to operate under transparent, documented, scope-limited, revocable user authorization and to keep records of their actions. Agentic supervision and UPL-by-proxy concerns.</p>
+      <p class="kb-b why"><b>Why it&rsquo;s in the KB.</b> Empirical / institutional authority (weight 0.60). It evidences the Agentic autonomy reopens supervision &amp; UPL. It is an L3 adoption signal — evidence the control is becoming table stakes, court or no court.</p>
+      <div class="kb-chips"><span class="kb-chip">Agentic autonomy reopens supervision &amp; UPL</span></div>
+    </article>
+<article class="kb">
+      <div class="kb-top"><span class="kb-pill" style="color:var(--amber);background:color-mix(in srgb, var(--amber) 12%, transparent)">T2</span> <span class="kb-pill" style="color:var(--primary);background:color-mix(in srgb, var(--primary) 12%, transparent)">L2 ruling</span> <span class="kb-pill" style="color:var(--metric);background:color-mix(in srgb, var(--metric) 12%, transparent)">L3 adoption</span> <span class="kb-pill" style="color:var(--emerald);background:color-mix(in srgb, var(--emerald) 12%, transparent)">data</span><span class="kb-titlewrap"><a class="kb-title" href="https://nwsidebar.wsba.org/2026/08/31/federal-court-excludes-expert-for-ai-hallucinated-citations/" target="_blank" rel="noreferrer">Federal court excludes expert for AI-hallucinated citations</a></span></div>
+      <div class="kb-meta">Federal court / WSBA &middot; 2026-08-31 &middot; Regulatory guidance authority</div>
+      <p class="kb-b what"><b>What it is.</b> Court excluded an expert witness whose report contained AI-hallucinated citations, extending exposure beyond attorney briefs to expert work product. Verification duty broadens.</p>
+      <p class="kb-b why"><b>Why it&rsquo;s in the KB.</b> Regulatory guidance authority (weight 0.80). It evidences the &#x27;A human reviewed it&#x27; stops being enough. It is L2 ruling evidence — a court, bar, or regulator acting. It is an L3 adoption signal — evidence the control is becoming table stakes, court or no court. Note: it carries hard data (weight ×1.25).</p>
+      <div class="kb-chips"><span class="kb-chip">&#x27;A human reviewed it&#x27; stops being enough</span></div>
+    </article>
+    </div>
+  </div>
+
+  <div class="lede" style="max-width:none;width:100%;margin:8px 0 0;text-align:center;">
+    <p>Want the <a href="legal-os-fault-line-radar-app.html" style="color:var(--primary)">radar screen</a>, or the <a href="legal-os-fault-line-radar.html" style="color:var(--primary)">engine behind it</a>?</p>
+  </div>
+
+  <div class="footer">&copy; 2025-2026 Charlie Fuller &middot; part of the legal-os platform</div>
+
+</div>
+
+</body>
+</html>
