@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<link rel="icon" type="image/svg+xml" href="../icon.svg">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="Charlie Fuller, Legal AI Architect: the governance layer that makes legal AI deployable, built against ABA Model Rules, Opinion 512, GDPR, the EU AI Act, and NIST AI RMF.">
+<title>Legal AI Architect &mdash; Overview</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Mulish:ital,wght@0,300;0,400;0,600;0,700;0,800;1,400&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --font-body: 'Mulish', 'Segoe UI', Helvetica, sans-serif;
+    --font-mono: 'Mulish', ui-monospace, 'SF Mono', Consolas, monospace;
+    --bg: #171416; --surface: #1E1A1D; --surface2: #262024;
+    --border: #332D31; --border-bright: #463D42;
+    --text: #F5F2F1; --text-dim: #C9C3C1; --text-faint: #8A8481;
+    --primary: #E39CB2; --primary-dim: rgba(227,156,178,0.12);
+    --metric: #5FBF9B; --metric-dim: rgba(95,191,155,0.12);
+    --slate: #948E8C; --slate-dim: rgba(148,142,140,0.12);
+    --rose: #E36C89;
+  }
+  html.light {
+    --bg: #F5F2F1; --surface: #FFFFFF; --surface2: #EDE8E6;
+    --border: #D9D2CE; --border-bright: #C4B9B4;
+    --text: #171416; --text-dim: #4A4442; --text-faint: #8A8481;
+    --primary: #B83159; --primary-dim: rgba(184,49,89,0.10);
+    --metric: #1E8A6A; --metric-dim: rgba(30,138,106,0.10);
+    --slate: #6A6461; --slate-dim: rgba(106,100,97,0.10);
+    --rose: #C4506B;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    background: var(--bg);
+    background-image:
+      radial-gradient(at 10% 0%, var(--primary-dim) 0%, transparent 40%),
+      radial-gradient(at 90% 80%, var(--metric-dim) 0%, transparent 40%);
+    color: var(--text); font-family: var(--font-body);
+    font-size: 15px; line-height: 1.7; min-height: 100vh; -webkit-font-smoothing: antialiased;
+  }
+  .nav { position: sticky; top: 0; z-index: 100; backdrop-filter: blur(16px);
+    background: color-mix(in srgb, var(--surface) 85%, transparent); border-bottom: 1px solid var(--border); }
+  .nav-inner { max-width: 1000px; margin: 0 auto; padding: 12px 24px; display: flex; align-items: center; justify-content: space-between; }
+  .crumbs { font-family: var(--font-mono); font-size: 13px; font-weight: 600; display: flex; align-items: center; gap: 8px; flex-wrap: wrap; min-width: 0; }
+  .crumbs a { color: var(--primary); text-decoration: none; }
+  .crumbs a:hover, .crumbs a:focus-visible { text-decoration: underline; outline: none; }
+  .crumbs .sep { color: var(--text-faint); }
+  .crumbs .current { color: var(--text-dim); font-weight: 400; }
+  .theme-toggle { width: 36px; height: 36px; border-radius: 10px; border: 1px solid var(--border);
+    background: var(--surface); cursor: pointer; display: flex; align-items: center; justify-content: center;
+    font-size: 16px; color: var(--text-dim); transition: all 0.2s; }
+  .theme-toggle:hover, .theme-toggle:focus-visible { border-color: var(--primary); color: var(--primary); outline: none; }
+
+  .container { max-width: 1000px; margin: 0 auto; padding: 48px 24px 80px; }
+  @keyframes fadeUp { from { opacity: 0; transform: translateY(16px); } to { opacity: 1; transform: translateY(0); } }
+
+  .hero { margin-bottom: 40px; animation: fadeUp 0.5s ease both; }
+  .hero .kicker { font-family: var(--font-mono); font-size: 11px; font-weight: 700; letter-spacing: 0.2em; text-transform: uppercase; color: var(--text-faint); margin-bottom: 12px; }
+  .hero h1 { font-size: 40px; font-weight: 800; letter-spacing: -1px; margin-bottom: 12px; max-width: 720px;
+    background: linear-gradient(135deg, var(--primary), var(--metric));
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+  .hero p { font-size: 17px; color: var(--text-dim); max-width: 760px; }
+
+  .section { margin-bottom: 44px; animation: fadeUp 0.5s ease both; }
+  .section-title { font-family: var(--font-mono); font-size: 12px; font-weight: 700; letter-spacing: 0.15em; text-transform: uppercase; color: var(--text-dim); margin-bottom: 16px; }
+  .lead { font-size: 20px; font-weight: 700; color: var(--text); margin-bottom: 18px; max-width: 720px; letter-spacing: -0.3px; }
+
+  .layers { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 14px; }
+  .layer { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 20px 18px; }
+  .layer.me { border-left: 3px solid var(--primary); }
+  .layer .lk { font-family: var(--font-mono); font-size: 10px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; color: var(--text-faint); }
+  .layer h3 { font-size: 18px; font-weight: 800; margin: 6px 0 6px; }
+  .layer.me h3 { color: var(--primary); }
+  .layer p { font-size: 13.5px; color: var(--text-dim); }
+  .layer ul { list-style: none; margin-top: 8px; display: grid; gap: 6px; }
+  .layer li { position: relative; padding-left: 18px; font-size: 13px; color: var(--text-dim); }
+  .layer li::before { content: "\2192"; position: absolute; left: 0; color: var(--primary); font-family: var(--font-mono); font-weight: 700; }
+
+  .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+  .card { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 20px; }
+  .card h4 { font-size: 15.5px; font-weight: 700; margin-bottom: 5px; }
+  .card p { font-size: 13.5px; color: var(--text-dim); }
+  .card.keep { border-left: 3px solid var(--metric); }
+
+  .frameworks { display: flex; flex-wrap: wrap; gap: 9px; margin-bottom: 12px; }
+  .fw { font-family: var(--font-mono); font-size: 12px; color: var(--text-dim); background: var(--surface2); border: 1px solid var(--border); border-radius: 6px; padding: 6px 11px; }
+  .fw b { color: var(--text); }
+  .verified { font-size: 14px; color: var(--metric); font-weight: 600; }
+
+  .cta { display: flex; gap: 12px; flex-wrap: wrap; margin-top: 8px; }
+  .btn { font-family: var(--font-mono); font-size: 13px; font-weight: 700; text-decoration: none; border-radius: 8px; padding: 11px 18px; transition: all 0.15s; }
+  .btn.primary { background: var(--primary); color: #171416; }
+  .btn.primary:hover { filter: brightness(1.08); }
+  .btn.ghost { border: 1px solid var(--border-bright); color: var(--text); }
+  .btn.ghost:hover { border-color: var(--primary); color: var(--primary); }
+
+  .footer { margin-top: 48px; padding-top: 16px; border-top: 1px solid var(--border); font-size: 13px; color: var(--text-dim); }
+  .footer a { color: var(--primary); text-decoration: none; }
+  .footer a:hover { text-decoration: underline; }
+
+  @media (max-width: 768px) { .hero h1 { font-size: 28px; } .layers, .grid2 { grid-template-columns: 1fr; } }
+  @media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation-duration: 0.01ms !important; } }
+</style>
+</head>
+<body>
+<div class="nav">
+  <div class="nav-inner">
+    <nav class="crumbs" aria-label="Breadcrumb">
+      <a href="../index.html">Index</a>
+      <span class="sep">/</span>
+      <a href="index.html">Legal</a>
+      <span class="sep">/</span>
+      <span class="current" aria-current="page">Overview</span>
+    </nav>
+    <button class="theme-toggle" id="themeToggle" aria-label="Toggle light mode">
+      <span class="icon-light">&#9788;</span>
+      <span class="icon-dark" style="display:none">&#9790;</span>
+    </button>
+  </div>
+</div>
+
+<div class="container">
+
+  <div class="hero">
+    <div class="kicker">Charlie Fuller &middot; privacy &amp; AI governance</div>
+    <h1>Legal AI a firm can actually deploy.</h1>
+    <p>The models can draft. The systems can hold the law. What&rsquo;s missing is the layer that makes it safe to turn on inside a firm. That layer is what I build.</p>
+  </div>
+
+  <div class="section">
+    <div class="section-title">Where I fit</div>
+    <p class="lead">Legal AI is three layers. Two of them are solved.</p>
+    <div class="layers">
+      <div class="layer">
+        <div class="lk">The brain</div>
+        <h3>The models</h3>
+        <p>The models that do the legal thinking and drafting. Bought, not built.</p>
+      </div>
+      <div class="layer">
+        <div class="lk">The library</div>
+        <h3>The systems</h3>
+        <p>The systems that hold the law: precedent, clauses, the knowledge base.</p>
+      </div>
+      <div class="layer me">
+        <div class="lk">The rails &middot; this is me</div>
+        <h3>The governance</h3>
+        <ul>
+          <li>Data-protection assessment before deployment, not after</li>
+          <li>Client matters isolated at the foundation</li>
+          <li>Every decision logged and reproducible</li>
+          <li>A hard stop where legal judgment begins</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="section-title">What I build</div>
+    <div class="grid2">
+      <div class="card keep"><h4>Privacy &amp; AI governance</h4><p>How the AI handles data, assessed against real frameworks, not assumed.</p></div>
+      <div class="card keep"><h4>Confidentiality</h4><p>Client data walled off at the foundation. Nothing leaks, nothing is shared.</p></div>
+      <div class="card keep"><h4>Accountability</h4><p>Every decision logged and provable: what the AI did, and why.</p></div>
+      <div class="card keep"><h4>Human oversight</h4><p>Consequential calls route to a lawyer. The AI never decides alone.</p></div>
+      <div class="card keep"><h4>Knowing where to stop</h4><p>The system stays on its side of the line. Judgment stays with the attorney.</p></div>
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="section-title">The two questions you&rsquo;re actually holding</div>
+    <div class="grid2">
+      <div class="card"><h4>The boundary</h4><p>The platform recommends. A licensed attorney decides. The line is drawn, not assumed.</p></div>
+      <div class="card"><h4>Nothing invented</h4><p>No fabricated cases. No invented citations. Every authority checked before it ships.</p></div>
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="section-title">Built against real authority</div>
+    <div class="frameworks">
+      <span class="fw"><b>ABA Model Rules</b> 1.1 &middot; 1.6 &middot; 5.3 &middot; 5.5</span>
+      <span class="fw"><b>ABA Formal Op. 512</b></span>
+      <span class="fw"><b>GDPR</b></span>
+      <span class="fw"><b>EU AI Act</b></span>
+      <span class="fw"><b>NIST AI RMF</b></span>
+      <span class="fw"><b>CCPA / CPRA</b></span>
+    </div>
+    <p class="verified">Every authority cited on these pages is verified good law.</p>
+  </div>
+
+  <div class="section">
+    <div class="section-title">See the work</div>
+    <p style="color:var(--text-dim);max-width:720px;margin-bottom:16px;">Every diagram in the collection is a system I&rsquo;ve designed or shipped. Start with the operating system, or browse the full set.</p>
+    <div class="cta">
+      <a class="btn primary" href="legal-ai-os-overview.html">Start here: Legal AI OS &rarr;</a>
+      <a class="btn ghost" href="index.html">Browse all the work &rarr;</a>
+    </div>
+  </div>
+
+  <div class="footer">
+    Open to privacy and AI-governance roles inside legal teams. &nbsp;
+    <a href="https://www.linkedin.com/in/charlie-fuller-colorado">Connect on LinkedIn</a> &middot;
+    <a href="https://github.com/motorthings">github.com/motorthings</a> &middot;
+    <a href="../index.html">All diagrams</a>
+    <div style="margin-top:8px;color:var(--text-faint);font-size:12px;">&copy; 2025&ndash;2026 Charlie Fuller</div>
+  </div>
+
+</div>
+
+<script>
+  const toggle = document.getElementById('themeToggle');
+  const iconLight = toggle.querySelector('.icon-light');
+  const iconDark = toggle.querySelector('.icon-dark');
+  function setTheme(d) {
+    document.documentElement.classList.toggle('light', d);
+    iconLight.style.display = d ? 'none' : '';
+    iconDark.style.display = d ? '' : 'none';
+    try { localStorage.setItem('diagram-theme', d ? 'light' : 'dark'); } catch(e) {}
+  }
+  toggle.addEventListener('click', () => setTheme(!document.documentElement.classList.contains('light')));
+  try { if (localStorage.getItem('diagram-theme') === 'light') setTheme(true); } catch(e) {}
+</script>
+</body>
+</html>
