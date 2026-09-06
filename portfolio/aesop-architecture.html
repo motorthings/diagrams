@@ -1,247 +1,256 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" class="light">
 <head>
 <meta charset="UTF-8">
-<link rel="icon" type="image/svg+xml" href="../icon.svg">
+<link rel="icon" href="../icon.svg" type="image/svg+xml" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>AESOP &mdash; Evaluation Wizard &amp; Architecture</title>
 <meta name="description" content="How AESOP's unified evaluation wizard runs five scoring modes across your AI instructions, governance, and live endpoints, and the stack that carries it.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Public+Sans:wght@400;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Mulish:ital,wght@0,300;0,400;0,600;0,700;0,800;1,400&display=swap" rel="stylesheet">
 <style>
-  :root {
-    --font-display: 'Instrument Serif', Georgia, serif;
-    --font-body: 'Public Sans', system-ui, sans-serif;
-    --font-mono: 'JetBrains Mono', 'SF Mono', monospace;
-    /* Gulf Stream Racing on a Ledger sheet — light only */
-    --ink: #0a1628; --graphite: #2e4d73; --body: #3d5a7a; --muted: #7a9ab8;
-    --rule: #c6d5e6; --row: #dbe5f0; --sheet: #eef4f9; --desk: #e4ecf4;
-    --spine: #0a1628; --spine-fg: #eef4f9;
-    --accent: #e8621a; --amber: #b45309; --blue: #2f6fa8; --teal: #0f766e; --violet: #7c3aed; --rose: #c23a30;
+  :root{--font-body:'Mulish','Segoe UI',Helvetica,sans-serif;--font-mono:'Mulish',ui-monospace,'SF Mono',Consolas,monospace;
+    --bg:#14181C;--surface:#1B2127;--surface2:#232B33;--border:#303A43;--border-bright:#42505C;
+    --text:#F4F5F6;--text-dim:#CBD0D6;--text-faint:#87919B;
+    --primary:#F58A4E;--primary-dim:rgba(245,138,78,0.12);--metric:#45C7A6;--metric-dim:rgba(69,199,166,0.12);
+    --blue:#6CACE4;--blue-dim:rgba(108,172,228,0.12);
+    --violet:#B9A0E8;--violet-dim:rgba(185,160,232,0.12);
+    --amber:#E8B54D;--amber-dim:rgba(232,181,77,0.12);
+    --rose:#E88280;--rose-dim:rgba(232,130,128,0.12);}
+  html.light{--bg:#F7F3EF;--surface:#FFFFFF;--surface2:#F0E9E1;--border:#E1D6CB;--border-bright:#CDBBA8;
+    --text:#241A12;--text-dim:#574A3C;--text-faint:#8C7E6E;
+    --primary:#C64A11;--primary-dim:rgba(198,74,17,0.09);--metric:#0E7C66;--metric-dim:rgba(14,124,102,0.08);
+    --blue:#2F6FA8;--blue-dim:rgba(47,111,168,0.08);
+    --violet:#7C3AED;--violet-dim:rgba(124,58,237,0.07);
+    --amber:#A5650A;--amber-dim:rgba(165,101,10,0.08);
+    --rose:#C23A30;--rose-dim:rgba(194,58,48,0.07);}
+  *{margin:0;padding:0;box-sizing:border-box}
+  html{scroll-behavior:smooth}
+  body{background:
+      radial-gradient(at 10% 0%,var(--primary-dim),transparent 55%),
+      radial-gradient(at 90% 80%,var(--metric-dim),transparent 55%),
+      var(--bg);
+    color:var(--text);font-family:var(--font-body);font-size:17px;line-height:1.62;-webkit-font-smoothing:antialiased;min-height:100vh}
+
+  .crumbs{font-size:13px;font-weight:600;color:var(--text-dim);display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+  .crumbs a{color:var(--primary);text-decoration:none}
+  .crumbs a:hover{text-decoration:underline}
+  .crumbs .sep{color:var(--text-faint)}
+  .crumbs .current{color:var(--text-dim);font-weight:400}
+  .crumbs-top{max-width:1080px;margin:0 auto;padding:18px 24px 0}
+
+  .wrap{max-width:1080px;margin:0 auto;padding:0 24px 80px}
+
+  .hero{padding:44px 0 24px;border-bottom:1px solid var(--border);margin-bottom:10px}
+  .hero .tagline{font-family:var(--font-mono);font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.14em;color:var(--primary);margin-bottom:10px}
+  .hero h1{font-size:52px;line-height:1.0;letter-spacing:-0.03em;font-weight:800;
+    background:linear-gradient(135deg,var(--primary),var(--metric));-webkit-background-clip:text;background-clip:text;color:transparent}
+  .hero .lede{font-size:19px;line-height:1.5;color:var(--text-dim);max-width:920px;margin-top:14px}
+  .hero .lede b{color:var(--text)}
+
+  .sec{margin-top:22px}
+  .sec-head{display:flex;align-items:baseline;gap:14px;padding-bottom:10px;border-bottom:1px solid var(--border);margin-bottom:10px}
+  .sec-num{font-size:23px;font-weight:800;color:var(--primary);font-family:var(--font-mono)}
+  .sec-title{font-size:23px;font-weight:800;color:var(--text);letter-spacing:-0.01em}
+  .sec-title .cnt{font-family:var(--font-mono);font-size:12px;font-weight:500;color:var(--text-faint);margin-left:10px}
+  .sec-body p{max-width:920px;margin-bottom:12px;color:var(--text-dim)}
+  .sec-body p b,.sec-body strong{color:var(--text)}
+  .intronote{border-left:2px solid var(--violet);padding:2px 0 2px 16px;font-size:14px;line-height:1.6;color:var(--text-dim);max-width:920px;margin-bottom:12px}
+  .intronote b{color:var(--text)}
+  code{font-family:var(--font-mono);font-size:0.84em;color:var(--primary)}
+  .close{margin-top:16px;border-top:1px solid var(--border);padding-top:14px;font-size:14px;line-height:1.6;color:var(--text-dim);max-width:920px}
+  .close b{color:var(--text)}
+
+  .pmap{padding:14px 4px;border-top:1px solid var(--border);display:grid;grid-template-columns:230px 1fr;gap:4px 28px;align-items:baseline}
+  .pmap:first-of-type{border-top:none}
+  .pmap .pm-k{font-family:var(--font-mono);font-size:11.5px;font-weight:800;text-transform:uppercase;letter-spacing:.08em;color:var(--blue);line-height:1.5}
+  .pmap .pm-k .ord{display:block;color:var(--primary);font-weight:700;font-size:10px;letter-spacing:.16em;margin-bottom:3px}
+  .pmap .pm-k .tag{display:block;color:var(--text-faint);font-weight:700;font-size:10px;letter-spacing:.16em;margin-bottom:3px}
+  .pmap .pm-b{font-size:14.5px;line-height:1.6;color:var(--text-dim)}
+  .pmap .pm-b .tt{font-weight:800;color:var(--text);font-size:15.5px}
+  .pmap.i-blue .pm-k{color:var(--blue)}
+  .pmap.i-teal .pm-k{color:var(--metric)}
+  .pmap.i-vio .pm-k{color:var(--violet)}
+  .pmap.i-amb .pm-k{color:var(--amber)}
+  .pmap.i-rose .pm-k{color:var(--rose)}
+  .pmap.i-acc .pm-k{color:var(--primary)}
+  .branch{font-size:13px;line-height:1.5;padding:1px 0}
+  .branch .bk{font-family:var(--font-mono);font-size:10.5px;font-weight:700;margin-right:8px}
+  .branch.blue .bk{color:var(--blue)}
+  .branch.teal .bk{color:var(--metric)}
+  .branch.vio .bk{color:var(--violet)}
+  .opt{color:var(--rose);font-weight:700}
+
+  table.tbl{width:100%;border-collapse:collapse;margin:2px 0 4px}
+  .tbl th{text-align:left;font-family:var(--font-mono);font-size:10px;font-weight:700;color:var(--text-faint);padding:6px 14px 8px 0;border-bottom:2px solid var(--border-bright);letter-spacing:.04em;text-transform:uppercase}
+  .tbl td{padding:9px 14px 9px 0;border-bottom:1px solid var(--border);vertical-align:top;font-size:13px;line-height:1.5;color:var(--text-dim)}
+  .tbl tr:last-child td{border-bottom:none}
+  .tbl td.f{font-weight:700;color:var(--text);width:40%}
+  .tbl td.src code{font-size:0.92em;color:var(--metric)}
+
+  .footer{margin-top:30px;border-top:1px solid var(--border);padding:18px 0 0;display:flex;justify-content:space-between;gap:20px;flex-wrap:wrap;font-family:var(--font-mono);font-size:12px;color:var(--text-faint)}
+  .footer a{color:var(--primary);text-decoration:none}
+  .footer a:hover{text-decoration:underline}
+
+  @media(max-width:900px){
+    .wrap{padding:0 16px 60px}
+    .hero h1{font-size:38px}
+    .pmap{grid-template-columns:1fr;gap:3px}
+    body{font-size:16px}
   }
-  * { margin: 0; padding: 0; box-sizing: border-box; }
-  body { background: var(--desk); color: var(--body); font-family: var(--font-body); font-size: 17px; line-height: 1.62; -webkit-font-smoothing: antialiased; text-rendering: optimizeLegibility; }
-  .topbar { max-width: 1160px; margin: 0 auto; padding: 18px 28px 6px; }
-  .backlink a { font-size: 14px; color: var(--muted); text-decoration: none; }
-  .backlink a:hover { color: var(--ink); }
-  .backlink .arr { color: var(--accent); font-size: 15px; margin-right: 2px; }
-
-  .sheet { max-width: 1160px; margin: 6px auto 72px; background: var(--sheet); display: grid; grid-template-columns: 56px 1fr; }
-  .spine { background: var(--spine); display: flex; align-items: flex-end; justify-content: center; padding: 26px 0; }
-  .spine-label { writing-mode: vertical-rl; transform: rotate(180deg); font-family: var(--font-mono); font-size: 13px; letter-spacing: 0.22em; color: var(--spine-fg); white-space: nowrap; text-transform: uppercase; }
-  .content { padding: 48px 60px 6px; min-width: 0; }
-
-  .masthead { border-bottom: 3px solid var(--ink); padding-bottom: 16px; }
-  .masthead h1 { font-family: var(--font-display); font-weight: 400; font-size: 50px; line-height: 0.97; letter-spacing: -0.028em; color: var(--ink); }
-  .masthead h1 .amp { color: var(--accent); }
-  .tagline { font-family: var(--font-mono); font-size: 11.5px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.14em; color: var(--accent); margin: 10px 0 14px; }
-  .lede { font-family: var(--font-display); font-style: italic; font-size: 18px; line-height: 1.5; color: var(--graphite); max-width: 900px; }
-  .lede b { color: var(--ink); }
-
-  section.sec { border-top: 3px solid var(--ink); padding: 22px 0 4px; }
-  .sec-title { display: grid; grid-template-columns: 88px 1fr; gap: 0 22px; align-items: baseline; margin-bottom: 6px; }
-  .sec-title .n { font-family: var(--font-display); font-size: 30px; line-height: 0.9; color: var(--accent); }
-  .sec-title h2 { font-size: 23px; font-weight: 700; letter-spacing: -0.012em; color: var(--ink); }
-  .sec-title h2 .cnt { font-family: var(--font-mono); font-size: 12px; font-weight: 500; color: var(--muted); margin-left: 10px; }
-  .sec-body { padding: 0 0 8px 110px; }
-  .sec-body p.lead { max-width: 900px; margin-bottom: 10px; }
-  .sec-body b, .sec-body strong { color: var(--ink); }
-  code { font-family: var(--font-mono); font-size: 0.84em; color: var(--accent); }
-  .run { font-family: var(--font-mono); font-size: 12px; color: var(--body); margin: 10px 0 0; }
-  .run b { color: var(--ink); font-weight: 700; }
-  .run .sep { color: var(--muted); }
-  .need { font-family: var(--font-mono); font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; margin-left: 8px; white-space: nowrap; }
-  .need.yes { color: var(--teal); } .need.no { color: var(--rose); }
-
-  /* process-map rows */
-  .pmap { border-top: 1px solid var(--row); padding: 13px 0 6px; display: grid; grid-template-columns: 200px 1fr; gap: 3px 26px; align-items: baseline; }
-  .pmap:first-of-type { border-top: none; }
-  .pmap .pm-k { font-family: var(--font-mono); font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; color: var(--blue); line-height: 1.4; }
-  .pmap .pm-k .ord { display: block; color: var(--accent); font-weight: 500; font-size: 9.5px; letter-spacing: 0.14em; }
-  .pmap .pm-b { font-size: 14px; line-height: 1.58; }
-  .pmap .pm-b .tt { font-weight: 700; color: var(--ink); font-size: 16px; }
-  .pmap .pm-b .sub { font-family: var(--font-mono); font-size: 11px; color: var(--muted); }
-  .pmap .pm-b ul { list-style: none; margin: 6px 0 2px; }
-  .pmap .pm-b li { padding: 2px 0 2px 15px; position: relative; font-size: 13.5px; line-height: 1.5; }
-  .pmap .pm-b li::before { content: ''; position: absolute; left: 1px; top: 0.72em; width: 5px; height: 5px; background: var(--row); }
-  .pmap .pm-b li b { color: var(--ink); }
-  .pmap.i-blue .pm-k { color: var(--blue); }
-  .pmap.i-acc .pm-k { color: var(--accent); }
-  .pmap.i-teal .pm-k { color: var(--teal); }
-  .pmap.i-vio .pm-k { color: var(--violet); }
-  .pmap.i-amb .pm-k { color: var(--amber); }
-
-  .footer { border-top: 3px solid var(--ink); margin: 26px 0 0; padding: 18px 0 30px; display: flex; justify-content: space-between; gap: 20px; flex-wrap: wrap; font-family: var(--font-mono); font-size: 11.5px; color: var(--muted); }
-  .footer a { color: var(--accent); text-decoration: none; }
-
-  @media (max-width: 900px) {
-    .sheet { grid-template-columns: 40px 1fr; }
-    .spine-label { font-size: 11px; }
-    .content { padding: 32px 22px 4px; }
-    .masthead h1 { font-size: 38px; }
-    .sec-title { grid-template-columns: 50px 1fr; }
-    .sec-title .n { font-size: 25px; }
-    .sec-body { padding-left: 0; }
-    .pmap { grid-template-columns: 1fr; gap: 2px; }
-    body { font-size: 16px; }
-  }
+  @media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+<style>
+  .pmap .pm-b ul{list-style:none;margin:8px 0 2px}
+  .pmap .pm-b ul li{padding:2px 0 2px 15px;position:relative;font-size:13.5px;line-height:1.55}
+  .pmap .pm-b ul li::before{content:'';position:absolute;left:1px;top:.7em;width:5px;height:5px;background:var(--border)}
+  .pmap .pm-b ul li b{color:var(--text)}
+  .pmap .pm-b .run{font-family:var(--font-mono);font-size:12px;color:var(--text-dim);margin-top:8px}
+  .pmap .pm-b .run b{color:var(--text);font-weight:700}
+  .pmap .pm-b .run .sep{color:var(--text-faint)}
+  .pmap .pm-k .need{font-family:var(--font-mono);font-size:9.5px;font-weight:700;letter-spacing:.05em;margin-left:6px;white-space:nowrap}
+  .pmap .pm-k .need.yes{color:var(--metric)}
+  .pmap .pm-k .need.no{color:var(--rose)}
 </style>
 </head>
 <body>
-<style>
-.crumbs-at-top{max-width:1100px;margin:0 auto;padding:14px 24px 0}
-.crumbs{font-family:var(--font-mono,monospace);font-size:13px;font-weight:600;display:flex;align-items:center;gap:8px;flex-wrap:wrap;min-width:0}
-.crumbs a{color:var(--accent);text-decoration:none}
-.crumbs a:hover,.crumbs a:focus-visible{text-decoration:underline;outline:none}
-.crumbs .sep{color:var(--muted)}
-.crumbs .current{color:var(--muted);font-weight:400}
-</style>
-<nav class="crumbs crumbs-at-top" aria-label="Breadcrumb">
-  <a href="../index.html">Index</a>
-  <span class="sep">/</span>
-  <a href="../aesop.html">AESOP</a>
-  <span class="sep">/</span>
+
+<div class="crumbs crumbs-top" aria-label="Breadcrumb">
+  <a href="../index.html">Index</a><span class="sep">/</span>
+  <a href="../aesop.html">AESOP</a><span class="sep">/</span>
   <span class="current" aria-current="page">Evaluation Wizard &amp; Architecture</span>
-</nav>
-
-
 </div>
 
-<div class="sheet">
-  <div class="spine"><div class="spine-label">AESOP ARCHITECTURE</div></div>
+<main class="wrap">
 
-  <div class="content">
+  <header class="hero">
+    <div class="tagline">AESOP &mdash; Enterprise AI Agent Governance</div>
+    <h1>Evaluation Wizard &amp; Architecture</h1>
+    <p class="lede">One unified wizard takes a system&rsquo;s instructions, optional governance documents, and an optional live endpoint and routes them into the evaluation modes that fit. Each mode is a deterministic, agent-run pipeline with a human gate at the end. This page maps the wizard and the stack underneath it.</p>
+  </header>
 
-    <header class="masthead">
-      <h1>Evaluation Wizard <span class="amp">&amp;</span> Architecture</h1>
-      <div class="tagline">AESOP &mdash; Enterprise AI Agent Governance</div>
-      <p class="lede">One unified wizard takes a system&rsquo;s instructions, optional governance documents, and an optional live endpoint and routes them into the evaluation modes that fit. Each mode is a deterministic, agent-run pipeline with a human gate at the end. This page maps the wizard and the stack underneath it.</p>
-    </header>
+  <!-- 01 wizard -->
+  <section class="sec">
+    <div class="sec-head"><span class="sec-num">01</span><h2 class="sec-title">Four-step wizard flow<span class="cnt">Materials &rarr; Governance &rarr; Endpoint &rarr; Capabilities</span></h2></div>
+    <div class="sec-body">
+      <p>The wizard narrows from &ldquo;what are you evaluating&rdquo; to &ldquo;how are you evaluating it.&rdquo; Governance is optional; Endpoint appears only when a live-testing mode is selected.</p>
+      <div class="pmap i-acc"><div class="pm-k"><span class="ord">01</span>Materials</div><div class="pm-b">Provide the inputs for the evaluation.
+        <ul>
+          <li><b>Project name</b> &mdash; identifies the run.</li>
+          <li><b>System instructions</b> &mdash; upload or paste.</li>
+          <li><b>Governance documents</b> &mdash; attach the policy layer to evaluate against.</li>
+          <li><b>Vital context</b> &mdash; anything the evaluators need to read the agent fairly.</li>
+        </ul>
+      </div></div>
+      <div class="pmap i-blue"><div class="pm-k"><span class="ord">02</span>Governance</div><div class="pm-b">Optionally attach governance documents.
+        <ul>
+          <li>Select from the document library.</li>
+          <li><b>Optional</b> &mdash; skip when no policy layer is in scope.</li>
+        </ul>
+      </div></div>
+      <div class="pmap i-blue"><div class="pm-k"><span class="ord">03</span>Endpoint</div><div class="pm-b">Only shown when live-testing phases are selected.
+        <ul>
+          <li><b>Chatbot API URL</b> &mdash; optional.</li>
+          <li><b>Hidden</b> for Quality-Analysis-only runs.</li>
+          <li>Providing it <b>unlocks the live-testing phases</b>.</li>
+        </ul>
+      </div></div>
+      <div class="pmap i-vio"><div class="pm-k"><span class="ord">04</span>Capabilities</div><div class="pm-b">Toggle evaluation phases on or off.
+        <ul>
+          <li><b>Quality Analysis pre-checked</b> &mdash; the default gate.</li>
+          <li>Each phase can be switched off for narrower runs.</li>
+          <li>Seven evaluation modes available on the platform.</li>
+        </ul>
+      </div></div>
+    </div>
+  </section>
 
-    <!-- 01 wizard -->
-    <section class="sec">
-      <div class="sec-title"><span class="n">01</span><h2>Four-step wizard flow<span class="cnt">Materials &rarr; Governance &rarr; Endpoint &rarr; Capabilities</span></h2></div>
-      <div class="sec-body">
-        <p class="lead">The wizard narrows from &ldquo;what are you evaluating&rdquo; to &ldquo;how are you evaluating it.&rdquo; Governance is optional; Endpoint appears only when a live-testing mode is selected.</p>
-        <div class="pmap i-acc"><div class="pm-k"><span class="ord">01</span>Materials</div><div class="pm-b">Provide the inputs for the evaluation.
-          <ul>
-            <li><b>Project name</b> &mdash; identifies the run.</li>
-            <li><b>System instructions</b> &mdash; upload or paste.</li>
-            <li><b>Governance documents</b> &mdash; attach the policy layer to evaluate against.</li>
-            <li><b>Vital context</b> &mdash; anything the evaluators need to read the agent fairly.</li>
-          </ul>
-        </div></div>
-        <div class="pmap i-blue"><div class="pm-k"><span class="ord">02</span>Governance</div><div class="pm-b">Optionally attach governance documents.
-          <ul>
-            <li>Select from the document library.</li>
-            <li><b>Optional</b> &mdash; skip when no policy layer is in scope.</li>
-          </ul>
-        </div></div>
-        <div class="pmap i-blue"><div class="pm-k"><span class="ord">03</span>Endpoint</div><div class="pm-b">Only shown when live-testing phases are selected.
-          <ul>
-            <li><b>Chatbot API URL</b> &mdash; optional.</li>
-            <li><b>Hidden</b> for Quality-Analysis-only runs.</li>
-            <li>Providing it <b>unlocks the live-testing phases</b>.</li>
-          </ul>
-        </div></div>
-        <div class="pmap i-vio"><div class="pm-k"><span class="ord">04</span>Capabilities</div><div class="pm-b">Toggle evaluation phases on or off.
-          <ul>
-            <li><b>Quality Analysis pre-checked</b> &mdash; the default gate.</li>
-            <li>Each phase can be switched off for narrower runs.</li>
-            <li>Seven evaluation modes available on the platform.</li>
-          </ul>
-        </div></div>
-      </div>
-    </section>
+  <!-- 02 modes -->
+  <section class="sec">
+    <div class="sec-head"><span class="sec-num">02</span><h2 class="sec-title">Evaluation modes<span class="cnt">the five wizard pipelines</span></h2></div>
+    <div class="sec-body">
+      <p>Each mode carries its own requirement: an <b>instruction set</b>, a <b>live endpoint</b>, or both. Static-analysis modes never touch the endpoint; live modes are the only ones that do.</p>
 
-    <!-- 02 modes -->
-    <section class="sec">
-      <div class="sec-title"><span class="n">02</span><h2>Evaluation modes<span class="cnt">the five wizard pipelines</span></h2></div>
-      <div class="sec-body">
-        <p class="lead">Each mode carries its own requirement: an <b>instruction set</b>, a <b>live endpoint</b>, or both. Static-analysis modes never touch the endpoint; live modes are the only ones that do.</p>
+      <div class="pmap i-teal"><div class="pm-k">Quality<br>Analysis<span class="need yes">Needs instructions</span></div><div class="pm-b"><span class="tt">Quality Analysis</span> &mdash; Full 5-agent scored pipeline evaluating <b>Instructions, Ethos, Bias, and Safety</b> with weighted Synthesis scoring and AESOP certification.
+        <div class="run"><b>Pipeline</b> Instructions <span class="sep">&rarr;</span> Ethos <span class="sep">&rarr;</span> Bias <span class="sep">&rarr;</span> Safety <span class="sep">&rarr;</span> Synthesis</div>
+      </div></div>
 
-        <div class="pmap i-teal"><div class="pm-k">Quality<br>Analysis<span class="need yes">Needs instructions</span></div><div class="pm-b"><span class="tt">Quality Analysis</span> &mdash; Full 5-agent scored pipeline evaluating <b>Instructions, Ethos, Bias, and Safety</b> with weighted Synthesis scoring and AESOP certification.
-          <div class="run"><b>Pipeline</b> Instructions <span class="sep">&rarr;</span> Ethos <span class="sep">&rarr;</span> Bias <span class="sep">&rarr;</span> Safety <span class="sep">&rarr;</span> Synthesis</div>
-        </div></div>
+      <div class="pmap i-vio"><div class="pm-k">Custom<br>Suite<span class="need yes">Needs instructions</span></div><div class="pm-b"><span class="tt">Custom Test Suite</span> &mdash; Generates a tailored evaluation rubric from your instructions, then creates targeted test scenarios from that rubric.
+        <div class="run"><b>Pipeline</b> Instructions <span class="sep">&rarr;</span> Custom Rubric <span class="sep">&rarr;</span> Test Scenarios <span class="sep">&rarr;</span> Results</div>
+      </div></div>
 
-        <div class="pmap i-vio"><div class="pm-k">Custom<br>Suite<span class="need yes">Needs instructions</span></div><div class="pm-b"><span class="tt">Custom Test Suite</span> &mdash; Generates a tailored evaluation rubric from your instructions, then creates targeted test scenarios from that rubric.
-          <div class="run"><b>Pipeline</b> Instructions <span class="sep">&rarr;</span> Custom Rubric <span class="sep">&rarr;</span> Test Scenarios <span class="sep">&rarr;</span> Results</div>
-        </div></div>
+      <div class="pmap i-amb"><div class="pm-k">Black Box<br>Investigation<span class="need yes">Needs endpoint</span><span class="need no">No instructions</span></div><div class="pm-b"><span class="tt">Black Box Investigation</span> &mdash; Interview-based discovery of an unknown chatbot. Probes the endpoint with strategic questions to map its capabilities, boundaries, and behavior with no prior knowledge.
+        <div class="run"><b>Pipeline</b> Endpoint <span class="sep">&rarr;</span> Interview <span class="sep">&rarr;</span> Discovery <span class="sep">&rarr;</span> Report</div>
+      </div></div>
 
-        <div class="pmap i-amb"><div class="pm-k">Black Box<br>Investigation<span class="need yes">Needs endpoint</span><span class="need no">No instructions</span></div><div class="pm-b"><span class="tt">Black Box Investigation</span> &mdash; Interview-based discovery of an unknown chatbot. Probes the endpoint with strategic questions to map its capabilities, boundaries, and behavior with no prior knowledge.
-          <div class="run"><b>Pipeline</b> Endpoint <span class="sep">&rarr;</span> Interview <span class="sep">&rarr;</span> Discovery <span class="sep">&rarr;</span> Report</div>
-        </div></div>
+      <div class="pmap i-acc"><div class="pm-k">Adversarial<br>Red-Team<span class="need yes">Needs both</span></div><div class="pm-b"><span class="tt">Adversarial Red-Team</span> &mdash; Cave of Shadows attack scenarios. Generates adversarial prompts from analysis reports, then executes them against your live chatbot to surface exploitable weaknesses.
+        <div class="run"><b>Pipeline</b> Reports <span class="sep">&rarr;</span> Attack Scenarios <span class="sep">&rarr;</span> Execute <span class="sep">&rarr;</span> Results</div>
+      </div></div>
 
-        <div class="pmap i-acc"><div class="pm-k">Adversarial<br>Red-Team<span class="need yes">Needs both</span></div><div class="pm-b"><span class="tt">Adversarial Red-Team</span> &mdash; Cave of Shadows attack scenarios. Generates adversarial prompts from analysis reports, then executes them against your live chatbot to surface exploitable weaknesses.
-          <div class="run"><b>Pipeline</b> Reports <span class="sep">&rarr;</span> Attack Scenarios <span class="sep">&rarr;</span> Execute <span class="sep">&rarr;</span> Results</div>
-        </div></div>
+      <div class="pmap i-blue"><div class="pm-k">Functional<br>Testing<span class="need yes">Needs endpoint</span></div><div class="pm-b"><span class="tt">Functional Testing</span> &mdash; Executes test scenarios (from Custom Test Suite or Red-Team) against a live chatbot endpoint. Sends real requests, captures responses, and scores pass/fail outcomes.
+        <div class="run"><b>Pipeline</b> Test Scenarios <span class="sep">&rarr;</span> Live Requests <span class="sep">&rarr;</span> Response Capture <span class="sep">&rarr;</span> Pass/Fail Scoring</div>
+      </div></div>
+    </div>
+  </section>
 
-        <div class="pmap i-blue"><div class="pm-k">Functional<br>Testing<span class="need yes">Needs endpoint</span></div><div class="pm-b"><span class="tt">Functional Testing</span> &mdash; Executes test scenarios (from Custom Test Suite or Red-Team) against a live chatbot endpoint. Sends real requests, captures responses, and scores pass/fail outcomes.
-          <div class="run"><b>Pipeline</b> Test Scenarios <span class="sep">&rarr;</span> Live Requests <span class="sep">&rarr;</span> Response Capture <span class="sep">&rarr;</span> Pass/Fail Scoring</div>
-        </div></div>
-      </div>
-    </section>
+  <!-- 03 stack -->
+  <section class="sec">
+    <div class="sec-head"><span class="sec-num">03</span><h2 class="sec-title">Tech stack<span class="cnt">frontend &rarr; backend &rarr; data &rarr; AI &rarr; infra</span></h2></div>
+    <div class="sec-body">
+      <p>Enterprise-grade by construction: <b>SOC 2 Type II</b> platforms, TLS + AES-256 encryption, JWT + row-level-security auth, user-controlled data, no AI training on your inputs, and a 99.9% SLA.</p>
 
-    <!-- 03 stack -->
-    <section class="sec">
-      <div class="sec-title"><span class="n">03</span><h2>Tech stack<span class="cnt">frontend &rarr; backend &rarr; data &rarr; AI &rarr; infra</span></h2></div>
-      <div class="sec-body">
-        <p class="lead">Enterprise-grade by construction: <b>SOC 2 Type II</b> platforms, TLS + AES-256 encryption, JWT + row-level-security auth, user-controlled data, no AI training on your inputs, and a 99.9% SLA.</p>
+      <div class="pmap i-teal"><div class="pm-k">Frontend</div><div class="pm-b"><span class="tt">Next.js 16 &middot; React 19 &middot; TypeScript</span>
+        <ul>
+          <li>Next.js 16 App Router with server and client components.</li>
+          <li>React 19 with functional components and hooks; TypeScript strict mode.</li>
+          <li>Tailwind CSS v4 for utility-first styling.</li>
+          <li><b>Libraries:</b> Recharts (KPI dashboards), Lucide React (icons), Supabase JS (auth + realtime), Server-Sent Events (streaming analysis progress).</li>
+        </ul>
+      </div></div>
 
-        <div class="pmap i-teal"><div class="pm-k">Frontend</div><div class="pm-b"><span class="tt">Next.js 16 &middot; React 19 &middot; TypeScript</span>
-          <ul>
-            <li>Next.js 16 App Router with server and client components.</li>
-            <li>React 19 with functional components and hooks; TypeScript strict mode.</li>
-            <li>Tailwind CSS v4 for utility-first styling.</li>
-            <li><b>Libraries:</b> Recharts (KPI dashboards), Lucide React (icons), Supabase JS (auth + realtime), Server-Sent Events (streaming analysis progress).</li>
-          </ul>
-        </div></div>
+      <div class="pmap i-acc"><div class="pm-k">Backend</div><div class="pm-b"><span class="tt">FastAPI &middot; Python &middot; Uvicorn</span>
+        <ul>
+          <li>FastAPI with async route handlers and Pydantic models; Uvicorn ASGI serving; SSE streaming via Starlette.</li>
+          <li>JWT middleware for Supabase token validation on every request.</li>
+          <li><b>Agent architecture:</b> specialized agents inheriting a <code>BaseAgent</code> &mdash; deterministic pipelines, probabilistic evaluation, human-in-the-loop at every gate.</li>
+          <li>Prompt files stored as plain <code>.txt</code> for easy iteration; sequential pipeline with report chaining; <code>httpx</code> for async chatbot testing.</li>
+        </ul>
+      </div></div>
 
-        <div class="pmap i-acc"><div class="pm-k">Backend</div><div class="pm-b"><span class="tt">FastAPI &middot; Python &middot; Uvicorn</span>
-          <ul>
-            <li>FastAPI with async route handlers and Pydantic models; Uvicorn ASGI serving; SSE streaming via Starlette.</li>
-            <li>JWT middleware for Supabase token validation on every request.</li>
-            <li><b>Agent architecture:</b> specialized agents inheriting a <code>BaseAgent</code> &mdash; deterministic pipelines, probabilistic evaluation, human-in-the-loop at every gate.</li>
-            <li>Prompt files stored as plain <code>.txt</code> for easy iteration; sequential pipeline with report chaining; <code>httpx</code> for async chatbot testing.</li>
-          </ul>
-        </div></div>
+      <div class="pmap i-teal"><div class="pm-k">Database<br>&amp; Auth</div><div class="pm-b"><span class="tt">Supabase &middot; PostgreSQL &middot; Row Level Security</span>
+        <ul>
+          <li>Supabase-hosted PostgreSQL with RLS policies; tables for analyses, evaluations, users, documents, help.</li>
+          <li>Voyage AI vector embeddings (512-dim) for the RAG help system.</li>
+          <li>SQL migrations tracked in <code>/database/migrations/</code>.</li>
+          <li><b>Auth:</b> email/password + magic links; JWT validated server-side; roles <code>org_admin</code> / <code>evaluator</code>; RLS isolates tenant data.</li>
+        </ul>
+      </div></div>
 
-        <div class="pmap i-teal"><div class="pm-k">Database<br>&amp; Auth</div><div class="pm-b"><span class="tt">Supabase &middot; PostgreSQL &middot; Row Level Security</span>
-          <ul>
-            <li>Supabase-hosted PostgreSQL with RLS policies; tables for analyses, evaluations, users, documents, help.</li>
-            <li>Voyage AI vector embeddings (512-dim) for the RAG help system.</li>
-            <li>SQL migrations tracked in <code>/database/migrations/</code>.</li>
-            <li><b>Auth:</b> email/password + magic links; JWT validated server-side; roles <code>org_admin</code> / <code>evaluator</code>; RLS isolates tenant data.</li>
-          </ul>
-        </div></div>
+      <div class="pmap i-vio"><div class="pm-k">AI &amp;<br>Evaluation</div><div class="pm-b"><span class="tt">Claude Sonnet 4.5 &middot; 21+ agents &middot; seven modes</span>
+        <ul>
+          <li>Claude Sonnet 4.5 (<code>claude-sonnet-4-5-20250915</code>) for primary agent evaluations; DeepSeek for batch / summary tasks.</li>
+          <li>Temperature 0.1 for consistent, reproducible scoring; 8K max output tokens per agent (16K for Custom Rubric).</li>
+          <li>Cost tracking per analysis with token-level granularity.</li>
+          <li><b>Pipelines:</b> 5-agent Quality Analysis; Custom Rubric + scenario generation; interview-based Black Box Investigation; Cave of Shadows Red-Team + execution; Functional Testing request/response scoring.</li>
+        </ul>
+      </div></div>
 
-        <div class="pmap i-vio"><div class="pm-k">AI &amp;<br>Evaluation</div><div class="pm-b"><span class="tt">Claude Sonnet 4.5 &middot; 21+ agents &middot; seven modes</span>
-          <ul>
-            <li>Claude Sonnet 4.5 (<code>claude-sonnet-4-5-20250915</code>) for primary agent evaluations; DeepSeek for batch / summary tasks.</li>
-            <li>Temperature 0.1 for consistent, reproducible scoring; 8K max output tokens per agent (16K for Custom Rubric).</li>
-            <li>Cost tracking per analysis with token-level granularity.</li>
-            <li><b>Pipelines:</b> 5-agent Quality Analysis; Custom Rubric + scenario generation; interview-based Black Box Investigation; Cave of Shadows Red-Team + execution; Functional Testing request/response scoring.</li>
-          </ul>
-        </div></div>
+      <div class="pmap i-blue"><div class="pm-k">Infra</div><div class="pm-b"><span class="tt">Vercel &middot; Fly.io &middot; GitHub Actions</span>
+        <ul>
+          <li>Frontend on Vercel with automatic preview deploys; backend on Fly.io via GitHub integration.</li>
+          <li>Supabase managed cloud for database + auth; custom domains with SSL on frontend and API.</li>
+          <li><b>CI/CD:</b> GitHub Actions help-doc reindexing on push; auto-deploy on merge to main; pytest suite for backend validation; per-service environment variables.</li>
+        </ul>
+      </div></div>
+    </div>
+  </section>
 
-        <div class="pmap i-blue"><div class="pm-k">Infra</div><div class="pm-b"><span class="tt">Vercel &middot; Fly.io &middot; GitHub Actions</span>
-          <ul>
-            <li>Frontend on Vercel with automatic preview deploys; backend on Fly.io via GitHub integration.</li>
-            <li>Supabase managed cloud for database + auth; custom domains with SSL on frontend and API.</li>
-            <li><b>CI/CD:</b> GitHub Actions help-doc reindexing on push; auto-deploy on merge to main; pytest suite for backend validation; per-service environment variables.</li>
-          </ul>
-        </div></div>
-      </div>
-    </section>
+  <footer class="footer">
+    <a href="../aesop.html">&larr; AESOP</a>
+    <span>&copy; 2025-2026 Charlie Fuller</span>
+  </footer>
 
-    <footer class="footer">
-      <a href="../aesop.html">&larr; AESOP</a>
-      <span>&copy; 2025-2026 Charlie Fuller</span>
-    </footer>
-
-  </div>
-</div>
-
+</main>
 </body>
 </html>

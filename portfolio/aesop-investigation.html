@@ -1,188 +1,182 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" class="light">
 <head>
 <meta charset="UTF-8">
-<link rel="icon" type="image/svg+xml" href="../icon.svg">
+<link rel="icon" href="../icon.svg" type="image/svg+xml" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>AESOP &mdash; Black Box Investigation</title>
 <meta name="description" content="How AESOP discovers a chatbot's behavior without its instructions, through progressive multi-turn interviews that map purpose, patterns, boundaries, and risks.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Public+Sans:wght@400;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Mulish:ital,wght@0,300;0,400;0,600;0,700;0,800;1,400&display=swap" rel="stylesheet">
 <style>
-  :root {
-    --font-display: 'Instrument Serif', Georgia, serif;
-    --font-body: 'Public Sans', system-ui, sans-serif;
-    --font-mono: 'JetBrains Mono', 'SF Mono', monospace;
-    --ink: #0a1628; --graphite: #2e4d73; --body: #3d5a7a; --muted: #7a9ab8;
-    --rule: #c6d5e6; --row: #dbe5f0; --sheet: #eef4f9; --desk: #e4ecf4;
-    --spine: #0a1628; --spine-fg: #eef4f9;
-    --accent: #e8621a; --amber: #b45309; --blue: #2f6fa8; --teal: #0f766e; --violet: #7c3aed; --rose: #c23a30;
+  :root{--font-body:'Mulish','Segoe UI',Helvetica,sans-serif;--font-mono:'Mulish',ui-monospace,'SF Mono',Consolas,monospace;
+    --bg:#14181C;--surface:#1B2127;--surface2:#232B33;--border:#303A43;--border-bright:#42505C;
+    --text:#F4F5F6;--text-dim:#CBD0D6;--text-faint:#87919B;
+    --primary:#F58A4E;--primary-dim:rgba(245,138,78,0.12);--metric:#45C7A6;--metric-dim:rgba(69,199,166,0.12);
+    --blue:#6CACE4;--blue-dim:rgba(108,172,228,0.12);
+    --violet:#B9A0E8;--violet-dim:rgba(185,160,232,0.12);
+    --amber:#E8B54D;--amber-dim:rgba(232,181,77,0.12);
+    --rose:#E88280;--rose-dim:rgba(232,130,128,0.12);}
+  html.light{--bg:#F7F3EF;--surface:#FFFFFF;--surface2:#F0E9E1;--border:#E1D6CB;--border-bright:#CDBBA8;
+    --text:#241A12;--text-dim:#574A3C;--text-faint:#8C7E6E;
+    --primary:#C64A11;--primary-dim:rgba(198,74,17,0.09);--metric:#0E7C66;--metric-dim:rgba(14,124,102,0.08);
+    --blue:#2F6FA8;--blue-dim:rgba(47,111,168,0.08);
+    --violet:#7C3AED;--violet-dim:rgba(124,58,237,0.07);
+    --amber:#A5650A;--amber-dim:rgba(165,101,10,0.08);
+    --rose:#C23A30;--rose-dim:rgba(194,58,48,0.07);}
+  *{margin:0;padding:0;box-sizing:border-box}
+  html{scroll-behavior:smooth}
+  body{background:
+      radial-gradient(at 10% 0%,var(--primary-dim),transparent 55%),
+      radial-gradient(at 90% 80%,var(--metric-dim),transparent 55%),
+      var(--bg);
+    color:var(--text);font-family:var(--font-body);font-size:17px;line-height:1.62;-webkit-font-smoothing:antialiased;min-height:100vh}
+
+  .crumbs{font-size:13px;font-weight:600;color:var(--text-dim);display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+  .crumbs a{color:var(--primary);text-decoration:none}
+  .crumbs a:hover{text-decoration:underline}
+  .crumbs .sep{color:var(--text-faint)}
+  .crumbs .current{color:var(--text-dim);font-weight:400}
+  .crumbs-top{max-width:1080px;margin:0 auto;padding:18px 24px 0}
+
+  .wrap{max-width:1080px;margin:0 auto;padding:0 24px 80px}
+
+  .hero{padding:44px 0 24px;border-bottom:1px solid var(--border);margin-bottom:10px}
+  .hero .tagline{font-family:var(--font-mono);font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.14em;color:var(--primary);margin-bottom:10px}
+  .hero h1{font-size:52px;line-height:1.0;letter-spacing:-0.03em;font-weight:800;
+    background:linear-gradient(135deg,var(--primary),var(--metric));-webkit-background-clip:text;background-clip:text;color:transparent}
+  .hero .lede{font-size:19px;line-height:1.5;color:var(--text-dim);max-width:920px;margin-top:14px}
+  .hero .lede b{color:var(--text)}
+
+  .sec{margin-top:22px}
+  .sec-head{display:flex;align-items:baseline;gap:14px;padding-bottom:10px;border-bottom:1px solid var(--border);margin-bottom:10px}
+  .sec-num{font-size:23px;font-weight:800;color:var(--primary);font-family:var(--font-mono)}
+  .sec-title{font-size:23px;font-weight:800;color:var(--text);letter-spacing:-0.01em}
+  .sec-body p{max-width:920px;margin-bottom:12px;color:var(--text-dim)}
+  .sec-body p b,.sec-body strong{color:var(--text)}
+  .sec-body p.nb{margin-bottom:0}
+  code{font-family:var(--font-mono);font-size:0.84em;color:var(--primary)}
+  .close{margin-top:16px;border-top:1px solid var(--border);padding-top:14px;font-size:14px;line-height:1.6;color:var(--text-dim);max-width:920px}
+  .close b{color:var(--text)}
+
+  .pmap{padding:14px 4px;border-top:1px solid var(--border);display:grid;grid-template-columns:240px 1fr;gap:4px 28px;align-items:baseline}
+  .pmap:first-of-type{border-top:none}
+  .pmap .pm-k{font-family:var(--font-mono);font-size:11.5px;font-weight:800;text-transform:uppercase;letter-spacing:.08em;color:var(--blue);line-height:1.5}
+  .pmap .pm-k .ord{display:block;color:var(--primary);font-weight:700;font-size:10px;letter-spacing:.16em;margin-bottom:3px}
+  .pmap .pm-k .tag{display:block;color:var(--text-faint);font-weight:700;font-size:10px;letter-spacing:.16em;margin-bottom:3px}
+  .pmap .pm-b{font-size:14.5px;line-height:1.6;color:var(--text-dim)}
+  .pmap .pm-b .tt{font-weight:800;color:var(--text);font-size:16px}
+  .pmap.i-vio .pm-k{color:var(--violet)}
+  .pmap.i-teal .pm-k{color:var(--metric)}
+  .pmap.i-amb .pm-k{color:var(--amber)}
+  .pmap.i-rose .pm-k{color:var(--rose)}
+  .pmap.i-acc .pm-k{color:var(--primary)}
+  .branch{font-size:13px;line-height:1.5;padding:1px 0}
+  .branch .bk{font-family:var(--font-mono);font-size:10.5px;font-weight:700;margin-right:8px}
+  .branch.blue .bk{color:var(--blue)}
+  .branch.teal .bk{color:var(--metric)}
+  .branch.vio .bk{color:var(--violet)}
+  .opt{color:var(--rose);font-weight:700}
+
+  .footer{margin-top:30px;border-top:1px solid var(--border);padding:18px 0 0;display:flex;justify-content:space-between;gap:20px;flex-wrap:wrap;font-family:var(--font-mono);font-size:12px;color:var(--text-faint)}
+  .footer a{color:var(--primary);text-decoration:none}
+  .footer a:hover{text-decoration:underline}
+
+  @media(max-width:900px){
+    .wrap{padding:0 16px 60px}
+    .hero h1{font-size:38px}
+    .pmap{grid-template-columns:1fr;gap:3px}
+    body{font-size:16px}
   }
-  * { margin: 0; padding: 0; box-sizing: border-box; }
-  body { background: var(--desk); color: var(--body); font-family: var(--font-body); font-size: 17px; line-height: 1.62; -webkit-font-smoothing: antialiased; text-rendering: optimizeLegibility; }
-  .topbar { max-width: 1160px; margin: 0 auto; padding: 18px 28px 6px; }
-  .backlink a { font-size: 14px; color: var(--muted); text-decoration: none; }
-  .backlink a:hover { color: var(--ink); }
-  .backlink .arr { color: var(--accent); font-size: 15px; margin-right: 2px; }
-
-  .sheet { max-width: 1160px; margin: 6px auto 72px; background: var(--sheet); display: grid; grid-template-columns: 56px 1fr; }
-  .spine { background: var(--spine); display: flex; align-items: flex-end; justify-content: center; padding: 26px 0; }
-  .spine-label { writing-mode: vertical-rl; transform: rotate(180deg); font-family: var(--font-mono); font-size: 13px; letter-spacing: 0.22em; color: var(--spine-fg); white-space: nowrap; text-transform: uppercase; }
-  .content { padding: 48px 60px 6px; min-width: 0; }
-
-  .masthead { border-bottom: 3px solid var(--ink); padding-bottom: 16px; }
-  .masthead h1 { font-family: var(--font-display); font-weight: 400; font-size: 50px; line-height: 0.97; letter-spacing: -0.028em; color: var(--ink); }
-  .tagline { font-family: var(--font-mono); font-size: 11.5px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.14em; color: var(--accent); margin: 10px 0 14px; }
-  .lede { font-family: var(--font-display); font-style: italic; font-size: 19px; line-height: 1.5; color: var(--graphite); max-width: 920px; }
-  .lede b { color: var(--ink); }
-
-  section.sec { border-top: 3px solid var(--ink); padding: 22px 0 4px; }
-  .sec-title { display: grid; grid-template-columns: 88px 1fr; gap: 0 22px; align-items: baseline; margin-bottom: 6px; }
-  .sec-title .n { font-family: var(--font-display); font-size: 30px; line-height: 0.9; color: var(--accent); }
-  .sec-title h2 { font-size: 23px; font-weight: 700; letter-spacing: -0.012em; color: var(--ink); }
-  .sec-body { padding: 0 0 8px 110px; }
-  .sec-body p, .sec-body p.lead { max-width: 920px; margin-bottom: 12px; }
-  .sec-body p.nb { margin-bottom: 0; }
-  .sec-body b, .sec-body strong { color: var(--ink); }
-  code { font-family: var(--font-mono); font-size: 0.84em; color: var(--accent); }
-  .close { margin-top: 18px; border-top: 1px solid var(--rule); padding-top: 12px; font-size: 14px; line-height: 1.6; color: var(--body); max-width: 920px; }
-  .close b { color: var(--ink); }
-
-  .pmap { border-top: 1px solid var(--row); padding: 12px 0 6px; display: grid; grid-template-columns: 230px 1fr; gap: 3px 28px; align-items: baseline; }
-  .pmap:first-of-type { border-top: none; }
-  .pmap .pm-k { font-family: var(--font-mono); font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; color: var(--blue); line-height: 1.45; }
-  .pmap .pm-k .tag { display: block; color: var(--muted); font-weight: 500; font-size: 9.5px; letter-spacing: 0.16em; margin-bottom: 3px; }
-  .pmap .pm-k .ord { display: block; color: var(--accent); font-weight: 500; font-size: 9.5px; letter-spacing: 0.16em; margin-bottom: 3px; }
-  .pmap .pm-b { font-size: 14px; line-height: 1.6; }
-  .pmap .pm-b .tt { font-weight: 700; color: var(--ink); font-size: 16px; }
-  .pmap.i-blue .pm-k { color: var(--blue); } .pmap.i-teal .pm-k { color: var(--teal); }
-  .pmap.i-vio .pm-k { color: var(--violet); } .pmap.i-amb .pm-k { color: var(--amber); }
-  .pmap.i-rose .pm-k { color: var(--rose); } .pmap.i-acc .pm-k { color: var(--accent); }
-  .branch { font-size: 13px; line-height: 1.5; padding: 1px 0; }
-  .branch .bk { font-family: var(--font-mono); font-size: 10.5px; font-weight: 600; margin-right: 8px; }
-  .branch.blue .bk { color: var(--blue); } .branch.teal .bk { color: var(--teal); }
-  .branch.vio .bk { color: var(--violet); }
-  .opt { color: var(--rose); font-weight: 600; }
-
-  .footer { border-top: 3px solid var(--ink); margin: 26px 0 0; padding: 18px 0 30px; display: flex; justify-content: space-between; gap: 20px; flex-wrap: wrap; font-family: var(--font-mono); font-size: 11.5px; color: var(--muted); }
-  .footer a { color: var(--accent); text-decoration: none; }
-
-  @media (max-width: 900px) {
-    .sheet { grid-template-columns: 40px 1fr; }
-    .spine-label { font-size: 11px; }
-    .content { padding: 32px 22px 4px; }
-    .masthead h1 { font-size: 38px; }
-    .sec-title { grid-template-columns: 50px 1fr; }
-    .sec-title .n { font-size: 25px; }
-    .sec-body { padding-left: 0; }
-    .pmap { grid-template-columns: 1fr; gap: 2px; }
-    body { font-size: 16px; }
-  }
+  @media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
 </style>
 </head>
 <body>
-<style>
-.crumbs-at-top{max-width:1100px;margin:0 auto;padding:14px 24px 0}
-.crumbs{font-family:var(--font-mono,monospace);font-size:13px;font-weight:600;display:flex;align-items:center;gap:8px;flex-wrap:wrap;min-width:0}
-.crumbs a{color:var(--accent);text-decoration:none}
-.crumbs a:hover,.crumbs a:focus-visible{text-decoration:underline;outline:none}
-.crumbs .sep{color:var(--muted)}
-.crumbs .current{color:var(--muted);font-weight:400}
-</style>
-<nav class="crumbs crumbs-at-top" aria-label="Breadcrumb">
-  <a href="../index.html">Index</a>
-  <span class="sep">/</span>
-  <a href="../aesop.html">AESOP</a>
-  <span class="sep">/</span>
+
+<div class="crumbs crumbs-top" aria-label="Breadcrumb">
+  <a href="../index.html">Index</a><span class="sep">/</span>
+  <a href="../aesop.html">AESOP</a><span class="sep">/</span>
   <span class="current" aria-current="page">Black Box Investigation</span>
-</nav>
-
-
 </div>
 
-<div class="sheet">
-  <div class="spine"><div class="spine-label">AESOP BLACK BOX INVESTIGATION</div></div>
+<main class="wrap">
 
-  <div class="content">
+  <header class="hero">
+    <div class="tagline">Discovery mode &mdash; AESOP</div>
+    <h1>Black Box Investigation</h1>
+    <p class="lede">Discover a chatbot&rsquo;s behavior through progressive, multi-turn interviews &mdash; with no access to its instructions.</p>
+  </header>
 
-    <header class="masthead">
-      <h1>Black Box Investigation</h1>
-      <div class="tagline">Discovery mode &mdash; AESOP</div>
-      <p class="lede">Discover a chatbot&rsquo;s behavior through progressive, multi-turn interviews &mdash; with no access to its instructions.</p>
-    </header>
+  <!-- 01 -->
+  <section class="sec">
+    <div class="sec-head"><span class="sec-num">01</span><h2 class="sec-title">What investigation does</h2></div>
+    <div class="sec-body">
+      <p><b>Black Box Investigation</b> is built for situations where you have a live chatbot but <b>no access to its system instructions</b>. AESOP interviews the chatbot through progressive, multi-turn conversations to discover its behavior, capabilities, boundaries, and potential issues &mdash; all without ever seeing the underlying prompt. The investigator agent acts as a skilled interviewer, probing from multiple angles to build a comprehensive behavioral profile.</p>
+    </div>
+  </section>
 
-    <!-- 01 -->
-    <section class="sec">
-      <div class="sec-title"><span class="n">01</span><h2>What investigation does</h2></div>
-      <div class="sec-body">
-        <p><b>Black Box Investigation</b> is built for situations where you have a live chatbot but <b>no access to its system instructions</b>. AESOP interviews the chatbot through progressive, multi-turn conversations to discover its behavior, capabilities, boundaries, and potential issues &mdash; all without ever seeing the underlying prompt. The investigator agent acts as a skilled interviewer, probing from multiple angles to build a comprehensive behavioral profile.</p>
-      </div>
-    </section>
+  <!-- 02 -->
+  <section class="sec">
+    <div class="sec-head"><span class="sec-num">02</span><h2 class="sec-title">When to use it</h2></div>
+    <div class="sec-body">
+      <div class="pmap"><div class="pm-k"><span class="tag">3P</span>Third-party<br>chatbot</div><div class="pm-b">Evaluating a vendor or partner chatbot where you have endpoint access but not the system prompt or configuration.</div></div>
+      <div class="pmap"><div class="pm-k"><span class="tag">IN</span>Inherited<br>system</div><div class="pm-b">A chatbot built by a previous team with no documentation. Investigation reveals what it actually does.</div></div>
+      <div class="pmap"><div class="pm-k"><span class="tag">CA</span>Competitive<br>analysis</div><div class="pm-b">Understanding a competitor&rsquo;s chatbot capabilities, safety posture, and behavioral patterns through structured interviews.</div></div>
+      <div class="pmap"><div class="pm-k"><span class="tag">PA</span>Pre-audit<br>discovery</div><div class="pm-b">Before a formal evaluation, investigate the chatbot to understand what you&rsquo;re working with and scope the audit appropriately.</div></div>
+    </div>
+  </section>
 
-    <!-- 02 -->
-    <section class="sec">
-      <div class="sec-title"><span class="n">02</span><h2>When to use it</h2></div>
-      <div class="sec-body">
-        <div class="pmap"><div class="pm-k"><span class="tag">3P</span>Third-party<br>chatbot</div><div class="pm-b">Evaluating a vendor or partner chatbot where you have endpoint access but not the system prompt or configuration.</div></div>
-        <div class="pmap"><div class="pm-k"><span class="tag">IN</span>Inherited<br>system</div><div class="pm-b">A chatbot built by a previous team with no documentation. Investigation reveals what it actually does.</div></div>
-        <div class="pmap"><div class="pm-k"><span class="tag">CA</span>Competitive<br>analysis</div><div class="pm-b">Understanding a competitor&rsquo;s chatbot capabilities, safety posture, and behavioral patterns through structured interviews.</div></div>
-        <div class="pmap"><div class="pm-k"><span class="tag">PA</span>Pre-audit<br>discovery</div><div class="pm-b">Before a formal evaluation, investigate the chatbot to understand what you&rsquo;re working with and scope the audit appropriately.</div></div>
-      </div>
-    </section>
+  <!-- 03 -->
+  <section class="sec">
+    <div class="sec-head"><span class="sec-num">03</span><h2 class="sec-title">How it works in the wizard</h2></div>
+    <div class="sec-body">
+      <p>In the evaluation wizard, <b>skip the system instructions</b> in Step 1 and provide only a <b>chatbot endpoint URL</b> in Step 2. When no instructions are provided, <b>Black Box Investigation</b> becomes available in Step 3. Select it to begin the automated interview process. AESOP handles the rest &mdash; running multi-turn conversations, analyzing transcripts, and building a behavioral profile.</p>
+    </div>
+  </section>
 
-    <!-- 03 -->
-    <section class="sec">
-      <div class="sec-title"><span class="n">03</span><h2>How it works in the wizard</h2></div>
-      <div class="sec-body">
-        <p>In the evaluation wizard, <b>skip the system instructions</b> in Step 1 and provide only a <b>chatbot endpoint URL</b> in Step 2. When no instructions are provided, <b>Black Box Investigation</b> becomes available in Step 3. Select it to begin the automated interview process. AESOP handles the rest &mdash; running multi-turn conversations, analyzing transcripts, and building a behavioral profile.</p>
-      </div>
-    </section>
+  <!-- 04 -->
+  <section class="sec">
+    <div class="sec-head"><span class="sec-num">04</span><h2 class="sec-title">What it discovers</h2></div>
+    <div class="sec-body">
+      <div class="pmap i-teal"><div class="pm-k"><span class="tag">Purpose</span>System<br>purpose</div><div class="pm-b">What the chatbot is designed to do, its domain of expertise, and its stated or implied mission.</div></div>
+      <div class="pmap"><div class="pm-k"><span class="tag">Behavior</span>Behavioral<br>patterns</div><div class="pm-b">Conversational style, response strategies, escalation behavior, and how it handles ambiguity.</div></div>
+      <div class="pmap"><div class="pm-k"><span class="tag">Boundaries</span>Safety<br>posture</div><div class="pm-b">Where the chatbot draws lines, how it refuses requests, and its approach to sensitive topics.</div></div>
+      <div class="pmap i-vio"><div class="pm-k"><span class="tag">Risks</span>Potential<br>vulnerabilities</div><div class="pm-b">Gaps in boundary enforcement, inconsistent behavior, and areas where the chatbot may be exploitable.</div></div>
+    </div>
+  </section>
 
-    <!-- 04 -->
-    <section class="sec">
-      <div class="sec-title"><span class="n">04</span><h2>What it discovers</h2></div>
-      <div class="sec-body">
-        <div class="pmap i-teal"><div class="pm-k"><span class="tag">Purpose</span>System<br>purpose</div><div class="pm-b">What the chatbot is designed to do, its domain of expertise, and its stated or implied mission.</div></div>
-        <div class="pmap"><div class="pm-k"><span class="tag">Behavior</span>Behavioral<br>patterns</div><div class="pm-b">Conversational style, response strategies, escalation behavior, and how it handles ambiguity.</div></div>
-        <div class="pmap"><div class="pm-k"><span class="tag">Boundaries</span>Safety<br>posture</div><div class="pm-b">Where the chatbot draws lines, how it refuses requests, and its approach to sensitive topics.</div></div>
-        <div class="pmap i-vio"><div class="pm-k"><span class="tag">Risks</span>Potential<br>vulnerabilities</div><div class="pm-b">Gaps in boundary enforcement, inconsistent behavior, and areas where the chatbot may be exploitable.</div></div>
-      </div>
-    </section>
+  <!-- 05 -->
+  <section class="sec">
+    <div class="sec-head"><span class="sec-num">05</span><h2 class="sec-title">What happens next</h2></div>
+    <div class="sec-body">
+      <p>After investigation completes, AESOP can optionally <b>generate evaluation rubrics</b> and <b>test scenarios</b> from the discovered behavior. The investigation report feeds forward &mdash; the behavioral profile can go into Cave of Shadows for red-team testing, or seed a Custom Rubric tailored to the chatbot&rsquo;s actual capabilities rather than assumed ones.</p>
+    </div>
+  </section>
 
-    <!-- 05 -->
-    <section class="sec">
-      <div class="sec-title"><span class="n">05</span><h2>What happens next</h2></div>
-      <div class="sec-body">
-        <p>After investigation completes, AESOP can optionally <b>generate evaluation rubrics</b> and <b>test scenarios</b> from the discovered behavior. The investigation report feeds forward &mdash; the behavioral profile can go into Cave of Shadows for red-team testing, or seed a Custom Rubric tailored to the chatbot&rsquo;s actual capabilities rather than assumed ones.</p>
-      </div>
-    </section>
+  <!-- 06 -->
+  <section class="sec">
+    <div class="sec-head"><span class="sec-num">06</span><h2 class="sec-title">The investigation pipeline</h2></div>
+    <div class="sec-body">
+      <div class="pmap"><div class="pm-k"><span class="tag">Input &mdash; wizard</span>Endpoint<br>only</div><div class="pm-b">Provide the chatbot endpoint URL. No system instructions needed.</div></div>
+      <div class="pmap i-acc"><div class="pm-k"><span class="tag">Wizard</span>Enable black box<br>investigation</div><div class="pm-b">Available when no instructions are provided &mdash; select to begin automated discovery.</div></div>
+      <div class="pmap"><div class="pm-k"><span class="tag">Fork &mdash; interview phase</span>Three<br>probes</div><div class="pm-b">
+        <div class="branch teal"><span class="bk">Progressive probing</span> Gradually escalating questions to map capabilities and boundaries.</div>
+        <div class="branch blue"><span class="bk">Behavioral mapping</span> Multi-angle conversations to understand response patterns and style.</div>
+        <div class="branch vio"><span class="bk">Boundary testing</span> Exploring edge cases and refusal behaviors across sensitive topics.</div>
+      </div></div>
+      <div class="pmap"><div class="pm-k"><span class="tag">Discovery</span>Analyze interview<br>transcripts</div><div class="pm-b">Reconstruct an understanding of system behavior from conversation evidence.</div></div>
+      <div class="pmap i-amb"><div class="pm-k"><span class="tag">Inference</span>Rubric<br>generation</div><div class="pm-b">Generate evaluation criteria based on discovered capabilities and behaviors.</div></div>
+      <div class="pmap i-rose"><div class="pm-k"><span class="tag">Optional</span>Scenario<br>execution</div><div class="pm-b"><span class="opt">Optional.</span> Generate and run test scenarios against the chatbot based on discovered behavior.</div></div>
+      <div class="pmap"><div class="pm-k"><span class="tag">Output</span>Investigation<br>results</div><div class="pm-b">Behavioral profile, discovered capabilities, identified risks, and recommended follow-up evaluations.</div></div>
+    </div>
+  </section>
 
-    <!-- 06 -->
-    <section class="sec">
-      <div class="sec-title"><span class="n">06</span><h2>The investigation pipeline</h2></div>
-      <div class="sec-body">
-        <div class="pmap"><div class="pm-k"><span class="tag">Input &mdash; wizard</span>Endpoint<br>only</div><div class="pm-b">Provide the chatbot endpoint URL. No system instructions needed.</div></div>
-        <div class="pmap i-acc"><div class="pm-k"><span class="tag">Wizard</span>Enable black box<br>investigation</div><div class="pm-b">Available when no instructions are provided &mdash; select to begin automated discovery.</div></div>
-        <div class="pmap"><div class="pm-k"><span class="tag">Fork &mdash; interview phase</span>Three<br>probes</div><div class="pm-b">
-          <div class="branch teal"><span class="bk">Progressive probing</span> Gradually escalating questions to map capabilities and boundaries.</div>
-          <div class="branch blue"><span class="bk">Behavioral mapping</span> Multi-angle conversations to understand response patterns and style.</div>
-          <div class="branch vio"><span class="bk">Boundary testing</span> Exploring edge cases and refusal behaviors across sensitive topics.</div>
-        </div></div>
-        <div class="pmap"><div class="pm-k"><span class="tag">Discovery</span>Analyze interview<br>transcripts</div><div class="pm-b">Reconstruct an understanding of system behavior from conversation evidence.</div></div>
-        <div class="pmap i-amb"><div class="pm-k"><span class="tag">Inference</span>Rubric<br>generation</div><div class="pm-b">Generate evaluation criteria based on discovered capabilities and behaviors.</div></div>
-        <div class="pmap i-rose"><div class="pm-k"><span class="tag">Optional</span>Scenario<br>execution</div><div class="pm-b"><span class="opt">Optional.</span> Generate and run test scenarios against the chatbot based on discovered behavior.</div></div>
-        <div class="pmap"><div class="pm-k"><span class="tag">Output</span>Investigation<br>results</div><div class="pm-b">Behavioral profile, discovered capabilities, identified risks, and recommended follow-up evaluations.</div></div>
-      </div>
-    </section>
+  <footer class="footer">
+    <a href="../aesop.html">&larr; AESOP</a>
+    <span>&copy; 2025-2026 Charlie Fuller</span>
+  </footer>
 
-    <footer class="footer">
-      <a href="../aesop.html">&larr; AESOP</a>
-      <span>&copy; 2025-2026 Charlie Fuller</span>
-    </footer>
-
-  </div>
-</div>
-
+</main>
 </body>
 </html>

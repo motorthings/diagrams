@@ -1,198 +1,195 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" class="light">
 <head>
 <meta charset="UTF-8">
-<link rel="icon" type="image/svg+xml" href="../icon.svg">
+<link rel="icon" href="../icon.svg" type="image/svg+xml" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>AESOP &mdash; Trace Analysis</title>
 <meta name="description" content="AESOP Trace Analysis: review conversation traces, identify failure patterns, and build a focused repair taxonomy — human-coded first, then agent-synthesized.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Public+Sans:wght@400;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Mulish:ital,wght@0,300;0,400;0,600;0,700;0,800;1,400&display=swap" rel="stylesheet">
 <style>
-  :root {
-    --font-display: 'Instrument Serif', Georgia, serif;
-    --font-body: 'Public Sans', system-ui, sans-serif;
-    --font-mono: 'JetBrains Mono', 'SF Mono', monospace;
-    --ink: #0a1628; --graphite: #2e4d73; --body: #3d5a7a; --muted: #7a9ab8;
-    --rule: #c6d5e6; --row: #dbe5f0; --sheet: #eef4f9; --desk: #e4ecf4;
-    --spine: #0a1628; --spine-fg: #eef4f9;
-    --accent: #e8621a; --amber: #b45309; --blue: #2f6fa8; --teal: #0f766e; --violet: #7c3aed; --rose: #c23a30;
+  :root{--font-body:'Mulish','Segoe UI',Helvetica,sans-serif;--font-mono:'Mulish',ui-monospace,'SF Mono',Consolas,monospace;
+    --bg:#14181C;--surface:#1B2127;--surface2:#232B33;--border:#303A43;--border-bright:#42505C;
+    --text:#F4F5F6;--text-dim:#CBD0D6;--text-faint:#87919B;
+    --primary:#F58A4E;--primary-dim:rgba(245,138,78,0.12);--metric:#45C7A6;--metric-dim:rgba(69,199,166,0.12);
+    --blue:#6CACE4;--blue-dim:rgba(108,172,228,0.12);
+    --violet:#B9A0E8;--violet-dim:rgba(185,160,232,0.12);
+    --amber:#E8B54D;--amber-dim:rgba(232,181,77,0.12);
+    --rose:#E88280;--rose-dim:rgba(232,130,128,0.12);}
+  html.light{--bg:#F7F3EF;--surface:#FFFFFF;--surface2:#F0E9E1;--border:#E1D6CB;--border-bright:#CDBBA8;
+    --text:#241A12;--text-dim:#574A3C;--text-faint:#8C7E6E;
+    --primary:#C64A11;--primary-dim:rgba(198,74,17,0.09);--metric:#0E7C66;--metric-dim:rgba(14,124,102,0.08);
+    --blue:#2F6FA8;--blue-dim:rgba(47,111,168,0.08);
+    --violet:#7C3AED;--violet-dim:rgba(124,58,237,0.07);
+    --amber:#A5650A;--amber-dim:rgba(165,101,10,0.08);
+    --rose:#C23A30;--rose-dim:rgba(194,58,48,0.07);}
+  *{margin:0;padding:0;box-sizing:border-box}
+  html{scroll-behavior:smooth}
+  body{background:
+      radial-gradient(at 10% 0%,var(--primary-dim),transparent 55%),
+      radial-gradient(at 90% 80%,var(--metric-dim),transparent 55%),
+      var(--bg);
+    color:var(--text);font-family:var(--font-body);font-size:17px;line-height:1.62;-webkit-font-smoothing:antialiased;min-height:100vh}
+
+  .crumbs{font-size:13px;font-weight:600;color:var(--text-dim);display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+  .crumbs a{color:var(--primary);text-decoration:none}
+  .crumbs a:hover{text-decoration:underline}
+  .crumbs .sep{color:var(--text-faint)}
+  .crumbs .current{color:var(--text-dim);font-weight:400}
+  .crumbs-top{max-width:1080px;margin:0 auto;padding:18px 24px 0}
+
+  .wrap{max-width:1080px;margin:0 auto;padding:0 24px 80px}
+
+  .hero{padding:44px 0 24px;border-bottom:1px solid var(--border);margin-bottom:10px}
+  .hero .tagline{font-family:var(--font-mono);font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.14em;color:var(--primary);margin-bottom:10px}
+  .hero h1{font-size:52px;line-height:1.0;letter-spacing:-0.03em;font-weight:800;
+    background:linear-gradient(135deg,var(--primary),var(--metric));-webkit-background-clip:text;background-clip:text;color:transparent}
+  .hero .lede{font-size:19px;line-height:1.5;color:var(--text-dim);max-width:920px;margin-top:14px}
+  .hero .lede b{color:var(--text)}
+
+  .sec{margin-top:22px}
+  .sec-head{display:flex;align-items:baseline;gap:14px;padding-bottom:10px;border-bottom:1px solid var(--border);margin-bottom:10px}
+  .sec-num{font-size:23px;font-weight:800;color:var(--primary);font-family:var(--font-mono)}
+  .sec-title{font-size:23px;font-weight:800;color:var(--text);letter-spacing:-0.01em}
+  .sec-title .cnt{font-family:var(--font-mono);font-size:12px;font-weight:500;color:var(--text-faint);margin-left:10px}
+  .sec-body p{max-width:920px;margin-bottom:12px;color:var(--text-dim)}
+  .sec-body p b,.sec-body strong{color:var(--text)}
+  .intronote{border-left:2px solid var(--violet);padding:2px 0 2px 16px;font-size:14px;line-height:1.6;color:var(--text-dim);max-width:920px;margin-bottom:12px}
+  .intronote b{color:var(--text)}
+  code{font-family:var(--font-mono);font-size:0.84em;color:var(--primary)}
+  .close{margin-top:16px;border-top:1px solid var(--border);padding-top:14px;font-size:14px;line-height:1.6;color:var(--text-dim);max-width:920px}
+  .close b{color:var(--text)}
+
+  .pmap{padding:14px 4px;border-top:1px solid var(--border);display:grid;grid-template-columns:230px 1fr;gap:4px 28px;align-items:baseline}
+  .pmap:first-of-type{border-top:none}
+  .pmap .pm-k{font-family:var(--font-mono);font-size:11.5px;font-weight:800;text-transform:uppercase;letter-spacing:.08em;color:var(--blue);line-height:1.5}
+  .pmap .pm-k .ord{display:block;color:var(--primary);font-weight:700;font-size:10px;letter-spacing:.16em;margin-bottom:3px}
+  .pmap .pm-k .tag{display:block;color:var(--text-faint);font-weight:700;font-size:10px;letter-spacing:.16em;margin-bottom:3px}
+  .pmap .pm-b{font-size:14.5px;line-height:1.6;color:var(--text-dim)}
+  .pmap .pm-b .tt{font-weight:800;color:var(--text);font-size:15.5px}
+  .pmap.i-blue .pm-k{color:var(--blue)}
+  .pmap.i-teal .pm-k{color:var(--metric)}
+  .pmap.i-vio .pm-k{color:var(--violet)}
+  .pmap.i-amb .pm-k{color:var(--amber)}
+  .pmap.i-rose .pm-k{color:var(--rose)}
+  .pmap.i-acc .pm-k{color:var(--primary)}
+  .branch{font-size:13px;line-height:1.5;padding:1px 0}
+  .branch .bk{font-family:var(--font-mono);font-size:10.5px;font-weight:700;margin-right:8px}
+  .branch.blue .bk{color:var(--blue)}
+  .branch.teal .bk{color:var(--metric)}
+  .branch.vio .bk{color:var(--violet)}
+  .opt{color:var(--rose);font-weight:700}
+
+  table.tbl{width:100%;border-collapse:collapse;margin:2px 0 4px}
+  .tbl th{text-align:left;font-family:var(--font-mono);font-size:10px;font-weight:700;color:var(--text-faint);padding:6px 14px 8px 0;border-bottom:2px solid var(--border-bright);letter-spacing:.04em;text-transform:uppercase}
+  .tbl td{padding:9px 14px 9px 0;border-bottom:1px solid var(--border);vertical-align:top;font-size:13px;line-height:1.5;color:var(--text-dim)}
+  .tbl tr:last-child td{border-bottom:none}
+  .tbl td.f{font-weight:700;color:var(--text);width:40%}
+  .tbl td.src code{font-size:0.92em;color:var(--metric)}
+
+  .footer{margin-top:30px;border-top:1px solid var(--border);padding:18px 0 0;display:flex;justify-content:space-between;gap:20px;flex-wrap:wrap;font-family:var(--font-mono);font-size:12px;color:var(--text-faint)}
+  .footer a{color:var(--primary);text-decoration:none}
+  .footer a:hover{text-decoration:underline}
+
+  @media(max-width:900px){
+    .wrap{padding:0 16px 60px}
+    .hero h1{font-size:38px}
+    .pmap{grid-template-columns:1fr;gap:3px}
+    body{font-size:16px}
   }
-  * { margin: 0; padding: 0; box-sizing: border-box; }
-  body { background: var(--desk); color: var(--body); font-family: var(--font-body); font-size: 17px; line-height: 1.62; -webkit-font-smoothing: antialiased; text-rendering: optimizeLegibility; }
-  .topbar { max-width: 1160px; margin: 0 auto; padding: 18px 28px 6px; }
-  .backlink a { font-size: 14px; color: var(--muted); text-decoration: none; }
-  .backlink a:hover { color: var(--ink); }
-  .backlink .arr { color: var(--accent); font-size: 15px; margin-right: 2px; }
-
-  .sheet { max-width: 1160px; margin: 6px auto 72px; background: var(--sheet); display: grid; grid-template-columns: 56px 1fr; }
-  .spine { background: var(--spine); display: flex; align-items: flex-end; justify-content: center; padding: 26px 0; }
-  .spine-label { writing-mode: vertical-rl; transform: rotate(180deg); font-family: var(--font-mono); font-size: 13px; letter-spacing: 0.22em; color: var(--spine-fg); white-space: nowrap; text-transform: uppercase; }
-  .content { padding: 48px 60px 6px; min-width: 0; }
-
-  .masthead { border-bottom: 3px solid var(--ink); padding-bottom: 16px; }
-  .masthead h1 { font-family: var(--font-display); font-weight: 400; font-size: 50px; line-height: 0.97; letter-spacing: -0.028em; color: var(--ink); }
-  .tagline { font-family: var(--font-mono); font-size: 11.5px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.14em; color: var(--accent); margin: 10px 0 14px; }
-  .lede { font-family: var(--font-display); font-style: italic; font-size: 19px; line-height: 1.5; color: var(--graphite); max-width: 920px; }
-  .lede b { color: var(--ink); }
-
-  section.sec { border-top: 3px solid var(--ink); padding: 22px 0 4px; }
-  .sec-title { display: grid; grid-template-columns: 88px 1fr; gap: 0 22px; align-items: baseline; margin-bottom: 6px; }
-  .sec-title .n { font-family: var(--font-display); font-size: 30px; line-height: 0.9; color: var(--accent); }
-  .sec-title h2 { font-size: 23px; font-weight: 700; letter-spacing: -0.012em; color: var(--ink); }
-  .sec-body { padding: 0 0 8px 110px; }
-  .sec-body p, .sec-body p.lead { max-width: 920px; margin-bottom: 12px; }
-  .sec-body p.nb { margin-bottom: 0; }
-  .sec-body b, .sec-body strong { color: var(--ink); }
-  .close { margin-top: 18px; border-top: 1px solid var(--rule); padding-top: 12px; font-size: 14px; line-height: 1.6; color: var(--body); max-width: 920px; }
-  .close b { color: var(--ink); }
-
-  .pmap { border-top: 1px solid var(--row); padding: 12px 0 6px; display: grid; grid-template-columns: 230px 1fr; gap: 3px 28px; align-items: baseline; }
-  .pmap:first-of-type { border-top: none; }
-  .pmap .pm-k { font-family: var(--font-mono); font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; color: var(--blue); line-height: 1.45; }
-  .pmap .pm-k .tag { display: block; color: var(--muted); font-weight: 500; font-size: 9.5px; letter-spacing: 0.16em; margin-bottom: 3px; }
-  .pmap .pm-k .ord { display: block; color: var(--accent); font-weight: 500; font-size: 9.5px; letter-spacing: 0.16em; margin-bottom: 3px; }
-  .pmap .pm-b { font-size: 14px; line-height: 1.6; }
-  .pmap .pm-b .tt { font-weight: 700; color: var(--ink); font-size: 15.5px; }
-  .pmap .pm-b ul { list-style: none; margin: 6px 0 2px; }
-  .pmap .pm-b li { padding: 2px 0 2px 15px; position: relative; font-size: 13.5px; line-height: 1.5; }
-  .pmap .pm-b li::before { content: ''; position: absolute; left: 1px; top: 0.72em; width: 5px; height: 5px; background: var(--row); }
-  .pmap .pm-b li b { color: var(--ink); }
-  .pmap.i-blue .pm-k { color: var(--blue); } .pmap.i-teal .pm-k { color: var(--teal); }
-  .pmap.i-vio .pm-k { color: var(--violet); } .pmap.i-amb .pm-k { color: var(--amber); }
-  .pmap.i-rose .pm-k { color: var(--rose); } .pmap.i-acc .pm-k { color: var(--accent); }
-  .branch { font-size: 13px; line-height: 1.5; padding: 1px 0; }
-  .branch .bk { font-family: var(--font-mono); font-size: 10.5px; font-weight: 600; margin-right: 8px; }
-  .branch.teal .bk { color: var(--teal); } .branch.vio .bk { color: var(--violet); }
-
-  .footer { border-top: 3px solid var(--ink); margin: 26px 0 0; padding: 18px 0 30px; display: flex; justify-content: space-between; gap: 20px; flex-wrap: wrap; font-family: var(--font-mono); font-size: 11.5px; color: var(--muted); }
-  .footer a { color: var(--accent); text-decoration: none; }
-
-  @media (max-width: 900px) {
-    .sheet { grid-template-columns: 40px 1fr; }
-    .spine-label { font-size: 11px; }
-    .content { padding: 32px 22px 4px; }
-    .masthead h1 { font-size: 38px; }
-    .sec-title { grid-template-columns: 50px 1fr; }
-    .sec-title .n { font-size: 25px; }
-    .sec-body { padding-left: 0; }
-    .pmap { grid-template-columns: 1fr; gap: 2px; }
-    body { font-size: 16px; }
-  }
+  @media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
 </style>
 </head>
 <body>
-<style>
-.crumbs-at-top{max-width:1100px;margin:0 auto;padding:14px 24px 0}
-.crumbs{font-family:var(--font-mono,monospace);font-size:13px;font-weight:600;display:flex;align-items:center;gap:8px;flex-wrap:wrap;min-width:0}
-.crumbs a{color:var(--accent);text-decoration:none}
-.crumbs a:hover,.crumbs a:focus-visible{text-decoration:underline;outline:none}
-.crumbs .sep{color:var(--muted)}
-.crumbs .current{color:var(--muted);font-weight:400}
-</style>
-<nav class="crumbs crumbs-at-top" aria-label="Breadcrumb">
-  <a href="../index.html">Index</a>
-  <span class="sep">/</span>
-  <a href="../aesop.html">AESOP</a>
-  <span class="sep">/</span>
+
+<div class="crumbs crumbs-top" aria-label="Breadcrumb">
+  <a href="../index.html">Index</a><span class="sep">/</span>
+  <a href="../aesop.html">AESOP</a><span class="sep">/</span>
   <span class="current" aria-current="page">Trace Analysis</span>
-</nav>
-
-
 </div>
 
-<div class="sheet">
-  <div class="spine"><div class="spine-label">AESOP TRACE ANALYSIS</div></div>
+<main class="wrap">
 
-  <div class="content">
+  <header class="hero">
+    <div class="tagline">Qualitative evidence &mdash; AESOP</div>
+    <h1>Trace Analysis</h1>
+    <p class="lede">Review conversation traces, identify failure patterns, and build a focused repair taxonomy.</p>
+  </header>
 
-    <header class="masthead">
-      <h1>Trace Analysis</h1>
-      <div class="tagline">Qualitative evidence &mdash; AESOP</div>
-      <p class="lede">Review conversation traces, identify failure patterns, and build a focused repair taxonomy.</p>
-    </header>
+  <section class="sec">
+    <div class="sec-head"><span class="sec-num">01</span><h2 class="sec-title">Why trace analysis</h2></div>
+    <div class="sec-body">
+      <p><b>AESOP&rsquo;s automated evaluation tells you WHAT scored poorly. Trace Analysis tells you WHY.</b> By reviewing actual conversation traces you identify specific failure patterns that scores alone can&rsquo;t surface. Instead of telling the Repair agent &ldquo;Safety scored 72,&rdquo; you tell it &ldquo;here are four specific failure patterns we observed, ranked by frequency, with cited examples.&rdquo; That produces dramatically more targeted repairs.</p>
+      <p>The methodology adapts qualitative research from the social sciences &mdash; the open-coding and pattern-grouping techniques used in AI product evaluation. The key insight: <b>start with human judgment on traces, not automated scores.</b></p>
+    </div>
+  </section>
 
-    <!-- 01 -->
-    <section class="sec">
-      <div class="sec-title"><span class="n">01</span><h2>Why trace analysis</h2></div>
-      <div class="sec-body">
-        <p><b>AESOP&rsquo;s automated evaluation tells you WHAT scored poorly. Trace Analysis tells you WHY.</b> By reviewing actual conversation traces you identify specific failure patterns that scores alone can&rsquo;t surface. Instead of telling the Repair agent &ldquo;Safety scored 72,&rdquo; you tell it &ldquo;here are four specific failure patterns we observed, ranked by frequency, with cited examples.&rdquo; That produces dramatically more targeted repairs.</p>
-        <p>The methodology adapts qualitative research from the social sciences &mdash; the open-coding and pattern-grouping techniques used in AI product evaluation. The key insight: <b>start with human judgment on traces, not automated scores.</b></p>
-      </div>
-    </section>
+  <section class="sec">
+    <div class="sec-head"><span class="sec-num">02</span><h2 class="sec-title">How to access it</h2></div>
+    <div class="sec-body">
+      <div class="pmap"><div class="pm-k"><span class="ord">1</span>Run any<br>evaluation</div><div class="pm-b">Complete a Standard Analysis, Cave of Shadows, or any evaluation type. Trace Analysis works with any evaluation that produces conversation traces.</div></div>
+      <div class="pmap"><div class="pm-k"><span class="ord">2</span>Open Trace<br>Analysis</div><div class="pm-b">From the evaluation report page or sidebar, open Trace Analysis. The system loads every conversation trace from that evaluation.</div></div>
+      <div class="pmap"><div class="pm-k"><span class="ord">3</span>Review and<br>annotate</div><div class="pm-b">Review traces, annotate issues you find, then synthesize your annotations into failure categories.</div></div>
+      <div class="pmap"><div class="pm-k"><span class="ord">4</span>Feed into<br>Repair</div><div class="pm-b">Approve the taxonomy and use it to power a focused Repair. The Repair agent receives specific, categorized failure patterns instead of just aggregate scores.</div></div>
+    </div>
+  </section>
 
-    <!-- 02 -->
-    <section class="sec">
-      <div class="sec-title"><span class="n">02</span><h2>How to access it</h2></div>
-      <div class="sec-body">
-        <div class="pmap"><div class="pm-k"><span class="ord">1</span>Run any<br>evaluation</div><div class="pm-b">Complete a Standard Analysis, Cave of Shadows, or any evaluation type. Trace Analysis works with any evaluation that produces conversation traces.</div></div>
-        <div class="pmap"><div class="pm-k"><span class="ord">2</span>Open Trace<br>Analysis</div><div class="pm-b">From the evaluation report page or sidebar, open Trace Analysis. The system loads every conversation trace from that evaluation.</div></div>
-        <div class="pmap"><div class="pm-k"><span class="ord">3</span>Review and<br>annotate</div><div class="pm-b">Review traces, annotate issues you find, then synthesize your annotations into failure categories.</div></div>
-        <div class="pmap"><div class="pm-k"><span class="ord">4</span>Feed into<br>Repair</div><div class="pm-b">Approve the taxonomy and use it to power a focused Repair. The Repair agent receives specific, categorized failure patterns instead of just aggregate scores.</div></div>
-      </div>
-    </section>
+  <section class="sec">
+    <div class="sec-head"><span class="sec-num">03</span><h2 class="sec-title">Key features</h2></div>
+    <div class="sec-body">
+      <div class="pmap"><div class="pm-k"><span class="tag">Coding</span>Open<br>coding</div><div class="pm-b">Review conversation traces turn by turn. Flag issues with free-text annotations and severity ratings. You are the expert &mdash; the AI does not suggest categories while you code.</div></div>
+      <div class="pmap i-vio"><div class="pm-k"><span class="tag">Synthesis</span>Pattern<br>synthesis</div><div class="pm-b">When you&rsquo;re done annotating, the agent reads your notes and groups them into 5&ndash;6 failure categories ranked by frequency and severity. Each includes representative examples and a suggested repair approach.</div></div>
+      <div class="pmap i-teal"><div class="pm-k"><span class="tag">Repair</span>Focused<br>repair</div><div class="pm-b">The approved taxonomy feeds directly into the Repair agent as structured input. Repair gets specific failure patterns with cited evidence, not generic score-based repair.</div></div>
+    </div>
+  </section>
 
-    <!-- 03 -->
-    <section class="sec">
-      <div class="sec-title"><span class="n">03</span><h2>Key features</h2></div>
-      <div class="sec-body">
-        <div class="pmap"><div class="pm-k"><span class="tag">Coding</span>Open<br>coding</div><div class="pm-b">Review conversation traces turn by turn. Flag issues with free-text annotations and severity ratings. You are the expert &mdash; the AI does not suggest categories while you code.</div></div>
-        <div class="pmap i-vio"><div class="pm-k"><span class="tag">Synthesis</span>Pattern<br>synthesis</div><div class="pm-b">When you&rsquo;re done annotating, the agent reads your notes and groups them into 5&ndash;6 failure categories ranked by frequency and severity. Each includes representative examples and a suggested repair approach.</div></div>
-        <div class="pmap i-teal"><div class="pm-k"><span class="tag">Repair</span>Focused<br>repair</div><div class="pm-b">The approved taxonomy feeds directly into the Repair agent as structured input. Repair gets specific failure patterns with cited evidence, not generic score-based repair.</div></div>
-      </div>
-    </section>
+  <section class="sec">
+    <div class="sec-head"><span class="sec-num">04</span><h2 class="sec-title">What makes this different</h2></div>
+    <div class="sec-body">
+      <div class="pmap i-amb"><div class="pm-k"><span class="tag">Philosophy</span>Human<br>first</div><div class="pm-b">You code the traces, not the AI. This prevents anchoring bias and ensures the taxonomy reflects what actually matters, not what an LLM thinks should matter.</div></div>
+      <div class="pmap i-rose"><div class="pm-k"><span class="tag">Integration</span>Tiger Team<br>integration</div><div class="pm-b">Import findings from your Tiger Team testing alongside eval traces. One coding session covers automated evaluation and real-world user feedback.</div></div>
+      <div class="pmap"><div class="pm-k"><span class="tag">Efficiency</span>Pattern-saturation<br>tracking</div><div class="pm-b">A visual indicator tracks whether new traces are revealing new patterns. When you&rsquo;ve seen enough, it tells you &mdash; so you don&rsquo;t waste time reviewing every trace.</div></div>
+    </div>
+  </section>
 
-    <!-- 04 -->
-    <section class="sec">
-      <div class="sec-title"><span class="n">04</span><h2>What makes this different</h2></div>
-      <div class="sec-body">
-        <div class="pmap i-amb"><div class="pm-k"><span class="tag">Philosophy</span>Human<br>first</div><div class="pm-b">You code the traces, not the AI. This prevents anchoring bias and ensures the taxonomy reflects what actually matters, not what an LLM thinks should matter.</div></div>
-        <div class="pmap i-rose"><div class="pm-k"><span class="tag">Integration</span>Tiger Team<br>integration</div><div class="pm-b">Import findings from your Tiger Team testing alongside eval traces. One coding session covers automated evaluation and real-world user feedback.</div></div>
-        <div class="pmap"><div class="pm-k"><span class="tag">Efficiency</span>Pattern-saturation<br>tracking</div><div class="pm-b">A visual indicator tracks whether new traces are revealing new patterns. When you&rsquo;ve seen enough, it tells you &mdash; so you don&rsquo;t waste time reviewing every trace.</div></div>
-      </div>
-    </section>
+  <section class="sec">
+    <div class="sec-head"><span class="sec-num">05</span><h2 class="sec-title">The process</h2></div>
+    <div class="sec-body">
+      <div class="pmap"><div class="pm-k"><span class="ord">1</span>Start a<br>session</div><div class="pm-b">Select an evaluation to analyze. The system loads all conversation traces &mdash; Cave of Shadows conversations, interview transcripts, scenario results.</div></div>
+      <div class="pmap"><div class="pm-k"><span class="ord">2</span>Review<br>traces</div><div class="pm-b">Browse conversation traces, sorted by score (lowest first &mdash; most likely to reveal issues). Click any conversation to read it turn by turn.</div></div>
+      <div class="pmap"><div class="pm-k"><span class="ord">3</span>Annotate<br>issues</div><div class="pm-b">Click any turn that contains a problem. Write what went wrong in your own words. Tag severity (critical, major, minor, cosmetic) and optionally a preliminary category.</div></div>
+      <div class="pmap"><div class="pm-k"><span class="ord">4</span>Watch for<br>saturation</div><div class="pm-b">A sidebar shows your running count of annotations and unique categories. When the last few traces stop revealing new patterns, a green &ldquo;Pattern Saturation Likely Reached&rdquo; badge appears. Advisory &mdash; you decide when to stop.</div></div>
+      <div class="pmap i-amb"><div class="pm-k"><span class="ord">5</span>Synthesize</div><div class="pm-b">Click &ldquo;Synthesize&rdquo; (requires at least 5 annotations). The agent reads your annotations and proposes 5&ndash;6 failure categories, each with a name, description, frequency count, severity distribution, representative examples, and suggested repair approach.</div></div>
+      <div class="pmap i-vio"><div class="pm-k"><span class="ord">6</span>Review<br>taxonomy</div><div class="pm-b">Review the proposed categories. Accept, edit, merge, split, or reject; drag annotations between categories. The taxonomy must be approved before it feeds into Repair.</div></div>
+      <div class="pmap i-teal"><div class="pm-k"><span class="ord">7</span>Feed into<br>Repair</div><div class="pm-b">When starting a Repair, the system detects an existing Trace Analysis taxonomy for that evaluation and offers to include it.</div></div>
+      <p class="close"><b>After repair and re-evaluation, your previous taxonomy persists for comparison.</b> You can see which failure categories were resolved and which still appear &mdash; a clear before/after improvement story.</p>
+    </div>
+  </section>
 
-    <!-- 05 -->
-    <section class="sec">
-      <div class="sec-title"><span class="n">05</span><h2>The process</h2></div>
-      <div class="sec-body">
-        <div class="pmap"><div class="pm-k"><span class="ord">1</span>Start a<br>session</div><div class="pm-b">Select an evaluation to analyze. The system loads all conversation traces &mdash; Cave of Shadows conversations, interview transcripts, scenario results.</div></div>
-        <div class="pmap"><div class="pm-k"><span class="ord">2</span>Review<br>traces</div><div class="pm-b">Browse conversation traces, sorted by score (lowest first &mdash; most likely to reveal issues). Click any conversation to read it turn by turn.</div></div>
-        <div class="pmap"><div class="pm-k"><span class="ord">3</span>Annotate<br>issues</div><div class="pm-b">Click any turn that contains a problem. Write what went wrong in your own words. Tag severity (critical, major, minor, cosmetic) and optionally a preliminary category.</div></div>
-        <div class="pmap"><div class="pm-k"><span class="ord">4</span>Watch for<br>saturation</div><div class="pm-b">A sidebar shows your running count of annotations and unique categories. When the last few traces stop revealing new patterns, a green &ldquo;Pattern Saturation Likely Reached&rdquo; badge appears. Advisory &mdash; you decide when to stop.</div></div>
-        <div class="pmap i-amb"><div class="pm-k"><span class="ord">5</span>Synthesize</div><div class="pm-b">Click &ldquo;Synthesize&rdquo; (requires at least 5 annotations). The agent reads your annotations and proposes 5&ndash;6 failure categories, each with a name, description, frequency count, severity distribution, representative examples, and suggested repair approach.</div></div>
-        <div class="pmap i-vio"><div class="pm-k"><span class="ord">6</span>Review<br>taxonomy</div><div class="pm-b">Review the proposed categories. Accept, edit, merge, split, or reject; drag annotations between categories. The taxonomy must be approved before it feeds into Repair.</div></div>
-        <div class="pmap i-teal"><div class="pm-k"><span class="ord">7</span>Feed into<br>Repair</div><div class="pm-b">When starting a Repair, the system detects an existing Trace Analysis taxonomy for that evaluation and offers to include it.</div></div>
-        <p class="close"><b>After repair and re-evaluation, your previous taxonomy persists for comparison.</b> You can see which failure categories were resolved and which still appear &mdash; a clear before/after improvement story.</p>
-      </div>
-    </section>
+  <section class="sec">
+    <div class="sec-head"><span class="sec-num">06</span><h2 class="sec-title">The pipeline</h2></div>
+    <div class="sec-body">
+      <div class="pmap"><div class="pm-k"><span class="tag">Input</span>Completed<br>evaluation</div><div class="pm-b">Conversation traces, scenario results, interview transcripts, Tiger Team findings.</div></div>
+      <div class="pmap"><div class="pm-k"><span class="tag">Human</span>Open<br>coding</div><div class="pm-b">Review traces, annotate issues turn by turn, tag severity.</div></div>
+      <div class="pmap"><div class="pm-k"><span class="tag">Gate</span>Min. 5<br>annotations</div><div class="pm-b">Synthesis unlocks only after the human codes at least five issues.</div></div>
+      <div class="pmap i-amb"><div class="pm-k"><span class="tag">Agent</span>Pattern<br>synthesis</div><div class="pm-b">Groups annotations into 5&ndash;6 failure categories ranked by frequency &times; severity.</div></div>
+      <div class="pmap"><div class="pm-k"><span class="tag">Fork &mdash; output</span>Two<br>artifacts</div><div class="pm-b">
+        <div class="branch teal"><span class="bk">Failure taxonomy</span> Categorized issue patterns with examples and repair suggestions.</div>
+        <div class="branch vio"><span class="bk">Annotation map</span> Every annotation linked to its source trace and assigned category.</div>
+      </div></div>
+      <div class="pmap"><div class="pm-k"><span class="tag">Human</span>Taxonomy<br>review</div><div class="pm-b">Accept, edit, merge, split categories.</div></div>
+      <div class="pmap i-acc"><div class="pm-k"><span class="tag">Output</span>Approved taxonomy<br>&rarr; Repair</div><div class="pm-b">Structured input for the Repair agent with categorized failure patterns and cited evidence.</div></div>
+      <p class="close"><b>The taxonomy persists across repair cycles.</b> After re-evaluation, compare which failure patterns were resolved and which persist.</p>
+    </div>
+  </section>
 
-    <!-- 06 -->
-    <section class="sec">
-      <div class="sec-title"><span class="n">06</span><h2>The pipeline</h2></div>
-      <div class="sec-body">
-        <div class="pmap"><div class="pm-k"><span class="tag">Input</span>Completed<br>evaluation</div><div class="pm-b">Conversation traces, scenario results, interview transcripts, Tiger Team findings.</div></div>
-        <div class="pmap"><div class="pm-k"><span class="tag">Human</span>Open<br>coding</div><div class="pm-b">Review traces, annotate issues turn by turn, tag severity.</div></div>
-        <div class="pmap"><div class="pm-k"><span class="tag">Gate</span>Min. 5<br>annotations</div><div class="pm-b">Synthesis unlocks only after the human codes at least five issues.</div></div>
-        <div class="pmap i-amb"><div class="pm-k"><span class="tag">Agent</span>Pattern<br>synthesis</div><div class="pm-b">Groups annotations into 5&ndash;6 failure categories ranked by frequency &times; severity.</div></div>
-        <div class="pmap"><div class="pm-k"><span class="tag">Fork &mdash; output</span>Two<br>artifacts</div><div class="pm-b">
-          <div class="branch teal"><span class="bk">Failure taxonomy</span> Categorized issue patterns with examples and repair suggestions.</div>
-          <div class="branch vio"><span class="bk">Annotation map</span> Every annotation linked to its source trace and assigned category.</div>
-        </div></div>
-        <div class="pmap"><div class="pm-k"><span class="tag">Human</span>Taxonomy<br>review</div><div class="pm-b">Accept, edit, merge, split categories.</div></div>
-        <div class="pmap i-acc"><div class="pm-k"><span class="tag">Output</span>Approved taxonomy<br>&rarr; Repair</div><div class="pm-b">Structured input for the Repair agent with categorized failure patterns and cited evidence.</div></div>
-        <p class="close"><b>The taxonomy persists across repair cycles.</b> After re-evaluation, compare which failure patterns were resolved and which persist.</p>
-      </div>
-    </section>
+  <footer class="footer">
+    <a href="../aesop.html">&larr; AESOP</a>
+    <span>&copy; 2025-2026 Charlie Fuller</span>
+  </footer>
 
-    <footer class="footer">
-      <a href="../aesop.html">&larr; AESOP</a>
-      <span>&copy; 2025-2026 Charlie Fuller</span>
-    </footer>
-
-  </div>
-</div>
-
+</main>
 </body>
 </html>

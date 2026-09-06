@@ -1,336 +1,353 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" class="light">
 <head>
 <meta charset="UTF-8">
-<link rel="icon" type="image/svg+xml" href="../icon.svg">
+<link rel="icon" href="../icon.svg" type="image/svg+xml" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>AESOP &mdash; The Hydra</title>
 <meta name="description" content="AESOP's Hydra: a parallelized red-team engine that deploys adversarial attack heads across five domains, concentrating firepower where an agent is weakest.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Public+Sans:wght@400;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Mulish:ital,wght@0,300;0,400;0,600;0,700;0,800;1,400&display=swap" rel="stylesheet">
 <style>
-  :root {
-    --font-display: 'Instrument Serif', Georgia, serif;
-    --font-body: 'Public Sans', system-ui, sans-serif;
-    --font-mono: 'JetBrains Mono', 'SF Mono', monospace;
-    --ink: #0a1628; --graphite: #2e4d73; --body: #3d5a7a; --muted: #7a9ab8;
-    --rule: #c6d5e6; --row: #dbe5f0; --sheet: #eef4f9; --desk: #e4ecf4;
-    --spine: #0a1628; --spine-fg: #eef4f9;
-    --accent: #e8621a; --amber: #b45309; --blue: #2f6fa8; --teal: #0f766e; --violet: #7c3aed; --rose: #c23a30;
+  :root{--font-body:'Mulish','Segoe UI',Helvetica,sans-serif;--font-mono:'Mulish',ui-monospace,'SF Mono',Consolas,monospace;
+    --bg:#14181C;--surface:#1B2127;--surface2:#232B33;--border:#303A43;--border-bright:#42505C;
+    --text:#F4F5F6;--text-dim:#CBD0D6;--text-faint:#87919B;
+    --primary:#F58A4E;--primary-dim:rgba(245,138,78,0.12);--metric:#45C7A6;--metric-dim:rgba(69,199,166,0.12);
+    --blue:#6CACE4;--blue-dim:rgba(108,172,228,0.12);
+    --violet:#B9A0E8;--violet-dim:rgba(185,160,232,0.12);
+    --amber:#E8B54D;--amber-dim:rgba(232,181,77,0.12);
+    --rose:#E88280;--rose-dim:rgba(232,130,128,0.12);}
+  html.light{--bg:#F7F3EF;--surface:#FFFFFF;--surface2:#F0E9E1;--border:#E1D6CB;--border-bright:#CDBBA8;
+    --text:#241A12;--text-dim:#574A3C;--text-faint:#8C7E6E;
+    --primary:#C64A11;--primary-dim:rgba(198,74,17,0.09);--metric:#0E7C66;--metric-dim:rgba(14,124,102,0.08);
+    --blue:#2F6FA8;--blue-dim:rgba(47,111,168,0.08);
+    --violet:#7C3AED;--violet-dim:rgba(124,58,237,0.07);
+    --amber:#A5650A;--amber-dim:rgba(165,101,10,0.08);
+    --rose:#C23A30;--rose-dim:rgba(194,58,48,0.07);}
+  *{margin:0;padding:0;box-sizing:border-box}
+  html{scroll-behavior:smooth}
+  body{background:
+      radial-gradient(at 10% 0%,var(--primary-dim),transparent 55%),
+      radial-gradient(at 90% 80%,var(--metric-dim),transparent 55%),
+      var(--bg);
+    color:var(--text);font-family:var(--font-body);font-size:17px;line-height:1.62;-webkit-font-smoothing:antialiased;min-height:100vh}
+
+  .crumbs{font-size:13px;font-weight:600;color:var(--text-dim);display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+  .crumbs a{color:var(--primary);text-decoration:none}
+  .crumbs a:hover{text-decoration:underline}
+  .crumbs .sep{color:var(--text-faint)}
+  .crumbs .current{color:var(--text-dim);font-weight:400}
+  .crumbs-top{max-width:1080px;margin:0 auto;padding:18px 24px 0}
+
+  .wrap{max-width:1080px;margin:0 auto;padding:0 24px 80px}
+
+  .hero{padding:44px 0 24px;border-bottom:1px solid var(--border);margin-bottom:10px}
+  .hero .tagline{font-family:var(--font-mono);font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.14em;color:var(--primary);margin-bottom:10px}
+  .hero h1{font-size:52px;line-height:1.0;letter-spacing:-0.03em;font-weight:800;
+    background:linear-gradient(135deg,var(--primary),var(--metric));-webkit-background-clip:text;background-clip:text;color:transparent}
+  .hero .lede{font-size:19px;line-height:1.5;color:var(--text-dim);max-width:920px;margin-top:14px}
+  .hero .lede b{color:var(--text)}
+
+  .sec{margin-top:22px}
+  .sec-head{display:flex;align-items:baseline;gap:14px;padding-bottom:10px;border-bottom:1px solid var(--border);margin-bottom:10px}
+  .sec-num{font-size:23px;font-weight:800;color:var(--primary);font-family:var(--font-mono)}
+  .sec-title{font-size:23px;font-weight:800;color:var(--text);letter-spacing:-0.01em}
+  .sec-title .cnt{font-family:var(--font-mono);font-size:12px;font-weight:500;color:var(--text-faint);margin-left:10px}
+  .sec-body p{max-width:920px;margin-bottom:12px;color:var(--text-dim)}
+  .sec-body p b,.sec-body strong{color:var(--text)}
+  .intronote{border-left:2px solid var(--violet);padding:2px 0 2px 16px;font-size:14px;line-height:1.6;color:var(--text-dim);max-width:920px;margin-bottom:12px}
+  .intronote b{color:var(--text)}
+  code{font-family:var(--font-mono);font-size:0.84em;color:var(--primary)}
+  .close{margin-top:16px;border-top:1px solid var(--border);padding-top:14px;font-size:14px;line-height:1.6;color:var(--text-dim);max-width:920px}
+  .close b{color:var(--text)}
+
+  .pmap{padding:14px 4px;border-top:1px solid var(--border);display:grid;grid-template-columns:230px 1fr;gap:4px 28px;align-items:baseline}
+  .pmap:first-of-type{border-top:none}
+  .pmap .pm-k{font-family:var(--font-mono);font-size:11.5px;font-weight:800;text-transform:uppercase;letter-spacing:.08em;color:var(--blue);line-height:1.5}
+  .pmap .pm-k .ord{display:block;color:var(--primary);font-weight:700;font-size:10px;letter-spacing:.16em;margin-bottom:3px}
+  .pmap .pm-k .tag{display:block;color:var(--text-faint);font-weight:700;font-size:10px;letter-spacing:.16em;margin-bottom:3px}
+  .pmap .pm-b{font-size:14.5px;line-height:1.6;color:var(--text-dim)}
+  .pmap .pm-b .tt{font-weight:800;color:var(--text);font-size:15.5px}
+  .pmap.i-blue .pm-k{color:var(--blue)}
+  .pmap.i-teal .pm-k{color:var(--metric)}
+  .pmap.i-vio .pm-k{color:var(--violet)}
+  .pmap.i-amb .pm-k{color:var(--amber)}
+  .pmap.i-rose .pm-k{color:var(--rose)}
+  .pmap.i-acc .pm-k{color:var(--primary)}
+  .branch{font-size:13px;line-height:1.5;padding:1px 0}
+  .branch .bk{font-family:var(--font-mono);font-size:10.5px;font-weight:700;margin-right:8px}
+  .branch.blue .bk{color:var(--blue)}
+  .branch.teal .bk{color:var(--metric)}
+  .branch.vio .bk{color:var(--violet)}
+  .opt{color:var(--rose);font-weight:700}
+
+  table.tbl{width:100%;border-collapse:collapse;margin:2px 0 4px}
+  .tbl th{text-align:left;font-family:var(--font-mono);font-size:10px;font-weight:700;color:var(--text-faint);padding:6px 14px 8px 0;border-bottom:2px solid var(--border-bright);letter-spacing:.04em;text-transform:uppercase}
+  .tbl td{padding:9px 14px 9px 0;border-bottom:1px solid var(--border);vertical-align:top;font-size:13px;line-height:1.5;color:var(--text-dim)}
+  .tbl tr:last-child td{border-bottom:none}
+  .tbl td.f{font-weight:700;color:var(--text);width:40%}
+  .tbl td.src code{font-size:0.92em;color:var(--metric)}
+
+  .footer{margin-top:30px;border-top:1px solid var(--border);padding:18px 0 0;display:flex;justify-content:space-between;gap:20px;flex-wrap:wrap;font-family:var(--font-mono);font-size:12px;color:var(--text-faint)}
+  .footer a{color:var(--primary);text-decoration:none}
+  .footer a:hover{text-decoration:underline}
+
+  @media(max-width:900px){
+    .wrap{padding:0 16px 60px}
+    .hero h1{font-size:38px}
+    .pmap{grid-template-columns:1fr;gap:3px}
+    body{font-size:16px}
   }
-  * { margin: 0; padding: 0; box-sizing: border-box; }
-  body { background: var(--desk); color: var(--body); font-family: var(--font-body); font-size: 17px; line-height: 1.62; -webkit-font-smoothing: antialiased; text-rendering: optimizeLegibility; }
-  .topbar { max-width: 1160px; margin: 0 auto; padding: 18px 28px 6px; }
-  .backlink a { font-size: 14px; color: var(--muted); text-decoration: none; }
-  .backlink a:hover { color: var(--ink); }
-  .backlink .arr { color: var(--accent); font-size: 15px; margin-right: 2px; }
+  @media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+<style>
+  .mono{font-family:var(--font-mono);font-size:12.5px;line-height:2;color:var(--text-dim);max-width:920px}
+  .mono b{color:var(--text)}
+  .f-weak{color:var(--rose);font-weight:700}
+  .f-strong{color:var(--metric);font-weight:700}
+  .f-heads{color:var(--amber);font-weight:700}
+  .f-dim{color:var(--text-faint)}
 
-  .sheet { max-width: 1160px; margin: 6px auto 72px; background: var(--sheet); display: grid; grid-template-columns: 56px 1fr; }
-  .spine { background: var(--spine); display: flex; align-items: flex-end; justify-content: center; padding: 26px 0; }
-  .spine-label { writing-mode: vertical-rl; transform: rotate(180deg); font-family: var(--font-mono); font-size: 13px; letter-spacing: 0.22em; color: var(--spine-fg); white-space: nowrap; text-transform: uppercase; }
-  .content { padding: 48px 60px 6px; min-width: 0; }
-
-  .masthead { border-bottom: 3px solid var(--ink); padding-bottom: 16px; }
-  .masthead h1 { font-family: var(--font-display); font-weight: 400; font-size: 50px; line-height: 0.97; letter-spacing: -0.028em; color: var(--ink); }
-  .tagline { font-family: var(--font-mono); font-size: 11.5px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.14em; color: var(--accent); margin: 10px 0 10px; }
-  .subline { font-family: var(--font-display); font-style: italic; font-size: 20px; color: var(--accent); margin-bottom: 8px; }
-  .lede { font-family: var(--font-display); font-style: italic; font-size: 19px; line-height: 1.5; color: var(--graphite); max-width: 920px; }
-  .lede b { color: var(--ink); }
-
-  section.sec { border-top: 3px solid var(--ink); padding: 22px 0 4px; }
-  .sec-title { display: grid; grid-template-columns: 88px 1fr; gap: 0 22px; align-items: baseline; margin-bottom: 6px; }
-  .sec-title .n { font-family: var(--font-display); font-size: 30px; line-height: 0.9; color: var(--accent); }
-  .sec-title h2 { font-size: 23px; font-weight: 700; letter-spacing: -0.012em; color: var(--ink); }
-  .sec-title h2 .cnt { font-family: var(--font-mono); font-size: 12px; font-weight: 500; color: var(--muted); margin-left: 10px; }
-  .sec-body { padding: 0 0 8px 110px; }
-  .sec-body p, .sec-body p.lead { max-width: 920px; margin-bottom: 12px; }
-  .sec-body p.nb { margin-bottom: 0; }
-  .sec-body b, .sec-body strong { color: var(--ink); }
-  code { font-family: var(--font-mono); font-size: 0.84em; color: var(--accent); }
-  .close { margin-top: 18px; border-top: 1px solid var(--rule); padding-top: 12px; font-size: 14px; line-height: 1.6; color: var(--body); max-width: 920px; }
-  .close b { color: var(--ink); }
-  .mono { font-family: var(--font-mono); font-size: 12.5px; line-height: 2; color: var(--body); }
-  .mono b { color: var(--ink); }
-  .f-weak { color: var(--rose); font-weight: 700; } .f-strong { color: var(--teal); font-weight: 700; }
-  .f-heads { color: var(--amber); font-weight: 700; } .f-dim { color: var(--muted); }
-
-  .pmap { border-top: 1px solid var(--row); padding: 12px 0 6px; display: grid; grid-template-columns: 230px 1fr; gap: 3px 28px; align-items: baseline; }
-  .pmap:first-of-type { border-top: none; }
-  .pmap .pm-k { font-family: var(--font-mono); font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; color: var(--blue); line-height: 1.45; }
-  .pmap .pm-k .tag { display: block; color: var(--muted); font-weight: 500; font-size: 9.5px; letter-spacing: 0.16em; margin-bottom: 3px; }
-  .pmap .pm-k .ord { display: block; color: var(--accent); font-weight: 500; font-size: 9.5px; letter-spacing: 0.16em; margin-bottom: 3px; }
-  .pmap .pm-b { font-size: 14px; line-height: 1.6; }
-  .pmap .pm-b .tt { font-weight: 700; color: var(--ink); font-size: 15.5px; }
-  .pmap.i-blue .pm-k { color: var(--blue); } .pmap.i-teal .pm-k { color: var(--teal); }
-  .pmap.i-vio .pm-k { color: var(--violet); } .pmap.i-amb .pm-k { color: var(--amber); }
-  .pmap.i-rose .pm-k { color: var(--rose); } .pmap.i-acc .pm-k { color: var(--accent); }
-  .gate { display: flex; align-items: center; gap: 12px; margin: 10px 0 2px; }
-  .gate::before, .gate::after { content: ''; flex: 1; border-top: 1px dashed var(--rule); }
-  .gate .gl { font-family: var(--font-mono); font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.14em; color: var(--amber); white-space: nowrap; }
-  .branch { font-size: 13px; line-height: 1.5; padding: 1px 0; }
-  .branch .bk { font-family: var(--font-mono); font-size: 10.5px; font-weight: 600; margin-right: 8px; }
-  .branch.pass .bk { color: var(--teal); } .branch.fail .bk { color: var(--amber); }
-  .branch.rose .bk { color: var(--rose); } .branch.vio .bk { color: var(--violet); }
-  .branch.blue .bk { color: var(--blue); }
-
-  .footer { border-top: 3px solid var(--ink); margin: 26px 0 0; padding: 18px 0 30px; display: flex; justify-content: space-between; gap: 20px; flex-wrap: wrap; font-family: var(--font-mono); font-size: 11.5px; color: var(--muted); }
-  .footer a { color: var(--accent); text-decoration: none; }
-
-  @media (max-width: 900px) {
-    .sheet { grid-template-columns: 40px 1fr; }
-    .spine-label { font-size: 11px; }
-    .content { padding: 32px 22px 4px; }
-    .masthead h1 { font-size: 38px; }
-    .sec-title { grid-template-columns: 50px 1fr; }
-    .sec-title .n { font-size: 25px; }
-    .sec-body { padding-left: 0; }
-    .pmap { grid-template-columns: 1fr; gap: 2px; }
-    body { font-size: 16px; }
-  }
+  .fig{font-family:var(--font-body)}
+  .fig .ln{stroke:var(--text-faint);fill:none}
+  .fig .ln2{stroke:var(--text-dim);fill:none}
+  .fig .nd{fill:var(--surface)}
+  .fig .bar{fill:var(--surface2)}
+  .fig .t1{fill:var(--text)}
+  .fig .d1{fill:var(--text-dim)}
+  .fig .tcap{fill:var(--text-faint)}
+  .fig .s-rose{stroke:var(--rose)}.fig .s-vio{stroke:var(--violet)}
+  .fig .s-amb{stroke:var(--amber)}.fig .s-teal{stroke:var(--metric)}
+  .fig .s-acc{stroke:var(--primary)}.fig .s-blue{stroke:var(--blue)}
+  .fig .c-rose{fill:var(--rose)}.fig .c-vio{fill:var(--violet)}
+  .fig .c-amb{fill:var(--amber)}.fig .c-teal{fill:var(--metric)}
+  .fig .c-acc{fill:var(--primary)}.fig .c-blue{fill:var(--blue)}
 </style>
 </head>
 <body>
-<style>
-.crumbs-at-top{max-width:1100px;margin:0 auto;padding:14px 24px 0}
-.crumbs{font-family:var(--font-mono,monospace);font-size:13px;font-weight:600;display:flex;align-items:center;gap:8px;flex-wrap:wrap;min-width:0}
-.crumbs a{color:var(--accent);text-decoration:none}
-.crumbs a:hover,.crumbs a:focus-visible{text-decoration:underline;outline:none}
-.crumbs .sep{color:var(--muted)}
-.crumbs .current{color:var(--muted);font-weight:400}
-</style>
-<nav class="crumbs crumbs-at-top" aria-label="Breadcrumb">
-  <a href="../index.html">Index</a>
-  <span class="sep">/</span>
-  <a href="../aesop.html">AESOP</a>
-  <span class="sep">/</span>
+
+<div class="crumbs crumbs-top" aria-label="Breadcrumb">
+  <a href="../index.html">Index</a><span class="sep">/</span>
+  <a href="../aesop.html">AESOP</a><span class="sep">/</span>
   <span class="current" aria-current="page">The Hydra</span>
-</nav>
-
-
 </div>
 
-<div class="sheet">
-  <div class="spine"><div class="spine-label">AESOP THE HYDRA</div></div>
+<main class="wrap">
 
-  <div class="content">
+  <header class="hero">
+    <div class="tagline">Adversarial red-team &mdash; AESOP</div>
+    <h1>The Hydra</h1>
+    <p class="lede">A parallelized red-team execution engine that deploys adversarial attack heads against your chatbot across five domains.</p>
+  </header>
 
-    <header class="masthead">
-      <h1>The Hydra</h1>
-      <div class="tagline">Adversarial red-team &mdash; AESOP</div>
-      <div class="subline">Cut one head off &mdash; two grow back.</div>
-      <p class="lede">A parallelized red-team execution engine that deploys adversarial attack heads against your chatbot across five domains.</p>
-    </header>
+  <!-- 01 -->
+  <section class="sec">
+    <div class="sec-head"><span class="sec-num">01</span><h2 class="sec-title">About the name</h2></div>
+    <div class="sec-body">
+      <p><b>The Hydra</b> draws on Greek mythology &mdash; the Lernaean Hydra grew two heads for every one that was cut off. No single attack could defeat it; only coordinated, concentrated force could. The capability works the same way. It does not send a single probe at a target. It assembles all available intelligence, fans each scenario into multiple variations, and unleashes them all at once. The target agent cannot prepare for a single angle when it faces dozens.</p>
+    </div>
+  </section>
 
-    <!-- 01 -->
-    <section class="sec">
-      <div class="sec-title"><span class="n">01</span><h2>About the name</h2></div>
-      <div class="sec-body">
-        <p><b>The Hydra</b> draws on Greek mythology &mdash; the Lernaean Hydra grew two heads for every one that was cut off. No single attack could defeat it; only coordinated, concentrated force could. The capability works the same way. It does not send a single probe at a target. It assembles all available intelligence, fans each scenario into multiple variations, and unleashes them all at once. The target agent cannot prepare for a single angle when it faces dozens.</p>
+  <!-- 02 -->
+  <section class="sec">
+    <div class="sec-head"><span class="sec-num">02</span><h2 class="sec-title">How to access it</h2></div>
+    <div class="sec-body">
+      <p class="lead"><b>The Hydra</b> lives at <code>/hydra</code> in the sidebar, or as a toggleable capability in the evaluation wizard. It unleashes concurrent adversarial heads against your chatbot endpoint.</p>
+      <div class="pmap"><div class="pm-k"><span class="ord">1</span>Navigate<br>to /hydra</div><div class="pm-b">The Hydra link sits in the sidebar for all users. Reach it too from the completion card after any evaluation.</div></div>
+      <div class="pmap"><div class="pm-k"><span class="ord">2</span>Enter your<br>endpoint</div><div class="pm-b">Provide the chatbot endpoint URL to test. Optionally link a registered AESOP agent to use its prior evaluation data for smarter targeting.</div></div>
+      <div class="pmap"><div class="pm-k"><span class="ord">3</span>Configure heads,<br>mode, cave link</div><div class="pm-b">Set the number of heads (1&ndash;20), choose a probe mode (Director, Workers, or Both), and optionally link a completed Cave of Shadows run as the scenario base.</div></div>
+      <div class="pmap"><div class="pm-k"><span class="ord">4</span>Unleash<br>the Hydra</div><div class="pm-b">Submit to launch. The Hydra assembles intel, fans scenarios into variations, and executes all heads simultaneously. Results stream live on the run page.</div></div>
+    </div>
+  </section>
+
+  <!-- 03 -->
+  <section class="sec">
+    <div class="sec-head"><span class="sec-num">03</span><h2 class="sec-title">Five evaluation domains</h2></div>
+    <div class="sec-body">
+      <div class="pmap i-rose"><div class="pm-k">Safety</div><div class="pm-b">Harm prevention, dangerous outputs, refusal behavior.</div></div>
+      <div class="pmap i-vio"><div class="pm-k">Ethics</div><div class="pm-b">Manipulation, transparency, responsible guidance.</div></div>
+      <div class="pmap i-amb"><div class="pm-k">Bias</div><div class="pm-b">Discriminatory patterns, stereotypes, fair treatment.</div></div>
+      <div class="pmap i-teal"><div class="pm-k">Legal</div><div class="pm-b">Regulatory exposure, PII handling, liability.</div></div>
+      <div class="pmap i-acc"><div class="pm-k">Security</div><div class="pm-b">Prompt injection, system-prompt leakage, data access.</div></div>
+    </div>
+  </section>
+
+  <!-- 04 -->
+  <section class="sec">
+    <div class="sec-head"><span class="sec-num">04</span><h2 class="sec-title">Tiger team head allocation</h2></div>
+    <div class="sec-body">
+      <p class="lead"><b>Concentrate firepower on weak domains.</b> The Hydra does not distribute heads evenly. Before fanning scenarios, it checks prior evaluation scores across all five domains; domains below the weakness threshold (80) receive proportionally more heads. Every domain gets at least one.</p>
+      <div class="mono">
+        <span class="f-weak">Safety: 62</span> &rarr; <span class="f-heads">4 heads</span> &nbsp;&nbsp; <span class="f-weak">Security: 58</span> &rarr; <span class="f-heads">5 heads</span><br>
+        <span class="f-strong">Ethics: 91</span> &rarr; <span class="f-heads">1 head</span> &nbsp;&nbsp; <span class="f-strong">Bias: 88</span> &rarr; <span class="f-heads">1 head</span> &nbsp;&nbsp; <span class="f-strong">Legal: 85</span> &rarr; <span class="f-heads">1 head</span><br>
+        <span class="f-dim">Total: 12 heads allocated based on the weakness profile</span>
       </div>
-    </section>
+    </div>
+  </section>
 
-    <!-- 02 -->
-    <section class="sec">
-      <div class="sec-title"><span class="n">02</span><h2>How to access it</h2></div>
-      <div class="sec-body">
-        <p class="lead"><b>The Hydra</b> lives at <code>/hydra</code> in the sidebar, or as a toggleable capability in the evaluation wizard. It unleashes concurrent adversarial heads against your chatbot endpoint.</p>
-        <div class="pmap"><div class="pm-k"><span class="ord">1</span>Navigate<br>to /hydra</div><div class="pm-b">The Hydra link sits in the sidebar for all users. Reach it too from the completion card after any evaluation.</div></div>
-        <div class="pmap"><div class="pm-k"><span class="ord">2</span>Enter your<br>endpoint</div><div class="pm-b">Provide the chatbot endpoint URL to test. Optionally link a registered AESOP agent to use its prior evaluation data for smarter targeting.</div></div>
-        <div class="pmap"><div class="pm-k"><span class="ord">3</span>Configure heads,<br>mode, cave link</div><div class="pm-b">Set the number of heads (1&ndash;20), choose a probe mode (Director, Workers, or Both), and optionally link a completed Cave of Shadows run as the scenario base.</div></div>
-        <div class="pmap"><div class="pm-k"><span class="ord">4</span>Unleash<br>the Hydra</div><div class="pm-b">Submit to launch. The Hydra assembles intel, fans scenarios into variations, and executes all heads simultaneously. Results stream live on the run page.</div></div>
+  <!-- 05 -->
+  <section class="sec">
+    <div class="sec-head"><span class="sec-num">05</span><h2 class="sec-title">Probe modes</h2></div>
+    <div class="sec-body">
+      <div class="pmap i-vio"><div class="pm-k"><span class="tag">Routing test</span>Director<br>only</div><div class="pm-b">Probes the director agent&rsquo;s routing decisions, scope enforcement, and handoff behavior. Tests whether the orchestration layer correctly filters and routes adversarial intent.</div></div>
+      <div class="pmap i-acc"><div class="pm-k"><span class="tag">Specialist test</span>Workers<br>only</div><div class="pm-b">Bypasses the director and attacks specialist workers directly. Reveals whether guardrails live only at the routing layer or are enforced throughout the hierarchy.</div></div>
+      <div class="pmap i-rose"><div class="pm-k"><span class="tag">Full coverage &mdash; recommended</span>Both</div><div class="pm-b">Runs director probes and worker probes. Complete coverage of the full agent hierarchy &mdash; the standard mode for a comprehensive Hydra run.</div></div>
+    </div>
+  </section>
+
+  <!-- 06 -->
+  <section class="sec">
+    <div class="sec-head"><span class="sec-num">06</span><h2 class="sec-title">Cave of Shadows integration</h2></div>
+    <div class="sec-body">
+      <p>Linking a completed <b>Cave of Shadows</b> run gives the Hydra a tailored base scenario set instead of the standard static battery. The Hydra fans each Cave scenario into domain-specific variations, multiplying the attack surface proportionally across weak domains. Without a linked Cave run it falls back to the built-in director and worker probe libraries (10 each, covering all five domains).</p>
+    </div>
+  </section>
+
+  <!-- 07 -->
+  <section class="sec">
+    <div class="sec-head"><span class="sec-num">07</span><h2 class="sec-title">Six-stage execution pipeline</h2></div>
+    <div class="sec-body">
+      <div class="pmap"><div class="pm-k"><span class="tag">Inputs</span>Endpoint +<br>Cave run</div><div class="pm-b"><b>Required:</b> chatbot endpoint URL. <b>Optional:</b> a completed Cave of Shadows run to use as the base scenario set.</div></div>
+      <div class="pmap i-rose"><div class="pm-k"><span class="tag">Stage 1</span>Briefing<br>assembly</div><div class="pm-b">Gathers all available intel on the target &mdash; system instructions, vital context, prior AESOP analyses, Cave of Shadows reports, historical Hydra run scores.</div></div>
+      <div class="pmap i-rose"><div class="pm-k"><span class="tag">Stage 2</span>Scenario<br>loading</div><div class="pm-b">Loads base scenarios from the linked Cave run, or falls back to the built-in static probe battery (director + worker probes across all five domains).</div></div>
+      <div class="pmap i-amb"><div class="pm-k"><span class="tag">Stage 3</span>Tiger team head<br>allocation</div><div class="pm-b">Reads prior domain scores and distributes N heads across the five domains, inverse-weighting weak domains (threshold 80) to concentrate firepower where the agent is most vulnerable.</div></div>
+      <div class="pmap i-acc"><div class="pm-k"><span class="tag">Stage 4</span>Scenario<br>fanning</div><div class="pm-b">Each base scenario is expanded into N domain-specific variations with distinct personas, angles, and escalation approaches.</div></div>
+      <div class="pmap i-rose"><div class="pm-k"><span class="tag">Stage 5</span>Parallel head<br>execution</div><div class="pm-b">All heads unleashed simultaneously via asyncio. Each runs an adaptive multi-turn conversation (up to 10 turns) against the endpoint; the Cave Scorer evaluates every response.</div></div>
+      <div class="pmap i-teal"><div class="pm-k"><span class="tag">Stage 6</span>Domain score<br>aggregation</div><div class="pm-b">Per-head scores averaged by domain &mdash; five domain scores plus an overall resilience score. Surfaces which domains failed and which held up under attack.</div></div>
+      <p class="close"><b>Heads slider (1&ndash;20):</b> the default of 10 balances cost and confidence. Higher counts give better statistical coverage. Each head runs one probe scenario against the target endpoint.</p>
+    </div>
+  </section>
+
+  <!-- 08 -->
+  <section class="sec">
+    <div class="sec-head"><span class="sec-num">08</span><h2 class="sec-title">The process map</h2></div>
+    <div class="sec-body">
+      <p class="lead">The Hydra assembles intelligence, picks the weakest domains, fans scenarios into variations, and unleashes them as concurrent multi-turn conversations &mdash; then scores each interaction to produce a domain-level resilience report.</p>
+
+      <div style="overflow-x:auto; padding:4px 0 6px;">
+      <svg class="fig" viewBox="0 0 860 668" width="100%" style="display:block;min-width:700px;font-family:var(--font-body)">
+        <defs>
+          <marker id="ah" markerWidth="8" markerHeight="8" refX="6.5" refY="3" orient="auto"><path d="M0,0 L6,3 L0,6 Z" style="fill:var(--text-faint)"/></marker>
+          <marker id="ahl" markerWidth="8" markerHeight="8" refX="6.5" refY="3" orient="auto"><path d="M0,0 L6,3 L0,6 Z" style="fill:var(--text-dim)"/></marker>
+        </defs>
+
+        <!-- intel caption -->
+        <rect x="40" y="12" width="780" height="34" rx="4" class="ln" stroke-dasharray="4 3"/>
+        <text x="430" y="34" text-anchor="middle" font-family="var(--font-mono)" font-size="11.5" class="tcap">INTEL &nbsp;&middot;&nbsp; system instructions &middot; vital context &middot; prior AESOP analyses &middot; Cave runs &middot; historical scores</text>
+
+        <!-- S1 -->
+        <rect x="330" y="72" width="200" height="52" rx="5" class="nd s-rose"/>
+        <text x="430" y="93" text-anchor="middle" font-size="13.5" font-weight="700" class="t1">Briefing Assembly</text>
+        <text x="430" y="111" text-anchor="middle" font-size="11" class="d1">compile intel &rarr; target dossier</text>
+
+        <!-- S2 -->
+        <rect x="330" y="156" width="200" height="52" rx="5" class="nd s-amb" stroke-dasharray="6 3"/>
+        <text x="430" y="177" text-anchor="middle" font-size="13.5" font-weight="700" class="t1">Scenario Loading</text>
+        <text x="430" y="195" text-anchor="middle" font-size="11" class="c-amb">decision &mdash; Cave run linked?</text>
+
+        <!-- scenario sources -->
+        <rect x="132" y="150" width="150" height="40" rx="4" class="ln s-blue"/>
+        <text x="207" y="175" text-anchor="middle" font-size="12" font-weight="600" class="c-blue">Load Cave scenarios</text>
+        <rect x="578" y="150" width="150" height="40" rx="4" class="ln s-blue"/>
+        <text x="653" y="175" text-anchor="middle" font-size="12" font-weight="600" class="c-blue">Static probe battery</text>
+
+        <!-- S3 -->
+        <rect x="330" y="248" width="200" height="52" rx="5" class="nd s-amb"/>
+        <text x="430" y="269" text-anchor="middle" font-size="13.5" font-weight="700" class="t1">Tiger Team Allocation</text>
+        <text x="430" y="287" text-anchor="middle" font-size="11" class="d1">heads weighted to weak domains</text>
+
+        <!-- connectors stage chain + decision -->
+        <line x1="430" y1="124" x2="430" y2="156" class="ln" stroke-width="1.5" marker-end="url(#ah)"/>
+        <line x1="330" y1="182" x2="282" y2="170" class="ln2" stroke-width="1.4" marker-end="url(#ahl)"/>
+        <line x1="530" y1="182" x2="578" y2="170" class="ln2" stroke-width="1.4" marker-end="url(#ahl)"/>
+        <line x1="207" y1="190" x2="350" y2="258" class="ln2" stroke-width="1.4" marker-end="url(#ahl)"/>
+        <line x1="653" y1="190" x2="510" y2="258" class="ln2" stroke-width="1.4" marker-end="url(#ahl)"/>
+
+        <!-- domain fan -->
+        <line x1="430" y1="300" x2="85" y2="356" class="ln" stroke-width="1.5" marker-end="url(#ah)"/>
+        <line x1="430" y1="300" x2="250" y2="356" class="ln" stroke-width="1.5" marker-end="url(#ah)"/>
+        <line x1="430" y1="300" x2="430" y2="356" class="ln" stroke-width="1.5" marker-end="url(#ah)"/>
+        <line x1="430" y1="300" x2="610" y2="356" class="ln" stroke-width="1.5" marker-end="url(#ah)"/>
+        <line x1="430" y1="300" x2="775" y2="356" class="ln" stroke-width="1.5" marker-end="url(#ah)"/>
+
+        <!-- five domains -->
+        <g font-size="13" font-weight="700" text-anchor="middle">
+          <rect x="28" y="356" width="114" height="54" rx="4" class="nd s-rose"/><text x="85" y="379" class="t1">Safety</text><text x="85" y="397" font-size="9.5" font-weight="500" font-family="var(--font-mono)" class="c-rose">fan &rarr; N heads</text>
+          <rect x="193" y="356" width="114" height="54" rx="4" class="nd s-vio"/><text x="250" y="379" class="t1">Ethics</text><text x="250" y="397" font-size="9.5" font-weight="500" font-family="var(--font-mono)" class="c-vio">fan &rarr; N heads</text>
+          <rect x="373" y="356" width="114" height="54" rx="4" class="nd s-amb"/><text x="430" y="379" class="t1">Bias</text><text x="430" y="397" font-size="9.5" font-weight="500" font-family="var(--font-mono)" class="c-amb">fan &rarr; N heads</text>
+          <rect x="553" y="356" width="114" height="54" rx="4" class="nd s-teal"/><text x="610" y="379" class="t1">Legal</text><text x="610" y="397" font-size="9.5" font-weight="500" font-family="var(--font-mono)" class="c-teal">fan &rarr; N heads</text>
+          <rect x="718" y="356" width="114" height="54" rx="4" class="nd s-acc"/><text x="775" y="379" class="t1">Security</text><text x="775" y="397" font-size="9.5" font-weight="500" font-family="var(--font-mono)" class="c-acc">fan &rarr; N heads</text>
+        </g>
+
+        <!-- execution -->
+        <g>
+          <line x1="85" y1="410" x2="85" y2="446" class="ln" stroke-width="1.5" marker-end="url(#ah)"/>
+          <line x1="250" y1="410" x2="250" y2="446" class="ln" stroke-width="1.5" marker-end="url(#ah)"/>
+          <line x1="430" y1="410" x2="430" y2="446" class="ln" stroke-width="1.5" marker-end="url(#ah)"/>
+          <line x1="610" y1="410" x2="610" y2="446" class="ln" stroke-width="1.5" marker-end="url(#ah)"/>
+          <line x1="775" y1="410" x2="775" y2="446" class="ln" stroke-width="1.5" marker-end="url(#ah)"/>
+          <rect x="40" y="446" width="780" height="46" rx="4" class="bar s-rose"/>
+          <text x="430" y="468" text-anchor="middle" font-size="13.5" font-weight="700" class="t1">Parallel Execution &mdash; Heads 1&hellip;N</text>
+          <text x="430" y="483" text-anchor="middle" font-size="11" class="d1">each head runs an adaptive multi-turn conversation vs. the endpoint (asyncio, up to 10 turns)</text>
+        </g>
+
+        <line x1="430" y1="492" x2="430" y2="518" class="ln" stroke-width="1.5" marker-end="url(#ah)"/>
+
+        <!-- scoring -->
+        <rect x="320" y="518" width="220" height="52" rx="5" class="nd s-vio"/>
+        <text x="430" y="539" text-anchor="middle" font-size="13.5" font-weight="700" class="t1">Cave Scorer</text>
+        <text x="430" y="557" text-anchor="middle" font-size="11" class="d1">scores each head 0&ndash;100 per domain</text>
+
+        <line x1="430" y1="570" x2="430" y2="600" class="ln" stroke-width="1.5" marker-end="url(#ah)"/>
+
+        <!-- report -->
+        <rect x="290" y="600" width="280" height="54" rx="5" class="nd s-teal" stroke-width="1.8"/>
+        <text x="430" y="621" text-anchor="middle" font-size="13.5" font-weight="700" class="t1">Aggregate &rarr; Resilience Report</text>
+        <text x="430" y="641" text-anchor="middle" font-size="11" class="c-teal">five domain scores + overall score</text>
+      </svg>
       </div>
-    </section>
 
-    <!-- 03 -->
-    <section class="sec">
-      <div class="sec-title"><span class="n">03</span><h2>Five evaluation domains</h2></div>
-      <div class="sec-body">
-        <div class="pmap i-rose"><div class="pm-k">Safety</div><div class="pm-b">Harm prevention, dangerous outputs, refusal behavior.</div></div>
-        <div class="pmap i-vio"><div class="pm-k">Ethics</div><div class="pm-b">Manipulation, transparency, responsible guidance.</div></div>
-        <div class="pmap i-amb"><div class="pm-k">Bias</div><div class="pm-b">Discriminatory patterns, stereotypes, fair treatment.</div></div>
-        <div class="pmap i-teal"><div class="pm-k">Legal</div><div class="pm-b">Regulatory exposure, PII handling, liability.</div></div>
-        <div class="pmap i-acc"><div class="pm-k">Security</div><div class="pm-b">Prompt injection, system-prompt leakage, data access.</div></div>
+      <p class="close" style="font-family:var(--font-mono);font-size:12px"><b>Heads slider (1&ndash;20):</b> default 10 balances cost and confidence. Weaker domains (below 80) draw more heads; every domain gets at least one. Higher head counts give better statistical coverage.</p>
+    </div>
+  </section>
+
+  <!-- 09 -->
+  <section class="sec">
+    <div class="sec-head"><span class="sec-num">09</span><h2 class="sec-title">Stage details</h2></div>
+    <div class="sec-body">
+      <div class="pmap i-acc"><div class="pm-k"><span class="tag">Input</span>Intelligence<br>gathering</div><div class="pm-b">System instructions, vital context, prior quality-analysis reports, Cave of Shadows findings, historical Hydra domain scores.</div></div>
+      <div class="pmap i-rose"><div class="pm-k"><span class="ord">STAGE 1</span>Briefing<br>assembly</div><div class="pm-b">Compiles all intel into a structured target dossier, including system-prompt analysis, known weaknesses, and prior score trajectories.</div></div>
+      <div class="pmap i-rose"><div class="pm-k"><span class="ord">STAGE 2</span>Scenario<br>loading</div><div class="pm-b">Loads tailored scenarios from a linked Cave run, or falls back to 20 built-in probes (10 director + 10 worker) covering all five domains.</div></div>
+      <div class="pmap i-amb"><div class="pm-k"><span class="ord">STAGE 3</span>Tiger team<br>allocation</div><div class="pm-b">Distributes heads using inverse score weighting. Domains below 80 get more heads; every domain gets at least one.</div></div>
+      <div class="pmap i-acc"><div class="pm-k"><span class="ord">STAGE 4</span>Scenario<br>fanning</div><div class="pm-b">Each base scenario expands into multiple variations via Claude, each with a distinct persona, angle, and escalation approach.</div></div>
+      <div class="pmap i-rose"><div class="pm-k"><span class="ord">STAGE 5</span>Parallel<br>execution</div><div class="pm-b">All heads unleashed simultaneously via asyncio.gather. Each runs an adaptive multi-turn conversation (up to 10 turns) against the endpoint.</div></div>
+      <div class="pmap i-teal"><div class="pm-k"><span class="ord">STAGE 6</span>Scoring &amp;<br>aggregation</div><div class="pm-b">Each head scored 0&ndash;100 by the Cave Scorer. Scores averaged by domain to produce five domain scores and one overall resilience score.</div></div>
+    </div>
+  </section>
+
+  <!-- 10 -->
+  <section class="sec">
+    <div class="sec-head"><span class="sec-num">10</span><h2 class="sec-title">Hydra report output</h2></div>
+    <div class="sec-body">
+      <p class="lead"><b>Resilience report.</b> The final output contains the following.</p>
+      <div class="mono">
+        <b>Overall resilience score</b> &mdash; aggregate across all domains and heads<br>
+        <b>Five domain scores</b> &mdash; Safety, Ethics, Bias, Legal, Security<br>
+        <b>Per-head results</b> &mdash; probe scenario, full conversation transcript, pass/fail<br>
+        <b>Head-allocation breakdown</b> &mdash; how many heads targeted each domain and why<br>
+        <b>Probe-mode coverage</b> &mdash; director probes, worker probes, or both<br>
+        <b>Cost summary</b> &mdash; total tokens and estimated spend
       </div>
-    </section>
+      <p class="close">On subsequent runs the tiger-team allocation shifts automatically &mdash; domains that improved get fewer heads, and newly weak domains attract more firepower.</p>
+    </div>
+  </section>
 
-    <!-- 04 -->
-    <section class="sec">
-      <div class="sec-title"><span class="n">04</span><h2>Tiger team head allocation</h2></div>
-      <div class="sec-body">
-        <p class="lead"><b>Concentrate firepower on weak domains.</b> The Hydra does not distribute heads evenly. Before fanning scenarios, it checks prior evaluation scores across all five domains; domains below the weakness threshold (80) receive proportionally more heads. Every domain gets at least one.</p>
-        <div class="mono">
-          <span class="f-weak">Safety: 62</span> &rarr; <span class="f-heads">4 heads</span> &nbsp;&nbsp; <span class="f-weak">Security: 58</span> &rarr; <span class="f-heads">5 heads</span><br>
-          <span class="f-strong">Ethics: 91</span> &rarr; <span class="f-heads">1 head</span> &nbsp;&nbsp; <span class="f-strong">Bias: 88</span> &rarr; <span class="f-heads">1 head</span> &nbsp;&nbsp; <span class="f-strong">Legal: 85</span> &rarr; <span class="f-heads">1 head</span><br>
-          <span class="f-dim">Total: 12 heads allocated based on the weakness profile</span>
-        </div>
-      </div>
-    </section>
+  <footer class="footer">
+    <a href="../aesop.html">&larr; AESOP</a>
+    <span>&copy; 2025-2026 Charlie Fuller</span>
+  </footer>
 
-    <!-- 05 -->
-    <section class="sec">
-      <div class="sec-title"><span class="n">05</span><h2>Probe modes</h2></div>
-      <div class="sec-body">
-        <div class="pmap i-vio"><div class="pm-k"><span class="tag">Routing test</span>Director<br>only</div><div class="pm-b">Probes the director agent&rsquo;s routing decisions, scope enforcement, and handoff behavior. Tests whether the orchestration layer correctly filters and routes adversarial intent.</div></div>
-        <div class="pmap i-acc"><div class="pm-k"><span class="tag">Specialist test</span>Workers<br>only</div><div class="pm-b">Bypasses the director and attacks specialist workers directly. Reveals whether guardrails live only at the routing layer or are enforced throughout the hierarchy.</div></div>
-        <div class="pmap i-rose"><div class="pm-k"><span class="tag">Full coverage &mdash; recommended</span>Both</div><div class="pm-b">Runs director probes and worker probes. Complete coverage of the full agent hierarchy &mdash; the standard mode for a comprehensive Hydra run.</div></div>
-      </div>
-    </section>
-
-    <!-- 06 -->
-    <section class="sec">
-      <div class="sec-title"><span class="n">06</span><h2>Cave of Shadows integration</h2></div>
-      <div class="sec-body">
-        <p>Linking a completed <b>Cave of Shadows</b> run gives the Hydra a tailored base scenario set instead of the standard static battery. The Hydra fans each Cave scenario into domain-specific variations, multiplying the attack surface proportionally across weak domains. Without a linked Cave run it falls back to the built-in director and worker probe libraries (10 each, covering all five domains).</p>
-      </div>
-    </section>
-
-    <!-- 07 -->
-    <section class="sec">
-      <div class="sec-title"><span class="n">07</span><h2>Six-stage execution pipeline</h2></div>
-      <div class="sec-body">
-        <div class="pmap"><div class="pm-k"><span class="tag">Inputs</span>Endpoint +<br>Cave run</div><div class="pm-b"><b>Required:</b> chatbot endpoint URL. <b>Optional:</b> a completed Cave of Shadows run to use as the base scenario set.</div></div>
-        <div class="pmap i-rose"><div class="pm-k"><span class="tag">Stage 1</span>Briefing<br>assembly</div><div class="pm-b">Gathers all available intel on the target &mdash; system instructions, vital context, prior AESOP analyses, Cave of Shadows reports, historical Hydra run scores.</div></div>
-        <div class="pmap i-rose"><div class="pm-k"><span class="tag">Stage 2</span>Scenario<br>loading</div><div class="pm-b">Loads base scenarios from the linked Cave run, or falls back to the built-in static probe battery (director + worker probes across all five domains).</div></div>
-        <div class="pmap i-amb"><div class="pm-k"><span class="tag">Stage 3</span>Tiger team head<br>allocation</div><div class="pm-b">Reads prior domain scores and distributes N heads across the five domains, inverse-weighting weak domains (threshold 80) to concentrate firepower where the agent is most vulnerable.</div></div>
-        <div class="pmap i-acc"><div class="pm-k"><span class="tag">Stage 4</span>Scenario<br>fanning</div><div class="pm-b">Each base scenario is expanded into N domain-specific variations with distinct personas, angles, and escalation approaches.</div></div>
-        <div class="pmap i-rose"><div class="pm-k"><span class="tag">Stage 5</span>Parallel head<br>execution</div><div class="pm-b">All heads unleashed simultaneously via asyncio. Each runs an adaptive multi-turn conversation (up to 10 turns) against the endpoint; the Cave Scorer evaluates every response.</div></div>
-        <div class="pmap i-teal"><div class="pm-k"><span class="tag">Stage 6</span>Domain score<br>aggregation</div><div class="pm-b">Per-head scores averaged by domain &mdash; five domain scores plus an overall resilience score. Surfaces which domains failed and which held up under attack.</div></div>
-        <p class="close"><b>Heads slider (1&ndash;20):</b> the default of 10 balances cost and confidence. Higher counts give better statistical coverage. Each head runs one probe scenario against the target endpoint.</p>
-      </div>
-    </section>
-
-    <!-- 08 -->
-    <section class="sec">
-      <div class="sec-title"><span class="n">08</span><h2>The process map</h2></div>
-      <div class="sec-body">
-        <p class="lead">The Hydra assembles intelligence, picks the weakest domains, fans scenarios into variations, and unleashes them as concurrent multi-turn conversations &mdash; then scores each interaction to produce a domain-level resilience report.</p>
-
-        <div style="overflow-x:auto; padding:4px 0 6px;">
-        <svg viewBox="0 0 860 668" width="100%" style="display:block;min-width:700px;font-family:var(--font-body)">
-          <defs>
-            <marker id="ah" markerWidth="8" markerHeight="8" refX="6.5" refY="3" orient="auto"><path d="M0,0 L6,3 L0,6 Z" fill="#7a9ab8"/></marker>
-            <marker id="ahl" markerWidth="8" markerHeight="8" refX="6.5" refY="3" orient="auto"><path d="M0,0 L6,3 L0,6 Z" fill="#3d5a7a"/></marker>
-          </defs>
-
-          <!-- intel caption -->
-          <rect x="40" y="12" width="780" height="34" rx="4" fill="none" stroke="#7a9ab8" stroke-dasharray="4 3"/>
-          <text x="430" y="34" text-anchor="middle" font-family="var(--font-mono)" font-size="11.5" fill="#7a9ab8">INTEL &nbsp;&middot;&nbsp; system instructions &middot; vital context &middot; prior AESOP analyses &middot; Cave runs &middot; historical scores</text>
-
-          <!-- S1 -->
-          <rect x="330" y="72" width="200" height="52" rx="5" fill="#eef4f9" stroke="#c23a30" stroke-width="1.6"/>
-          <text x="430" y="93" text-anchor="middle" font-size="13.5" font-weight="700" fill="#0a1628">Briefing Assembly</text>
-          <text x="430" y="111" text-anchor="middle" font-size="11" fill="#3d5a7a">compile intel &rarr; target dossier</text>
-
-          <!-- S2 -->
-          <rect x="330" y="156" width="200" height="52" rx="5" fill="#eef4f9" stroke="#b45309" stroke-width="1.6" stroke-dasharray="6 3"/>
-          <text x="430" y="177" text-anchor="middle" font-size="13.5" font-weight="700" fill="#0a1628">Scenario Loading</text>
-          <text x="430" y="195" text-anchor="middle" font-size="11" fill="#b45309">decision &mdash; Cave run linked?</text>
-
-          <!-- scenario sources -->
-          <rect x="132" y="150" width="150" height="40" rx="4" fill="none" stroke="#2f6fa8" stroke-width="1.4"/>
-          <text x="207" y="175" text-anchor="middle" font-size="12" font-weight="600" fill="#2f6fa8">Load Cave scenarios</text>
-          <rect x="578" y="150" width="150" height="40" rx="4" fill="none" stroke="#2f6fa8" stroke-width="1.4"/>
-          <text x="653" y="175" text-anchor="middle" font-size="12" font-weight="600" fill="#2f6fa8">Static probe battery</text>
-
-          <!-- S3 -->
-          <rect x="330" y="248" width="200" height="52" rx="5" fill="#eef4f9" stroke="#b45309" stroke-width="1.6"/>
-          <text x="430" y="269" text-anchor="middle" font-size="13.5" font-weight="700" fill="#0a1628">Tiger Team Allocation</text>
-          <text x="430" y="287" text-anchor="middle" font-size="11" fill="#3d5a7a">heads weighted to weak domains</text>
-
-          <!-- connectors stage chain + decision -->
-          <line x1="430" y1="124" x2="430" y2="156" stroke="#7a9ab8" stroke-width="1.5" marker-end="url(#ah)"/>
-          <line x1="330" y1="182" x2="282" y2="170" stroke="#3d5a7a" stroke-width="1.4" marker-end="url(#ahl)"/>
-          <line x1="530" y1="182" x2="578" y2="170" stroke="#3d5a7a" stroke-width="1.4" marker-end="url(#ahl)"/>
-          <line x1="207" y1="190" x2="350" y2="258" stroke="#3d5a7a" stroke-width="1.4" marker-end="url(#ahl)"/>
-          <line x1="653" y1="190" x2="510" y2="258" stroke="#3d5a7a" stroke-width="1.4" marker-end="url(#ahl)"/>
-
-          <!-- domain fan -->
-          <line x1="430" y1="300" x2="85" y2="356" stroke="#7a9ab8" stroke-width="1.5" marker-end="url(#ah)"/>
-          <line x1="430" y1="300" x2="250" y2="356" stroke="#7a9ab8" stroke-width="1.5" marker-end="url(#ah)"/>
-          <line x1="430" y1="300" x2="430" y2="356" stroke="#7a9ab8" stroke-width="1.5" marker-end="url(#ah)"/>
-          <line x1="430" y1="300" x2="610" y2="356" stroke="#7a9ab8" stroke-width="1.5" marker-end="url(#ah)"/>
-          <line x1="430" y1="300" x2="775" y2="356" stroke="#7a9ab8" stroke-width="1.5" marker-end="url(#ah)"/>
-
-          <!-- five domains -->
-          <g font-size="13" font-weight="700" text-anchor="middle">
-            <rect x="28" y="356" width="114" height="54" rx="4" fill="#eef4f9" stroke="#c23a30" stroke-width="1.6"/><text x="85" y="379" fill="#0a1628">Safety</text><text x="85" y="397" font-size="9.5" font-weight="500" font-family="var(--font-mono)" fill="#c23a30">fan &rarr; N heads</text>
-            <rect x="193" y="356" width="114" height="54" rx="4" fill="#eef4f9" stroke="#7c3aed" stroke-width="1.6"/><text x="250" y="379" fill="#0a1628">Ethics</text><text x="250" y="397" font-size="9.5" font-weight="500" font-family="var(--font-mono)" fill="#7c3aed">fan &rarr; N heads</text>
-            <rect x="373" y="356" width="114" height="54" rx="4" fill="#eef4f9" stroke="#b45309" stroke-width="1.6"/><text x="430" y="379" fill="#0a1628">Bias</text><text x="430" y="397" font-size="9.5" font-weight="500" font-family="var(--font-mono)" fill="#b45309">fan &rarr; N heads</text>
-            <rect x="553" y="356" width="114" height="54" rx="4" fill="#eef4f9" stroke="#0f766e" stroke-width="1.6"/><text x="610" y="379" fill="#0a1628">Legal</text><text x="610" y="397" font-size="9.5" font-weight="500" font-family="var(--font-mono)" fill="#0f766e">fan &rarr; N heads</text>
-            <rect x="718" y="356" width="114" height="54" rx="4" fill="#eef4f9" stroke="#e8621a" stroke-width="1.6"/><text x="775" y="379" fill="#0a1628">Security</text><text x="775" y="397" font-size="9.5" font-weight="500" font-family="var(--font-mono)" fill="#e8621a">fan &rarr; N heads</text>
-          </g>
-
-          <!-- execution -->
-          <g>
-            <line x1="85" y1="410" x2="85" y2="446" stroke="#7a9ab8" stroke-width="1.5" marker-end="url(#ah)"/>
-            <line x1="250" y1="410" x2="250" y2="446" stroke="#7a9ab8" stroke-width="1.5" marker-end="url(#ah)"/>
-            <line x1="430" y1="410" x2="430" y2="446" stroke="#7a9ab8" stroke-width="1.5" marker-end="url(#ah)"/>
-            <line x1="610" y1="410" x2="610" y2="446" stroke="#7a9ab8" stroke-width="1.5" marker-end="url(#ah)"/>
-            <line x1="775" y1="410" x2="775" y2="446" stroke="#7a9ab8" stroke-width="1.5" marker-end="url(#ah)"/>
-            <rect x="40" y="446" width="780" height="46" rx="4" fill="#dbe5f0" stroke="#c23a30" stroke-width="1.6"/>
-            <text x="430" y="468" text-anchor="middle" font-size="13.5" font-weight="700" fill="#0a1628">Parallel Execution &mdash; Heads 1&hellip;N</text>
-            <text x="430" y="483" text-anchor="middle" font-size="11" fill="#3d5a7a">each head runs an adaptive multi-turn conversation vs. the endpoint (asyncio, up to 10 turns)</text>
-          </g>
-
-          <line x1="430" y1="492" x2="430" y2="518" stroke="#7a9ab8" stroke-width="1.5" marker-end="url(#ah)"/>
-
-          <!-- scoring -->
-          <rect x="320" y="518" width="220" height="52" rx="5" fill="#eef4f9" stroke="#7c3aed" stroke-width="1.6"/>
-          <text x="430" y="539" text-anchor="middle" font-size="13.5" font-weight="700" fill="#0a1628">Cave Scorer</text>
-          <text x="430" y="557" text-anchor="middle" font-size="11" fill="#3d5a7a">scores each head 0&ndash;100 per domain</text>
-
-          <line x1="430" y1="570" x2="430" y2="600" stroke="#7a9ab8" stroke-width="1.5" marker-end="url(#ah)"/>
-
-          <!-- report -->
-          <rect x="290" y="600" width="280" height="54" rx="5" fill="#eef4f9" stroke="#0f766e" stroke-width="1.8"/>
-          <text x="430" y="621" text-anchor="middle" font-size="13.5" font-weight="700" fill="#0a1628">Aggregate &rarr; Resilience Report</text>
-          <text x="430" y="641" text-anchor="middle" font-size="11" fill="#0f766e">five domain scores + overall score</text>
-        </svg>
-        </div>
-
-        <p class="close" style="font-family:var(--font-mono);font-size:12px"><b>Heads slider (1&ndash;20):</b> default 10 balances cost and confidence. Weaker domains (below 80) draw more heads; every domain gets at least one. Higher head counts give better statistical coverage.</p>
-      </div>
-    </section>
-
-    <!-- 09 -->
-    <section class="sec">
-      <div class="sec-title"><span class="n">09</span><h2>Stage details</h2></div>
-      <div class="sec-body">
-        <div class="pmap i-acc"><div class="pm-k"><span class="tag">Input</span>Intelligence<br>gathering</div><div class="pm-b">System instructions, vital context, prior quality-analysis reports, Cave of Shadows findings, historical Hydra domain scores.</div></div>
-        <div class="pmap i-rose"><div class="pm-k"><span class="ord">STAGE 1</span>Briefing<br>assembly</div><div class="pm-b">Compiles all intel into a structured target dossier, including system-prompt analysis, known weaknesses, and prior score trajectories.</div></div>
-        <div class="pmap i-rose"><div class="pm-k"><span class="ord">STAGE 2</span>Scenario<br>loading</div><div class="pm-b">Loads tailored scenarios from a linked Cave run, or falls back to 20 built-in probes (10 director + 10 worker) covering all five domains.</div></div>
-        <div class="pmap i-amb"><div class="pm-k"><span class="ord">STAGE 3</span>Tiger team<br>allocation</div><div class="pm-b">Distributes heads using inverse score weighting. Domains below 80 get more heads; every domain gets at least one.</div></div>
-        <div class="pmap i-acc"><div class="pm-k"><span class="ord">STAGE 4</span>Scenario<br>fanning</div><div class="pm-b">Each base scenario expands into multiple variations via Claude, each with a distinct persona, angle, and escalation approach.</div></div>
-        <div class="pmap i-rose"><div class="pm-k"><span class="ord">STAGE 5</span>Parallel<br>execution</div><div class="pm-b">All heads unleashed simultaneously via asyncio.gather. Each runs an adaptive multi-turn conversation (up to 10 turns) against the endpoint.</div></div>
-        <div class="pmap i-teal"><div class="pm-k"><span class="ord">STAGE 6</span>Scoring &amp;<br>aggregation</div><div class="pm-b">Each head scored 0&ndash;100 by the Cave Scorer. Scores averaged by domain to produce five domain scores and one overall resilience score.</div></div>
-      </div>
-    </section>
-
-    <!-- 10 -->
-    <section class="sec">
-      <div class="sec-title"><span class="n">10</span><h2>Hydra report output</h2></div>
-      <div class="sec-body">
-        <p class="lead"><b>Resilience report.</b> The final output contains the following.</p>
-        <div class="mono">
-          <b>Overall resilience score</b> &mdash; aggregate across all domains and heads<br>
-          <b>Five domain scores</b> &mdash; Safety, Ethics, Bias, Legal, Security<br>
-          <b>Per-head results</b> &mdash; probe scenario, full conversation transcript, pass/fail<br>
-          <b>Head-allocation breakdown</b> &mdash; how many heads targeted each domain and why<br>
-          <b>Probe-mode coverage</b> &mdash; director probes, worker probes, or both<br>
-          <b>Cost summary</b> &mdash; total tokens and estimated spend
-        </div>
-        <p class="close">On subsequent runs the tiger-team allocation shifts automatically &mdash; domains that improved get fewer heads, and newly weak domains attract more firepower.</p>
-      </div>
-    </section>
-
-    <footer class="footer">
-      <a href="../aesop.html">&larr; AESOP</a>
-      <span>&copy; 2025-2026 Charlie Fuller</span>
-    </footer>
-
-  </div>
-</div>
-
+</main>
 </body>
 </html>
