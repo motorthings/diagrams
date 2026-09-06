@@ -299,5 +299,85 @@
 </div>
 
 
+<script>
+  const $ = id => document.getElementById(id);
+  const usd = n => (n < 0 ? "−$" : "$") + Math.abs(Math.round(n)).toLocaleString();
+  const usdM = n => { const s = n < 0 ? "−$" : "$"; const a = Math.abs(n);
+    return a >= 1e6 ? s + (a/1e6).toFixed(1) + "M" : a >= 1e3 ? s + (a/1e3).toFixed(0) + "K" : s + Math.round(a); };
+
+  function calc() {
+    const rate = +$('rate').value, hours = +$('hours').value, lawyers = +$('lawyers').value,
+          aiCost = +$('aicost').value, addr = +$('addr').value/100, comp = +$('comp').value/100,
+          refill = +$('refill').value/100, pass = +$('pass').value/100,
+          check = +$('check').value/100, uplift = +$('uplift').value/100;
+
+    // The identity (per lawyer / year). See the defs at the bottom of the report.
+    const freed    = hours * addr * comp;
+    const netFreed = freed * (1 - check);
+    const hourly   = -rate * netFreed * (1 - refill) - aiCost;
+    const fixed    =  rate * netFreed * refill * (1 + uplift) - rate * netFreed * pass - aiCost;
+    const swing    =  fixed - hourly;                 // = rate*netFreed*(1 + refill*uplift - pass)
+
+    $('rateV').textContent = "$" + rate + "/hr";
+    $('hoursV').textContent = hours.toLocaleString();
+    $('lawyersV').textContent = lawyers.toLocaleString();
+    $('aicostV').textContent = "$" + aiCost.toLocaleString();
+    $('addrV').textContent = Math.round(addr*100) + "%";
+    $('compV').textContent = Math.round(comp*100) + "%";
+    $('refillV').textContent = Math.round(refill*100) + "%";
+    $('passV').textContent = Math.round(pass*100) + "%";
+    $('checkV').textContent = Math.round(check*100) + "%";
+    $('upliftV').textContent = Math.round(uplift*100) + "%";
+
+    $('hourlyBig').textContent = usd(hourly);
+    $('fixedBig').textContent  = usd(fixed);
+    $('hourlyCard').className = 'card ' + (hourly >= 0 ? 'win' : 'loss');
+    $('fixedCard').className  = 'card ' + (fixed  >= 0 ? 'win' : 'loss');
+
+    $('swingBig').textContent = usd(swing) + " / lawyer / year";
+    $('firmLine').textContent = "Across " + lawyers.toLocaleString() + " lawyers, that's "
+        + usdM(swing*lawyers) + " a year in self-inflicted profit swing.";
+
+    const denom = rate * netFreed;
+    const beHourly = denom > 0 ? 1 + aiCost/denom : Infinity;
+    const beTxt = isFinite(beHourly) ? Math.round(beHourly*100) + "%" : "impossible";
+
+    $('verdict').innerHTML =
+        "Under hourly, every freed hour you fail to resell is revenue gone at full rate — "
+      + "with a <b>" + Math.round(refill*100) + "% refill</b> that&rsquo;s a <b>" + usd(hourly)
+      + "</b>/lawyer hit before tooling fully lands. Charge fixed fee and the same hours are cost "
+      + "taken out of the salaried base, then resold as new matter — <b>" + usd(fixed)
+      + "</b>/lawyer. Same tool, same hours saved, opposite sign on the bottom line. That gap — "
+      + "<b>" + usd(swing) + "</b>/lawyer — is the paradox. Hourly only breaks even at a "
+      + "<b>" + beTxt + "</b> refill; you can&rsquo;t resell that.";
+
+    const rows = [
+      ["Blended rate", "$" + rate + "/hr"],
+      ["Billable hours / lawyer", hours.toLocaleString()],
+      ["Firm size", lawyers.toLocaleString() + " lawyers"],
+      ["AI tooling / lawyer", "$" + aiCost.toLocaleString()],
+      ["Addressable work", Math.round(addr*100) + "%"],
+      ["Compression", Math.round(comp*100) + "%"],
+      ["Check-back drag", Math.round(check*100) + "%"],
+      ["Refill rate", Math.round(refill*100) + "%"],
+      ["Client giveback", Math.round(pass*100) + "%"],
+      ["Upsell uplift", Math.round(uplift*100) + "%"],
+      ["Freed hours / lawyer / yr", Math.round(freed).toLocaleString()],
+      ["Net freed (after QC)", Math.round(netFreed).toLocaleString()],
+    ];
+    $('inputsGrid').innerHTML = rows.map(r =>
+      '<div class="irow"><span class="k">' + r[0] + '</span><span class="v">' + r[1] + '</span></div>').join('');
+  }
+
+  document.querySelectorAll('input[type=range]').forEach(el => el.addEventListener('input', calc));
+  $('printBtn').addEventListener('click', () => window.print());
+  try {
+    $('stamp').textContent = "Generated " + new Date().toLocaleDateString(undefined,
+      { year: 'numeric', month: 'long', day: 'numeric' });
+  } catch(e) {}
+
+  calc();
+</script>
+
 </body>
 </html>
