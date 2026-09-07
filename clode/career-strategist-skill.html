@@ -1,243 +1,255 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" class="light">
 <head>
 <meta charset="UTF-8">
-<link rel="icon" type="image/svg+xml" href="../icon.svg">
+<link rel="icon" href="../icon.svg" type="image/svg+xml" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Claude Skills &mdash; Career Strategist: Architecture</title>
 <meta name="description" content="How the career-strategist skill processes career questions through triage, file loading, and three execution modes to produce coaching, applications, and negotiation deliverables.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Public+Sans:wght@400;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Mulish:ital,wght@0,300;0,400;0,600;0,700;0,800;1,400&display=swap" rel="stylesheet">
 <style>
-  :root {
-    --font-display: 'Instrument Serif', Georgia, serif;
-    --font-body: 'Public Sans', system-ui, sans-serif;
-    --font-mono: 'JetBrains Mono', 'SF Mono', monospace;
-    --ink: #241f1d; --graphite: #453b36; --body: #534a46; --muted: #8b837b;
-    --rule: #d8d0c2; --row: #e9e2d4; --sheet: #f8f4ee; --desk: #ece5da;
-    --spine: #241f1d; --spine-fg: #f8f4ee;
-    --accent: #7e1f22; --amber: #a16207; --blue: #4a5d73; --teal: #3f6b57; --violet: #6b4f7a; --rose: #8f2a1f;
+  :root{--font-body:'Mulish','Segoe UI',Helvetica,sans-serif;--font-mono:'Mulish',ui-monospace,'SF Mono',Consolas,monospace;
+    --bg:#14181C;--surface:#1B2127;--surface2:#232B33;--border:#303A43;--border-bright:#42505C;
+    --text:#F4F5F6;--text-dim:#CBD0D6;--text-faint:#87919B;
+    --primary:#A79CF2;--primary-dim:rgba(167,156,242,0.12);--metric:#58D6B4;--metric-dim:rgba(88,214,180,0.12);
+    --blue:#6CACE4;--blue-dim:rgba(108,172,228,0.12);
+    --violet:#B9A0E8;--violet-dim:rgba(185,160,232,0.12);
+    --amber:#E8B54D;--amber-dim:rgba(232,181,77,0.12);
+    --rose:#E88280;--rose-dim:rgba(232,130,128,0.12);}
+  html.light{--bg:#F7F3EF;--surface:#FFFFFF;--surface2:#F0E9E1;--border:#E1D6CB;--border-bright:#CDBBA8;
+    --text:#241A12;--text-dim:#574A3C;--text-faint:#8C7E6E;
+    --primary:#4F46E5;--primary-dim:rgba(79,70,229,0.08);--metric:#0E7C6E;--metric-dim:rgba(14,124,110,0.08);
+    --blue:#2F6FA8;--blue-dim:rgba(47,111,168,0.08);
+    --violet:#7C3AED;--violet-dim:rgba(124,58,237,0.07);
+    --amber:#A5650A;--amber-dim:rgba(165,101,10,0.08);
+    --rose:#C23A30;--rose-dim:rgba(194,58,48,0.07);}
+  *{margin:0;padding:0;box-sizing:border-box}
+  html{scroll-behavior:smooth}
+  body{background:
+      radial-gradient(at 10% 0%,var(--primary-dim),transparent 55%),
+      radial-gradient(at 90% 80%,var(--metric-dim),transparent 55%),
+      var(--bg);
+    color:var(--text);font-family:var(--font-body);font-size:17px;line-height:1.62;-webkit-font-smoothing:antialiased;min-height:100vh}
+
+  .crumbs{font-size:13px;font-weight:600;color:var(--text-dim);display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+  .crumbs a{color:var(--primary);text-decoration:none}
+  .crumbs a:hover{text-decoration:underline}
+  .crumbs .sep{color:var(--text-faint)}
+  .crumbs .current{color:var(--text-dim);font-weight:400}
+  .crumbs-top{max-width:1080px;margin:0 auto;padding:18px 24px 0}
+
+  .wrap{max-width:1080px;margin:0 auto;padding:0 24px 80px}
+
+  .hero{padding:44px 0 24px;border-bottom:1px solid var(--border);margin-bottom:10px}
+  .hero .tagline{font-family:var(--font-mono);font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.14em;color:var(--primary);margin-bottom:10px}
+  .hero h1{font-size:52px;line-height:1.0;letter-spacing:-0.03em;font-weight:800;
+    background:linear-gradient(135deg,var(--primary),var(--metric));-webkit-background-clip:text;background-clip:text;color:transparent}
+  .hero .lede{font-size:19px;line-height:1.5;color:var(--text-dim);max-width:920px;margin-top:14px}
+  .hero .lede b{color:var(--text)}
+
+  .sec{margin-top:22px}
+  .sec-head{display:flex;align-items:baseline;gap:14px;padding-bottom:10px;border-bottom:1px solid var(--border);margin-bottom:10px}
+  .sec-num{font-size:23px;font-weight:800;color:var(--primary);font-family:var(--font-mono)}
+  .sec-title{font-size:23px;font-weight:800;color:var(--text);letter-spacing:-0.01em}
+  .sec-body p{max-width:920px;margin-bottom:12px;color:var(--text-dim)}
+  .sec-body p b,.sec-body strong{color:var(--text)}
+  .sec-body p.nb{margin-bottom:0}
+  code{font-family:var(--font-mono);font-size:0.84em;color:var(--primary)}
+  .close{margin-top:16px;border-top:1px solid var(--border);padding-top:14px;font-size:14px;line-height:1.6;color:var(--text-dim);max-width:920px}
+  .close b{color:var(--text)}
+
+  .pmap{padding:14px 4px;border-top:1px solid var(--border);display:grid;grid-template-columns:240px 1fr;gap:4px 28px;align-items:baseline}
+  .pmap:first-of-type{border-top:none}
+  .pmap .pm-k{font-family:var(--font-mono);font-size:11.5px;font-weight:800;text-transform:uppercase;letter-spacing:.08em;color:var(--blue);line-height:1.5}
+  .pmap .pm-k .ord{display:block;color:var(--primary);font-weight:700;font-size:10px;letter-spacing:.16em;margin-bottom:3px}
+  .pmap .pm-k .tag{display:block;color:var(--text-faint);font-weight:700;font-size:10px;letter-spacing:.16em;margin-bottom:3px}
+  .pmap .pm-b{font-size:14.5px;line-height:1.6;color:var(--text-dim)}
+  .pmap .pm-b .tt{font-weight:800;color:var(--text);font-size:16px}
+  .pmap.i-vio .pm-k{color:var(--violet)}
+  .pmap.i-teal .pm-k{color:var(--metric)}
+  .pmap.i-amb .pm-k{color:var(--amber)}
+  .pmap.i-rose .pm-k{color:var(--rose)}
+  .pmap.i-acc .pm-k{color:var(--primary)}
+  .branch{font-size:13px;line-height:1.5;padding:1px 0}
+  .branch .bk{font-family:var(--font-mono);font-size:10.5px;font-weight:700;margin-right:8px}
+  .branch.blue .bk{color:var(--blue)}
+  .branch.teal .bk{color:var(--metric)}
+  .branch.vio .bk{color:var(--violet)}
+  .opt{color:var(--rose);font-weight:700}
+
+  .footer{margin-top:30px;border-top:1px solid var(--border);padding:18px 0 0;display:flex;justify-content:space-between;gap:20px;flex-wrap:wrap;font-family:var(--font-mono);font-size:12px;color:var(--text-faint)}
+  .footer a{color:var(--primary);text-decoration:none}
+  .footer a:hover{text-decoration:underline}
+
+  @media(max-width:900px){
+    .wrap{padding:0 16px 60px}
+    .hero h1{font-size:38px}
+    .pmap{grid-template-columns:1fr;gap:3px}
+    body{font-size:16px}
   }
-  * { margin: 0; padding: 0; box-sizing: border-box; }
-  body { background: var(--desk); color: var(--body); font-family: var(--font-body); font-size: 17px; line-height: 1.62; -webkit-font-smoothing: antialiased; text-rendering: optimizeLegibility; }
-  .topbar { max-width: 1160px; margin: 0 auto; padding: 18px 28px 6px; }
-  .backlink a { font-size: 14px; color: var(--muted); text-decoration: none; }
-  .backlink a:hover { color: var(--ink); }
-  .backlink .arr { color: var(--accent); font-size: 15px; margin-right: 2px; }
-
-  .sheet { max-width: 1160px; margin: 6px auto 72px; background: var(--sheet); display: grid; grid-template-columns: 56px 1fr; }
-  .spine { background: var(--spine); display: flex; align-items: flex-end; justify-content: center; padding: 26px 0; }
-  .spine-label { writing-mode: vertical-rl; transform: rotate(180deg); font-family: var(--font-mono); font-size: 13px; letter-spacing: 0.22em; color: var(--spine-fg); white-space: nowrap; text-transform: uppercase; }
-  .content { padding: 48px 60px 6px; min-width: 0; }
-
-  .masthead { border-bottom: 3px solid var(--ink); padding-bottom: 16px; }
-  .masthead h1 { font-family: var(--font-display); font-weight: 400; font-size: 50px; line-height: 0.98; letter-spacing: -0.028em; color: var(--ink); }
-  .tagline { font-family: var(--font-mono); font-size: 11.5px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.14em; color: var(--accent); margin: 10px 0 14px; }
-  .lede { font-family: var(--font-display); font-style: italic; font-size: 19px; line-height: 1.5; color: var(--graphite); max-width: 940px; }
-  .lede b { color: var(--ink); }
-  code { font-family: var(--font-mono); font-size: 0.86em; color: var(--accent); }
-
-  section.sec { border-top: 3px solid var(--ink); padding: 22px 0 4px; }
-  .sec-title { display: grid; grid-template-columns: 88px 1fr; gap: 0 22px; align-items: baseline; margin-bottom: 6px; }
-  .sec-title .n { font-family: var(--font-display); font-size: 30px; line-height: 0.9; color: var(--accent); }
-  .sec-title h2 { font-size: 23px; font-weight: 700; letter-spacing: -0.012em; color: var(--ink); }
-  .sec-body { padding: 0 0 8px 110px; }
-  .sec-body p, .sec-body p.lead { max-width: 940px; margin-bottom: 12px; }
-  .sec-body p.nb { margin-bottom: 0; }
-  .sec-body b, .sec-body strong { color: var(--ink); }
-  .note { margin: 14px 0 4px; padding: 10px 0 6px 16px; border-left: 2px solid var(--accent); font-size: 13.5px; line-height: 1.6; max-width: 940px; }
-  .note .mk { font-family: var(--font-mono); font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.12em; color: var(--accent); margin-right: 8px; }
-  .note p { font-size: 13.5px; }
-  .note b { color: var(--ink); }
-  .close { margin-top: 16px; border-top: 1px solid var(--rule); padding-top: 12px; font-size: 14px; line-height: 1.6; color: var(--body); max-width: 940px; }
-  .close b { color: var(--ink); }
-
-  .pmap { border-top: 1px solid var(--row); padding: 12px 0 6px; display: grid; grid-template-columns: 250px 1fr; gap: 3px 28px; align-items: baseline; }
-  .pmap:first-of-type { border-top: none; }
-  .pmap .pm-k { font-family: var(--font-mono); font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; color: var(--blue); line-height: 1.5; }
-  .pmap .pm-k .tag { display: block; color: var(--muted); font-weight: 500; font-size: 9.5px; letter-spacing: 0.12em; margin-bottom: 3px; }
-  .pmap .pm-k .ord { display: block; color: var(--accent); font-weight: 600; font-size: 11px; letter-spacing: 0.12em; margin-bottom: 3px; }
-  .pmap .pm-b { font-size: 13.5px; line-height: 1.6; }
-  .pmap .pm-b .tt { font-weight: 700; color: var(--ink); font-size: 15.5px; display: block; margin-bottom: 4px; }
-  .pmap .pm-b p { font-size: 13.5px; margin-bottom: 6px; }
-  .pmap .pm-b .fws { margin-top: 8px; }
-  .pmap .pm-b .fw { display:inline-block; font-family: var(--font-mono); font-size: 9.5px; color: var(--muted); border:1px solid var(--rule); padding: 1px 7px; margin: 0 5px 4px 0; }
-  .qrow { font-size: 12.5px; line-height: 1.55; padding: 2px 0; }
-  .qrow .q { color: var(--ink); font-weight: 600; }
-  .qrow .a { color: var(--body); }
-  .qrow .sep { color: var(--accent); font-family: var(--font-mono); font-size: 12px; margin: 0 6px; }
-  .pmap.i-blue .pm-k { color: var(--blue); } .pmap.i-teal .pm-k { color: var(--teal); }
-  .pmap.i-vio .pm-k { color: var(--violet); } .pmap.i-amb .pm-k { color: var(--amber); }
-  .pmap.i-rose .pm-k { color: var(--rose); } .pmap.i-acc .pm-k { color: var(--accent); }
-
-  .footer { border-top: 3px solid var(--ink); margin: 26px 0 0; padding: 18px 0 30px; display: flex; justify-content: space-between; gap: 20px; flex-wrap: wrap; font-family: var(--font-mono); font-size: 11.5px; color: var(--muted); }
-  .footer a { color: var(--accent); text-decoration: none; }
-
-  @media (max-width: 900px) {
-    .sheet { grid-template-columns: 40px 1fr; }
-    .spine-label { font-size: 11px; }
-    .content { padding: 32px 22px 4px; }
-    .masthead h1 { font-size: 38px; }
-    .sec-title { grid-template-columns: 50px 1fr; }
-    .sec-title .n { font-size: 25px; }
-    .sec-body { padding-left: 0; }
-    .pmap { grid-template-columns: 1fr; gap: 2px; }
-    body { font-size: 16px; }
-  }
+  @media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+  /* content helpers */
+  .pmap .pm-b p{color:var(--text-dim)}
+  .pmap .pm-b .tt{display:block;margin-bottom:5px}
+  .pmap .pm-b ul{list-style:none;margin:6px 0 2px;padding:0;max-width:920px}
+  .pmap .pm-b li{font-size:13.5px;line-height:1.6;padding:2px 0 2px 16px;position:relative;color:var(--text-dim)}
+  .pmap .pm-b li::before{content:'';position:absolute;left:1px;top:0.72em;width:5px;height:5px;background:var(--border)}
+  .pmap .pm-b li b{color:var(--text)}
+  .pmap.i-blue .pm-k{color:var(--blue)}
+  .branch.pass .bk{color:var(--metric)}
+  .branch.fail .bk{color:var(--rose)}
+  .branch.acc .bk{color:var(--primary)}
+  .branch.amb .bk{color:var(--amber)}
+  .branch.vio .bk{color:var(--violet)}
+  .sec-title .cnt{font-family:var(--font-mono);font-size:11px;font-weight:500;color:var(--text-faint);letter-spacing:.04em;margin-left:10px;text-transform:uppercase}
+  .qrow{font-size:13px;line-height:1.6;padding:2px 0;color:var(--text-dim)}
+  .qrow .q{color:var(--text);font-weight:600}
+  .qrow .a{color:var(--text-dim)}
+  .qrow .sep{color:var(--primary);font-family:var(--font-mono);font-size:12px;margin:0 6px}
+  .fws{margin-top:8px}
+  .fw{display:inline-block;font-family:var(--font-mono);font-size:9.5px;color:var(--text-faint);border:1px solid var(--border);padding:2px 8px;margin:0 6px 5px 0;border-radius:4px}
+  .note{margin:14px 0 4px;padding:12px 0 8px 16px;border-left:2px solid var(--primary);max-width:920px;color:var(--text-dim);font-size:14px;line-height:1.6}
+  .note .mk{font-family:var(--font-mono);font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.12em;color:var(--primary);margin-right:8px}
+  .note p{font-size:14px;color:var(--text-dim)}
+  .note b{color:var(--text)}
 </style>
 </head>
 <body>
-<style>
-.crumbs-at-top{max-width:1100px;margin:0 auto;padding:14px 24px 0}
-.crumbs{font-family:var(--font-mono,monospace);font-size:13px;font-weight:600;display:flex;align-items:center;gap:8px;flex-wrap:wrap;min-width:0}
-.crumbs a{color:var(--accent);text-decoration:none}
-.crumbs a:hover,.crumbs a:focus-visible{text-decoration:underline;outline:none}
-.crumbs .sep{color:var(--muted)}
-.crumbs .current{color:var(--muted);font-weight:400}
-</style>
-<nav class="crumbs crumbs-at-top" aria-label="Breadcrumb">
-  <a href="../index.html">Index</a>
-  <span class="sep">/</span>
-  <a href="../claude-skills.html">Claude Skills</a>
-  <span class="sep">/</span>
-  <span class="current" aria-current="page">Career Strategist</span>
-</nav>
 
-
+<div class="crumbs crumbs-top" aria-label="Breadcrumb">
+  <a href="../index.html">Index</a><span class="sep">/</span>
+  <a href="../claude-skills.html">Claude Skills</a><span class="sep">/</span>
+  <span class="current" aria-current="page">Career Strategist: Architecture</span>
 </div>
 
-<div class="sheet">
-  <div class="spine"><div class="spine-label">CAREER STRATEGIST</div></div>
+<main class="wrap">
 
-  <div class="content">
+  <header class="hero">
+    <div class="tagline">Claude skill &middot; architecture &amp; information flow</div>
+    <h1>Career Strategist</h1>
+    <p class="lede">A Claude Code skill that acts as a career coach, employment advisor, and negotiation rep &mdash; available 24/7, remembers everything, costs nothing.</p>
+  </header>
 
-    <header class="masthead">
-      <h1>Career Strategist</h1>
-      <div class="tagline">Claude skill &middot; architecture &amp; information flow</div>
-      <p class="lede">A Claude Code skill that acts as a career coach, employment advisor, and negotiation rep &mdash; available 24/7, remembers everything, costs nothing.</p>
-    </header>
+  <!-- 01 intro -->
+  <section class="sec">
+    <div class="sec-head"><span class="sec-num">01</span><h2 class="sec-title">The problem, the skill, the why</h2></div>
+    <div class="sec-body">
+      <div class="pmap i-rose"><div class="pm-k"><span class="tag">Problem</span>High-stakes<br>multi-threaded</div><div class="pm-b">A senior job search is a high-stakes operation: dozens of roles, each needing a tailored resume, cover letter, interview prep, and comp strategy. A human career coach costs thousands and isn&rsquo;t available at 11pm before a morning interview.</div></div>
+      <div class="pmap i-teal"><div class="pm-k"><span class="tag">What it does</span>Knows you,<br>remembers you</div><div class="pm-b">Ask any career question. The skill knows <em>you</em> &mdash; your career arc, wins and losses, strengths and blind spots, the jobs that worked and the ones that didn&rsquo;t. It reads your vault for context, applies tested coaching methods, and gives honest, specific answers. It writes back after every conversation, so nothing is forgotten.</div></div>
+      <div class="pmap i-vio"><div class="pm-k"><span class="tag">Why it matters</span>Compounding<br>knowledge</div><div class="pm-b">The difference between a good outcome and a bad one isn&rsquo;t effort &mdash; it&rsquo;s the right information at the right moment, remembered across conversations, applied by someone who knows your blind spots and won&rsquo;t let you paper over them. Every interview, rejection, offer, and insight feeds back, so you&rsquo;re never starting from zero.</div></div>
+    </div>
+  </section>
 
-    <!-- 01 intro -->
-    <section class="sec">
-      <div class="sec-title"><span class="n">01</span><h2>The problem, the skill, the why</h2></div>
-      <div class="sec-body">
-        <div class="pmap i-rose"><div class="pm-k"><span class="tag">Problem</span>High-stakes<br>multi-threaded</div><div class="pm-b">A senior job search is a high-stakes operation: dozens of roles, each needing a tailored resume, cover letter, interview prep, and comp strategy. A human career coach costs thousands and isn&rsquo;t available at 11pm before a morning interview.</div></div>
-        <div class="pmap i-teal"><div class="pm-k"><span class="tag">What it does</span>Knows you,<br>remembers you</div><div class="pm-b">Ask any career question. The skill knows <em>you</em> &mdash; your career arc, wins and losses, strengths and blind spots, the jobs that worked and the ones that didn&rsquo;t. It reads your vault for context, applies tested coaching methods, and gives honest, specific answers. It writes back after every conversation, so nothing is forgotten.</div></div>
-        <div class="pmap i-vio"><div class="pm-k"><span class="tag">Why it matters</span>Compounding<br>knowledge</div><div class="pm-b">The difference between a good outcome and a bad one isn&rsquo;t effort &mdash; it&rsquo;s the right information at the right moment, remembered across conversations, applied by someone who knows your blind spots and won&rsquo;t let you paper over them. Every interview, rejection, offer, and insight feeds back, so you&rsquo;re never starting from zero.</div></div>
-      </div>
-    </section>
+  <!-- 02 pipeline -->
+  <section class="sec">
+    <div class="sec-head"><span class="sec-num">02</span><h2 class="sec-title">Pipeline overview</h2></div>
+    <div class="sec-body">
+      <p class="lead">Six stages from question to learning. The triage determines which mode executes; file loading is tiered by relevance.</p>
+      <div class="pmap"><div class="pm-k"><span class="ord">1</span>Career<br>question</div><div class="pm-b">Entry &mdash; a career question arrives.</div></div>
+      <div class="pmap i-vio"><div class="pm-k"><span class="ord">2</span>Classify<br>mode</div><div class="pm-b">Triage &mdash; route the question to one of seven branches.</div></div>
+      <div class="pmap i-acc"><div class="pm-k"><span class="ord">3</span>Load vault<br>files</div><div class="pm-b">Tiered by relevance &mdash; Tier 0 always, Tier 1 for a target, Tiers 2&ndash;3 on request.</div></div>
+      <div class="pmap i-teal"><div class="pm-k"><span class="ord">4</span>Execute</div><div class="pm-b">Run in one of the three operating modes &mdash; Coach, Advisor, or HR Rep.</div></div>
+      <div class="pmap i-acc"><div class="pm-k"><span class="ord">5</span>Deliverable</div><div class="pm-b">Assessment, prep, offer review, or scripts.</div></div>
+      <div class="pmap i-rose"><div class="pm-k"><span class="ord">6</span>Write<br>learnings</div><div class="pm-b">Feedback loop &mdash; append the session to <code>learnings.md</code>.</div></div>
+    </div>
+  </section>
 
-    <!-- 02 pipeline -->
-    <section class="sec">
-      <div class="sec-title"><span class="n">02</span><h2>Pipeline overview</h2></div>
-      <div class="sec-body">
-        <p class="lead">Six stages from question to learning. The triage determines which mode executes; file loading is tiered by relevance.</p>
-        <div class="pmap"><div class="pm-k"><span class="ord">1</span>Career<br>question</div><div class="pm-b">Entry &mdash; a career question arrives.</div></div>
-        <div class="pmap i-vio"><div class="pm-k"><span class="ord">2</span>Classify<br>mode</div><div class="pm-b">Triage &mdash; route the question to one of seven branches.</div></div>
-        <div class="pmap i-acc"><div class="pm-k"><span class="ord">3</span>Load vault<br>files</div><div class="pm-b">Tiered by relevance &mdash; Tier 0 always, Tier 1 for a target, Tiers 2&ndash;3 on request.</div></div>
-        <div class="pmap i-teal"><div class="pm-k"><span class="ord">4</span>Execute</div><div class="pm-b">Run in one of the three operating modes &mdash; Coach, Advisor, or HR Rep.</div></div>
-        <div class="pmap i-acc"><div class="pm-k"><span class="ord">5</span>Deliverable</div><div class="pm-b">Assessment, prep, offer review, or scripts.</div></div>
-        <div class="pmap i-rose"><div class="pm-k"><span class="ord">6</span>Write<br>learnings</div><div class="pm-b">Feedback loop &mdash; append the session to <code>learnings.md</code>.</div></div>
-      </div>
-    </section>
+  <!-- 03 triage -->
+  <section class="sec">
+    <div class="sec-head"><span class="sec-num">03</span><h2 class="sec-title">Triage tree<span class="cnt">seven branches</span></h2></div>
+    <div class="sec-body">
+      <p class="lead">Every career question routes through one of seven branches. Each triggers specific vault files, activates a mode, and produces a structured output.</p>
+      <div class="pmap i-acc"><div class="pm-k"><span class="tag">Branch</span>Company /<br>Role</div><div class="pm-b">
+        <div class="qrow"><span class="q">Assess role fit</span><span class="sep">&rarr;</span><span class="a">Role Assessment Format + Red Flag screen</span></div>
+        <div class="qrow"><span class="q">Prep for interview</span><span class="sep">&rarr;</span><span class="a">Hiring-manager one-pager, 5 questions, 5 stories, landmines map</span></div>
+        <div class="qrow"><span class="q">Build resume / cover letter</span><span class="sep">&rarr;</span><span class="a">Tailored .docx + cover letter + credibility artifact</span></div>
+        <div class="qrow"><span class="q">Research company / person</span><span class="sep">&rarr;</span><span class="a">Deep research (web + Glassdoor + LinkedIn)</span></div>
+        <div class="qrow"><span class="q">Evaluate offer</span><span class="sep">&rarr;</span><span class="a">Offer Evaluation + Decision Framework + Premortem</span></div>
+      </div></div>
+      <div class="pmap i-vio"><div class="pm-k"><span class="tag">Branch</span>Strategy /<br>Narrative</div><div class="pm-b">
+        <div class="qrow"><span class="q">Shape my story</span><span class="sep">&rarr;</span><span class="a">Career Coach mode (GROW) with pattern recognition</span></div>
+        <div class="qrow"><span class="q">Where to focus next?</span><span class="sep">&rarr;</span><span class="a">Win/Loss analysis + coaching session</span></div>
+        <div class="qrow"><span class="q">Am I on track?</span><span class="sep">&rarr;</span><span class="a">Evidence-bank check + pattern reflection</span></div>
+      </div></div>
+      <div class="pmap i-amb"><div class="pm-k"><span class="tag">Branch</span>Negotiation /<br>Comp</div><div class="pm-b">
+        <div class="qrow"><span class="q">How much to ask for?</span><span class="sep">&rarr;</span><span class="a">Comp benchmarks + market data by role/stage</span></div>
+        <div class="qrow"><span class="q">Respond to offer/counter</span><span class="sep">&rarr;</span><span class="a">Negotiation script (8 scenarios, exact words)</span></div>
+        <div class="qrow"><span class="q">Equity grant fair?</span><span class="sep">&rarr;</span><span class="a">Equity benchmarks by company stage</span></div>
+        <div class="qrow"><span class="q">Review offer letter</span><span class="sep">&rarr;</span><span class="a">6-point review: comp, benefits, red flags, negotiation, background check, recommendation</span></div>
+        <div class="qrow"><span class="q">This vs. that?</span><span class="sep">&rarr;</span><span class="a">Decision matrix + scenario planning (best / most likely / worst)</span></div>
+      </div></div>
+      <div class="pmap i-blue"><div class="pm-k"><span class="tag">Branch</span>Timeline /<br>Urgency</div><div class="pm-b">
+        <div class="qrow"><span class="q">Hold out or take it?</span><span class="sep">&rarr;</span><span class="a">Timeline recommendation (Phase 1&ndash;4 framework)</span></div>
+        <div class="qrow"><span class="q">What patterns show?</span><span class="sep">&rarr;</span><span class="a">Pattern-synthesis memo (5 questions, brief format)</span></div>
+      </div></div>
+      <div class="pmap i-rose"><div class="pm-k"><span class="tag">Branch</span>Emotional /<br>Resilience</div><div class="pm-b">
+        <div class="qrow"><span class="q">I got rejected</span><span class="sep">&rarr;</span><span class="a">Rejection Recovery Protocol (5 steps)</span></div>
+        <div class="qrow"><span class="q">I feel like a fraud</span><span class="sep">&rarr;</span><span class="a">Imposter-type ID + evidence-bank redirect</span></div>
+        <div class="qrow"><span class="q">Nothing&rsquo;s working</span><span class="sep">&rarr;</span><span class="a">Pattern interrupt: shift activity, narrow focus, check the story</span></div>
+      </div></div>
+      <div class="pmap i-teal"><div class="pm-k"><span class="tag">Branch</span>Networking /<br>Pipeline</div><div class="pm-b">
+        <div class="qrow"><span class="q">Reach out to someone</span><span class="sep">&rarr;</span><span class="a">Informational-interview script (4-part, 15 min)</span></div>
+        <div class="qrow"><span class="q">Need more opportunities</span><span class="sep">&rarr;</span><span class="a">Tier activation + 5-3-2 LinkedIn rhythm</span></div>
+        <div class="qrow"><span class="q">Update my pipeline</span><span class="sep">&rarr;</span><span class="a">Read JOB_TRACKER.md, reconcile with learnings.md</span></div>
+      </div></div>
+      <div class="pmap i-vio"><div class="pm-k"><span class="tag">Branch</span>Self-<br>protection</div><div class="pm-b">
+        <div class="qrow"><span class="q">How to protect myself?</span><span class="sep">&rarr;</span><span class="a">Documentation plan (Receipts, Burn, Blueprint folders)</span></div>
+        <div class="qrow"><span class="q">Disclosure question</span><span class="sep">&rarr;</span><span class="a">Prepared script + legal-strategy guide</span></div>
+      </div></div>
+    </div>
+  </section>
 
-    <!-- 03 triage -->
-    <section class="sec">
-      <div class="sec-title"><span class="n">03</span><h2>Triage tree<span class="cnt">seven branches</span></h2></div>
-      <div class="sec-body">
-        <p class="lead">Every career question routes through one of seven branches. Each triggers specific vault files, activates a mode, and produces a structured output.</p>
-        <div class="pmap i-acc"><div class="pm-k"><span class="tag">Branch</span>Company /<br>Role</div><div class="pm-b">
-          <div class="qrow"><span class="q">Assess role fit</span><span class="sep">&rarr;</span><span class="a">Role Assessment Format + Red Flag screen</span></div>
-          <div class="qrow"><span class="q">Prep for interview</span><span class="sep">&rarr;</span><span class="a">Hiring-manager one-pager, 5 questions, 5 stories, landmines map</span></div>
-          <div class="qrow"><span class="q">Build resume / cover letter</span><span class="sep">&rarr;</span><span class="a">Tailored .docx + cover letter + credibility artifact</span></div>
-          <div class="qrow"><span class="q">Research company / person</span><span class="sep">&rarr;</span><span class="a">Deep research (web + Glassdoor + LinkedIn)</span></div>
-          <div class="qrow"><span class="q">Evaluate offer</span><span class="sep">&rarr;</span><span class="a">Offer Evaluation + Decision Framework + Premortem</span></div>
-        </div></div>
-        <div class="pmap i-vio"><div class="pm-k"><span class="tag">Branch</span>Strategy /<br>Narrative</div><div class="pm-b">
-          <div class="qrow"><span class="q">Shape my story</span><span class="sep">&rarr;</span><span class="a">Career Coach mode (GROW) with pattern recognition</span></div>
-          <div class="qrow"><span class="q">Where to focus next?</span><span class="sep">&rarr;</span><span class="a">Win/Loss analysis + coaching session</span></div>
-          <div class="qrow"><span class="q">Am I on track?</span><span class="sep">&rarr;</span><span class="a">Evidence-bank check + pattern reflection</span></div>
-        </div></div>
-        <div class="pmap i-amb"><div class="pm-k"><span class="tag">Branch</span>Negotiation /<br>Comp</div><div class="pm-b">
-          <div class="qrow"><span class="q">How much to ask for?</span><span class="sep">&rarr;</span><span class="a">Comp benchmarks + market data by role/stage</span></div>
-          <div class="qrow"><span class="q">Respond to offer/counter</span><span class="sep">&rarr;</span><span class="a">Negotiation script (8 scenarios, exact words)</span></div>
-          <div class="qrow"><span class="q">Equity grant fair?</span><span class="sep">&rarr;</span><span class="a">Equity benchmarks by company stage</span></div>
-          <div class="qrow"><span class="q">Review offer letter</span><span class="sep">&rarr;</span><span class="a">6-point review: comp, benefits, red flags, negotiation, background check, recommendation</span></div>
-          <div class="qrow"><span class="q">This vs. that?</span><span class="sep">&rarr;</span><span class="a">Decision matrix + scenario planning (best / most likely / worst)</span></div>
-        </div></div>
-        <div class="pmap i-blue"><div class="pm-k"><span class="tag">Branch</span>Timeline /<br>Urgency</div><div class="pm-b">
-          <div class="qrow"><span class="q">Hold out or take it?</span><span class="sep">&rarr;</span><span class="a">Timeline recommendation (Phase 1&ndash;4 framework)</span></div>
-          <div class="qrow"><span class="q">What patterns show?</span><span class="sep">&rarr;</span><span class="a">Pattern-synthesis memo (5 questions, brief format)</span></div>
-        </div></div>
-        <div class="pmap i-rose"><div class="pm-k"><span class="tag">Branch</span>Emotional /<br>Resilience</div><div class="pm-b">
-          <div class="qrow"><span class="q">I got rejected</span><span class="sep">&rarr;</span><span class="a">Rejection Recovery Protocol (5 steps)</span></div>
-          <div class="qrow"><span class="q">I feel like a fraud</span><span class="sep">&rarr;</span><span class="a">Imposter-type ID + evidence-bank redirect</span></div>
-          <div class="qrow"><span class="q">Nothing&rsquo;s working</span><span class="sep">&rarr;</span><span class="a">Pattern interrupt: shift activity, narrow focus, check the story</span></div>
-        </div></div>
-        <div class="pmap i-teal"><div class="pm-k"><span class="tag">Branch</span>Networking /<br>Pipeline</div><div class="pm-b">
-          <div class="qrow"><span class="q">Reach out to someone</span><span class="sep">&rarr;</span><span class="a">Informational-interview script (4-part, 15 min)</span></div>
-          <div class="qrow"><span class="q">Need more opportunities</span><span class="sep">&rarr;</span><span class="a">Tier activation + 5-3-2 LinkedIn rhythm</span></div>
-          <div class="qrow"><span class="q">Update my pipeline</span><span class="sep">&rarr;</span><span class="a">Read JOB_TRACKER.md, reconcile with learnings.md</span></div>
-        </div></div>
-        <div class="pmap i-vio"><div class="pm-k"><span class="tag">Branch</span>Self-<br>protection</div><div class="pm-b">
-          <div class="qrow"><span class="q">How to protect myself?</span><span class="sep">&rarr;</span><span class="a">Documentation plan (Receipts, Burn, Blueprint folders)</span></div>
-          <div class="qrow"><span class="q">Disclosure question</span><span class="sep">&rarr;</span><span class="a">Prepared script + legal-strategy guide</span></div>
-        </div></div>
-      </div>
-    </section>
+  <!-- 04 modes -->
+  <section class="sec">
+    <div class="sec-head"><span class="sec-num">04</span><h2 class="sec-title">Three operating modes</h2></div>
+    <div class="sec-body">
+      <p class="lead">The skill shifts fluidly between modes &mdash; a single conversation may use all three. When modes conflict, the tension is surfaced explicitly.</p>
+      <div class="pmap i-teal"><div class="pm-k"><span class="tag">Career Coach</span>Pattern<br>recognition</div><div class="pm-b"><span class="tt">Honest narrative work.</span><p>Names the pattern before offering options. The throughline: translating technical capability into organizational adoption.</p><p>GROW coaching model &middot; pattern-synthesis memos &middot; imposter-type identification &middot; evidence-bank technique.</p><div class="fws"><span class="fw">GROW</span><span class="fw">Career Construction Theory</span><span class="fw">Mercenary Mindset</span><span class="fw">Rejection Recovery</span></div></div></div>
+      <div class="pmap i-acc"><div class="pm-k"><span class="tag">Employment Advisor</span>Execution<br>engine</div><div class="pm-b"><span class="tt">Deep research, tailored applications.</span><p>Research on companies and roles; tailored applications, interview prep, credibility artifacts, market intelligence.</p><p>Role assessment (Strong / Solid / Partial / Stretch) &middot; stakes &rarr; action &rarr; outcome stories &middot; hiring-manager one-pagers &middot; red-flag detection.</p><div class="fws"><span class="fw">STAR replacement</span><span class="fw">5-question bank</span><span class="fw">Red Flag Screen</span><span class="fw">5-3-2 LinkedIn Rhythm</span></div></div></div>
+      <div class="pmap i-vio"><div class="pm-k"><span class="tag">HR / Negotiation Rep</span>Protective<br>skeptic</div><div class="pm-b"><span class="tt">Catches what you miss in the excitement of a close.</span><p>Compensation analysis, offer evaluation, equity assessment, scope protection.</p><p>Offer evaluation with market context &middot; equity benchmarks by stage &middot; negotiation scripts for 8 scenarios &middot; decision framework with premortem.</p><div class="fws"><span class="fw">Comp Benchmarks</span><span class="fw">Decision Matrix</span><span class="fw">Scenario Planning</span><span class="fw">Offer Letter Review</span></div></div></div>
+    </div>
+  </section>
 
-    <!-- 04 modes -->
-    <section class="sec">
-      <div class="sec-title"><span class="n">04</span><h2>Three operating modes</h2></div>
-      <div class="sec-body">
-        <p class="lead">The skill shifts fluidly between modes &mdash; a single conversation may use all three. When modes conflict, the tension is surfaced explicitly.</p>
-        <div class="pmap i-teal"><div class="pm-k"><span class="tag">Career Coach</span>Pattern<br>recognition</div><div class="pm-b"><span class="tt">Honest narrative work.</span><p>Names the pattern before offering options. The throughline: translating technical capability into organizational adoption.</p><p>GROW coaching model &middot; pattern-synthesis memos &middot; imposter-type identification &middot; evidence-bank technique.</p><div class="fws"><span class="fw">GROW</span><span class="fw">Career Construction Theory</span><span class="fw">Mercenary Mindset</span><span class="fw">Rejection Recovery</span></div></div></div>
-        <div class="pmap i-acc"><div class="pm-k"><span class="tag">Employment Advisor</span>Execution<br>engine</div><div class="pm-b"><span class="tt">Deep research, tailored applications.</span><p>Research on companies and roles; tailored applications, interview prep, credibility artifacts, market intelligence.</p><p>Role assessment (Strong / Solid / Partial / Stretch) &middot; stakes &rarr; action &rarr; outcome stories &middot; hiring-manager one-pagers &middot; red-flag detection.</p><div class="fws"><span class="fw">STAR replacement</span><span class="fw">5-question bank</span><span class="fw">Red Flag Screen</span><span class="fw">5-3-2 LinkedIn Rhythm</span></div></div></div>
-        <div class="pmap i-vio"><div class="pm-k"><span class="tag">HR / Negotiation Rep</span>Protective<br>skeptic</div><div class="pm-b"><span class="tt">Catches what you miss in the excitement of a close.</span><p>Compensation analysis, offer evaluation, equity assessment, scope protection.</p><p>Offer evaluation with market context &middot; equity benchmarks by stage &middot; negotiation scripts for 8 scenarios &middot; decision framework with premortem.</p><div class="fws"><span class="fw">Comp Benchmarks</span><span class="fw">Decision Matrix</span><span class="fw">Scenario Planning</span><span class="fw">Offer Letter Review</span></div></div></div>
-      </div>
-    </section>
+  <!-- 05 file tiers -->
+  <section class="sec">
+    <div class="sec-head"><span class="sec-num">05</span><h2 class="sec-title">File loading protocol</h2></div>
+    <div class="sec-body">
+      <p class="lead">The agent reads vault files in prioritized tiers. Tier 0 loads on every conversation; Tier 1 loads when working on a specific company or role; Tiers 2 and 3 load on explicit request.</p>
+      <div class="pmap"><div class="pm-k"><span class="tag">Tier 0 &mdash; always load</span>High-signal<br>context</div><div class="pm-b">Small, high-signal files read on every conversation &mdash; they establish the honest narrative, cross-session memory, and current state: <code>career-background.md</code>, <code>learnings.md</code>, and the context-and-preferences file.</div></div>
+      <div class="pmap"><div class="pm-k"><span class="tag">Tier 1 &mdash; company / role</span>Target-specific<br>intel</div><div class="pm-b">Loaded when working on a specific company or role: the JD file + existing resume/cover letter for that company, interview transcripts if they exist, hiring-manager research from web search, and the offer letter / terms for evaluation.</div></div>
+      <div class="pmap"><div class="pm-k"><span class="tag">Tier 2 &mdash; application summaries</span>Deep project<br>descriptions</div><div class="pm-b">Six application summaries covering major projects &mdash; load the one matching the role orientation: agent evaluation platform, enterprise strategy platform, enterprise search agent deployment, contract review automation, voice AI interview platform, learning &amp; enablement platform.</div></div>
+      <div class="pmap"><div class="pm-k"><span class="tag">Tier 3 &mdash; full context</span>On explicit<br>request</div><div class="pm-b">Loaded only when needed: <code>master-resume.md</code> (every experience claim), <code>application-tracker.csv</code> (pipeline check), the legal-strategy guide, and <code>JOB_TRACKER.md</code> (historical win/loss analysis).</div></div>
+    </div>
+  </section>
 
-    <!-- 05 file tiers -->
-    <section class="sec">
-      <div class="sec-title"><span class="n">05</span><h2>File loading protocol</h2></div>
-      <div class="sec-body">
-        <p class="lead">The agent reads vault files in prioritized tiers. Tier 0 loads on every conversation; Tier 1 loads when working on a specific company or role; Tiers 2 and 3 load on explicit request.</p>
-        <div class="pmap"><div class="pm-k"><span class="tag">Tier 0 &mdash; always load</span>High-signal<br>context</div><div class="pm-b">Small, high-signal files read on every conversation &mdash; they establish the honest narrative, cross-session memory, and current state: <code>career-background.md</code>, <code>learnings.md</code>, and the context-and-preferences file.</div></div>
-        <div class="pmap"><div class="pm-k"><span class="tag">Tier 1 &mdash; company / role</span>Target-specific<br>intel</div><div class="pm-b">Loaded when working on a specific company or role: the JD file + existing resume/cover letter for that company, interview transcripts if they exist, hiring-manager research from web search, and the offer letter / terms for evaluation.</div></div>
-        <div class="pmap"><div class="pm-k"><span class="tag">Tier 2 &mdash; application summaries</span>Deep project<br>descriptions</div><div class="pm-b">Six application summaries covering major projects &mdash; load the one matching the role orientation: agent evaluation platform, enterprise strategy platform, enterprise search agent deployment, contract review automation, voice AI interview platform, learning &amp; enablement platform.</div></div>
-        <div class="pmap"><div class="pm-k"><span class="tag">Tier 3 &mdash; full context</span>On explicit<br>request</div><div class="pm-b">Loaded only when needed: <code>master-resume.md</code> (every experience claim), <code>application-tracker.csv</code> (pipeline check), the legal-strategy guide, and <code>JOB_TRACKER.md</code> (historical win/loss analysis).</div></div>
-      </div>
-    </section>
+  <!-- 06 mercenary -->
+  <section class="sec">
+    <div class="sec-head"><span class="sec-num">06</span><h2 class="sec-title">Mercenary mindset</h2></div>
+    <div class="sec-body">
+      <p class="lead">Every job has an expiration date. Loyalty is to the mission, not the logo. Four disciplines turn the philosophy into daily practice.</p>
+      <div class="pmap"><div class="pm-k">1 &middot; Know<br>the goal</div><div class="pm-b">Define success in measurable KPIs before starting &mdash; &ldquo;deploy 3 production agents serving 200+ users within 90 days.&rdquo; If the organization can&rsquo;t articulate the mission, that&rsquo;s the first problem to solve.</div></div>
+      <div class="pmap"><div class="pm-k">2 &middot; Get the<br>work done</div><div class="pm-b">Ship, then ship again. Build credibility through output, not presence. The best defense against reorgs and budget cuts is being the person whose work everyone can point to.</div></div>
+      <div class="pmap"><div class="pm-k">3 &middot; Surface blockers<br>early</div><div class="pm-b">Don&rsquo;t suffer in silence. Name the obstacle, propose the fix, ask for what you need. If the organization won&rsquo;t unblock you, that&rsquo;s a data point, not a failure.</div></div>
+      <div class="pmap"><div class="pm-k">4 &middot; Be so good they<br>can&rsquo;t ignore you</div><div class="pm-b">Build things that matter, document the impact, make the work undeniable. When budgets get cut, demonstrated ROI survives; when nobody knows what you did, you&rsquo;re a line item.</div></div>
+    </div>
+  </section>
 
-    <!-- 06 mercenary -->
-    <section class="sec">
-      <div class="sec-title"><span class="n">06</span><h2>Mercenary mindset</h2></div>
-      <div class="sec-body">
-        <p class="lead">Every job has an expiration date. Loyalty is to the mission, not the logo. Four disciplines turn the philosophy into daily practice.</p>
-        <div class="pmap"><div class="pm-k">1 &middot; Know<br>the goal</div><div class="pm-b">Define success in measurable KPIs before starting &mdash; &ldquo;deploy 3 production agents serving 200+ users within 90 days.&rdquo; If the organization can&rsquo;t articulate the mission, that&rsquo;s the first problem to solve.</div></div>
-        <div class="pmap"><div class="pm-k">2 &middot; Get the<br>work done</div><div class="pm-b">Ship, then ship again. Build credibility through output, not presence. The best defense against reorgs and budget cuts is being the person whose work everyone can point to.</div></div>
-        <div class="pmap"><div class="pm-k">3 &middot; Surface blockers<br>early</div><div class="pm-b">Don&rsquo;t suffer in silence. Name the obstacle, propose the fix, ask for what you need. If the organization won&rsquo;t unblock you, that&rsquo;s a data point, not a failure.</div></div>
-        <div class="pmap"><div class="pm-k">4 &middot; Be so good they<br>can&rsquo;t ignore you</div><div class="pm-b">Build things that matter, document the impact, make the work undeniable. When budgets get cut, demonstrated ROI survives; when nobody knows what you did, you&rsquo;re a line item.</div></div>
-      </div>
-    </section>
+  <!-- 07 feedback -->
+  <section class="sec">
+    <div class="sec-head"><span class="sec-num">07</span><h2 class="sec-title">Feedback loop</h2></div>
+    <div class="sec-body">
+      <p class="lead">After every significant event &mdash; interview, rejection, offer, negotiation, insight &mdash; the agent writes a dated entry to <code>learnings.md</code>. This file IS the agent&rsquo;s memory; without it, every conversation starts from zero.</p>
+      <div class="note"><span class="mk">Learnings entry format</span><p><code>## YYYY-MM-DD &mdash; [Event Type]: [Company or Topic]</code><br><code>**What happened:**</code> [1&ndash;2 sentences]<br><code>**Learning:**</code> [1 sentence]<br><code>**Action:**</code> [what changes based on this]<br><br><b>Pattern synthesis</b> runs every 2 weeks: what&rsquo;s repeating, what&rsquo;s improving, what&rsquo;s getting worse, and the single highest-leverage action right now.</p></div>
+    </div>
+  </section>
 
-    <!-- 07 feedback -->
-    <section class="sec">
-      <div class="sec-title"><span class="n">07</span><h2>Feedback loop</h2></div>
-      <div class="sec-body">
-        <p class="lead">After every significant event &mdash; interview, rejection, offer, negotiation, insight &mdash; the agent writes a dated entry to <code>learnings.md</code>. This file IS the agent&rsquo;s memory; without it, every conversation starts from zero.</p>
-        <div class="note"><span class="mk">Learnings entry format</span><p><code>## YYYY-MM-DD &mdash; [Event Type]: [Company or Topic]</code><br><code>**What happened:**</code> [1&ndash;2 sentences]<br><code>**Learning:**</code> [1 sentence]<br><code>**Action:**</code> [what changes based on this]<br><br><b>Pattern synthesis</b> runs every 2 weeks: what&rsquo;s repeating, what&rsquo;s improving, what&rsquo;s getting worse, and the single highest-leverage action right now.</p></div>
-      </div>
-    </section>
+  <footer class="footer">
+    <a href="../claude-skills.html">&larr; Claude Skills</a>
+    <span>&copy; 2025-2026 Charlie Fuller</span>
+  </footer>
 
-    <footer class="footer">
-      <a href="../claude-skills.html">&larr; Claude Skills</a>
-      <span>&copy; 2025-2026 Charlie Fuller</span>
-    </footer>
-
-  </div>
-</div>
-
+</main>
 </body>
 </html>

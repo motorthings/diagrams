@@ -1,202 +1,203 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" class="light">
 <head>
 <meta charset="UTF-8">
-<link rel="icon" type="image/svg+xml" href="../icon.svg">
+<link rel="icon" href="../icon.svg" type="image/svg+xml" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Claude Skills &mdash; Cite-Check: Authority Verification</title>
 <meta name="description" content="How the cite-check skill verifies every citation and quotation in a filing against Descrybe — existence, correct cite, good-law status, and word-for-word accuracy.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Public+Sans:wght@400;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Mulish:ital,wght@0,300;0,400;0,600;0,700;0,800;1,400&display=swap" rel="stylesheet">
 <style>
-  :root {
-    --font-display: 'Instrument Serif', Georgia, serif;
-    --font-body: 'Public Sans', system-ui, sans-serif;
-    --font-mono: 'JetBrains Mono', 'SF Mono', monospace;
-    /* Oxblood + Steel Ledger — light only */
-    --ink: #241f1d; --graphite: #453b36; --body: #534a46; --muted: #8b837b;
-    --rule: #d8d0c2; --row: #e9e2d4; --sheet: #f8f4ee; --desk: #ece5da;
-    --spine: #241f1d; --spine-fg: #f8f4ee;
-    --accent: #7e1f22; --amber: #a16207; --blue: #4a5d73; --teal: #3f6b57; --violet: #6b4f7a; --rose: #8f2a1f;
+  :root{--font-body:'Mulish','Segoe UI',Helvetica,sans-serif;--font-mono:'Mulish',ui-monospace,'SF Mono',Consolas,monospace;
+    --bg:#14181C;--surface:#1B2127;--surface2:#232B33;--border:#303A43;--border-bright:#42505C;
+    --text:#F4F5F6;--text-dim:#CBD0D6;--text-faint:#87919B;
+    --primary:#A79CF2;--primary-dim:rgba(167,156,242,0.12);--metric:#58D6B4;--metric-dim:rgba(88,214,180,0.12);
+    --blue:#6CACE4;--blue-dim:rgba(108,172,228,0.12);
+    --violet:#B9A0E8;--violet-dim:rgba(185,160,232,0.12);
+    --amber:#E8B54D;--amber-dim:rgba(232,181,77,0.12);
+    --rose:#E88280;--rose-dim:rgba(232,130,128,0.12);}
+  html.light{--bg:#F7F3EF;--surface:#FFFFFF;--surface2:#F0E9E1;--border:#E1D6CB;--border-bright:#CDBBA8;
+    --text:#241A12;--text-dim:#574A3C;--text-faint:#8C7E6E;
+    --primary:#4F46E5;--primary-dim:rgba(79,70,229,0.08);--metric:#0E7C6E;--metric-dim:rgba(14,124,110,0.08);
+    --blue:#2F6FA8;--blue-dim:rgba(47,111,168,0.08);
+    --violet:#7C3AED;--violet-dim:rgba(124,58,237,0.07);
+    --amber:#A5650A;--amber-dim:rgba(165,101,10,0.08);
+    --rose:#C23A30;--rose-dim:rgba(194,58,48,0.07);}
+  *{margin:0;padding:0;box-sizing:border-box}
+  html{scroll-behavior:smooth}
+  body{background:
+      radial-gradient(at 10% 0%,var(--primary-dim),transparent 55%),
+      radial-gradient(at 90% 80%,var(--metric-dim),transparent 55%),
+      var(--bg);
+    color:var(--text);font-family:var(--font-body);font-size:17px;line-height:1.62;-webkit-font-smoothing:antialiased;min-height:100vh}
+
+  .crumbs{font-size:13px;font-weight:600;color:var(--text-dim);display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+  .crumbs a{color:var(--primary);text-decoration:none}
+  .crumbs a:hover{text-decoration:underline}
+  .crumbs .sep{color:var(--text-faint)}
+  .crumbs .current{color:var(--text-dim);font-weight:400}
+  .crumbs-top{max-width:1080px;margin:0 auto;padding:18px 24px 0}
+
+  .wrap{max-width:1080px;margin:0 auto;padding:0 24px 80px}
+
+  .hero{padding:44px 0 24px;border-bottom:1px solid var(--border);margin-bottom:10px}
+  .hero .tagline{font-family:var(--font-mono);font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.14em;color:var(--primary);margin-bottom:10px}
+  .hero h1{font-size:52px;line-height:1.0;letter-spacing:-0.03em;font-weight:800;
+    background:linear-gradient(135deg,var(--primary),var(--metric));-webkit-background-clip:text;background-clip:text;color:transparent}
+  .hero .lede{font-size:19px;line-height:1.5;color:var(--text-dim);max-width:920px;margin-top:14px}
+  .hero .lede b{color:var(--text)}
+
+  .sec{margin-top:22px}
+  .sec-head{display:flex;align-items:baseline;gap:14px;padding-bottom:10px;border-bottom:1px solid var(--border);margin-bottom:10px}
+  .sec-num{font-size:23px;font-weight:800;color:var(--primary);font-family:var(--font-mono)}
+  .sec-title{font-size:23px;font-weight:800;color:var(--text);letter-spacing:-0.01em}
+  .sec-body p{max-width:920px;margin-bottom:12px;color:var(--text-dim)}
+  .sec-body p b,.sec-body strong{color:var(--text)}
+  .sec-body p.nb{margin-bottom:0}
+  code{font-family:var(--font-mono);font-size:0.84em;color:var(--primary)}
+  .close{margin-top:16px;border-top:1px solid var(--border);padding-top:14px;font-size:14px;line-height:1.6;color:var(--text-dim);max-width:920px}
+  .close b{color:var(--text)}
+
+  .pmap{padding:14px 4px;border-top:1px solid var(--border);display:grid;grid-template-columns:240px 1fr;gap:4px 28px;align-items:baseline}
+  .pmap:first-of-type{border-top:none}
+  .pmap .pm-k{font-family:var(--font-mono);font-size:11.5px;font-weight:800;text-transform:uppercase;letter-spacing:.08em;color:var(--blue);line-height:1.5}
+  .pmap .pm-k .ord{display:block;color:var(--primary);font-weight:700;font-size:10px;letter-spacing:.16em;margin-bottom:3px}
+  .pmap .pm-k .tag{display:block;color:var(--text-faint);font-weight:700;font-size:10px;letter-spacing:.16em;margin-bottom:3px}
+  .pmap .pm-b{font-size:14.5px;line-height:1.6;color:var(--text-dim)}
+  .pmap .pm-b .tt{font-weight:800;color:var(--text);font-size:16px}
+  .pmap.i-vio .pm-k{color:var(--violet)}
+  .pmap.i-teal .pm-k{color:var(--metric)}
+  .pmap.i-amb .pm-k{color:var(--amber)}
+  .pmap.i-rose .pm-k{color:var(--rose)}
+  .pmap.i-acc .pm-k{color:var(--primary)}
+  .branch{font-size:13px;line-height:1.5;padding:1px 0}
+  .branch .bk{font-family:var(--font-mono);font-size:10.5px;font-weight:700;margin-right:8px}
+  .branch.blue .bk{color:var(--blue)}
+  .branch.teal .bk{color:var(--metric)}
+  .branch.vio .bk{color:var(--violet)}
+  .opt{color:var(--rose);font-weight:700}
+
+  .footer{margin-top:30px;border-top:1px solid var(--border);padding:18px 0 0;display:flex;justify-content:space-between;gap:20px;flex-wrap:wrap;font-family:var(--font-mono);font-size:12px;color:var(--text-faint)}
+  .footer a{color:var(--primary);text-decoration:none}
+  .footer a:hover{text-decoration:underline}
+
+  @media(max-width:900px){
+    .wrap{padding:0 16px 60px}
+    .hero h1{font-size:38px}
+    .pmap{grid-template-columns:1fr;gap:3px}
+    body{font-size:16px}
   }
-  * { margin: 0; padding: 0; box-sizing: border-box; }
-  body { background: var(--desk); color: var(--body); font-family: var(--font-body); font-size: 17px; line-height: 1.62; -webkit-font-smoothing: antialiased; text-rendering: optimizeLegibility; }
-  .topbar { max-width: 1160px; margin: 0 auto; padding: 18px 28px 6px; }
-  .backlink a { font-size: 14px; color: var(--muted); text-decoration: none; }
-  .backlink a:hover { color: var(--ink); }
-  .backlink .arr { color: var(--accent); font-size: 15px; margin-right: 2px; }
-
-  .sheet { max-width: 1160px; margin: 6px auto 72px; background: var(--sheet); display: grid; grid-template-columns: 56px 1fr; }
-  .spine { background: var(--spine); display: flex; align-items: flex-end; justify-content: center; padding: 26px 0; }
-  .spine-label { writing-mode: vertical-rl; transform: rotate(180deg); font-family: var(--font-mono); font-size: 13px; letter-spacing: 0.22em; color: var(--spine-fg); white-space: nowrap; text-transform: uppercase; }
-  .content { padding: 48px 60px 6px; min-width: 0; }
-
-  .masthead { border-bottom: 3px solid var(--ink); padding-bottom: 16px; }
-  .masthead h1 { font-family: var(--font-display); font-weight: 400; font-size: 50px; line-height: 0.98; letter-spacing: -0.028em; color: var(--ink); }
-  .tagline { font-family: var(--font-mono); font-size: 11.5px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.14em; color: var(--accent); margin: 10px 0 14px; }
-  .lede { font-family: var(--font-display); font-style: italic; font-size: 19px; line-height: 1.5; color: var(--graphite); max-width: 940px; }
-  .lede b { color: var(--ink); }
-
-  section.sec { border-top: 3px solid var(--ink); padding: 22px 0 4px; }
-  .sec-title { display: grid; grid-template-columns: 88px 1fr; gap: 0 22px; align-items: baseline; margin-bottom: 6px; }
-  .sec-title .n { font-family: var(--font-display); font-size: 30px; line-height: 0.9; color: var(--accent); }
-  .sec-title h2 { font-size: 23px; font-weight: 700; letter-spacing: -0.012em; color: var(--ink); }
-  .sec-body { padding: 0 0 8px 110px; }
-  .sec-body p, .sec-body p.lead { max-width: 940px; margin-bottom: 12px; }
-  .sec-body p.nb { margin-bottom: 0; }
-  .sec-body b, .sec-body strong { color: var(--ink); }
-  code { font-family: var(--font-mono); font-size: 0.86em; color: var(--accent); }
-  .close { margin-top: 18px; border-top: 1px solid var(--rule); padding-top: 12px; font-size: 14.5px; line-height: 1.62; color: var(--body); max-width: 940px; }
-  .close b { color: var(--ink); }
-  .note { margin: 14px 0 4px; padding: 10px 0 6px 16px; border-left: 2px solid var(--amber); font-size: 14.5px; line-height: 1.62; max-width: 940px; }
-  .note .mk { font-family: var(--font-mono); font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.12em; color: var(--amber); margin-right: 8px; }
-  .note p { font-size: 14.5px; }
-  .note b { color: var(--ink); }
-
-  .pmap { border-top: 1px solid var(--row); padding: 12px 0 6px; display: grid; grid-template-columns: 230px 1fr; gap: 3px 28px; align-items: baseline; }
-  .pmap:first-of-type { border-top: none; }
-  .pmap .pm-k { font-family: var(--font-mono); font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; color: var(--blue); line-height: 1.5; }
-  .pmap .pm-k .tag { display: block; color: var(--muted); font-weight: 500; font-size: 9.5px; letter-spacing: 0.16em; margin-bottom: 3px; }
-  .pmap .pm-k .ord { display: block; color: var(--accent); font-weight: 600; font-size: 11px; letter-spacing: 0.12em; margin-bottom: 3px; }
-  .pmap .pm-b { font-size: 14px; line-height: 1.6; }
-  .pmap .pm-b .tt { font-weight: 700; color: var(--ink); font-size: 15.5px; }
-  .pmap .pm-b ul { list-style: none; margin: 5px 0 2px; }
-  .pmap .pm-b li { padding: 2px 0 2px 15px; position: relative; font-size: 13.5px; line-height: 1.5; }
-  .pmap .pm-b li::before { content: ''; position: absolute; left: 1px; top: 0.72em; width: 5px; height: 5px; background: var(--row); }
-  .pmap .pm-b li b { color: var(--ink); }
-  .pmap.i-blue .pm-k { color: var(--blue); } .pmap.i-teal .pm-k { color: var(--teal); }
-  .pmap.i-vio .pm-k { color: var(--violet); } .pmap.i-amb .pm-k { color: var(--amber); }
-  .pmap.i-rose .pm-k { color: var(--rose); } .pmap.i-acc .pm-k { color: var(--accent); }
-  .branch { font-size: 13px; line-height: 1.5; padding: 2px 0; }
-  .branch .bk { font-family: var(--font-mono); font-size: 10.5px; font-weight: 700; margin-right: 8px; }
-  .branch.pass .bk { color: var(--teal); } .branch.fail .bk { color: var(--rose); }
-  .branch.amb .bk { color: var(--amber); }
-  .gate { display: flex; align-items: center; gap: 12px; margin: 10px 0 2px; }
-  .gate::before, .gate::after { content: ''; flex: 1; border-top: 1px dashed var(--rule); }
-  .gate .gl { font-family: var(--font-mono); font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.14em; color: var(--amber); white-space: nowrap; }
-
-  .footer { border-top: 3px solid var(--ink); margin: 26px 0 0; padding: 18px 0 30px; display: flex; justify-content: space-between; gap: 20px; flex-wrap: wrap; font-family: var(--font-mono); font-size: 11.5px; color: var(--muted); }
-  .footer a { color: var(--accent); text-decoration: none; }
-
-  @media (max-width: 900px) {
-    .sheet { grid-template-columns: 40px 1fr; }
-    .spine-label { font-size: 11px; }
-    .content { padding: 32px 22px 4px; }
-    .masthead h1 { font-size: 38px; }
-    .sec-title { grid-template-columns: 50px 1fr; }
-    .sec-title .n { font-size: 25px; }
-    .sec-body { padding-left: 0; }
-    .pmap { grid-template-columns: 1fr; gap: 2px; }
-    body { font-size: 16px; }
-  }
+  @media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+  /* content helpers */
+  .pmap .pm-b p{color:var(--text-dim)}
+  .pmap .pm-b .tt{display:block;margin-bottom:5px}
+  .pmap .pm-b ul{list-style:none;margin:6px 0 2px;padding:0;max-width:920px}
+  .pmap .pm-b li{font-size:13.5px;line-height:1.6;padding:2px 0 2px 16px;position:relative;color:var(--text-dim)}
+  .pmap .pm-b li::before{content:'';position:absolute;left:1px;top:0.72em;width:5px;height:5px;background:var(--border)}
+  .pmap .pm-b li b{color:var(--text)}
+  .pmap.i-blue .pm-k{color:var(--blue)}
+  .branch.pass .bk{color:var(--metric)}
+  .branch.fail .bk{color:var(--rose)}
+  .branch.acc .bk{color:var(--primary)}
+  .branch.amb .bk{color:var(--amber)}
+  .branch.vio .bk{color:var(--violet)}
+  .sec-title .cnt{font-family:var(--font-mono);font-size:11px;font-weight:500;color:var(--text-faint);letter-spacing:.04em;margin-left:10px;text-transform:uppercase}
+  .note{margin:14px 0 4px;padding:12px 0 8px 16px;border-left:2px solid var(--primary);max-width:920px;color:var(--text-dim);font-size:14px;line-height:1.6}
+  .note .mk{font-family:var(--font-mono);font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.12em;color:var(--primary);margin-right:8px}
+  .note p{font-size:14px;color:var(--text-dim)}
+  .note b{color:var(--text)}
 </style>
 </head>
 <body>
-<style>
-.crumbs-at-top{max-width:1100px;margin:0 auto;padding:14px 24px 0}
-.crumbs{font-family:var(--font-mono,monospace);font-size:13px;font-weight:600;display:flex;align-items:center;gap:8px;flex-wrap:wrap;min-width:0}
-.crumbs a{color:var(--accent);text-decoration:none}
-.crumbs a:hover,.crumbs a:focus-visible{text-decoration:underline;outline:none}
-.crumbs .sep{color:var(--muted)}
-.crumbs .current{color:var(--muted);font-weight:400}
-</style>
-<nav class="crumbs crumbs-at-top" aria-label="Breadcrumb">
-  <a href="../index.html">Index</a>
-  <span class="sep">/</span>
-  <a href="../claude-skills.html">Claude Skills</a>
-  <span class="sep">/</span>
-  <span class="current" aria-current="page">Cite-Check — Authority Verification</span>
-</nav>
 
-
+<div class="crumbs crumbs-top" aria-label="Breadcrumb">
+  <a href="../index.html">Index</a><span class="sep">/</span>
+  <a href="../claude-skills.html">Claude Skills</a><span class="sep">/</span>
+  <span class="current" aria-current="page">Cite-Check: Authority Verification</span>
 </div>
 
-<div class="sheet">
-  <div class="spine"><div class="spine-label">CITE-CHECK SKILL</div></div>
+<main class="wrap">
 
-  <div class="content">
+  <header class="hero">
+    <div class="tagline">Claude skill &middot; the verification pipeline</div>
+    <h1>Cite-Check &mdash; Authority Verification</h1>
+    <p class="lede">How the cite-check skill verifies every authority in a filing against the Descrybe Legal Engine before it goes out. Four checks per cite: does it exist, is it cited right, is it still good law, and is the quote word-for-word accurate.</p>
+  </header>
 
-    <header class="masthead">
-      <h1>Cite-Check &mdash; Authority Verification</h1>
-      <div class="tagline">Claude skill &middot; the verification pipeline</div>
-      <p class="lede">How the cite-check skill verifies every authority in a filing against the Descrybe Legal Engine before it goes out. Four checks per cite: does it exist, is it cited right, is it still good law, and is the quote word-for-word accurate.</p>
-    </header>
+  <!-- 01 map -->
+  <section class="sec">
+    <div class="sec-head"><span class="sec-num">01</span><h2 class="sec-title">The pipeline</h2></div>
+    <div class="sec-body">
+      <p class="lead">Every authority gets one of three verification paths &mdash; case, quote, or statute &mdash; then everything lands in one prioritized report.</p>
+      <div class="pmap"><div class="pm-k"><span class="tag">Input</span>Filing</div><div class="pm-b">Brief, demand, or motion.</div></div>
+      <div class="pmap i-acc"><div class="pm-k"><span class="ord">STEP 1</span>Extract<br>authorities</div><div class="pm-b">Pull every authority out of the target document, keeping every line location so fixes apply everywhere.</div></div>
+      <div class="pmap i-acc"><div class="pm-k"><span class="ord">STEP 2</span>Verify every<br>authority</div><div class="pm-b">Three paths, decided by what the authority is:
+        <div class="branch pass"><span class="bk">CASE</span> <code>find_case_from_reference</code> &rarr; is it in Descrybe?
+          <div class="branch fail"><span class="bk">NO</span> Flag <b>NOT FOUND</b> &mdash; fabricated or uncovered.</div>
+          <div class="branch pass"><span class="bk">YES</span> <code>check_case_status</code> (treatment, good law) &rarr; confirm the holding supports the proposition &rarr; is the caption / cite correct?</div>
+        </div>
+        <div class="branch pass"><span class="bk">QUOTE</span> <code>verify_quote</code> &mdash; word-for-word?
+          <div class="branch pass"><span class="bk">YES</span> Verified.</div>
+          <div class="branch fail"><span class="bk">NO</span> Misquote &mdash; fix or paraphrase.</div>
+        </div>
+        <div class="branch amb"><span class="bk">STATUTE</span> <code>search_laws_and_rules</code> &rarr; confirm current text, watching renumbering and amendments.</div>
+      </div></div>
+      <div class="pmap i-teal"><div class="pm-k"><span class="ord">STEP 3</span>Report</div><div class="pm-b">One authority table plus prioritized action items.</div></div>
+      <div class="pmap i-acc"><div class="pm-k"><span class="ord">STEP 4</span>Fix the filing</div><div class="pm-b">Applied on approval, with an audit note for every correction.</div></div>
+    </div>
+  </section>
 
-    <!-- 01 map -->
-    <section class="sec">
-      <div class="sec-title"><span class="n">01</span><h2>The pipeline</h2></div>
-      <div class="sec-body">
-        <p class="lead">Every authority gets one of three verification paths &mdash; case, quote, or statute &mdash; then everything lands in one prioritized report.</p>
-        <div class="pmap"><div class="pm-k"><span class="tag">Input</span>Filing</div><div class="pm-b">Brief, demand, or motion.</div></div>
-        <div class="pmap i-acc"><div class="pm-k"><span class="ord">STEP 1</span>Extract<br>authorities</div><div class="pm-b">Pull every authority out of the target document, keeping every line location so fixes apply everywhere.</div></div>
-        <div class="pmap i-acc"><div class="pm-k"><span class="ord">STEP 2</span>Verify every<br>authority</div><div class="pm-b">Three paths, decided by what the authority is:
-          <div class="branch pass"><span class="bk">CASE</span> <code>find_case_from_reference</code> &rarr; is it in Descrybe?
-            <div class="branch fail"><span class="bk">NO</span> Flag <b>NOT FOUND</b> &mdash; fabricated or uncovered.</div>
-            <div class="branch pass"><span class="bk">YES</span> <code>check_case_status</code> (treatment, good law) &rarr; confirm the holding supports the proposition &rarr; is the caption / cite correct?</div>
-          </div>
-          <div class="branch pass"><span class="bk">QUOTE</span> <code>verify_quote</code> &mdash; word-for-word?
-            <div class="branch pass"><span class="bk">YES</span> Verified.</div>
-            <div class="branch fail"><span class="bk">NO</span> Misquote &mdash; fix or paraphrase.</div>
-          </div>
-          <div class="branch amb"><span class="bk">STATUTE</span> <code>search_laws_and_rules</code> &rarr; confirm current text, watching renumbering and amendments.</div>
-        </div></div>
-        <div class="pmap i-teal"><div class="pm-k"><span class="ord">STEP 3</span>Report</div><div class="pm-b">One authority table plus prioritized action items.</div></div>
-        <div class="pmap i-acc"><div class="pm-k"><span class="ord">STEP 4</span>Fix the filing</div><div class="pm-b">Applied on approval, with an audit note for every correction.</div></div>
-      </div>
-    </section>
+  <!-- 02 steps -->
+  <section class="sec">
+    <div class="sec-head"><span class="sec-num">02</span><h2 class="sec-title">Pipeline steps</h2></div>
+    <div class="sec-body">
+      <div class="pmap i-acc"><div class="pm-k"><span class="ord">STEP 1</span>Extract<br>authorities</div><div class="pm-b"><span class="tt">Pull every authority out, with line numbers.</span>
+        <ul><li>Case citations &mdash; full cites, short-cites, and <code>Id.</code> / <code>supra</code> chains</li><li>Statutes and rules &mdash; C.R.S., U.S.C., C.R.C.P., regs</li><li>Quotations &mdash; every quoted string 20+ characters as a verify candidate</li></ul>
+      </div></div>
+      <div class="pmap i-teal"><div class="pm-k"><span class="ord">STEP 2</span>Verify<br>cases</div><div class="pm-b"><span class="tt">Resolve each case against Descrybe, then check whether it still stands.</span>
+        <ul><li><b>Resolve</b> &mdash; <code>find_case_from_reference</code>; flag caption, reporter, volume, page, court, and year mismatches</li><li><b>Treatment</b> &mdash; <code>check_case_status</code>; drill forward cites on any caution or negative</li><li><b>Holding</b> &mdash; confirm the case actually supports the proposition it&rsquo;s cited for</li></ul>
+      </div></div>
+      <div class="pmap i-vio"><div class="pm-k"><span class="ord">STEP 3</span>Verify quotes<br>&amp; statutes</div><div class="pm-b"><span class="tt">The language has to be exact.</span> A real case cited for a holding it doesn&rsquo;t contain is as dangerous as a fake one.
+        <ul><li><b>Quotes</b> &mdash; <code>verify_quote</code> against the resolved case; correct or paraphrase on mismatch</li><li><b>Statutes</b> &mdash; <code>search_laws_and_rules</code>; confirm current text, watch renumbering and amendments</li></ul>
+      </div></div>
+      <div class="pmap i-rose"><div class="pm-k"><span class="ord">STEP 4</span>Report<br>&amp; fix</div><div class="pm-b"><span class="tt">One table, prioritized action items, applied on approval.</span>
+        <ul><li>Authority table &mdash; doc cite vs. Descrybe cite, exists?, cite correct?, treatment, quote verified?</li><li>Action items ordered by risk &mdash; fabricated first, then wrong cite, negative treatment, misquotes</li><li>Fixes applied on approval, with an audit note for every correction</li></ul>
+      </div></div>
+    </div>
+  </section>
 
-    <!-- 02 steps -->
-    <section class="sec">
-      <div class="sec-title"><span class="n">02</span><h2>Pipeline steps</h2></div>
-      <div class="sec-body">
-        <div class="pmap i-acc"><div class="pm-k"><span class="ord">STEP 1</span>Extract<br>authorities</div><div class="pm-b"><span class="tt">Pull every authority out, with line numbers.</span>
-          <ul><li>Case citations &mdash; full cites, short-cites, and <code>Id.</code> / <code>supra</code> chains</li><li>Statutes and rules &mdash; C.R.S., U.S.C., C.R.C.P., regs</li><li>Quotations &mdash; every quoted string 20+ characters as a verify candidate</li></ul>
-        </div></div>
-        <div class="pmap i-teal"><div class="pm-k"><span class="ord">STEP 2</span>Verify<br>cases</div><div class="pm-b"><span class="tt">Resolve each case against Descrybe, then check whether it still stands.</span>
-          <ul><li><b>Resolve</b> &mdash; <code>find_case_from_reference</code>; flag caption, reporter, volume, page, court, and year mismatches</li><li><b>Treatment</b> &mdash; <code>check_case_status</code>; drill forward cites on any caution or negative</li><li><b>Holding</b> &mdash; confirm the case actually supports the proposition it&rsquo;s cited for</li></ul>
-        </div></div>
-        <div class="pmap i-vio"><div class="pm-k"><span class="ord">STEP 3</span>Verify quotes<br>&amp; statutes</div><div class="pm-b"><span class="tt">The language has to be exact.</span> A real case cited for a holding it doesn&rsquo;t contain is as dangerous as a fake one.
-          <ul><li><b>Quotes</b> &mdash; <code>verify_quote</code> against the resolved case; correct or paraphrase on mismatch</li><li><b>Statutes</b> &mdash; <code>search_laws_and_rules</code>; confirm current text, watch renumbering and amendments</li></ul>
-        </div></div>
-        <div class="pmap i-rose"><div class="pm-k"><span class="ord">STEP 4</span>Report<br>&amp; fix</div><div class="pm-b"><span class="tt">One table, prioritized action items, applied on approval.</span>
-          <ul><li>Authority table &mdash; doc cite vs. Descrybe cite, exists?, cite correct?, treatment, quote verified?</li><li>Action items ordered by risk &mdash; fabricated first, then wrong cite, negative treatment, misquotes</li><li>Fixes applied on approval, with an audit note for every correction</li></ul>
-        </div></div>
-      </div>
-    </section>
+  <!-- 03 catches -->
+  <section class="sec">
+    <div class="sec-head"><span class="sec-num">03</span><h2 class="sec-title">What it catches</h2></div>
+    <div class="sec-body">
+      <p class="lead">This exists because AI-drafted and human-drafted filings both ship bad cites. One fabricated case can sink credibility with an arbitrator or judge.</p>
+      <div class="pmap i-rose"><div class="pm-k"><span class="tag">Catches</span>Bad<br>authority</div><div class="pm-b">
+        <div class="branch fail"><span class="bk">&bull;</span> Fabricated / hallucinated cases</div>
+        <div class="branch fail"><span class="bk">&bull;</span> Wrong reporter, volume, page, or year</div>
+        <div class="branch fail"><span class="bk">&bull;</span> Truncated or garbled captions</div>
+        <div class="branch fail"><span class="bk">&bull;</span> Overruled or negatively-treated authority</div>
+        <div class="branch fail"><span class="bk">&bull;</span> Quotes that appear nowhere in the opinion</div>
+        <div class="branch fail"><span class="bk">&bull;</span> Cases cited for a holding they don&rsquo;t contain</div>
+      </div></div>
+      <div class="pmap i-teal"><div class="pm-k"><span class="tag">Rules</span>Operating<br>rules</div><div class="pm-b">
+        <div class="branch pass"><span class="bk">&bull;</span> Never certify a cite you couldn&rsquo;t verify</div>
+        <div class="branch pass"><span class="bk">&bull;</span> &ldquo;Not in Descrybe&rdquo; &ne; &ldquo;doesn&rsquo;t exist&rdquo; &mdash; escalate to a primary source</div>
+        <div class="branch pass"><span class="bk">&bull;</span> Run independent checks in parallel; batch the case lookups</div>
+        <div class="branch pass"><span class="bk">&bull;</span> Preserve an audit trail &mdash; record what was wrong and how it was verified</div>
+        <div class="branch pass"><span class="bk">&bull;</span> Distinguish defense-win cases &mdash; fine to cite for a standard, say so</div>
+        <div class="branch pass"><span class="bk">&bull;</span> Scale depth to stakes &mdash; full pass pre-filing, lighter pass for sanity checks</div>
+      </div></div>
+      <div class="note"><span class="mk">The rule</span><b>Never certify a cite you couldn&rsquo;t verify.</b> &ldquo;Not in Descrybe&rdquo; doesn&rsquo;t mean &ldquo;doesn&rsquo;t exist&rdquo; &mdash; but it also doesn&rsquo;t mean &ldquo;safe to file.&rdquo; Every authority either resolves against primary law or gets flagged, escalated, and labeled binding vs. persuasive.</div>
+    </div>
+  </section>
 
-    <!-- 03 catches -->
-    <section class="sec">
-      <div class="sec-title"><span class="n">03</span><h2>What it catches</h2></div>
-      <div class="sec-body">
-        <p class="lead">This exists because AI-drafted and human-drafted filings both ship bad cites. One fabricated case can sink credibility with an arbitrator or judge.</p>
-        <div class="pmap i-rose"><div class="pm-k"><span class="tag">Catches</span>Bad<br>authority</div><div class="pm-b">
-          <div class="branch fail"><span class="bk">&bull;</span> Fabricated / hallucinated cases</div>
-          <div class="branch fail"><span class="bk">&bull;</span> Wrong reporter, volume, page, or year</div>
-          <div class="branch fail"><span class="bk">&bull;</span> Truncated or garbled captions</div>
-          <div class="branch fail"><span class="bk">&bull;</span> Overruled or negatively-treated authority</div>
-          <div class="branch fail"><span class="bk">&bull;</span> Quotes that appear nowhere in the opinion</div>
-          <div class="branch fail"><span class="bk">&bull;</span> Cases cited for a holding they don&rsquo;t contain</div>
-        </div></div>
-        <div class="pmap i-teal"><div class="pm-k"><span class="tag">Rules</span>Operating<br>rules</div><div class="pm-b">
-          <div class="branch pass"><span class="bk">&bull;</span> Never certify a cite you couldn&rsquo;t verify</div>
-          <div class="branch pass"><span class="bk">&bull;</span> &ldquo;Not in Descrybe&rdquo; &ne; &ldquo;doesn&rsquo;t exist&rdquo; &mdash; escalate to a primary source</div>
-          <div class="branch pass"><span class="bk">&bull;</span> Run independent checks in parallel; batch the case lookups</div>
-          <div class="branch pass"><span class="bk">&bull;</span> Preserve an audit trail &mdash; record what was wrong and how it was verified</div>
-          <div class="branch pass"><span class="bk">&bull;</span> Distinguish defense-win cases &mdash; fine to cite for a standard, say so</div>
-          <div class="branch pass"><span class="bk">&bull;</span> Scale depth to stakes &mdash; full pass pre-filing, lighter pass for sanity checks</div>
-        </div></div>
-        <div class="note"><span class="mk">The rule</span><b>Never certify a cite you couldn&rsquo;t verify.</b> &ldquo;Not in Descrybe&rdquo; doesn&rsquo;t mean &ldquo;doesn&rsquo;t exist&rdquo; &mdash; but it also doesn&rsquo;t mean &ldquo;safe to file.&rdquo; Every authority either resolves against primary law or gets flagged, escalated, and labeled binding vs. persuasive.</div>
-      </div>
-    </section>
+  <footer class="footer">
+    <a href="../claude-skills.html">&larr; Claude Skills</a>
+    <span>&copy; 2025-2026 Charlie Fuller</span>
+  </footer>
 
-    <footer class="footer">
-      <a href="../claude-skills.html">&larr; Claude Skills</a>
-      <span>&copy; 2025-2026 Charlie Fuller</span>
-    </footer>
-
-  </div>
-</div>
-
+</main>
 </body>
 </html>
