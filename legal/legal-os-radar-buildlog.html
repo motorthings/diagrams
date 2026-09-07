@@ -1,0 +1,413 @@
+<!DOCTYPE html>
+<html class="light">
+<head>
+<meta charset="UTF-8">
+<link rel="icon" type="image/svg+xml" href="../icon.svg">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="The working method behind the Fault-Line Radar: how a prediction engine for legal AI went from a question to a calibrated, auditable forecaster. Ideate, requirements, options, governance, build, self-check.">
+<title>How the Fault-Line Radar Was Built — Working Method</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Mulish:ital,wght@0,300;0,400;0,600;0,700;0,800;1,400&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --font-body: 'Mulish', 'Segoe UI', Helvetica, sans-serif;
+    --font-mono: 'Mulish', ui-monospace, 'SF Mono', Consolas, monospace;
+    --bg: #171416; --surface: #1E1A1D; --surface2: #262024;
+    --border: #332D31; --border-bright: #463D42;
+    --text: #F5F2F1; --text-dim: #C9C3C1; --text-faint: #8A8481;
+    --primary: #E39CB2; --primary-dim: rgba(227,156,178,0.12);
+    --metric: #5FBF9B; --metric-dim: rgba(95,191,155,0.12);
+    --slate: #948E8C; --slate-dim: rgba(148,142,140,0.12);
+    --rose: #E36C89; --rose-dim: rgba(227,108,137,0.12);
+    --amber: #D9A05B; --amber-dim: rgba(217,160,91,0.12);
+    --teal: #2dd4bf; --teal-dim: rgba(45,212,191,0.12);
+    --emerald: #34d399;
+  }
+  html.light {
+    --bg: #F5F2F1; --surface: #FFFFFF; --surface2: #EDE8E6;
+    --border: #D9D2CE; --border-bright: #C4B9B4;
+    --text: #171416; --text-dim: #4A4442; --text-faint: #8A8481;
+    --primary: #B83159; --primary-dim: rgba(184,49,89,0.10);
+    --metric: #1E8A6A; --metric-dim: rgba(30,138,106,0.10);
+    --slate: #6A6461; --slate-dim: rgba(106,100,97,0.10);
+    --rose: #C4506B; --rose-dim: rgba(196,80,107,0.10);
+    --amber: #B07C2E; --amber-dim: rgba(176,124,46,0.10);
+    --teal: #1E8A6A; --teal-dim: rgba(30,138,106,0.10);
+    --emerald: #059669;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    background: var(--bg);
+    background-image:
+      radial-gradient(at 10% 0%, var(--primary-dim) 0%, transparent 40%),
+      radial-gradient(at 90% 80%, var(--teal-dim) 0%, transparent 40%);
+    color: var(--text); font-family: var(--font-body);
+    font-size: 15px; line-height: 1.7; min-height: 100vh;
+    -webkit-font-smoothing: antialiased;
+  }
+  .nav { position: sticky; top: 0; z-index: 100; backdrop-filter: blur(16px);
+    background: color-mix(in srgb, var(--surface) 85%, transparent); border-bottom: 1px solid var(--border); }
+  .nav-inner { max-width: 1060px; margin: 0 auto; padding: 12px 24px; display: flex; align-items: center; justify-content: space-between; }
+  .crumbs { font-family: var(--font-mono); font-size: 13px; font-weight: 600; display: flex; align-items: center; gap: 8px; flex-wrap: wrap; min-width: 0; }
+  .crumbs a { color: var(--primary); text-decoration: none; }
+  .crumbs a:hover, .crumbs a:focus-visible { text-decoration: underline; outline: none; }
+  .crumbs .sep { color: var(--text-faint); }
+  .crumbs .current { color: var(--text-dim); font-weight: 400; }
+
+  .container { max-width: 1060px; margin: 0 auto; padding: 48px 24px 80px; }
+  @keyframes fadeUp { from { opacity: 0; transform: translateY(16px); } to { opacity: 1; transform: translateY(0); } }
+
+  .hero { margin-bottom: 34px; animation: fadeUp 0.5s ease both; }
+  .hero .kicker { font-family: var(--font-mono); font-size: 11px; font-weight: 700; letter-spacing: 0.2em; text-transform: uppercase; color: var(--text-faint); margin-bottom: 12px; }
+  .hero h1 { font-size: 40px; font-weight: 800; letter-spacing: -1px; margin-bottom: 12px; max-width: 780px;
+    background: linear-gradient(135deg, var(--primary), var(--metric));
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+  .hero p { font-size: 17px; color: var(--text-dim); max-width: 720px; }
+
+  .lede { max-width: 720px; margin: 0 0 34px; font-size: 15.5px; color: var(--text-dim); }
+  .lede .land { display: block; margin-top: 18px; padding-top: 14px; border-top: 1px solid var(--border);
+    font-size: 20px; font-weight: 800; letter-spacing: -0.3px; color: var(--text); }
+
+  /* lineage strip */
+  .lineage { display: flex; align-items: stretch; gap: 0; overflow-x: auto; margin: 0 0 40px; padding-bottom: 4px; }
+  .lin { flex: 1; min-width: 150px; background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 13px 15px; }
+  .lin .ld { font-family: var(--font-mono); font-size: 10px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: var(--text-faint); }
+  .lin .ln { font-weight: 700; font-size: 13.5px; margin: 4px 0 3px; }
+  .lin .lx { font-size: 12px; color: var(--text-dim); line-height: 1.45; }
+  .lin.last { border-color: var(--primary); background: var(--primary-dim); }
+  .lin-arrow { align-self: center; padding: 0 7px; color: var(--text-faint); font-family: var(--font-mono); font-size: 17px; }
+
+  .section { margin-bottom: 42px; animation: fadeUp 0.5s ease both; }
+  .section-title { font-family: var(--font-mono); font-size: 12px; font-weight: 700; letter-spacing: 0.15em; text-transform: uppercase; color: var(--text-dim); margin-bottom: 16px; }
+
+  /* phase cards */
+  .phases { display: grid; gap: 14px; }
+  .phase { display: grid; grid-template-columns: 46px 1fr; gap: 18px; background: var(--surface); border: 1px solid var(--border); border-radius: 14px; padding: 22px 24px; border-left: 3px solid var(--primary); }
+  .phase .n { font-family: var(--font-mono); font-size: 26px; font-weight: 800; color: var(--primary); line-height: 1; }
+  .phase h3 { font-size: 18px; font-weight: 700; margin-bottom: 6px; letter-spacing: -0.2px; }
+  .phase p { font-size: 14px; color: var(--text-dim); margin: 0; }
+  .phase .k { display: inline-block; font-family: var(--font-mono); font-size: 10px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: var(--text-faint); margin-bottom: 8px; }
+  .phase ul { list-style: none; margin: 10px 0 0; display: grid; gap: 6px; }
+  .phase li { position: relative; padding-left: 22px; font-size: 13.5px; color: var(--text-dim); }
+  .phase li::before { content: "\2192"; position: absolute; left: 0; top: 0; color: var(--primary); font-family: var(--font-mono); font-weight: 700; }
+  .phase li b { color: var(--text); }
+  @media (max-width: 640px) { .phase { grid-template-columns: 1fr; gap: 8px; } }
+
+  /* decisions table */
+  .dwrap { overflow-x: auto; border: 1px solid var(--border); border-radius: 12px; }
+  .dtable { width: 100%; border-collapse: collapse; font-size: 13.5px; }
+  .dtable th, .dtable td { text-align: left; padding: 12px 15px; border-bottom: 1px solid var(--border); vertical-align: top; }
+  .dtable th { font-family: var(--font-mono); font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--text-faint); font-weight: 700; }
+  .dtable tbody tr:last-child td { border-bottom: none; }
+  .dtable .dec { font-weight: 700; color: var(--text); min-width: 130px; }
+  .dtable .chose { color: var(--metric); font-weight: 700; }
+  .dtable .opts { color: var(--text-faint); font-size: 12.5px; }
+
+  /* governance chips */
+  .gov { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  .gchip { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 16px 18px; border-left: 3px solid var(--teal); }
+  .gchip h4 { font-size: 14px; font-weight: 700; margin-bottom: 4px; }
+  .gchip p { font-size: 12.5px; color: var(--text-dim); margin: 0; }
+  @media (max-width: 640px) { .gov { grid-template-columns: 1fr; } }
+
+  /* pipeline flow */
+  .flow { display: flex; align-items: stretch; gap: 0; overflow-x: auto; padding-bottom: 6px; }
+  .stage { flex: 1; min-width: 138px; background: var(--surface2); border: 1px solid var(--border); border-radius: 10px; padding: 14px 13px; }
+  .stage .sfile { font-family: var(--font-mono); font-size: 10px; color: var(--primary); }
+  .stage .sname { font-weight: 700; font-size: 13px; margin: 4px 0; }
+  .stage .sdesc { font-size: 12px; color: var(--text-dim); line-height: 1.4; }
+  .arrow { align-self: center; padding: 0 8px; color: var(--text-faint); font-size: 18px; font-family: var(--font-mono); }
+
+  /* self-check metrics */
+  .cal { background: var(--surface); border: 1px solid var(--border); border-radius: 14px; padding: 24px; }
+  .cal-head { display: flex; align-items: baseline; gap: 14px; flex-wrap: wrap; }
+  .hitrate { font-family: var(--font-mono); font-size: 30px; font-weight: 800; color: var(--emerald); }
+  .cal-sub { font-size: 13px; color: var(--text-dim); }
+  .cal-rows { margin-top: 16px; display: grid; gap: 8px; }
+  .cal-row { display: grid; grid-template-columns: 60px 1fr auto; gap: 12px; align-items: center; padding: 10px 13px; background: var(--surface2); border: 1px solid var(--border); border-radius: 8px; font-size: 13px; }
+  .cal-row .o { font-family: var(--font-mono); font-size: 11px; font-weight: 700; }
+  .cal-row .r { font-family: var(--font-mono); font-size: 12px; font-weight: 700; }
+  .cal-row.miss .r { color: var(--amber); }
+  .cal-row .r.hit { color: var(--emerald); }
+  .cal-note { margin-top: 14px; font-size: 13px; color: var(--text-dim); }
+  .cal-note b { color: var(--text); }
+
+  /* rhythm */
+  .rhythm { display: flex; flex-wrap: wrap; gap: 8px; }
+  .beat { font-family: var(--font-mono); font-size: 12px; color: var(--text-dim); background: var(--surface2); border: 1px solid var(--border); border-radius: 20px; padding: 7px 14px; }
+  .beat b { color: var(--text); }
+
+  .stance { background: var(--primary-dim); border: 1px solid var(--border-bright); border-radius: 14px; padding: 22px 26px; font-size: 15px; color: var(--text); }
+  .stance b { font-weight: 800; }
+
+  .cta { margin-top: 40px; display: flex; gap: 12px; flex-wrap: wrap; }
+  .cta a { font-family: var(--font-mono); font-size: 13px; font-weight: 800; text-decoration: none; border-radius: 10px; padding: 12px 20px; }
+  .cta .primary { color: #fff; background: linear-gradient(135deg, var(--primary), var(--metric)); }
+  .cta .ghost { color: var(--primary); border: 1px solid var(--border-bright); }
+  .cta a:hover { filter: brightness(1.06); }
+
+  .footer { margin-top: 48px; padding-top: 16px; border-top: 1px solid var(--border); text-align: center; font-size: 12px; color: var(--text-faint); }
+  .footer a { color: var(--text-dim); text-decoration: none; }
+  .footer a:hover { color: var(--text); }
+</style>
+</head>
+<body>
+<div class="nav">
+  <div class="nav-inner">
+    <nav class="crumbs" aria-label="Breadcrumb">
+      <a href="../index.html">Index</a>
+      <span class="sep">/</span>
+      <a href="index.html">Legal</a>
+      <span class="sep">/</span>
+      <span class="current" aria-current="page">How it was built</span>
+    </nav>
+  </div>
+</div>
+
+<div class="container">
+
+  <div class="hero">
+    <div class="kicker">From &ldquo;wouldn't it be nice&rdquo; to &ldquo;how would I build it&rdquo;</div>
+    <h1>My process, shown at full size.</h1>
+    <p>How I find a problem worth solving, model it, and build toward a solution with the tools in front of me. The Fault-Line Radar is the worked example. The process is the point.</p>
+  </div>
+
+  <div class="lede">
+    <p style="font-size:18px;color:var(--text);font-weight:700;letter-spacing:-0.2px;margin-bottom:16px;">Everything here traces to one shift in how I think: from &ldquo;wouldn't it be nice if we could do X&rdquo; to &ldquo;how would I build it.&rdquo;</p>
+    <p>That flip is the whole engine. &ldquo;Wouldn't it be nice&rdquo; is a wish that waits for permission. &ldquo;How would I build it&rdquo; is a plan that starts now. Once you live on the second side of it, you stop admiring problems and start taking them apart.</p>
+    <p>So I don't start from a tool looking for a use. I start by opening my mind to find a problem that matters, digging to the root cause, and only then asking how I'd address it. The how comes after the why, and early on it gets to be naive. Whether it's possible is a question for later.</p>
+    <p>This page follows one build end to end so you can see the loop: find the problem, set the bar, weigh the options in the open, use the tools as leverage, wire in trust, then check myself and say what broke.</p>
+    <span class="land">The engine is the output. How I got there is the pitch.</span>
+  </div>
+
+  <div class="section">
+    <div class="section-title">Where it came from</div>
+    <div class="lineage">
+      <div class="lin">
+        <div class="ld">Jul 2</div>
+        <div class="ln">Governance model</div>
+        <div class="lx">First artifact was about safety, not features. How do you keep legal AI auditable.</div>
+      </div>
+      <div class="lin-arrow">&rarr;</div>
+      <div class="lin">
+        <div class="ld">Jul 7</div>
+        <div class="ln">Legal AI OS</div>
+        <div class="lx">The governance thinking became a platform with real functions.</div>
+      </div>
+      <div class="lin-arrow">&rarr;</div>
+      <div class="lin">
+        <div class="ld">Aug 14&ndash;19</div>
+        <div class="ln">Law-firm simulation</div>
+        <div class="lx">A deterministic runner that simulates a firm and scores its own confidence. The seed.</div>
+      </div>
+      <div class="lin-arrow">&rarr;</div>
+      <div class="lin last">
+        <div class="ld">Sep 5&ndash;6</div>
+        <div class="ln">Fault-Line Radar</div>
+        <div class="lx">Same discipline, pointed at the future of the field instead of at one firm.</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="section-title">The working process &mdash; my AESOP lifecycle, applied</div>
+    <p style="max-width:720px;margin:-4px 0 18px;font-size:14.5px;color:var(--text-dim);">This is the same lifecycle my AESOP transformation platform runs teams through. Not six phases I invented for this page. The radar is that method pointed at a forecasting problem.</p>
+    <div class="lineage" style="margin-bottom:22px;">
+      <div class="lin last"><div class="ln">Discover</div></div><div class="lin-arrow">&rarr;</div>
+      <div class="lin last"><div class="ln">Design</div></div><div class="lin-arrow">&rarr;</div>
+      <div class="lin last"><div class="ln">Build</div></div><div class="lin-arrow">&rarr;</div>
+      <div class="lin last"><div class="ln">Evaluate</div></div><div class="lin-arrow">&rarr;</div>
+      <div class="lin last"><div class="ln">Repair</div></div><div class="lin-arrow">&rarr;</div>
+      <div class="lin last"><div class="ln">Track</div></div>
+    </div>
+    <div class="phases">
+
+      <div class="phase">
+        <div class="n">1</div>
+        <div>
+          <span class="k">Discover</span>
+          <h3>Open the aperture. Find the root. Hold off on &ldquo;how.&rdquo;</h3>
+          <p>The first move is to open my mind wide and find a problem that actually matters, then dig until I hit the root cause instead of a symptom. Feasibility is not invited to this part. The &ldquo;how&rdquo; comes after the &ldquo;why,&rdquo; and it gets to be naive at first.</p>
+          <ul>
+            <li><b>Why before how.</b> Get the problem and its root cause right, then let the solution follow. Never the reverse.</li>
+            <li><b>No feasibility filter yet.</b> &ldquo;It might not be possible&rdquo; is a later question. Early on it only shrinks the imagination.</li>
+            <li>Here the real question was not &ldquo;what can AI do&rdquo; but where the field would be forced to react, and what firms would have to adopt to keep operating. That became three linked questions: <b>can the tech do it, will the law react, what control does the market then demand.</b></li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="phase">
+        <div class="n">2</div>
+        <div>
+          <span class="k">Design</span>
+          <h3>Map the spaces, let the constraints pick the stack</h3>
+          <p>Design is where I map the problem space against the solution space until the real restrictions fall out. Those constraints are not red tape. They are what the problem demands, and they decide the platform, the stack, and the tools. Get them right and the tech choice is half made for you.</p>
+          <ul>
+            <li><b>Deterministic and replayable.</b> Same inputs, same score, every time. This constraint alone ruled out an LLM writing the forecast, and pointed at plain scored code.</li>
+            <li><b>Weighted by authority, never volume.</b> A binding opinion outweighs a hundred vendor blogs. This asks for a tiered weighting model, not a search rank.</li>
+            <li><b>Point-in-time backtest.</b> Replay the engine 90 days before an event using only what was known then. That forces a dated, append-only evidence store.</li>
+            <li><b>No date predictions.</b> Called-versus-actual only. No false precision.</li>
+            <li><b>Immutable audit trail.</b> Every run writes its inputs, weights, math, and score. That is a decision about storage, not a nice-to-have.</li>
+          </ul>
+          <p style="margin-top:14px;">With the constraints set, the open forks resolve fast. This is the actual set.</p>
+          <div class="dwrap" style="margin-top:12px;">
+            <table class="dtable">
+              <thead><tr><th>Decision</th><th>Options</th><th>Chosen</th><th>Why</th></tr></thead>
+              <tbody>
+                <tr>
+                  <td class="dec">Generate the forecast</td>
+                  <td class="opts">LLM free-generation vs deterministic weighted scoring</td>
+                  <td class="chose">Deterministic scoring</td>
+                  <td>Replayable and auditable. No hallucinated confidence.</td>
+                </tr>
+                <tr>
+                  <td class="dec">Weight the sources</td>
+                  <td class="opts">By volume vs by authority tier</td>
+                  <td class="chose">Authority tiers</td>
+                  <td>T1 binding at 1.0 down to T5 vendor at 0.008. Who sets the rule matters, not how loud.</td>
+                </tr>
+                <tr>
+                  <td class="dec">Grade the calls</td>
+                  <td class="opts">Predict dates vs called-versus-actual at 90-day lead</td>
+                  <td class="chose">Called-versus-actual</td>
+                  <td>Checkable against reality. A miss reads as a miss.</td>
+                </tr>
+                <tr>
+                  <td class="dec">Prediction depth</td>
+                  <td class="opts">Single ruling meter vs three-order cascade</td>
+                  <td class="chose">Cascade</td>
+                  <td>Capability &rarr; ruling &rarr; adoption. Each layer only counts if the one it rests on held.</td>
+                </tr>
+                <tr>
+                  <td class="dec">Conflicting evidence</td>
+                  <td class="opts">Average it out vs discount on conflict</td>
+                  <td class="chose">Conflict discount</td>
+                  <td>Disagreement should lower confidence, not wash out.</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <div class="phase">
+        <div class="n">3</div>
+        <div>
+          <span class="k">Build</span>
+          <h3>Use AI as leverage, keep the logic mine</h3>
+          <p>I move fast by pairing with AI to draft and refactor, but the scoring stays deterministic code I can read, rerun, and defend. The tool accelerates the build. It does not own the judgment. Five stages, each a small file you can run on its own.</p>
+          <div class="flow" style="margin-top:12px;">
+            <div class="stage"><div class="sfile">fault_lines.py</div><div class="sname">Model</div><div class="sdesc">Taxonomy, source tiers, market weights, the three orders.</div></div>
+            <div class="arrow">&rarr;</div>
+            <div class="stage"><div class="sfile">score.py</div><div class="sname">Score</div><div class="sdesc">Two meters: ruling pressure and adoption pressure. Queue = their intersection.</div></div>
+            <div class="arrow">&rarr;</div>
+            <div class="stage"><div class="sfile">calibration.py</div><div class="sname">Grade</div><div class="sdesc">Point-in-time backtest, per-order hit rate, cascade conditionals.</div></div>
+            <div class="arrow">&rarr;</div>
+            <div class="stage"><div class="sfile">build.py</div><div class="sname">Render</div><div class="sdesc">The queue and calibration as a page anyone can read.</div></div>
+            <div class="arrow">&rarr;</div>
+            <div class="stage"><div class="sfile">run.py</div><div class="sname">Archive</div><div class="sdesc">One pass: backtest, build, snapshot, immutable artifact.</div></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="phase">
+        <div class="n">4</div>
+        <div>
+          <span class="k">Evaluate</span>
+          <h3>Grade it against reality, then say what broke</h3>
+          <p>The engine earns trust by being scored, not by sounding sure. AESOP scores agents across dimensions before it certifies them. The radar scores itself the same way: replay the past and check the calls.</p>
+          <div class="cal" style="margin-top:12px;">
+            <div class="cal-head">
+              <span class="hitrate">0.83</span>
+              <span class="cal-sub">overall called-versus-actual, replayed 90 days out at the 7.0 threshold</span>
+            </div>
+            <div class="cal-rows">
+              <div class="cal-row"><span class="o">L2</span><span>Ruling reactions: did the pressure meter flag the fault line before the ruling landed</span><span class="r hit">3 / 3</span></div>
+              <div class="cal-row miss"><span class="o">L3</span><span>Adoption calls: which controls the market then demanded</span><span class="r">2 / 3</span></div>
+              <div class="cal-row miss"><span class="o">Casc</span><span>L3 calls that rested on a correctly-called L2</span><span class="r">1 / 2</span></div>
+            </div>
+            <div class="cal-note">The agentic-liability L3 call is a logged <b>miss</b>, left in on purpose. A calibration panel that only shows hits is marketing, not calibration.</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="phase">
+        <div class="n">5</div>
+        <div>
+          <span class="k">Repair</span>
+          <h3>A logged miss is the next work item, not a failure to hide</h3>
+          <p>AESOP's Forge rewrites an agent using its eval context rather than guessing. Same move here: the evaluation points straight at the fix.</p>
+          <ul>
+            <li>The agentic-liability miss says the cascade is thin at the bottom, so the repair is concrete: <b>add an L1 capability lane</b> so the first order gets graded, not assumed.</li>
+            <li><b>Widen the market evidence</b> so adoption scores on real signals, not a seed value.</li>
+            <li>Every fix is a diff against a scored baseline, so I can tell whether the repair actually moved the number.</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="phase">
+        <div class="n">6</div>
+        <div>
+          <span class="k">Track</span>
+          <h3>Version it, snapshot it, keep it honest over time</h3>
+          <p>One call is a guess. A tracked trajectory is a track record. This is where the loop closes and starts again.</p>
+          <ul>
+            <li><b>Immutable run artifacts.</b> Each run stores a hash of the evidence feed plus every knob and calculation, replayable months from now.</li>
+            <li><b>Snapshots</b> build a time series of each fault line's pressure, so a real trend separates from noise.</li>
+            <li>New evidence reopens Discover. The lifecycle is a loop, not a line.</li>
+          </ul>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="section-title">Governance runs through every stage</div>
+    <p style="max-width:720px;margin:-4px 0 16px;font-size:14.5px;color:var(--text-dim);">AESOP doesn't treat safety as a stage you reach. Neither do I. It's woven through the six, which is the only way it holds.</p>
+    <div class="gov">
+      <div class="gchip"><h4>Source-authority tiers &middot; Design</h4><p>Five tiers from binding law to vendor marketing. The weight is the governance.</p></div>
+      <div class="gchip"><h4>Recency decay &middot; Build</h4><p>Evidence loses weight on a half-life. Old signals fade instead of lingering.</p></div>
+      <div class="gchip"><h4>Report the misses &middot; Evaluate</h4><p>The calibration panel shows a real miss, not a curated highlight reel.</p></div>
+      <div class="gchip"><h4>Immutable artifacts &middot; Track</h4><p>Each run is hashed and replayable, so any call can be audited later.</p></div>
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="section-title">The loop, with AI in it</div>
+    <p style="max-width:720px;margin:-4px 0 16px;font-size:14.5px;color:var(--text-dim);">The six stages are what got done. This is how the work actually moved: a tight loop between me and the tools, where my job was to keep pushing for honest and readable, not just impressive.</p>
+    <div class="rhythm">
+      <span class="beat">I bring the <b>problem</b>, not a prompt</span>
+      <span class="beat">Draft fast <b>with AI</b></span>
+      <span class="beat">I <b>push back</b> on the easy version</span>
+      <span class="beat"><b>Hostile review</b> before ship</span>
+      <span class="beat">Calibrate, <b>report the misses</b></span>
+      <span class="beat">Grind on <b>clarity</b> until it reads</span>
+    </div>
+    <div class="stance" style="margin-top:16px;">
+      The lawyers own the doctrine. <b>I bring the modeling, the calibration, and the discipline of checking my own work and asking where I'm wrong.</b> The radar page went through more than a dozen passes for readability after the engine was already correct, because a forecast no one can read is a forecast no one can trust.
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="section-title">The same process, elsewhere</div>
+    <div class="gchip" style="border-left-color: var(--amber);">
+      <h4>Seam Finder &amp; the legal calculators</h4>
+      <p>A separate track, same loop. There the problem was fit and value, not forecasting, and the honest-scoring instinct showed up as &ldquo;this is a rubric, not a measurement,&rdquo; hostile-reviewed before ship. Different problem, same way of working. That&rsquo;s the point: the method isn&rsquo;t situational. <a href="index.html" style="color:var(--primary);text-decoration:none;">See the legal work &rarr;</a></p>
+    </div>
+  </div>
+
+  <div class="cta">
+    <a class="primary" href="legal-os-fault-line-radar.html">See the radar</a>
+    <a class="ghost" href="legal-overview.html">Read the overview</a>
+  </div>
+
+  <div class="footer">
+    &copy; 2025&ndash;2026 Charlie Fuller &middot; part of the legal-os platform &middot;
+    <a href="index.html">All legal work</a>
+  </div>
+
+</div>
+</body>
+</html>
