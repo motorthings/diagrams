@@ -1,146 +1,167 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" class="light">
 <head>
 <meta charset="UTF-8">
-<link rel="icon" type="image/svg+xml" href="../icon.svg">
+<link rel="icon" href="../icon.svg" type="image/svg+xml" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Stage 0 — Consultative Discovery: From Pepper's Request to Architecture</title>
+<meta name="description" content="How the Stark Industries PMO request was processed — the chain from what Pepper said to what was built and what was deliberately cut, before any platform work.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600;9..144,700&family=Source+Code+Pro:wght@400;500;600" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Mulish:ital,wght@0,300;0,400;0,600;0,700;0,800;1,400&display=swap" rel="stylesheet">
 <style>
-.crumbs{font-family:var(--font-mono,monospace);font-size:13px;font-weight:600;display:flex;align-items:center;gap:8px;flex-wrap:wrap;min-width:0}
-.crumbs a{color:var(--primary);text-decoration:none}
-.crumbs a:hover,.crumbs a:focus-visible{text-decoration:underline;outline:none}
-.crumbs .sep{color:var(--text-dim)}
-.crumbs .current{color:var(--text-dim);font-weight:400}
+  :root{--font-body:'Mulish','Segoe UI',Helvetica,sans-serif;--font-mono:'Mulish',ui-monospace,'SF Mono',Consolas,monospace;
+    --bg:#14181C;--surface:#1B2127;--surface2:#232B33;--border:#303A43;--border-bright:#42505C;
+    --text:#F4F5F6;--text-dim:#CBD0D6;--text-faint:#87919B;
+    --primary:#A79CF2;--primary-dim:rgba(167,156,242,0.12);--metric:#58D6B4;--metric-dim:rgba(88,214,180,0.12);
+    --blue:#6CACE4;--blue-dim:rgba(108,172,228,0.12);
+    --violet:#B9A0E8;--violet-dim:rgba(185,160,232,0.12);
+    --amber:#E8B54D;--amber-dim:rgba(232,181,77,0.12);
+    --rose:#E88280;--rose-dim:rgba(232,130,128,0.12);}
+  html.light{--bg:#F7F3EF;--surface:#FFFFFF;--surface2:#F0E9E1;--border:#E1D6CB;--border-bright:#CDBBA8;
+    --text:#241A12;--text-dim:#574A3C;--text-faint:#8C7E6E;
+    --primary:#4F46E5;--primary-dim:rgba(79,70,229,0.08);--metric:#0E7C6E;--metric-dim:rgba(14,124,110,0.08);
+    --blue:#2F6FA8;--blue-dim:rgba(47,111,168,0.08);
+    --violet:#7C3AED;--violet-dim:rgba(124,58,237,0.07);
+    --amber:#A5650A;--amber-dim:rgba(165,101,10,0.08);
+    --rose:#C23A30;--rose-dim:rgba(194,58,48,0.07);}
+  *{margin:0;padding:0;box-sizing:border-box}
+  html{scroll-behavior:smooth}
+  body{background:
+      radial-gradient(at 10% 0%,var(--primary-dim),transparent 55%),
+      radial-gradient(at 90% 80%,var(--metric-dim),transparent 55%),
+      var(--bg);
+    color:var(--text);font-family:var(--font-body);font-size:17px;line-height:1.62;-webkit-font-smoothing:antialiased;min-height:100vh}
 
-  :root {
-    --font-display:'Fraunces',Georgia,serif;--font-body: 'Fraunces', Georgia, serif;--font-mono: 'Source Code Pro', 'SF Mono', Consolas, monospace;
-    --bg:#eef4f9;--surface:#ffffff;--surface2:#f5f8fc;--border:#c8daea;--border-bright:#a0bedb;--heading:#0a1628;--text:#0a1628;--text-dim:#3d5a7a;
-    --primary:#e8621a;--primary-dim:rgba(232,98,26,0.08);--secondary:#4a90c4;--secondary-dim:rgba(74,144,196,0.08);
-    --green:#059669;--green-dim:rgba(5,150,105,0.08);--teal:#008c85;--teal-dim:rgba(0,140,133,0.08);--coral:#e05050;--coral-dim:rgba(224,80,80,0.08);
-    --amber:#d97706;--amber-dim:rgba(217,119,6,0.08);
+  .crumbs{font-size:13px;font-weight:600;color:var(--text-dim);display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+  .crumbs a{color:var(--primary);text-decoration:none}
+  .crumbs a:hover{text-decoration:underline}
+  .crumbs .sep{color:var(--text-faint)}
+  .crumbs .current{color:var(--text-dim);font-weight:400}
+  .crumbs-top{max-width:1080px;margin:0 auto;padding:18px 24px 0}
+
+  .wrap{max-width:1080px;margin:0 auto;padding:0 24px 80px}
+
+  .hero{padding:44px 0 24px;border-bottom:1px solid var(--border);margin-bottom:10px}
+  .hero .tagline{font-family:var(--font-mono);font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.14em;color:var(--primary);margin-bottom:10px}
+  .hero h1{font-size:52px;line-height:1.0;letter-spacing:-0.03em;font-weight:800;
+    background:linear-gradient(135deg,var(--primary),var(--metric));-webkit-background-clip:text;background-clip:text;color:transparent}
+  .hero .lede{font-size:19px;line-height:1.5;color:var(--text-dim);max-width:920px;margin-top:14px}
+  .hero .lede b{color:var(--text)}
+  .kicker{display:block;font-family:var(--font-mono);font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.12em;color:var(--text-faint);margin-bottom:12px}
+
+  .sec{margin-top:22px}
+  .sec-head{display:flex;align-items:baseline;gap:14px;padding-bottom:10px;border-bottom:1px solid var(--border);margin-bottom:10px}
+  .sec-num{font-size:23px;font-weight:800;color:var(--primary);font-family:var(--font-mono)}
+  .sec-title{font-size:23px;font-weight:800;color:var(--text);letter-spacing:-0.01em}
+  .sec-body p{max-width:920px;margin-bottom:12px;color:var(--text-dim)}
+  .sec-body p b,.sec-body strong{color:var(--text)}
+  .sec-body p.nb{margin-bottom:0}
+  code{font-family:var(--font-mono);font-size:0.84em;color:var(--primary)}
+  .close{margin-top:16px;border-top:1px solid var(--border);padding-top:14px;font-size:14px;line-height:1.6;color:var(--text-dim);max-width:920px}
+  .close b{color:var(--text)}
+
+  .pmap{padding:14px 4px;border-top:1px solid var(--border);display:grid;grid-template-columns:240px 1fr;gap:4px 28px;align-items:baseline}
+  .pmap:first-of-type{border-top:none}
+  .pmap .pm-k{font-family:var(--font-mono);font-size:11.5px;font-weight:800;text-transform:uppercase;letter-spacing:.08em;color:var(--blue);line-height:1.5}
+  .pmap .pm-k .ord{display:block;color:var(--primary);font-weight:700;font-size:10px;letter-spacing:.16em;margin-bottom:3px}
+  .pmap .pm-k .tag{display:block;color:var(--text-faint);font-weight:700;font-size:10px;letter-spacing:.16em;margin-bottom:3px}
+  .pmap .pm-b{font-size:14.5px;line-height:1.6;color:var(--text-dim)}
+  .pmap .pm-b .tt{font-weight:800;color:var(--text);font-size:16px}
+  .pmap.i-vio .pm-k{color:var(--violet)}
+  .pmap.i-teal .pm-k{color:var(--metric)}
+  .pmap.i-amb .pm-k{color:var(--amber)}
+  .pmap.i-rose .pm-k{color:var(--rose)}
+  .pmap.i-acc .pm-k{color:var(--primary)}
+  .branch{font-size:13px;line-height:1.5;padding:1px 0}
+  .branch .bk{font-family:var(--font-mono);font-size:10.5px;font-weight:700;margin-right:8px}
+  .branch.blue .bk{color:var(--blue)}
+  .branch.teal .bk{color:var(--metric)}
+  .branch.vio .bk{color:var(--violet)}
+  .opt{color:var(--rose);font-weight:700}
+
+  table.tbl{width:100%;border-collapse:collapse;margin:2px 0 4px}
+  .tbl th{text-align:left;font-family:var(--font-mono);font-size:10px;font-weight:700;color:var(--text-faint);padding:6px 14px 8px 0;border-bottom:2px solid var(--border-bright);letter-spacing:.04em;text-transform:uppercase}
+  .tbl td{padding:9px 14px 9px 0;border-bottom:1px solid var(--border);vertical-align:top;font-size:13px;line-height:1.5;color:var(--text-dim)}
+  .tbl tr:last-child td{border-bottom:none}
+  .tbl td.f{font-weight:700;color:var(--text);width:40%}
+  .tbl td.src code{font-size:0.92em;color:var(--metric)}
+
+  .footer{margin-top:30px;border-top:1px solid var(--border);padding:18px 0 0;display:flex;justify-content:space-between;gap:20px;flex-wrap:wrap;font-family:var(--font-mono);font-size:12px;color:var(--text-faint)}
+  .footer a{color:var(--primary);text-decoration:none}
+  .footer a:hover{text-decoration:underline}
+
+  @media(max-width:900px){
+    .wrap{padding:0 16px 60px}
+    .hero h1{font-size:38px}
+    .pmap{grid-template-columns:1fr;gap:3px}
+    body{font-size:16px}
   }
-  
-  *{box-sizing:border-box;margin:0;padding:0;}
-  body{background:var(--bg);background-image:radial-gradient(ellipse at 80% 0%,var(--primary-dim) 0%,transparent 50%),radial-gradient(ellipse at 20% 60%,var(--secondary-dim) 0%,transparent 40%);color:var(--text);font-family:var(--font-body);min-height:100vh;line-height:1.6;transition:background 0.3s,color 0.3s;padding:0 32px 48px;}
-  .nav{position:sticky;top:0;z-index:100;backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);background:color-mix(in srgb,var(--surface) 85%,transparent);border-bottom:1px solid var(--border);margin:0 -32px 32px;padding:0 32px;}
-  .nav-inner{max-width:1100px;margin:0 auto;padding:12px 0;display:flex;align-items:center;justify-content:space-between;}
-  .nav-brand{font-family:var(--font-mono);font-size:14px;font-weight:600;letter-spacing:0.5px;color:var(--primary);text-decoration:none;}
-  .theme-toggle{width:36px;height:36px;border-radius:10px;border:1px solid var(--border);background:var(--surface);cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:18px;color:var(--text-dim);transition:all 0.2s;}
-  .theme-toggle:hover{border-color:var(--primary);color:var(--primary);}
-  .container{max-width:1100px;margin:0 auto;}
-  h1{font-family:var(--font-display);font-size:40px;font-weight:700;letter-spacing:-0.5px;color:var(--heading);margin-bottom:8px;}
-  .subtitle{font-family:var(--font-mono);font-size:14px;color:var(--text-dim);margin-bottom:6px;}
-  .stage-badge{display:inline-block;font-family:var(--font-mono);font-size:11px;font-weight:600;padding:3px 10px;border-radius:5px;background:var(--primary-dim);color:var(--primary);margin-bottom:28px;}
-  .description{font-size:15px;line-height:1.7;color:var(--text-dim);margin-bottom:36px;max-width:780px;}
-  .description strong{color:var(--text);}
-
-  .mermaid-wrap{position:relative;background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:32px 24px;overflow:auto;min-height:700px;display:flex;align-items:flex-start;justify-content:center;margin-bottom:28px;}
-  .mermaid-wrap .mermaid{transition:transform 0.2s ease;transform-origin:top center;width:100%;}
-  .zoom-controls{position:absolute;top:8px;right:8px;display:flex;gap:2px;z-index:10;background:var(--surface);border:1px solid var(--border);border-radius:6px;padding:2px;}
-  .zoom-controls button{width:28px;height:28px;border:none;background:transparent;color:var(--text-dim);font-family:var(--font-mono);font-size:14px;cursor:pointer;border-radius:4px;display:flex;align-items:center;justify-content:center;transition:background 0.15s,color 0.15s;}
-  .zoom-controls button:hover{background:var(--border);color:var(--text);}
-  .mermaid-wrap{scrollbar-width:thin;scrollbar-color:var(--border) transparent;}
-  .mermaid-wrap::-webkit-scrollbar{width:6px;height:6px;}
-  .mermaid-wrap.is-zoomed{cursor:grab;}
-  .mermaid-wrap.is-panning{cursor:grabbing;user-select:none;}
-  .mermaid .nodeLabel{font-family:var(--font-body)!important;font-size:17px!important;}
-  .mermaid .edgeLabel{font-family:var(--font-mono)!important;font-size:13px!important;}
-
-  .columns{display:grid;grid-template-columns:1fr;gap:20px;margin-bottom:28px;}
-  .columns>*{min-width:0;}
-  @media(max-width:860px){.columns{grid-template-columns:1fr;}}
-
-  .card{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:20px;}
-  .card__header{font-family:var(--font-mono);font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:1.5px;margin-bottom:14px;display:flex;align-items:center;gap:8px;}
-  .card__header::before{content:'';width:8px;height:8px;border-radius:50%;}
-  .card__header.pepper{color:var(--primary);}.card__header.pepper::before{background:var(--primary);}
-  .card__header.read{color:var(--secondary);}.card__header.read::before{background:var(--secondary);}
-  .card__header.built{color:var(--green);}.card__header.built::before{background:var(--green);}
-  .card__header.cut{color:var(--amber);}.card__header.cut::before{background:var(--amber);}
-  .card__title{font-family:var(--font-display);font-size:16px;font-weight:600;color:var(--heading);margin-bottom:14px;}
-  .card-item{padding:9px 0;border-bottom:1px solid var(--border);font-size:13px;}
-  .card-item:last-of-type{border-bottom:none;}
-  .card-item__label{color:var(--text);}
-  .card-item__note{font-family:var(--font-mono);font-size:10px;color:var(--text-dim);margin-top:2px;}
-  .card-item .implicit{font-family:var(--font-mono);font-size:9px;padding:1px 5px;border-radius:3px;background:var(--secondary-dim);color:var(--secondary);margin-left:6px;}
-
-  .scope-banner{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:20px 24px;margin-bottom:28px;display:flex;align-items:flex-start;gap:16px;}
-  .scope-banner__icon{font-size:32px;flex-shrink:0;}
-  .scope-banner__text{font-size:14px;line-height:1.7;color:var(--text-dim);}
-  .scope-banner__text strong{color:var(--text);}
-  .scope-banner__text .cut-count{font-family:var(--font-mono);font-size:13px;font-weight:600;color:var(--amber);}
-
-  .callout{background:var(--surface);border:1px solid var(--border);border-left:3px solid var(--secondary);border-radius:0 10px 10px 0;padding:16px 20px;font-size:14px;line-height:1.6;color:var(--text-dim);}
-  .callout strong{color:var(--text);}
-  @media(max-width:768px){body{padding:0 16px 32px;}h1{font-size:28px;}.columns{grid-template-columns:1fr;}}
-.backlink{position:fixed;top:12px;left:16px;z-index:200;font-family:var(--font-mono,monospace);font-size:11px;color:var(--text-dim,#8b949e);text-decoration:none;padding:6px 10px;border:1px solid var(--border,rgba(255,255,255,0.08));border-radius:6px;background:var(--surface,#161b22);transition:color .15s,border-color .15s}.backlink:hover{color:var(--text,#e6edf3);border-color:var(--text-dim,#8b949e)}
+  @media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+<style>
+  .mermaid-wrap{position:relative;background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:28px 20px;overflow:auto;margin:6px 0 4px;scrollbar-width:thin;scrollbar-color:var(--border) transparent}
+  .mermaid-wrap::-webkit-scrollbar{width:6px;height:6px}
+  .mermaid-wrap::-webkit-scrollbar-track{background:transparent}
+  .mermaid-wrap::-webkit-scrollbar-thumb{background:var(--border);border-radius:3px}
+  .mermaid-wrap .mermaid{display:flex;justify-content:center;transition:transform .2s ease;transform-origin:top center}
+  .zoom-controls{position:absolute;top:8px;right:8px;display:flex;gap:2px;z-index:10;background:var(--surface);border:1px solid var(--border);border-radius:6px;padding:2px}
+  .zoom-controls button{width:28px;height:28px;border:none;background:transparent;color:var(--text-dim);font-family:var(--font-mono);font-size:14px;cursor:pointer;border-radius:4px;display:flex;align-items:center;justify-content:center}
+  .zoom-controls button:hover{background:var(--border);color:var(--text)}
+  .legend{display:flex;gap:20px;flex-wrap:wrap;margin:14px 0 4px}
+  .legend-item{display:flex;align-items:center;gap:6px;font-family:var(--font-mono);font-size:11px;color:var(--text-dim)}
+  .legend-swatch{width:12px;height:12px;border-radius:3px}
+  .flowcap{font-family:var(--font-mono);font-size:11px;font-weight:700;letter-spacing:.1em;color:var(--text-faint);text-transform:uppercase;margin:10px 0 2px}
 </style>
 </head>
 <body>
 
-<div class="nav"><div class="nav-inner">
-    <nav class="crumbs" aria-label="Breadcrumb">
-  <a href="../index.html">Index</a>
-  <span class="sep">/</span>
+<div class="crumbs crumbs-top" aria-label="Breadcrumb">
+  <a href="../index.html">Index</a><span class="sep">/</span>
   <span class="current" aria-current="page">Stage 0 — Consultative Discovery</span>
-</nav></div></div>
-<div class="container">
-<h1>Stage 0 — Consultative Discovery</h1>
-<p class="subtitle">Stark Industries PMO &middot; from an email to an architecture</p>
-<div class="stage-badge">FOUNDATION</div>
-<p class="description"><strong>How I processed Pepper's request.</strong> The assignment is a PMO Director's email asking for intake, SLA tracking, and a dashboard. The evaluation isn't about monday.com expertise — it's about <strong>architectural instincts</strong>, <strong>consultative thinking</strong>, and <strong>AI as a working tool</strong>. This diagram traces the chain from what Pepper said → what I heard → what I built → what I deliberately cut.</p>
-
-<div class="columns">
-  <div class="card">
-    <div class="card__header pepper">What Pepper Said</div>
-    <div class="card__title">Explicit requirements from the PMO Director</div>
-    <div class="card-item">
-      <div class="card-item__label">"Requests are vague — I need a standardized intake process"</div>
-      <div class="card-item__note">Problem #1: Inconsistent submission quality</div>
-    </div>
-    <div class="card-item">
-      <div class="card-item__label">"We need SLA tracking — requests reviewed within 5 days"</div>
-      <div class="card-item__note">Problem #2: No accountability on review timelines</div>
-    </div>
-    <div class="card-item">
-      <div class="card-item__label">"An executive dashboard so leadership can see portfolio health"</div>
-      <div class="card-item__note">Problem #3: Manual spreadsheet-to-PowerPoint grind</div>
-    </div>
-    <div class="card-item">
-      <div class="card-item__label">"I have 3 PMs who'd manage from a portfolio view"</div>
-      <div class="card-item__note">Constraint: 3-person PM team, strategic oversight needed</div>
-    </div>
-  </div>
-
-  <div class="card">
-    <div class="card__header read">What I Heard</div>
-    <div class="card__title">The problems she didn't name but implied</div>
-    <div class="card-item">
-      <div class="card-item__label">Requests need screening before the SLA clock starts <span class="implicit">IMPLICIT</span></div>
-      <div class="card-item__note">Someone has to read every request and decide: is this complete? Is this actually a project? Without a gatekeeping step, incomplete requests flood the PM queue and the 5-day clock starts on noise.</div>
-    </div>
-    <div class="card-item">
-      <div class="card-item__label">SLA breach must notify, not just silently expire <span class="implicit">IMPLICIT</span></div>
-      <div class="card-item__note">A 5-day SLA that silently expires isn't tracking — it's a stopwatch. When the clock runs out, the PM needs to be alerted immediately, not discover it days later in a report.</div>
-    </div>
-    <div class="card-item">
-      <div class="card-item__label">Executives and PMs need different views of the same data <span class="implicit">IMPLICIT</span></div>
-      <div class="card-item__note">Pepper manually builds PowerPoints because the raw PM-level data isn't structured for leadership consumption. The two audiences need different boards designed for their specific questions.</div>
-    </div>
-    <div class="card-item">
-      <div class="card-item__label">Vague requests create all downstream problems <span class="implicit">IMPLICIT</span></div>
-      <div class="card-item__note">Every problem Pepper described traces back to poor request quality. Fix intake — make it structured, complete, AI-assisted — and everything downstream improves. This is where AI earns its place.</div>
-    </div>
-  </div>
 </div>
 
+<main class="wrap">
 
-<div class="mermaid-wrap">
-  <div class="zoom-controls"><button onclick="zoomDiagram(this,1.2)">+</button><button onclick="zoomDiagram(this,0.8)">&minus;</button><button onclick="resetZoom(this)">&#8634;</button></div>
-  <pre class="mermaid">
+  <header class="hero">
+    <div class="tagline">Foundation</div>
+    <h1>Stage 0 — Consultative Discovery</h1>
+    <p class="lede"><span class="kicker">Stark Industries PMO &middot; from an email to an architecture</span><b>How I processed Pepper's request.</b> The assignment is a PMO Director's email asking for intake, SLA tracking, and a dashboard. The evaluation isn't about monday.com expertise — it's about <b>architectural instincts</b>, <b>consultative thinking</b>, and <b>AI as a working tool</b>. This diagram traces the chain from what Pepper said → what I heard → what I built → what I deliberately cut.</p>
+  </header>
+
+  <!-- 01 -->
+  <section class="sec">
+    <div class="sec-head"><span class="sec-num">01</span><h2 class="sec-title">What Pepper Said — Explicit Requirements</h2></div>
+    <div class="sec-body">
+      <div class="pmap i-amb"><div class="pm-k"><span class="tag">Problem #1</span>Inconsistent submission quality</div><div class="pm-b"><i>&ldquo;Requests are vague — I need a standardized intake process&rdquo;</i></div></div>
+      <div class="pmap i-amb"><div class="pm-k"><span class="tag">Problem #2</span>No accountability on review timelines</div><div class="pm-b"><i>&ldquo;We need SLA tracking — requests reviewed within 5 days&rdquo;</i></div></div>
+      <div class="pmap i-amb"><div class="pm-k"><span class="tag">Problem #3</span>Manual spreadsheet-to-PowerPoint grind</div><div class="pm-b"><i>&ldquo;An executive dashboard so leadership can see portfolio health&rdquo;</i></div></div>
+      <div class="pmap i-acc"><div class="pm-k"><span class="tag">Constraint</span>3-person PM team, strategic oversight needed</div><div class="pm-b"><i>&ldquo;I have 3 PMs who'd manage from a portfolio view&rdquo;</i></div></div>
+    </div>
+  </section>
+
+  <!-- 02 -->
+  <section class="sec">
+    <div class="sec-head"><span class="sec-num">02</span><h2 class="sec-title">What I Heard — The Problems She Didn't Name</h2></div>
+    <div class="sec-body">
+      <div class="pmap i-teal"><div class="pm-k"><span class="tag">Implicit</span>Requests need screening before the SLA clock starts</div><div class="pm-b">Someone has to read every request and decide: is this complete? Is this actually a project? Without a gatekeeping step, incomplete requests flood the PM queue and the 5-day clock starts on noise.</div></div>
+      <div class="pmap i-teal"><div class="pm-k"><span class="tag">Implicit</span>SLA breach must notify, not just silently expire</div><div class="pm-b">A 5-day SLA that silently expires isn't tracking — it's a stopwatch. When the clock runs out, the PM needs to be alerted immediately, not discover it days later in a report.</div></div>
+      <div class="pmap i-teal"><div class="pm-k"><span class="tag">Implicit</span>Executives and PMs need different views of the same data</div><div class="pm-b">Pepper manually builds PowerPoints because the raw PM-level data isn't structured for leadership consumption. The two audiences need different boards designed for their specific questions.</div></div>
+      <div class="pmap i-teal"><div class="pm-k"><span class="tag">Implicit</span>Vague requests create all downstream problems</div><div class="pm-b">Every problem Pepper described traces back to poor request quality. Fix intake — make it structured, complete, AI-assisted — and everything downstream improves. This is where AI earns its place.</div></div>
+    </div>
+  </section>
+
+  <!-- 03 -->
+  <section class="sec">
+    <div class="sec-head"><span class="sec-num">03</span><h2 class="sec-title">Intake-to-Execution Flow</h2></div>
+    <div class="sec-body">
+      <div class="mermaid-wrap">
+        <div class="zoom-controls">
+          <button onclick="zoomDiagram(this,1.2)" title="Zoom in">+</button>
+          <button onclick="zoomDiagram(this,0.8)" title="Zoom out">&minus;</button>
+          <button onclick="resetZoom(this)" title="Reset zoom">&#8634;</button>
+        </div>
+        <pre class="mermaid">
 flowchart TD
   USER["User submits\na vague request"]:::hitl
 
@@ -189,74 +210,56 @@ flowchart TD
   TIER4 --> D3["Active Projects"]
   TIER4 --> D4["Department Load"]
 
-  classDef trigger fill:#fde8d8,stroke:#e8621a,strokeWidth:2px
-  classDef decision fill:#f5f8fc,stroke:#d97706,strokeWidth:2px
-  classDef hitl fill:#d4f0f0,stroke:#008c85,strokeWidth:2px
-  </pre>
-</div>
+  classDef trigger fill:#ECEAFE,stroke:#4F46E5,stroke-width:2px
+  classDef decision fill:#FBEFD8,stroke:#A5650A,stroke-width:2px
+  classDef hitl fill:#DDF2EE,stroke:#0E7C6E,stroke-width:2px
+        </pre>
+      </div>
+      <div class="legend">
+        <div class="legend-item"><div class="legend-swatch" style="background:var(--primary)"></div> Trigger / Automation</div>
+        <div class="legend-item"><div class="legend-swatch" style="background:var(--amber)"></div> System Decision</div>
+        <div class="legend-item"><div class="legend-swatch" style="background:var(--metric)"></div> HITL — Human in the Loop</div>
+      </div>
+    </div>
+  </section>
 
-<div class="columns" style="grid-template-columns:repeat(3,1fr)">
-  <div class="card" style="text-align:center">
-    <div style="display:flex;align-items:center;justify-content:center;gap:8px;margin-bottom:4px">
-      <span style="display:inline-block;width:12px;height:12px;border-radius:3px;background:#fde8d8;border:2px solid #e8621a"></span>
-      <span style="font-family:var(--font-mono);font-size:11px;font-weight:600;color:var(--text)">Trigger / Automation</span>
+  <!-- 04 -->
+  <section class="sec">
+    <div class="sec-head"><span class="sec-num">04</span><h2 class="sec-title">What We Built — The LEAN MVP</h2></div>
+    <div class="sec-body">
+      <p>Traceable to assignment text.</p>
+      <div class="pmap i-acc"><div class="pm-k">Two AI columns firing on form submit</div><div class="pm-b"><b>AI Summary</b> — general summarization of the Business Problem for PM review. <b>AI Completeness</b> — reads Business Problem, Budget, Timeline, and Success Criteria. Outputs exactly COMPLETE or INCOMPLETE: [specific reason]. Two columns, two jobs.</div></div>
+      <div class="pmap i-acc"><div class="pm-k">AI Completeness Gate + Field Check — two barriers before Portfolio</div><div class="pm-b">AI gate judges conceptual completeness (does this request actually make sense?). Field formula checks required fields are filled. Both must pass. If AI says INCOMPLETE, an automation notifies the requester with the specific reason.</div></div>
+      <div class="pmap i-acc"><div class="pm-k">5 automations across Intake + Portfolio</div><div class="pm-b">AI completeness routing (new), field completeness routing, SLA breach notification, PM assignment, Execution Board creation on approval. End-to-end automated.</div></div>
+      <div class="pmap i-acc"><div class="pm-k">Connected Boards: live status sync from Execution → Portfolio</div><div class="pm-b">When a task's Status or Due Date changes in the Execution Board, it updates in Portfolio automatically. PMs see trajectory without clicking through. Zero manual sync.</div></div>
+      <div class="pmap i-acc"><div class="pm-k">4 dashboard widgets — all live, no manual work</div><div class="pm-b">Portfolio Health, SLA Compliance, Active Projects, Department Load. Pepper never opens PowerPoint again.</div></div>
     </div>
-    <div style="font-size:10px;color:var(--text-dim)">Fires automatically on a system event</div>
-  </div>
-  <div class="card" style="text-align:center">
-    <div style="display:flex;align-items:center;justify-content:center;gap:8px;margin-bottom:4px">
-      <span style="display:inline-block;width:12px;height:12px;border-radius:3px;background:#f5f8fc;border:2px solid #d97706"></span>
-      <span style="font-family:var(--font-mono);font-size:11px;font-weight:600;color:var(--text)">System Decision</span>
-    </div>
-    <div style="font-size:10px;color:var(--text-dim)">Formula-based branching (completeness, SLA clock)</div>
-  </div>
-  <div class="card" style="text-align:center">
-    <div style="display:flex;align-items:center;justify-content:center;gap:8px;margin-bottom:4px">
-      <span style="display:inline-block;width:12px;height:12px;border-radius:3px;background:#d4f0f0;border:2px solid #008c85"></span>
-      <span style="font-family:var(--font-mono);font-size:11px;font-weight:600;color:var(--text)">HITL — Human in the Loop</span>
-    </div>
-    <div style="font-size:10px;color:var(--text-dim)">Interpretation, judgment, or approval by a person</div>
-  </div>
-</div>
+  </section>
 
-<div class="columns">
-  <div class="card">
-    <div class="card__header built">What We Built</div>
-    <div class="card__title">The LEAN MVP — traceable to assignment text</div>
-    <div class="card-item">
-      <div class="card-item__label">Two AI columns firing on form submit</div>
-      <div class="card-item__note"><strong>AI Summary</strong> — general summarization of the Business Problem for PM review. <strong>AI Completeness</strong> — reads Business Problem, Budget, Timeline, and Success Criteria. Outputs exactly COMPLETE or INCOMPLETE: [specific reason]. Two columns, two jobs.</div>
-    </div>
-    <div class="card-item">
-      <div class="card-item__label">AI Completeness Gate + Field Check — two barriers before Portfolio</div>
-      <div class="card-item__note">AI gate judges conceptual completeness (does this request actually make sense?). Field formula checks required fields are filled. Both must pass. If AI says INCOMPLETE, an automation notifies the requester with the specific reason.</div>
-    </div>
-    <div class="card-item">
-      <div class="card-item__label">5 automations across Intake + Portfolio</div>
-      <div class="card-item__note">AI completeness routing (new), field completeness routing, SLA breach notification, PM assignment, Execution Board creation on approval. End-to-end automated.</div>
-    </div>
-    <div class="card-item">
-      <div class="card-item__label">Connected Boards: live status sync from Execution → Portfolio</div>
-      <div class="card-item__note">When a task's Status or Due Date changes in the Execution Board, it updates in Portfolio automatically. PMs see trajectory without clicking through. Zero manual sync.</div>
-    </div>
-    <div class="card-item">
-      <div class="card-item__label">4 dashboard widgets — all live, no manual work</div>
-      <div class="card-item__note">Portfolio Health, SLA Compliance, Active Projects, Department Load. Pepper never opens PowerPoint again.</div>
-    </div>
-  </div>
-</div>
+  <footer class="footer">
+    <a href="../index.html">&larr; Index</a>
+    <span>&copy; 2025-2026 Charlie Fuller</span>
+  </footer>
 
-</div>
+</main>
 
 <script type="module">
   import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs';
-  function gt(){var s=getComputedStyle(document.documentElement);return{primaryColor:s.getPropertyValue('--surface').trim(),primaryBorderColor:s.getPropertyValue('--primary').trim(),primaryTextColor:s.getPropertyValue('--text').trim(),secondaryColor:s.getPropertyValue('--surface').trim(),secondaryBorderColor:s.getPropertyValue('--secondary').trim(),secondaryTextColor:s.getPropertyValue('--text').trim(),tertiaryColor:s.getPropertyValue('--surface').trim(),tertiaryBorderColor:s.getPropertyValue('--teal').trim(),tertiaryTextColor:s.getPropertyValue('--text').trim(),lineColor:s.getPropertyValue('--text-dim').trim(),fontSize:'17px',fontFamily:"'Fraunces',Georgia,serif"};}
-  await mermaid.initialize({startOnLoad:true,theme:'base',look:'classic',themeVariables:gt()});
+  mermaid.initialize({
+    startOnLoad:true,theme:'base',look:'classic',
+    themeVariables:{
+      primaryColor:'#FFFFFF',primaryBorderColor:'#4F46E5',primaryTextColor:'#241A12',
+      secondaryColor:'#FFFFFF',secondaryBorderColor:'#2F6FA8',secondaryTextColor:'#241A12',
+      tertiaryColor:'#FFFFFF',tertiaryBorderColor:'#0E7C6E',tertiaryTextColor:'#241A12',
+      lineColor:'#574A3C',fontSize:'15px',fontFamily:"'Mulish','Segoe UI',Helvetica,sans-serif"
+    }
+  });
 </script>
 <script>
-  function zoomDiagram(b,f){var w=b.closest('.mermaid-wrap'),t=w.querySelector('.mermaid');var n=Math.min(Math.max(parseFloat(t.dataset.zoom||'1')*f,0.3),5);t.dataset.zoom=n;t.style.transform='scale('+n+')';w.classList.toggle('is-zoomed',n>1);}
-  function resetZoom(b){var w=b.closest('.mermaid-wrap'),t=w.querySelector('.mermaid');t.dataset.zoom='1';t.style.transform='scale(1)';w.classList.remove('is-zoomed');}
-  document.querySelectorAll('.mermaid-wrap').forEach(function(w){w.addEventListener('wheel',function(e){if(!e.ctrlKey&&!e.metaKey)return;e.preventDefault();var t=w.querySelector('.mermaid');var n=Math.min(Math.max(parseFloat(t.dataset.zoom||'1')*(e.deltaY<0?1.1:0.9),0.3),5);t.dataset.zoom=n;t.style.transform='scale('+n+')';w.classList.toggle('is-zoomed',n>1);},{passive:false});var sx,sy,sl,st;w.addEventListener('mousedown',function(e){if(e.target.closest('.zoom-controls'))return;if(parseFloat(w.querySelector('.mermaid').dataset.zoom||'1')<=1)return;w.classList.add('is-panning');sx=e.clientX;sy=e.clientY;sl=w.scrollLeft;st=w.scrollTop;});window.addEventListener('mousemove',function(e){if(!w.classList.contains('is-panning'))return;w.scrollLeft=sl-(e.clientX-sx);w.scrollTop=st-(e.clientY-sy);});window.addEventListener('mouseup',function(){w.classList.remove('is-panning');});});
+  function zoomDiagram(btn,factor){var wrap=btn.closest('.mermaid-wrap'),target=wrap.querySelector('.mermaid');var next=Math.min(Math.max((parseFloat(target.dataset.zoom||'1'))*factor,0.3),5);target.dataset.zoom=next;target.style.transform='scale('+next+')';}
+  function resetZoom(btn){var wrap=btn.closest('.mermaid-wrap'),target=wrap.querySelector('.mermaid');target.dataset.zoom='1';target.style.transform='scale(1)';}
+  document.querySelectorAll('.mermaid-wrap').forEach(function(wrap){wrap.addEventListener('wheel',function(e){if(!e.ctrlKey&&!e.metaKey)return;e.preventDefault();var target=wrap.querySelector('.mermaid');var current=parseFloat(target.dataset.zoom||'1');var factor=e.deltaY<0?1.1:0.9;var next=Math.min(Math.max(current*factor,0.3),5);target.dataset.zoom=next;target.style.transform='scale('+next+')';},{passive:false});});
 </script>
+
 </body>
 </html>

@@ -1,267 +1,158 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" class="light">
 <head>
 <meta charset="UTF-8">
+<link rel="icon" href="../icon.svg" type="image/svg+xml" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Supply Chain Agentic Demo — System Architecture</title>
 <meta name="description" content="How a supply chain agentic demo is built — seven planning agents across a planning platform and a lakehouse, a split-screen demo UI, and visible agent handoffs.">
-<link rel="icon" type="image/svg+xml" href="../icon.svg">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,wght@0,400;0,500;0,600;0,700;0,800;1,400&family=Source+Code+Pro:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Mulish:ital,wght@0,300;0,400;0,600;0,700;0,800;1,400&display=swap" rel="stylesheet">
 <style>
-.crumbs{font-family:var(--font-mono,monospace);font-size:13px;font-weight:600;display:flex;align-items:center;gap:8px;flex-wrap:wrap;min-width:0}
-.crumbs a{color:var(--primary);text-decoration:none}
-.crumbs a:hover,.crumbs a:focus-visible{text-decoration:underline;outline:none}
-.crumbs .sep{color:var(--text-dim)}
-.crumbs .current{color:var(--text-dim);font-weight:400}
+  :root{--font-body:'Mulish','Segoe UI',Helvetica,sans-serif;--font-mono:'Mulish',ui-monospace,'SF Mono',Consolas,monospace;
+    --bg:#14181C;--surface:#1B2127;--surface2:#232B33;--border:#303A43;--border-bright:#42505C;
+    --text:#F4F5F6;--text-dim:#CBD0D6;--text-faint:#87919B;
+    --primary:#A79CF2;--primary-dim:rgba(167,156,242,0.12);--metric:#58D6B4;--metric-dim:rgba(88,214,180,0.12);
+    --blue:#6CACE4;--blue-dim:rgba(108,172,228,0.12);
+    --violet:#B9A0E8;--violet-dim:rgba(185,160,232,0.12);
+    --amber:#E8B54D;--amber-dim:rgba(232,181,77,0.12);
+    --rose:#E88280;--rose-dim:rgba(232,130,128,0.12);
+    --slate:#87919B;--slate-dim:rgba(135,145,155,0.15);}
+  html.light{--bg:#F7F3EF;--surface:#FFFFFF;--surface2:#F0E9E1;--border:#E1D6CB;--border-bright:#CDBBA8;
+    --text:#241A12;--text-dim:#574A3C;--text-faint:#8C7E6E;
+    --primary:#4F46E5;--primary-dim:rgba(79,70,229,0.08);--metric:#0E7C6E;--metric-dim:rgba(14,124,110,0.08);
+    --blue:#2F6FA8;--blue-dim:rgba(47,111,168,0.08);
+    --violet:#7C3AED;--violet-dim:rgba(124,58,237,0.07);
+    --amber:#A5650A;--amber-dim:rgba(165,101,10,0.08);
+    --rose:#C23A30;--rose-dim:rgba(194,58,48,0.07);
+    --slate:#8C7E6E;--slate-dim:rgba(140,126,110,0.14);}
+  *{margin:0;padding:0;box-sizing:border-box}
+  html{scroll-behavior:smooth}
+  body{background:
+      radial-gradient(at 10% 0%,var(--primary-dim),transparent 55%),
+      radial-gradient(at 90% 80%,var(--metric-dim),transparent 55%),
+      var(--bg);
+    color:var(--text);font-family:var(--font-body);font-size:17px;line-height:1.62;-webkit-font-smoothing:antialiased;min-height:100vh}
 
-  :root {
-    --font-display: 'Fraunces', Georgia, serif;
-    --font-mono: 'Source Code Pro', 'SF Mono', Consolas, monospace;
-    --bg: #eef4f9; --surface: #ffffff; --surface2: #f5f8fc;
-    --border: #c8daea; --border-bright: #a0bedb;
-    --text: #0a1628; --text-dim: #3d5a7a; --text-muted: #7a9ab8;
-    --primary: #e8621a; --primary-dim: rgba(232,98,26,0.08);
-    --secondary: #4a90c4; --secondary-dim: rgba(74,144,196,0.08);
-    --metric: #0f766e; --metric-dim: rgba(15,118,110,0.06);
-    --amber: #b45309; --amber-dim: rgba(180,83,9,0.08);
-    --violet: #7c3aed; --violet-dim: rgba(124,58,237,0.08);
-    --rose: #e11d48; --rose-dim: rgba(225,29,72,0.08);
-    --slate: #475569; --slate-dim: rgba(71,85,105,0.08);
-  }
-  
+  .crumbs{font-size:13px;font-weight:600;color:var(--text-dim);display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+  .crumbs a{color:var(--primary);text-decoration:none}
+  .crumbs a:hover{text-decoration:underline}
+  .crumbs .sep{color:var(--text-faint)}
+  .crumbs .current{color:var(--text-dim);font-weight:400}
+  .crumbs-top{max-width:1080px;margin:0 auto;padding:18px 24px 0}
+  .wrap{max-width:1080px;margin:0 auto;padding:0 24px 80px}
 
-  * { margin:0; padding:0; box-sizing:border-box; }
+  .hero{padding:44px 0 24px;border-bottom:1px solid var(--border);margin-bottom:10px;text-align:center}
+  .hero .tagline{font-family:var(--font-mono);font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.14em;color:var(--primary);margin-bottom:10px}
+  .hero h1{font-size:52px;line-height:1.0;letter-spacing:-0.03em;font-weight:800;color:var(--text)}
+  .hero .lede{font-size:16px;line-height:1.5;color:var(--text-dim);max-width:760px;margin:16px auto 0}
+  .hero .lede b{color:var(--text)}
 
-  body {
-    background: var(--bg);
-    background-image:
-      radial-gradient(ellipse at 80% 0%, var(--primary-dim) 0%, transparent 50%),
-      radial-gradient(ellipse at 20% 60%, var(--secondary-dim) 0%, transparent 40%);
-    color: var(--text); font-family: var(--font-display);
-    min-height: 100vh; line-height: 1.7; padding: 0 32px 80px;
-    transition: background 0.3s, color 0.3s;
-    overflow-wrap: break-word;
-  }
+  .sec{margin-top:22px}
+  .sec-head{display:flex;align-items:baseline;gap:14px;padding-bottom:10px;border-bottom:1px solid var(--border);margin-bottom:10px}
+  .sec-num{font-size:23px;font-weight:800;color:var(--primary);font-family:var(--font-mono)}
+  .sec-title{font-size:23px;font-weight:800;color:var(--text);letter-spacing:-0.01em}
+  .sec-body p{max-width:920px;margin-bottom:12px;color:var(--text-dim)}
+  .sec-body p b,.sec-body strong{color:var(--text)}
+  code{font-family:var(--font-mono);font-size:.84em;color:var(--primary)}
+  .footer{margin-top:30px;border-top:1px solid var(--border);padding:18px 0 0;display:flex;justify-content:space-between;gap:20px;flex-wrap:wrap;font-family:var(--font-mono);font-size:12px;color:var(--text-faint)}
+  .footer a{color:var(--primary);text-decoration:none}
+  .footer a:hover{text-decoration:underline}
 
-  .nav {
-    position: sticky; top: 0; z-index: 100;
-    backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px);
-    background: color-mix(in srgb, var(--surface) 85%, transparent);
-    border-bottom: 1px solid var(--border);
-    margin: 0 -32px 32px; padding: 0 32px;
-    transition: background 0.3s, border-color 0.3s;
-  }
-  .nav-inner {
-    max-width: 1000px; margin: 0 auto; padding: 12px 0;
-    display: flex; align-items: center; justify-content: space-between;
-  }
-  .nav-brand {
-    font-family: var(--font-mono); font-size: 12px; font-weight: 600;
-    letter-spacing: 0.5px; color: var(--primary); text-decoration: none;
-  }
-  .theme-toggle {
-    width: 36px; height: 36px; border-radius: 10px;
-    border: 1px solid var(--border); background: var(--surface);
-    cursor: pointer; display: flex; align-items: center; justify-content: center;
-    font-size: 16px; color: var(--text-dim); transition: all 0.2s;
-  }
-  .theme-toggle:hover { border-color: var(--primary); color: var(--primary); }
+  table.tbl{width:100%;border-collapse:collapse;margin:2px 0 4px}
+  .tbl th{text-align:left;font-family:var(--font-mono);font-size:10px;font-weight:700;color:var(--text-faint);padding:8px 12px 8px 0;border-bottom:2px solid var(--border-bright);letter-spacing:.04em;text-transform:uppercase}
+  .tbl td{padding:9px 12px 9px 0;border-bottom:1px solid var(--border);vertical-align:top;font-size:12.5px;line-height:1.5;color:var(--text-dim)}
+  .tbl tr:last-child td{border-bottom:none}
+  .tbl td.f{font-weight:700;color:var(--text)}
 
-  .container { max-width: 1000px; margin: 0 auto; }
+  .note{border-left:3px solid var(--primary);background:var(--primary-dim);border-radius:0 8px 8px 0;padding:13px 16px;font-size:13.5px;line-height:1.65;color:var(--text-dim);max-width:920px;margin:6px 0 14px}
+  .note b,.note strong{color:var(--text)}
+  .note.amber{border-left-color:var(--amber);background:var(--amber-dim)}
+  .note.vio{border-left-color:var(--violet);background:var(--violet-dim)}
 
-  @keyframes fadeUp { from { opacity:0; transform:translateY(12px); } to { opacity:1; transform:translateY(0); } }
-  @keyframes fadeScale { from { opacity:0; transform:scale(0.95); } to { opacity:1; transform:scale(1); } }
-  .animate { animation: fadeUp 0.4s ease-out both; animation-delay: calc(var(--i, 0) * 0.05s); }
-  @media (prefers-reduced-motion: reduce) {
-    *, *::before, *::after { animation-duration:0.01ms !important; animation-delay:0ms !important; }
-  }
+  @media(max-width:900px){.wrap{padding:0 16px 60px}.hero h1{font-size:36px}body{font-size:16px}}
+  @media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+<style>
+  .kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin:8px 0 6px}
+  .kpi{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:14px 16px;text-align:center}
+  .kpi .v{font-size:30px;font-weight:800;line-height:1.1;color:var(--primary);font-variant-numeric:tabular-nums}
+  .kpi .l{font-family:var(--font-mono);font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--text-faint);margin-top:6px}
 
-  /* Backlink */
-  .backlink{position:fixed;top:12px;left:16px;z-index:101;font-family:var(--font-mono,'Source Code Pro',monospace);font-size:12px;color:var(--text-dim);text-decoration:none;padding:6px 10px;border:1px solid var(--border);border-radius:6px;background:var(--surface);transition:color .15s,border-color .15s}
-  .backlink:hover{color:var(--text);border-color:var(--border-bright)}
+  .mermaid-wrap{position:relative;background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:26px 18px;overflow:auto;margin:6px 0 4px;scrollbar-width:thin;scrollbar-color:var(--border) transparent}
+  .mermaid-wrap::-webkit-scrollbar{width:6px;height:6px}.mermaid-wrap::-webkit-scrollbar-thumb{background:var(--border);border-radius:3px}
+  .mermaid-wrap .mermaid{display:flex;justify-content:center;transition:transform .2s ease;transform-origin:top center}
+  .zoom-controls{position:absolute;top:8px;right:8px;display:flex;gap:2px;z-index:10;background:var(--surface);border:1px solid var(--border);border-radius:6px;padding:2px}
+  .zoom-controls button{width:28px;height:28px;border:none;background:transparent;color:var(--text-faint);font-family:var(--font-mono);font-size:14px;cursor:pointer;border-radius:4px;display:flex;align-items:center;justify-content:center}
+  .zoom-controls button:hover{background:var(--border);color:var(--text)}
+  .legend{display:flex;gap:18px;flex-wrap:wrap;margin:2px 0 4px;font-family:var(--font-mono);font-size:11px;color:var(--text-faint)}
+  .legend-item{display:flex;align-items:center;gap:6px}
+  .legend-swatch{width:11px;height:11px;border-radius:3px}
 
-  /* Hero */
-  .hero { text-align: center; padding: 28px 0 12px; animation: fadeUp 0.5s ease-out; }
-  .hero-badge {
-    display: inline-flex; align-items: center; gap: 6px;
-    padding: 5px 16px; background: var(--primary-dim);
-    border: 1px solid var(--primary); border-radius: 20px;
-    font-family: var(--font-mono); font-size: 10px; font-weight: 600;
-    color: var(--primary); letter-spacing: 1px; text-transform: uppercase;
-    margin-bottom: 20px;
-  }
-  .hero h1 { font-size: 40px; font-weight: 800; letter-spacing: -0.5px; margin-bottom: 10px; color: var(--text); }
-  .hero .subtitle { font-size: 18px; color: var(--text-dim); max-width: 640px; margin: 0 auto; font-family: var(--font-mono); font-size: 13px; }
+  .split{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin:6px 0}
+  .spanel{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:18px 20px}
+  .spanel .pt{font-family:var(--font-mono);font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.08em;margin-bottom:12px;display:flex;align-items:center;gap:8px}
+  .spanel.g .pt{color:var(--metric)}.spanel.a .pt{color:var(--amber)}
+  .pt .dot{width:8px;height:8px;border-radius:50%;display:inline-block}
+  .spanel.g .dot{background:var(--metric)}.spanel.a .dot{background:var(--amber)}
+  .pflow{display:flex;flex-direction:column;gap:10px}
+  .pstep{display:flex;gap:10px;font-size:13px;line-height:1.5;color:var(--text-dim)}
+  .pstep b,.pstep strong{color:var(--text)}
+  .pstep .idx{font-family:var(--font-mono);font-size:10px;color:var(--text-faint);width:20px;flex-shrink:0;padding-top:2px}
 
-  /* KPI row */
-  .kpi-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 12px; margin: 8px 0 28px; }
-  .kpi-card { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 16px 18px; text-align: center; animation: fadeScale 0.4s ease-out both; animation-delay: calc(var(--i, 0) * 0.06s); }
-  .kpi-card .value { font-size: 30px; font-weight: 800; letter-spacing: -0.5px; line-height: 1.1; color: var(--primary); font-variant-numeric: tabular-nums; }
-  .kpi-card .label { font-family: var(--font-mono); font-size: 9px; font-weight: 600; text-transform: uppercase; letter-spacing: 1px; color: var(--text-dim); margin-top: 6px; }
+  .bd{display:inline-block;font-family:var(--font-mono);font-size:9.5px;font-weight:700;padding:2px 8px;border-radius:5px;white-space:nowrap}
+  .bd.p1{background:var(--rose-dim);color:var(--rose)}.bd.p3{background:var(--amber-dim);color:var(--amber)}.bd.p7{background:var(--slate-dim);color:var(--slate)}
+  .bd.k{background:var(--blue-dim);color:var(--blue)}.bd.kv{background:var(--violet-dim);color:var(--violet)}.bd.tbd{background:var(--slate-dim);color:var(--slate)}
+  .bd.live{background:var(--metric-dim);color:var(--metric)}.bd.vid{background:var(--amber-dim);color:var(--amber)}
 
-  /* Detail section */
-  .detail-section { margin-bottom: 40px; }
-  .detail-section h2 {
-    font-family: var(--font-mono); font-size: 12px; font-weight: 700;
-    letter-spacing: 1px; text-transform: uppercase;
-    color: var(--primary); margin-bottom: 14px;
-  }
-
-  /* Mermaid container */
-  .mermaid-wrap {
-    position: relative; background: var(--surface);
-    border: 1px solid var(--border); border-radius: 14px;
-    padding: 32px 24px; overflow: auto; margin: 0 0 12px;
-    animation: fadeUp 0.4s ease-out both; animation-delay: 0.06s;
-  }
-  .mermaid-wrap .mermaid { display: flex; justify-content: center; transition: transform 0.2s ease; transform-origin: top center; }
-  .mermaid-wrap.is-zoomed { cursor: grab; }
-  .mermaid-wrap.is-panning { cursor: grabbing; user-select: none; }
-  .zoom-controls { position: absolute; top: 10px; right: 10px; z-index: 10; display: flex; gap: 2px; background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 3px; }
-  .zoom-controls button { width: 30px; height: 30px; border: none; background: transparent; color: var(--text-dim); font-family: var(--font-mono); font-size: 16px; cursor: pointer; border-radius: 5px; display: flex; align-items: center; justify-content: center; transition: background 0.15s, color 0.15s; }
-  .zoom-controls button:hover { background: var(--border); color: var(--text); }
-  .mermaid-wrap { scrollbar-width: thin; scrollbar-color: var(--border) transparent; }
-  .mermaid-wrap::-webkit-scrollbar { width:6px; height:6px; }
-  .mermaid-wrap::-webkit-scrollbar-track { background:transparent; }
-  .mermaid-wrap::-webkit-scrollbar-thumb { background:var(--border); border-radius:3px; }
-
-  /* Mermaid node typography */
-  .mermaid .nodeLabel { font-family: var(--font-display) !important; font-size: 14px !important; }
-  .mermaid .edgeLabel { font-family: var(--font-mono) !important; font-size: 10px !important; }
-  .mermaid .node rect, .mermaid .node circle, .mermaid .node polygon { stroke-width: 1.5px !important; }
-
-  /* Mermaid classDef CSS bridge — dark mode shapes */
-  .mermaid g.live rect, .mermaid g.live polygon, .mermaid g.live circle { fill: var(--metric-dim) !important; stroke: var(--metric) !important; }
-  .mermaid g.video rect, .mermaid g.video polygon, .mermaid g.video circle { fill: var(--amber-dim) !important; stroke: var(--amber) !important; }
-  .mermaid g.stretch rect, .mermaid g.stretch polygon, .mermaid g.stretch circle { fill: var(--surface2) !important; stroke: var(--border-bright) !important; }
-  .mermaid g.actions rect, .mermaid g.actions polygon, .mermaid g.actions circle { fill: var(--secondary-dim) !important; stroke: var(--secondary) !important; }
-
-  /* Dark mode text — Mermaid renders text at init time, CSS bridge must override */
-  
-  
-  
-  
-  
-
-  /* Legend */
-  .legend { display: flex; gap: 18px; flex-wrap: wrap; margin-bottom: 4px; }
-  .legend-item { display: flex; align-items: center; gap: 6px; font-size: 11px; color: var(--text-dim); font-family: var(--font-mono); }
-  .legend-swatch { width: 11px; height: 11px; border-radius: 3px; flex-shrink: 0; }
-  .legend-swatch--outline { border: 1.5px solid; }
-
-  /* Split screen */
-  .split-screen { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin: 16px 0; }
-  .split-panel { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 20px; }
-  .split-panel--actions { border-top: 3px solid var(--metric); }
-  .split-panel--reasoning { border-top: 3px solid var(--amber); }
-  .panel-title { font-family: var(--font-mono); font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 14px; display: flex; align-items: center; gap: 8px; }
-  .split-panel--actions .panel-title { color: var(--metric); }
-  .split-panel--reasoning .panel-title { color: var(--amber); }
-  .panel-flow { display: flex; flex-direction: column; gap: 10px; }
-  .panel-step { display: flex; gap: 10px; font-size: 13px; line-height: 1.5; }
-  .panel-step .idx { font-family: var(--font-mono); font-size: 10px; color: var(--text-muted); width: 20px; flex-shrink: 0; padding-top: 2px; }
-
-  /* Data table */
-  .table-wrap { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; overflow: hidden; }
-  .table-scroll { overflow-x: auto; -webkit-overflow-scrolling: touch; }
-  .data-table { width: 100%; border-collapse: collapse; font-size: 13px; line-height: 1.5; }
-  .data-table thead th { background: var(--surface2); font-family: var(--font-mono); font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: 1px; color: var(--text-dim); text-align: left; padding: 12px 14px; border-bottom: 2px solid var(--border-bright); white-space: nowrap; position: sticky; top: 0; }
-  .data-table td { padding: 10px 14px; border-bottom: 1px solid var(--border); vertical-align: top; }
-  .data-table tbody tr:nth-child(even) { background: var(--primary-dim); }
-  .data-table tbody tr:last-child td { border-bottom: none; }
-  .data-table code { font-family: var(--font-mono); font-size: 11px; background: var(--secondary-dim); color: var(--secondary); padding: 1px 5px; border-radius: 3px; }
-
-  /* Badges */
-  .badge { display: inline-flex; align-items: center; gap: 5px; font-family: var(--font-mono); font-size: 10px; font-weight: 600; padding: 2px 9px; border-radius: 5px; white-space: nowrap; }
-  .badge--metric { background: var(--metric-dim); color: var(--metric); }
-  .badge--amber { background: var(--amber-dim); color: var(--amber); }
-  .badge--secondary { background: var(--secondary-dim); color: var(--secondary); }
-  .badge--violet { background: var(--violet-dim); color: var(--violet); }
-  .badge--rose { background: var(--rose-dim); color: var(--rose); }
-  .badge--slate { background: var(--slate-dim); color: var(--slate); }
-
-  /* Context / inner cards */
-  .context-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 12px; }
-  .context-card { background: var(--surface); border: 1px solid var(--border); border-left: 3px solid; border-radius: 0 10px 10px 0; padding: 16px 18px; font-size: 14px; line-height: 1.5; }
-  .context-card .label { font-family: var(--font-mono); font-size: 10px; font-weight: 600; letter-spacing: 0.5px; text-transform: uppercase; margin-bottom: 4px; }
-  .context-card .name { font-size: 15px; font-weight: 700; margin-bottom: 4px; }
-  .context-card .desc { font-size: 13px; color: var(--text-dim); }
-  .context-card.metric { border-left-color: var(--metric); } .context-card.metric .label { color: var(--metric); }
-  .context-card.violet { border-left-color: var(--violet); } .context-card.violet .label { color: var(--violet); }
-  .context-card.amber { border-left-color: var(--amber); } .context-card.amber .label { color: var(--amber); }
-  .context-card.secondary { border-left-color: var(--secondary); } .context-card.secondary .label { color: var(--secondary); }
-
-  /* Callout */
-  .callout {
-    background: var(--surface); border: 1px solid var(--border);
-    border-left: 3px solid var(--primary); border-radius: 0 12px 12px 0;
-    padding: 18px 22px; font-size: 14px; line-height: 1.6;
-    color: var(--text-dim); margin-top: 16px;
-  }
-  .callout strong { color: var(--text); }
-  .callout--metric { border-left-color: var(--metric); }
-  .callout--violet { border-left-color: var(--violet); }
-  .callout--amber { border-left-color: var(--amber); }
-
-  .footer { margin-top: 56px; padding-top: 20px; border-top: 1px solid var(--border); text-align: center; font-size: 13px; color: var(--text-muted); }
-  .footer a { color: var(--primary); text-decoration: none; }
-
-  @media (max-width: 640px) {
-    body { padding: 0 12px 48px; }
-    .nav { margin: 0 -12px 24px; padding: 0 12px; }
-    .hero h1 { font-size: 28px; }
-    .split-screen { grid-template-columns: 1fr; }
-    .context-grid { grid-template-columns: 1fr; }
-    .kpi-row { grid-template-columns: repeat(2, 1fr); }
-  }
+  .cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:12px;margin-top:4px}
+  .ccard{background:var(--surface);border:1px solid var(--border);border-left:3px solid;border-radius:0 10px 10px 0;padding:15px 17px}
+  .ccard .l{font-family:var(--font-mono);font-size:10px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;margin-bottom:4px}
+  .ccard .n{font-size:15px;font-weight:800;color:var(--text);margin-bottom:4px}
+  .ccard .d{font-size:12.5px;color:var(--text-dim);line-height:1.55}
+  .ccard.g{border-left-color:var(--metric)}.ccard.g .l{color:var(--metric)}
+  .ccard.v{border-left-color:var(--violet)}.ccard.v .l{color:var(--violet)}
+  .ccard.a{border-left-color:var(--amber)}.ccard.a .l{color:var(--amber)}
+  .ccard.b{border-left-color:var(--blue)}.ccard.b .l{color:var(--blue)}
+  @media(max-width:640px){.split{grid-template-columns:1fr}}
 </style>
 </head>
 <body>
 
-
-
-<div class="nav">
-  <div class="nav-inner">
-    <nav class="crumbs" aria-label="Breadcrumb">
-  <a href="../index.html">Index</a>
-  <span class="sep">/</span>
-  <a href="../other-projects.html">Other Projects</a>
-  <span class="sep">/</span>
+<div class="crumbs crumbs-top" aria-label="Breadcrumb">
+  <a href="../index.html">Index</a><span class="sep">/</span>
+  <a href="../other-projects.html">Other Projects</a><span class="sep">/</span>
   <span class="current" aria-current="page">Supply Chain Agentic Demo</span>
-</nav>
-    
-    
-  </div>
 </div>
 
-<div class="container">
-  <div class="hero">
-    <div class="hero-badge">Agentic Architecture &middot; Supply Chain</div>
+<main class="wrap">
+
+  <header class="hero">
+    <div class="tagline">Agentic Architecture &middot; Supply Chain</div>
     <h1>Supply Chain Agentic Demo</h1>
-    <p class="subtitle">System architecture for a one-hour client demo &mdash; seven planning agents across a planning platform and a lakehouse.</p>
+    <p class="lede">System architecture for a one-hour client demo &mdash; seven planning agents across a planning platform and a lakehouse.</p>
+  </header>
+
+  <div class="kpis">
+    <div class="kpi"><div class="v">7</div><div class="l">Agentic Use Cases</div></div>
+    <div class="kpi"><div class="v">2</div><div class="l">Live Click-Through Demos</div></div>
+    <div class="kpi"><div class="v">4</div><div class="l">Narrated Video Walkthroughs</div></div>
+    <div class="kpi"><div class="v">~7d</div><div class="l">Build Timeline</div></div>
+    <div class="kpi"><div class="v">2</div><div class="l">Platforms</div></div>
   </div>
 
-  <!-- KPI row -->
-  <div class="kpi-row">
-    <div class="kpi-card" style="--i:0"><div class="value">7</div><div class="label">Agentic Use Cases</div></div>
-    <div class="kpi-card" style="--i:1"><div class="value">2</div><div class="label">Live Click-Through Demos</div></div>
-    <div class="kpi-card" style="--i:2"><div class="value">4</div><div class="label">Narrated Video Walkthroughs</div></div>
-    <div class="kpi-card" style="--i:3"><div class="value">~7d</div><div class="label">Build Timeline</div></div>
-    <div class="kpi-card" style="--i:4"><div class="value">2</div><div class="label">Platforms</div></div>
-  </div>
-
-  <!-- System flow -->
-  <div class="detail-section animate" style="--i:1">
-    <h2>System Architecture</h2>
-    <div class="mermaid-wrap">
-      <div class="zoom-controls">
-        <button onclick="zoomDiagram(this, 1.2)" title="Zoom in">+</button>
-        <button onclick="zoomDiagram(this, 0.8)" title="Zoom out">&minus;</button>
-        <button onclick="resetZoom(this)" title="Reset">&#8634;</button>
-      </div>
-      <pre class="mermaid">
+  <!-- 01 -->
+  <section class="sec">
+    <div class="sec-head"><span class="sec-num">01</span><h2 class="sec-title">System Architecture</h2></div>
+    <div class="sec-body">
+      <div class="mermaid-wrap">
+        <div class="zoom-controls">
+          <button onclick="zoomDiagram(this, 1.2)" title="Zoom in">+</button>
+          <button onclick="zoomDiagram(this, 0.8)" title="Zoom out">&minus;</button>
+          <button onclick="resetZoom(this)" title="Reset">&#8634;</button>
+        </div>
+        <pre class="mermaid">
 flowchart TD
   subgraph DATA["Data Sources"]
     KIN["Kinaxis Maestro\nlive instance"]:::source
@@ -307,142 +198,66 @@ flowchart TD
   APPROVE -->|"committed"| MAESTRO
   APPROVE -->|"committed"| ORACLE
 
-  classDef source fill:#f5f8fc,stroke:#a0bedb,stroke-width:1.5px,color:#0a1628
-  classDef live fill:#d5f0ee,stroke:#0f766e,stroke-width:2px,color:#0a1628
-  classDef video fill:#fef0d7,stroke:#b45309,stroke-width:1.5px,color:#0a1628
-  classDef stretch fill:#f5f8fc,stroke:#c8daea,stroke-width:1px,color:#3d5a7a
-  classDef actions fill:#e0eef7,stroke:#4a90c4,stroke-width:1.5px,color:#0a1628
-      </pre>
+  classDef source fill:#FFFFFF,stroke:#CDBBA8,stroke-width:1.5px,color:#241A12
+  classDef live fill:#E4F1EE,stroke:#0E7C6E,stroke-width:2px,color:#241A12
+  classDef video fill:#FAF0DC,stroke:#A5650A,stroke-width:1.5px,color:#241A12
+  classDef stretch fill:#F7F3EF,stroke:#E1D6CB,stroke-width:1px,color:#574A3C
+  classDef actions fill:#E9E7FB,stroke:#4F46E5,stroke-width:1.5px,color:#241A12
+        </pre>
+      </div>
+      <div class="legend">
+        <div class="legend-item"><div class="legend-swatch" style="background:var(--metric)"></div>live demo</div>
+        <div class="legend-item"><div class="legend-swatch" style="background:var(--amber)"></div>video walkthrough</div>
+        <div class="legend-item"><div class="legend-swatch" style="background:var(--blue)"></div>split-screen panel</div>
+      </div>
     </div>
-    <div class="legend">
-      <div class="legend-item"><div class="legend-swatch" style="background:var(--metric)"></div>live demo</div>
-      <div class="legend-item"><div class="legend-swatch" style="background:var(--amber)"></div>video walkthrough</div>
-      <div class="legend-item"><div class="legend-swatch" style="background:var(--secondary)"></div>split-screen panel</div>
-    </div>
-  </div>
+  </section>
 
-  <!-- Split screen -->
-  <div class="detail-section animate" style="--i:2">
-    <h2>Split-Screen Demo UI &mdash; Build Requirement</h2>
-    <div class="callout callout--amber" style="margin:0 0 16px">
-      The split screen is a build requirement, not a presentation trick: agent actions on one side, reasoning on the other, paced for a human to follow.
+  <!-- 02 -->
+  <section class="sec">
+    <div class="sec-head"><span class="sec-num">02</span><h2 class="sec-title">Split-Screen Demo UI &mdash; Build Requirement</h2></div>
+    <div class="sec-body">
+      <div class="note amber">The split screen is a build requirement, not a presentation trick: agent actions on one side, reasoning on the other, paced for a human to follow.</div>
+      <div class="split">
+        <div class="spanel g"><div class="pt"><span class="dot"></span> Agent Actions</div><div class="pflow"><div class="pstep"><span class="idx">01</span><span>Query Kinaxis for scheduled receipts, pegging, BOM data</span></div><div class="pstep"><span class="idx">02</span><span>Detect disruption: commit date moved, inventory at risk</span></div><div class="pstep"><span class="idx">03</span><span>Model 2&ndash;3 mitigations as Maestro what-if scenarios</span></div><div class="pstep"><span class="idx">04</span><span>Present options with penalty arithmetic visible</span></div><div class="pstep"><span class="idx">05</span><span>Execute chosen scenario on planner approval</span></div></div></div>
+        <div class="spanel a"><div class="pt"><span class="dot"></span> Agent Reasoning</div><div class="pflow"><div class="pstep"><span class="idx">01</span><span>Plain-language root cause: <em>&ldquo;Commit moved because cycle time at OSAT slipped 4 days&rdquo;</em></span></div><div class="pstep"><span class="idx">02</span><span>Named customers affected, with revenue + margin at stake per customer</span></div><div class="pstep"><span class="idx">03</span><span>Lateness penalty arithmetic: 2 minor misses &gt; 1 severe miss</span></div><div class="pstep"><span class="idx">04</span><span>Evidence chain: source data &rarr; analysis &rarr; recommendation</span></div><div class="pstep"><span class="idx">05</span><span>Before-state: planner + 50 workbooks &rarr; seconds</span></div></div></div>
+      </div>
     </div>
-    <div class="split-screen">
-      <div class="split-panel split-panel--actions">
-        <div class="panel-title"><span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--metric)"></span> Agent Actions</div>
-        <div class="panel-flow">
-          <div class="panel-step"><span class="idx">01</span><span>Query Kinaxis for scheduled receipts, pegging, BOM data</span></div>
-          <div class="panel-step"><span class="idx">02</span><span>Detect disruption: commit date moved, inventory at risk</span></div>
-          <div class="panel-step"><span class="idx">03</span><span>Model 2&ndash;3 mitigations as Maestro what-if scenarios</span></div>
-          <div class="panel-step"><span class="idx">04</span><span>Present options with penalty arithmetic visible</span></div>
-          <div class="panel-step"><span class="idx">05</span><span>Execute chosen scenario on planner approval</span></div>
+  </section>
+
+  <!-- 03 -->
+  <section class="sec">
+    <div class="sec-head"><span class="sec-num">03</span><h2 class="sec-title">Agent Inventory &mdash; 7 Use Cases</h2></div>
+    <div class="sec-body">
+      <div style="overflow-x:auto;border:1px solid var(--border);border-radius:12px;background:var(--surface);padding:4px 16px">
+      <table class="tbl">
+        <thead><tr><th>Priority</th><th>#</th><th>Use Case</th><th>Platform</th><th>Type</th><th>Demo Message</th><th>Handoff</th></tr></thead>
+        <tbody>
+          <tr><td><span class="bd p1">P1</span></td><td><code>6</code></td><td class="f">Supply Disruption Exception Handler</td><td><span class="bd k">Kinaxis</span></td><td><span class="bd live">LIVE</span></td><td>Why the commit moved, in plain language, in seconds</td><td>&larr; Receives from UC1</td></tr>
+          <tr><td><span class="bd p1">P2</span></td><td><code>8</code></td><td class="f">Inventory Expiry &amp; Alternate BOM</td><td><span class="bd k">Kinaxis</span></td><td><span class="bd live">LIVE</span></td><td>At-risk lots converted to revenue before write-off</td><td>&mdash;</td></tr>
+          <tr><td><span class="bd p3">P3</span></td><td><code>1</code></td><td class="f">Agentic WIP Reconciliation</td><td><span class="bd kv">Kinaxis + Databricks</span></td><td><span class="bd vid">VIDEO</span></td><td>Receipt dates corrected before the miss, not after</td><td>&rarr; Feeds UC6, UC7</td></tr>
+          <tr><td><span class="bd p3">P4</span></td><td><code>2</code></td><td class="f">Predictive Yield Agent</td><td><span class="bd kv">Databricks</span></td><td><span class="bd vid">VIDEO</span></td><td>Demonstrated yield beats stated yield, with evidence</td><td>&harr; Overlaps UC5</td></tr>
+          <tr><td><span class="bd p3">P5</span></td><td><code>5</code></td><td class="f">Planning Parameter Optimization</td><td><span class="bd k">Kinaxis</span></td><td><span class="bd vid">VIDEO</span></td><td>Parameters self-heal inside Maestro, not in a side tool</td><td>&harr; Overlaps UC2</td></tr>
+          <tr><td><span class="bd p3">P6</span></td><td><code>7</code></td><td class="f">Agentic Allocation</td><td><span class="bd k">Kinaxis</span></td><td><span class="bd vid">VIDEO</span></td><td>Constrained supply reallocated with defensible rules</td><td>&larr; Receives from UC1</td></tr>
+          <tr><td><span class="bd p7">P7</span></td><td><code>3</code></td><td class="f">NPI Phase-Gate Agent</td><td><span class="bd tbd">TBD</span></td><td><span class="bd vid">VIDEO</span></td><td>Agent layer over the build already in flight</td><td>&mdash;</td></tr>
+        </tbody>
+      </table>
+      </div>
+    </div>
+  </section>
+
+  <!-- 04 -->
+  <section class="sec">
+    <div class="sec-head"><span class="sec-num">04</span><h2 class="sec-title">Agent Handoff Map</h2></div>
+    <div class="sec-body">
+      <div class="note">Visible agent handoffs are the compounding argument: WIP reconciliation feeds exception handling and allocation; yield monitoring overlaps parameter audit.</div>
+      <div class="mermaid-wrap">
+        <div class="zoom-controls">
+          <button onclick="zoomDiagram(this, 1.2)" title="Zoom in">+</button>
+          <button onclick="zoomDiagram(this, 0.8)" title="Zoom out">&minus;</button>
+          <button onclick="resetZoom(this)" title="Reset">&#8634;</button>
         </div>
-      </div>
-      <div class="split-panel split-panel--reasoning">
-        <div class="panel-title"><span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--amber)"></span> Agent Reasoning</div>
-        <div class="panel-flow">
-          <div class="panel-step"><span class="idx">01</span><span>Plain-language root cause: <em>&ldquo;Commit moved because cycle time at OSAT slipped 4 days&rdquo;</em></span></div>
-          <div class="panel-step"><span class="idx">02</span><span>Named customers affected, with revenue + margin at stake per customer</span></div>
-          <div class="panel-step"><span class="idx">03</span><span>Lateness penalty arithmetic: 2 minor misses &gt; 1 severe miss</span></div>
-          <div class="panel-step"><span class="idx">04</span><span>Evidence chain: source data &rarr; analysis &rarr; recommendation</span></div>
-          <div class="panel-step"><span class="idx">05</span><span>Before-state: planner + 50 workbooks &rarr; seconds</span></div>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <!-- Agent inventory -->
-  <div class="detail-section animate" style="--i:3">
-    <h2>Agent Inventory &mdash; 7 Use Cases</h2>
-    <div class="table-wrap">
-      <div class="table-scroll">
-        <table class="data-table">
-          <thead>
-            <tr><th>Priority</th><th>#</th><th>Use Case</th><th>Platform</th><th>Type</th><th>Demo Message</th><th>Handoff</th></tr>
-          </thead>
-          <tbody>
-            <tr>
-              <td><span class="badge badge--rose">P1</span></td>
-              <td><code>6</code></td>
-              <td><strong>Supply Disruption Exception Handler</strong></td>
-              <td><span class="badge badge--secondary">Kinaxis</span></td>
-              <td><span class="badge badge--metric">LIVE</span></td>
-              <td>Why the commit moved, in plain language, in seconds</td>
-              <td>&larr; Receives from UC1</td>
-            </tr>
-            <tr>
-              <td><span class="badge badge--rose">P2</span></td>
-              <td><code>8</code></td>
-              <td><strong>Inventory Expiry &amp; Alternate BOM</strong></td>
-              <td><span class="badge badge--secondary">Kinaxis</span></td>
-              <td><span class="badge badge--metric">LIVE</span></td>
-              <td>At-risk lots converted to revenue before write-off</td>
-              <td>&mdash;</td>
-            </tr>
-            <tr>
-              <td><span class="badge badge--amber">P3</span></td>
-              <td><code>1</code></td>
-              <td><strong>Agentic WIP Reconciliation</strong></td>
-              <td><span class="badge badge--violet">Kinaxis + Databricks</span></td>
-              <td><span class="badge badge--amber">VIDEO</span></td>
-              <td>Receipt dates corrected before the miss, not after</td>
-              <td>&rarr; Feeds UC6, UC7</td>
-            </tr>
-            <tr>
-              <td><span class="badge badge--amber">P4</span></td>
-              <td><code>2</code></td>
-              <td><strong>Predictive Yield Agent</strong></td>
-              <td><span class="badge badge--violet">Databricks</span></td>
-              <td><span class="badge badge--amber">VIDEO</span></td>
-              <td>Demonstrated yield beats stated yield, with evidence</td>
-              <td>&harr; Overlaps UC5</td>
-            </tr>
-            <tr>
-              <td><span class="badge badge--amber">P5</span></td>
-              <td><code>5</code></td>
-              <td><strong>Planning Parameter Optimization</strong></td>
-              <td><span class="badge badge--secondary">Kinaxis</span></td>
-              <td><span class="badge badge--amber">VIDEO</span></td>
-              <td>Parameters self-heal inside Maestro, not in a side tool</td>
-              <td>&harr; Overlaps UC2</td>
-            </tr>
-            <tr>
-              <td><span class="badge badge--amber">P6</span></td>
-              <td><code>7</code></td>
-              <td><strong>Agentic Allocation</strong></td>
-              <td><span class="badge badge--secondary">Kinaxis</span></td>
-              <td><span class="badge badge--amber">VIDEO</span></td>
-              <td>Constrained supply reallocated with defensible rules</td>
-              <td>&larr; Receives from UC1</td>
-            </tr>
-            <tr>
-              <td><span class="badge badge--slate">P7</span></td>
-              <td><code>3</code></td>
-              <td><strong>NPI Phase-Gate Agent</strong></td>
-              <td><span class="badge badge--slate">TBD</span></td>
-              <td><span class="badge badge--amber">VIDEO</span></td>
-              <td>Agent layer over the build already in flight</td>
-              <td>&mdash;</td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
-    </div>
-  </div>
-
-  <!-- Handoff map -->
-  <div class="detail-section animate" style="--i:4">
-    <h2>Agent Handoff Map</h2>
-    <div class="callout" style="margin:0 0 16px">
-      Visible agent handoffs are the compounding argument: WIP reconciliation feeds exception handling and allocation; yield monitoring overlaps parameter audit.
-    </div>
-    <div class="mermaid-wrap">
-      <div class="zoom-controls">
-        <button onclick="zoomDiagram(this, 1.2)" title="Zoom in">+</button>
-        <button onclick="zoomDiagram(this, 0.8)" title="Zoom out">&minus;</button>
-        <button onclick="resetZoom(this)" title="Reset">&#8634;</button>
-      </div>
-      <pre class="mermaid">
+        <pre class="mermaid">
 flowchart LR
   subgraph LIVE["Live Demos — Full Click-Through"]
     UC6["UC6\nSupply Disruption\nException Handler"]:::live
@@ -460,149 +275,93 @@ flowchart LR
   UC1 -->|"shortfall from\nreal WIP data"| UC7
   UC2 -.->|"yield monitor overlaps\nparameter audit"| UC5
 
-  classDef live fill:#d5f0ee,stroke:#0f766e,stroke-width:2px,color:#0a1628
-  classDef video fill:#fef0d7,stroke:#b45309,stroke-width:1.5px,color:#0a1628
-  classDef stretch fill:#f5f8fc,stroke:#c8daea,stroke-width:1px,color:#3d5a7a
-      </pre>
+  classDef live fill:#E4F1EE,stroke:#0E7C6E,stroke-width:2px,color:#241A12
+  classDef video fill:#FAF0DC,stroke:#A5650A,stroke-width:1.5px,color:#241A12
+  classDef stretch fill:#F7F3EF,stroke:#E1D6CB,stroke-width:1px,color:#574A3C
+        </pre>
+      </div>
     </div>
-  </div>
+  </section>
 
-  <!-- Data layer -->
-  <div class="detail-section animate" style="--i:5">
-    <h2>Data Layer Architecture</h2>
-    <div class="context-grid">
-      <div class="context-card metric">
-        <div class="label">Live Data</div>
-        <div class="name">Kinaxis Maestro</div>
-        <div class="desc">Via an MCP client bridge to Kinaxis Agent Studio. Real-time queries against scheduled receipts, pegging, BOM, where-used, and Maestro what-if scenarios.</div>
+  <!-- 05 -->
+  <section class="sec">
+    <div class="sec-head"><span class="sec-num">05</span><h2 class="sec-title">Data Layer Architecture</h2></div>
+    <div class="sec-body">
+      <div class="cards">
+        <div class="ccard g"><div class="l">Live Data</div><div class="n">Kinaxis Maestro</div><div class="d">Via an MCP client bridge to Kinaxis Agent Studio. Real-time queries against scheduled receipts, pegging, BOM, where-used, and Maestro what-if scenarios.</div></div>
+        <div class="ccard v"><div class="l">Synthetic Data</div><div class="n">Domain-shaped Files</div><div class="d">Synthetic is explicitly allowed by the brief, but must mirror part number formats, bin grades, and OSAT WIP file layouts so a planner never sees data that looks fake.</div></div>
+        <div class="ccard a"><div class="l">External Signals</div><div class="n">Simulated Triggers</div><div class="d">Pre-computed events for demo realism: supplier delay alerts, commit date changes, WIP receipt mismatches, and yield gap detection.</div></div>
       </div>
-      <div class="context-card violet">
-        <div class="label">Synthetic Data</div>
-        <div class="name">Domain-shaped Files</div>
-        <div class="desc">Synthetic is explicitly allowed by the brief, but must mirror part number formats, bin grades, and OSAT WIP file layouts so a planner never sees data that looks fake.</div>
-      </div>
-      <div class="context-card amber">
-        <div class="label">External Signals</div>
-        <div class="name">Simulated Triggers</div>
-        <div class="desc">Pre-computed events for demo realism: supplier delay alerts, commit date changes, WIP receipt mismatches, and yield gap detection.</div>
-      </div>
+      <div class="note vio"><strong>Lakehouse strategy:</strong> Live demos run entirely on the planning platform. Lakehouse-sourced data is synthetic. The yield walkthrough uses pre-computed yield curves with the reasoning layer on top &mdash; the concept lands without live infrastructure.</div>
     </div>
-    <div class="callout callout--violet">
-      <strong>Lakehouse strategy:</strong> Live demos run entirely on the planning platform. Lakehouse-sourced data is synthetic. The yield walkthrough uses pre-computed yield curves with the reasoning layer on top &mdash; the concept lands without live infrastructure.
-    </div>
-  </div>
+  </section>
 
-  <!-- Architecture decisions -->
-  <div class="detail-section animate" style="--i:6">
-    <h2>Architecture Decisions</h2>
-    <div class="context-grid">
-      <div class="context-card secondary">
-        <div class="label">Reasoning</div>
-        <div class="name">Claude API</div>
-        <div class="desc">Prompt-engineered reasoning chains with structured outputs. Evidence-attached responses &mdash; the agent shows its work, not just its answer.</div>
-      </div>
-      <div class="context-card secondary">
-        <div class="label">Kinaxis-first</div>
-        <div class="name">Not a custom UI</div>
-        <div class="desc">Anchor every demo in Kinaxis or Databricks screens. A custom UI reads as a prototype; their own systems read as a deliverable.</div>
-      </div>
-      <div class="context-card secondary">
-        <div class="label">Human-in-the-loop</div>
-        <div class="name">Proposed vs committed</div>
-        <div class="desc">Every action that changes planning data requires planner approval. The agent explores paths; the human chooses the destination.</div>
-      </div>
-      <div class="context-card secondary">
-        <div class="label">Slow motion</div>
-        <div class="name">Paced for humans</div>
-        <div class="desc">Autonomous agents are invisible on screen. Actions appear incrementally, reasoning unfolds step by step, mitigations compared before committing.</div>
-      </div>
-      <div class="context-card secondary">
-        <div class="label">Before-state</div>
-        <div class="name">In numbers</div>
-        <div class="desc">Every demo closes with the contrast: planner + 50 workbooks &rarr; seconds, 5&ndash;6 clicks &rarr; single ranked list. Speed and legibility are the message.</div>
-      </div>
-      <div class="context-card secondary">
-        <div class="label">Discovery first</div>
-        <div class="name">Client-specific</div>
-        <div class="desc">A short discovery pass makes demos client-specific: part formats, bin grades, file layouts. Generic demos lose planners in 30 seconds.</div>
+  <!-- 06 -->
+  <section class="sec">
+    <div class="sec-head"><span class="sec-num">06</span><h2 class="sec-title">Architecture Decisions</h2></div>
+    <div class="sec-body">
+      <div class="cards">
+        <div class="ccard b"><div class="l">Reasoning</div><div class="n">Claude API</div><div class="d">Prompt-engineered reasoning chains with structured outputs. Evidence-attached responses &mdash; the agent shows its work, not just its answer.</div></div>
+        <div class="ccard b"><div class="l">Kinaxis-first</div><div class="n">Not a custom UI</div><div class="d">Anchor every demo in Kinaxis or Databricks screens. A custom UI reads as a prototype; their own systems read as a deliverable.</div></div>
+        <div class="ccard b"><div class="l">Human-in-the-loop</div><div class="n">Proposed vs committed</div><div class="d">Every action that changes planning data requires planner approval. The agent explores paths; the human chooses the destination.</div></div>
+        <div class="ccard b"><div class="l">Slow motion</div><div class="n">Paced for humans</div><div class="d">Autonomous agents are invisible on screen. Actions appear incrementally, reasoning unfolds step by step, mitigations compared before committing.</div></div>
+        <div class="ccard b"><div class="l">Before-state</div><div class="n">In numbers</div><div class="d">Every demo closes with the contrast: planner + 50 workbooks &rarr; seconds, 5&ndash;6 clicks &rarr; single ranked list. Speed and legibility are the message.</div></div>
+        <div class="ccard b"><div class="l">Discovery first</div><div class="n">Client-specific</div><div class="d">A short discovery pass makes demos client-specific: part formats, bin grades, file layouts. Generic demos lose planners in 30 seconds.</div></div>
       </div>
     </div>
-  </div>
+  </section>
 
-  <!-- Session format -->
-  <div class="detail-section animate" style="--i:7">
-    <h2>Client Session Format &mdash; 60 Minutes</h2>
-    <div class="context-grid">
-      <div class="context-card metric">
-        <div class="label">Live Demos · ~15 min each</div>
-        <div class="name">Full Click-Through</div>
-        <div class="desc">Real interaction and real data flow. The planner drives the experience; the agent responds in real time. Enough detail that the client sees the thing is close to ready.</div>
-      </div>
-      <div class="context-card amber">
-        <div class="label">Video · ~90 sec each</div>
-        <div class="name">Narrated Walkthroughs</div>
-        <div class="desc">Concept walkthroughs, recorded not driven live. Show the architecture, the agent's capabilities, and the before/after contrast. Close with proof points.</div>
-      </div>
-      <div class="context-card secondary">
-        <div class="label">The Objective</div>
-        <div class="name">Show the System, Not One Tool</div>
-        <div class="desc">The architecture is the story: seven agents that compound through visible handoffs. A planner leaves understanding the whole system, not a single feature.</div>
+  <!-- 07 -->
+  <section class="sec">
+    <div class="sec-head"><span class="sec-num">07</span><h2 class="sec-title">Client Session Format &mdash; 60 Minutes</h2></div>
+    <div class="sec-body">
+      <div class="cards">
+        <div class="ccard g"><div class="l">Live Demos &middot; ~15 min each</div><div class="n">Full Click-Through</div><div class="d">Real interaction and real data flow. The planner drives the experience; the agent responds in real time. Enough detail that the client sees the thing is close to ready.</div></div>
+        <div class="ccard a"><div class="l">Video &middot; ~90 sec each</div><div class="n">Narrated Walkthroughs</div><div class="d">Concept walkthroughs, recorded not driven live. Show the architecture, the agent&rsquo;s capabilities, and the before/after contrast. Close with proof points.</div></div>
+        <div class="ccard b"><div class="l">The Objective</div><div class="n">Show the System, Not One Tool</div><div class="d">The architecture is the story: seven agents that compound through visible handoffs. A planner leaves understanding the whole system, not a single feature.</div></div>
       </div>
     </div>
-  </div>
+  </section>
 
-  <div class="footer">
-    <a href="../index.html">&larr; Index</a>
-    &nbsp;&middot;&nbsp;
-    &copy; 2025-2026 Charlie Fuller &nbsp;&middot;&nbsp; <a href="https://linkedin.com/in/charlie-fuller-colorado/" target="_blank" rel="noopener">LinkedIn</a>
-  </div>
-</div>
+  <footer class="footer">
+    <a href="../other-projects.html">&larr; Other Projects</a>
+    <span>&copy; 2025-2026 Charlie Fuller</span>
+  </footer>
+
+</main>
 
 <script type="module">
   import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs';
-  const isDark = document.documentElement.classList.contains('dark');
   mermaid.initialize({
     startOnLoad: true, theme: 'base', look: 'classic',
     themeVariables: {
-      primaryColor: isDark ? '#132240' : '#f5f8fc',
-      primaryBorderColor: isDark ? '#5e7aa3' : '#a0bedb',
-      primaryTextColor: isDark ? '#e8edf5' : '#0a1628',
-      secondaryColor: isDark ? '#132240' : '#ffffff',
-      secondaryBorderColor: isDark ? '#6cace4' : '#4a90c4',
-      secondaryTextColor: isDark ? '#e8edf5' : '#0a1628',
-      tertiaryColor: isDark ? '#132240' : '#ffffff',
-      tertiaryBorderColor: isDark ? '#2dd4bf' : '#0f766e',
-      tertiaryTextColor: isDark ? '#e8edf5' : '#0a1628',
-      lineColor: isDark ? '#5e7aa3' : '#7a9ab8',
-      clusterBkg: isDark ? '#132240' : '#ffffff',
-      clusterBorder: isDark ? '#2d4570' : '#a0bedb',
-      fontSize: '14px', fontFamily: "'Fraunces', Georgia, serif",
+      primaryColor: '#FFFFFF', primaryBorderColor: '#4F46E5', primaryTextColor: '#241A12',
+      secondaryColor: '#F0E9E1', secondaryBorderColor: '#0E7C6E', secondaryTextColor: '#241A12',
+      tertiaryColor: '#F0E9E1', tertiaryBorderColor: '#A5650A', tertiaryTextColor: '#241A12',
+      lineColor: '#8C7E6E', clusterBkg: '#FFFFFF', clusterBorder: '#CDBBA8',
+      fontSize: '14px', fontFamily: "'Mulish', Helvetica, sans-serif"
     }
   });
 </script>
 <script>
-  function updateZoomState(wrap) { const t = wrap.querySelector('.mermaid'); wrap.classList.toggle('is-zoomed', parseFloat(t.dataset.zoom || '1') > 1); }
-  function zoomDiagram(btn, factor) { const wrap = btn.closest('.mermaid-wrap'), t = wrap.querySelector('.mermaid'); const n = Math.min(Math.max((parseFloat(t.dataset.zoom || '1')) * factor, 0.3), 5); t.dataset.zoom = n; t.style.transform = 'scale(' + n + ')'; updateZoomState(wrap); }
-  function resetZoom(btn) { const wrap = btn.closest('.mermaid-wrap'), t = wrap.querySelector('.mermaid'); t.dataset.zoom = '1'; t.style.transform = 'scale(1)'; updateZoomState(wrap); }
+  function zoomDiagram(btn, factor) {
+    var wrap = btn.closest('.mermaid-wrap'), target = wrap.querySelector('.mermaid');
+    var next = Math.min(Math.max((parseFloat(target.dataset.zoom || '1')) * factor, 0.3), 5);
+    target.dataset.zoom = next; target.style.transform = 'scale(' + next + ')';
+  }
+  function resetZoom(btn) {
+    var wrap = btn.closest('.mermaid-wrap'), target = wrap.querySelector('.mermaid');
+    target.dataset.zoom = '1'; target.style.transform = 'scale(1)';
+  }
   document.querySelectorAll('.mermaid-wrap').forEach(function(wrap) {
     wrap.addEventListener('wheel', function(e) {
       if (!e.ctrlKey && !e.metaKey) return;
       e.preventDefault();
-      const t = wrap.querySelector('.mermaid');
-      const n = Math.min(Math.max((parseFloat(t.dataset.zoom || '1')) * (e.deltaY < 0 ? 1.1 : 0.9), 0.3), 5);
-      t.dataset.zoom = n; t.style.transform = 'scale(' + n + ')'; updateZoomState(wrap);
+      var target = wrap.querySelector('.mermaid');
+      var c = parseFloat(target.dataset.zoom || '1');
+      target.dataset.zoom = Math.min(Math.max(c * (e.deltaY < 0 ? 1.1 : 0.9), 0.3), 5);
+      target.style.transform = 'scale(' + target.dataset.zoom + ')';
     }, { passive: false });
-    let sx, sy, sl, st;
-    wrap.addEventListener('mousedown', function(e) {
-      if (e.target.closest('.zoom-controls')) return;
-      if (parseFloat(wrap.querySelector('.mermaid').dataset.zoom || '1') <= 1) return;
-      wrap.classList.add('is-panning'); sx = e.clientX; sy = e.clientY; sl = wrap.scrollLeft; st = wrap.scrollTop;
-    });
-    window.addEventListener('mousemove', function(e) {
-      if (!wrap.classList.contains('is-panning')) return;
-      wrap.scrollLeft = sl - (e.clientX - sx); wrap.scrollTop = st - (e.clientY - sy);
-    });
-    window.addEventListener('mouseup', function() { wrap.classList.remove('is-panning'); });
   });
 </script>
 

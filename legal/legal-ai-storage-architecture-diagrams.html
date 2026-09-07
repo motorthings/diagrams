@@ -1,699 +1,364 @@
 <!DOCTYPE html>
-<html class="light">
+<html lang="en" class="light">
 <head>
 <meta charset="UTF-8">
-<link rel="icon" type="image/svg+xml" href="../icon.svg">
+<link rel="icon" href="../icon.svg" type="image/svg+xml" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<meta name="description" content="Visual flow diagrams of three legal AI storage architectures — vector-only RAG, hybrid vector+BM25+rerank, and full hybrid with knowledge graph — showing how data moves through each system.">
-<title>Legal AI Storage Architecture — How Each Option Works</title>
+<title>Legal AI Storage Architecture &mdash; How Each Option Works</title>
+<meta name="description" content="Data flow through three legal AI storage architectures, from document to answer: vector-only RAG, hybrid vector+BM25+rerank, and full hybrid with knowledge graph.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Mulish:ital,wght@0,300;0,400;0,600;0,700;0,800;1,400&display=swap" rel="stylesheet">
 <style>
-.crumbs{font-family:var(--font-mono,monospace);font-size:13px;font-weight:600;display:flex;align-items:center;gap:8px;flex-wrap:wrap;min-width:0}
-.crumbs a{color:var(--primary);text-decoration:none}
-.crumbs a:hover,.crumbs a:focus-visible{text-decoration:underline;outline:none}
-.crumbs .sep{color:var(--text-faint)}
-.crumbs .current{color:var(--text-faint);font-weight:400}
+  :root{--font-body:'Mulish','Segoe UI',Helvetica,sans-serif;--font-mono:'Mulish',ui-monospace,'SF Mono',Consolas,monospace;
+    --bg:#14181C;--surface:#1B2127;--surface2:#232B33;--border:#303A43;--border-bright:#42505C;
+    --text:#F4F5F6;--text-dim:#CBD0D6;--text-faint:#87919B;
+    --primary:#E39CB2;--metric:#5FBF9B;--primary-dim:rgba(227,156,178,0.12);--metric-dim:rgba(95,191,155,0.12);
+    --blue:#6CACE4;--blue-dim:rgba(108,172,228,0.12);
+    --violet:#B9A0E8;--violet-dim:rgba(185,160,232,0.12);
+    --amber:#E8B54D;--amber-dim:rgba(232,181,77,0.12);
+    --rose:#E88280;--rose-dim:rgba(232,130,128,0.12);
+    --red:#E88280;--red-dim:rgba(232,130,128,0.12);}
+  html.light{--bg:#F7F3EF;--surface:#FFFFFF;--surface2:#F0E9E1;--border:#E1D6CB;--border-bright:#CDBBA8;
+    --text:#241A12;--text-dim:#574A3C;--text-faint:#8C7E6E;
+    --primary:#B83159;--primary-dim:rgba(184,49,89,0.08);--metric:#1E8A6A;--metric-dim:rgba(30,138,106,0.08);
+    --blue:#2F6FA8;--blue-dim:rgba(47,111,168,0.08);
+    --violet:#7C3AED;--violet-dim:rgba(124,58,237,0.07);
+    --amber:#A5650A;--amber-dim:rgba(165,101,10,0.08);
+    --rose:#C23A30;--rose-dim:rgba(194,58,48,0.07);
+    --red:#C4506B;--red-dim:rgba(196,80,107,0.10);}
+  *{margin:0;padding:0;box-sizing:border-box}
+  html{scroll-behavior:smooth}
+  body{background:
+      radial-gradient(at 10% 0%,var(--primary-dim),transparent 55%),
+      radial-gradient(at 90% 80%,var(--metric-dim),transparent 55%),
+      var(--bg);
+    color:var(--text);font-family:var(--font-body);font-size:17px;line-height:1.62;-webkit-font-smoothing:antialiased;min-height:100vh}
 
-  /* ============ GULF STREAM RACING PALETTE ============ */
-  :root {
-    --font-body: 'Mulish', 'Segoe UI', Helvetica, sans-serif;
-    --font-mono: 'Mulish', ui-monospace, 'SF Mono', Consolas, monospace;
+  .crumbs{font-size:13px;font-weight:600;color:var(--text-dim);display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+  .crumbs a{color:var(--primary);text-decoration:none}
+  .crumbs a:hover{text-decoration:underline}
+  .crumbs .sep{color:var(--text-faint)}
+  .crumbs .current{color:var(--text-dim);font-weight:400}
+  .crumbs-top{max-width:1080px;margin:0 auto;padding:18px 24px 0}
 
-    --bg: #171416;
-    --surface: #1E1A1D;
-    --surface2: #262024;
-    --surface-elevated: #2A2427;
-    --border: #332D31;
-    --border-bright: #463D42;
-    --text: #F5F2F1;
-    --text-dim: #C9C3C1;
-    --text-muted: #948E8C;
+  .wrap{max-width:1080px;margin:0 auto;padding:0 24px 80px}
 
-    --primary: #E39CB2;
-    --primary-dim: rgba(227,156,178,0.12);
-    --secondary: #B83159;
-    --secondary-dim: rgba(184,49,89,0.14);
-    --metric: #5FBF9B;
-    --metric-dim: rgba(95,191,155,0.12);
-    --amber: #D9A05B;
-    --amber-dim: rgba(217,160,91,0.12);
-    --violet: #C9A3B8;
-    --violet-dim: rgba(201,163,184,0.12);
-    --rose: #E36C89;
-    --rose-dim: rgba(227,108,137,0.12);
-    --slate: #948E8C;
-    --slate-dim: rgba(148,142,140,0.12);
-    --emerald: #059669;
-    --emerald-dim: rgba(5, 150, 105, 0.08);
-  }
+  .hero{padding:44px 0 24px;border-bottom:1px solid var(--border);margin-bottom:10px}
+  .hero .tagline{font-family:var(--font-mono);font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.14em;color:var(--primary);margin-bottom:10px}
+  .hero h1{font-size:52px;line-height:1.0;letter-spacing:-0.03em;font-weight:800;
+    background:linear-gradient(135deg,var(--primary),var(--metric));-webkit-background-clip:text;background-clip:text;color:transparent}
+  .hero .lede{font-size:19px;line-height:1.5;color:var(--text-dim);max-width:920px;margin-top:14px}
+  .hero .lede b{color:var(--text)}
 
-  
+  .sec{margin-top:22px}
+  .sec-head{display:flex;align-items:baseline;gap:14px;padding-bottom:10px;border-bottom:1px solid var(--border);margin-bottom:10px}
+  .sec-num{font-size:23px;font-weight:800;color:var(--primary);font-family:var(--font-mono)}
+  .sec-title{font-size:23px;font-weight:800;color:var(--text);letter-spacing:-0.01em}
+  .sec .tag{display:inline-block;font-family:var(--font-mono);font-size:11px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--text-faint);border:1px solid var(--border);border-radius:999px;padding:3px 12px;margin-bottom:8px}
+  .sec .tag.rose{color:var(--red);border-color:var(--red)}
+  .sec .tag.blue{color:var(--blue);border-color:var(--blue)}
+  .sec .tag.violet{color:var(--violet);border-color:var(--violet)}
+  .sec-body p{max-width:920px;margin-bottom:12px;color:var(--text-dim)}
+  .sec-body p b,.sec-body strong{color:var(--text)}
+  .sec-body p.nb{margin-bottom:0}
+  code{font-family:var(--font-mono);font-size:0.84em;color:var(--primary)}
+  .close{margin-top:16px;border-top:1px solid var(--border);padding-top:14px;font-size:14px;line-height:1.6;color:var(--text-dim);max-width:920px}
+  .close b{color:var(--text)}
 
-  /* ============ RESET + BASE ============ */
-  * { margin: 0; padding: 0; box-sizing: border-box; }
+  /* ---- inline SVG flow diagrams ---- */
+  .dflow{display:block;width:100%;max-width:920px;height:auto;margin:6px auto 4px;background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:18px}
+  .dflow text{font-family:var(--font-mono);fill:var(--text)}
+  .dflow text.t1{font-size:12.5px;font-weight:700}
+  .dflow text.t2{font-size:10px;fill:var(--text-faint)}
+  .f-n rect{fill:var(--surface2);stroke:var(--border-bright)}
+  .f-lm rect{fill:var(--surface2);stroke:var(--border-bright);stroke-dasharray:4 3}
+  .f-ans rect{fill:var(--metric-dim);stroke:var(--metric)}
+  .f-r rect{fill:var(--rose-dim);stroke:var(--rose)}
+  .f-b rect{fill:var(--blue-dim);stroke:var(--blue)}
+  .f-v rect{fill:var(--violet-dim);stroke:var(--violet)}
+  .f-a rect{fill:var(--primary-dim);stroke:var(--primary)}
+  .f-s rect{fill:var(--amber-dim);stroke:var(--amber)}
+  .f-v polygon{fill:var(--violet-dim);stroke:var(--violet)}
+  .dflow .a{stroke:var(--border-bright);stroke-width:1.4;fill:none}
+  .dflow .a.blue{stroke:var(--blue)}
+  .dflow .a.vio{stroke:var(--violet)}
+  .dflow .a.amb{stroke:var(--amber)}
 
-  body {
-    background: var(--bg);
-    background-image:
-      radial-gradient(ellipse at 80% 0%, var(--primary-dim) 0%, transparent 50%),
-      radial-gradient(ellipse at 20% 60%, var(--secondary-dim) 0%, transparent 40%);
-    color: var(--text);
-    font-family: var(--font-body);
-    font-size: 15px;
-    line-height: 1.7;
-    min-height: 100vh;
-    -webkit-font-smoothing: antialiased;
-    transition: background 0.3s, color 0.3s;
-  }
+  .pcap{font-size:14px;line-height:1.6;color:var(--text-dim);border:1px solid var(--border);border-left-width:3px;border-radius:8px;background:var(--surface);padding:12px 16px;margin:10px 0 4px;max-width:920px}
+  .pcap.rose{border-left-color:var(--rose)}
+  .pcap.blue{border-left-color:var(--blue)}
+  .pcap.violet{border-left-color:var(--violet)}
+  .pcap b{color:var(--text)}
 
-  /* ============ NAV ============ */
-  .nav {
-    position: sticky; top: 0; z-index: 100;
-    backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px);
-    background: color-mix(in srgb, var(--surface) 85%, transparent);
-    border-bottom: 1px solid var(--border);
-    margin: 0 0 32px; padding: 0 32px;
-    transition: background 0.3s, border-color 0.3s;
-  }
-  .nav-inner {
-    max-width: 1000px; margin: 0 auto; padding: 12px 0;
-    display: flex; align-items: center; justify-content: space-between;
-  }
-  .nav-brand {
-    font-family: var(--font-mono); font-size: 13px; font-weight: 600;
-    color: var(--primary); text-decoration: none;
-  }
-  .theme-toggle {
-    width: 36px; height: 36px; border-radius: 10px;
-    border: 1px solid var(--border); background: var(--surface);
-    cursor: pointer; display: flex; align-items: center; justify-content: center;
-    font-size: 16px; color: var(--text-dim); transition: all 0.2s;
-  }
-  .theme-toggle:hover { border-color: var(--primary); color: var(--primary); }
-  .theme-toggle:focus-visible { outline: 2px solid var(--primary); outline-offset: 2px; }
+  .pmap{padding:14px 4px;border-top:1px solid var(--border);display:grid;grid-template-columns:200px 1fr;gap:4px 28px;align-items:baseline}
+  .pmap:first-of-type{border-top:none}
+  .pmap .pm-k{font-family:var(--font-mono);font-size:12.5px;font-weight:800;text-transform:uppercase;letter-spacing:.08em;line-height:1.4}
+  .pmap.i-rose .pm-k{color:var(--rose)}
+  .pmap.i-acc .pm-k{color:var(--primary)}
+  .pmap.i-vio .pm-k{color:var(--violet)}
+  .pmap.i-teal .pm-k{color:var(--metric)}
+  .pmap .pm-b{font-size:14px;line-height:1.6;color:var(--text-dim)}
+  .pmap .pm-b b,.pmap .pm-b strong{color:var(--text)}
 
-  /* ============ BACKLINK ============ */
-  .backlink {
-    position: fixed; top: 12px; left: 16px; z-index: 101;
-    font-family: var(--font-mono); font-size: 12px;
-    color: var(--text-dim); text-decoration: none;
-    padding: 6px 10px; border: 1px solid var(--border);
-    border-radius: 6px; background: var(--surface);
-    transition: color 0.15s, border-color 0.15s;
-  }
-  .backlink:hover { color: var(--text); border-color: var(--border-bright); }
+  .footer{margin-top:30px;border-top:1px solid var(--border);padding:18px 0 0;display:flex;justify-content:space-between;gap:20px;flex-wrap:wrap;font-family:var(--font-mono);font-size:12px;color:var(--text-faint)}
+  .footer a{color:var(--primary);text-decoration:none}
+  .footer a:hover{text-decoration:underline}
 
-  /* ============ CONTAINER ============ */
-  .container { max-width: 1000px; margin: 0 auto; padding: 0 24px 80px; }
-
-  /* ============ ANIMATION ============ */
-  @keyframes fadeUp {
-    from { opacity: 0; transform: translateY(16px); }
-    to { opacity: 1; transform: translateY(0); }
+  @media(max-width:900px){
+    .wrap{padding:0 16px 60px}
+    .hero h1{font-size:38px}
+    body{font-size:16px}
+    .dflow{padding:8px}
   }
-  .section { animation: fadeUp 0.5s ease both; margin-bottom: 40px; }
-  .section:nth-child(1) { animation-delay: 0.05s; }
-  .section:nth-child(2) { animation-delay: 0.10s; }
-  .section:nth-child(3) { animation-delay: 0.15s; }
-  .section:nth-child(4) { animation-delay: 0.20s; }
-  .section:nth-child(5) { animation-delay: 0.25s; }
-  .section:nth-child(6) { animation-delay: 0.30s; }
-
-  @media (prefers-reduced-motion: reduce) {
-    *, *::before, *::after {
-      animation-duration: 0.01ms !important;
-      animation-delay: 0ms !important;
-      transition-duration: 0.01ms !important;
-    }
-  }
-
-  /* ============ HERO ============ */
-  .hero { text-align: center; margin-bottom: 48px; padding: 32px 0 0; }
-  .hero-badge {
-    display: inline-block; font-family: var(--font-mono);
-    font-size: 11px; font-weight: 600; letter-spacing: 1.5px;
-    text-transform: uppercase; color: var(--secondary);
-    background: var(--secondary-dim); border: 1px solid var(--secondary);
-    border-radius: 20px; padding: 4px 14px; margin-bottom: 16px;
-  }
-  .hero h1 {
-    font-size: 44px; font-weight: 800; letter-spacing: -1px;
-    margin-bottom: 8px; color: var(--text); text-wrap: balance;
-  }
-  .hero .tagline {
-    font-size: 16px; color: var(--text-dim);
-    font-style: italic; max-width: 620px; margin: 0 auto;
-  }
-
-  /* ============ DIAGRAM SECTION HEADER ============ */
-  .diagram-header {
-    margin-bottom: 20px;
-  }
-  .diagram-header__num {
-    font-family: var(--font-mono); font-size: 10px; font-weight: 600;
-    letter-spacing: 1.5px; text-transform: uppercase; margin-bottom: 4px;
-  }
-  .diagram-header__num--rose { color: var(--rose); }
-  .diagram-header__num--secondary { color: var(--secondary); }
-  .diagram-header__num--violet { color: var(--violet); }
-
-  .diagram-header h2 {
-    font-size: 24px; font-weight: 700; letter-spacing: -0.3px; margin-bottom: 4px;
-  }
-  .diagram-header__subtitle {
-    font-family: var(--font-mono); font-size: 11px; color: var(--text-muted);
-  }
-
-  /* ============ MERMAID CONTAINER ============ */
-  .mermaid-wrap {
-    position: relative;
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: 12px;
-    padding: 28px 20px 24px;
-    overflow: auto;
-    margin-bottom: 8px;
-  }
-
-  .mermaid-wrap .mermaid {
-    display: flex;
-    justify-content: center;
-    transition: transform 0.2s ease;
-    transform-origin: top center;
-  }
-
-  /* Zoom controls */
-  .zoom-controls {
-    position: absolute;
-    top: 8px; right: 8px;
-    display: flex; gap: 2px; z-index: 10;
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: 6px; padding: 2px;
-  }
-  .zoom-controls button {
-    width: 28px; height: 28px;
-    border: none; background: transparent;
-    color: var(--text-dim);
-    font-family: var(--font-mono); font-size: 14px;
-    cursor: pointer; border-radius: 4px;
-    display: flex; align-items: center; justify-content: center;
-    transition: background 0.15s, color 0.15s;
-  }
-  .zoom-controls button:hover {
-    background: var(--border); color: var(--text);
-  }
-
-  /* Scrollbar */
-  .mermaid-wrap {
-    scrollbar-width: thin;
-    scrollbar-color: var(--border) transparent;
-  }
-  .mermaid-wrap::-webkit-scrollbar { width: 6px; height: 6px; }
-  .mermaid-wrap::-webkit-scrollbar-track { background: transparent; }
-  .mermaid-wrap::-webkit-scrollbar-thumb {
-    background: var(--border); border-radius: 3px;
-  }
-  .mermaid-wrap::-webkit-scrollbar-thumb:hover { background: var(--text-dim); }
-
-  .mermaid-wrap.is-zoomed { cursor: grab; }
-  .mermaid-wrap.is-panning { cursor: grabbing; user-select: none; }
-
-  /* ============ MERMAID SVG OVERRIDES ============ */
-  .mermaid .nodeLabel {
-    font-family: var(--font-mono) !important;
-    font-size: 13px !important;
-  }
-  .mermaid .edgeLabel {
-    font-family: var(--font-mono) !important;
-    font-size: 11px !important;
-  }
-  .mermaid .node rect,
-  .mermaid .node circle,
-  .mermaid .node polygon {
-    stroke-width: 1.5px !important;
-  }
-  .mermaid .edge-pattern-solid {
-    stroke-width: 1.5px !important;
-  }
-
-  /* Dark mode Mermaid overrides — Option 1 (rose) */
-  
-  
-
-  /* Dark mode Mermaid overrides — Option 2 (blue) */
-  
-  
-
-  /* Dark mode Mermaid overrides — Option 3 (violet) */
-  
-  
-  
-
-  /* Dark mode — shared nodes */
-  
-  
-  
-  
-
-  /* Dark mode — edge labels */
-  
-  
-
-  /* ============ DIAGRAM LABEL BAR ============ */
-  .diagram-label {
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: 8px;
-    padding: 10px 16px;
-    margin-bottom: 32px;
-    font-family: var(--font-mono); font-size: 11px;
-    color: var(--text-dim); text-align: center;
-  }
-  .diagram-label--rose { border-left: 3px solid var(--rose); }
-  .diagram-label--secondary { border-left: 3px solid var(--secondary); }
-  .diagram-label--violet { border-left: 3px solid var(--violet); }
-
-  /* ============ SUMMARY COMPARISON ============ */
-  .summary-header {
-    text-align: center; margin-bottom: 24px;
-  }
-  .summary-header h2 {
-    font-size: 22px; font-weight: 700; letter-spacing: -0.3px; margin-bottom: 4px;
-  }
-  .summary-header p {
-    font-size: 14px; color: var(--text-dim); font-style: italic;
-  }
-
-  .summary-grid {
-    display: grid;
-    grid-template-columns: 1fr 1fr 1fr;
-    gap: 16px;
-    margin-bottom: 48px;
-  }
-
-  .summary-card {
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: 10px;
-    padding: 18px 20px;
-    text-align: center;
-  }
-  .summary-card__bar {
-    height: 3px; margin-bottom: 14px; border-radius: 2px;
-  }
-  .summary-card__bar--rose { background: var(--rose); }
-  .summary-card__bar--secondary { background: var(--secondary); }
-  .summary-card__bar--violet { background: var(--violet); }
-
-  .summary-card__title {
-    font-size: 14px; font-weight: 700; margin-bottom: 6px;
-  }
-  .summary-card__text {
-    font-size: 12px; color: var(--text-dim); line-height: 1.5;
-  }
-
-  /* ============ FOOTER ============ */
-  .footer {
-    text-align: center; font-family: var(--font-mono);
-    font-size: 11px; color: var(--text-muted); padding: 24px 0 0;
-  }
-
-  /* ============ RESPONSIVE ============ */
-  @media (max-width: 768px) {
-    .hero h1 { font-size: 32px; }
-    .summary-grid { grid-template-columns: 1fr; }
-    .mermaid-wrap { padding: 20px 12px; }
-    .backlink { top: 8px; left: 8px; font-size: 10px; padding: 4px 8px; }
-  }
-
-  @media (max-width: 500px) {
-    .hero h1 { font-size: 26px; }
-  }
-  html.light {
-    --bg: #F5F2F1; --surface: #FFFFFF; --surface2: #EDE8E6; --surface-warm: #F7F3F1;
-    --border: #D9D2CE; --border-bright: #C4B9B4;
-    --text: #171416; --text-dim: #4A4442; --text-faint: #8A8481; --text-muted: #8A8481; --heading: #171416;
-    --primary: #B83159; --primary-dim: rgba(184,49,89,0.10);
-    --accent: #B83159; --accent-bright: #A4093F; --accent-dim: rgba(184,49,89,0.10); --accent-btn: #A4093F;
-    --secondary: #A4093F; --secondary-dim: rgba(164,9,63,0.10);
-    --metric: #1E8A6A; --metric-dim: rgba(30,138,106,0.10);
-    --amber: #B07C2E; --amber-dim: rgba(176,124,46,0.10);
-    --violet: #8A5A76; --violet-dim: rgba(138,90,118,0.10);
-    --rose: #C4506B; --rose-dim: rgba(196,80,107,0.10);
-    --slate: #6A6461; --slate-dim: rgba(106,100,97,0.10);
-    --good: #1E8A6A; --good-dim: rgba(30,138,106,0.10);
-    --warn: #B07C2E; --warn-dim: rgba(176,124,46,0.10);
-    --bad: #C4506B; --bad-dim: rgba(196,80,107,0.10);
-    --surface-elevated: #EDE8E6; --nav-bg: rgba(255,255,255,0.78);
-  }
+  @media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
 </style>
 </head>
 <body>
 
-<!-- Nav -->
-<div class="nav">
-  <div class="nav-inner">
-    <nav class="crumbs" aria-label="Breadcrumb">
-  <a href="../index.html">Index</a>
-  <span class="sep">/</span>
-  <a href="index.html">Legal</a>
-  <span class="sep">/</span>
-  <span class="current" aria-current="page">How Each Architecture Works</span>
-</nav>
-    
-    
-  </div>
+<div class="crumbs crumbs-top" aria-label="Breadcrumb">
+  <a href="../index.html">Index</a><span class="sep">/</span>
+  <a href="index.html">Legal</a><span class="sep">/</span>
+  <span class="current" aria-current="page">Storage Architectures</span>
 </div>
 
-<!-- Backlink -->
+<main class="wrap">
 
-
-<div class="container">
-
-  <!-- Hero -->
-  <div class="hero section">
-    <div class="hero-badge">Legal AI OS</div>
+  <header class="hero">
+    <div class="tagline">Legal AI OS &mdash; storage, in flow</div>
     <h1>How Each Architecture Works</h1>
-    <p class="tagline">Data flow through the three options &mdash; from document to answer.</p>
-  </div>
+    <p class="lede">Data flow through the three options &mdash; from document to answer.</p>
+  </header>
 
   <!-- ============ OPTION 1: VECTOR ONLY ============ -->
-  <div class="diagram-header section">
-    <div class="diagram-header__num diagram-header__num--rose">Option 1 &mdash; Not recommended</div>
-    <h2>Vector DB / RAG Only</h2>
-    <div class="diagram-header__subtitle">Pure semantic search with embeddings</div>
-  </div>
-
-  <div class="mermaid-wrap section">
-    <div class="zoom-controls">
-      <button onclick="zoomDiagram(this, 1.2)" title="Zoom in">+</button>
-      <button onclick="zoomDiagram(this, 0.8)" title="Zoom out">&minus;</button>
-      <button onclick="resetZoom(this)" title="Reset zoom">&#8634;</button>
+  <section class="sec">
+    <div class="sec-head"><span class="sec-num">1</span><h2 class="sec-title">Vector DB / RAG Only</h2></div>
+    <span class="tag rose">Option 1 &mdash; Not recommended</span>
+    <div class="sec-body">
+      <p><i>Pure semantic search with embeddings</i></p>
+      <svg class="dflow" viewBox="0 0 760 470" role="img" aria-label="Vector DB / RAG Only flow">
+        <defs>
+          <marker id="ah1" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M0 0L10 5L0 10z" fill="var(--border-bright)"/></marker>
+        </defs>
+        <g class="f-r"><rect x="40" y="30" width="170" height="52" rx="10"/></g>
+        <text x="125" y="52" text-anchor="middle" class="t1">Documents</text>
+        <path class="a" d="M125 82 V118" marker-end="url(#ah1)"/>
+        <g class="f-r"><rect x="40" y="120" width="170" height="52" rx="10"/></g>
+        <text x="125" y="141" text-anchor="middle" class="t1">Chunk &amp; Embed</text>
+        <text x="125" y="158" text-anchor="middle" class="t2">split + embed chunks</text>
+        <path class="a" d="M125 172 V208" marker-end="url(#ah1)"/>
+        <g class="f-r"><rect x="30" y="210" width="190" height="58" rx="14"/></g>
+        <text x="125" y="234" text-anchor="middle" class="t1">Vector Store</text>
+        <text x="125" y="252" text-anchor="middle" class="t2">LanceDB Enterprise</text>
+        <g class="f-r"><rect x="500" y="30" width="220" height="52" rx="10"/></g>
+        <text x="610" y="52" text-anchor="middle" class="t1">User Query</text>
+        <path class="a" d="M610 82 V118" marker-end="url(#ah1)"/>
+        <g class="f-r"><rect x="500" y="120" width="220" height="52" rx="10"/></g>
+        <text x="610" y="141" text-anchor="middle" class="t1">Embed Query</text>
+        <text x="610" y="158" text-anchor="middle" class="t2">vectorize the question</text>
+        <path class="a" d="M610 172 V208" marker-end="url(#ah1)"/>
+        <g class="f-r"><rect x="470" y="210" width="280" height="58" rx="10"/></g>
+        <text x="610" y="233" text-anchor="middle" class="t1">Similarity Search</text>
+        <text x="610" y="251" text-anchor="middle" class="t2">cosine distance</text>
+        <path class="a" d="M220 239 H468" marker-end="url(#ah1)"/>
+        <path class="a" d="M610 268 V308" marker-end="url(#ah1)"/>
+        <g class="f-r"><rect x="470" y="310" width="280" height="56" rx="10"/></g>
+        <text x="610" y="332" text-anchor="middle" class="t1">Retrieved Chunks</text>
+        <text x="610" y="350" text-anchor="middle" class="t2">top-k</text>
+        <path class="a" d="M610 366 V400" marker-end="url(#ah1)"/>
+        <g class="f-n"><rect x="560" y="402" width="100" height="42" rx="21"/></g>
+        <text x="610" y="428" text-anchor="middle" class="t1">LLM</text>
+        <path class="a" d="M640 423 H668" marker-end="url(#ah1)"/>
+        <g class="f-ans"><rect x="670" y="402" width="90" height="42" rx="10"/></g>
+        <text x="715" y="428" text-anchor="middle" class="t1">Answer</text>
+      </svg>
+      <p class="pcap rose"><b>~70% accuracy ceiling.</b> No production legal AI system uses this alone. Embeddings fuzz out exact clause numbers, statute citations, and party names.</p>
     </div>
-    <pre class="mermaid">
-      flowchart TD
-        docs["Documents"]
-        chunk["Chunk &amp; Embed"]
-        vector[("Vector Store
-        LanceDB Enterprise")]
-        query["User Query"]
-        embed["Embed Query"]
-        similarity["Similarity Search
-        cosine distance"]
-        retrieved["Retrieved Chunks
-        top-k"]
-        llm["LLM"]
-        answer["Answer"]
-
-        docs --> chunk
-        chunk --> vector
-        query --> embed
-        embed --> similarity
-        vector --> similarity
-        similarity --> retrieved
-        retrieved --> llm
-        llm --> answer
-
-        class docs,chunk,embed,similarity,retrieved roseNode
-        class vector roseStore
-        class query roseNode
-        class llm llmNode
-        class answer answerNode
-    </pre>
-  </div>
-
-  <div class="diagram-label diagram-label--rose section">
-    ~70% accuracy ceiling &mdash; No production legal AI system uses this alone. Embeddings fuzz out exact clause numbers, statute citations, and party names.
-  </div>
+  </section>
 
   <!-- ============ OPTION 2: HYBRID ============ -->
-  <div class="diagram-header section">
-    <div class="diagram-header__num diagram-header__num--secondary">Option 2 &mdash; Production Baseline</div>
-    <h2>Hybrid Vector + BM25 + Cross-encoder Rerank</h2>
-    <div class="diagram-header__subtitle">Two parallel retrieval paths fused before the LLM</div>
-  </div>
-
-  <div class="mermaid-wrap section">
-    <div class="zoom-controls">
-      <button onclick="zoomDiagram(this, 1.2)" title="Zoom in">+</button>
-      <button onclick="zoomDiagram(this, 0.8)" title="Zoom out">&minus;</button>
-      <button onclick="resetZoom(this)" title="Reset zoom">&#8634;</button>
+  <section class="sec">
+    <div class="sec-head"><span class="sec-num">2</span><h2 class="sec-title">Hybrid Vector + BM25 + Cross-encoder Rerank</h2></div>
+    <span class="tag blue">Option 2 &mdash; Production Baseline</span>
+    <div class="sec-body">
+      <p><i>Two parallel retrieval paths fused before the LLM</i></p>
+      <svg class="dflow" viewBox="0 0 700 930" role="img" aria-label="Hybrid Vector plus BM25 plus cross-encoder rerank flow">
+        <defs>
+          <marker id="ah2" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M0 0L10 5L0 10z" fill="var(--border-bright)"/></marker>
+        </defs>
+        <!-- sources -->
+        <g class="f-b"><rect x="250" y="10" width="200" height="44" rx="10"/></g>
+        <text x="350" y="38" text-anchor="middle" class="t1">Documents</text>
+        <g class="f-b"><rect x="250" y="90" width="200" height="44" rx="10"/></g>
+        <text x="350" y="118" text-anchor="middle" class="t1">User Query</text>
+        <!-- docs fan -->
+        <path class="a blue" d="M300 40 H130 V196" marker-end="url(#ah2)"/>
+        <path class="a blue" d="M400 40 H570 V196" marker-end="url(#ah2)"/>
+        <!-- Dense lane (left) -->
+        <g class="f-b"><rect x="30" y="200" width="200" height="54" rx="10"/></g>
+        <text x="130" y="222" text-anchor="middle" class="t1">Chunk &amp; Embed</text>
+        <text x="130" y="239" text-anchor="middle" class="t2">Dense Path</text>
+        <path class="a" d="M130 254 V336" marker-end="url(#ah2)"/>
+        <g class="f-b"><rect x="30" y="340" width="200" height="58" rx="14"/></g>
+        <text x="130" y="364" text-anchor="middle" class="t1">Vector Store</text>
+        <text x="130" y="381" text-anchor="middle" class="t2">embeddings index</text>
+        <path class="a" d="M30 380 H16 V588 H26" marker-end="url(#ah2)"/>
+        <g class="f-b"><rect x="30" y="448" width="200" height="54" rx="10"/></g>
+        <text x="130" y="470" text-anchor="middle" class="t1">Embed Query</text>
+        <text x="130" y="487" text-anchor="middle" class="t2">vectorize the question</text>
+        <path class="a" d="M130 502 V566" marker-end="url(#ah2)"/>
+        <g class="f-b"><rect x="30" y="570" width="200" height="54" rx="10"/></g>
+        <text x="130" y="592" text-anchor="middle" class="t1">Vector Results</text>
+        <text x="130" y="609" text-anchor="middle" class="t2">cosine top candidates</text>
+        <!-- Sparse lane (right) -->
+        <g class="f-b"><rect x="470" y="200" width="200" height="54" rx="10"/></g>
+        <text x="570" y="222" text-anchor="middle" class="t1">BM25 Index</text>
+        <text x="570" y="239" text-anchor="middle" class="t2">Sparse Path</text>
+        <path class="a" d="M570 254 V336" marker-end="url(#ah2)"/>
+        <g class="f-b"><rect x="470" y="340" width="200" height="58" rx="14"/></g>
+        <text x="570" y="364" text-anchor="middle" class="t1">Keyword Index</text>
+        <text x="570" y="381" text-anchor="middle" class="t2">exact-match tokens</text>
+        <path class="a" d="M670 380 H684 V588 H674" marker-end="url(#ah2)"/>
+        <g class="f-b"><rect x="470" y="448" width="200" height="54" rx="10"/></g>
+        <text x="570" y="470" text-anchor="middle" class="t1">Keyword Query</text>
+        <text x="570" y="487" text-anchor="middle" class="t2">statute &amp;sect; party names</text>
+        <path class="a" d="M570 502 V566" marker-end="url(#ah2)"/>
+        <g class="f-b"><rect x="470" y="570" width="200" height="54" rx="10"/></g>
+        <text x="570" y="592" text-anchor="middle" class="t1">Keyword Results</text>
+        <text x="570" y="609" text-anchor="middle" class="t2">lexical matches</text>
+        <!-- query feeds query forms -->
+        <path class="a" d="M330 134 V500 H233" marker-end="url(#ah2)"/>
+        <path class="a" d="M370 134 V500 H527" marker-end="url(#ah2)"/>
+        <!-- results -> fusion -->
+        <path class="a" d="M230 597 H293" marker-end="url(#ah2)"/>
+        <path class="a" d="M470 597 H407" marker-end="url(#ah2)"/>
+        <g class="f-s"><rect x="250" y="640" width="200" height="54" rx="10"/></g>
+        <text x="350" y="662" text-anchor="middle" class="t1">Fusion RRF</text>
+        <text x="350" y="679" text-anchor="middle" class="t2">Reciprocal Rank Fusion</text>
+        <path class="a amb" d="M350 694 V732" marker-end="url(#ah2)"/>
+        <g class="f-b"><rect x="250" y="736" width="200" height="54" rx="10"/></g>
+        <text x="350" y="758" text-anchor="middle" class="t1">Cross-encoder Rerank</text>
+        <text x="350" y="775" text-anchor="middle" class="t2">relevance scoring</text>
+        <path class="a" d="M350 790 V832" marker-end="url(#ah2)"/>
+        <g class="f-n"><rect x="290" y="836" width="120" height="54" rx="10"/></g>
+        <text x="350" y="858" text-anchor="middle" class="t1">LLM</text>
+        <path class="a" d="M410 863 H466" marker-end="url(#ah2)"/>
+        <g class="f-ans"><rect x="470" y="836" width="150" height="54" rx="10"/></g>
+        <text x="545" y="858" text-anchor="middle" class="t1">Answer</text>
+      </svg>
+      <p class="pcap blue">The production floor. <b>Harvey AI, Brazilian legal platform (184,895 answers), and HyPA-RAG (NAACL 2025) all use this pattern.</b> BM25 catches exact matches (statute &sect; numbers, party names, dates). Cross-encoder reranks for relevance. Non-negotiable baseline.</p>
     </div>
-    <pre class="mermaid">
-      flowchart TD
-        docs["Documents"]
-
-        subgraph dense["Dense Path"]
-          chunk["Chunk &amp; Embed"]
-          vector[("Vector Store")]
-        end
-
-        subgraph sparse["Sparse Path"]
-          bm25["BM25 Index"]
-          keyword[("Keyword Index")]
-        end
-
-        query["User Query"]
-        embed["Embed Query"]
-        kwquery["Keyword Query"]
-        vresults["Vector Results"]
-        kresults["Keyword Results"]
-        fusion["Fusion RRF
-        Reciprocal Rank Fusion"]
-        rerank["Cross-encoder Rerank
-        relevance scoring"]
-        llm["LLM"]
-        answer["Answer"]
-
-        docs --> chunk & bm25
-        chunk --> vector
-        bm25 --> keyword
-        query --> embed & kwquery
-        embed --> vresults
-        kwquery --> kresults
-        vector --> vresults
-        keyword --> kresults
-        vresults --> fusion
-        kresults --> fusion
-        fusion --> rerank
-        rerank --> llm
-        llm --> answer
-
-        class docs,chunk,embed,kwquery,vresults,kresults blueNode
-        class vector,keyword blueStore
-        class bm25,query blueNode
-        class fusion fusionNode
-        class rerank blueNode
-        class llm llmNode
-        class answer answerNode
-    </pre>
-  </div>
-
-  <div class="diagram-label diagram-label--secondary section">
-    The production floor. Harvey AI, Brazilian legal platform (184,895 answers), and HyPA-RAG (NAACL 2025) all use this pattern. BM25 catches exact matches (statute &sect; numbers, party names, dates). Cross-encoder reranks for relevance. Non-negotiable baseline.
-  </div>
+  </section>
 
   <!-- ============ OPTION 3: FULL HYBRID + KG ============ -->
-  <div class="diagram-header section">
-    <div class="diagram-header__num diagram-header__num--violet">Option 3 &mdash; Long-term Target</div>
-    <h2>Full Hybrid with Knowledge Graph</h2>
-    <div class="diagram-header__subtitle">KG pre-filtering + retrieval + hallucination verification</div>
-  </div>
-
-  <div class="mermaid-wrap section">
-    <div class="zoom-controls">
-      <button onclick="zoomDiagram(this, 1.2)" title="Zoom in">+</button>
-      <button onclick="zoomDiagram(this, 0.8)" title="Zoom out">&minus;</button>
-      <button onclick="resetZoom(this)" title="Reset zoom">&#8634;</button>
+  <section class="sec">
+    <div class="sec-head"><span class="sec-num">3</span><h2 class="sec-title">Full Hybrid with Knowledge Graph</h2></div>
+    <span class="tag violet">Option 3 &mdash; Long-term Target</span>
+    <div class="sec-body">
+      <p><i>KG pre-filtering + retrieval + hallucination verification</i></p>
+      <svg class="dflow" viewBox="0 0 700 1380" role="img" aria-label="Full hybrid with knowledge graph flow">
+        <defs>
+          <marker id="ah3" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M0 0L10 5L0 10z" fill="var(--border-bright)"/></marker>
+        </defs>
+        <!-- sources -->
+        <g class="f-v"><rect x="220" y="10" width="260" height="44" rx="10"/></g>
+        <text x="350" y="38" text-anchor="middle" class="t1">Documents</text>
+        <g class="f-v"><rect x="220" y="86" width="120" height="44" rx="10"/></g>
+        <text x="280" y="114" text-anchor="middle" class="t1">User Query</text>
+        <g class="f-s"><rect x="360" y="86" width="120" height="44" rx="14"/></g>
+        <text x="420" y="108" text-anchor="middle" class="t1">Knowledge Graph</text>
+        <text x="420" y="122" text-anchor="middle" class="t2">entities &amp; relations</text>
+        <!-- docs feed lanes -->
+        <path class="a vio" d="M260 40 H120 V206" marker-end="url(#ah3)"/>
+        <path class="a vio" d="M440 40 H580 V206" marker-end="url(#ah3)"/>
+        <!-- Dense lane (left) -->
+        <g class="f-v"><rect x="20" y="210" width="200" height="54" rx="10"/></g>
+        <text x="120" y="232" text-anchor="middle" class="t1">Chunk &amp; Embed</text>
+        <text x="120" y="249" text-anchor="middle" class="t2">Dense Path</text>
+        <path class="a" d="M120 264 V326" marker-end="url(#ah3)"/>
+        <g class="f-v"><rect x="20" y="330" width="200" height="58" rx="14"/></g>
+        <text x="120" y="354" text-anchor="middle" class="t1">Vector Store</text>
+        <text x="120" y="371" text-anchor="middle" class="t2">embeddings index</text>
+        <g class="f-v"><rect x="20" y="640" width="200" height="54" rx="10"/></g>
+        <text x="120" y="662" text-anchor="middle" class="t1">Filtered Vector</text>
+        <text x="120" y="679" text-anchor="middle" class="t2">Results</text>
+        <path class="a" d="M120 388 V636" marker-end="url(#ah3)"/>
+        <!-- Sparse lane (right) -->
+        <g class="f-v"><rect x="480" y="210" width="200" height="54" rx="10"/></g>
+        <text x="580" y="232" text-anchor="middle" class="t1">BM25 Index</text>
+        <text x="580" y="249" text-anchor="middle" class="t2">Sparse Path</text>
+        <path class="a" d="M580 264 V326" marker-end="url(#ah3)"/>
+        <g class="f-v"><rect x="480" y="330" width="200" height="58" rx="14"/></g>
+        <text x="580" y="354" text-anchor="middle" class="t1">Keyword Index</text>
+        <text x="580" y="371" text-anchor="middle" class="t2">exact-match tokens</text>
+        <g class="f-v"><rect x="480" y="640" width="200" height="54" rx="10"/></g>
+        <text x="580" y="662" text-anchor="middle" class="t1">Filtered Keyword</text>
+        <text x="580" y="679" text-anchor="middle" class="t2">Results</text>
+        <path class="a" d="M580 388 V636" marker-end="url(#ah3)"/>
+        <!-- prefilter diamond -->
+        <polygon class="f-v" points="220,300 350,230 480,300 350,370"/>
+        <text x="350" y="285" text-anchor="middle" class="t1">KG Pre-filter</text>
+        <text x="350" y="301" text-anchor="middle" class="t2">dates, parties,</text>
+        <text x="350" y="314" text-anchor="middle" class="t2">jurisdictions, amounts</text>
+        <path class="a" d="M285 134 L315 236" marker-end="url(#ah3)"/>
+        <path class="a" d="M415 134 L385 236" marker-end="url(#ah3)"/>
+        <path class="a" d="M300 370 L160 636" marker-end="url(#ah3)"/>
+        <path class="a" d="M400 370 L540 636" marker-end="url(#ah3)"/>
+        <!-- fusion chain -->
+        <g class="f-s"><rect x="220" y="740" width="260" height="54" rx="10"/></g>
+        <text x="350" y="762" text-anchor="middle" class="t1">Fusion RRF</text>
+        <text x="350" y="779" text-anchor="middle" class="t2">merge both result sets</text>
+        <path class="a amb" d="M180 694 L300 736" marker-end="url(#ah3)"/>
+        <path class="a amb" d="M520 694 L400 736" marker-end="url(#ah3)"/>
+        <path class="a" d="M350 794 V836" marker-end="url(#ah3)"/>
+        <g class="f-v"><rect x="220" y="840" width="260" height="54" rx="10"/></g>
+        <text x="350" y="862" text-anchor="middle" class="t1">Cross-encoder Rerank</text>
+        <text x="350" y="879" text-anchor="middle" class="t2">relevance scoring</text>
+        <path class="a" d="M350 894 V936" marker-end="url(#ah3)"/>
+        <g class="f-n"><rect x="270" y="940" width="160" height="54" rx="10"/></g>
+        <text x="350" y="962" text-anchor="middle" class="t1">LLM</text>
+        <path class="a" d="M350 994 V1026" marker-end="url(#ah3)"/>
+        <g class="f-ans"><rect x="230" y="1030" width="240" height="54" rx="10"/></g>
+        <text x="350" y="1052" text-anchor="middle" class="t1">Answer</text>
+        <path class="a" d="M350 1084 V1106" marker-end="url(#ah3)"/>
+        <!-- verify diamond -->
+        <polygon class="f-v" points="220,1180 350,1110 480,1180 350,1250"/>
+        <text x="350" y="1175" text-anchor="middle" class="t1">KG Hallucination</text>
+        <text x="350" y="1191" text-anchor="middle" class="t2">Verification</text>
+        <text x="350" y="1204" text-anchor="middle" class="t2">entity grounding</text>
+        <g class="f-ans"><rect x="60" y="1320" width="180" height="54" rx="10"/></g>
+        <text x="150" y="1342" text-anchor="middle" class="t1">Verified Answer</text>
+        <g class="f-n"><rect x="460" y="1320" width="180" height="54" rx="10"/></g>
+        <text x="550" y="1342" text-anchor="middle" class="t1">Human</text>
+        <text x="550" y="1359" text-anchor="middle" class="t2">Escalation</text>
+        <!-- kg -> verify (right gutter) -->
+        <path class="a vio" d="M430 130 H700 V1180 H482" marker-end="url(#ah3)"/>
+        <!-- verify branches -->
+        <path class="a" d="M320 1250 L200 1316" marker-end="url(#ah3)"/>
+        <path class="a" d="M380 1250 L500 1316" marker-end="url(#ah3)"/>
+        <text x="180" y="1295" text-anchor="middle" class="t2">passes</text>
+        <text x="520" y="1295" text-anchor="middle" class="t2">fails</text>
+      </svg>
+      <p class="pcap violet">Adds two KG capabilities: <b>(A) structured pre-filtering</b> narrows candidates by metadata before vector search, and <b>(B) post-generation entity grounding</b> verifies citations against the KG. HalluGraph: AUC 0.94 for entity error detection vs BERTScore 0.60. But partially research-grade &mdash; build toward it, don&rsquo;t start here.</p>
     </div>
-    <pre class="mermaid">
-      flowchart TD
-        docs["Documents"]
-        kg[("Knowledge Graph
-        entities &amp; relations")]
-
-        subgraph dense2["Dense Path"]
-          chunk2["Chunk &amp; Embed"]
-          vector2[("Vector Store")]
-        end
-
-        subgraph sparse2["Sparse Path"]
-          bm252["BM25 Index"]
-          keyword2[("Keyword Index")]
-        end
-
-        query2["User Query"]
-        prefilter{"KG Pre-filter
-        dates, parties,
-        jurisdictions, amounts"}
-        vfiltered["Filtered Vector
-        Results"]
-        kfiltered["Filtered Keyword
-        Results"]
-        fusion2["Fusion RRF"]
-        rerank2["Cross-encoder Rerank"]
-        llm2["LLM"]
-        answer2["Answer"]
-        verify{"KG Hallucination
-        Verification
-        entity grounding"}
-        verified["Verified Answer"]
-        escalate["Human Escalation"]
-
-        docs --> chunk2 & bm252
-        chunk2 --> vector2
-        bm252 --> keyword2
-        query2 --> prefilter
-        kg --> prefilter
-        prefilter --> vfiltered & kfiltered
-        vector2 --> vfiltered
-        keyword2 --> kfiltered
-        vfiltered --> fusion2
-        kfiltered --> fusion2
-        fusion2 --> rerank2
-        rerank2 --> llm2
-        llm2 --> answer2
-        answer2 --> verify
-        kg --> verify
-        verify -->|"passes"| verified
-        verify -->|"fails"| escalate
-
-        class docs,chunk2,bm252,query2,vfiltered,kfiltered,rerank2 violetNode
-        class vector2,keyword2 violetStore
-        class prefilter,verify violetDiamond
-        class kg kgNode
-        class fusion2 fusionNode
-        class llm2 llmNode
-        class verified answerNode
-        class escalate roseNode
-    </pre>
-  </div>
-
-  <div class="diagram-label diagram-label--violet section">
-    Adds two KG capabilities: (A) structured pre-filtering narrows candidates by metadata before vector search, and (B) post-generation entity grounding verifies citations against the KG. HalluGraph: AUC 0.94 for entity error detection vs BERTScore 0.60. But partially research-grade &mdash; build toward it, don&rsquo;t start here.
-  </div>
+  </section>
 
   <!-- ============ SUMMARY ============ -->
-  <div class="summary-header section">
-    <h2>Summary</h2>
-    <p>Which architecture fits where</p>
-  </div>
-
-  <div class="summary-grid section">
-    <div class="summary-card">
-      <div class="summary-card__bar summary-card__bar--rose"></div>
-      <div class="summary-card__title">Option 1</div>
-      <div class="summary-card__text">Fastest to prototype. Not production-ready for legal. Pure semantic search misses exact citations and structured metadata.</div>
+  <section class="sec">
+    <div class="sec-head"><span class="sec-num">&Sigma;</span><h2 class="sec-title">Summary</h2></div>
+    <span class="tag">Which architecture fits where</span>
+    <div class="sec-body">
+      <div class="pmap i-rose"><div class="pm-k">Option 1</div><div class="pm-b">Fastest to prototype. Not production-ready for legal. Pure semantic search misses exact citations and structured metadata.</div></div>
+      <div class="pmap i-acc"><div class="pm-k">Option 2</div><div class="pm-b">Production baseline. Ship this now. Dual retrieval paths + reranking. Per-matter database-level isolation (ABA Model Rule 1.6). Deployed in customer VPC.</div></div>
+      <div class="pmap i-vio"><div class="pm-k">Option 3</div><div class="pm-b">Long-term target. Build toward it as retrieval quality demands. KG adds structured filtering and hallucination guardrails.</div></div>
     </div>
-    <div class="summary-card">
-      <div class="summary-card__bar summary-card__bar--secondary"></div>
-      <div class="summary-card__title">Option 2</div>
-      <div class="summary-card__text">Production baseline. Ship this now. Dual retrieval paths + reranking. Per-matter database-level isolation (ABA Model Rule 1.6). Deployed in customer VPC.</div>
-    </div>
-    <div class="summary-card">
-      <div class="summary-card__bar summary-card__bar--violet"></div>
-      <div class="summary-card__title">Option 3</div>
-      <div class="summary-card__text">Long-term target. Build toward it as retrieval quality demands. KG adds structured filtering and hallucination guardrails.</div>
-    </div>
-  </div>
+  </section>
 
-  <!-- Footer -->
-  <div class="footer">&copy; 2025&ndash;2026 Charlie Fuller &nbsp;&middot;&nbsp; <a href="https://linkedin.com/in/charlie-fuller-colorado/" target="_blank" rel="noopener">LinkedIn</a></div>
+  <footer class="footer">
+    <a href="index.html">&larr; Legal</a>
+    <span>&copy; 2025-2026 Charlie Fuller &middot; <a href="https://linkedin.com/in/charlie-fuller-colorado/" target="_blank" rel="noopener">LinkedIn</a></span>
+  </footer>
 
-</div>
-
-<!-- Mermaid import -->
-<script type="module">
-  import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs';
-
-  mermaid.initialize({
-    startOnLoad: true,
-    theme: 'base',
-    look: 'classic',
-    securityLevel: 'loose',
-    themeVariables: {
-      primaryColor: '#f5f8fc',
-      primaryBorderColor: '#c8daea',
-      primaryTextColor: '#0a1628',
-      secondaryColor: '#f5f8fc',
-      secondaryBorderColor: '#c8daea',
-      secondaryTextColor: '#0a1628',
-      tertiaryColor: '#f5f8fc',
-      tertiaryBorderColor: '#c8daea',
-      tertiaryTextColor: '#0a1628',
-      lineColor: '#a0bedb',
-      fontSize: '13px',
-      fontFamily: "'Source Code Pro', 'SF Mono', Consolas, monospace",
-    }
-  });
-</script>
-
-<!-- Zoom + pan -->
-<script>
-  function updateZoomState(wrap) {
-    var target = wrap.querySelector('.mermaid');
-    var zoom = parseFloat(target.dataset.zoom || '1');
-    wrap.classList.toggle('is-zoomed', zoom > 1);
-  }
-
-  function zoomDiagram(btn, factor) {
-    var wrap = btn.closest('.mermaid-wrap');
-    var target = wrap.querySelector('.mermaid');
-    var current = parseFloat(target.dataset.zoom || '1');
-    var next = Math.min(Math.max(current * factor, 0.3), 5);
-    target.dataset.zoom = next;
-    target.style.transform = 'scale(' + next + ')';
-    updateZoomState(wrap);
-  }
-
-  function resetZoom(btn) {
-    var wrap = btn.closest('.mermaid-wrap');
-    var target = wrap.querySelector('.mermaid');
-    target.dataset.zoom = '1';
-    target.style.transform = 'scale(1)';
-    updateZoomState(wrap);
-  }
-
-  document.querySelectorAll('.mermaid-wrap').forEach(function(wrap) {
-    wrap.addEventListener('wheel', function(e) {
-      if (!e.ctrlKey && !e.metaKey) return;
-      e.preventDefault();
-      var target = wrap.querySelector('.mermaid');
-      var current = parseFloat(target.dataset.zoom || '1');
-      var factor = e.deltaY < 0 ? 1.1 : 0.9;
-      var next = Math.min(Math.max(current * factor, 0.3), 5);
-      target.dataset.zoom = next;
-      target.style.transform = 'scale(' + next + ')';
-      updateZoomState(wrap);
-    }, { passive: false });
-
-    var startX, startY, scrollL, scrollT;
-    wrap.addEventListener('mousedown', function(e) {
-      if (e.target.closest('.zoom-controls')) return;
-      var target = wrap.querySelector('.mermaid');
-      if (parseFloat(target.dataset.zoom || '1') <= 1) return;
-      wrap.classList.add('is-panning');
-      startX = e.clientX;
-      startY = e.clientY;
-      scrollL = wrap.scrollLeft;
-      scrollT = wrap.scrollTop;
-    });
-    window.addEventListener('mousemove', function(e) {
-      if (!wrap.classList.contains('is-panning')) return;
-      wrap.scrollLeft = scrollL - (e.clientX - startX);
-      wrap.scrollTop = scrollT - (e.clientY - startY);
-    });
-    window.addEventListener('mouseup', function() {
-      wrap.classList.remove('is-panning');
-    });
-  });
-</script>
-
-<!-- Theme toggle -->
-
-
+</main>
 </body>
 </html>

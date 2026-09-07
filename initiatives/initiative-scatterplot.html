@@ -1,265 +1,110 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" class="light">
 <head>
 <meta charset="UTF-8">
-<link rel="icon" type="image/svg+xml" href="../icon.svg">
+<link rel="icon" href="../icon.svg" type="image/svg+xml" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>AI Initiatives -- Score vs Effort</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600;9..144,700&family=Source+Code+Pro:wght@400;500;600" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Mulish:ital,wght@0,300;0,400;0,600;0,700;0,800;1,400&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-annotation@3.0.1/dist/chartjs-plugin-annotation.min.js"></script>
 <style>
-  :root {
-    --font-body: 'Fraunces', Georgia, serif;
-    --font-mono: 'Source Code Pro', 'SF Mono', Consolas, monospace;
-    --bg: #f0f4f8;
-    --surface: #ffffff;
-    --surface2: #e8eef4;
-    --surface-elevated: #ffffff;
-    --border: rgba(0, 20, 60, 0.08);
-    --border-bright: rgba(0, 20, 60, 0.15);
-    --text: #0f172a;
-    --text-dim: #64748b;
-    --accent: #1e40af;
-    --accent-dim: rgba(30, 64, 175, 0.07);
-    --finance: #1e40af;
-    --finance-bg: rgba(30, 64, 175, 0.75);
-    --legal: #7c3aed;
-    --legal-bg: rgba(124, 58, 237, 0.75);
-    --people: #059669;
-    --people-bg: rgba(5, 150, 105, 0.75);
-    --is: #d97706;
-    --is-bg: rgba(217, 119, 6, 0.75);
-    --green: #059669;
-    --green-dim: rgba(5, 150, 105, 0.08);
-    --red: #dc2626;
-    --red-dim: rgba(220, 38, 38, 0.07);
-    --orange: #d97706;
-    --orange-dim: rgba(217, 119, 6, 0.08);
-    --purple: #7c3aed;
-    --purple-dim: rgba(124, 58, 237, 0.08);
-    --quad-a: rgba(5, 150, 105, 0.04);
-    --quad-b: rgba(30, 64, 175, 0.04);
-    --quad-c: rgba(217, 119, 6, 0.04);
-    --quad-d: rgba(220, 38, 38, 0.03);
-    --grid-line: rgba(0, 20, 60, 0.06);
-    --chart-text: #64748b;
-  }
-
-  
-
-  * { margin: 0; padding: 0; box-sizing: border-box; }
-
-  body {
-    background: var(--bg);
-    background-image:
-      radial-gradient(ellipse at 20% 0%, var(--accent-dim) 0%, transparent 55%),
-      radial-gradient(ellipse at 80% 100%, var(--purple-dim) 0%, transparent 45%);
-    color: var(--text);
-    font-family: var(--font-body);
-    padding: 40px;
-    min-height: 100vh;
-  }
-
-  @keyframes fadeUp { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: translateY(0); } }
-  @keyframes fadeScale { from { opacity: 0; transform: scale(0.92); } to { opacity: 1; transform: scale(1); } }
-  .animate { animation: fadeUp 0.4s ease-out both; animation-delay: calc(var(--i, 0) * 0.05s); }
-  .animate-scale { animation: fadeScale 0.35s ease-out both; animation-delay: calc(var(--i, 0) * 0.06s); }
-  @media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; } }
-
-  .container { max-width: 1100px; margin: 0 auto; }
-
-  h1 { font-size: 30px; font-weight: 700; letter-spacing: -0.5px; margin-bottom: 4px; }
-  .subtitle { color: var(--text-dim); font-family: var(--font-mono); font-size: 12px; margin-bottom: 28px; line-height: 1.5; }
-
-  .chart-wrap {
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: 12px;
-    padding: 28px 24px 20px;
-    margin-bottom: 24px;
-    box-shadow: 0 2px 12px rgba(0,0,0,0.04);
-    position: relative;
-  }
-
-  .chart-container {
-    position: relative;
-    width: 100%;
-    height: 620px;
-  }
-
-  .legend-row {
-    display: flex;
-    gap: 20px;
-    flex-wrap: wrap;
-    margin-bottom: 20px;
-    padding: 12px 16px;
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: 10px;
-  }
-
-  .legend-item {
-    display: flex;
-    align-items: center;
-    gap: 7px;
-    font-family: var(--font-mono);
-    font-size: 11px;
-    color: var(--text-dim);
-  }
-
-  .legend-dot {
-    width: 12px;
-    height: 12px;
-    border-radius: 50%;
-  }
-
-  .quad-legend {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 10px;
-    margin-bottom: 20px;
-  }
-
-  .quad-card {
-    padding: 12px 16px;
-    border-radius: 8px;
-    border: 1px solid var(--border);
-    font-size: 12px;
-    line-height: 1.4;
-  }
-
-  .quad-card__title {
-    font-family: var(--font-mono);
-    font-size: 10px;
-    font-weight: 600;
-    text-transform: uppercase;
-    letter-spacing: 1.2px;
-    margin-bottom: 4px;
-  }
-
-  .quad-card__body { color: var(--text-dim); }
-
-  .quad-card--a { background: var(--quad-a); }
-  .quad-card--a .quad-card__title { color: var(--green); }
-  .quad-card--b { background: var(--quad-b); }
-  .quad-card--b .quad-card__title { color: var(--accent); }
-  .quad-card--c { background: var(--quad-c); }
-  .quad-card--c .quad-card__title { color: var(--orange); }
-  .quad-card--d { background: var(--quad-d); }
-  .quad-card--d .quad-card__title { color: var(--red); }
-
-  .note {
-    font-family: var(--font-mono);
-    font-size: 11px;
-    color: var(--text-dim);
-    padding: 12px 16px;
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: 8px;
-    line-height: 1.5;
-  }
-  .note strong { color: var(--text); }
-
-  /* Tooltip override */
-  .tooltip-table { border-collapse: collapse; font-family: 'IBM Plex Mono', monospace; font-size: 11px; }
-  .tooltip-table td { padding: 2px 8px 2px 0; }
-  .tooltip-table td:first-child { color: rgba(255,255,255,0.6); }
-
-  @media (max-width: 768px) {
-    body { padding: 16px; }
-    h1 { font-size: 22px; }
-    .chart-container { height: 480px; }
-    .quad-legend { grid-template-columns: 1fr; }
-  }
-.backlink{position:fixed;top:12px;left:16px;z-index:200;font-family:var(--font-mono,monospace);font-size:11px;color:var(--text-dim,#8b949e);text-decoration:none;padding:6px 10px;border:1px solid var(--border,rgba(255,255,255,0.08));border-radius:6px;background:var(--surface,#161b22);transition:color .15s,border-color .15s}.backlink:hover{color:var(--text,#e6edf3);border-color:var(--text-dim,#8b949e)}
+  :root{--font-body:'Mulish','Segoe UI',Helvetica,sans-serif;--font-mono:'Mulish',ui-monospace,'SF Mono',Consolas,monospace;
+    --bg:#F7F3EF;--surface:#FFFFFF;--surface2:#F0E9E1;--border:#E1D6CB;--border-bright:#CDBBA8;
+    --text:#241A12;--text-dim:#574A3C;--text-faint:#8C7E6E;
+    --primary:#4F46E5;--primary-dim:rgba(79,70,229,0.08);
+    --violet:#7C3AED;--violet-dim:rgba(124,58,237,0.07);
+    --metric:#0E7C6E;--metric-dim:rgba(14,124,110,0.08);
+    --amber:#A5650A;--amber-dim:rgba(165,101,10,0.08);
+    --rose:#C23A30;--rose-dim:rgba(194,58,48,0.07);
+    --finance:#4F46E5;--finance-bg:rgba(79,70,229,0.75);
+    --legal:#7C3AED;--legal-bg:rgba(124,58,237,0.75);
+    --people:#0E7C6E;--people-bg:rgba(14,124,110,0.75);
+    --is:#A5650A;--is-bg:rgba(165,101,10,0.75);
+    --quad-a:rgba(14,124,110,0.05);--quad-b:rgba(79,70,229,0.05);--quad-c:rgba(165,101,10,0.05);--quad-d:rgba(194,58,48,0.04);
+    --grid-line:rgba(0,20,60,0.06);}
+  *{margin:0;padding:0;box-sizing:border-box}
+  body{background:
+      radial-gradient(at 20% 0%,var(--primary-dim),transparent 55%),
+      radial-gradient(at 80% 100%,var(--metric-dim),transparent 45%),
+      var(--bg);
+    color:var(--text);font-family:var(--font-body);min-height:100vh;line-height:1.6;padding:40px;overflow-wrap:break-word}
+  .crumbs{font-size:13px;font-weight:600;color:var(--text-dim);display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+  .crumbs a{color:var(--primary);text-decoration:none}
+  .crumbs a:hover{text-decoration:underline}
+  .crumbs .sep{color:var(--text-faint)}
+  .crumbs .current{color:var(--text-dim);font-weight:400}
+  .crumbs-top{max-width:1100px;margin:0 auto;padding:0 0 22px}
+  .container{max-width:1100px;margin:0 auto}
+  h1{font-size:34px;font-weight:800;letter-spacing:-0.02em;color:var(--text);margin-bottom:6px}
+  .subtitle{color:var(--text-dim);font-family:var(--font-mono);font-size:12.5px;margin-bottom:24px;line-height:1.5}
+  .legend-row{display:flex;gap:20px;flex-wrap:wrap;margin-bottom:20px;padding:12px 16px;background:var(--surface);border:1px solid var(--border);border-radius:10px}
+  .legend-item{display:flex;align-items:center;gap:7px;font-family:var(--font-mono);font-size:11px;color:var(--text-dim)}
+  .legend-dot{width:12px;height:12px;border-radius:50%}
+  .chart-wrap{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:28px 24px 20px;margin-bottom:20px;box-shadow:0 2px 12px rgba(0,0,0,0.04);position:relative}
+  .chart-container{position:relative;width:100%;height:620px}
+  .quad-legend{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:20px}
+  .quad-card{padding:12px 16px;border-radius:8px;border:1px solid var(--border);font-size:12px;line-height:1.4}
+  .quad-card__title{font-family:var(--font-mono);font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.08em;margin-bottom:4px}
+  .quad-card__body{color:var(--text-dim)}
+  .quad-card--a{background:var(--quad-a)}.quad-card--a .quad-card__title{color:var(--metric)}
+  .quad-card--b{background:var(--quad-b)}.quad-card--b .quad-card__title{color:var(--primary)}
+  .quad-card--c{background:var(--quad-c)}.quad-card--c .quad-card__title{color:var(--amber)}
+  .quad-card--d{background:var(--quad-d)}.quad-card--d .quad-card__title{color:var(--rose)}
+  .note{font-family:var(--font-mono);font-size:11.5px;color:var(--text-dim);padding:12px 16px;background:var(--surface);border:1px solid var(--border);border-radius:8px;line-height:1.5}
+  .note b{color:var(--text)}
+  @media(max-width:768px){body{padding:16px}h1{font-size:24px}.chart-container{height:480px}.quad-legend{grid-template-columns:1fr}}
+  @media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
 </style>
 </head>
 <body>
-<style>
-.crumbs-at-top{max-width:1100px;margin:0 auto;padding:14px 24px 0}
-.crumbs{font-family:var(--font-mono,monospace);font-size:13px;font-weight:600;display:flex;align-items:center;gap:8px;flex-wrap:wrap;min-width:0}
-.crumbs a{color:var(--accent);text-decoration:none}
-.crumbs a:hover,.crumbs a:focus-visible{text-decoration:underline;outline:none}
-.crumbs .sep{color:var(--text-dim)}
-.crumbs .current{color:var(--text-dim);font-weight:400}
-</style>
-<nav class="crumbs crumbs-at-top" aria-label="Breadcrumb">
-  <a href="../index.html">Index</a>
-  <span class="sep">/</span>
-  <a href="../initiatives.html">Initiatives</a>
-  <span class="sep">/</span>
+
+<nav class="crumbs crumbs-top" aria-label="Breadcrumb">
+  <a href="../index.html">Index</a><span class="sep">/</span>
+  <a href="../initiatives.html">Initiatives</a><span class="sep">/</span>
   <span class="current" aria-current="page">AI Initiatives: Score vs Effort</span>
 </nav>
 
-
 <div class="container">
+  <h1>AI Initiatives: Score vs Effort</h1>
+  <p class="subtitle">Bubble size = strategic alignment multiplier (H). Position uses revised scores where updated.</p>
 
-  <h1 class="animate" style="--i:0">AI Initiatives: Score vs Effort</h1>
-  <p class="subtitle animate" style="--i:1">Bubble size = strategic alignment multiplier (H). Position uses revised scores where updated.</p>
-
-  <div class="legend-row animate" style="--i:2">
+  <div class="legend-row">
     <div class="legend-item"><div class="legend-dot" style="background:var(--finance-bg)"></div> Finance</div>
     <div class="legend-item"><div class="legend-dot" style="background:var(--legal-bg)"></div> Legal</div>
     <div class="legend-item"><div class="legend-dot" style="background:var(--people-bg)"></div> People</div>
     <div class="legend-item"><div class="legend-dot" style="background:var(--is-bg)"></div> Technology</div>
-    <div class="legend-item" style="margin-left:auto"><div class="legend-dot" style="background:transparent;border:2px dashed var(--text-dim)"></div> New (missing from dashboard)</div>
+    <div class="legend-item" style="margin-left:auto"><div class="legend-dot" style="background:transparent;border:2px dashed var(--text-faint)"></div> New (missing from dashboard)</div>
   </div>
 
-  <div class="chart-wrap animate" style="--i:3">
-    <div class="chart-container">
-      <canvas id="scatter"></canvas>
-    </div>
+  <div class="chart-wrap">
+    <div class="chart-container"><canvas id="scatter"></canvas></div>
   </div>
 
-  <div class="quad-legend animate" style="--i:4">
-    <div class="quad-card quad-card--a">
-      <div class="quad-card__title">Quick Wins (top-right)</div>
-      <div class="quad-card__body">High score + Low effort. Do these first. Sales Assist Bot, Contract Feedback Agent, JD Generator.</div>
-    </div>
-    <div class="quad-card quad-card--b">
-      <div class="quad-card__title">Strategic Bets (top-left)</div>
-      <div class="quad-card__body">High score + High effort. Worth the investment. Pricing Evaluator, Hire to Retire, Sandbox.</div>
-    </div>
-    <div class="quad-card quad-card--c">
-      <div class="quad-card__title">Fill-Ins (bottom-right)</div>
-      <div class="quad-card__body">Lower score + Low effort. Useful additions. Helpdesk Automation Agent, PRD Automation, AESOP Studio.</div>
-    </div>
-    <div class="quad-card quad-card--d">
-      <div class="quad-card__title">Reconsider (bottom-left)</div>
-      <div class="quad-card__body">Lower score + High effort. Question the ROI. Contract Review (Legal Ops) is here -- blocked on tooling.</div>
-    </div>
+  <div class="quad-legend">
+    <div class="quad-card quad-card--a"><div class="quad-card__title">Quick Wins (top-right)</div><div class="quad-card__body">High score + Low effort. Do these first. Sales Assist Bot, Contract Feedback Agent, JD Generator.</div></div>
+    <div class="quad-card quad-card--b"><div class="quad-card__title">Strategic Bets (top-left)</div><div class="quad-card__body">High score + High effort. Worth the investment. Pricing Evaluator, Hire to Retire, Sandbox.</div></div>
+    <div class="quad-card quad-card--c"><div class="quad-card__title">Fill-Ins (bottom-right)</div><div class="quad-card__body">Lower score + Low effort. Useful additions. Helpdesk Automation Agent, PRD Automation, AESOP Studio.</div></div>
+    <div class="quad-card quad-card--d"><div class="quad-card__title">Reconsider (bottom-left)</div><div class="quad-card__body">Lower score + High effort. Question the ROI. Contract Review (Legal Ops) is here -- blocked on tooling.</div></div>
   </div>
 
-  <div class="note animate" style="--i:5">
-    <strong>Reading the chart:</strong> X-axis is Effort (G) where 5 = very easy, 1 = very hard. Y-axis is Initiative Score using suggested/updated values. Dashed-border bubbles are initiatives missing from the current dashboard. Hover any point for detail.
-  </div>
-
+  <div class="note"><b>Reading the chart:</b> X-axis is Effort (G) where 5 = very easy, 1 = very hard. Y-axis is Initiative Score using suggested/updated values. Dashed-border bubbles are initiatives missing from the current dashboard. Hover any point for detail.</div>
 </div>
 
 <script>
 (function() {
-  // Detect dark mode
-  const isDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-
+  const isDark = false;
+  const FONT = "'Mulish', Helvetica, sans-serif";
   const C = {
-    finance: isDark ? 'rgba(96, 165, 250, 0.8)' : 'rgba(30, 64, 175, 0.75)',
-    financeBorder: isDark ? '#60a5fa' : '#1e40af',
-    legal: isDark ? 'rgba(167, 139, 250, 0.8)' : 'rgba(124, 58, 237, 0.75)',
-    legalBorder: isDark ? '#a78bfa' : '#7c3aed',
-    people: isDark ? 'rgba(52, 211, 153, 0.8)' : 'rgba(5, 150, 105, 0.75)',
-    peopleBorder: isDark ? '#34d399' : '#059669',
-    is: isDark ? 'rgba(251, 191, 36, 0.8)' : 'rgba(217, 119, 6, 0.75)',
-    isBorder: isDark ? '#fbbf24' : '#d97706',
-    gridLine: isDark ? 'rgba(148, 180, 230, 0.06)' : 'rgba(0, 20, 60, 0.06)',
-    text: isDark ? '#94a3b8' : '#64748b',
-    quadLine: isDark ? 'rgba(148, 180, 230, 0.12)' : 'rgba(0, 20, 60, 0.1)',
-    quadLabel: isDark ? 'rgba(148, 180, 230, 0.2)' : 'rgba(0, 20, 60, 0.12)',
+    finance: 'rgba(79,70,229,0.75)', financeBorder: '#4F46E5',
+    legal: 'rgba(124,58,237,0.75)', legalBorder: '#7C3AED',
+    people: 'rgba(14,124,110,0.75)', peopleBorder: '#0E7C6E',
+    is: 'rgba(165,101,10,0.75)', isBorder: '#A5650A',
+    gridLine: 'rgba(0,20,60,0.06)', text: '#574A3C',
+    quadLine: 'rgba(0,20,60,0.10)', quadLabel: 'rgba(0,20,60,0.18)',
   };
-
-  // Data: [effort_G, score, H_multiplier_raw, name, dept, isNew, status_change]
   const raw = [
     [4, 16.2, 8, 'Sales Assist Bot', 'finance', false, 'Correct'],
     [3, 14.4, 8, 'Offer Letter Generator', 'people', false, 'Dep. risk (G=3 if blocked)'],
@@ -286,236 +131,83 @@
     [3, 7.2, 2, 'Purchase Obligations', 'finance', true, 'NEW -- 18 hrs/quarter'],
     [3, 5.0, 0, 'SoS Report Generator', 'legal', false, 'Correct'],
   ];
-
-  function deptColor(dept) {
-    return { finance: C.finance, legal: C.legal, people: C.people, is: C.is }[dept];
-  }
-  function deptBorder(dept) {
-    return { finance: C.financeBorder, legal: C.legalBorder, people: C.peopleBorder, is: C.isBorder }[dept];
-  }
-
-  // Build datasets grouped by dept + new status
+  function deptColor(dept){ return { finance: C.finance, legal: C.legal, people: C.people, is: C.is }[dept]; }
+  function deptBorder(dept){ return { finance: C.financeBorder, legal: C.legalBorder, people: C.peopleBorder, is: C.isBorder }[dept]; }
   const groups = {};
-  raw.forEach(d => {
-    const key = d[4] + (d[5] ? '_new' : '');
-    if (!groups[key]) groups[key] = [];
-    groups[key].push(d);
-  });
-
+  raw.forEach(d => { const key = d[4] + (d[5] ? '_new' : ''); if (!groups[key]) groups[key] = []; groups[key].push(d); });
   const datasets = Object.entries(groups).map(([key, items]) => {
-    const dept = key.replace('_new', '');
-    const isNew = key.endsWith('_new');
+    const dept = key.replace('_new', ''); const isNew = key.endsWith('_new');
     const deptLabels = { finance: 'Finance', legal: 'Legal', people: 'People', is: 'Technology' };
     return {
       label: deptLabels[dept] + (isNew ? ' (New)' : ''),
-      data: items.map(d => ({
-        x: d[0],
-        y: d[1],
-        r: Math.max(6, 4 + d[2] * 1.6),
-        name: d[3],
-        dept: dept,
-        effort: d[0],
-        score: d[1],
-        h: d[2],
-        isNew: d[5],
-        change: d[6],
-      })),
-      backgroundColor: items.map(() => deptColor(dept)),
-      borderColor: items.map(() => deptBorder(dept)),
-      borderWidth: isNew ? 2 : 1.5,
-      borderDash: isNew ? [4, 3] : undefined,
-      pointStyle: 'circle',
-      hidden: false,
+      data: items.map(d => ({ x: d[0], y: d[1], r: Math.max(6, 4 + d[2] * 1.6), name: d[3], dept: dept, effort: d[0], score: d[1], h: d[2], isNew: d[5], change: d[6] })),
+      backgroundColor: items.map(() => deptColor(dept)), borderColor: items.map(() => deptBorder(dept)),
+      borderWidth: isNew ? 2 : 1.5, borderDash: isNew ? [4, 3] : undefined, pointStyle: 'circle', hidden: false,
     };
   });
-
   const ctx = document.getElementById('scatter').getContext('2d');
-
   new Chart(ctx, {
-    type: 'bubble',
-    data: { datasets },
+    type: 'bubble', data: { datasets },
     options: {
-      responsive: true,
-      maintainAspectRatio: false,
-      layout: { padding: { top: 20, right: 30, bottom: 10, left: 10 } },
+      responsive: true, maintainAspectRatio: false, layout: { padding: { top: 20, right: 30, bottom: 10, left: 10 } },
       scales: {
         x: {
-          min: 1.2,
-          max: 4.8,
-          title: {
-            display: true,
-            text: 'EFFORT (G)  --  1 = Hard  |  5 = Easy',
-            font: { family: "'IBM Plex Mono', monospace", size: 11, weight: '600' },
-            color: C.text,
-            padding: { top: 12 }
-          },
-          ticks: {
-            stepSize: 1,
-            callback: function(v) {
-              const labels = { 1: '1 (Hardest)', 2: '2 (Hard)', 3: '3 (Moderate)', 4: '4 (Easy)', 5: '5 (Easiest)' };
-              return labels[v] || v;
-            },
-            font: { family: "'IBM Plex Mono', monospace", size: 10 },
-            color: C.text,
-          },
-          grid: { color: C.gridLine, drawBorder: false },
-          border: { display: false },
+          min: 1.2, max: 4.8,
+          title: { display: true, text: 'EFFORT (G)  --  1 = Hard  |  5 = Easy', font: { family: FONT, size: 11, weight: '600' }, color: C.text, padding: { top: 12 } },
+          ticks: { stepSize: 1, callback: function(v){ const labels = { 1: '1 (Hardest)', 2: '2 (Hard)', 3: '3 (Moderate)', 4: '4 (Easy)', 5: '5 (Easiest)' }; return labels[v] || v; }, font: { family: FONT, size: 10 }, color: C.text },
+          grid: { color: C.gridLine, drawBorder: false }, border: { display: false },
         },
         y: {
-          min: 3,
-          max: 18,
-          title: {
-            display: true,
-            text: 'INITIATIVE SCORE (suggested)',
-            font: { family: "'IBM Plex Mono', monospace", size: 11, weight: '600' },
-            color: C.text,
-            padding: { bottom: 12 }
-          },
-          ticks: {
-            stepSize: 2,
-            font: { family: "'IBM Plex Mono', monospace", size: 10 },
-            color: C.text,
-          },
-          grid: { color: C.gridLine, drawBorder: false },
-          border: { display: false },
+          min: 3, max: 18,
+          title: { display: true, text: 'INITIATIVE SCORE (suggested)', font: { family: FONT, size: 11, weight: '600' }, color: C.text, padding: { bottom: 12 } },
+          ticks: { stepSize: 2, font: { family: FONT, size: 10 }, color: C.text },
+          grid: { color: C.gridLine, drawBorder: false }, border: { display: false },
         },
       },
       plugins: {
         legend: { display: false },
         tooltip: {
-          backgroundColor: isDark ? '#1e2d4a' : '#0f172a',
-          titleColor: '#ffffff',
-          bodyColor: 'rgba(255,255,255,0.85)',
-          titleFont: { family: "'DM Sans', sans-serif", size: 13, weight: '600' },
-          bodyFont: { family: "'IBM Plex Mono', monospace", size: 11 },
-          padding: 14,
-          cornerRadius: 8,
-          displayColors: false,
+          backgroundColor: '#4F46E5', titleColor: '#ffffff', bodyColor: 'rgba(255,255,255,0.9)',
+          titleFont: { family: FONT, size: 13, weight: '600' }, bodyFont: { family: FONT, size: 11 },
+          padding: 14, cornerRadius: 8, displayColors: false,
           callbacks: {
-            title: function(items) {
-              return items[0].raw.name;
-            },
-            label: function(item) {
+            title: function(items){ return items[0].raw.name; },
+            label: function(item){
               const d = item.raw;
-              return [
-                'Score:    ' + d.score.toFixed(1),
-                'Effort:   ' + d.effort + ' (' + ['','Hardest','Hard','Moderate','Easy','Easiest'][Math.round(d.effort)] + ')',
-                'Strat(H): ' + d.h,
-                'Status:   ' + d.change,
-              ];
+              return ['Score:    ' + d.score.toFixed(1), 'Effort:   ' + d.effort + ' (' + ['','Hardest','Hard','Moderate','Easy','Easiest'][Math.round(d.effort)] + ')', 'Strat(H): ' + d.h, 'Status:   ' + d.change];
             },
           },
         },
         annotation: {
           annotations: {
-            quadV: {
-              type: 'line',
-              xMin: 3,
-              xMax: 3,
-              borderColor: C.quadLine,
-              borderWidth: 1.5,
-              borderDash: [6, 4],
-            },
-            quadH: {
-              type: 'line',
-              yMin: 10,
-              yMax: 10,
-              borderColor: C.quadLine,
-              borderWidth: 1.5,
-              borderDash: [6, 4],
-            },
-            labelTR: {
-              type: 'label',
-              xValue: 4.5,
-              yValue: 17,
-              content: ['QUICK WINS'],
-              font: { family: "'IBM Plex Mono', monospace", size: 10, weight: '600' },
-              color: C.quadLabel,
-            },
-            labelTL: {
-              type: 'label',
-              xValue: 1.7,
-              yValue: 17,
-              content: ['STRATEGIC BETS'],
-              font: { family: "'IBM Plex Mono', monospace", size: 10, weight: '600' },
-              color: C.quadLabel,
-            },
-            labelBR: {
-              type: 'label',
-              xValue: 4.5,
-              yValue: 4,
-              content: ['FILL-INS'],
-              font: { family: "'IBM Plex Mono', monospace", size: 10, weight: '600' },
-              color: C.quadLabel,
-            },
-            labelBL: {
-              type: 'label',
-              xValue: 1.7,
-              yValue: 4,
-              content: ['RECONSIDER'],
-              font: { family: "'IBM Plex Mono', monospace", size: 10, weight: '600' },
-              color: C.quadLabel,
-            },
+            quadV: { type: 'line', xMin: 3, xMax: 3, borderColor: C.quadLine, borderWidth: 1.5, borderDash: [6, 4] },
+            quadH: { type: 'line', yMin: 10, yMax: 10, borderColor: C.quadLine, borderWidth: 1.5, borderDash: [6, 4] },
+            labelTR: { type: 'label', xValue: 4.5, yValue: 17, content: ['QUICK WINS'], font: { family: FONT, size: 10, weight: '600' }, color: C.quadLabel },
+            labelTL: { type: 'label', xValue: 1.7, yValue: 17, content: ['STRATEGIC BETS'], font: { family: FONT, size: 10, weight: '600' }, color: C.quadLabel },
+            labelBR: { type: 'label', xValue: 4.5, yValue: 4, content: ['FILL-INS'], font: { family: FONT, size: 10, weight: '600' }, color: C.quadLabel },
+            labelBL: { type: 'label', xValue: 1.7, yValue: 4, content: ['RECONSIDER'], font: { family: FONT, size: 10, weight: '600' }, color: C.quadLabel },
           }
         }
       },
     },
     plugins: [{
       id: 'bubbleLabels',
-      afterDatasetsDraw: function(chart) {
-        const ctx = chart.ctx;
-        ctx.save();
-        chart.data.datasets.forEach(function(dataset, di) {
+      afterDatasetsDraw: function(chart){
+        const ctx = chart.ctx; ctx.save();
+        chart.data.datasets.forEach(function(dataset, di){
           const meta = chart.getDatasetMeta(di);
-          meta.data.forEach(function(el, i) {
-            const d = dataset.data[i];
-            const x = el.x;
-            const y = el.y;
-            const r = el.options.radius || d.r;
-
-            // Only label bubbles with enough room
+          meta.data.forEach(function(el, i){
+            const d = dataset.data[i]; const x = el.x; const y = el.y; const r = el.options.radius || d.r;
             if (r < 8) return;
-
-            // Short name for label
             let label = d.name;
-            if (label.length > 18) {
-              const parts = label.split(' ');
-              label = parts.slice(0, 2).join(' ');
-              if (label.length > 18) label = label.slice(0, 16) + '..';
-            }
-
-            ctx.font = "500 9px 'IBM Plex Mono', monospace";
-            ctx.textAlign = 'center';
-            ctx.textBaseline = 'middle';
-
-            // Position label above or below bubble
-            const labelY = y - r - 10;
-            const finalY = labelY < 20 ? y + r + 12 : labelY;
-
-            // Background pill
-            const tw = ctx.measureText(label).width + 8;
-            const th = 16;
-            const pillX = x - tw / 2;
-            const pillY = finalY - th / 2;
-
-            ctx.fillStyle = isDark ? 'rgba(19, 27, 46, 0.88)' : 'rgba(255, 255, 255, 0.92)';
-            ctx.beginPath();
-            ctx.roundRect(pillX, pillY, tw, th, 4);
-            ctx.fill();
-
-            ctx.fillStyle = isDark ? '#e2e8f0' : '#0f172a';
-            ctx.fillText(label, x, finalY);
-
-            // Dashed ring for new items
-            if (d.isNew) {
-              ctx.beginPath();
-              ctx.arc(el.x, el.y, r + 3, 0, Math.PI * 2);
-              ctx.setLineDash([3, 3]);
-              ctx.strokeStyle = isDark ? 'rgba(255,255,255,0.3)' : 'rgba(0,0,0,0.2)';
-              ctx.lineWidth = 1;
-              ctx.stroke();
-              ctx.setLineDash([]);
-            }
+            if (label.length > 18) { const parts = label.split(' '); label = parts.slice(0, 2).join(' '); if (label.length > 18) label = label.slice(0, 16) + '..'; }
+            ctx.font = "500 9px " + FONT; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+            const labelY = y - r - 10; const finalY = labelY < 20 ? y + r + 12 : labelY;
+            const tw = ctx.measureText(label).width + 8; const th = 16; const pillX = x - tw / 2; const pillY = finalY - th / 2;
+            ctx.fillStyle = 'rgba(255,255,255,0.92)';
+            ctx.beginPath(); ctx.roundRect(pillX, pillY, tw, th, 4); ctx.fill();
+            ctx.fillStyle = '#241A12'; ctx.fillText(label, x, finalY);
+            if (d.isNew) { ctx.beginPath(); ctx.arc(el.x, el.y, r + 3, 0, Math.PI * 2); ctx.setLineDash([3, 3]); ctx.strokeStyle = 'rgba(0,0,0,0.2)'; ctx.lineWidth = 1; ctx.stroke(); ctx.setLineDash([]); }
           });
         });
         ctx.restore();

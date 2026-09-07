@@ -1,366 +1,189 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" class="light">
 <head>
 <meta charset="UTF-8">
-<link rel="icon" type="image/svg+xml" href="../icon.svg">
+<link rel="icon" href="../icon.svg" type="image/svg+xml" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Adoption is the product, not the platform. — Pre-Implementation Diagnostic</title>
+<meta name="description" content="A structured intake system for monday.com Implementation Consultants that scores workflow complexity and surfaces adoption risk before the first board is built.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600;9..144,700&family=Source+Code+Pro:wght@400;500;600" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Mulish:ital,wght@0,300;0,400;0,600;0,700;0,800;1,400&display=swap" rel="stylesheet">
 <style>
-  :root {
-    --font-display: 'Instrument Serif', Georgia, serif;
-    --font-body: 'Fraunces', Georgia, serif;
-    --font-mono: 'Source Code Pro', 'SF Mono', Consolas, monospace;
+  :root{--font-body:'Mulish','Segoe UI',Helvetica,sans-serif;--font-mono:'Mulish',ui-monospace,'SF Mono',Consolas,monospace;
+    --bg:#14181C;--surface:#1B2127;--surface2:#232B33;--border:#303A43;--border-bright:#42505C;
+    --text:#F4F5F6;--text-dim:#CBD0D6;--text-faint:#87919B;
+    --primary:#A79CF2;--primary-dim:rgba(167,156,242,0.12);--metric:#58D6B4;--metric-dim:rgba(88,214,180,0.12);
+    --blue:#6CACE4;--blue-dim:rgba(108,172,228,0.12);
+    --violet:#B9A0E8;--violet-dim:rgba(185,160,232,0.12);
+    --amber:#E8B54D;--amber-dim:rgba(232,181,77,0.12);
+    --rose:#E88280;--rose-dim:rgba(232,130,128,0.12);}
+  html.light{--bg:#F7F3EF;--surface:#FFFFFF;--surface2:#F0E9E1;--border:#E1D6CB;--border-bright:#CDBBA8;
+    --text:#241A12;--text-dim:#574A3C;--text-faint:#8C7E6E;
+    --primary:#4F46E5;--primary-dim:rgba(79,70,229,0.08);--metric:#0E7C6E;--metric-dim:rgba(14,124,110,0.08);
+    --blue:#2F6FA8;--blue-dim:rgba(47,111,168,0.08);
+    --violet:#7C3AED;--violet-dim:rgba(124,58,237,0.07);
+    --amber:#A5650A;--amber-dim:rgba(165,101,10,0.08);
+    --rose:#C23A30;--rose-dim:rgba(194,58,48,0.07);}
+  *{margin:0;padding:0;box-sizing:border-box}
+  html{scroll-behavior:smooth}
+  body{background:
+      radial-gradient(at 10% 0%,var(--primary-dim),transparent 55%),
+      radial-gradient(at 90% 80%,var(--metric-dim),transparent 55%),
+      var(--bg);
+    color:var(--text);font-family:var(--font-body);font-size:17px;line-height:1.62;-webkit-font-smoothing:antialiased;min-height:100vh}
 
-    --primary: #6366FF;
-    --primary-dim: rgba(99,102,255,0.08);
-    --rose: #FD5B71;
-    --rose-dim: rgba(253,91,113,0.08);
-    --metric: #00C875;
-    --metric-dim: rgba(0,200,117,0.08);
-    --amber: #FFCC00;
-    --amber-dim: rgba(255,204,0,0.1);
-    --secondary: #00B5E2;
-    --secondary-dim: rgba(0,181,226,0.08);
-    --primary: #FF8C3C;
-    --primary-dim: rgba(255,140,60,0.08);
+  .crumbs{font-size:13px;font-weight:600;color:var(--text-dim);display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+  .crumbs a{color:var(--primary);text-decoration:none}
+  .crumbs a:hover{text-decoration:underline}
+  .crumbs .sep{color:var(--text-faint)}
+  .crumbs .current{color:var(--text-dim);font-weight:400}
+  .crumbs-top{max-width:1080px;margin:0 auto;padding:18px 24px 0}
 
-    --bg: #eef4f9;
-    --surface: #ffffff;
-    --surface2: #f5f8fc;
-    --border: rgba(0,0,0,0.06);
-    --border-strong: rgba(0,0,0,0.12);
-    --text: #0a1628;
-    --text-dim: #3d5a7a;
-    --text-muted: #7a9ab8;
-  }
+  .wrap{max-width:1080px;margin:0 auto;padding:0 24px 80px}
 
-  
+  .hero{padding:44px 0 24px;border-bottom:1px solid var(--border);margin-bottom:10px}
+  .hero .tagline{font-family:var(--font-mono);font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.14em;color:var(--primary);margin-bottom:10px}
+  .hero h1{font-size:52px;line-height:1.0;letter-spacing:-0.03em;font-weight:800;
+    background:linear-gradient(135deg,var(--primary),var(--metric));-webkit-background-clip:text;background-clip:text;color:transparent}
+  .hero .lede{font-size:19px;line-height:1.5;color:var(--text-dim);max-width:920px;margin-top:14px}
+  .hero .lede b{color:var(--text)}
 
-  * { margin: 0; padding: 0; box-sizing: border-box; }
+  .sec{margin-top:22px}
+  .sec-head{display:flex;align-items:baseline;gap:14px;padding-bottom:10px;border-bottom:1px solid var(--border);margin-bottom:10px}
+  .sec-num{font-size:23px;font-weight:800;color:var(--primary);font-family:var(--font-mono)}
+  .sec-title{font-size:23px;font-weight:800;color:var(--text);letter-spacing:-0.01em}
+  .sec-body p{max-width:920px;margin-bottom:12px;color:var(--text-dim)}
+  .sec-body p b,.sec-body strong{color:var(--text)}
+  .sec-body p.nb{margin-bottom:0}
+  code{font-family:var(--font-mono);font-size:0.84em;color:var(--primary)}
+  .close{margin-top:16px;border-top:1px solid var(--border);padding-top:14px;font-size:14px;line-height:1.6;color:var(--text-dim);max-width:920px}
+  .close b{color:var(--text)}
 
-  body {
-    background: var(--bg);
-    background-image:
-      radial-gradient(ellipse 60% 40% at 50% 10%, var(--primary-dim) 0%, transparent 60%),
-      radial-gradient(ellipse 50% 30% at 80% 90%, var(--metric-dim) 0%, transparent 50%);
-    color: var(--text);
-    font-family: var(--font-body);
-    padding: 64px 40px;
-    min-height: 100vh;
-    display: flex; justify-content: center;
-    overflow-wrap: break-word;
-  }
+  .pmap{padding:14px 4px;border-top:1px solid var(--border);display:grid;grid-template-columns:240px 1fr;gap:4px 28px;align-items:baseline}
+  .pmap:first-of-type{border-top:none}
+  .pmap .pm-k{font-family:var(--font-mono);font-size:11.5px;font-weight:800;text-transform:uppercase;letter-spacing:.08em;color:var(--blue);line-height:1.5}
+  .pmap .pm-k .ord{display:block;color:var(--primary);font-weight:700;font-size:10px;letter-spacing:.16em;margin-bottom:3px}
+  .pmap .pm-k .tag{display:block;color:var(--text-faint);font-weight:700;font-size:10px;letter-spacing:.16em;margin-bottom:3px}
+  .pmap .pm-b{font-size:14.5px;line-height:1.6;color:var(--text-dim)}
+  .pmap .pm-b .tt{font-weight:800;color:var(--text);font-size:16px}
+  .pmap.i-vio .pm-k{color:var(--violet)}
+  .pmap.i-teal .pm-k{color:var(--metric)}
+  .pmap.i-amb .pm-k{color:var(--amber)}
+  .pmap.i-rose .pm-k{color:var(--rose)}
+  .pmap.i-acc .pm-k{color:var(--primary)}
+  .branch{font-size:13px;line-height:1.5;padding:1px 0}
+  .branch .bk{font-family:var(--font-mono);font-size:10.5px;font-weight:700;margin-right:8px}
+  .branch.blue .bk{color:var(--blue)}
+  .branch.teal .bk{color:var(--metric)}
+  .branch.vio .bk{color:var(--violet)}
+  .opt{color:var(--rose);font-weight:700}
 
-  @keyframes fadeUp {
-    from { opacity: 0; transform: translateY(16px); }
-    to { opacity: 1; transform: translateY(0); }
-  }
-  .anim { animation: fadeUp 0.5s ease-out both; }
+  table.tbl{width:100%;border-collapse:collapse;margin:2px 0 4px}
+  .tbl th{text-align:left;font-family:var(--font-mono);font-size:10px;font-weight:700;color:var(--text-faint);padding:6px 14px 8px 0;border-bottom:2px solid var(--border-bright);letter-spacing:.04em;text-transform:uppercase}
+  .tbl td{padding:9px 14px 9px 0;border-bottom:1px solid var(--border);vertical-align:top;font-size:13px;line-height:1.5;color:var(--text-dim)}
+  .tbl tr:last-child td{border-bottom:none}
+  .tbl td.f{font-weight:700;color:var(--text);width:40%}
+  .tbl td.src code{font-size:0.92em;color:var(--metric)}
 
-  @media (prefers-reduced-motion: reduce) {
-    *, *::before, *::after { animation-duration: 0.01ms !important; animation-delay: 0ms !important; }
-  }
+  .footer{margin-top:30px;border-top:1px solid var(--border);padding:18px 0 0;display:flex;justify-content:space-between;gap:20px;flex-wrap:wrap;font-family:var(--font-mono);font-size:12px;color:var(--text-faint)}
+  .footer a{color:var(--primary);text-decoration:none}
+  .footer a:hover{text-decoration:underline}
 
-  .backlink{position:fixed;top:12px;left:16px;z-index:200;font-family:var(--font-mono,monospace);font-size:11px;color:var(--text-dim,#8b949e);text-decoration:none;padding:6px 10px;border:1px solid var(--border,rgba(255,255,255,0.08));border-radius:6px;background:var(--surface,#161b22);transition:color .15s,border-color .15s}.backlink:hover{color:var(--text,#e6edf3);border-color:var(--text-dim,#8b949e)}
-
-  .page { max-width: 900px; width: 100%; }
-
-  .header {
-    text-align: center; margin-bottom: 48px;
+  @media(max-width:900px){
+    .wrap{padding:0 16px 60px}
+    .hero h1{font-size:38px}
+    .pmap{grid-template-columns:1fr;gap:3px}
+    body{font-size:16px}
   }
-  .header .label {
-    font-family: var(--font-display);
-    font-size: 32px; font-style: italic; font-weight: 400;
-    color: var(--primary); margin-bottom: 6px;
-  }
-  .header .sub {
-    font-size: 16px; color: var(--text-dim);
-    margin-bottom: 4px;
-  }
-  .header .insight {
-    font-family: var(--font-display);
-    font-size: 20px; font-style: italic; color: var(--text-dim);
-    margin-top: 10px;
-  }
-  .header .insight strong { font-style: normal; color: var(--primary); }
-
-  .process {
-    display: flex; flex-direction: column;
-    align-items: center; gap: 0;
-  }
-
-  .connector {
-    width: 2px; height: 24px;
-    background: var(--border-strong);
-  }
-
-  .stage {
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: 14px;
-    padding: 20px 36px;
-    display: flex; align-items: center; gap: 28px;
-    width: 100%;
-    transition: transform 0.2s, box-shadow 0.2s;
-  }
-  .stage:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 6px 20px rgba(0,0,0,0.06);
-  }
-  .stage__num {
-    font-family: var(--font-mono);
-    font-size: 28px; font-weight: 500;
-    flex-shrink: 0; width: 56px; text-align: center;
-  }
-  .stage__body { flex: 1; min-width: 0; }
-  .stage__name {
-    font-family: var(--font-display);
-    font-size: 34px; font-style: italic; font-weight: 400;
-    line-height: 1.1; margin-bottom: 3px;
-  }
-  .stage__desc {
-    font-size: 16px; color: var(--text-dim);
-    line-height: 1.5;
-  }
-
-  .stage--intake { border-left: 4px solid var(--secondary); }
-  .stage--intake .stage__num { color: var(--secondary); }
-  .stage--score { border-left: 4px solid var(--primary); }
-  .stage--score .stage__num { color: var(--primary); }
-  .stage--risk { border-left: 4px solid var(--rose); }
-  .stage--risk .stage__num { color: var(--rose); }
-  .stage--brief { border-left: 4px solid var(--metric); }
-  .stage--brief .stage__num { color: var(--metric); }
-  .stage--review { border-left: 4px solid var(--primary); }
-  .stage--review .stage__num { color: var(--primary); }
-
-  .outputs {
-    display: grid; grid-template-columns: 1fr 1fr;
-    gap: 12px; margin-top: 14px;
-  }
-  .output {
-    background: var(--surface-alt);
-    border: 1px solid var(--border);
-    border-radius: 10px;
-    padding: 14px 18px;
-  }
-  .output__name {
-    font-size: 14px; font-weight: 600; margin-bottom: 4px;
-  }
-  .output__detail {
-    font-size: 13px; color: var(--text-dim); line-height: 1.5;
-  }
-
-  .dimensions {
-    display: grid; grid-template-columns: repeat(4, 1fr);
-    gap: 10px; margin-top: 14px;
-  }
-  .dim {
-    background: var(--surface-alt);
-    border: 1px solid var(--border);
-    border-radius: 10px;
-    padding: 10px 12px; text-align: center;
-  }
-  .dim__name {
-    font-size: 13px; font-weight: 600; margin-bottom: 2px;
-  }
-  .dim__desc {
-    font-size: 11px; color: var(--text-muted); line-height: 1.3;
-  }
-
-  .risks {
-    display: grid; grid-template-columns: repeat(3, 1fr);
-    gap: 10px; margin-top: 14px;
-  }
-  .risk {
-    background: var(--surface-alt);
-    border: 1px solid var(--border);
-    border-radius: 10px;
-    padding: 10px 12px; text-align: center;
-  }
-  .risk__name {
-    font-size: 12px; font-weight: 600; margin-bottom: 2px;
-  }
-  .risk__desc {
-    font-size: 10px; color: var(--text-muted); line-height: 1.3;
-  }
-
-  .download-row {
-    margin-top: 40px; text-align: center;
-  }
-  .download-link {
-    display: inline-flex; align-items: center; gap: 8px;
-    font-family: var(--font-mono);
-    font-size: 12px; font-weight: 500;
-    color: var(--primary);
-    text-decoration: none;
-    padding: 10px 20px;
-    border: 1px solid color-mix(in srgb, var(--primary) 30%, transparent);
-    border-radius: 8px;
-    background: var(--primary-dim);
-    transition: background 0.2s, border-color 0.2s;
-  }
-  .download-link:hover {
-    background: color-mix(in srgb, var(--primary-dim) 100%, var(--surface));
-    border-color: var(--primary);
-  }
-  .download-link svg {
-    width: 16px; height: 16px;
-    fill: none; stroke: currentColor;
-    stroke-width: 2; stroke-linecap: round;
-  }
-
-  @media (max-width: 640px) {
-    body { padding: 32px 16px; }
-    .stage { padding: 16px 20px; gap: 16px; }
-    .stage__num { font-size: 24px; width: 40px; }
-    .stage__name { font-size: 28px; }
-    .dimensions, .risks { grid-template-columns: 1fr 1fr; }
-    .outputs { grid-template-columns: 1fr; }
-  }
+  @media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+<style>
+  .stage-lede{font-size:15px;line-height:1.6;color:var(--text-dim);margin-bottom:6px}
+  .stage-lede b{color:var(--text)}
+  .dl{display:inline-flex;align-items:center;gap:8px;font-family:var(--font-mono);font-size:12px;font-weight:700;color:var(--primary);text-decoration:none;padding:10px 20px;border:1px solid var(--primary);border-radius:8px;background:var(--primary-dim);transition:background .2s,border-color .2s}
+  .dl:hover{background:var(--surface);border-color:var(--primary)}
+  .dl svg{width:16px;height:16px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
 </style>
 </head>
 <body>
-<style>
-.crumbs-at-top{max-width:1100px;margin:0 auto;padding:14px 24px 0}
-.crumbs{font-family:var(--font-mono,monospace);font-size:13px;font-weight:600;display:flex;align-items:center;gap:8px;flex-wrap:wrap;min-width:0}
-.crumbs a{color:var(--primary);text-decoration:none}
-.crumbs a:hover,.crumbs a:focus-visible{text-decoration:underline;outline:none}
-.crumbs .sep{color:var(--text-dim)}
-.crumbs .current{color:var(--text-dim);font-weight:400}
-</style>
-<nav class="crumbs crumbs-at-top" aria-label="Breadcrumb">
-  <a href="../index.html">Index</a>
-  <span class="sep">/</span>
-  <span class="current" aria-current="page">Adoption is the product, not the platform. — Pre-Implementation…</span>
-</nav>
 
-
-
-<div class="page">
-
-  <div class="header anim" style="--i:0">
-    <div class="label">Adoption is the product, not the platform.</div>
-    <div class="sub">Pre-Implementation Diagnostic &mdash; a structured intake system for Monday.com Implementation Consultants</div>
-  </div>
-
-  <div class="process">
-
-    <div class="stage stage--intake anim" style="--i:1">
-      <div class="stage__num">01</div>
-      <div class="stage__body">
-        <div class="stage__name">Structured intake interview</div>
-        <div class="stage__desc">20-30 minute conversational assessment covering workflow, team structure, use case type, data relationships, automation appetite, integration requirements, success criteria, and organizational context.</div>
-      </div>
-    </div>
-
-    <div class="connector anim" style="--i:1"></div>
-
-    <div class="stage stage--score anim" style="--i:2">
-      <div class="stage__num">02</div>
-      <div class="stage__body">
-        <div class="stage__name">Workflow complexity scoring</div>
-        <div class="stage__desc">Scores the engagement on four dimensions and recommends a starting architecture pattern.</div>
-        <div class="dimensions">
-          <div class="dim">
-            <div class="dim__name">Data complexity</div>
-            <div class="dim__desc">Simple records vs. linked items, mirror columns, cross-board dependencies</div>
-          </div>
-          <div class="dim">
-            <div class="dim__name">Automation depth</div>
-            <div class="dim__desc">No automation vs. conditional logic and integrations</div>
-          </div>
-          <div class="dim">
-            <div class="dim__name">Team surface area</div>
-            <div class="dim__desc">Single team vs. cross-functional portfolio view</div>
-          </div>
-          <div class="dim">
-            <div class="dim__name">Integration load</div>
-            <div class="dim__desc">Standalone vs. CRM-connected, API-dependent</div>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <div class="connector anim" style="--i:2"></div>
-
-    <div class="stage stage--risk anim" style="--i:3">
-      <div class="stage__num">03</div>
-      <div class="stage__body">
-        <div class="stage__name">Adoption risk detection</div>
-        <div class="stage__desc">Maps intake signals to six risk categories. Each flag includes the signal that triggered it and a recommended pre-build conversation.</div>
-        <div class="risks">
-          <div class="risk">
-            <div class="risk__name">Spreadsheet culture</div>
-            <div class="risk__desc">Deep data ownership habits, resistance at reporting layer</div>
-          </div>
-          <div class="risk">
-            <div class="risk__name">Tool fatigue</div>
-            <div class="risk__desc">Prior platform failure, trust deficit to address</div>
-          </div>
-          <div class="risk">
-            <div class="risk__name">Missing process owner</div>
-            <div class="risk__desc">Driver lacks authority over the workflow being changed</div>
-          </div>
-          <div class="risk">
-            <div class="risk__name">Misaligned success criteria</div>
-            <div class="risk__desc">Stated goals don't match described process</div>
-          </div>
-          <div class="risk">
-            <div class="risk__name">Automation overreach</div>
-            <div class="risk__desc">Client wants to automate steps requiring human judgment</div>
-          </div>
-          <div class="risk">
-            <div class="risk__name">Integration dependency</div>
-            <div class="risk__desc">Success depends on external system the client doesn't control</div>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <div class="connector anim" style="--i:3"></div>
-
-    <div class="stage stage--brief anim" style="--i:4">
-      <div class="stage__num">04</div>
-      <div class="stage__body">
-        <div class="stage__name">Generate structured brief</div>
-        <div class="stage__desc">The system produces two outputs that shape every decision downstream.</div>
-        <div class="outputs">
-          <div class="output">
-            <div class="output__name">Workflow Complexity Score</div>
-            <div class="output__detail">Recommends one of four architecture patterns: Simple Board, Relational Structure, Multi-Board with Automation, or Full Integration Play. Anchors the conversation without locking the decision.</div>
-          </div>
-          <div class="output">
-            <div class="output__name">Adoption Risk Profile</div>
-            <div class="output__detail">Names the specific change management landmines before they detonate. Each flagged risk comes with a recommended conversation, not a recommendation to pause.</div>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <div class="connector anim" style="--i:4"></div>
-
-    <div class="stage stage--review anim" style="--i:5">
-      <div class="stage__num">05</div>
-      <div class="stage__body">
-        <div class="stage__name">Consultant review &amp; client framing</div>
-        <div class="stage__desc">The consultant reviews the brief, adjusts any scoring that doesn't match their read, and shares it with the client as a framing document. The diagnostic becomes the engagement's starting contract: here is what we understand, here is the architecture we recommend, and here are the risks we will manage together.</div>
-      </div>
-    </div>
-
-  </div>
-
-  <div class="download-row anim" style="--i:6">
-    <a href="Monday-PreImpl-Diagnostic-PRD.pdf" class="download-link" download>
-      <svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-      Download full PRD (PDF)
-    </a>
-  </div>
-
+<div class="crumbs crumbs-top" aria-label="Breadcrumb">
+  <a href="../index.html">Index</a><span class="sep">/</span>
+  <span class="current" aria-current="page">Pre-Implementation Diagnostic</span>
 </div>
 
+<main class="wrap">
+
+  <header class="hero">
+    <div class="tagline">Pre-Implementation Diagnostic</div>
+    <h1>Adoption is the product, not the platform.</h1>
+    <p class="lede">A structured intake system for <b>monday.com Implementation Consultants</b> that produces a workflow complexity score and an adoption risk profile before any configuration begins.</p>
+  </header>
+
+  <!-- 01 -->
+  <section class="sec">
+    <div class="sec-head"><span class="sec-num">01</span><h2 class="sec-title">Structured Intake Interview</h2></div>
+    <div class="sec-body">
+      <p>20-30 minute conversational assessment covering workflow, team structure, use case type, data relationships, automation appetite, integration requirements, success criteria, and organizational context.</p>
+    </div>
+  </section>
+
+  <!-- 02 -->
+  <section class="sec">
+    <div class="sec-head"><span class="sec-num">02</span><h2 class="sec-title">Workflow Complexity Scoring</h2></div>
+    <div class="sec-body">
+      <p class="stage-lede">Scores the engagement on four dimensions and recommends a starting architecture pattern.</p>
+      <div class="pmap i-vio"><div class="pm-k">Data complexity</div><div class="pm-b">Simple records vs. linked items, mirror columns, cross-board dependencies</div></div>
+      <div class="pmap i-teal"><div class="pm-k">Automation depth</div><div class="pm-b">No automation vs. conditional logic and integrations</div></div>
+      <div class="pmap i-amb"><div class="pm-k">Team surface area</div><div class="pm-b">Single team vs. cross-functional portfolio view</div></div>
+      <div class="pmap i-rose"><div class="pm-k">Integration load</div><div class="pm-b">Standalone vs. CRM-connected, API-dependent</div></div>
+    </div>
+  </section>
+
+  <!-- 03 -->
+  <section class="sec">
+    <div class="sec-head"><span class="sec-num">03</span><h2 class="sec-title">Adoption Risk Detection</h2></div>
+    <div class="sec-body">
+      <p class="stage-lede">Maps intake signals to six risk categories. Each flag includes the signal that triggered it and a recommended pre-build conversation.</p>
+      <div class="pmap i-vio"><div class="pm-k">Spreadsheet culture</div><div class="pm-b">Deep data ownership habits, resistance at reporting layer</div></div>
+      <div class="pmap i-rose"><div class="pm-k">Tool fatigue</div><div class="pm-b">Prior platform failure, trust deficit to address</div></div>
+      <div class="pmap i-acc"><div class="pm-k">Missing process owner</div><div class="pm-b">Driver lacks authority over the workflow being changed</div></div>
+      <div class="pmap i-amb"><div class="pm-k">Misaligned success criteria</div><div class="pm-b">Stated goals don't match described process</div></div>
+      <div class="pmap i-teal"><div class="pm-k">Automation overreach</div><div class="pm-b">Client wants to automate steps requiring human judgment</div></div>
+      <div class="pmap i-vio"><div class="pm-k">Integration dependency</div><div class="pm-b">Success depends on external system the client doesn't control</div></div>
+    </div>
+  </section>
+
+  <!-- 04 -->
+  <section class="sec">
+    <div class="sec-head"><span class="sec-num">04</span><h2 class="sec-title">Generate Structured Brief</h2></div>
+    <div class="sec-body">
+      <p class="stage-lede">The system produces two outputs that shape every decision downstream.</p>
+      <div class="pmap i-acc"><div class="pm-k"><span class="tag">Output 1</span>Workflow Complexity Score</div><div class="pm-b">Recommends one of four architecture patterns: Simple Board, Relational Structure, Multi-Board with Automation, or Full Integration Play. Anchors the conversation without locking the decision.</div></div>
+      <div class="pmap i-rose"><div class="pm-k"><span class="tag">Output 2</span>Adoption Risk Profile</div><div class="pm-b">Names the specific change management landmines before they detonate. Each flagged risk comes with a recommended conversation, not a recommendation to pause.</div></div>
+    </div>
+  </section>
+
+  <!-- 05 -->
+  <section class="sec">
+    <div class="sec-head"><span class="sec-num">05</span><h2 class="sec-title">Consultant Review &amp; Client Framing</h2></div>
+    <div class="sec-body">
+      <p class="stage-lede">The consultant reviews the brief, adjusts any scoring that doesn't match their read, and shares it with the client as a framing document. The diagnostic becomes the engagement's starting contract: <b>here is what we understand, here is the architecture we recommend, and here are the risks we will manage together.</b></p>
+    </div>
+  </section>
+
+  <div class="sec">
+    <div class="sec-body">
+      <p class="nb"><a class="dl" href="Monday-PreImpl-Diagnostic-PRD.pdf" download><svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>Download full PRD (PDF)</a></p>
+    </div>
+  </div>
+
+  <footer class="footer">
+    <a href="../index.html">&larr; Index</a>
+    <span>&copy; 2025-2026 Charlie Fuller</span>
+  </footer>
+
+</main>
 </body>
 </html>

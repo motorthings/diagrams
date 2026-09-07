@@ -1,602 +1,262 @@
 <!DOCTYPE html>
-<html class="light">
+<html lang="en" class="light">
 <head>
 <meta charset="UTF-8">
-<link rel="icon" type="image/svg+xml" href="../icon.svg">
+<link rel="icon" href="../icon.svg" type="image/svg+xml" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Legal AI OS &mdash; Descrybe Integration</title>
 <meta name="description" content="How Descrybe's legal research engine plugs into Legal AI OS — matter enrichment, citation verification, and an auditable cache wired into every function.">
-<title>Legal AI OS — Descrybe Integration</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Mulish:ital,wght@0,300;0,400;0,600;0,700;0,800;1,400&display=swap" rel="stylesheet">
 <style>
-.crumbs{font-family:var(--font-mono,monospace);font-size:13px;font-weight:600;display:flex;align-items:center;gap:8px;flex-wrap:wrap;min-width:0}
-.crumbs a{color:var(--primary);text-decoration:none}
-.crumbs a:hover,.crumbs a:focus-visible{text-decoration:underline;outline:none}
-.crumbs .sep{color:var(--text-faint)}
-.crumbs .current{color:var(--text-faint);font-weight:400}
+  :root{--font-body:'Mulish','Segoe UI',Helvetica,sans-serif;--font-mono:'Mulish',ui-monospace,'SF Mono',Consolas,monospace;
+    --bg:#14181C;--surface:#1B2127;--surface2:#232B33;--border:#303A43;--border-bright:#42505C;
+    --text:#F4F5F6;--text-dim:#CBD0D6;--text-faint:#87919B;
+    --primary:#E39CB2;--metric:#5FBF9B;--primary-dim:rgba(227,156,178,0.12);--metric-dim:rgba(95,191,155,0.12);
+    --blue:#6CACE4;--blue-dim:rgba(108,172,228,0.12);
+    --violet:#B9A0E8;--violet-dim:rgba(185,160,232,0.12);
+    --amber:#E8B54D;--amber-dim:rgba(232,181,77,0.12);
+    --rose:#E88280;--rose-dim:rgba(232,130,128,0.12);
+    --red:#E88280;--red-dim:rgba(232,130,128,0.12);}
+  html.light{--bg:#F7F3EF;--surface:#FFFFFF;--surface2:#F0E9E1;--border:#E1D6CB;--border-bright:#CDBBA8;
+    --text:#241A12;--text-dim:#574A3C;--text-faint:#8C7E6E;
+    --primary:#B83159;--primary-dim:rgba(184,49,89,0.08);--metric:#1E8A6A;--metric-dim:rgba(30,138,106,0.08);
+    --blue:#2F6FA8;--blue-dim:rgba(47,111,168,0.08);
+    --violet:#7C3AED;--violet-dim:rgba(124,58,237,0.07);
+    --amber:#A5650A;--amber-dim:rgba(165,101,10,0.08);
+    --rose:#C23A30;--rose-dim:rgba(194,58,48,0.07);
+    --red:#C4506B;--red-dim:rgba(196,80,107,0.10);}
+  *{margin:0;padding:0;box-sizing:border-box}
+  html{scroll-behavior:smooth}
+  body{background:
+      radial-gradient(at 10% 0%,var(--primary-dim),transparent 55%),
+      radial-gradient(at 90% 80%,var(--metric-dim),transparent 55%),
+      var(--bg);
+    color:var(--text);font-family:var(--font-body);font-size:17px;line-height:1.62;-webkit-font-smoothing:antialiased;min-height:100vh}
 
-  /* ============ GULF STREAM RACING PALETTE ============ */
-  :root {
-    --font-body: 'Mulish', 'Segoe UI', Helvetica, sans-serif;
-    --font-mono: 'Mulish', ui-monospace, 'SF Mono', Consolas, monospace;
+  .crumbs{font-size:13px;font-weight:600;color:var(--text-dim);display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+  .crumbs a{color:var(--primary);text-decoration:none}
+  .crumbs a:hover{text-decoration:underline}
+  .crumbs .sep{color:var(--text-faint)}
+  .crumbs .current{color:var(--text-dim);font-weight:400}
+  .crumbs-top{max-width:1080px;margin:0 auto;padding:18px 24px 0}
 
-    --bg: #171416;
-    --surface: #1E1A1D;
-    --surface2: #262024;
-    --surface-elevated: #2A2427;
-    --border: #332D31;
-    --border-bright: #463D42;
-    --text: #F5F2F1;
-    --text-dim: #C9C3C1;
-    --text-muted: #948E8C;
+  .wrap{max-width:1080px;margin:0 auto;padding:0 24px 80px}
 
-    --primary: #E39CB2;
-    --primary-dim: rgba(227,156,178,0.12);
-    --secondary: #B83159;
-    --secondary-dim: rgba(184,49,89,0.14);
-    --metric: #5FBF9B;
-    --metric-dim: rgba(95,191,155,0.12);
-    --amber: #D9A05B;
-    --amber-dim: rgba(217,160,91,0.12);
-    --violet: #C9A3B8;
-    --violet-dim: rgba(201,163,184,0.12);
-    --rose: #E36C89;
-    --rose-dim: rgba(227,108,137,0.12);
-    --slate: #948E8C;
-    --slate-dim: rgba(148,142,140,0.12);
-    --emerald: #059669;
-    --emerald-dim: rgba(5, 150, 105, 0.08);
-  }
+  .hero{padding:44px 0 24px;border-bottom:1px solid var(--border);margin-bottom:10px}
+  .hero .tagline{font-family:var(--font-mono);font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.14em;color:var(--primary);margin-bottom:10px}
+  .hero h1{font-size:52px;line-height:1.0;letter-spacing:-0.03em;font-weight:800;
+    background:linear-gradient(135deg,var(--primary),var(--metric));-webkit-background-clip:text;background-clip:text;color:transparent}
+  .hero h1 a{background:inherit;-webkit-background-clip:inherit;background-clip:inherit;color:inherit;text-decoration:underline;text-decoration-color:var(--primary);text-underline-offset:4px}
+  .hero .lede{font-size:19px;line-height:1.5;color:var(--text-dim);max-width:920px;margin-top:14px}
+  .hero .lede b{color:var(--text)}
+  a.ext{color:var(--primary);text-decoration:underline;text-underline-offset:3px}
+  a.ext:hover{opacity:.85}
 
-  
+  .sec{margin-top:22px}
+  .sec-head{display:flex;align-items:baseline;gap:14px;padding-bottom:10px;border-bottom:1px solid var(--border);margin-bottom:10px}
+  .sec-num{font-size:23px;font-weight:800;color:var(--primary);font-family:var(--font-mono)}
+  .sec-title{font-size:23px;font-weight:800;color:var(--text);letter-spacing:-0.01em}
+  .sec-body p{max-width:920px;margin-bottom:12px;color:var(--text-dim)}
+  .sec-body p b,.sec-body strong{color:var(--text)}
+  .sec-body p.nb{margin-bottom:0}
+  code{font-family:var(--font-mono);font-size:0.84em;color:var(--primary)}
+  .close{margin-top:16px;border-top:1px solid var(--border);padding-top:14px;font-size:14px;line-height:1.6;color:var(--text-dim);max-width:920px}
+  .close b{color:var(--text)}
 
-  /* ============ RESET + BASE ============ */
-  * { margin: 0; padding: 0; box-sizing: border-box; }
+  .pmap{padding:14px 4px;border-top:1px solid var(--border);display:grid;grid-template-columns:250px 1fr;gap:4px 28px;align-items:baseline}
+  .pmap:first-of-type{border-top:none}
+  .pmap .pm-k{font-family:var(--font-mono);font-size:11.5px;font-weight:800;text-transform:uppercase;letter-spacing:.08em;color:var(--blue);line-height:1.5}
+  .pmap .pm-k .ord{display:block;color:var(--primary);font-weight:700;font-size:10px;letter-spacing:.16em;margin-bottom:3px}
+  .pmap .pm-k .tag{display:block;color:var(--text-faint);font-weight:700;font-size:10px;letter-spacing:.16em;margin-bottom:3px}
+  .pmap .pm-b{font-size:14.5px;line-height:1.6;color:var(--text-dim)}
+  .pmap .pm-b .tt{font-weight:800;color:var(--text);font-size:16px}
+  .pmap .pm-b b,.pmap .pm-b strong{color:var(--text)}
+  .pmap.i-vio .pm-k{color:var(--violet)}
+  .pmap.i-teal .pm-k{color:var(--metric)}
+  .pmap.i-amb .pm-k{color:var(--amber)}
+  .pmap.i-rose .pm-k{color:var(--rose)}
+  .pmap.i-acc .pm-k{color:var(--primary)}
+  .branch{font-size:13px;line-height:1.5;padding:1px 0}
+  .branch .bk{font-family:var(--font-mono);font-size:10.5px;font-weight:700;margin-right:8px}
+  .branch.blue .bk{color:var(--blue)}
+  .branch.teal .bk{color:var(--metric)}
+  .branch.vio .bk{color:var(--violet)}
+  .opt{color:var(--rose);font-weight:700}
 
-  body {
-    background: var(--bg);
-    background-image:
-      radial-gradient(ellipse at 80% 0%, var(--primary-dim) 0%, transparent 50%),
-      radial-gradient(ellipse at 20% 60%, var(--secondary-dim) 0%, transparent 40%);
-    color: var(--text);
-    font-family: var(--font-body);
-    font-size: 15px;
-    line-height: 1.7;
-    min-height: 100vh;
-    -webkit-font-smoothing: antialiased;
-    transition: background 0.3s, color 0.3s;
-  }
+  /* ---- inline SVG flow ---- */
+  .dflow{display:block;width:100%;max-width:680px;height:auto;margin:6px auto 4px;background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:18px}
+  .dflow text{font-family:var(--font-mono);fill:var(--text)}
+  .dflow text.t1{font-size:12px;font-weight:700}
+  .dflow text.t2{font-size:9.5px;fill:var(--text-faint)}
+  .f-n rect{fill:var(--surface2);stroke:var(--border-bright)}
+  .f-ans rect{fill:var(--metric-dim);stroke:var(--metric)}
+  .f-r rect{fill:var(--rose-dim);stroke:var(--rose)}
+  .f-a rect{fill:var(--primary-dim);stroke:var(--primary)}
+  .f-b rect{fill:var(--blue-dim);stroke:var(--blue)}
+  .f-v rect{fill:var(--violet-dim);stroke:var(--violet)}
+  .f-s rect{fill:var(--amber-dim);stroke:var(--amber)}
+  .f-t rect{fill:var(--metric-dim);stroke:var(--metric)}
+  .f-v polygon{fill:var(--violet-dim);stroke:var(--violet)}
+  .dflow .a{stroke:var(--border-bright);stroke-width:1.4;fill:none}
+  .dflow .a.r{stroke:var(--rose)}
+  .dflow .lbl{font-size:9.5px;font-weight:700;font-family:var(--font-mono);fill:var(--text-faint)}
 
-  /* ============ NAV ============ */
-  .nav {
-    position: sticky; top: 0; z-index: 100;
-    backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px);
-    background: color-mix(in srgb, var(--surface) 85%, transparent);
-    border-bottom: 1px solid var(--border);
-    margin: 0 0 32px; padding: 0 32px;
-    transition: background 0.3s, border-color 0.3s;
-  }
-  .nav-inner {
-    max-width: 1000px; margin: 0 auto; padding: 12px 0;
-    display: flex; align-items: center; justify-content: space-between;
-  }
-  .nav-brand {
-    font-family: var(--font-mono); font-size: 13px; font-weight: 600;
-    color: var(--primary); text-decoration: none;
-  }
-  .theme-toggle {
-    width: 36px; height: 36px; border-radius: 10px;
-    border: 1px solid var(--border); background: var(--surface);
-    cursor: pointer; display: flex; align-items: center; justify-content: center;
-    font-size: 16px; color: var(--text-dim); transition: all 0.2s;
-  }
-  .theme-toggle:hover { border-color: var(--primary); color: var(--primary); }
-  .theme-toggle:focus-visible { outline: 2px solid var(--primary); outline-offset: 2px; }
+  .fig{list-style:none;max-width:680px;margin:10px auto 4px}
+  .fig li{position:relative;padding-left:20px;margin-bottom:6px;font-size:13.5px;color:var(--text-dim);line-height:1.55}
+  .fig li::before{content:'\203A';color:var(--primary);font-weight:700;position:absolute;left:0;font-size:15px;line-height:1.3}
+  .fig li b{color:var(--text)}
 
-  /* ============ BACKLINK ============ */
-  .backlink {
-    position: fixed; top: 12px; left: 16px; z-index: 101;
-    font-family: var(--font-mono); font-size: 12px;
-    color: var(--text-dim); text-decoration: none;
-    padding: 6px 10px; border: 1px solid var(--border);
-    border-radius: 6px; background: var(--surface);
-    transition: color 0.15s, border-color 0.15s;
-  }
-  .backlink:hover { color: var(--text); border-color: var(--border-bright); }
+  .footer{margin-top:30px;border-top:1px solid var(--border);padding:18px 0 0;display:flex;justify-content:space-between;gap:20px;flex-wrap:wrap;font-family:var(--font-mono);font-size:12px;color:var(--text-faint)}
+  .footer a{color:var(--primary);text-decoration:none}
+  .footer a:hover{text-decoration:underline}
 
-  /* ============ CONTAINER ============ */
-  .container { max-width: 1000px; margin: 0 auto; padding: 0 24px 80px; }
-
-  /* ============ ANIMATION ============ */
-  @keyframes fadeUp {
-    from { opacity: 0; transform: translateY(16px); }
-    to { opacity: 1; transform: translateY(0); }
+  @media(max-width:900px){
+    .wrap{padding:0 16px 60px}
+    .hero h1{font-size:38px}
+    .pmap{grid-template-columns:1fr;gap:3px}
+    body{font-size:16px}
   }
-  .section { animation: fadeUp 0.5s ease both; }
-  .section:nth-child(1) { animation-delay: 0.05s; }
-  .section:nth-child(2) { animation-delay: 0.10s; }
-  .section:nth-child(3) { animation-delay: 0.15s; }
-  .section:nth-child(4) { animation-delay: 0.20s; }
-  .section:nth-child(5) { animation-delay: 0.25s; }
-
-  @media (prefers-reduced-motion: reduce) {
-    *, *::before, *::after {
-      animation-duration: 0.01ms !important;
-      animation-delay: 0ms !important;
-      transition-duration: 0.01ms !important;
-    }
-  }
-
-  /* ============ HERO ============ */
-  .hero { text-align: center; margin-bottom: 48px; padding: 32px 0 0; }
-  .hero-badge {
-    display: inline-block; font-family: var(--font-mono);
-    font-size: 11px; font-weight: 600; letter-spacing: 1.5px;
-    text-transform: uppercase; color: var(--secondary);
-    background: var(--secondary-dim); border: 1px solid var(--secondary);
-    border-radius: 20px; padding: 4px 14px; margin-bottom: 16px;
-  }
-  .hero h1 {
-    font-size: 44px; font-weight: 800; letter-spacing: -1px;
-    margin-bottom: 8px; color: var(--text); text-wrap: balance;
-  }
-  .hero .tagline {
-    font-size: 16px; color: var(--text-dim);
-    font-style: italic; max-width: 760px; margin: 0 auto;
-    text-wrap: nowrap;
-  }
-
-  /* ============ EXTERNAL LINK ============ */
-  a.descrybe-link {
-    color: inherit;
-    text-decoration: underline;
-    text-decoration-color: var(--primary);
-    text-underline-offset: 3px;
-    transition: color 0.15s;
-  }
-  a.descrybe-link:hover { color: var(--primary); }
-  a.descrybe-link:focus-visible { outline: 2px solid var(--primary); outline-offset: 2px; }
-
-  /* ============ EXEC SUMMARY (COLLAPSIBLE) ============ */
-  .exec-summary {
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: 12px;
-    margin-bottom: 40px;
-    overflow: hidden;
-  }
-  .exec-summary summary {
-    cursor: pointer;
-    list-style: none;
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    padding: 18px 24px;
-    transition: color 0.15s;
-  }
-  .exec-summary summary::-webkit-details-marker { display: none; }
-  .exec-summary summary:hover { color: var(--primary); }
-  .exec-summary summary:focus-visible { outline: 2px solid var(--primary); outline-offset: 2px; }
-  .exec-summary__title {
-    font-size: 17px; font-weight: 700; letter-spacing: -0.3px;
-  }
-  .exec-summary__hint {
-    font-family: var(--font-mono); font-size: 10px; font-weight: 600;
-    letter-spacing: 1px; text-transform: uppercase; color: var(--text-muted);
-    margin-left: auto;
-  }
-  .exec-summary__chevron {
-    font-family: var(--font-mono); font-size: 18px;
-    color: var(--text-muted); transition: transform 0.2s;
-    line-height: 1;
-  }
-  .exec-summary[open] .exec-summary__chevron { transform: rotate(45deg); }
-  .exec-summary__body {
-    padding: 4px 24px 24px;
-    border-top: 1px solid var(--border);
-  }
-  .exec-summary__block { margin-top: 18px; }
-  .exec-summary__label {
-    font-family: var(--font-mono); font-size: 10px; font-weight: 600;
-    letter-spacing: 1.5px; text-transform: uppercase; margin-bottom: 10px;
-  }
-  .exec-summary__label--primary { color: var(--primary); }
-  .exec-summary__label--secondary { color: var(--secondary); }
-  .exec-summary__block p {
-    font-size: 14px; color: var(--text-dim); line-height: 1.7;
-    margin-bottom: 8px;
-  }
-  .exec-summary__block p strong { color: var(--text); font-weight: 600; }
-  .exec-summary__block ul { list-style: none; }
-  .exec-summary__block li {
-    position: relative; padding-left: 18px; margin-bottom: 8px;
-    font-size: 14px; color: var(--text-dim); line-height: 1.6;
-  }
-  .exec-summary__block li::before {
-    content: '\203A'; color: var(--text-muted); font-weight: 700;
-    position: absolute; left: 0; font-size: 16px; line-height: 1.35;
-  }
-
-  /* ============ SECTION HEADING ============ */
-  .section-head { margin: 48px 0 24px; text-align: center; }
-  .section-head h2 {
-    font-size: 26px; font-weight: 700; letter-spacing: -0.5px; margin-bottom: 6px;
-  }
-  .section-head p {
-    font-size: 14px; color: var(--text-dim); font-style: italic;
-  }
-
-  /* ============ MERMAID CONTAINER ============ */
-  .mermaid-wrap {
-    position: relative;
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: 12px;
-    padding: 28px 20px 24px;
-    overflow: auto;
-    margin-bottom: 16px;
-  }
-  .mermaid-wrap .mermaid {
-    display: flex; justify-content: center;
-    transition: transform 0.2s ease; transform-origin: top center;
-  }
-  .zoom-controls {
-    position: absolute; top: 8px; right: 8px;
-    display: flex; gap: 2px; z-index: 10;
-    background: var(--surface); border: 1px solid var(--border);
-    border-radius: 6px; padding: 2px;
-  }
-  .zoom-controls button {
-    width: 28px; height: 28px; border: none; background: transparent;
-    color: var(--text-dim); font-family: var(--font-mono); font-size: 14px;
-    cursor: pointer; border-radius: 4px;
-    display: flex; align-items: center; justify-content: center;
-    transition: background 0.15s, color 0.15s;
-  }
-  .zoom-controls button:hover { background: var(--border); color: var(--text); }
-  .mermaid-wrap { scrollbar-width: thin; scrollbar-color: var(--border) transparent; }
-  .mermaid-wrap::-webkit-scrollbar { width: 6px; height: 6px; }
-  .mermaid-wrap::-webkit-scrollbar-track { background: transparent; }
-  .mermaid-wrap::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
-  .mermaid-wrap::-webkit-scrollbar-thumb:hover { background: var(--text-dim); }
-  .mermaid-wrap.is-zoomed { cursor: grab; }
-  .mermaid-wrap.is-panning { cursor: grabbing; user-select: none; }
-
-  /* Mermaid base */
-  .mermaid .nodeLabel { font-family: var(--font-mono) !important; font-size: 12px !important; }
-  .mermaid .edgeLabel { font-family: var(--font-mono) !important; font-size: 11px !important; color: var(--text) !important; }
-  .mermaid .edgeLabel span { color: var(--text) !important; }
-  .mermaid .edgeLabel foreignObject { color: var(--text) !important; }
-  .mermaid .node rect, .mermaid .node circle, .mermaid .node polygon { stroke-width: 1.5px !important; }
-  .mermaid .edge-pattern-solid { stroke-width: 1.5px !important; }
-
-  /* Dark mode Mermaid overrides */
-  
-  
-  
-  
-  
-
-  
-  
-  
-  
-  
-
-  /* Diagram caption */
-  .diagram-caption {
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: 12px;
-    padding: 20px 24px;
-    margin-bottom: 48px;
-  }
-  .diagram-caption ul { list-style: none; }
-  .diagram-caption li {
-    position: relative; padding-left: 20px; margin-bottom: 8px;
-    font-size: 14px; color: var(--text-dim); line-height: 1.6;
-  }
-  .diagram-caption li:last-child { margin-bottom: 0; }
-  .diagram-caption li::before {
-    content: '\203A'; color: var(--primary); font-weight: 700;
-    position: absolute; left: 0; font-size: 16px; line-height: 1.35;
-  }
-
-  /* ============ COMPONENT CARDS ============ */
-  .component-grid {
-    display: grid; grid-template-columns: 1fr 1fr; gap: 18px; margin-bottom: 48px;
-  }
-  .component-card {
-    background: var(--surface); border: 1px solid var(--border);
-    border-radius: 12px; padding: 22px 24px;
-    display: flex; flex-direction: column;
-  }
-  .component-card__file {
-    font-family: var(--font-mono); font-size: 11px; font-weight: 600;
-    letter-spacing: 0.5px; margin-bottom: 8px; word-break: break-all;
-  }
-  .component-card--primary h3 { color: var(--primary); }
-  .component-card--secondary h3 { color: var(--secondary); }
-  .component-card--violet h3 { color: var(--violet); }
-  .component-card--metric h3 { color: var(--metric); }
-  .component-card h3 { font-size: 18px; font-weight: 700; margin-bottom: 8px; letter-spacing: -0.3px; }
-  .component-card p { font-size: 13px; color: var(--text-dim); line-height: 1.6; }
-  .component-card p strong { color: var(--text); font-weight: 600; }
-  .component-card--primary { border-left: 3px solid var(--primary); }
-  .component-card--secondary { border-left: 3px solid var(--secondary); }
-  .component-card--violet { border-left: 3px solid var(--violet); }
-  .component-card--metric { border-left: 3px solid var(--metric); }
-
-  /* ============ WHAT YOU GET ============ */
-  .outcome-grid {
-    display: grid; grid-template-columns: repeat(3, 1fr); gap: 18px; margin-bottom: 48px;
-  }
-  .outcome-card {
-    background: var(--surface); border: 1px solid var(--border);
-    border-radius: 12px; padding: 22px 24px;
-  }
-  .outcome-card__num {
-    font-family: var(--font-mono); font-size: 10px; font-weight: 600;
-    letter-spacing: 1.5px; text-transform: uppercase; margin-bottom: 10px;
-  }
-  .outcome-card__num--primary { color: var(--primary); }
-  .outcome-card__num--secondary { color: var(--secondary); }
-  .outcome-card__num--metric { color: var(--metric); }
-  .outcome-card h3 { font-size: 17px; font-weight: 700; margin-bottom: 8px; letter-spacing: -0.3px; }
-  .outcome-card p { font-size: 13px; color: var(--text-dim); line-height: 1.6; }
-
-  /* ============ FOOTER ============ */
-  .footer {
-    text-align: center; font-family: var(--font-mono);
-    font-size: 11px; color: var(--text-muted); padding: 24px 0 0;
-  }
-  .footer a { color: var(--text-dim); text-decoration: none; }
-  .footer a:hover { color: var(--primary); text-decoration: underline; }
-
-  /* ============ RESPONSIVE ============ */
-  @media (max-width: 860px) {
-    .component-grid { grid-template-columns: 1fr; }
-    .outcome-grid { grid-template-columns: 1fr; }
-    .hero h1 { font-size: 32px; }
-    .hero .tagline { text-wrap: wrap; max-width: 560px; }
-    .backlink { top: 8px; left: 8px; font-size: 10px; padding: 4px 8px; }
-  }
-  @media (max-width: 500px) {
-    .hero h1 { font-size: 28px; }
-  }
-  html.light {
-    --bg: #F5F2F1; --surface: #FFFFFF; --surface2: #EDE8E6; --surface-warm: #F7F3F1;
-    --border: #D9D2CE; --border-bright: #C4B9B4;
-    --text: #171416; --text-dim: #4A4442; --text-faint: #8A8481; --text-muted: #8A8481; --heading: #171416;
-    --primary: #B83159; --primary-dim: rgba(184,49,89,0.10);
-    --accent: #B83159; --accent-bright: #A4093F; --accent-dim: rgba(184,49,89,0.10); --accent-btn: #A4093F;
-    --secondary: #A4093F; --secondary-dim: rgba(164,9,63,0.10);
-    --metric: #1E8A6A; --metric-dim: rgba(30,138,106,0.10);
-    --amber: #B07C2E; --amber-dim: rgba(176,124,46,0.10);
-    --violet: #8A5A76; --violet-dim: rgba(138,90,118,0.10);
-    --rose: #C4506B; --rose-dim: rgba(196,80,107,0.10);
-    --slate: #6A6461; --slate-dim: rgba(106,100,97,0.10);
-    --good: #1E8A6A; --good-dim: rgba(30,138,106,0.10);
-    --warn: #B07C2E; --warn-dim: rgba(176,124,46,0.10);
-    --bad: #C4506B; --bad-dim: rgba(196,80,107,0.10);
-    --surface-elevated: #EDE8E6; --nav-bg: rgba(255,255,255,0.78);
-  }
+  @media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
 </style>
 </head>
 <body>
 
-<!-- Nav -->
-<div class="nav">
-  <div class="nav-inner">
-    <nav class="crumbs" aria-label="Breadcrumb">
-  <a href="../index.html">Index</a>
-  <span class="sep">/</span>
-  <a href="index.html">Legal</a>
-  <span class="sep">/</span>
+<div class="crumbs crumbs-top" aria-label="Breadcrumb">
+  <a href="../index.html">Index</a><span class="sep">/</span>
+  <a href="index.html">Legal</a><span class="sep">/</span>
   <span class="current" aria-current="page">Descrybe Integration</span>
-</nav>
-    
-    
-  </div>
 </div>
 
-<!-- Backlink -->
+<main class="wrap">
 
+  <header class="hero">
+    <div class="tagline">Legal AI OS &mdash; research engine</div>
+    <h1><a href="https://descrybe.ai" target="_blank" rel="noopener">Descrybe</a> Integration</h1>
+    <p class="lede">Legal research stops being a thing you go do. It becomes a thing that happens before you look.</p>
+  </header>
 
-<div class="container">
-
-  <!-- Hero -->
-  <div class="hero section">
-    <div class="hero-badge">Legal AI OS</div>
-    <h1><a href="https://descrybe.ai" target="_blank" rel="noopener" class="descrybe-link">Descrybe</a> Integration</h1>
-    <p class="tagline">Legal research stops being a thing you go do. It becomes a thing that happens before you look.</p>
-  </div>
-
-  <!-- Executive Summary -->
-  <details class="exec-summary section" open>
-    <summary>
-      <span class="exec-summary__title">Executive Summary</span>
-      <span class="exec-summary__hint">plain english</span>
-      <span class="exec-summary__chevron">+</span>
-    </summary>
-    <div class="exec-summary__body">
-      <div class="exec-summary__block">
-        <div class="exec-summary__label exec-summary__label--primary">What we built with <a href="https://descrybe.ai" target="_blank" rel="noopener" class="descrybe-link">Descrybe</a></div>
-        <ul>
-          <li><a href="https://descrybe.ai" target="_blank" rel="noopener" class="descrybe-link">Descrybe</a> is now the <strong>research engine of Legal AI OS</strong>. The platform&rsquo;s research layer.</li>
-          <li>Every new matter arrives with Descrybe&rsquo;s case law and statutes already surfaced &mdash; matched to its jurisdiction and practice area &mdash; before anyone reviews it. The research is finished before a human thinks to ask for it.</li>
-          <li>Citation checking that actually checks. Drop in a cite and the exact wording, and Descrybe confirms the quote appears where you say it does. <strong>No hallucinated cases. No garbled cites.</strong></li>
-        </ul>
-      </div>
-      <div class="exec-summary__block">
-        <div class="exec-summary__label exec-summary__label--secondary">Why Descrybe makes the platform stronger</div>
-        <ul>
-          <li><strong>Structured primary law.</strong> Real, resolvable authorities a lawyer can stand behind.</li>
-          <li><strong>Research happens before review.</strong> The platform hands a lawyer a brief.</li>
-          <li><strong>Everything Descrybe returns lands on the permanent audit trail.</strong> When the client or the court asks &ldquo;why did you cite this,&rdquo; the answer is one query away.</li>
-        </ul>
-      </div>
+  <!-- 01 -->
+  <section class="sec">
+    <div class="sec-head"><span class="sec-num">01</span><h2 class="sec-title">Executive Summary</h2></div>
+    <div class="sec-body">
+      <div class="pmap i-acc"><div class="pm-k">What we built<br>with <a class="ext" href="https://descrybe.ai" target="_blank" rel="noopener">Descrybe</a></div><div class="pm-b">
+        <div class="branch teal"><span class="bk">Engine</span> <a class="ext" href="https://descrybe.ai" target="_blank" rel="noopener">Descrybe</a> is now the <b>research engine of Legal AI OS</b>. The platform&rsquo;s research layer.</div>
+        <div class="branch blue"><span class="bk">Early</span> Every new matter arrives with Descrybe&rsquo;s case law and statutes already surfaced &mdash; matched to its jurisdiction and practice area &mdash; before anyone reviews it. The research is finished before a human thinks to ask for it.</div>
+        <div class="branch vio"><span class="bk">Check</span> Citation checking that actually checks. Drop in a cite and the exact wording, and Descrybe confirms the quote appears where you say it does. <b>No hallucinated cases. No garbled cites.</b></div>
+      </div></div>
+      <div class="pmap i-rose"><div class="pm-k">Why Descrybe makes<br>the platform stronger</div><div class="pm-b">
+        <div class="branch teal"><span class="bk">1</span> <b>Structured primary law.</b> Real, resolvable authorities a lawyer can stand behind.</div>
+        <div class="branch blue"><span class="bk">2</span> <b>Research happens before review.</b> The platform hands a lawyer a brief.</div>
+        <div class="branch vio"><span class="bk">3</span> <b>Everything Descrybe returns lands on the permanent audit trail.</b> When the client or the court asks &ldquo;why did you cite this,&rdquo; the answer is one query away.</div>
+      </div></div>
     </div>
-  </details>
+  </section>
 
-  <!-- Main Diagram -->
-  <div class="mermaid-wrap section">
-    <div class="zoom-controls">
-      <button onclick="zoomDiagram(this, 1.2)" title="Zoom in">+</button>
-      <button onclick="zoomDiagram(this, 0.8)" title="Zoom out">&minus;</button>
-      <button onclick="resetZoom(this)" title="Reset zoom">&#8634;</button>
+  <!-- 02 -->
+  <section class="sec">
+    <div class="sec-head"><span class="sec-num">02</span><h2 class="sec-title">The flow</h2></div>
+    <div class="sec-body">
+      <svg class="dflow" viewBox="0 0 620 950" role="img" aria-label="Descrybe integration data flow">
+        <defs>
+          <marker id="ah4" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M0 0L10 5L0 10z" fill="var(--border-bright)"/></marker>
+        </defs>
+        <!-- matter -> enrich (left) -->
+        <g class="f-r"><rect x="30" y="20" width="180" height="96" rx="10"/></g>
+        <text x="120" y="44" text-anchor="middle" class="t1">New Matter</text>
+        <text x="120" y="60" text-anchor="middle" class="t2">jurisdiction + practice</text>
+        <text x="120" y="73" text-anchor="middle" class="t2">area + adverse parties</text>
+        <path class="a r" d="M120 116 V176" marker-end="url(#ah4)"/>
+        <g class="f-r"><rect x="30" y="180" width="180" height="60" rx="10"/></g>
+        <text x="120" y="203" text-anchor="middle" class="t1">Matter Enrichment</text>
+        <text x="120" y="219" text-anchor="middle" class="t2">auto-builds queries</text>
+        <!-- attorney + functions (right) -->
+        <g class="f-b"><rect x="410" y="30" width="180" height="120" rx="10"/></g>
+        <text x="500" y="66" text-anchor="middle" class="t1">Attorney</text>
+        <text x="500" y="90" text-anchor="middle" class="t2">research</text>
+        <text x="500" y="104" text-anchor="middle" class="t2">verify-citation</text>
+        <path class="a" d="M414 100 H302 V324" marker-end="url(#ah4)"/>
+        <g class="f-b"><rect x="410" y="190" width="180" height="60" rx="10"/></g>
+        <text x="500" y="213" text-anchor="middle" class="t1">Legal-OS Functions</text>
+        <text x="500" y="229" text-anchor="middle" class="t2">KM &middot; Regulatory &middot; DD &middot; Contract</text>
+        <path class="a" d="M445 250 L395 324" marker-end="url(#ah4)"/>
+        <!-- enrich -> client -->
+        <path class="a r" d="M150 240 L250 326" marker-end="url(#ah4)"/>
+        <g class="f-a"><rect x="200" y="330" width="220" height="60" rx="10"/></g>
+        <text x="310" y="353" text-anchor="middle" class="t1">Descrybe Client</text>
+        <text x="310" y="369" text-anchor="middle" class="t2">async + retry + timeout</text>
+        <!-- client -> cache -->
+        <path class="a" d="M310 390 V446" marker-end="url(#ah4)"/>
+        <polygon class="f-v" points="210,500 310,450 410,500 310,550"/>
+        <text x="310" y="504" text-anchor="middle" class="t1">Cache</text>
+        <text x="310" y="518" text-anchor="middle" class="t2">hit?</text>
+        <!-- cache -> miss api -->
+        <path class="a" d="M210 500 H122 V596" marker-end="url(#ah4)"/>
+        <text x="150" y="492" class="lbl">miss</text>
+        <g class="f-v"><rect x="30" y="600" width="180" height="80" rx="10"/></g>
+        <text x="120" y="623" text-anchor="middle" class="t1">Descrybe API</text>
+        <text x="120" y="639" text-anchor="middle" class="t2">case law &middot; statutes</text>
+        <text x="120" y="653" text-anchor="middle" class="t2">&middot; citations</text>
+        <!-- cache hit + api -> normalize -->
+        <path class="a" d="M310 550 V636" marker-end="url(#ah4)"/>
+        <text x="340" y="566" class="lbl">hit</text>
+        <path class="a" d="M210 650 H202" marker-end="url(#ah4)"/>
+        <g class="f-b"><rect x="200" y="640" width="220" height="60" rx="10"/></g>
+        <text x="310" y="663" text-anchor="middle" class="t1">Normalize</text>
+        <text x="310" y="679" text-anchor="middle" class="t2">+ rank results</text>
+        <!-- normalize -> store + audit -->
+        <path class="a" d="M260 700 L140 756" marker-end="url(#ah4)"/>
+        <path class="a" d="M360 700 L480 756" marker-end="url(#ah4)"/>
+        <g class="f-t"><rect x="30" y="760" width="190" height="70" rx="14"/></g>
+        <text x="125" y="783" text-anchor="middle" class="t1">legal_research_queries</text>
+        <text x="125" y="799" text-anchor="middle" class="t2">+ results &middot; 24h TTL</text>
+        <g class="f-t"><rect x="400" y="760" width="190" height="70" rx="14"/></g>
+        <text x="495" y="783" text-anchor="middle" class="t1">Audit Trail</text>
+        <text x="495" y="799" text-anchor="middle" class="t2">immutable</text>
+        <!-- store + audit -> review -->
+        <path class="a" d="M150 830 L250 876" marker-end="url(#ah4)"/>
+        <path class="a" d="M470 830 L370 876" marker-end="url(#ah4)"/>
+        <g class="f-ans"><rect x="200" y="880" width="220" height="60" rx="10"/></g>
+        <text x="310" y="903" text-anchor="middle" class="t1">Attorney Review</text>
+      </svg>
+      <ul class="fig">
+        <li>Two paths in, one audited core.</li>
+        <li>Auto-enrichment on matter creation.</li>
+        <li>On-demand research and citation checks from the attorney or any function.</li>
+        <li>Every result cached, every call written to the immutable audit trail.</li>
+      </ul>
     </div>
-    <pre class="mermaid">
-      flowchart TD
-        matter["New Matter
-        jurisdiction + practice area
-        + adverse parties"]
-        enrich["Matter Enrichment
-        auto-builds queries"]
-        matter --> enrich
+  </section>
 
-        attorney["Attorney
-        research / verify-citation"]
-        functions["Legal-OS Functions
-        KM · Regulatory · DD · Contract"]
-
-        client["Descrybe Client
-        async + retry + timeout"]
-
-        enrich --> client
-        attorney --> client
-        functions --> client
-
-        cache{"Cache
-        hit?"}
-        client --> cache
-
-        api["Descrybe API
-        case law · statutes · citations"]
-
-        cache -->|"miss"| api
-        api --> normalize["Normalize
-        + rank results"]
-        cache -->|"hit"| normalize
-
-        store[("legal_research_queries
-        + results · 24h TTL")]
-        audit["Audit Trail
-        immutable"]
-
-        normalize --> store
-        normalize --> audit
-        store --> review["Attorney Review"]
-        audit --> review
-
-        classDef fnNode fill:#fde8d8,stroke:#e8621a,color:#0a1628
-        classDef enrichNode fill:#fef0d7,stroke:#b45309,color:#0a1628
-        classDef svcNode fill:#e0eef7,stroke:#4a90c4,color:#0a1628
-        classDef apiNode fill:#ede9fe,stroke:#7c3aed,color:#0a1628
-        classDef storeNode fill:#d5f0ee,stroke:#0f766e,color:#0a1628
-
-        class attorney,functions fnNode
-        class matter,enrich enrichNode
-        class client,cache,normalize svcNode
-        class api apiNode
-        class store,audit,review storeNode
-    </pre>
-  </div>
-  <div class="diagram-caption">
-    <ul>
-      <li>Two paths in, one audited core.</li>
-      <li>Auto-enrichment on matter creation.</li>
-      <li>On-demand research and citation checks from the attorney or any function.</li>
-      <li>Every result cached, every call written to the immutable audit trail.</li>
-    </ul>
-  </div>
-
-  <!-- Components -->
-  <div class="section-head section">
-    <h2>What I Built</h2>
-    <p>Four pieces. Each one fits the existing governance contract.</p>
-  </div>
-
-  <div class="component-grid section">
-    <div class="component-card component-card--primary">
-      <h3>The research connection</h3>
-      <p>Links the platform to <a href="https://descrybe.ai" target="_blank" rel="noopener" class="descrybe-link">Descrybe</a>. Searches case law, statutes, and regulations, then brings results back in one consistent form. Each public-law question is answered once and reused.</p>
+  <!-- 03 -->
+  <section class="sec">
+    <div class="sec-head"><span class="sec-num">03</span><h2 class="sec-title">What I Built</h2></div>
+    <div class="sec-body">
+      <p><i>Four pieces. Each one fits the existing governance contract.</i></p>
+      <div class="pmap i-acc"><div class="pm-k">The research<br>connection</div><div class="pm-b">Links the platform to <a class="ext" href="https://descrybe.ai" target="_blank" rel="noopener">Descrybe</a>. Searches case law, statutes, and regulations, then brings results back in one consistent form. Each public-law question is answered once and reused.</div></div>
+      <div class="pmap i-rose"><div class="pm-k">Automatic matter<br>research</div><div class="pm-b">Turns what a matter already knows &mdash; its <b>jurisdiction, practice area, and the parties involved</b> &mdash; into a set of searches. Runs before anyone reviews it. Never slows the intake down.</div></div>
+      <div class="pmap i-vio"><div class="pm-k">Three things a<br>lawyer can do</div><div class="pm-b"><b>Run a research query. Verify a citation. Enrich an existing matter.</b> Registered as the platform&rsquo;s ninth function.</div></div>
+      <div class="pmap i-teal"><div class="pm-k">A permanent<br>record</div><div class="pm-b">Keeps track of every query and every result. Public law is shared and reused; the matter&rsquo;s private details stay private (ABA Model Rule 1.6).</div></div>
     </div>
+  </section>
 
-    <div class="component-card component-card--secondary">
-      <h3>Automatic matter research</h3>
-      <p>Turns what a matter already knows &mdash; its <strong>jurisdiction, practice area, and the parties involved</strong> &mdash; into a set of searches. Runs before anyone reviews it. Never slows the intake down.</p>
+  <!-- 04 -->
+  <section class="sec">
+    <div class="sec-head"><span class="sec-num">04</span><h2 class="sec-title">What you get</h2></div>
+    <div class="sec-body">
+      <p><i>Research woven into the workflow.</i></p>
+      <div class="pmap i-acc"><div class="pm-k"><span class="tag">Research before review</span></div><div class="pm-b"><span class="tt">Matters arrive with authority</span><br>A new matter lands with controlling case law and governing statutes already surfaced from its own jurisdiction and practice area. The partner reviews a brief.</div></div>
+      <div class="pmap i-rose"><div class="pm-k"><span class="tag">Citations that check themselves</span></div><div class="pm-b"><span class="tt">Verify the quote, not just the cite</span><br>Drop a citation and the exact language. The system resolves it against Descrybe&rsquo;s corpus and tells you whether the words actually appear where you say they do.</div></div>
+      <div class="pmap i-teal"><div class="pm-k"><span class="tag">Every query provable</span></div><div class="pm-b"><span class="tt">The audit trail is the product</span><br>Every research call is captured &mdash; what was asked, what came back, what it cost. When the client asks why you cited something, the answer is one query away.</div></div>
     </div>
+  </section>
 
-    <div class="component-card component-card--violet">
-      <h3>Three things a lawyer can do</h3>
-      <p><strong>Run a research query. Verify a citation. Enrich an existing matter.</strong> Registered as the platform&rsquo;s ninth function.</p>
-    </div>
+  <footer class="footer">
+    <a href="index.html">&larr; Legal</a>
+    <span>&copy; 2025-2026 Charlie Fuller &middot; <a href="https://linkedin.com/in/charlie-fuller-colorado/" target="_blank" rel="noopener">LinkedIn</a></span>
+  </footer>
 
-    <div class="component-card component-card--metric">
-      <h3>A permanent record</h3>
-      <p>Keeps track of every query and every result. Public law is shared and reused; the matter&rsquo;s private details stay private (ABA Model Rule 1.6).</p>
-    </div>
-  </div>
-
-  <!-- What you get -->
-  <div class="section-head section">
-    <h2>What you get</h2>
-    <p>Research woven into the workflow.</p>
-  </div>
-
-  <div class="outcome-grid section">
-    <div class="outcome-card">
-      <div class="outcome-card__num outcome-card__num--primary">Research before review</div>
-      <h3>Matters arrive with authority</h3>
-      <p>A new matter lands with controlling case law and governing statutes already surfaced from its own jurisdiction and practice area. The partner reviews a brief.</p>
-    </div>
-
-    <div class="outcome-card">
-      <div class="outcome-card__num outcome-card__num--secondary">Citations that check themselves</div>
-      <h3>Verify the quote, not just the cite</h3>
-      <p>Drop a citation and the exact language. The system resolves it against Descrybe's corpus and tells you whether the words actually appear where you say they do.</p>
-    </div>
-
-    <div class="outcome-card">
-      <div class="outcome-card__num outcome-card__num--metric">Every query provable</div>
-      <h3>The audit trail is the product</h3>
-      <p>Every research call is captured &mdash; what was asked, what came back, what it cost. When the client asks why you cited something, the answer is one query away.</p>
-    </div>
-  </div>
-
-  <!-- Footer -->
-  <div class="footer">&copy; 2025&ndash;2026 Charlie Fuller &nbsp;&middot;&nbsp; <a href="https://linkedin.com/in/charlie-fuller-colorado/" target="_blank" rel="noopener">LinkedIn</a></div>
-
-</div>
-
-<script type="module">
-  import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs';
-
-  mermaid.initialize({
-    startOnLoad: true,
-    theme: 'base',
-    look: 'classic',
-    securityLevel: 'loose',
-    themeVariables: {
-      primaryColor: '#f5f8fc',
-      primaryBorderColor: '#c8daea',
-      primaryTextColor: '#0a1628',
-      secondaryColor: '#f5f8fc',
-      secondaryBorderColor: '#c8daea',
-      secondaryTextColor: '#0a1628',
-      tertiaryColor: '#f5f8fc',
-      tertiaryBorderColor: '#c8daea',
-      tertiaryTextColor: '#0a1628',
-      lineColor: '#a0bedb',
-      fontSize: '12px',
-      fontFamily: "'Source Code Pro', 'SF Mono', Consolas, monospace",
-    }
-  });
-</script>
-
-
-
+</main>
 </body>
 </html>

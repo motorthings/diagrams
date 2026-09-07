@@ -1,183 +1,87 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" class="light">
 <head>
 <meta charset="UTF-8">
-<link rel="icon" type="image/svg+xml" href="../icon.svg">
+<link rel="icon" href="../icon.svg" type="image/svg+xml" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>AI Initiatives -- Ranked by Score</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600;9..144,700&family=Source+Code+Pro:wght@400;500;600" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Mulish:ital,wght@0,300;0,400;0,600;0,700;0,800;1,400&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-annotation@3.0.1/dist/chartjs-plugin-annotation.min.js"></script>
 <style>
-  :root {
-    --font-body: 'Fraunces', Georgia, serif;
-    --font-mono: 'Source Code Pro', 'SF Mono', Consolas, monospace;
-    --bg: #f0f4f8;
-    --surface: #ffffff;
-    --surface2: #e8eef4;
-    --border: rgba(0, 20, 60, 0.08);
-    --border-bright: rgba(0, 20, 60, 0.15);
-    --text: #0f172a;
-    --text-dim: #64748b;
-    --accent: #1e40af;
-    --accent-dim: rgba(30, 64, 175, 0.07);
-    --finance: #1e40af;
-    --finance-bg: rgba(30, 64, 175, 0.82);
-    --finance-bg-dim: rgba(30, 64, 175, 0.15);
-    --legal: #7c3aed;
-    --legal-bg: rgba(124, 58, 237, 0.82);
-    --legal-bg-dim: rgba(124, 58, 237, 0.15);
-    --people: #059669;
-    --people-bg: rgba(5, 150, 105, 0.82);
-    --people-bg-dim: rgba(5, 150, 105, 0.15);
-    --is: #d97706;
-    --is-bg: rgba(217, 119, 6, 0.82);
-    --is-bg-dim: rgba(217, 119, 6, 0.15);
-    --green: #059669;
-    --green-dim: rgba(5, 150, 105, 0.08);
-    --red: #dc2626;
-    --red-dim: rgba(220, 38, 38, 0.07);
-    --orange: #d97706;
-    --purple: #7c3aed;
-    --purple-dim: rgba(124, 58, 237, 0.08);
-    --grid-line: rgba(0, 20, 60, 0.05);
-  }
+  :root{--font-body:'Mulish','Segoe UI',Helvetica,sans-serif;--font-mono:'Mulish',ui-monospace,'SF Mono',Consolas,monospace;
+    --bg:#F7F3EF;--surface:#FFFFFF;--surface2:#F0E9E1;--border:#E1D6CB;--border-bright:#CDBBA8;
+    --text:#241A12;--text-dim:#574A3C;--text-faint:#8C7E6E;
+    --primary:#4F46E5;--primary-dim:rgba(79,70,229,0.08);
+    --violet:#7C3AED;--violet-dim:rgba(124,58,237,0.07);
+    --metric:#0E7C6E;--metric-dim:rgba(14,124,110,0.08);
+    --amber:#A5650A;--amber-dim:rgba(165,101,10,0.08);
+    --rose:#C23A30;--rose-dim:rgba(194,58,48,0.07);
+    --finance:#4F46E5;--finance-bg:rgba(79,70,229,0.85);--finance-bg-dim:rgba(79,70,229,0.13);
+    --legal:#7C3AED;--legal-bg:rgba(124,58,237,0.82);--legal-bg-dim:rgba(124,58,237,0.13);
+    --people:#0E7C6E;--people-bg:rgba(14,124,110,0.82);--people-bg-dim:rgba(14,124,110,0.13);
+    --is:#A5650A;--is-bg:rgba(165,101,10,0.82);--is-bg-dim:rgba(165,101,10,0.13);
+    --grid-line:rgba(0,20,60,0.05);}
+  *{margin:0;padding:0;box-sizing:border-box}
+  html{scroll-behavior:smooth}
+  body{background:
+      radial-gradient(at 20% 0%,var(--primary-dim),transparent 55%),
+      radial-gradient(at 80% 100%,var(--metric-dim),transparent 45%),
+      var(--bg);
+    color:var(--text);font-family:var(--font-body);min-height:100vh;line-height:1.6;padding:40px;overflow-wrap:break-word}
 
-  
+  .crumbs{font-size:13px;font-weight:600;color:var(--text-dim);display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+  .crumbs a{color:var(--primary);text-decoration:none}
+  .crumbs a:hover{text-decoration:underline}
+  .crumbs .sep{color:var(--text-faint)}
+  .crumbs .current{color:var(--text-dim);font-weight:400}
+  .crumbs-top{max-width:1100px;margin:0 auto;padding:0 0 22px}
 
-  * { margin: 0; padding: 0; box-sizing: border-box; }
+  .container{max-width:1100px;margin:0 auto}
+  h1{font-size:34px;font-weight:800;letter-spacing:-0.02em;color:var(--text);margin-bottom:6px}
+  .subtitle{color:var(--text-dim);font-family:var(--font-mono);font-size:12.5px;margin-bottom:26px;line-height:1.5}
+  .subtitle b{color:var(--text)}
 
-  body {
-    background: var(--bg);
-    background-image:
-      radial-gradient(ellipse at 20% 0%, var(--accent-dim) 0%, transparent 55%),
-      radial-gradient(ellipse at 80% 100%, var(--purple-dim) 0%, transparent 45%);
-    color: var(--text);
-    font-family: var(--font-body);
-    padding: 40px;
-    min-height: 100vh;
-  }
+  .kpi-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:14px;margin-bottom:20px}
+  .kpi-card{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:16px}
+  .kpi-card__value{font-size:28px;font-weight:800;line-height:1.1;font-variant-numeric:tabular-nums;letter-spacing:-1px;color:var(--text)}
+  .kpi-card__label{font-family:var(--font-mono);font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--text-faint);margin-top:5px}
 
-  @keyframes fadeUp { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: translateY(0); } }
-  @keyframes fadeScale { from { opacity: 0; transform: scale(0.92); } to { opacity: 1; transform: scale(1); } }
-  .animate { animation: fadeUp 0.4s ease-out both; animation-delay: calc(var(--i, 0) * 0.05s); }
-  .animate-scale { animation: fadeScale 0.35s ease-out both; animation-delay: calc(var(--i, 0) * 0.06s); }
-  @media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; } }
+  .legend-row{display:flex;gap:20px;flex-wrap:wrap;margin-bottom:18px;padding:12px 16px;background:var(--surface);border:1px solid var(--border);border-radius:10px}
+  .legend-item{display:flex;align-items:center;gap:7px;font-family:var(--font-mono);font-size:11px;color:var(--text-dim)}
+  .legend-swatch{width:14px;height:14px;border-radius:3px}
+  .legend-swatch--striped{background:repeating-linear-gradient(-45deg,var(--text-faint),var(--text-faint) 2px,transparent 2px,transparent 5px);opacity:.45}
 
-  .container { max-width: 1100px; margin: 0 auto; }
+  .chart-wrap{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:24px 20px 16px;box-shadow:0 2px 12px rgba(0,0,0,0.04)}
+  .chart-container{position:relative;width:100%;height:780px}
 
-  h1 { font-size: 30px; font-weight: 700; letter-spacing: -0.5px; margin-bottom: 4px; }
-  .subtitle { color: var(--text-dim); font-family: var(--font-mono); font-size: 12px; margin-bottom: 28px; line-height: 1.5; }
-  .subtitle strong { color: var(--text); }
-
-  .legend-row {
-    display: flex;
-    gap: 20px;
-    flex-wrap: wrap;
-    margin-bottom: 20px;
-    padding: 12px 16px;
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: 10px;
-  }
-  .legend-item { display: flex; align-items: center; gap: 7px; font-family: var(--font-mono); font-size: 11px; color: var(--text-dim); }
-  .legend-swatch { width: 14px; height: 14px; border-radius: 3px; }
-  .legend-swatch--striped {
-    background: repeating-linear-gradient(-45deg, var(--text-dim), var(--text-dim) 2px, transparent 2px, transparent 5px);
-    opacity: 0.4;
-  }
-
-  .chart-wrap {
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: 12px;
-    padding: 24px 20px 16px;
-    margin-bottom: 24px;
-    box-shadow: 0 2px 12px rgba(0,0,0,0.04);
-  }
-
-  .chart-container {
-    position: relative;
-    width: 100%;
-    height: 780px;
-  }
-
-  .kpi-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 14px; margin-bottom: 24px; }
-  .kpi-card { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 16px; box-shadow: 0 2px 8px rgba(0,0,0,0.04); transition: transform 0.2s, box-shadow 0.2s; }
-  .kpi-card:hover { transform: translateY(-2px); box-shadow: 0 4px 12px rgba(0,0,0,0.08); }
-  .kpi-card__value { font-size: 28px; font-weight: 700; line-height: 1.1; font-variant-numeric: tabular-nums; letter-spacing: -1px; }
-  .kpi-card__label { font-family: var(--font-mono); font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: 1.2px; color: var(--text-dim); margin-top: 5px; }
-
-  .tier-label {
-    font-family: var(--font-mono);
-    font-size: 10px;
-    font-weight: 600;
-    text-transform: uppercase;
-    letter-spacing: 1.5px;
-    padding: 6px 12px;
-    border-radius: 4px;
-    display: inline-block;
-    margin-bottom: 8px;
-  }
-
-  @media (max-width: 768px) {
-    body { padding: 16px; }
-    h1 { font-size: 22px; }
-    .chart-container { height: 640px; }
-    .kpi-row { grid-template-columns: repeat(2, 1fr); }
-  }
-.backlink{position:fixed;top:12px;left:16px;z-index:200;font-family:var(--font-mono,monospace);font-size:11px;color:var(--text-dim,#8b949e);text-decoration:none;padding:6px 10px;border:1px solid var(--border,rgba(255,255,255,0.08));border-radius:6px;background:var(--surface,#161b22);transition:color .15s,border-color .15s}.backlink:hover{color:var(--text,#e6edf3);border-color:var(--text-dim,#8b949e)}
+  @media(max-width:768px){body{padding:16px}h1{font-size:24px}.chart-container{height:640px}.kpi-row{grid-template-columns:repeat(2,1fr)}}
+  @media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
 </style>
 </head>
 <body>
-<style>
-.crumbs-at-top{max-width:1100px;margin:0 auto;padding:14px 24px 0}
-.crumbs{font-family:var(--font-mono,monospace);font-size:13px;font-weight:600;display:flex;align-items:center;gap:8px;flex-wrap:wrap;min-width:0}
-.crumbs a{color:var(--accent);text-decoration:none}
-.crumbs a:hover,.crumbs a:focus-visible{text-decoration:underline;outline:none}
-.crumbs .sep{color:var(--text-dim)}
-.crumbs .current{color:var(--text-dim);font-weight:400}
-</style>
-<nav class="crumbs crumbs-at-top" aria-label="Breadcrumb">
-  <a href="../index.html">Index</a>
-  <span class="sep">/</span>
-  <a href="../initiatives.html">Initiatives</a>
-  <span class="sep">/</span>
+
+<nav class="crumbs crumbs-top" aria-label="Breadcrumb">
+  <a href="../index.html">Index</a><span class="sep">/</span>
+  <a href="../initiatives.html">Initiatives</a><span class="sep">/</span>
   <span class="current" aria-current="page">AI Initiatives -- Ranked by Score</span>
 </nav>
 
-
 <div class="container">
+  <h1>AI Initiatives -- Ranked by Score</h1>
+  <p class="subtitle">Solid bars = current score. Ghost bars = original score where revised. Hatched bars = new initiatives.</p>
 
-  <h1 class="animate" style="--i:0">AI Initiatives -- Ranked by Score</h1>
-  <p class="subtitle animate" style="--i:1">Solid bars = current score. Ghost bars = original score where revised. Hatched bars = new initiatives.</p>
-
-  <div class="kpi-row animate" style="--i:2">
-    <div class="kpi-card animate-scale" style="--i:0">
-      <div class="kpi-card__value">24</div>
-      <div class="kpi-card__label">Total Initiatives</div>
-    </div>
-    <div class="kpi-card animate-scale" style="--i:1">
-      <div class="kpi-card__value" style="color:var(--finance)">9</div>
-      <div class="kpi-card__label">Finance</div>
-    </div>
-    <div class="kpi-card animate-scale" style="--i:2">
-      <div class="kpi-card__value" style="color:var(--legal)">10</div>
-      <div class="kpi-card__label">Legal</div>
-    </div>
-    <div class="kpi-card animate-scale" style="--i:3">
-      <div class="kpi-card__value" style="color:var(--people)">3</div>
-      <div class="kpi-card__label">People</div>
-    </div>
-    <div class="kpi-card animate-scale" style="--i:4">
-      <div class="kpi-card__value" style="color:var(--is)">6</div>
-      <div class="kpi-card__label">Technology</div>
-    </div>
+  <div class="kpi-row">
+    <div class="kpi-card"><div class="kpi-card__value">24</div><div class="kpi-card__label">Total Initiatives</div></div>
+    <div class="kpi-card"><div class="kpi-card__value" style="color:var(--finance)">9</div><div class="kpi-card__label">Finance</div></div>
+    <div class="kpi-card"><div class="kpi-card__value" style="color:var(--legal)">10</div><div class="kpi-card__label">Legal</div></div>
+    <div class="kpi-card"><div class="kpi-card__value" style="color:var(--people)">3</div><div class="kpi-card__label">People</div></div>
+    <div class="kpi-card"><div class="kpi-card__value" style="color:var(--is)">6</div><div class="kpi-card__label">Technology</div></div>
   </div>
 
-  <div class="legend-row animate" style="--i:3">
+  <div class="legend-row">
     <div class="legend-item"><div class="legend-swatch" style="background:var(--finance-bg)"></div> Finance</div>
     <div class="legend-item"><div class="legend-swatch" style="background:var(--legal-bg)"></div> Legal</div>
     <div class="legend-item"><div class="legend-swatch" style="background:var(--people-bg)"></div> People</div>
@@ -185,88 +89,59 @@
     <div class="legend-item" style="margin-left:auto"><div class="legend-swatch legend-swatch--striped"></div> Original score (where changed)</div>
   </div>
 
-  <div class="chart-wrap animate" style="--i:4">
-    <div class="chart-container">
-      <canvas id="barChart"></canvas>
-    </div>
+  <div class="chart-wrap">
+    <div class="chart-container"><canvas id="barChart"></canvas></div>
   </div>
 
 </div>
 
 <script>
 (function() {
-  const isDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-
+  const isDark = false;
+  const FONT = "'Mulish', Helvetica, sans-serif";
   const C = {
-    finance:    isDark ? 'rgba(96, 165, 250, 0.85)'  : 'rgba(30, 64, 175, 0.82)',
-    financeDim: isDark ? 'rgba(96, 165, 250, 0.18)'  : 'rgba(30, 64, 175, 0.12)',
-    legal:      isDark ? 'rgba(167, 139, 250, 0.85)'  : 'rgba(124, 58, 237, 0.82)',
-    legalDim:   isDark ? 'rgba(167, 139, 250, 0.18)'  : 'rgba(124, 58, 237, 0.12)',
-    people:     isDark ? 'rgba(52, 211, 153, 0.85)'   : 'rgba(5, 150, 105, 0.82)',
-    peopleDim:  isDark ? 'rgba(52, 211, 153, 0.18)'   : 'rgba(5, 150, 105, 0.12)',
-    is:         isDark ? 'rgba(251, 191, 36, 0.85)'   : 'rgba(217, 119, 6, 0.82)',
-    isDim:      isDark ? 'rgba(251, 191, 36, 0.18)'   : 'rgba(217, 119, 6, 0.12)',
-    gridLine:   isDark ? 'rgba(148, 180, 230, 0.05)'  : 'rgba(0, 20, 60, 0.05)',
-    text:       isDark ? '#94a3b8' : '#64748b',
-    textBright: isDark ? '#e2e8f0' : '#0f172a',
-    tierHigh:   isDark ? 'rgba(52, 211, 153, 0.08)'   : 'rgba(5, 150, 105, 0.04)',
-    tierMid:    isDark ? 'rgba(96, 165, 250, 0.06)'   : 'rgba(30, 64, 175, 0.03)',
-    tierLow:    isDark ? 'rgba(148, 180, 230, 0.04)'  : 'rgba(0, 20, 60, 0.02)',
-    tierLine:   isDark ? 'rgba(148, 180, 230, 0.12)'  : 'rgba(0, 20, 60, 0.08)',
-    tierLabel:  isDark ? 'rgba(148, 180, 230, 0.25)'  : 'rgba(0, 20, 60, 0.15)',
+    finance: 'rgba(79, 70, 229, 0.85)', financeDim: 'rgba(79, 70, 229, 0.12)',
+    legal: 'rgba(124, 58, 237, 0.82)', legalDim: 'rgba(124, 58, 237, 0.12)',
+    people: 'rgba(14, 124, 110, 0.82)', peopleDim: 'rgba(14, 124, 110, 0.12)',
+    is: 'rgba(165, 101, 10, 0.82)', isDim: 'rgba(165, 101, 10, 0.12)',
+    gridLine: 'rgba(0, 20, 60, 0.05)', text: '#574A3C', textBright: '#241A12',
+    tierHigh: 'rgba(14, 124, 110, 0.05)', tierMid: 'rgba(79, 70, 229, 0.04)',
+    tierLow: 'rgba(0, 20, 60, 0.02)', tierLine: 'rgba(0, 20, 60, 0.10)', tierLabel: 'rgba(0, 20, 60, 0.20)',
   };
-
-  function bg(dept) { return C[dept] || C.finance; }
-  function bgDim(dept) { return C[dept + 'Dim'] || C.financeDim; }
-
-  // [name, dept, suggestedScore, originalScore (null if same or new), isNew]
+  function bg(dept){ return C[dept] || C.finance; }
+  function bgDim(dept){ return C[dept + 'Dim'] || C.financeDim; }
   const data = [
-    ['Sales Assist Bot',           'finance', 16.2, null,  false],
-    ['Offer Letter Generator',  'people',  14.4, 16.2,  false],
-    ['Contract Feedback Agent',     'finance', 13.6, null,   false],
-    ['Pricing Evaluator',      'finance', 13.5, null,   true],
-    ['AI Evals (AESOP)',        'is',      11.6, 8.4,   false],
-    ['Separation Agent',        'legal',   11.2, 12.8,  false],
-    ['JD Generator',            'people',  11.2, null,   false],
-    ['Vendor Contract Agent',   'legal',   10.8, 9.6,   false],
-    ['Contract Review Agent', 'finance', 10.5, null,   true],
-    ['Sandbox Environment',     'is',      10.5, 9.6,   false],
-    ['Invoice-to-PO Matching',  'finance', 10.2, 7.2,   false],
-    ['Hire to Retire',     'finance', 10.2, 8.4,   false],
-    ['AESOP Studio',           'is',       9.8, null,   false],
-    ['PRD Agent',               'is',       9.8, null,   false],
-    ['Contract Review (Legal Ops)','legal',    9.6, null,   false],
-    ['PRD Automation',          'is',       9.1, null,   false],
-    ['Analysis Agent',          'legal',    8.5, 7.2,   false],
-    ['Ticket Deflection Agent',          'legal',    8.5, 6.5,   false],
-    ['Helpdesk Automation Agent',              'legal',    8.4, null,   false],
-    ['DPA Review Agents (x2)',  'legal',    7.8, null,   true],
-    ['Contract Tagging',        'legal',    7.2, 6.0,   false],
-    ['Procurement Automation',  'finance',  7.2, null,   false],
-    ['Purchase Obligations',    'finance',  7.2, null,   true],
-    ['SoS Report Generator',    'legal',    5.0, null,   false],
+    ['Sales Assist Bot', 'finance', 16.2, null, false],
+    ['Offer Letter Generator', 'people', 14.4, 16.2, false],
+    ['Contract Feedback Agent', 'finance', 13.6, null, false],
+    ['Pricing Evaluator', 'finance', 13.5, null, true],
+    ['AI Evals (AESOP)', 'is', 11.6, 8.4, false],
+    ['Separation Agent', 'legal', 11.2, 12.8, false],
+    ['JD Generator', 'people', 11.2, null, false],
+    ['Vendor Contract Agent', 'legal', 10.8, 9.6, false],
+    ['Contract Review Agent', 'finance', 10.5, null, true],
+    ['Sandbox Environment', 'is', 10.5, 9.6, false],
+    ['Invoice-to-PO Matching', 'finance', 10.2, 7.2, false],
+    ['Hire to Retire', 'finance', 10.2, 8.4, false],
+    ['AESOP Studio', 'is', 9.8, null, false],
+    ['PRD Agent', 'is', 9.8, null, false],
+    ['Contract Review (Legal Ops)', 'legal', 9.6, null, false],
+    ['PRD Automation', 'is', 9.1, null, false],
+    ['Analysis Agent', 'legal', 8.5, 7.2, false],
+    ['Ticket Deflection Agent', 'legal', 8.5, 6.5, false],
+    ['Helpdesk Automation Agent', 'legal', 8.4, null, false],
+    ['DPA Review Agents (x2)', 'legal', 7.8, null, true],
+    ['Contract Tagging', 'legal', 7.2, 6.0, false],
+    ['Procurement Automation', 'finance', 7.2, null, false],
+    ['Purchase Obligations', 'finance', 7.2, null, true],
+    ['SoS Report Generator', 'legal', 5.0, null, false],
   ];
-
-  const labels = data.map(d => {
-    let name = d[0];
-    if (d[4]) name = '* ' + name;
-    return name;
-  });
-
-  // Ghost bars (original scores where different)
+  const labels = data.map(d => { let name = d[0]; if (d[4]) name = '* ' + name; return name; });
   const ghostData = data.map(d => d[3]);
   const mainData = data.map(d => d[2]);
-
   const mainColors = data.map(d => bg(d[1]));
   const ghostColors = data.map(d => d[3] ? bgDim(d[1]) : 'transparent');
-  const mainBorders = data.map(d => {
-    if (d[4]) {
-      // hatched pattern for new -- use dashed border
-      return isDark ? 'rgba(255,255,255,0.4)' : 'rgba(0,0,0,0.25)';
-    }
-    return 'transparent';
-  });
-
+  const mainBorders = data.map(d => d[4] ? 'rgba(0,0,0,0.25)' : 'transparent');
   const ctx = document.getElementById('barChart').getContext('2d');
 
   new Chart(ctx, {
@@ -275,117 +150,55 @@
       labels: labels,
       datasets: [
         {
-          label: 'Original Score',
-          data: ghostData,
-          backgroundColor: ghostColors,
-          borderColor: ghostColors.map(c => c === 'transparent' ? 'transparent' : (isDark ? 'rgba(148,180,230,0.2)' : 'rgba(0,20,60,0.1)')),
-          borderWidth: 1,
-          borderDash: [4, 3],
-          borderSkipped: false,
-          borderRadius: 4,
-          barPercentage: 0.7,
-          categoryPercentage: 0.85,
-          order: 2,
+          label: 'Original Score', data: ghostData, backgroundColor: ghostColors,
+          borderColor: ghostColors.map(c => c === 'transparent' ? 'transparent' : 'rgba(0,20,60,0.15)'),
+          borderWidth: 1, borderDash: [4, 3], borderSkipped: false, borderRadius: 4,
+          barPercentage: 0.7, categoryPercentage: 0.85, order: 2,
         },
         {
-          label: 'Updated Score',
-          data: mainData,
-          backgroundColor: mainColors,
-          borderColor: mainBorders,
-          borderWidth: data.map(d => d[4] ? 2 : 0),
-          borderDash: data.map(d => d[4] ? [5, 3] : []),
-          borderSkipped: false,
-          borderRadius: 5,
-          barPercentage: 0.7,
-          categoryPercentage: 0.85,
-          order: 1,
+          label: 'Updated Score', data: mainData, backgroundColor: mainColors, borderColor: mainBorders,
+          borderWidth: data.map(d => d[4] ? 2 : 0), borderDash: data.map(d => d[4] ? [5, 3] : []),
+          borderSkipped: false, borderRadius: 5, barPercentage: 0.7, categoryPercentage: 0.85, order: 1,
         },
       ],
     },
     options: {
-      indexAxis: 'y',
-      responsive: true,
-      maintainAspectRatio: false,
+      indexAxis: 'y', responsive: true, maintainAspectRatio: false,
       layout: { padding: { top: 10, right: 40, bottom: 10, left: 0 } },
       scales: {
         x: {
-          min: 0,
-          max: 18,
-          title: {
-            display: true,
-            text: 'INITIATIVE SCORE',
-            font: { family: "'IBM Plex Mono', monospace", size: 11, weight: '600' },
-            color: C.text,
-            padding: { top: 8 },
-          },
-          ticks: {
-            stepSize: 2,
-            font: { family: "'IBM Plex Mono', monospace", size: 10 },
-            color: C.text,
-          },
-          grid: { color: C.gridLine, drawBorder: false },
-          border: { display: false },
+          min: 0, max: 18,
+          title: { display: true, text: 'INITIATIVE SCORE', font: { family: FONT, size: 11, weight: '600' }, color: C.text, padding: { top: 8 } },
+          ticks: { stepSize: 2, font: { family: FONT, size: 10 }, color: C.text },
+          grid: { color: C.gridLine, drawBorder: false }, border: { display: false },
         },
         y: {
           ticks: {
-            font: function(context) {
-              const idx = context.index;
-              const isNew = data[idx] && data[idx][4];
-              return {
-                family: "'IBM Plex Mono', monospace",
-                size: 11,
-                weight: isNew ? '600' : '400',
-                style: isNew ? 'italic' : 'normal',
-              };
-            },
-            color: function(context) {
-              const idx = context.index;
-              const d = data[idx];
-              if (!d) return C.text;
-              const deptColors = {
-                finance: isDark ? '#60a5fa' : '#1e40af',
-                legal:   isDark ? '#a78bfa' : '#7c3aed',
-                people:  isDark ? '#34d399' : '#059669',
-                is:      isDark ? '#fbbf24' : '#d97706',
-              };
+            font: function(context){ const idx = context.index; const isNew = data[idx] && data[idx][4]; return { family: FONT, size: 11, weight: isNew ? '600' : '400', style: isNew ? 'italic' : 'normal' }; },
+            color: function(context){
+              const idx = context.index; const d = data[idx]; if (!d) return C.text;
+              const deptColors = { finance: '#4F46E5', legal: '#7C3AED', people: '#0E7C6E', is: '#A5650A' };
               return deptColors[d[1]] || C.text;
             },
             padding: 8,
           },
-          grid: { display: false },
-          border: { display: false },
+          grid: { display: false }, border: { display: false },
         },
       },
       plugins: {
         legend: { display: false },
         tooltip: {
-          backgroundColor: isDark ? '#1e2d4a' : '#0f172a',
-          titleColor: '#ffffff',
-          bodyColor: 'rgba(255,255,255,0.85)',
-          titleFont: { family: "'DM Sans', sans-serif", size: 13, weight: '600' },
-          bodyFont: { family: "'IBM Plex Mono', monospace", size: 11 },
-          padding: 14,
-          cornerRadius: 8,
-          displayColors: false,
-          filter: function(item) { return item.datasetIndex === 1; },
+          backgroundColor: '#4F46E5', titleColor: '#ffffff', bodyColor: 'rgba(255,255,255,0.9)',
+          titleFont: { family: FONT, size: 13, weight: '600' }, bodyFont: { family: FONT, size: 11 },
+          padding: 14, cornerRadius: 8, displayColors: false,
+          filter: function(item){ return item.datasetIndex === 1; },
           callbacks: {
-            title: function(items) {
-              const idx = items[0].dataIndex;
-              return data[idx][0];
-            },
-            label: function(item) {
-              const idx = item.dataIndex;
-              const d = data[idx];
+            title: function(items){ return data[items[0].dataIndex][0]; },
+            label: function(item){
+              const idx = item.dataIndex; const d = data[idx];
               const dept = { finance: 'Finance', legal: 'Legal', people: 'People', is: 'Technology' }[d[1]];
-              const lines = [
-                'Dept:     ' + dept,
-                'Score:    ' + d[2].toFixed(1),
-              ];
-              if (d[3]) {
-                const delta = d[2] - d[3];
-                const sign = delta > 0 ? '+' : '';
-                lines.push('Original: ' + d[3].toFixed(1) + ' (' + sign + delta.toFixed(1) + ')');
-              }
+              const lines = ['Dept:     ' + dept, 'Score:    ' + d[2].toFixed(1)];
+              if (d[3]) { const delta = d[2] - d[3]; const sign = delta > 0 ? '+' : ''; lines.push('Original: ' + d[3].toFixed(1) + ' (' + sign + delta.toFixed(1) + ')'); }
               if (d[4]) lines.push('Status:   NEW (missing from dashboard)');
               return lines;
             },
@@ -393,76 +206,30 @@
         },
         annotation: {
           annotations: {
-            tierHighBg: {
-              type: 'box', xMin: 12, xMax: 18, yMin: -0.5, yMax: 3.5,
-              backgroundColor: C.tierHigh, borderWidth: 0, drawTime: 'beforeDatasetsDraw',
-            },
-            tierHighLabel: {
-              type: 'label', xValue: 17.2, yValue: 1.5,
-              content: ['TIER 1'], rotation: 0,
-              font: { family: "'IBM Plex Mono', monospace", size: 9, weight: '700' },
-              color: C.tierLabel,
-            },
-            tierLine1: {
-              type: 'line', xMin: 12, xMax: 12, yMin: -0.5, yMax: 23.5,
-              borderColor: C.tierLine, borderWidth: 1, borderDash: [6, 4],
-              label: {
-                display: true, content: 'Score 12', position: 'start',
-                font: { family: "'IBM Plex Mono', monospace", size: 9 },
-                color: C.tierLabel, backgroundColor: 'transparent', padding: 4,
-              },
-            },
-            tierLine2: {
-              type: 'line', xMin: 9, xMax: 9, yMin: -0.5, yMax: 23.5,
-              borderColor: C.tierLine, borderWidth: 1, borderDash: [6, 4],
-              label: {
-                display: true, content: 'Score 9', position: 'start',
-                font: { family: "'IBM Plex Mono', monospace", size: 9 },
-                color: C.tierLabel, backgroundColor: 'transparent', padding: 4,
-              },
-            },
+            tierHighBg: { type: 'box', xMin: 12, xMax: 18, yMin: -0.5, yMax: 3.5, backgroundColor: C.tierHigh, borderWidth: 0, drawTime: 'beforeDatasetsDraw' },
+            tierHighLabel: { type: 'label', xValue: 17.2, yValue: 1.5, content: ['TIER 1'], rotation: 0, font: { family: FONT, size: 9, weight: '700' }, color: C.tierLabel },
+            tierLine1: { type: 'line', xMin: 12, xMax: 12, yMin: -0.5, yMax: 23.5, borderColor: C.tierLine, borderWidth: 1, borderDash: [6, 4], label: { display: true, content: 'Score 12', position: 'start', font: { family: FONT, size: 9 }, color: C.tierLabel, backgroundColor: 'transparent', padding: 4 } },
+            tierLine2: { type: 'line', xMin: 9, xMax: 9, yMin: -0.5, yMax: 23.5, borderColor: C.tierLine, borderWidth: 1, borderDash: [6, 4], label: { display: true, content: 'Score 9', position: 'start', font: { family: FONT, size: 9 }, color: C.tierLabel, backgroundColor: 'transparent', padding: 4 } },
           }
         }
       },
     },
     plugins: [{
       id: 'scoreLabels',
-      afterDatasetsDraw: function(chart) {
-        const ctx = chart.ctx;
-        const meta = chart.getDatasetMeta(1);
-        ctx.save();
-        meta.data.forEach(function(bar, i) {
-          const d = data[i];
-          const val = d[2].toFixed(1);
-          const x = bar.x + 8;
-          const y = bar.y;
-
-          ctx.font = "600 11px 'IBM Plex Mono', monospace";
-          ctx.textAlign = 'left';
-          ctx.textBaseline = 'middle';
-          ctx.fillStyle = C.textBright;
+      afterDatasetsDraw: function(chart){
+        const ctx = chart.ctx; const meta = chart.getDatasetMeta(1); ctx.save();
+        meta.data.forEach(function(bar, i){
+          const d = data[i]; const val = d[2].toFixed(1); const x = bar.x + 8; const y = bar.y;
+          ctx.font = "600 11px " + FONT; ctx.textAlign = 'left'; ctx.textBaseline = 'middle'; ctx.fillStyle = C.textBright;
           ctx.fillText(val, x, y);
-
-          // Show delta if changed
           if (d[3]) {
-            const delta = d[2] - d[3];
-            const sign = delta > 0 ? '+' : '';
+            const delta = d[2] - d[3]; const sign = delta > 0 ? '+' : '';
             const deltaText = ' (' + sign + delta.toFixed(1) + ')';
             const valWidth = ctx.measureText(val).width;
-            ctx.font = "500 10px 'IBM Plex Mono', monospace";
-            ctx.fillStyle = delta > 0
-              ? (isDark ? '#34d399' : '#059669')
-              : (isDark ? '#f87171' : '#dc2626');
+            ctx.font = "500 10px " + FONT; ctx.fillStyle = delta > 0 ? '#0E7C6E' : '#C23A30';
             ctx.fillText(deltaText, x + valWidth, y);
           }
-
-          // Star for new
-          if (d[4]) {
-            const valWidth = ctx.measureText(val).width;
-            ctx.font = "600 10px 'IBM Plex Mono', monospace";
-            ctx.fillStyle = isDark ? '#fbbf24' : '#d97706';
-            ctx.fillText(' NEW', x + valWidth, y);
-          }
+          if (d[4]) { const valWidth = ctx.measureText(val).width; ctx.font = "600 10px " + FONT; ctx.fillStyle = '#A5650A'; ctx.fillText(' NEW', x + valWidth, y); }
         });
         ctx.restore();
       }

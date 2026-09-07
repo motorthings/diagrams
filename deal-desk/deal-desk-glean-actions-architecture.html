@@ -1,815 +1,217 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" class="light">
 <head>
 <meta charset="UTF-8">
-<link rel="icon" type="image/svg+xml" href="../icon.svg">
+<link rel="icon" href="../icon.svg" type="image/svg+xml" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Sales Ops AI -- Glean Actions + Deterministic Calculators</title>
+<meta name="description" content="Hybrid sales-ops AI architecture: the Glean LLM agent interprets intent while deterministic calculator services deliver exact, auditable numbers.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600;9..144,700&family=Source+Code+Pro:wght@400;500;600" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Mulish:ital,wght@0,300;0,400;0,600;0,700;0,800;1,400&display=swap" rel="stylesheet">
 <style>
-  /* ============ THEME ============ */
-  :root {
-    --font-body: 'Fraunces', Georgia, serif;
-    --font-mono: 'Source Code Pro', 'SF Mono', Consolas, monospace;
-
-    /* Light -- blueprint palette */
-    --bg: #f7f8fc;
-    --surface: #ffffff;
-    --surface2: #eef0f7;
-    --surface-elevated: #ffffff;
-    --border: rgba(0, 0, 0, 0.07);
-    --border-bright: rgba(0, 0, 0, 0.14);
-    --text: #1a1e2e;
-    --text-dim: #6b7194;
-
-    /* Probabilistic = indigo/blue */
-    --prob: #4f46e5;
-    --prob-light: #818cf8;
-    --prob-dim: rgba(79, 70, 229, 0.07);
-    --prob-surface: rgba(79, 70, 229, 0.03);
-
-    /* Deterministic = amber/orange */
-    --det: #d97706;
-    --det-light: #f59e0b;
-    --det-dim: rgba(217, 119, 6, 0.07);
-    --det-surface: rgba(217, 119, 6, 0.03);
-
-    /* Accents */
-    --green: #059669;
-    --green-dim: rgba(5, 150, 105, 0.07);
-    --slate: #64748b;
-    --slate-dim: rgba(100, 116, 139, 0.07);
-  }
-
-  
-
-  /* ============ RESET + BASE ============ */
-  * { margin: 0; padding: 0; box-sizing: border-box; }
-
-  body {
-    background: var(--bg);
-    background-image:
-      linear-gradient(var(--border) 1px, transparent 1px),
-      linear-gradient(90deg, var(--border) 1px, transparent 1px);
-    background-size: 40px 40px;
-    color: var(--text);
-    font-family: var(--font-body);
-    padding: 48px 40px;
-    min-height: 100vh;
-  }
-
-  /* ============ ANIMATION ============ */
-  @keyframes fadeUp {
-    from { opacity: 0; transform: translateY(14px); }
-    to { opacity: 1; transform: translateY(0); }
-  }
-
-  @keyframes fadeScale {
-    from { opacity: 0; transform: scale(0.94); }
-    to { opacity: 1; transform: scale(1); }
-  }
-
-  .anim-up {
-    animation: fadeUp 0.45s ease-out both;
-    animation-delay: calc(var(--i, 0) * 0.06s);
-  }
-
-  .anim-scale {
-    animation: fadeScale 0.4s ease-out both;
-    animation-delay: calc(var(--i, 0) * 0.06s);
-  }
-
-  @media (prefers-reduced-motion: reduce) {
-    *, *::before, *::after {
-      animation-duration: 0.01ms !important;
-      animation-delay: 0ms !important;
-      transition-duration: 0.01ms !important;
-    }
-  }
-
-  /* ============ LAYOUT ============ */
-  .container {
-    max-width: 1140px;
-    margin: 0 auto;
-  }
-
-  h1 {
-    font-size: 36px;
-    font-weight: 700;
-    letter-spacing: -0.5px;
-    margin-bottom: 6px;
-    text-wrap: balance;
-  }
-
-  .subtitle {
-    color: var(--text-dim);
-    font-family: var(--font-mono);
-    font-size: 12px;
-    margin-bottom: 12px;
-  }
-
-  .intro {
-    font-size: 15px;
-    line-height: 1.7;
-    color: var(--text-dim);
-    max-width: 780px;
-    margin-bottom: 36px;
-  }
-
-  .intro strong { color: var(--text); }
-
-  /* ============ PRINCIPLE BAR ============ */
-  .principle-bar {
-    display: grid;
-    grid-template-columns: 1fr auto 1fr;
-    gap: 0;
-    align-items: stretch;
-    margin-bottom: 40px;
-    border-radius: 12px;
-    overflow: hidden;
-    border: 1px solid var(--border);
-  }
-
-  .principle-card {
-    padding: 20px 28px;
-    text-align: center;
-  }
-
-  .principle-card--prob {
-    background: var(--prob-surface);
-    border-right: 1px solid var(--border);
-  }
-
-  .principle-card--det {
-    background: var(--det-surface);
-    border-left: 1px solid var(--border);
-  }
-
-  .principle-card .label {
-    font-family: var(--font-mono);
-    font-size: 10px;
-    font-weight: 600;
-    text-transform: uppercase;
-    letter-spacing: 2px;
-    margin-bottom: 6px;
-  }
-
-  .principle-card--prob .label { color: var(--prob); }
-  .principle-card--det .label { color: var(--det); }
-
-  .principle-card .tagline {
-    font-size: 16px;
-    font-weight: 600;
-    margin-bottom: 4px;
-  }
-
-  .principle-card .detail {
-    font-size: 12px;
-    color: var(--text-dim);
-    line-height: 1.5;
-  }
-
-  .principle-divider {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    background: var(--surface);
-    padding: 0 16px;
-    font-family: var(--font-mono);
-    font-size: 11px;
-    font-weight: 600;
-    color: var(--text-dim);
-    border-left: 1px solid var(--border);
-    border-right: 1px solid var(--border);
-    white-space: nowrap;
-  }
-
-  /* ============ DATA FLOW ============ */
-  .flow-section {
-    margin-bottom: 40px;
-  }
-
-  .flow-section-title {
-    font-family: var(--font-mono);
-    font-size: 11px;
-    font-weight: 600;
-    text-transform: uppercase;
-    letter-spacing: 2px;
-    color: var(--text-dim);
-    margin-bottom: 20px;
-    padding-left: 4px;
-  }
-
-  /* The main data flow strip */
-  .data-flow {
-    display: flex;
-    align-items: stretch;
-    gap: 0;
-    overflow-x: auto;
-    padding-bottom: 8px;
-    scrollbar-width: thin;
-    scrollbar-color: var(--border) transparent;
-  }
-
-  .data-flow::-webkit-scrollbar { height: 6px; }
-  .data-flow::-webkit-scrollbar-track { background: transparent; }
-  .data-flow::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
-
-  .flow-step {
-    min-width: 150px;
-    max-width: 180px;
-    flex-shrink: 0;
-    border-radius: 10px;
-    padding: 16px;
-    border: 1px solid var(--border);
-    position: relative;
-  }
-
-  .flow-step--prob {
-    background: var(--prob-surface);
-    border-color: var(--prob-dim);
-  }
-
-  .flow-step--det {
-    background: var(--det-surface);
-    border-color: var(--det-dim);
-  }
-
-  .flow-step--neutral {
-    background: var(--surface);
-  }
-
-  .flow-step .step-tag {
-    font-family: var(--font-mono);
-    font-size: 9px;
-    font-weight: 600;
-    text-transform: uppercase;
-    letter-spacing: 1.5px;
-    margin-bottom: 6px;
-    display: flex;
-    align-items: center;
-    gap: 5px;
-  }
-
-  .flow-step--prob .step-tag { color: var(--prob); }
-  .flow-step--det .step-tag { color: var(--det); }
-  .flow-step--neutral .step-tag { color: var(--slate); }
-
-  .flow-step .step-tag::before {
-    content: '';
-    width: 6px;
-    height: 6px;
-    border-radius: 50%;
-    background: currentColor;
-  }
-
-  .flow-step .step-name {
-    font-size: 13px;
-    font-weight: 600;
-    margin-bottom: 4px;
-  }
-
-  .flow-step .step-desc {
-    font-size: 11px;
-    color: var(--text-dim);
-    line-height: 1.5;
-  }
-
-  .flow-step code {
-    font-family: var(--font-mono);
-    font-size: 10px;
-    padding: 1px 4px;
-    border-radius: 3px;
-  }
-
-  .flow-step--prob code {
-    background: var(--prob-dim);
-    color: var(--prob);
-  }
-
-  .flow-step--det code {
-    background: var(--det-dim);
-    color: var(--det);
-  }
-
-  .flow-arrow {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    padding: 0 3px;
-    flex-shrink: 0;
-    color: var(--border-bright);
-    font-size: 20px;
-  }
-
-  .flow-arrow--highlight {
-    color: var(--det);
-    font-weight: 700;
-  }
-
-  /* ============ TWO-LAYER ARCHITECTURE ============ */
-  .layers {
-    display: grid;
-    grid-template-columns: 1fr;
-    gap: 0;
-    margin-bottom: 40px;
-  }
-
-  .layer {
-    border: 1px solid var(--border);
-    border-radius: 14px;
-    padding: 24px 28px;
-    position: relative;
-  }
-
-  .layer + .layer-connector + .layer {
-    margin-top: 0;
-  }
-
-  .layer--glean {
-    background: linear-gradient(135deg, var(--prob-surface), var(--surface));
-    border-color: color-mix(in srgb, var(--border) 60%, var(--prob) 40%);
-  }
-
-  .layer--calc {
-    background: linear-gradient(135deg, var(--det-surface), var(--surface));
-    border-color: color-mix(in srgb, var(--border) 60%, var(--det) 40%);
-  }
-
-  .layer-header {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    margin-bottom: 20px;
-  }
-
-  .layer-badge {
-    font-family: var(--font-mono);
-    font-size: 10px;
-    font-weight: 600;
-    text-transform: uppercase;
-    letter-spacing: 1.5px;
-    padding: 4px 10px;
-    border-radius: 6px;
-  }
-
-  .layer--glean .layer-badge {
-    background: var(--prob-dim);
-    color: var(--prob);
-  }
-
-  .layer--calc .layer-badge {
-    background: var(--det-dim);
-    color: var(--det);
-  }
-
-  .layer-title {
-    font-size: 18px;
-    font-weight: 700;
-  }
-
-  .layer-subtitle {
-    font-size: 12px;
-    color: var(--text-dim);
-    margin-left: auto;
-    font-family: var(--font-mono);
-  }
-
-  /* Glean workflow steps */
-  .workflow-steps {
-    display: flex;
-    align-items: stretch;
-    gap: 0;
-    overflow-x: auto;
-    padding-bottom: 4px;
-    scrollbar-width: thin;
-  }
-
-  .wf-step {
-    min-width: 135px;
-    flex-shrink: 0;
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: 8px;
-    padding: 12px 14px;
-    transition: transform 0.2s ease, box-shadow 0.2s ease;
-  }
-
-  .wf-step:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
-  }
-
-  .wf-step .wf-num {
-    font-family: var(--font-mono);
-    font-size: 10px;
-    font-weight: 600;
-    color: var(--prob);
-    margin-bottom: 4px;
-  }
-
-  .wf-step .wf-type {
-    font-size: 12px;
-    font-weight: 600;
-    margin-bottom: 3px;
-  }
-
-  .wf-step .wf-detail {
-    font-size: 10px;
-    color: var(--text-dim);
-    line-height: 1.4;
-  }
-
-  .wf-step--action {
-    border-color: var(--det);
-    background: var(--det-surface);
-  }
-
-  .wf-step--action .wf-num {
-    color: var(--det);
-  }
-
-  .wf-step--branch {
-    border-radius: 8px;
-    border-color: var(--green);
-    background: var(--green-dim);
-  }
-
-  .wf-step--branch .wf-num {
-    color: var(--green);
-  }
-
-  .wf-arrow {
-    display: flex;
-    align-items: center;
-    padding: 0 2px;
-    color: var(--border-bright);
-    font-size: 16px;
-    flex-shrink: 0;
-  }
-
-  /* Calculator endpoints grid */
-  .calc-grid {
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 12px;
-  }
-
-  .calc-card {
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: 8px;
-    padding: 16px;
-    transition: transform 0.2s ease, box-shadow 0.2s ease;
-  }
-
-  .calc-card:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
-  }
-
-  .calc-card .calc-method {
-    font-family: var(--font-mono);
-    font-size: 10px;
-    font-weight: 600;
-    color: var(--det);
-    margin-bottom: 4px;
-  }
-
-  .calc-card .calc-endpoint {
-    font-family: var(--font-mono);
-    font-size: 12px;
-    font-weight: 500;
-    margin-bottom: 8px;
-    word-break: break-all;
-  }
-
-  .calc-card .calc-desc {
-    font-size: 11px;
-    color: var(--text-dim);
-    line-height: 1.5;
-  }
-
-  .calc-card .calc-io {
-    margin-top: 8px;
-    padding-top: 8px;
-    border-top: 1px solid var(--border);
-    font-family: var(--font-mono);
-    font-size: 10px;
-    color: var(--text-dim);
-    line-height: 1.6;
-  }
-
-  .calc-card .calc-io .label-in { color: var(--prob); }
-  .calc-card .calc-io .label-out { color: var(--det); }
-
-  .layer-note {
-    margin-top: 16px;
-    padding: 12px 16px;
-    background: var(--surface2);
-    border-radius: 8px;
-    font-size: 12px;
-    color: var(--text-dim);
-    line-height: 1.5;
-    display: flex;
-    align-items: flex-start;
-    gap: 10px;
-  }
-
-  .layer-note strong { color: var(--text); }
-
-  .layer-note .note-icon {
-    font-family: var(--font-mono);
-    font-size: 11px;
-    font-weight: 600;
-    color: var(--det);
-    flex-shrink: 0;
-    margin-top: 1px;
-  }
-
-  /* ============ CONNECTOR BETWEEN LAYERS ============ */
-  .layer-connector {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 4px;
-    padding: 12px 0;
-  }
-
-  .layer-connector svg {
-    width: 24px;
-    height: 24px;
-    fill: none;
-    stroke-width: 2;
-    stroke-linecap: round;
-    stroke-linejoin: round;
-  }
-
-  .layer-connector .conn-up {
-    stroke: var(--prob);
-  }
-
-  .layer-connector .conn-down {
-    stroke: var(--det);
-  }
-
-  .layer-connector .conn-label {
-    font-family: var(--font-mono);
-    font-size: 10px;
-    display: flex;
-    gap: 24px;
-  }
-
-  .conn-label .label-req { color: var(--prob); }
-  .conn-label .label-res { color: var(--det); }
-
-  /* ============ KNOWLEDGE BASE SIDEBAR ============ */
-  .arch-row {
-    display: grid;
-    grid-template-columns: 200px 1fr;
-    gap: 20px;
-    align-items: start;
-  }
-
-  .kb-panel {
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-left: 3px solid var(--slate);
-    border-radius: 0 10px 10px 0;
-    padding: 16px;
-  }
-
-  .kb-panel .kb-title {
-    font-family: var(--font-mono);
-    font-size: 10px;
-    font-weight: 600;
-    text-transform: uppercase;
-    letter-spacing: 1.5px;
-    color: var(--slate);
-    margin-bottom: 10px;
-  }
-
-  .kb-list {
-    list-style: none;
-    font-size: 11px;
-    line-height: 1.9;
-  }
-
-  .kb-list li {
-    padding-left: 14px;
-    position: relative;
-    color: var(--text-dim);
-  }
-
-  .kb-list li::before {
-    content: '>';
-    font-family: var(--font-mono);
-    font-weight: 600;
-    color: var(--slate);
-    position: absolute;
-    left: 0;
-  }
-
-  .kb-feed-arrow {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    padding: 8px 0;
-  }
-
-  .kb-feed-arrow svg {
-    width: 20px;
-    height: 20px;
-    fill: none;
-    stroke: var(--slate);
-    stroke-width: 2;
-    stroke-linecap: round;
-  }
-
-  .kb-feed-label {
-    font-family: var(--font-mono);
-    font-size: 10px;
-    color: var(--slate);
-    text-align: center;
-    margin-bottom: 4px;
-  }
-
-  /* ============ BENEFITS ============ */
-  .benefits {
-    display: grid;
-    grid-template-columns: repeat(4, 1fr);
-    gap: 12px;
-    margin-top: 40px;
-  }
-
-  .benefit-card {
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: 10px;
-    padding: 16px;
-  }
-
-  .benefit-card .benefit-title {
-    font-size: 13px;
-    font-weight: 600;
-    margin-bottom: 4px;
-  }
-
-  .benefit-card .benefit-desc {
-    font-size: 11px;
-    color: var(--text-dim);
-    line-height: 1.5;
-  }
-
-  /* ============ LEGEND ============ */
-  .legend {
-    display: flex;
-    gap: 24px;
-    flex-wrap: wrap;
-    margin-top: 32px;
-    padding-top: 20px;
-    border-top: 1px solid var(--border);
-  }
-
-  .legend-item {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    font-family: var(--font-mono);
-    font-size: 11px;
-    color: var(--text-dim);
-  }
-
-  .legend-swatch {
-    width: 14px;
-    height: 14px;
-    border-radius: 4px;
-    border: 1px solid var(--border);
-  }
-
-  /* ============ RESPONSIVE ============ */
-  @media (max-width: 900px) {
-    body { padding: 20px; }
-    h1 { font-size: 26px; }
-    .principle-bar { grid-template-columns: 1fr; }
-    .principle-divider { padding: 10px; border-left: none; border-right: none; border-top: 1px solid var(--border); border-bottom: 1px solid var(--border); }
-    .arch-row { grid-template-columns: 1fr; }
-    .calc-grid { grid-template-columns: 1fr; }
-    .benefits { grid-template-columns: 1fr 1fr; }
-    .workflow-steps { flex-wrap: wrap; gap: 6px; }
-    .wf-arrow { display: none; }
-    .data-flow { flex-wrap: wrap; gap: 6px; }
-    .flow-arrow { display: none; }
-  }
-.backlink{position:fixed;top:12px;left:16px;z-index:200;font-family:var(--font-mono,monospace);font-size:11px;color:var(--text-dim,#8b949e);text-decoration:none;padding:6px 10px;border:1px solid var(--border,rgba(255,255,255,0.08));border-radius:6px;background:var(--surface,#161b22);transition:color .15s,border-color .15s}.backlink:hover{color:var(--text,#e6edf3);border-color:var(--text-dim,#8b949e)}
+  :root{--font-body:'Mulish','Segoe UI',Helvetica,sans-serif;--font-mono:'Mulish',ui-monospace,'SF Mono',Consolas,monospace;
+    --bg:#14181C;--surface:#1B2127;--surface2:#232B33;--border:#303A43;--border-bright:#42505C;
+    --text:#F4F5F6;--text-dim:#CBD0D6;--text-faint:#87919B;
+    --primary:#A79CF2;--primary-dim:rgba(167,156,242,0.12);--metric:#58D6B4;--metric-dim:rgba(88,214,180,0.12);
+    --blue:#6CACE4;--blue-dim:rgba(108,172,228,0.12);
+    --violet:#B9A0E8;--violet-dim:rgba(185,160,232,0.12);
+    --amber:#E8B54D;--amber-dim:rgba(232,181,77,0.12);
+    --rose:#E88280;--rose-dim:rgba(232,130,128,0.12);
+    --prob:#A79CF2;--prob-dim:rgba(167,156,242,0.12);--det:#E8B54D;--det-dim:rgba(232,181,77,0.12);
+    --branch:#58D6B4;--branch-dim:rgba(88,214,180,0.12);}
+  html.light{--bg:#F7F3EF;--surface:#FFFFFF;--surface2:#F0E9E1;--border:#E1D6CB;--border-bright:#CDBBA8;
+    --text:#241A12;--text-dim:#574A3C;--text-faint:#8C7E6E;
+    --primary:#4F46E5;--primary-dim:rgba(79,70,229,0.08);--metric:#0E7C6E;--metric-dim:rgba(14,124,110,0.08);
+    --blue:#2F6FA8;--blue-dim:rgba(47,111,168,0.08);
+    --violet:#7C3AED;--violet-dim:rgba(124,58,237,0.07);
+    --amber:#A5650A;--amber-dim:rgba(165,101,10,0.08);
+    --rose:#C23A30;--rose-dim:rgba(194,58,48,0.07);
+    --prob:#4F46E5;--prob-dim:rgba(79,70,229,0.08);--det:#A5650A;--det-dim:rgba(165,101,10,0.08);
+    --branch:#0E7C6E;--branch-dim:rgba(14,124,110,0.08);}
+  *{margin:0;padding:0;box-sizing:border-box}
+  html{scroll-behavior:smooth}
+  body{background:
+      radial-gradient(at 10% 0%,var(--primary-dim),transparent 55%),
+      radial-gradient(at 90% 80%,var(--metric-dim),transparent 55%),
+      var(--bg);
+    color:var(--text);font-family:var(--font-body);font-size:17px;line-height:1.62;-webkit-font-smoothing:antialiased;min-height:100vh}
+
+  .crumbs{font-size:13px;font-weight:600;color:var(--text-dim);display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+  .crumbs a{color:var(--primary);text-decoration:none}
+  .crumbs a:hover{text-decoration:underline}
+  .crumbs .sep{color:var(--text-faint)}
+  .crumbs .current{color:var(--text-dim);font-weight:400}
+  .crumbs-top{max-width:1200px;margin:0 auto;padding:18px 24px 0}
+
+  .wrap{max-width:1200px;margin:0 auto;padding:0 24px 80px}
+
+  .hero{padding:44px 0 24px;border-bottom:1px solid var(--border);margin-bottom:10px}
+  .hero .tagline{font-family:var(--font-mono);font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.14em;color:var(--primary);margin-bottom:10px}
+  .hero h1{font-size:52px;line-height:1.0;letter-spacing:-0.03em;font-weight:800;
+    background:linear-gradient(135deg,var(--primary),var(--metric));-webkit-background-clip:text;background-clip:text;color:transparent}
+  .hero .lede{font-size:19px;line-height:1.5;color:var(--text-dim);max-width:920px;margin-top:14px}
+  .hero .lede b{color:var(--text)}
+
+  .sec{margin-top:22px}
+  .sec-head{display:flex;align-items:baseline;gap:14px;padding-bottom:10px;border-bottom:1px solid var(--border);margin-bottom:10px}
+  .sec-num{font-size:23px;font-weight:800;color:var(--primary);font-family:var(--font-mono)}
+  .sec-title{font-size:23px;font-weight:800;color:var(--text);letter-spacing:-0.01em}
+  .sec-body p{max-width:920px;margin-bottom:12px;color:var(--text-dim)}
+  .sec-body p b,.sec-body strong{color:var(--text)}
+  code{font-family:var(--font-mono);font-size:0.84em;color:var(--primary)}
+  .footer{margin-top:30px;border-top:1px solid var(--border);padding:18px 0 0;display:flex;justify-content:space-between;gap:20px;flex-wrap:wrap;font-family:var(--font-mono);font-size:12px;color:var(--text-faint)}
+  .footer a{color:var(--primary);text-decoration:none}
+  .footer a:hover{text-decoration:underline}
+
+  .pmap{padding:14px 4px;border-top:1px solid var(--border);display:grid;grid-template-columns:240px 1fr;gap:4px 28px;align-items:baseline}
+  .pmap:first-of-type{border-top:none}
+  .pmap .pm-k{font-family:var(--font-mono);font-size:11.5px;font-weight:800;text-transform:uppercase;letter-spacing:.08em;color:var(--blue);line-height:1.5}
+  .pmap .pm-k .tag{display:block;color:var(--text-faint);font-weight:700;font-size:10px;letter-spacing:.16em;margin-bottom:3px}
+  .pmap .pm-b{font-size:14.5px;line-height:1.6;color:var(--text-dim)}
+  .pmap.i-vio .pm-k{color:var(--violet)}
+  .pmap.i-teal .pm-k{color:var(--metric)}
+  .pmap.i-amb .pm-k{color:var(--amber)}
+  .pmap.i-rose .pm-k{color:var(--rose)}
+  .pmap.i-acc .pm-k{color:var(--primary)}
+  .pm-b b,.pm-b strong{color:var(--text)}
+
+  .split{display:grid;grid-template-columns:1fr;gap:10px;margin:8px 0}
+  .spbar{display:grid;grid-template-columns:1fr auto 1fr;border:1px solid var(--border);border-radius:12px;overflow:hidden}
+  .spcol{padding:16px 22px;text-align:center}
+  .spcol.prob{background:var(--prob-dim)}
+  .spcol.det{background:var(--det-dim)}
+  .spcol .lb{font-family:var(--font-mono);font-size:10px;font-weight:800;letter-spacing:.16em;text-transform:uppercase;margin-bottom:6px}
+  .spcol.prob .lb{color:var(--prob)}.spcol.det .lb{color:var(--det)}
+  .spcol .tt{font-size:16px;font-weight:700;color:var(--text)}
+  .spcol .dt{font-size:12px;color:var(--text-dim);line-height:1.5;margin-top:3px}
+  .spdiv{display:flex;align-items:center;justify-content:center;padding:0 14px;font-family:var(--font-mono);font-size:11px;color:var(--text-dim);border-left:1px solid var(--border);border-right:1px solid var(--border);background:var(--surface);white-space:nowrap}
+  .strip{display:flex;align-items:stretch;gap:0;overflow-x:auto;padding-bottom:6px}
+  .strip::-webkit-scrollbar{height:6px}.strip::-webkit-scrollbar-thumb{background:var(--border);border-radius:3px}
+  .fs{border:1px solid var(--border);border-radius:10px;padding:12px 13px;flex:1;min-width:150px;max-width:185px;background:var(--surface)}
+  .fs .tag{font-family:var(--font-mono);font-size:9px;font-weight:800;letter-spacing:.12em;text-transform:uppercase;margin-bottom:5px;display:block}
+  .fs.prob{background:var(--prob-dim);border-color:var(--border-bright)}.fs.prob .tag{color:var(--prob)}
+  .fs.det{background:var(--det-dim);border-color:var(--border-bright)}.fs.det .tag{color:var(--det)}
+  .fs .nm{font-size:13px;font-weight:700;margin-bottom:3px;color:var(--text)}
+  .fs .de{font-size:11px;color:var(--text-dim);line-height:1.45}
+  .fs code{font-family:var(--font-mono);font-size:10px;color:var(--prob);background:var(--prob-dim);padding:0 3px;border-radius:3px}
+  .fs.det code{color:var(--det);background:var(--det-dim)}
+  .arow{display:flex;align-items:center;padding:0 3px;color:var(--text-faint);flex-shrink:0;font-weight:800}
+  .arow.hot{color:var(--det)}
+
+  .layer{border:1px solid var(--border);border-radius:14px;padding:20px 22px;margin-top:12px}
+  .layer.glean{background:linear-gradient(135deg,var(--prob-dim),transparent 60%)}
+  .layer.calc{background:linear-gradient(135deg,var(--det-dim),transparent 60%)}
+  .lhead{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:14px}
+  .lbadge{font-family:var(--font-mono);font-size:9.5px;font-weight:800;letter-spacing:.14em;text-transform:uppercase;padding:3px 9px;border-radius:6px}
+  .layer.glean .lbadge{background:var(--prob-dim);color:var(--prob)}
+  .layer.calc .lbadge{background:var(--det-dim);color:var(--det)}
+  .ltitle{font-size:17px;font-weight:700;color:var(--text)}
+  .lsub{margin-left:auto;font-family:var(--font-mono);font-size:11px;color:var(--text-dim)}
+  .arch{display:grid;grid-template-columns:190px 1fr;gap:16px;align-items:start}
+  .kb{background:var(--surface);border:1px solid var(--border);border-left:3px solid var(--border-bright);border-radius:0 10px 10px 0;padding:13px 14px}
+  .kb .kt{font-family:var(--font-mono);font-size:9.5px;font-weight:800;letter-spacing:.14em;text-transform:uppercase;color:var(--text-faint);margin-bottom:8px}
+  .kb ul{list-style:none;font-size:11px;line-height:1.9;color:var(--text-dim)}
+  .kb li{padding-left:13px;position:relative}
+  .kb li::before{content:'\003E';position:absolute;left:0;font-weight:800;color:var(--text-faint)}
+  .kbfeed{display:flex;justify-content:center;padding:8px 0;color:var(--text-faint);font-weight:800}
+  .kblab{font-family:var(--font-mono);font-size:10px;color:var(--text-faint);text-align:center;margin-bottom:2px}
+  .wflow{display:flex;align-items:stretch;gap:0;overflow-x:auto}
+  .wflow::-webkit-scrollbar{height:6px}.wflow::-webkit-scrollbar-thumb{background:var(--border);border-radius:3px}
+  .ws{min-width:130px;background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:10px 12px}
+  .ws .num{font-family:var(--font-mono);font-size:9.5px;font-weight:800;color:var(--prob);margin-bottom:3px}
+  .ws .ty{font-size:12px;font-weight:700;margin-bottom:3px;color:var(--text)}
+  .ws .de{font-size:10px;color:var(--text-dim);line-height:1.4}
+  .ws.branch{border-color:var(--branch);background:var(--branch-dim)}.ws.branch .num{color:var(--branch)}
+  .ws.action{border-color:var(--det);background:var(--det-dim)}.ws.action .num{color:var(--det)}
+
+  .conn{display:flex;flex-direction:column;align-items:center;gap:6px;padding:12px 0}
+  .clab{font-family:var(--font-mono);font-size:10px;color:var(--text-dim)}
+  .clab .up{color:var(--prob)}.clab .dn{color:var(--det)}
+
+  .cg{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:12px;margin-top:6px}
+  .cc{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:14px 16px}
+  .cc .cm{font-family:var(--font-mono);font-size:9.5px;font-weight:800;color:var(--det);margin-bottom:3px}
+  .cc .ce{font-family:var(--font-mono);font-size:12px;font-weight:700;color:var(--text);word-break:break-all;margin-bottom:7px}
+  .cc .cd{font-size:11px;color:var(--text-dim);line-height:1.5}
+  .cc .io{margin-top:8px;padding-top:8px;border-top:1px solid var(--border);font-family:var(--font-mono);font-size:10px;color:var(--text-dim);line-height:1.6}
+  .cc .io .i{color:var(--prob);font-weight:700}.cc .io .o{color:var(--det);font-weight:700}
+  .lnote{margin-top:12px;padding:11px 14px;background:var(--surface2);border-radius:8px;font-size:12px;color:var(--text-dim);line-height:1.55}
+  .lnote strong{color:var(--text)}
+
+  .ben{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px;margin-top:6px}
+  .bc{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:14px 16px}
+  .bc .bt{font-size:13px;font-weight:700;color:var(--text);margin-bottom:4px}
+  .bc .bd{font-size:11.5px;color:var(--text-dim);line-height:1.5}
+  .legend{display:flex;gap:22px;flex-wrap:wrap;margin:6px 0 4px}
+  .legend-item{display:flex;align-items:center;gap:7px;font-family:var(--font-mono);font-size:11px;color:var(--text-dim)}
+  .legend-swatch{width:14px;height:14px;border-radius:4px;border:1px solid var(--border-bright)}
+
+  @media(max-width:900px){.wrap{padding:0 16px 60px}.hero h1{font-size:36px}.spbar{grid-template-columns:1fr}.spdiv{padding:8px;border-left:none;border-right:none;border-top:1px solid var(--border);border-bottom:1px solid var(--border)}.arch{grid-template-columns:1fr}.strip,.wflow{flex-wrap:wrap;gap:6px}.arow{display:none}body{font-size:16px}}
+  @media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
 </style>
 </head>
 <body>
-<style>
-.crumbs-at-top{max-width:1100px;margin:0 auto;padding:14px 24px 0}
-.crumbs{font-family:var(--font-mono,monospace);font-size:13px;font-weight:600;display:flex;align-items:center;gap:8px;flex-wrap:wrap;min-width:0}
-.crumbs a{color:#e8621a;text-decoration:none}
-.crumbs a:hover,.crumbs a:focus-visible{text-decoration:underline;outline:none}
-.crumbs .sep{color:var(--text-dim)}
-.crumbs .current{color:var(--text-dim);font-weight:400}
-</style>
-<nav class="crumbs crumbs-at-top" aria-label="Breadcrumb">
-  <a href="../index.html">Index</a>
-  <span class="sep">/</span>
+
+<div class="crumbs crumbs-top" aria-label="Breadcrumb">
+  <a href="../index.html">Index</a><span class="sep">/</span>
   <span class="current" aria-current="page">Sales Ops AI -- Hybrid Architecture</span>
-</nav>
+</div>
 
+<main class="wrap">
 
-<div class="container">
+  <header class="hero">
+    <div class="tagline">glean actions + deterministic calculators</div>
+    <h1>Sales Ops AI -- Hybrid Architecture</h1>
+    <p class="lede"><b>LLMs handle language and intent. Calculators handle math and rules.</b> Neither does the other&rsquo;s job. The Glean agent interprets deal questions in natural language, while external calculator services -- ported from existing Excel spreadsheets -- deliver exact, auditable, repeatable numbers every time.</p>
+  </header>
 
-  <!-- HEADER -->
-  <h1 class="anim-up" style="--i:0">Sales Ops AI -- Hybrid Architecture</h1>
-  <p class="subtitle anim-up" style="--i:1">glean actions + deterministic calculators</p>
-  <p class="intro anim-up" style="--i:2">
-    <strong>LLMs handle language and intent. Calculators handle math and rules.</strong>
-    Neither does the other's job. The Glean agent interprets deal questions in natural language,
-    while external calculator services -- ported from existing Excel spreadsheets -- deliver
-    exact, auditable, repeatable numbers every time.
-  </p>
-
-  <!-- PRINCIPLE BAR -->
-  <div class="principle-bar anim-scale" style="--i:3">
-    <div class="principle-card principle-card--prob">
-      <div class="label">Probabilistic</div>
-      <div class="tagline">Glean Agent (LLM)</div>
-      <div class="detail">Understands questions, extracts parameters,<br>retrieves policy docs, generates explanations</div>
-    </div>
-    <div class="principle-divider">neither does<br>the other's job</div>
-    <div class="principle-card principle-card--det">
-      <div class="label">Deterministic</div>
-      <div class="tagline">Calculator Service (Python)</div>
-      <div class="detail">Runs business rules, computes thresholds,<br>returns exact numbers, logs every calculation</div>
-    </div>
-  </div>
-
-  <!-- DATA FLOW -->
-  <div class="flow-section anim-up" style="--i:4">
-    <div class="flow-section-title">End-to-End Data Flow</div>
-    <div class="data-flow">
-      <div class="flow-step flow-step--neutral">
-        <div class="step-tag">User</div>
-        <div class="step-name">Messy Question</div>
-        <div class="step-desc">"We've got a 500-seat deal with Acme, they want 30% off a 3-year term"</div>
-      </div>
-      <div class="flow-arrow">-></div>
-      <div class="flow-step flow-step--prob">
-        <div class="step-tag">LLM</div>
-        <div class="step-name">Interpret + Extract</div>
-        <div class="step-desc">Parses natural language into structured fields: <code>seats: 500</code>, <code>discount: 0.30</code>, <code>term: 36</code></div>
-      </div>
-      <div class="flow-arrow">-></div>
-      <div class="flow-step flow-step--prob">
-        <div class="step-tag">LLM</div>
-        <div class="step-name">Search Policy</div>
-        <div class="step-desc">Retrieves approval matrix, discount tiers, product rules from knowledge base</div>
-      </div>
-      <div class="flow-arrow flow-arrow--highlight">-></div>
-      <div class="flow-step flow-step--det">
-        <div class="step-tag">API call</div>
-        <div class="step-name">Calculator</div>
-        <div class="step-desc">Structured JSON in, structured JSON out. Same input = same answer, always.</div>
-      </div>
-      <div class="flow-arrow flow-arrow--highlight">-></div>
-      <div class="flow-step flow-step--prob">
-        <div class="step-tag">LLM</div>
-        <div class="step-name">Interpret Results</div>
-        <div class="step-desc">Contextualizes numbers against policy, identifies approval path</div>
-      </div>
-      <div class="flow-arrow">-></div>
-      <div class="flow-step flow-step--prob">
-        <div class="step-tag">LLM</div>
-        <div class="step-name">Respond</div>
-        <div class="step-desc">"This discount exceeds standard threshold by 5 points -- VP Sales approval required."</div>
-      </div>
-    </div>
-  </div>
-
-  <!-- TWO-LAYER ARCHITECTURE -->
-  <div class="flow-section anim-up" style="--i:6">
-    <div class="flow-section-title">Architecture Layers</div>
-
-    <div class="layers">
-
-      <!-- GLEAN LAYER -->
-      <div class="layer layer--glean anim-up" style="--i:7">
-        <div class="layer-header">
-          <span class="layer-badge">Probabilistic</span>
-          <span class="layer-title">Glean Agent Workflow</span>
-          <span class="layer-subtitle">LLM-driven steps</span>
+  <!-- 01 -->
+  <section class="sec">
+    <div class="sec-head"><span class="sec-num">01</span><h2 class="sec-title">The Split</h2></div>
+    <div class="sec-body">
+      <div class="split">
+        <div class="spbar">
+          <div class="spcol prob"><div class="lb">Probabilistic</div><div class="tt">Glean Agent (LLM)</div><div class="dt">Understands questions, extracts parameters, retrieves policy docs, generates explanations</div></div>
+          <div class="spdiv">neither does<br>the other&rsquo;s job</div>
+          <div class="spcol det"><div class="lb">Deterministic</div><div class="tt">Calculator Service (Python)</div><div class="dt">Runs business rules, computes thresholds, returns exact numbers, logs every calculation</div></div>
         </div>
+      </div>
+    </div>
+  </section>
 
-        <div class="arch-row">
+  <!-- 02 -->
+  <section class="sec">
+    <div class="sec-head"><span class="sec-num">02</span><h2 class="sec-title">End-to-End Data Flow</h2></div>
+    <div class="sec-body">
+      <div class="strip">
+        <div class="fs"><span class="tag">User</span><div class="nm">Messy Question</div><div class="de">&ldquo;We&rsquo;ve got a 500-seat deal with Acme, they want 30% off a 3-year term&rdquo;</div></div>
+        <div class="arow">-&gt;</div>
+        <div class="fs prob"><span class="tag">LLM</span><div class="nm">Interpret + Extract</div><div class="de">Parses natural language into structured fields: <code>seats: 500</code>, <code>discount: 0.30</code>, <code>term: 36</code></div></div>
+        <div class="arow">-&gt;</div>
+        <div class="fs prob"><span class="tag">LLM</span><div class="nm">Search Policy</div><div class="de">Retrieves approval matrix, discount tiers, product rules from knowledge base</div></div>
+        <div class="arow hot">-&gt;</div>
+        <div class="fs det"><span class="tag">API call</span><div class="nm">Calculator</div><div class="de">Structured JSON in, structured JSON out. Same input = same answer, always.</div></div>
+        <div class="arow hot">-&gt;</div>
+        <div class="fs prob"><span class="tag">LLM</span><div class="nm">Interpret Results</div><div class="de">Contextualizes numbers against policy, identifies approval path</div></div>
+        <div class="arow">-&gt;</div>
+        <div class="fs prob"><span class="tag">LLM</span><div class="nm">Respond</div><div class="de">&ldquo;This discount exceeds standard threshold by 5 points -- VP Sales approval required.&rdquo;</div></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 03 -->
+  <section class="sec">
+    <div class="sec-head"><span class="sec-num">03</span><h2 class="sec-title">Architecture Layers</h2></div>
+    <div class="sec-body">
+
+      <div class="layer glean">
+        <div class="lhead"><span class="lbadge">Probabilistic</span><span class="ltitle">Glean Agent Workflow</span><span class="lsub">LLM-driven steps</span></div>
+        <div class="arch">
           <div>
-            <div class="kb-panel">
-              <div class="kb-title">Knowledge Base</div>
-              <ul class="kb-list">
+            <div class="kb">
+              <div class="kt">Knowledge Base</div>
+              <ul>
                 <li>Discount approval matrix</li>
                 <li>Product pricing tiers</li>
                 <li>Revenue recognition rules</li>
@@ -817,147 +219,72 @@
                 <li>Regional compliance rules</li>
               </ul>
             </div>
-            <div class="kb-feed-arrow">
-              <svg viewBox="0 0 20 20"><path d="M10 4 L16 10 L10 4 L10 16 M6 10 L10 4"/><path d="M10 4 L10 16 M6 8 L10 4 L14 8"/></svg>
-            </div>
-            <div class="kb-feed-label">feeds Step 1</div>
+            <div class="kbfeed">&darr;</div>
+            <div class="kblab">feeds Step 1</div>
           </div>
-
-          <div class="workflow-steps">
-            <div class="wf-step">
-              <div class="wf-num">Step 1</div>
-              <div class="wf-type">Search</div>
-              <div class="wf-detail">Pull sales operations policies and approval matrices from knowledge base</div>
-            </div>
-            <div class="wf-arrow">-></div>
-            <div class="wf-step wf-step--branch">
-              <div class="wf-num">Step 2</div>
-              <div class="wf-type">Branch (SELECT)</div>
-              <div class="wf-detail">Deal structuring / Discount approval / Revenue recognition</div>
-            </div>
-            <div class="wf-arrow">-></div>
-            <div class="wf-step">
-              <div class="wf-num">Step 3</div>
-              <div class="wf-type">Think</div>
-              <div class="wf-detail">Extract deal parameters from conversational input into structured fields</div>
-            </div>
-            <div class="wf-arrow">-></div>
-            <div class="wf-step wf-step--action">
-              <div class="wf-num">Step 4</div>
-              <div class="wf-type">Action</div>
-              <div class="wf-detail">Call external calculator API with structured JSON payload</div>
-            </div>
-            <div class="wf-arrow">-></div>
-            <div class="wf-step">
-              <div class="wf-num">Step 5</div>
-              <div class="wf-type">Think</div>
-              <div class="wf-detail">Interpret calculator results against policy context from Step 1</div>
-            </div>
-            <div class="wf-arrow">-></div>
-            <div class="wf-step">
-              <div class="wf-num">Step 6</div>
-              <div class="wf-type">Respond</div>
-              <div class="wf-detail">Present recommendation in natural language with approval path</div>
-            </div>
+          <div class="wflow">
+            <div class="ws"><div class="num">Step 1</div><div class="ty">Search</div><div class="de">Pull sales operations policies and approval matrices from knowledge base</div></div>
+            <div class="arow">-&gt;</div>
+            <div class="ws branch"><div class="num">Step 2</div><div class="ty">Branch (SELECT)</div><div class="de">Deal structuring / Discount approval / Revenue recognition</div></div>
+            <div class="arow">-&gt;</div>
+            <div class="ws"><div class="num">Step 3</div><div class="ty">Think</div><div class="de">Extract deal parameters from conversational input into structured fields</div></div>
+            <div class="arow">-&gt;</div>
+            <div class="ws action"><div class="num">Step 4</div><div class="ty">Action</div><div class="de">Call external calculator API with structured JSON payload</div></div>
+            <div class="arow">-&gt;</div>
+            <div class="ws"><div class="num">Step 5</div><div class="ty">Think</div><div class="de">Interpret calculator results against policy context from Step 1</div></div>
+            <div class="arow">-&gt;</div>
+            <div class="ws"><div class="num">Step 6</div><div class="ty">Respond</div><div class="de">Present recommendation in natural language with approval path</div></div>
           </div>
         </div>
       </div>
 
-      <!-- CONNECTOR -->
-      <div class="layer-connector anim-scale" style="--i:9">
-        <div class="conn-label">
-          <span class="label-req">structured JSON request</span>
-          <span class="label-res">deterministic JSON response</span>
+      <div class="conn">
+        <div class="clab"><span class="up">structured JSON request</span><span style="margin:0 14px">&nbsp;</span><span class="dn">deterministic JSON response</span></div>
+        <div style="display:flex;gap:18px;font-weight:800">
+          <span style="color:var(--prob)">&darr; request</span>
+          <span style="color:var(--det)">&uarr; response</span>
         </div>
-        <div style="display:flex; gap:16px;">
-          <svg viewBox="0 0 24 24"><path class="conn-down" d="M12 4 L12 20 M7 15 L12 20 L17 15"/></svg>
-          <svg viewBox="0 0 24 24"><path class="conn-up" d="M12 20 L12 4 M7 9 L12 4 L17 9"/></svg>
-        </div>
-        <div class="conn-label" style="font-size:9px; opacity:0.7">
-          <span class="label-req">Glean Action (HTTP POST)</span>
-          <span class="label-res">Glean Action response</span>
-        </div>
+        <div class="clab" style="font-size:9px;opacity:.75"><span class="up">Glean Action (HTTP POST)</span><span style="margin:0 14px">&nbsp;</span><span class="dn">Glean Action response</span></div>
       </div>
 
-      <!-- CALCULATOR LAYER -->
-      <div class="layer layer--calc anim-up" style="--i:10">
-        <div class="layer-header">
-          <span class="layer-badge">Deterministic</span>
-          <span class="layer-title">Calculator Service</span>
-          <span class="layer-subtitle">Python / FastAPI on Fly.io</span>
+      <div class="layer calc">
+        <div class="lhead"><span class="lbadge">Deterministic</span><span class="ltitle">Calculator Service</span><span class="lsub">Python / FastAPI on Fly.io</span></div>
+        <div class="cg">
+          <div class="cc"><div class="cm">POST</div><div class="ce">/calculators/deal-structure</div><div class="cd">Evaluates deal configuration options: payment schedules, term optimization, product bundling scenarios</div><div class="io"><div><span class="i">IN:</span> products, seats, term, region</div><div><span class="o">OUT:</span> payment_options[], optimal_term, bundle_savings</div></div></div>
+          <div class="cc"><div class="cm">POST</div><div class="ce">/calculators/discount-approval</div><div class="cd">Computes maximum discount by tier, approval level required, and margin impact</div><div class="io"><div><span class="i">IN:</span> product, tier, seats, requested_discount</div><div><span class="o">OUT:</span> max_discount, approval_level, margin_impact, within_policy</div></div></div>
+          <div class="cc"><div class="cm">POST</div><div class="ce">/calculators/revenue-recognition</div><div class="cd">Calculates rev rec schedule per ASC 606, handles multi-element arrangements</div><div class="io"><div><span class="i">IN:</span> deal_components[], start_date, billing_schedule</div><div><span class="o">OUT:</span> recognition_schedule[], deferred_revenue, period_allocations</div></div></div>
         </div>
-
-        <div class="calc-grid">
-          <div class="calc-card">
-            <div class="calc-method">POST</div>
-            <div class="calc-endpoint">/calculators/deal-structure</div>
-            <div class="calc-desc">Evaluates deal configuration options: payment schedules, term optimization, product bundling scenarios</div>
-            <div class="calc-io">
-              <div><span class="label-in">IN:</span> products, seats, term, region</div>
-              <div><span class="label-out">OUT:</span> payment_options[], optimal_term, bundle_savings</div>
-            </div>
-          </div>
-          <div class="calc-card">
-            <div class="calc-method">POST</div>
-            <div class="calc-endpoint">/calculators/discount-approval</div>
-            <div class="calc-desc">Computes maximum discount by tier, approval level required, and margin impact</div>
-            <div class="calc-io">
-              <div><span class="label-in">IN:</span> product, tier, seats, requested_discount</div>
-              <div><span class="label-out">OUT:</span> max_discount, approval_level, margin_impact, within_policy</div>
-            </div>
-          </div>
-          <div class="calc-card">
-            <div class="calc-method">POST</div>
-            <div class="calc-endpoint">/calculators/revenue-recognition</div>
-            <div class="calc-desc">Calculates rev rec schedule per ASC 606, handles multi-element arrangements</div>
-            <div class="calc-io">
-              <div><span class="label-in">IN:</span> deal_components[], start_date, billing_schedule</div>
-              <div><span class="label-out">OUT:</span> recognition_schedule[], deferred_revenue, period_allocations</div>
-            </div>
-          </div>
-        </div>
-
-        <div class="layer-note">
-          <span class="note-icon">[!]</span>
-          <span><strong>Ported from Excel.</strong> Same business logic as current spreadsheet calculators, unit-tested row-by-row against original outputs. Every API call is logged with inputs and outputs for auditability.</span>
-        </div>
+        <div class="lnote"><strong>Ported from Excel.</strong> Same business logic as current spreadsheet calculators, unit-tested row-by-row against original outputs. Every API call is logged with inputs and outputs for auditability.</div>
       </div>
 
     </div>
-  </div>
+  </section>
 
-  <!-- BENEFITS -->
-  <div class="flow-section anim-up" style="--i:12">
-    <div class="flow-section-title">Why This Split Works</div>
-    <div class="benefits">
-      <div class="benefit-card anim-scale" style="--i:13">
-        <div class="benefit-title">Repeatability</div>
-        <div class="benefit-desc">Same question, same numbers. Sales reps get consistent answers regardless of how they phrase the question.</div>
-      </div>
-      <div class="benefit-card anim-scale" style="--i:14">
-        <div class="benefit-title">Maintainability</div>
-        <div class="benefit-desc">Finance updates a threshold? Change one line in Python. The Glean agent never needs to be touched.</div>
-      </div>
-      <div class="benefit-card anim-scale" style="--i:15">
-        <div class="benefit-title">Auditability</div>
-        <div class="benefit-desc">API logs capture every calculation with exact inputs and outputs. Full trail for compliance and review.</div>
-      </div>
-      <div class="benefit-card anim-scale" style="--i:16">
-        <div class="benefit-title">Testability</div>
-        <div class="benefit-desc">Calculator endpoints are unit-tested against original Excel outputs. Row-by-row validation before deploy.</div>
+  <!-- 04 -->
+  <section class="sec">
+    <div class="sec-head"><span class="sec-num">04</span><h2 class="sec-title">Why This Split Works</h2></div>
+    <div class="sec-body">
+      <div class="ben">
+        <div class="bc"><div class="bt">Repeatability</div><div class="bd">Same question, same numbers. Sales reps get consistent answers regardless of how they phrase the question.</div></div>
+        <div class="bc"><div class="bt">Maintainability</div><div class="bd">Finance updates a threshold? Change one line in Python. The Glean agent never needs to be touched.</div></div>
+        <div class="bc"><div class="bt">Auditability</div><div class="bd">API logs capture every calculation with exact inputs and outputs. Full trail for compliance and review.</div></div>
+        <div class="bc"><div class="bt">Testability</div><div class="bd">Calculator endpoints are unit-tested against original Excel outputs. Row-by-row validation before deploy.</div></div>
       </div>
     </div>
+  </section>
+
+  <div class="legend">
+    <div class="legend-item"><div class="legend-swatch" style="background:var(--prob-dim);border-color:var(--prob)"></div> Probabilistic (LLM)</div>
+    <div class="legend-item"><div class="legend-swatch" style="background:var(--det-dim);border-color:var(--det)"></div> Deterministic (API)</div>
+    <div class="legend-item"><div class="legend-swatch" style="background:var(--branch-dim);border-color:var(--branch)"></div> Routing (SELECT)</div>
+    <div class="legend-item"><div class="legend-swatch" style="background:var(--surface);border-color:var(--text-faint)"></div> Knowledge Base</div>
   </div>
 
-  <!-- LEGEND -->
-  <div class="legend anim-up" style="--i:17">
-    <div class="legend-item"><div class="legend-swatch" style="background:var(--prob-dim); border-color:var(--prob);"></div> Probabilistic (LLM)</div>
-    <div class="legend-item"><div class="legend-swatch" style="background:var(--det-dim); border-color:var(--det);"></div> Deterministic (API)</div>
-    <div class="legend-item"><div class="legend-swatch" style="background:var(--green-dim); border-color:var(--green);"></div> Routing (SELECT)</div>
-    <div class="legend-item"><div class="legend-swatch" style="background:var(--slate-dim); border-color:var(--slate);"></div> Knowledge Base</div>
-  </div>
+  <footer class="footer">
+    <a href="../index.html">&larr; Index</a>
+    <span>&copy; 2025-2026 Charlie Fuller</span>
+  </footer>
 
-</div>
-
+</main>
 </body>
 </html>
