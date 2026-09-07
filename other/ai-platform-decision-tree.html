@@ -1,443 +1,138 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" class="light">
 <head>
 <meta charset="UTF-8">
-<link rel="icon" type="image/svg+xml" href="../icon.svg">
+<link rel="icon" href="../icon.svg" type="image/svg+xml" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>AI Platform Selection Decision Tree v3.0</title>
+<meta name="description" content="AI Platform Selection Decision Tree: a seven-stage governance flow routing platform choices past validation, audience, compliance, data, complexity, and operations.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600;9..144,700&family=Source+Code+Pro:wght@400;500;600" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Mulish:ital,wght@0,300;0,400;0,600;0,700;0,800;1,400&display=swap" rel="stylesheet">
 <style>
-  :root {
-    --font-body: 'Fraunces', Georgia, serif;
-    --font-display: 'Instrument Serif', Georgia, serif;
-    --font-mono: 'Source Code Pro', 'SF Mono', Consolas, monospace;
+  :root{--font-body:'Mulish','Segoe UI',Helvetica,sans-serif;--font-mono:'Mulish',ui-monospace,'SF Mono',Consolas,monospace;
+    --bg:#14181C;--surface:#1B2127;--surface2:#232B33;--border:#303A43;--border-bright:#42505C;
+    --text:#F4F5F6;--text-dim:#CBD0D6;--text-faint:#87919B;
+    --primary:#A79CF2;--primary-dim:rgba(167,156,242,0.12);--metric:#58D6B4;--metric-dim:rgba(88,214,180,0.12);
+    --blue:#6CACE4;--blue-dim:rgba(108,172,228,0.12);
+    --violet:#B9A0E8;--violet-dim:rgba(185,160,232,0.12);
+    --amber:#E8B54D;--amber-dim:rgba(232,181,77,0.12);
+    --rose:#E88280;--rose-dim:rgba(232,130,128,0.12);
+    --stop:#F87171;--stop-dim:rgba(248,113,113,0.12);
+    --review:#FBBF24;--review-dim:rgba(251,191,36,0.12);
+    --result:#34D399;--result-dim:rgba(52,211,153,0.12);
+    --cyan:#22D3EE;--cyan-dim:rgba(34,211,238,0.12);
+    --red:#F87171;--red-dim:rgba(248,113,113,0.12);}
+  html.light{--bg:#F7F3EF;--surface:#FFFFFF;--surface2:#F0E9E1;--border:#E1D6CB;--border-bright:#CDBBA8;
+    --text:#241A12;--text-dim:#574A3C;--text-faint:#8C7E6E;
+    --primary:#4F46E5;--primary-dim:rgba(79,70,229,0.08);--metric:#0E7C6E;--metric-dim:rgba(14,124,110,0.08);
+    --blue:#2F6FA8;--blue-dim:rgba(47,111,168,0.08);
+    --violet:#7C3AED;--violet-dim:rgba(124,58,237,0.07);
+    --amber:#A5650A;--amber-dim:rgba(165,101,10,0.08);
+    --rose:#C23A30;--rose-dim:rgba(194,58,48,0.07);
+    --cyan:#0E7490;--cyan-dim:rgba(14,116,144,0.08);
+    --red:#DC2626;--red-dim:rgba(220,38,38,0.08);
+    --stop:#DC2626;--stop-dim:rgba(220,38,38,0.10);
+    --review:#D97706;--review-dim:rgba(217,119,6,0.10);
+    --result:#059669;--result-dim:rgba(5,150,105,0.10);
+    --c1:#4F46E5;--c2:#7C3AED;--c3:#DC2626;--c4:#0E7490;--c5:#2563EB;--c6:#D97706;--c7:#059669;}
+  *{margin:0;padding:0;box-sizing:border-box}
+  html{scroll-behavior:smooth}
+  body{background:
+      radial-gradient(at 10% 0%,var(--primary-dim),transparent 55%),
+      radial-gradient(at 90% 80%,var(--metric-dim),transparent 55%),
+      var(--bg);
+    color:var(--text);font-family:var(--font-body);font-size:17px;line-height:1.62;-webkit-font-smoothing:antialiased;min-height:100vh}
 
-    --bg: #fafaf9;
-    --surface: #ffffff;
-    --surface2: #f5f5f4;
-    --border: rgba(0, 0, 0, 0.07);
-    --border-bright: rgba(0, 0, 0, 0.14);
-    --text: #1c1917;
-    --text-dim: #78716c;
+  .crumbs{font-size:13px;font-weight:600;color:var(--text-dim);display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+  .crumbs a{color:var(--primary);text-decoration:none}
+  .crumbs a:hover{text-decoration:underline}
+  .crumbs .sep{color:var(--text-faint)}
+  .crumbs .current{color:var(--text-dim);font-weight:400}
+  .crumbs-top{max-width:1080px;margin:0 auto;padding:18px 24px 0}
 
-    --stage1: #6366f1;
-    --stage1-dim: rgba(99, 102, 241, 0.08);
-    --stage2: #7c3aed;
-    --stage2-dim: rgba(124, 58, 237, 0.08);
-    --stage3: #dc2626;
-    --stage3-dim: rgba(220, 38, 38, 0.08);
-    --stage4: #0891b2;
-    --stage4-dim: rgba(8, 145, 178, 0.08);
-    --stage5: #2563eb;
-    --stage5-dim: rgba(37, 99, 235, 0.08);
-    --stage6: #d97706;
-    --stage6-dim: rgba(217, 119, 6, 0.08);
-    --stage7: #059669;
-    --stage7-dim: rgba(5, 150, 105, 0.08);
+  .wrap{max-width:1080px;margin:0 auto;padding:0 24px 80px}
 
-    --stop: #dc2626;
-    --stop-dim: rgba(220, 38, 38, 0.10);
-    --review: #d97706;
-    --review-dim: rgba(217, 119, 6, 0.10);
-    --result: #059669;
-    --result-dim: rgba(5, 150, 105, 0.10);
+  .hero{padding:44px 0 24px;border-bottom:1px solid var(--border);margin-bottom:10px}
+  .hero .tagline{font-family:var(--font-mono);font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.14em;color:var(--primary);margin-bottom:10px}
+  .hero h1{font-size:52px;line-height:1.0;letter-spacing:-0.03em;font-weight:800;
+    background:linear-gradient(135deg,var(--primary),var(--metric));-webkit-background-clip:text;background-clip:text;color:transparent}
+  .hero .lede{font-size:19px;line-height:1.5;color:var(--text-dim);max-width:920px;margin-top:14px}
+  .hero .metarow{margin-top:16px;display:flex;gap:8px;flex-wrap:wrap}
+  .meta-tag{font-family:var(--font-mono);font-size:11px;font-weight:600;color:var(--text-dim);padding:3px 10px;border-radius:6px;background:var(--surface);border:1px solid var(--border)}
+
+  .sec{margin-top:22px}
+  .sec-head{display:flex;align-items:baseline;gap:14px;padding-bottom:10px;border-bottom:1px solid var(--border);margin-bottom:10px}
+  .sec-num{font-size:23px;font-weight:800;color:var(--primary);font-family:var(--font-mono)}
+  .sec-title{font-size:23px;font-weight:800;color:var(--text);letter-spacing:-0.01em}
+  .sec-body p{max-width:920px;margin-bottom:12px;color:var(--text-dim)}
+  .sec-body p b,.sec-body strong{color:var(--text)}
+
+  .legend{display:flex;gap:14px;flex-wrap:wrap;align-items:center;margin:2px 0 16px}
+  .legend-group{display:flex;gap:8px;flex-wrap:wrap}
+  .legend-item{display:flex;align-items:center;gap:6px;font-family:var(--font-mono);font-size:11px;color:var(--text-dim);padding:4px 10px;background:var(--surface);border:1px solid var(--border);border-radius:6px}
+  .legend-swatch{width:11px;height:11px;border-radius:3px;flex-shrink:0}
+  .legend-divider{width:1px;background:var(--border-bright);margin:0 4px;align-self:stretch}
+
+  /* Mermaid machinery — canonical zoom wrapper */
+  .mermaid-wrap{position:relative;background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:32px 24px;overflow:auto;margin-bottom:18px;scrollbar-width:thin;scrollbar-color:var(--border) transparent}
+  .mermaid-wrap::-webkit-scrollbar{width:6px;height:6px}
+  .mermaid-wrap::-webkit-scrollbar-track{background:transparent}
+  .mermaid-wrap::-webkit-scrollbar-thumb{background:var(--border);border-radius:3px}
+  .mermaid-wrap .mermaid{display:flex;justify-content:center;transition:transform 0.2s ease;transform-origin:top left}
+  .zoom-controls{position:absolute;top:8px;right:8px;display:flex;gap:2px;z-index:10;background:var(--surface);border:1px solid var(--border);border-radius:6px;padding:2px}
+  .zoom-controls button{width:28px;height:28px;border:none;background:transparent;color:var(--text-dim);font-family:var(--font-mono);font-size:14px;cursor:pointer;border-radius:4px;display:flex;align-items:center;justify-content:center}
+  .zoom-controls button:hover{background:var(--border);color:var(--text)}
+  .mermaid .nodeLabel{font-family:var(--font-body);font-size:13px}
+  .mermaid .edgeLabel{font-family:var(--font-mono);font-size:10px;color:var(--text-dim);background-color:var(--surface)}
+  .mermaid .edgeLabel rect{fill:var(--surface)}
+
+  .terminal-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(330px,1fr));gap:12px;margin-top:6px}
+  .terminal-card{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:16px 20px;border-left:3px solid var(--border)}
+  .terminal-card--stop{border-left-color:var(--stop)}
+  .terminal-card--review{border-left-color:var(--review)}
+  .terminal-card--result{border-left-color:var(--result)}
+  .terminal-card__type{font-family:var(--font-mono);font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:1px;padding:2px 8px;border-radius:4px;display:inline-block;margin-bottom:8px}
+  .terminal-card--stop .terminal-card__type{background:var(--stop-dim);color:var(--stop)}
+  .terminal-card--review .terminal-card__type{background:var(--review-dim);color:var(--review)}
+  .terminal-card--result .terminal-card__type{background:var(--result-dim);color:var(--result)}
+  .terminal-card__title{font-weight:800;font-size:14px;color:var(--text);margin-bottom:4px}
+  .terminal-card__desc{font-size:12.5px;color:var(--text-dim);line-height:1.5}
+  .terminal-card__stage{font-family:var(--font-mono);font-size:10px;color:var(--text-faint);margin-top:8px}
+
+  .note{margin:20px 0 4px;padding:16px 0 2px 18px;border-left:2px solid var(--primary);font-size:14px;line-height:1.65;color:var(--text-dim);max-width:920px}
+  .note b{color:var(--text)}
+  .note code{font-family:var(--font-mono);font-size:0.85em;color:var(--primary)}
+
+  .footer{margin-top:30px;border-top:1px solid var(--border);padding:18px 0 0;display:flex;justify-content:space-between;gap:20px;flex-wrap:wrap;font-family:var(--font-mono);font-size:12px;color:var(--text-faint)}
+  .footer a{color:var(--primary);text-decoration:none}
+  .footer a:hover{text-decoration:underline}
+
+  @media(max-width:900px){
+    .wrap{padding:0 16px 60px}
+    .hero h1{font-size:38px}
+    body{font-size:16px}
+    .mermaid-wrap{padding:16px 12px}
+    .terminal-grid{grid-template-columns:1fr}
+    .legend-divider{display:none}
   }
-
-  
-
-  * { margin: 0; padding: 0; box-sizing: border-box; }
-
-  body {
-    background-color: var(--bg);
-    background-image:
-      radial-gradient(ellipse at 30% 0%, var(--stage1-dim) 0%, transparent 50%),
-      radial-gradient(ellipse at 70% 100%, var(--stage7-dim) 0%, transparent 50%);
-    color: var(--text);
-    font-family: var(--font-body);
-    padding: 48px 40px;
-    min-height: 100vh;
-    overflow-wrap: break-word;
-  }
-
-  @keyframes fadeUp {
-    from { opacity: 0; transform: translateY(12px); }
-    to { opacity: 1; transform: translateY(0); }
-  }
-
-  .animate {
-    animation: fadeUp 0.4s ease-out both;
-    animation-delay: calc(var(--i, 0) * 0.06s);
-  }
-
-  @media (prefers-reduced-motion: reduce) {
-    *, *::before, *::after {
-      animation-duration: 0.01ms !important;
-      animation-delay: 0ms !important;
-      transition-duration: 0.01ms !important;
-    }
-    .mermaid-wrap .mermaid { transition: none; }
-  }
-
-  .container {
-    max-width: 1200px;
-    margin: 0 auto;
-  }
-
-  header {
-    margin-bottom: 40px;
-  }
-
-  h1 {
-    font-family: var(--font-display);
-    font-size: 42px;
-    font-weight: 400;
-    letter-spacing: -0.5px;
-    line-height: 1.15;
-    margin-bottom: 8px;
-  }
-
-  .subtitle {
-    font-family: var(--font-mono);
-    font-size: 13px;
-    color: var(--text-dim);
-    letter-spacing: 0.5px;
-  }
-
-  .meta {
-    display: flex;
-    align-items: center;
-    gap: 16px;
-    margin-top: 12px;
-    flex-wrap: wrap;
-  }
-
-  .meta-tag {
-    font-family: var(--font-mono);
-    font-size: 11px;
-    font-weight: 500;
-    padding: 3px 10px;
-    border-radius: 6px;
-    background: var(--surface);
-    border: 1px solid var(--border);
-    color: var(--text-dim);
-  }
-
-  .legend-section {
-    margin-bottom: 32px;
-  }
-
-  .legend-title {
-    font-family: var(--font-mono);
-    font-size: 11px;
-    font-weight: 600;
-    text-transform: uppercase;
-    letter-spacing: 1.5px;
-    color: var(--text-dim);
-    margin-bottom: 12px;
-  }
-
-  .legend-grid {
-    display: flex;
-    gap: 12px;
-    flex-wrap: wrap;
-  }
-
-  .legend-group {
-    display: flex;
-    gap: 10px;
-    flex-wrap: wrap;
-  }
-
-  .legend-item {
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    font-family: var(--font-mono);
-    font-size: 11px;
-    color: var(--text-dim);
-    padding: 4px 10px;
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: 6px;
-  }
-
-  .legend-swatch {
-    width: 10px;
-    height: 10px;
-    border-radius: 3px;
-    flex-shrink: 0;
-  }
-
-  .legend-divider {
-    width: 1px;
-    background: var(--border-bright);
-    margin: 0 4px;
-    align-self: stretch;
-  }
-
-  /* Mermaid container */
-  .mermaid-wrap {
-    position: relative;
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: 12px;
-    padding: 32px 24px;
-    overflow: auto;
-    margin-bottom: 32px;
-    scrollbar-width: thin;
-    scrollbar-color: var(--border) transparent;
-  }
-
-  .mermaid-wrap::-webkit-scrollbar { width: 6px; height: 6px; }
-  .mermaid-wrap::-webkit-scrollbar-track { background: transparent; }
-  .mermaid-wrap::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
-  .mermaid-wrap::-webkit-scrollbar-thumb:hover { background: var(--text-dim); }
-
-  .mermaid-wrap .mermaid {
-    display: flex;
-    justify-content: center;
-    transition: transform 0.2s ease;
-    transform-origin: top left;
-  }
-
-  .mermaid-wrap.is-zoomed { cursor: grab; }
-  .mermaid-wrap.is-panning { cursor: grabbing; user-select: none; }
-
-  .zoom-controls {
-    position: absolute;
-    top: 8px;
-    right: 8px;
-    display: flex;
-    gap: 2px;
-    z-index: 10;
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: 6px;
-    padding: 2px;
-  }
-
-  .zoom-controls button {
-    width: 28px;
-    height: 28px;
-    border: none;
-    background: transparent;
-    color: var(--text-dim);
-    font-family: var(--font-mono);
-    font-size: 14px;
-    cursor: pointer;
-    border-radius: 4px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    transition: background 0.15s ease, color 0.15s ease;
-  }
-
-  .zoom-controls button:hover {
-    background: var(--border);
-    color: var(--text);
-  }
-
-  /* Fullscreen mode */
-  .mermaid-wrap.is-fullscreen {
-    position: fixed;
-    inset: 0;
-    z-index: 1000;
-    border-radius: 0;
-    margin: 0;
-    padding: 48px 24px 24px;
-    background: var(--bg);
-    max-width: none;
-  }
-
-  .mermaid-wrap.is-fullscreen .zoom-controls {
-    top: 12px;
-    right: 12px;
-  }
-
-  .mermaid-wrap.is-fullscreen .zoom-hint {
-    bottom: 12px;
-    right: 16px;
-  }
-
-  .zoom-hint {
-    position: absolute;
-    bottom: 8px;
-    right: 12px;
-    font-family: var(--font-mono);
-    font-size: 10px;
-    color: var(--text-dim);
-    opacity: 0.6;
-  }
-
-  /* Mermaid SVG overrides */
-  .mermaid .nodeLabel {
-    font-family: var(--font-body) !important;
-    font-size: 13px !important;
-  }
-
-  .mermaid .edgeLabel {
-    font-family: var(--font-mono) !important;
-    font-size: 10px !important;
-    color: var(--text-dim) !important;
-    background-color: var(--surface) !important;
-  }
-
-  .mermaid .edgeLabel rect {
-    fill: var(--surface) !important;
-  }
-
-  .mermaid .nodeLabel {
-    color: var(--text) !important;
-  }
-
-  .mermaid .node rect,
-  .mermaid .node circle,
-  .mermaid .node polygon {
-    stroke-width: 1.5px !important;
-  }
-
-  .mermaid .edge-pattern-solid {
-    stroke-width: 1.2px !important;
-  }
-
-  /* Terminal nodes table */
-  .terminals {
-    margin-top: 8px;
-  }
-
-  .terminals h2 {
-    font-family: var(--font-display);
-    font-size: 24px;
-    font-weight: 400;
-    margin-bottom: 16px;
-  }
-
-  .terminal-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
-    gap: 12px;
-  }
-
-  .terminal-card {
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: 10px;
-    padding: 16px 20px;
-    border-left: 3px solid var(--border);
-  }
-
-  .terminal-card--stop { border-left-color: var(--stop); }
-  .terminal-card--review { border-left-color: var(--review); }
-  .terminal-card--result { border-left-color: var(--result); }
-
-  .terminal-card__type {
-    font-family: var(--font-mono);
-    font-size: 10px;
-    font-weight: 600;
-    text-transform: uppercase;
-    letter-spacing: 1px;
-    padding: 2px 8px;
-    border-radius: 4px;
-    display: inline-block;
-    margin-bottom: 8px;
-  }
-
-  .terminal-card--stop .terminal-card__type {
-    background: var(--stop-dim);
-    color: var(--stop);
-  }
-
-  .terminal-card--review .terminal-card__type {
-    background: var(--review-dim);
-    color: var(--review);
-  }
-
-  .terminal-card--result .terminal-card__type {
-    background: var(--result-dim);
-    color: var(--result);
-  }
-
-  .terminal-card__title {
-    font-weight: 600;
-    font-size: 14px;
-    margin-bottom: 4px;
-  }
-
-  .terminal-card__desc {
-    font-size: 12px;
-    color: var(--text-dim);
-    line-height: 1.5;
-  }
-
-  .terminal-card__stage {
-    font-family: var(--font-mono);
-    font-size: 10px;
-    color: var(--text-dim);
-    margin-top: 8px;
-  }
-
-  .callout {
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-left: 3px solid var(--stage1);
-    border-radius: 0 10px 10px 0;
-    padding: 16px 20px;
-    font-size: 13px;
-    line-height: 1.6;
-    color: var(--text-dim);
-    margin-top: 24px;
-  }
-
-  .callout strong { color: var(--text); }
-
-  @media print {
-    body {
-      background: white !important;
-      color: #1c1917 !important;
-      padding: 24px;
-    }
-    .zoom-controls, .zoom-hint { display: none !important; }
-    .mermaid-wrap {
-      border: 1px solid #d6d3d1;
-      background: white;
-      overflow: visible;
-    }
-    .terminal-card { break-inside: avoid; }
-  }
-
-  @media (max-width: 768px) {
-    body { padding: 16px; }
-    h1 { font-size: 28px; }
-    .mermaid-wrap { padding: 16px 12px; }
-    .terminal-grid { grid-template-columns: 1fr; }
-  }
-.backlink{position:fixed;top:12px;left:16px;z-index:200;font-family:var(--font-mono,monospace);font-size:11px;color:var(--text-dim,#8b949e);text-decoration:none;padding:6px 10px;border:1px solid var(--border,rgba(255,255,255,0.08));border-radius:6px;background:var(--surface,#161b22);transition:color .15s,border-color .15s}.backlink:hover{color:var(--text,#e6edf3);border-color:var(--text-dim,#8b949e)}
+  @media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}.mermaid-wrap .mermaid{transition:none}}
 </style>
 </head>
 <body>
-<style>
-.crumbs-at-top{max-width:1100px;margin:0 auto;padding:14px 24px 0}
-.crumbs{font-family:var(--font-mono,monospace);font-size:13px;font-weight:600;display:flex;align-items:center;gap:8px;flex-wrap:wrap;min-width:0}
-.crumbs a{color:#e8621a;text-decoration:none}
-.crumbs a:hover,.crumbs a:focus-visible{text-decoration:underline;outline:none}
-.crumbs .sep{color:var(--text-dim)}
-.crumbs .current{color:var(--text-dim);font-weight:400}
-</style>
-<nav class="crumbs crumbs-at-top" aria-label="Breadcrumb">
-  <a href="../index.html">Index</a>
-  <span class="sep">/</span>
+
+<div class="crumbs crumbs-top" aria-label="Breadcrumb">
+  <a href="../index.html">Index</a><span class="sep">/</span>
+  <a href="../other-projects.html">Other Projects</a><span class="sep">/</span>
   <span class="current" aria-current="page">AI Platform Selection Decision Tree</span>
-</nav>
+</div>
 
+<main class="wrap">
 
-<div class="container">
-
-  <header class="animate" style="--i:0">
+  <header class="hero">
+    <div class="tagline">AI Platform Selection &mdash; Governance Framework</div>
     <h1>AI Platform Selection Decision Tree</h1>
-    <p class="subtitle">AI Platform Selection -- Governance Framework</p>
-    <div class="meta">
+    <div class="metarow">
       <span class="meta-tag">v3.0</span>
       <span class="meta-tag">7 Stages</span>
       <span class="meta-tag">25 Decision Nodes</span>
@@ -445,35 +140,35 @@
     </div>
   </header>
 
-  <div class="legend-section animate" style="--i:1">
-    <div class="legend-title">Legend</div>
-    <div class="legend-grid">
-      <div class="legend-group">
-        <div class="legend-item"><div class="legend-swatch" style="background:var(--stage1)"></div> 1. Validation</div>
-        <div class="legend-item"><div class="legend-swatch" style="background:var(--stage2)"></div> 2. Audience</div>
-        <div class="legend-item"><div class="legend-swatch" style="background:var(--stage3)"></div> 3. Compliance</div>
-        <div class="legend-item"><div class="legend-swatch" style="background:var(--stage4)"></div> 4. Data</div>
-        <div class="legend-item"><div class="legend-swatch" style="background:var(--stage5)"></div> 5. Complexity</div>
-        <div class="legend-item"><div class="legend-swatch" style="background:var(--stage6)"></div> 6. Governance</div>
-        <div class="legend-item"><div class="legend-swatch" style="background:var(--stage7)"></div> 7. Result</div>
+  <!-- 01 -->
+  <section class="sec">
+    <div class="sec-head"><span class="sec-num">01</span><h2 class="sec-title">The decision tree</h2></div>
+    <div class="sec-body">
+      <div class="legend">
+        <div class="legend-group">
+          <div class="legend-item"><div class="legend-swatch" style="background:var(--c1)"></div> 1. Validation</div>
+          <div class="legend-item"><div class="legend-swatch" style="background:var(--c2)"></div> 2. Audience</div>
+          <div class="legend-item"><div class="legend-swatch" style="background:var(--c3)"></div> 3. Compliance</div>
+          <div class="legend-item"><div class="legend-swatch" style="background:var(--c4)"></div> 4. Data</div>
+          <div class="legend-item"><div class="legend-swatch" style="background:var(--c5)"></div> 5. Complexity</div>
+          <div class="legend-item"><div class="legend-swatch" style="background:var(--c6)"></div> 6. Governance</div>
+          <div class="legend-item"><div class="legend-swatch" style="background:var(--c7)"></div> 7. Result</div>
+        </div>
+        <div class="legend-divider"></div>
+        <div class="legend-group">
+          <div class="legend-item"><div class="legend-swatch" style="background:var(--stop)"></div> STOP</div>
+          <div class="legend-item"><div class="legend-swatch" style="background:var(--review)"></div> REVIEW</div>
+          <div class="legend-item"><div class="legend-swatch" style="background:var(--result)"></div> APPROVED</div>
+        </div>
       </div>
-      <div class="legend-divider"></div>
-      <div class="legend-group">
-        <div class="legend-item"><div class="legend-swatch" style="background:var(--stop)"></div> STOP</div>
-        <div class="legend-item"><div class="legend-swatch" style="background:var(--review)"></div> REVIEW</div>
-        <div class="legend-item"><div class="legend-swatch" style="background:var(--result)"></div> APPROVED</div>
-      </div>
-    </div>
-  </div>
 
-  <div class="mermaid-wrap animate" style="--i:2">
-    <div class="zoom-controls">
-      <button onclick="zoomDiagram(this, 1.2)" title="Zoom in">+</button>
-      <button onclick="zoomDiagram(this, 0.8)" title="Zoom out">&minus;</button>
-      <button onclick="resetZoom(this)" title="Reset zoom">&#8634;</button>
-      <button onclick="toggleFullscreen(this)" title="Toggle fullscreen" class="fs-btn">&#x26F6;</button>
-    </div>
-    <pre class="mermaid">
+      <div class="mermaid-wrap">
+        <div class="zoom-controls">
+          <button onclick="zoomDiagram(this, 1.2)" title="Zoom in">+</button>
+          <button onclick="zoomDiagram(this, 0.8)" title="Zoom out">&minus;</button>
+          <button onclick="resetZoom(this)" title="Reset zoom">&#8634;</button>
+        </div>
+        <pre class="mermaid">
 flowchart LR
 
   %% ===== Stage 1: Validation =====
@@ -570,15 +265,15 @@ flowchart LR
   recommendation([Platform<br/>Recommendation])
 
   %% ===== Styles =====
-  classDef s1 fill:#6366f122,stroke:#6366f1,stroke-width:2px
-  classDef s2 fill:#7c3aed22,stroke:#7c3aed,stroke-width:2px
-  classDef s3 fill:#dc262622,stroke:#dc2626,stroke-width:2px
-  classDef s4 fill:#0891b222,stroke:#0891b2,stroke-width:2px
-  classDef s5 fill:#2563eb22,stroke:#2563eb,stroke-width:2px
-  classDef s6 fill:#d9770622,stroke:#d97706,stroke-width:2px
-  classDef stopNode fill:#dc262633,stroke:#dc2626,stroke-width:2px
-  classDef reviewNode fill:#d9770633,stroke:#d97706,stroke-width:2px
-  classDef resultNode fill:#05966933,stroke:#059669,stroke-width:2.5px
+  classDef s1 fill:#EEF1FF,stroke:#4F46E5,stroke-width:2px
+  classDef s2 fill:#F5EEFD,stroke:#7C3AED,stroke-width:2px
+  classDef s3 fill:#FDEEEE,stroke:#DC2626,stroke-width:2px
+  classDef s4 fill:#E6F4FA,stroke:#0E7490,stroke-width:2px
+  classDef s5 fill:#EBF1FE,stroke:#2563EB,stroke-width:2px
+  classDef s6 fill:#FBF3E2,stroke:#D97706,stroke-width:2px
+  classDef stopNode fill:#FEE2E2,stroke:#DC2626,stroke-width:2px
+  classDef reviewNode fill:#FEF3C7,stroke:#D97706,stroke-width:2px
+  classDef resultNode fill:#D1FAE5,stroke:#059669,stroke-width:2.5px
 
   class start s1
   class audience s2
@@ -589,153 +284,118 @@ flowchart LR
   class stop_not_ai,stop_no_api,stop_find_owner stopNode
   class stop_discuss,stop_connector,stop_governance,stop_backup,stop_legal,stop_works reviewNode
   class recommendation resultNode
-    </pre>
-    <span class="zoom-hint">Ctrl/Cmd + scroll to zoom</span>
-  </div>
-
-  <div class="terminals animate" style="--i:3">
-    <h2>Terminal Outcomes</h2>
-    <div class="terminal-grid">
-      <div class="terminal-card terminal-card--stop">
-        <span class="terminal-card__type">Stop</span>
-        <div class="terminal-card__title">AI Not Recommended</div>
-        <div class="terminal-card__desc">Consider rules-based automation or human process instead. Low volume, high stakes, or requires strict accountability.</div>
-        <div class="terminal-card__stage">Stage 1 - Validation</div>
-      </div>
-      <div class="terminal-card terminal-card--review">
-        <span class="terminal-card__type">Review</span>
-        <div class="terminal-card__title">Discuss with Governance</div>
-        <div class="terminal-card__desc">Mixed signals suggest this needs team discussion. Document the use case and schedule a review with your governance team.</div>
-        <div class="terminal-card__stage">Stage 1 - Validation</div>
-      </div>
-      <div class="terminal-card terminal-card--review">
-        <span class="terminal-card__type">Review</span>
-        <div class="terminal-card__title">Legal Review Required</div>
-        <div class="terminal-card__desc">High-sensitivity data (PII, financial, legal) requires Legal and Governance approval before proceeding.</div>
-        <div class="terminal-card__stage">Stage 3 - Compliance</div>
-      </div>
-      <div class="terminal-card terminal-card--review">
-        <span class="terminal-card__type">Review</span>
-        <div class="terminal-card__title">Regional Approval Required</div>
-        <div class="terminal-card__desc">Tool requires regional regulatory or legal approval before use. Check applicable compliance frameworks for your jurisdiction.</div>
-        <div class="terminal-card__stage">Stage 3 - Compliance</div>
-      </div>
-      <div class="terminal-card terminal-card--review">
-        <span class="terminal-card__type">Review</span>
-        <div class="terminal-card__title">Evaluate Glean Connector</div>
-        <div class="terminal-card__desc">Required data source not in Glean but API exists. Evaluate custom connector feasibility before proceeding.</div>
-        <div class="terminal-card__stage">Stage 4 - Data</div>
-      </div>
-      <div class="terminal-card terminal-card--stop">
-        <span class="terminal-card__type">Stop</span>
-        <div class="terminal-card__title">No Integration Path</div>
-        <div class="terminal-card__desc">External system has no API. Consider manual data export, vendor API request, or alternative data source.</div>
-        <div class="terminal-card__stage">Stage 4 - Data</div>
-      </div>
-      <div class="terminal-card terminal-card--review">
-        <span class="terminal-card__type">Review</span>
-        <div class="terminal-card__title">Additional Governance Review</div>
-        <div class="terminal-card__desc">Mission-critical solutions require evaluation against all five criteria: Reliability, Governance, Traceability, Auditability, Fault Tolerance.</div>
-        <div class="terminal-card__stage">Stage 6 - Governance</div>
-      </div>
-      <div class="terminal-card terminal-card--review">
-        <span class="terminal-card__type">Review</span>
-        <div class="terminal-card__title">Identify Backup Owner</div>
-        <div class="terminal-card__desc">Primary builder needs a backup owner identified. Document handoff procedures and schedule knowledge transfer.</div>
-        <div class="terminal-card__stage">Stage 6 - Governance</div>
-      </div>
-      <div class="terminal-card terminal-card--stop">
-        <span class="terminal-card__type">Stop</span>
-        <div class="terminal-card__title">Find Different Owner</div>
-        <div class="terminal-card__desc">Current builder cannot meet maintenance requirements. Find different owner, reduce scope, or switch to platform-managed solution.</div>
-        <div class="terminal-card__stage">Stage 6 - Governance</div>
-      </div>
-      <div class="terminal-card terminal-card--result">
-        <span class="terminal-card__type">Approved</span>
-        <div class="terminal-card__title">Platform Recommendation</div>
-        <div class="terminal-card__desc">All checks passed. Dynamic recommendation based on audience, compliance, data type, complexity, and governance needs.</div>
-        <div class="terminal-card__stage">Stage 7 - Result</div>
+        </pre>
       </div>
     </div>
-  </div>
+  </section>
 
-  <div class="callout animate" style="--i:4">
-    <strong>How to read this tree.</strong> Start at "Is AI the right solution?" on the left. Follow branches right through 7 evaluation stages. Diamond nodes are decision points. Rounded nodes are terminal outcomes -- either STOP (red), REVIEW (amber), or APPROVED (green). Use zoom controls or Ctrl/Cmd+scroll to inspect details.
-    <br/><br/>
-    <strong>Disqualifiers first.</strong> This tree front-loads audience scope (Stage 2) and compliance checks (Stage 3) before asking about data or platform selection. This ensures users never invest time exploring a platform path only to discover it is blocked by scale requirements or regional regulatory restrictions.
-  </div>
+  <!-- 02 -->
+  <section class="sec">
+    <div class="sec-head"><span class="sec-num">02</span><h2 class="sec-title">Terminal outcomes</h2></div>
+    <div class="sec-body">
+      <div class="terminal-grid">
+        <div class="terminal-card terminal-card--stop">
+          <span class="terminal-card__type">Stop</span>
+          <div class="terminal-card__title">AI Not Recommended</div>
+          <div class="terminal-card__desc">Consider rules-based automation or human process instead. Low volume, high stakes, or requires strict accountability.</div>
+          <div class="terminal-card__stage">Stage 1 - Validation</div>
+        </div>
+        <div class="terminal-card terminal-card--review">
+          <span class="terminal-card__type">Review</span>
+          <div class="terminal-card__title">Discuss with Governance</div>
+          <div class="terminal-card__desc">Mixed signals suggest this needs team discussion. Document the use case and schedule a review with your governance team.</div>
+          <div class="terminal-card__stage">Stage 1 - Validation</div>
+        </div>
+        <div class="terminal-card terminal-card--review">
+          <span class="terminal-card__type">Review</span>
+          <div class="terminal-card__title">Legal Review Required</div>
+          <div class="terminal-card__desc">High-sensitivity data (PII, financial, legal) requires Legal and Governance approval before proceeding.</div>
+          <div class="terminal-card__stage">Stage 3 - Compliance</div>
+        </div>
+        <div class="terminal-card terminal-card--review">
+          <span class="terminal-card__type">Review</span>
+          <div class="terminal-card__title">Regional Approval Required</div>
+          <div class="terminal-card__desc">Tool requires regional regulatory or legal approval before use. Check applicable compliance frameworks for your jurisdiction.</div>
+          <div class="terminal-card__stage">Stage 3 - Compliance</div>
+        </div>
+        <div class="terminal-card terminal-card--review">
+          <span class="terminal-card__type">Review</span>
+          <div class="terminal-card__title">Evaluate Glean Connector</div>
+          <div class="terminal-card__desc">Required data source not in Glean but API exists. Evaluate custom connector feasibility before proceeding.</div>
+          <div class="terminal-card__stage">Stage 4 - Data</div>
+        </div>
+        <div class="terminal-card terminal-card--stop">
+          <span class="terminal-card__type">Stop</span>
+          <div class="terminal-card__title">No Integration Path</div>
+          <div class="terminal-card__desc">External system has no API. Consider manual data export, vendor API request, or alternative data source.</div>
+          <div class="terminal-card__stage">Stage 4 - Data</div>
+        </div>
+        <div class="terminal-card terminal-card--review">
+          <span class="terminal-card__type">Review</span>
+          <div class="terminal-card__title">Additional Governance Review</div>
+          <div class="terminal-card__desc">Mission-critical solutions require evaluation against all five criteria: Reliability, Governance, Traceability, Auditability, Fault Tolerance.</div>
+          <div class="terminal-card__stage">Stage 6 - Governance</div>
+        </div>
+        <div class="terminal-card terminal-card--review">
+          <span class="terminal-card__type">Review</span>
+          <div class="terminal-card__title">Identify Backup Owner</div>
+          <div class="terminal-card__desc">Primary builder needs a backup owner identified. Document handoff procedures and schedule knowledge transfer.</div>
+          <div class="terminal-card__stage">Stage 6 - Governance</div>
+        </div>
+        <div class="terminal-card terminal-card--stop">
+          <span class="terminal-card__type">Stop</span>
+          <div class="terminal-card__title">Find Different Owner</div>
+          <div class="terminal-card__desc">Current builder cannot meet maintenance requirements. Find different owner, reduce scope, or switch to platform-managed solution.</div>
+          <div class="terminal-card__stage">Stage 6 - Governance</div>
+        </div>
+        <div class="terminal-card terminal-card--result">
+          <span class="terminal-card__type">Approved</span>
+          <div class="terminal-card__title">Platform Recommendation</div>
+          <div class="terminal-card__desc">All checks passed. Dynamic recommendation based on audience, compliance, data type, complexity, and governance needs.</div>
+          <div class="terminal-card__stage">Stage 7 - Result</div>
+        </div>
+      </div>
+      <div class="note"><strong>How to read this tree.</strong> Start at &ldquo;Is AI the right solution?&rdquo; on the left. Follow branches right through 7 evaluation stages. Diamond nodes are decision points. Rounded nodes are terminal outcomes -- either STOP (red), REVIEW (amber), or APPROVED (green). Use zoom controls or Ctrl/Cmd+scroll to inspect details.<br><br><strong>Disqualifiers first.</strong> This tree front-loads audience scope (Stage 2) and compliance checks (Stage 3) before asking about data or platform selection. This ensures users never invest time exploring a platform path only to discover it is blocked by scale requirements or regional regulatory restrictions.</div>
+    </div>
+  </section>
 
-</div>
+  <footer class="footer">
+    <a href="../other-projects.html">&larr; Other Projects</a>
+    <span>&copy; 2025-2026 Charlie Fuller</span>
+  </footer>
+
+</main>
 
 <script type="module">
   import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs';
-
-  const isDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-
   mermaid.initialize({
-    startOnLoad: true,
-    theme: 'base',
-    look: 'classic',
-    layout: 'elk',
+    startOnLoad: true, theme: 'base', look: 'classic',
     themeVariables: {
-      primaryColor: isDark ? '#292524' : '#f5f5f4',
-      primaryBorderColor: isDark ? '#78716c' : '#a8a29e',
-      primaryTextColor: isDark ? '#fafaf9' : '#1c1917',
-      secondaryColor: isDark ? '#1c1917' : '#ffffff',
-      secondaryBorderColor: isDark ? '#57534e' : '#d6d3d1',
-      secondaryTextColor: isDark ? '#fafaf9' : '#1c1917',
-      tertiaryColor: isDark ? '#292524' : '#fafaf9',
-      tertiaryBorderColor: isDark ? '#57534e' : '#d6d3d1',
-      tertiaryTextColor: isDark ? '#fafaf9' : '#1c1917',
-      lineColor: isDark ? '#78716c' : '#a8a29e',
+      primaryColor: '#FFFFFF',
+      primaryBorderColor: '#4F46E5',
+      primaryTextColor: '#241A12',
+      secondaryColor: '#FFFFFF',
+      secondaryBorderColor: '#CDBBA8',
+      secondaryTextColor: '#574A3C',
+      tertiaryColor: '#FFFFFF',
+      tertiaryBorderColor: '#CDBBA8',
+      tertiaryTextColor: '#574A3C',
+      lineColor: '#8C7E6E',
       fontSize: '13px',
-      fontFamily: "'DM Sans', system-ui, sans-serif",
+      fontFamily: "'Mulish', sans-serif"
     }
   });
 </script>
 <script>
-  function updateZoomState(wrap) {
-    var target = wrap.querySelector('.mermaid');
-    var zoom = parseFloat(target.dataset.zoom || '1');
-    wrap.classList.toggle('is-zoomed', zoom > 1);
-  }
-
   function zoomDiagram(btn, factor) {
-    var wrap = btn.closest('.mermaid-wrap');
-    var target = wrap.querySelector('.mermaid');
-    var current = parseFloat(target.dataset.zoom || '1');
-    var next = Math.min(Math.max(current * factor, 0.3), 5);
-    target.dataset.zoom = next;
-    target.style.transform = 'scale(' + next + ')';
-    updateZoomState(wrap);
+    var wrap = btn.closest('.mermaid-wrap'), target = wrap.querySelector('.mermaid');
+    var next = Math.min(Math.max((parseFloat(target.dataset.zoom || '1')) * factor, 0.3), 5);
+    target.dataset.zoom = next; target.style.transform = 'scale(' + next + ')';
   }
-
   function resetZoom(btn) {
-    var wrap = btn.closest('.mermaid-wrap');
-    var target = wrap.querySelector('.mermaid');
-    target.dataset.zoom = '1';
-    target.style.transform = 'scale(1)';
-    updateZoomState(wrap);
+    var wrap = btn.closest('.mermaid-wrap'), target = wrap.querySelector('.mermaid');
+    target.dataset.zoom = '1'; target.style.transform = 'scale(1)';
   }
-
-  function toggleFullscreen(btn) {
-    var wrap = btn.closest('.mermaid-wrap');
-    wrap.classList.toggle('is-fullscreen');
-    btn.textContent = wrap.classList.contains('is-fullscreen') ? '\u2716' : '\u26F6';
-    btn.title = wrap.classList.contains('is-fullscreen') ? 'Exit fullscreen' : 'Toggle fullscreen';
-  }
-
-  document.addEventListener('keydown', function(e) {
-    if (e.key === 'Escape') {
-      var fs = document.querySelector('.mermaid-wrap.is-fullscreen');
-      if (fs) {
-        fs.classList.remove('is-fullscreen');
-        var btn = fs.querySelector('.fs-btn');
-        if (btn) { btn.textContent = '\u26F6'; btn.title = 'Toggle fullscreen'; }
-      }
-    }
-  });
-
   document.querySelectorAll('.mermaid-wrap').forEach(function(wrap) {
     wrap.addEventListener('wheel', function(e) {
       if (!e.ctrlKey && !e.metaKey) return;
@@ -744,30 +404,8 @@ flowchart LR
       var current = parseFloat(target.dataset.zoom || '1');
       var factor = e.deltaY < 0 ? 1.1 : 0.9;
       var next = Math.min(Math.max(current * factor, 0.3), 5);
-      target.dataset.zoom = next;
-      target.style.transform = 'scale(' + next + ')';
-      updateZoomState(wrap);
+      target.dataset.zoom = next; target.style.transform = 'scale(' + next + ')';
     }, { passive: false });
-
-    var startX, startY, scrollL, scrollT;
-    wrap.addEventListener('mousedown', function(e) {
-      if (e.target.closest('.zoom-controls')) return;
-      var target = wrap.querySelector('.mermaid');
-      if (parseFloat(target.dataset.zoom || '1') <= 1) return;
-      wrap.classList.add('is-panning');
-      startX = e.clientX;
-      startY = e.clientY;
-      scrollL = wrap.scrollLeft;
-      scrollT = wrap.scrollTop;
-    });
-    window.addEventListener('mousemove', function(e) {
-      if (!wrap.classList.contains('is-panning')) return;
-      wrap.scrollLeft = scrollL - (e.clientX - startX);
-      wrap.scrollTop = scrollT - (e.clientY - startY);
-    });
-    window.addEventListener('mouseup', function() {
-      wrap.classList.remove('is-panning');
-    });
   });
 </script>
 

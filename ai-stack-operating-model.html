@@ -1,268 +1,178 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" class="light">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>AI Transformation — What We're Talking About</title>
-<meta name="description" content="The three-layer AI stack: why the model is a commodity, the harness is replicable, and the organizational operating model is the real constraint.">
 <link rel="icon" href="icon.svg" type="image/svg+xml" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AI Transformation &mdash; What We're Talking About</title>
+<meta name="description" content="The three-layer AI stack: why the model is a commodity, the harness is replicable, and the organizational operating model is the real constraint.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Anton&family=Public+Sans:wght@400;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Mulish:ital,wght@0,300;0,400;0,600;0,700;0,800;1,400&display=swap" rel="stylesheet">
 <style>
-:root {
-  --ink:        #1F1A1C;
-  --graphite:   #3D3A3C;
-  --body:       #55504E;
-  --muted:      #76716F;
-  --rule-hair:  #D6D2D0;
-  --rule-faint: #E7E4E2;
-  --sheet:      #FAF8F7;
-  --desk:       #E8E5E1;
-  --cream-ink:  #C9C4BE;
+  :root{--font-body:'Mulish','Segoe UI',Helvetica,sans-serif;--font-mono:'Mulish',ui-monospace,'SF Mono',Consolas,monospace;
+    --bg:#14181C;--surface:#1B2127;--surface2:#232B33;--border:#303A43;--border-bright:#42505C;
+    --text:#F4F5F6;--text-dim:#CBD0D6;--text-faint:#87919B;
+    --primary:#A79CF2;--primary-dim:rgba(167,156,242,0.12);--metric:#58D6B4;--metric-dim:rgba(88,214,180,0.12);
+    --blue:#6CACE4;--blue-dim:rgba(108,172,228,0.12);
+    --violet:#B9A0E8;--violet-dim:rgba(185,160,232,0.12);
+    --amber:#E8B54D;--amber-dim:rgba(232,181,77,0.12);
+    --rose:#E88280;--rose-dim:rgba(232,130,128,0.12);}
+  html.light{--bg:#F7F3EF;--surface:#FFFFFF;--surface2:#F0E9E1;--border:#E1D6CB;--border-bright:#CDBBA8;
+    --text:#241A12;--text-dim:#574A3C;--text-faint:#8C7E6E;
+    --primary:#4F46E5;--primary-dim:rgba(79,70,229,0.08);--metric:#0E7C6E;--metric-dim:rgba(14,124,110,0.08);
+    --blue:#2F6FA8;--blue-dim:rgba(47,111,168,0.08);
+    --violet:#7C3AED;--violet-dim:rgba(124,58,237,0.07);
+    --amber:#A5650A;--amber-dim:rgba(165,101,10,0.08);
+    --rose:#C23A30;--rose-dim:rgba(194,58,48,0.07);}
+  *{margin:0;padding:0;box-sizing:border-box}
+  html{scroll-behavior:smooth}
+  body{background:
+      radial-gradient(at 10% 0%,var(--primary-dim),transparent 55%),
+      radial-gradient(at 90% 80%,var(--metric-dim),transparent 55%),
+      var(--bg);
+    color:var(--text);font-family:var(--font-body);font-size:17px;line-height:1.62;-webkit-font-smoothing:antialiased;min-height:100vh}
 
-  --maroon: #A4093F;
-  --amber:  #EFAE42;
-  --coral:  #BE5142;
-  --olive:  #7F8C30;
-  --sage:   #8FBFAE;
-  --rose:   #E38FA8;
+  .crumbs{font-size:13px;font-weight:600;color:var(--text-dim);display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+  .crumbs a{color:var(--primary);text-decoration:none}
+  .crumbs a:hover{text-decoration:underline}
+  .crumbs .sep{color:var(--text-faint)}
+  .crumbs .current{color:var(--text-dim);font-weight:400}
+  .crumbs-top{max-width:1080px;margin:0 auto;padding:18px 24px 0}
 
-  --serif: 'Instrument Serif', Georgia, serif;
-  --sans:  'Public Sans', system-ui, sans-serif;
-  --mono:  'JetBrains Mono', monospace;
-  --cond:  'Anton', Impact, sans-serif;
-}
+  .wrap{max-width:1080px;margin:0 auto;padding:0 24px 80px}
 
-* { margin: 0; padding: 0; box-sizing: border-box; }
+  .hero{padding:44px 0 24px;border-bottom:1px solid var(--border);margin-bottom:10px}
+  .hero .tagline{font-family:var(--font-mono);font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.14em;color:var(--primary);margin-bottom:10px}
+  .hero h1{font-size:52px;line-height:1.0;letter-spacing:-0.03em;font-weight:800;
+    background:linear-gradient(135deg,var(--primary),var(--metric));-webkit-background-clip:text;background-clip:text;color:transparent}
+  .hero .lede{font-size:19px;line-height:1.5;color:var(--text-dim);max-width:920px;margin-top:14px}
+  .hero .lede b{color:var(--text)}
 
-body {
-  background: var(--desk);
-  color: var(--ink);
-  font-family: var(--sans);
-  font-size: 17px;
-  line-height: 1.6;
-  -webkit-font-smoothing: antialiased;
-  text-rendering: optimizeLegibility;
-}
+  .sec{margin-top:22px}
+  .sec-head{display:flex;align-items:baseline;gap:14px;padding-bottom:10px;border-bottom:1px solid var(--border);margin-bottom:10px}
+  .sec-num{font-size:23px;font-weight:800;color:var(--primary);font-family:var(--font-mono)}
+  .sec-title{font-size:23px;font-weight:800;color:var(--text);letter-spacing:-0.01em}
+  .sec-body p{max-width:920px;margin-bottom:12px;color:var(--text-dim)}
+  .sec-body p b,.sec-body strong{color:var(--text)}
+  .sec-body p.nb{margin-bottom:0}
+  code{font-family:var(--font-mono);font-size:0.84em;color:var(--primary)}
+  .close{margin-top:16px;border-top:1px solid var(--border);padding-top:14px;font-size:14px;line-height:1.6;color:var(--text-dim);max-width:920px}
+  .close b{color:var(--text)}
 
-.backlink { max-width: 1140px; margin: 0 auto; padding: 20px 28px 8px; }
-.backlink a { font-size: 14px; color: var(--muted); text-decoration: none; }
-.backlink a:hover { color: var(--maroon); }
+  .pmap{padding:14px 4px;border-top:1px solid var(--border);display:grid;grid-template-columns:240px 1fr;gap:4px 28px;align-items:baseline}
+  .pmap:first-of-type{border-top:none}
+  .pmap .pm-k{font-family:var(--font-mono);font-size:11.5px;font-weight:800;text-transform:uppercase;letter-spacing:.08em;color:var(--blue);line-height:1.5}
+  .pmap .pm-k .ord{display:block;color:var(--primary);font-weight:700;font-size:10px;letter-spacing:.16em;margin-bottom:3px}
+  .pmap .pm-k .tag{display:block;color:var(--text-faint);font-weight:700;font-size:10px;letter-spacing:.16em;margin-bottom:3px}
+  .pmap .pm-b{font-size:14.5px;line-height:1.6;color:var(--text-dim)}
+  .pmap .pm-b .tt{font-weight:800;color:var(--text);font-size:16px}
+  .pmap.i-vio .pm-k{color:var(--violet)}
+  .pmap.i-teal .pm-k{color:var(--metric)}
+  .pmap.i-amb .pm-k{color:var(--amber)}
+  .pmap.i-rose .pm-k{color:var(--rose)}
+  .pmap.i-acc .pm-k{color:var(--primary)}
+  .branch{font-size:13px;line-height:1.5;padding:1px 0}
+  .branch .bk{font-family:var(--font-mono);font-size:10.5px;font-weight:700;margin-right:8px}
+  .branch.blue .bk{color:var(--blue)}
+  .branch.teal .bk{color:var(--metric)}
+  .branch.vio .bk{color:var(--violet)}
+  .opt{color:var(--rose);font-weight:700}
 
-.sheet { max-width: 1140px; margin: 0 auto 72px; background: var(--sheet); display: grid; grid-template-columns: 56px 1fr; }
-.spine { background: var(--ink); display: flex; align-items: flex-end; justify-content: center; padding: 30px 0; }
-.spine-label {
-  writing-mode: vertical-rl; transform: rotate(180deg);
-  font-family: var(--cond); font-size: 18px; letter-spacing: 0.2em;
-  color: var(--sheet); text-transform: uppercase; white-space: nowrap;
-}
-.content { padding: 54px 58px 62px; }
+  .footer{margin-top:30px;border-top:1px solid var(--border);padding:18px 0 0;display:flex;justify-content:space-between;gap:20px;flex-wrap:wrap;font-family:var(--font-mono);font-size:12px;color:var(--text-faint)}
+  .footer a{color:var(--primary);text-decoration:none}
+  .footer a:hover{text-decoration:underline}
 
-/* Masthead */
-.masthead {
-  display: flex; align-items: flex-end; justify-content: space-between;
-  gap: 30px; border-bottom: 3px solid var(--ink); padding-bottom: 12px;
-}
-.masthead h1 {
-  font-family: var(--serif); font-weight: 400; font-size: 32px;
-  line-height: 1.05; letter-spacing: -0.014em; max-width: 720px;
-}
-.masthead-num { font-family: var(--serif); font-size: 32px; line-height: 0.95; color: var(--amber); }
-.lede { font-family: var(--serif); font-style: italic; font-size: 17px; line-height: 1.6; color: var(--graphite); margin: 14px 0 8px; max-width: 640px; }
-
-/* Entries */
-.entry { display: grid; grid-template-columns: 104px 1fr; gap: 0 28px; align-items: start; border-top: 1px solid var(--rule-hair); padding: 30px 0 32px; margin-top: 26px; }
-.entry:last-of-type { border-bottom: 3px solid var(--ink); }
-.entry-num { font-family: var(--serif); font-size: 72px; line-height: 0.95; }
-.entry-kicker { font-family: var(--serif); font-style: italic; font-size: 16px; color: var(--muted); margin-bottom: 4px; }
-.entry-title { font-size: 24px; font-weight: 700; letter-spacing: -0.014em; margin-bottom: 8px; }
-.entry-sub { font-size: 17px; line-height: 1.6; color: var(--graphite); margin: 0 0 16px; }
-.e-1 .entry-num { color: var(--amber); }
-.e-2 .entry-num { color: var(--coral); }
-.e-3 .entry-num { color: var(--maroon); }
-
-/* Props — term / definition, hairline separated */
-.props { margin: 0; }
-.prop { display: grid; grid-template-columns: 200px 1fr; gap: 0 20px; border-top: 1px solid var(--rule-hair); padding: 11px 0; }
-.prop:last-child { border-bottom: 1px solid var(--rule-hair); }
-.prop .term { font-size: 15px; font-weight: 700; color: var(--ink); line-height: 1.5; }
-.prop .def { font-size: 15px; color: var(--body); line-height: 1.55; }
-
-/* Transition — the "dig deeper" arguments */
-.transition { margin: 40px 0 0; }
-.transition .marker { font-family: var(--serif); font-style: italic; font-size: 16px; color: var(--muted); text-align: center; padding: 10px 0 16px; border-top: 1px solid var(--rule-hair); }
-.arg { border-top: 1px solid var(--rule-hair); padding: 16px 0; }
-.arg h4 { font-size: 16px; font-weight: 700; color: var(--ink); margin-bottom: 5px; line-height: 1.4; }
-.arg p { font-size: 15px; color: var(--body); line-height: 1.6; }
-.transition .conclusion { font-family: var(--serif); font-style: italic; font-size: 17px; color: var(--graphite); line-height: 1.55; padding: 16px 0; border-top: 1px solid var(--rule-hair); }
-
-/* Insight — inverted */
-.invert { background: var(--ink); color: var(--sheet); margin: 40px 0 0; padding: 30px 28px 34px; }
-.invert .kicker { font-family: var(--serif); font-style: italic; font-size: 16px; color: var(--rose); margin-bottom: 12px; }
-.invert .big { font-family: var(--serif); font-size: 32px; line-height: 1.15; color: var(--sheet); margin-bottom: 18px; }
-.invert .big strong { font-weight: 400; color: var(--sage); }
-.invert .phases { border-top: 1px solid var(--cream-ink); padding-top: 14px; }
-.invert .phase { font-family: var(--mono); font-size: 13px; color: var(--cream-ink); line-height: 2; }
-.invert .phase:last-child { color: var(--rose); }
-
-/* Footer */
-.footer { border-top: 3px solid var(--ink); margin-top: 44px; padding: 24px 0 0; }
-.footer .rule-line { font-size: 14px; color: var(--body); line-height: 1.7; }
-.footer a { color: var(--maroon); text-decoration: none; }
-.footer a:hover { text-decoration: underline; }
-
-/* Responsive */
-@media (max-width: 960px) {
-  .sheet { grid-template-columns: 1fr; }
-  .spine { display: none; }
-  .content { padding: 40px 32px 48px; }
-  .entry { grid-template-columns: 72px 1fr; }
-  .entry-num { font-size: 56px; }
-  .prop { grid-template-columns: 1fr; gap: 2px; }
-}
-@media (max-width: 640px) {
-  .content { padding: 30px 20px 40px; }
-  .masthead { flex-direction: column; align-items: flex-start; gap: 8px; }
-  .masthead h1 { font-size: 26px; }
-  .entry { grid-template-columns: 1fr; gap: 8px; }
-  .invert .big { font-size: 24px; }
-}
+  @media(max-width:900px){
+    .wrap{padding:0 16px 60px}
+    .hero h1{font-size:38px}
+    .pmap{grid-template-columns:1fr;gap:3px}
+    body{font-size:16px}
+  }
+  @media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
 </style>
 </head>
 <body>
-<style>
-.crumbs-at-top{max-width:1100px;margin:0 auto;padding:14px 24px 0}
-.crumbs{font-family:var(--font-mono,monospace);font-size:13px;font-weight:600;display:flex;align-items:center;gap:8px;flex-wrap:wrap;min-width:0}
-.crumbs a{color:var(--ink);text-decoration:none}
-.crumbs a:hover,.crumbs a:focus-visible{text-decoration:underline;outline:none}
-.crumbs .sep{color:var(--muted)}
-.crumbs .current{color:var(--muted);font-weight:400}
-</style>
-<nav class="crumbs crumbs-at-top" aria-label="Breadcrumb">
-  <a href="index.html">Index</a>
-  <span class="sep">/</span>
-  <a href="overview.html">Overview</a>
-  <span class="sep">/</span>
-  <span class="current" aria-current="page">What We&#x27;re Talking About When We Talk About AI Transformation</span>
-</nav>
 
-
-
-<div class="sheet">
-  <div class="spine"><div class="spine-label">Charlie Fuller &nbsp;·&nbsp; AI Transformation</div></div>
-
-  <div class="content">
-
-    <div class="masthead">
-      <h1>What We're Talking About When We Talk About AI Transformation</h1>
-      <div class="masthead-num">03</div>
-    </div>
-    <p class="lede">Everyone starts at the surface &mdash; the model. Then they discover the harness matters more. Keep digging and you find what actually determines what either can do.</p>
-
-    <div class="entry e-1">
-      <div class="entry-num">01</div>
-      <div>
-        <div class="entry-kicker">Surface &mdash; What Everyone Sees</div>
-        <div class="entry-title">The Model</div>
-        <p class="entry-sub">Foundation models are remarkable, interchangeable, and improving at the same rate for everyone. Competing on model choice is a losing strategy &mdash; your competitor has access to the same ones.</p>
-        <div class="props">
-          <div class="prop"><div class="term">GPT, Claude, Gemini, DeepSeek</div><div class="def">All converging. All accessible via API.</div></div>
-          <div class="prop"><div class="term">Switching Cost &asymp; Zero</div><div class="def">Change one line of configuration. Test. Deploy.</div></div>
-          <div class="prop"><div class="term">Weekly Benchmarks</div><div class="def">Today's leader is tomorrow's second place.</div></div>
-          <div class="prop"><div class="term">Price Racing to Zero</div><div class="def">Token costs halve every 6-12 months.</div></div>
-          <div class="prop"><div class="term">Identical Capabilities</div><div class="def">Reasoning, tool use, structured output &mdash; table stakes now.</div></div>
-        </div>
-      </div>
-    </div>
-
-    <div class="transition">
-      <div class="marker">&darr; dig deeper &darr;</div>
-      <div class="arg">
-        <h4>A model is a reasoning engine. It is not a system.</h4>
-        <p>Models don't remember. They don't connect to your database. They don't know your policies, your customers, or your edge cases. A model without a harness is an incredibly capable intelligence that cannot actually do anything in your organization. The model answers questions. The harness does work.</p>
-      </div>
-      <div class="arg">
-        <h4>Models are interchangeable. Your competitor has the same ones.</h4>
-        <p>GPT, Claude, Gemini, DeepSeek &mdash; they are converging on identical capabilities at commodity prices. Whatever advantage one model gives you today will be replicated by every other model within months. If your strategy is "we picked the best model," you have no strategy.</p>
-      </div>
-      <div class="arg">
-        <h4>The industry has already absorbed this lesson.</h4>
-        <p>Every major implementation guide now spends more pages on orchestration, tool integration, and workflow design than on model selection. The conversation moved from "which model" to "which harness" because the people doing the work discovered that the model was never the bottleneck.</p>
-      </div>
-    </div>
-
-    <div class="entry e-2">
-      <div class="entry-num">02</div>
-      <div>
-        <div class="entry-kicker">One Level Down &mdash; Necessary, Not Sufficient</div>
-        <div class="entry-title">The Agent Harness</div>
-        <p class="entry-sub">Determines what the model can do. Orchestration, tools, memory, guardrails. An important differentiator &mdash; but replicable. Your competitor can build one too.</p>
-        <div class="props">
-          <div class="prop"><div class="term">Orchestration</div><div class="def">Workflow engines, state machines, deterministic routing.</div></div>
-          <div class="prop"><div class="term">Tool Integration</div><div class="def">APIs, databases, file systems, external services.</div></div>
-          <div class="prop"><div class="term">Memory &amp; Context</div><div class="def">Vector stores, conversation history, retrieval pipelines.</div></div>
-          <div class="prop"><div class="term">Guardrails</div><div class="def">Input validation, output filtering, safety boundaries.</div></div>
-          <div class="prop"><div class="term">Observability</div><div class="def">Logging, monitoring, evaluation, drift detection.</div></div>
-          <div class="prop"><div class="term">Multi-Agent Coordination</div><div class="def">Delegation, handoffs, parallel execution.</div></div>
-        </div>
-      </div>
-    </div>
-
-    <div class="transition">
-      <div class="marker">&darr; dig deeper &darr;</div>
-      <div class="arg">
-        <h4>The harness inherits the organization's ambiguity. It cannot fix what the organization hasn't resolved.</h4>
-        <p>If nobody can decide who owns a cross-functional decision, the harness can't either. If the org chart says one person decides but everyone knows someone else actually has veto power, the harness will route to the wrong person. The harness doesn't know about shadow decision-makers. It only knows what you tell it &mdash; and what you tell it is usually the documented process, not the real one.</p>
-      </div>
-      <div class="arg">
-        <h4>Governance designed for quarterly reviews cannot govern agents that decide in milliseconds.</h4>
-        <p>An agent making 10,000 decisions per day will make roughly 900,000 decisions between quarterly steering committee meetings. If governance cycle time is measured in weeks and agent decision time is measured in milliseconds, governance is not governing &mdash; it is documenting decisions already made. The harness can enforce rules. It cannot create them at the speed the agent needs them.</p>
-      </div>
-      <div class="arg">
-        <h4>The human repair layer &mdash; undocumented, invisible work &mdash; is what actually keeps processes running.</h4>
-        <p>Every organization has people who catch exceptions, translate between incompatible systems, remember why decisions were made, and know where "enough" is versus "perfect." This work is invisible by definition &mdash; if it were documented, it would be part of the process. When you automate the documented process without accounting for the repair layer, the repair layer becomes visible as failures, exceptions, and stalled workflows. The harness didn't break anything. It revealed what was already broken.</p>
-      </div>
-      <div class="arg">
-        <h4>Without organizational learning loops, each deployment starts from scratch.</h4>
-        <p>Most organizations get better at deploying technology. Almost none get better at absorbing it. The difference is whether deployment N changes how you approach deployment N+1 &mdash; or whether you start from the same assumptions every time. The harness can be refined. The learning that refines it has to come from the organization. If nobody owns capturing what each deployment taught about how work actually gets done, the organization accumulates technology without accumulating understanding.</p>
-      </div>
-      <div class="conclusion">The harness matters more than the model. But the organization determines what the harness can do. Every unresolved ambiguity in the operating model becomes a constraint the harness cannot overcome &mdash; and a failure the model will be blamed for.</div>
-    </div>
-
-    <div class="entry e-3">
-      <div class="entry-num">03</div>
-      <div>
-        <div class="entry-kicker">Bedrock &mdash; The Real Constraint</div>
-        <div class="entry-title">The Organizational Operating Model</div>
-        <p class="entry-sub">Determines what the harness can do. This is the foundation everything else rests on. Nothing above this layer can compensate for what's missing here.</p>
-        <div class="props">
-          <div class="prop"><div class="term">Decision Architecture</div><div class="def">Who actually decides? Who breaks ties? The org chart lies.</div></div>
-          <div class="prop"><div class="term">Governance Velocity</div><div class="def">Can governance keep pace with agents that decide in milliseconds?</div></div>
-          <div class="prop"><div class="term">Human Repair Layer</div><div class="def">The undocumented work that keeps processes running when formal systems fail.</div></div>
-          <div class="prop"><div class="term">Learning Infrastructure</div><div class="def">Does deployment N change how you approach deployment N+1?</div></div>
-          <div class="prop"><div class="term">Change Absorption</div><div class="def">Can the org redesign work while continuing to operate?</div></div>
-          <div class="prop"><div class="term">Ownership &amp; Accountability</div><div class="def">Who owns the stop button? Who is accountable when the agent gets it wrong?</div></div>
-        </div>
-      </div>
-    </div>
-
-    <div class="invert">
-      <div class="kicker">The Lesson of the Last Two Years</div>
-      <div class="big">The model is a commodity. The harness is an advantage, but replicable. <strong>The operating model is the ceiling.</strong></div>
-      <div class="phases">
-        <div class="phase">2023&ndash;2024: We improved the model</div>
-        <div class="phase">2025&ndash;2026: We improved the harness</div>
-        <div class="phase">2027&rarr;: We improve the organization</div>
-      </div>
-    </div>
-
-    <div class="footer">
-      <div class="rule-line">&copy; 2025-2026 Charlie Fuller &nbsp;&middot;&nbsp; <a href="https://linkedin.com/in/charlie-fuller-colorado/" target="_blank" rel="noopener">LinkedIn</a></div>
-    </div>
-
-  </div>
+<div class="crumbs crumbs-top" aria-label="Breadcrumb">
+  <a href="index.html">Index</a><span class="sep">/</span>
+  <span class="current" aria-current="page">What We're Talking About</span>
 </div>
 
+<main class="wrap">
+
+  <header class="hero">
+    <h1>What We&rsquo;re Talking About When We Talk About AI Transformation</h1>
+    <p class="lede">Everyone starts at the surface &mdash; the model. Then they discover the harness matters more. Keep digging and you find what actually determines what either can do.</p>
+  </header>
+
+  <!-- 01 -->
+  <section class="sec">
+    <div class="sec-head"><span class="sec-num">01</span><h2 class="sec-title">The Model</h2></div>
+    <div class="sec-body">
+      <p><b>Foundation models are remarkable, interchangeable, and improving at the same rate for everyone.</b> Competing on model choice is a losing strategy &mdash; your competitor has access to the same ones.</p>
+      <div class="pmap"><div class="pm-k">GPT, Claude,<br>Gemini, DeepSeek</div><div class="pm-b">All converging. All accessible via API.</div></div>
+      <div class="pmap"><div class="pm-k">Switching Cost &asymp; Zero</div><div class="pm-b">Change one line of configuration. Test. Deploy.</div></div>
+      <div class="pmap"><div class="pm-k">Weekly Benchmarks</div><div class="pm-b">Today&rsquo;s leader is tomorrow&rsquo;s second place.</div></div>
+      <div class="pmap"><div class="pm-k">Price Racing to Zero</div><div class="pm-b">Token costs halve every 6-12 months.</div></div>
+      <div class="pmap"><div class="pm-k">Identical Capabilities</div><div class="pm-b">Reasoning, tool use, structured output &mdash; table stakes now.</div></div>
+      <p>&darr; dig deeper &darr;</p>
+      <p><b>A model is a reasoning engine. It is not a system.</b></p>
+      <p>Models don&rsquo;t remember. They don&rsquo;t connect to your database. They don&rsquo;t know your policies, your customers, or your edge cases. A model without a harness is an incredibly capable intelligence that cannot actually do anything in your organization. The model answers questions. The harness does work.</p>
+      <p><b>Models are interchangeable. Your competitor has the same ones.</b></p>
+      <p>GPT, Claude, Gemini, DeepSeek &mdash; they are converging on identical capabilities at commodity prices. Whatever advantage one model gives you today will be replicated by every other model within months. If your strategy is &ldquo;we picked the best model,&rdquo; you have no strategy.</p>
+      <p><b>The industry has already absorbed this lesson.</b></p>
+      <p>Every major implementation guide now spends more pages on orchestration, tool integration, and workflow design than on model selection. The conversation moved from &ldquo;which model&rdquo; to &ldquo;which harness&rdquo; because the people doing the work discovered that the model was never the bottleneck.</p>
+    </div>
+  </section>
+
+  <!-- 02 -->
+  <section class="sec">
+    <div class="sec-head"><span class="sec-num">02</span><h2 class="sec-title">The Agent Harness</h2></div>
+    <div class="sec-body">
+      <p><b>Determines what the model can do.</b> Orchestration, tools, memory, guardrails. An important differentiator &mdash; but replicable. Your competitor can build one too.</p>
+      <div class="pmap"><div class="pm-k">Orchestration</div><div class="pm-b">Workflow engines, state machines, deterministic routing.</div></div>
+      <div class="pmap"><div class="pm-k">Tool Integration</div><div class="pm-b">APIs, databases, file systems, external services.</div></div>
+      <div class="pmap"><div class="pm-k">Memory &amp; Context</div><div class="pm-b">Vector stores, conversation history, retrieval pipelines.</div></div>
+      <div class="pmap"><div class="pm-k">Guardrails</div><div class="pm-b">Input validation, output filtering, safety boundaries.</div></div>
+      <div class="pmap"><div class="pm-k">Observability</div><div class="pm-b">Logging, monitoring, evaluation, drift detection.</div></div>
+      <div class="pmap"><div class="pm-k">Multi-Agent Coordination</div><div class="pm-b">Delegation, handoffs, parallel execution.</div></div>
+      <p>&darr; dig deeper &darr;</p>
+      <p><b>The harness inherits the organization&rsquo;s ambiguity. It cannot fix what the organization hasn&rsquo;t resolved.</b></p>
+      <p>If nobody can decide who owns a cross-functional decision, the harness can&rsquo;t either. If the org chart says one person decides but everyone knows someone else actually has veto power, the harness will route to the wrong person. The harness doesn&rsquo;t know about shadow decision-makers. It only knows what you tell it &mdash; and what you tell it is usually the documented process, not the real one.</p>
+      <p><b>Governance designed for quarterly reviews cannot govern agents that decide in milliseconds.</b></p>
+      <p>An agent making 10,000 decisions per day will make roughly 900,000 decisions between quarterly steering committee meetings. If governance cycle time is measured in weeks and agent decision time is measured in milliseconds, governance is not governing &mdash; it is documenting decisions already made. The harness can enforce rules. It cannot create them at the speed the agent needs them.</p>
+      <p><b>The human repair layer &mdash; undocumented, invisible work &mdash; is what actually keeps processes running.</b></p>
+      <p>Every organization has people who catch exceptions, translate between incompatible systems, remember why decisions were made, and know where &ldquo;enough&rdquo; is versus &ldquo;perfect.&rdquo; This work is invisible by definition &mdash; if it were documented, it would be part of the process. When you automate the documented process without accounting for the repair layer, the repair layer becomes visible as failures, exceptions, and stalled workflows. The harness didn&rsquo;t break anything. It revealed what was already broken.</p>
+      <p><b>Without organizational learning loops, each deployment starts from scratch.</b></p>
+      <p>Most organizations get better at deploying technology. Almost none get better at absorbing it. The difference is whether deployment N changes how you approach deployment N+1 &mdash; or whether you start from the same assumptions every time. The harness can be refined. The learning that refines it has to come from the organization. If nobody owns capturing what each deployment taught about how work actually gets done, the organization accumulates technology without accumulating understanding.</p>
+      <p><b>The harness matters more than the model. But the organization determines what the harness can do.</b> Every unresolved ambiguity in the operating model becomes a constraint the harness cannot overcome &mdash; and a failure the model will be blamed for.</p>
+    </div>
+  </section>
+
+  <!-- 03 -->
+  <section class="sec">
+    <div class="sec-head"><span class="sec-num">03</span><h2 class="sec-title">The Organizational Operating Model</h2></div>
+    <div class="sec-body">
+      <p><b>Determines what the harness can do.</b> This is the foundation everything else rests on. Nothing above this layer can compensate for what&rsquo;s missing here.</p>
+      <div class="pmap"><div class="pm-k">Decision Architecture</div><div class="pm-b">Who actually decides? Who breaks ties? The org chart lies.</div></div>
+      <div class="pmap"><div class="pm-k">Governance Velocity</div><div class="pm-b">Can governance keep pace with agents that decide in milliseconds?</div></div>
+      <div class="pmap"><div class="pm-k">Human Repair Layer</div><div class="pm-b">The undocumented work that keeps processes running when formal systems fail.</div></div>
+      <div class="pmap"><div class="pm-k">Learning Infrastructure</div><div class="pm-b">Does deployment N change how you approach deployment N+1?</div></div>
+      <div class="pmap"><div class="pm-k">Change Absorption</div><div class="pm-b">Can the org redesign work while continuing to operate?</div></div>
+      <div class="pmap"><div class="pm-k">Ownership &amp; Accountability</div><div class="pm-b">Who owns the stop button? Who is accountable when the agent gets it wrong?</div></div>
+      <p class="close"><b>The Lesson of the Last Two Years.</b> The model is a commodity. The harness is an advantage, but replicable. <b>The operating model is the ceiling.</b></p>
+      <p class="nb">2023&ndash;2024: We improved the model</p>
+      <p class="nb">2025&ndash;2026: We improved the harness</p>
+      <p class="nb">2027&rarr;: We improve the organization</p>
+    </div>
+  </section>
+
+  <footer class="footer">
+    <a href="index.html">&larr; Index</a>
+    <span>&copy; 2025-2026 Charlie Fuller</span>
+  </footer>
+
+</main>
 </body>
 </html>

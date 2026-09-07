@@ -1,211 +1,212 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" class="light">
 <head>
 <meta charset="UTF-8">
-<link rel="icon" type="image/svg+xml" href="../icon.svg">
+<link rel="icon" href="../icon.svg" type="image/svg+xml" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Claude Skills &mdash; Diagrams Skill: Page Builder</title>
-<meta name="description" content="How the diagrams skill builds self-contained HTML explainer pages for motorthings/diagrams — Ledger pages, custom-SVG process maps, light-only palettes, and verification.">
+<meta name="description" content="How the diagrams skill builds self-contained HTML explainer pages for motorthings/diagrams &mdash; Ledger pages, custom-SVG process maps, light-only palettes, and verification.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Public+Sans:wght@400;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Mulish:ital,wght@0,300;0,400;0,600;0,700;0,800;1,400&display=swap" rel="stylesheet">
 <style>
-  :root {
-    --font-display: 'Instrument Serif', Georgia, serif;
-    --font-body: 'Public Sans', system-ui, sans-serif;
-    --font-mono: 'JetBrains Mono', 'SF Mono', monospace;
-    --ink: #241f1d; --graphite: #453b36; --body: #534a46; --muted: #8b837b;
-    --rule: #d8d0c2; --row: #e9e2d4; --sheet: #f8f4ee; --desk: #ece5da;
-    --spine: #241f1d; --spine-fg: #f8f4ee;
-    --accent: #7e1f22; --amber: #a16207; --blue: #4a5d73; --teal: #3f6b57; --violet: #6b4f7a; --rose: #8f2a1f;
+  :root{--font-body:'Mulish','Segoe UI',Helvetica,sans-serif;--font-mono:'Mulish',ui-monospace,'SF Mono',Consolas,monospace;
+    --bg:#14181C;--surface:#1B2127;--surface2:#232B33;--border:#303A43;--border-bright:#42505C;
+    --text:#F4F5F6;--text-dim:#CBD0D6;--text-faint:#87919B;
+    --primary:#A79CF2;--primary-dim:rgba(167,156,242,0.12);--metric:#58D6B4;--metric-dim:rgba(88,214,180,0.12);
+    --blue:#6CACE4;--blue-dim:rgba(108,172,228,0.12);
+    --violet:#B9A0E8;--violet-dim:rgba(185,160,232,0.12);
+    --amber:#E8B54D;--amber-dim:rgba(232,181,77,0.12);
+    --rose:#E88280;--rose-dim:rgba(232,130,128,0.12);}
+  html.light{--bg:#F7F3EF;--surface:#FFFFFF;--surface2:#F0E9E1;--border:#E1D6CB;--border-bright:#CDBBA8;
+    --text:#241A12;--text-dim:#574A3C;--text-faint:#8C7E6E;
+    --primary:#4F46E5;--primary-dim:rgba(79,70,229,0.08);--metric:#0E7C6E;--metric-dim:rgba(14,124,110,0.08);
+    --blue:#2F6FA8;--blue-dim:rgba(47,111,168,0.08);
+    --violet:#7C3AED;--violet-dim:rgba(124,58,237,0.07);
+    --amber:#A5650A;--amber-dim:rgba(165,101,10,0.08);
+    --rose:#C23A30;--rose-dim:rgba(194,58,48,0.07);}
+  *{margin:0;padding:0;box-sizing:border-box}
+  html{scroll-behavior:smooth}
+  body{background:
+      radial-gradient(at 10% 0%,var(--primary-dim),transparent 55%),
+      radial-gradient(at 90% 80%,var(--metric-dim),transparent 55%),
+      var(--bg);
+    color:var(--text);font-family:var(--font-body);font-size:17px;line-height:1.62;-webkit-font-smoothing:antialiased;min-height:100vh}
+
+  .crumbs{font-size:13px;font-weight:600;color:var(--text-dim);display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+  .crumbs a{color:var(--primary);text-decoration:none}
+  .crumbs a:hover{text-decoration:underline}
+  .crumbs .sep{color:var(--text-faint)}
+  .crumbs .current{color:var(--text-dim);font-weight:400}
+  .crumbs-top{max-width:1080px;margin:0 auto;padding:18px 24px 0}
+
+  .wrap{max-width:1080px;margin:0 auto;padding:0 24px 80px}
+
+  .hero{padding:44px 0 24px;border-bottom:1px solid var(--border);margin-bottom:10px}
+  .hero .tagline{font-family:var(--font-mono);font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.14em;color:var(--primary);margin-bottom:10px}
+  .hero h1{font-size:52px;line-height:1.0;letter-spacing:-0.03em;font-weight:800;
+    background:linear-gradient(135deg,var(--primary),var(--metric));-webkit-background-clip:text;background-clip:text;color:transparent}
+  .hero .lede{font-size:19px;line-height:1.5;color:var(--text-dim);max-width:920px;margin-top:14px}
+  .hero .lede b{color:var(--text)}
+
+  .sec{margin-top:22px}
+  .sec-head{display:flex;align-items:baseline;gap:14px;padding-bottom:10px;border-bottom:1px solid var(--border);margin-bottom:10px}
+  .sec-num{font-size:23px;font-weight:800;color:var(--primary);font-family:var(--font-mono)}
+  .sec-title{font-size:23px;font-weight:800;color:var(--text);letter-spacing:-0.01em}
+  .sec-body p{max-width:920px;margin-bottom:12px;color:var(--text-dim)}
+  .sec-body p b,.sec-body strong{color:var(--text)}
+  .sec-body p.lead{color:var(--text-dim)}
+  code{font-family:var(--font-mono);font-size:0.84em;color:var(--primary)}
+  .close{margin-top:16px;border-top:1px solid var(--border);padding-top:14px;font-size:14px;line-height:1.6;color:var(--text-dim);max-width:920px}
+  .close b{color:var(--text)}
+
+  .pmap{padding:14px 4px;border-top:1px solid var(--border);display:grid;grid-template-columns:240px 1fr;gap:4px 28px;align-items:baseline}
+  .pmap:first-of-type{border-top:none}
+  .pmap .pm-k{font-family:var(--font-mono);font-size:11.5px;font-weight:800;text-transform:uppercase;letter-spacing:.08em;color:var(--blue);line-height:1.5}
+  .pmap .pm-k .ord{display:block;color:var(--primary);font-weight:700;font-size:10px;letter-spacing:.16em;margin-bottom:3px}
+  .pmap .pm-k .tag{display:block;color:var(--text-faint);font-weight:700;font-size:10px;letter-spacing:.16em;margin-bottom:3px}
+  .pmap .pm-b{font-size:14.5px;line-height:1.6;color:var(--text-dim)}
+  .pmap .pm-b .tt{font-weight:800;color:var(--text);font-size:16px}
+  .pmap .pm-b p{font-size:14.5px;line-height:1.6;margin:0 0 4px;max-width:none}
+  .pmap .pm-b ul{list-style:none;margin:4px 0 0}
+  .pmap .pm-b li{padding:2px 0 2px 15px;position:relative;font-size:13.5px;line-height:1.5;color:var(--text-dim)}
+  .pmap .pm-b li::before{content:'';position:absolute;left:1px;top:0.72em;width:5px;height:5px;background:var(--primary-dim)}
+  .pmap .pm-b li b{color:var(--text)}
+  .pmap .pm-b .meta{font-family:var(--font-mono);font-size:10.5px;color:var(--text-faint);margin-bottom:5px;display:block}
+  .pmap .pm-b .meta b{color:var(--text-dim)}
+  .pmap .pm-b .ref{display:inline-block;font-family:var(--font-mono);font-size:9.5px;color:var(--violet);margin-right:6px}
+  .pmap.i-blue .pm-k{color:var(--blue)}
+  .pmap.i-teal .pm-k{color:var(--metric)}
+  .pmap.i-amb .pm-k{color:var(--amber)}
+  .pmap.i-vio .pm-k{color:var(--violet)}
+  .pmap.i-rose .pm-k{color:var(--rose)}
+  .pmap.i-acc .pm-k{color:var(--primary)}
+  .branch{font-size:13px;line-height:1.5;padding:1px 0}
+  .branch .bk{font-family:var(--font-mono);font-size:10.5px;font-weight:700;margin-right:8px}
+  .branch.blue .bk{color:var(--blue)}
+  .branch.teal .bk{color:var(--metric)}
+  .branch.vio .bk{color:var(--violet)}
+  .branch.amb .bk{color:var(--amber)}
+  .branch.rose .bk{color:var(--rose)}
+  .opt{color:var(--rose);font-weight:700}
+  .note{margin:16px 0 4px;padding:6px 0 2px 16px;border-left:2px solid var(--primary);font-size:14px;line-height:1.6;max-width:920px}
+  .note .mk{font-family:var(--font-mono);font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.12em;color:var(--primary);margin-right:8px}
+  .note b{color:var(--text)}
+
+  table.tbl{width:100%;border-collapse:collapse;margin:2px 0 4px}
+  .tbl th{text-align:left;font-family:var(--font-mono);font-size:10px;font-weight:700;color:var(--text-faint);padding:6px 14px 8px 0;border-bottom:2px solid var(--border-bright);letter-spacing:.04em;text-transform:uppercase}
+  .tbl td{padding:9px 14px 9px 0;border-bottom:1px solid var(--border);vertical-align:top;font-size:13px;line-height:1.5;color:var(--text-dim)}
+  .tbl tr:last-child td{border-bottom:none}
+  .tbl td.f{font-weight:700;color:var(--text);width:40%}
+  .tbl td.nm{font-weight:700;color:var(--text)}
+  .tbl td code{font-size:0.92em;color:var(--metric)}
+
+  .footer{margin-top:30px;border-top:1px solid var(--border);padding:18px 0 0;display:flex;justify-content:space-between;gap:20px;flex-wrap:wrap;font-family:var(--font-mono);font-size:12px;color:var(--text-faint)}
+  .footer a{color:var(--primary);text-decoration:none}
+  .footer a:hover{text-decoration:underline}
+
+  @media(max-width:900px){
+    .wrap{padding:0 16px 60px}
+    .hero h1{font-size:38px}
+    .pmap{grid-template-columns:1fr;gap:3px}
+    body{font-size:16px}
   }
-  * { margin: 0; padding: 0; box-sizing: border-box; }
-  body { background: var(--desk); color: var(--body); font-family: var(--font-body); font-size: 17px; line-height: 1.62; -webkit-font-smoothing: antialiased; text-rendering: optimizeLegibility; }
-  .topbar { max-width: 1160px; margin: 0 auto; padding: 18px 28px 6px; }
-  .backlink a { font-size: 14px; color: var(--muted); text-decoration: none; }
-  .backlink a:hover { color: var(--ink); }
-  .backlink .arr { color: var(--accent); font-size: 15px; margin-right: 2px; }
-
-  .sheet { max-width: 1160px; margin: 6px auto 72px; background: var(--sheet); display: grid; grid-template-columns: 56px 1fr; }
-  .spine { background: var(--spine); display: flex; align-items: flex-end; justify-content: center; padding: 26px 0; }
-  .spine-label { writing-mode: vertical-rl; transform: rotate(180deg); font-family: var(--font-mono); font-size: 13px; letter-spacing: 0.22em; color: var(--spine-fg); white-space: nowrap; text-transform: uppercase; }
-  .content { padding: 48px 60px 6px; min-width: 0; }
-
-  .masthead { border-bottom: 3px solid var(--ink); padding-bottom: 16px; }
-  .masthead h1 { font-family: var(--font-display); font-weight: 400; font-size: 50px; line-height: 0.98; letter-spacing: -0.028em; color: var(--ink); }
-  .tagline { font-family: var(--font-mono); font-size: 11.5px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.14em; color: var(--accent); margin: 10px 0 14px; }
-  .lede { font-family: var(--font-display); font-style: italic; font-size: 19px; line-height: 1.5; color: var(--graphite); max-width: 940px; }
-  .lede b { color: var(--ink); }
-  code { font-family: var(--font-mono); font-size: 0.86em; color: var(--accent); }
-
-  section.sec { border-top: 3px solid var(--ink); padding: 22px 0 4px; }
-  .sec-title { display: grid; grid-template-columns: 88px 1fr; gap: 0 22px; align-items: baseline; margin-bottom: 6px; }
-  .sec-title .n { font-family: var(--font-display); font-size: 30px; line-height: 0.9; color: var(--accent); }
-  .sec-title h2 { font-size: 23px; font-weight: 700; letter-spacing: -0.012em; color: var(--ink); }
-  .sec-title h2 .cnt { font-family: var(--font-mono); font-size: 12px; font-weight: 500; color: var(--muted); margin-left: 10px; }
-  .sec-body { padding: 0 0 8px 110px; }
-  .sec-body p, .sec-body p.lead { max-width: 940px; margin-bottom: 12px; }
-  .sec-body p.nb { margin-bottom: 0; }
-  .sec-body b, .sec-body strong { color: var(--ink); }
-  .note { margin: 14px 0 4px; padding: 10px 0 6px 16px; border-left: 2px solid var(--accent); font-size: 14.5px; line-height: 1.62; max-width: 940px; }
-  .note .mk { font-family: var(--font-mono); font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.12em; color: var(--accent); margin-right: 8px; }
-  .note p { font-size: 14.5px; }
-  .note b { color: var(--ink); }
-  .bleed { margin-left: -110px; width: calc(100% + 110px); }
-
-  .pmap { border-top: 1px solid var(--row); padding: 12px 0 6px; display: grid; grid-template-columns: 240px 1fr; gap: 3px 28px; align-items: baseline; }
-  .pmap:first-of-type { border-top: none; }
-  .pmap .pm-k { font-family: var(--font-mono); font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; color: var(--blue); line-height: 1.5; }
-  .pmap .pm-k .tag { display: block; color: var(--muted); font-weight: 500; font-size: 9.5px; letter-spacing: 0.16em; margin-bottom: 3px; }
-  .pmap .pm-k .ord { display: block; color: var(--accent); font-weight: 600; font-size: 11px; letter-spacing: 0.12em; margin-bottom: 3px; }
-  .pmap .pm-b { font-size: 14px; line-height: 1.62; }
-  .pmap .pm-b .tt { font-weight: 700; color: var(--ink); font-size: 15.5px; }
-  .pmap .pm-b ul { list-style: none; margin: 5px 0 2px; }
-  .pmap .pm-b li { padding: 2px 0 2px 15px; position: relative; font-size: 13.5px; line-height: 1.5; }
-  .pmap .pm-b li::before { content: ''; position: absolute; left: 1px; top: 0.72em; width: 5px; height: 5px; background: var(--row); }
-  .pmap .pm-b li b { color: var(--ink); }
-  .pmap.i-blue .pm-k { color: var(--blue); } .pmap.i-teal .pm-k { color: var(--teal); }
-  .pmap.i-vio .pm-k { color: var(--violet); } .pmap.i-amb .pm-k { color: var(--amber); }
-  .pmap.i-rose .pm-k { color: var(--rose); } .pmap.i-acc .pm-k { color: var(--accent); }
-  .branch { font-size: 13px; line-height: 1.5; padding: 2px 0; }
-  .branch .bk { font-family: var(--font-mono); font-size: 10.5px; font-weight: 700; margin-right: 8px; }
-  .branch.pass .bk { color: var(--teal); } .branch.fail .bk { color: var(--rose); }
-  .branch.amb .bk { color: var(--amber); } .branch.vio .bk { color: var(--violet); }
-
-  table.tbl { width: 100%; border-collapse: collapse; margin: 4px 0 6px; }
-  .tbl th { text-align: left; font-family: var(--font-mono); font-size: 9.5px; font-weight: 600; color: var(--muted); padding: 5px 12px 7px 0; border-bottom: 2px solid var(--ink); letter-spacing: 0.03em; text-transform: uppercase; white-space: nowrap; }
-  .tbl td { padding: 6px 12px 6px 0; border-bottom: 1px solid var(--row); vertical-align: top; font-size: 13px; line-height: 1.5; }
-  .tbl tr:last-child td { border-bottom: none; }
-  .tbl td.nm { font-weight: 700; color: var(--ink); }
-  .tbl td code { font-size: 0.9em; }
-
-  .footer { border-top: 3px solid var(--ink); margin: 26px 0 0; padding: 18px 0 30px; display: flex; justify-content: space-between; gap: 20px; flex-wrap: wrap; font-family: var(--font-mono); font-size: 11.5px; color: var(--muted); }
-  .footer a { color: var(--accent); text-decoration: none; }
-
-  @media (max-width: 900px) {
-    .sheet { grid-template-columns: 40px 1fr; }
-    .spine-label { font-size: 11px; }
-    .content { padding: 32px 22px 4px; }
-    .masthead h1 { font-size: 38px; }
-    .sec-title { grid-template-columns: 50px 1fr; }
-    .sec-title .n { font-size: 25px; }
-    .sec-body { padding-left: 0; }
-    .pmap { grid-template-columns: 1fr; gap: 2px; }
-    .bleed { margin-left: 0; width: 100%; }
-    body { font-size: 16px; }
-  }
+  @media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
 </style>
 </head>
 <body>
-<style>
-.crumbs-at-top{max-width:1100px;margin:0 auto;padding:14px 24px 0}
-.crumbs{font-family:var(--font-mono,monospace);font-size:13px;font-weight:600;display:flex;align-items:center;gap:8px;flex-wrap:wrap;min-width:0}
-.crumbs a{color:var(--accent);text-decoration:none}
-.crumbs a:hover,.crumbs a:focus-visible{text-decoration:underline;outline:none}
-.crumbs .sep{color:var(--muted)}
-.crumbs .current{color:var(--muted);font-weight:400}
-</style>
-<nav class="crumbs crumbs-at-top" aria-label="Breadcrumb">
-  <a href="../index.html">Index</a>
-  <span class="sep">/</span>
-  <a href="../claude-skills.html">Claude Skills</a>
-  <span class="sep">/</span>
-  <span class="current" aria-current="page">Diagrams Skill — Page Builder</span>
-</nav>
 
-
+<div class="crumbs crumbs-top" aria-label="Breadcrumb">
+  <a href="../index.html">Index</a><span class="sep">/</span>
+  <a href="../claude-skills.html">Claude Skills</a><span class="sep">/</span>
+  <span class="current" aria-current="page">Diagrams Skill &mdash; Page Builder</span>
 </div>
 
-<div class="sheet">
-  <div class="spine"><div class="spine-label">DIAGRAMS SKILL</div></div>
+<main class="wrap">
 
-  <div class="content">
+  <header class="hero">
+    <div class="tagline">Claude skill &middot; how it actually works</div>
+    <h1>Diagrams Skill &mdash; Page Builder</h1>
+    <p class="lede">The diagrams skill builds self-contained HTML explainer pages for the <code>motorthings/diagrams</code> GitHub Pages repo. Theme comes from the repo; structure from <code>visual-explainer</code>; process flows are drawn as custom-SVG maps. Pages are light-only Ledger.</p>
+  </header>
 
-    <header class="masthead">
-      <h1>Diagrams Skill &mdash; Page Builder</h1>
-      <div class="tagline">Claude skill &middot; how it actually works</div>
-      <p class="lede">The diagrams skill builds self-contained HTML explainer pages for the <code>motorthings/diagrams</code> GitHub Pages repo. Theme comes from the repo; structure from <code>visual-explainer</code>; process flows are drawn as custom-SVG maps. Pages are light-only Ledger.</p>
-    </header>
+  <!-- 01 -->
+  <section class="sec">
+    <div class="sec-head"><span class="sec-num">01</span><h2 class="sec-title">The builder pipeline</h2></div>
+    <div class="sec-body">
+      <div class="pmap"><div class="pm-k"><span class="tag">Start</span>User asks<br>for a page</div><div class="pm-b">A request arrives for a visual explainer.</div></div>
+      <div class="pmap i-acc"><div class="pm-k"><span class="ord">1</span>Pick the palette</div><div class="pm-b">Gulf Stream Racing (default) or a per-category custom Ledger palette &mdash; e.g. coldprint indigo, oxblood + steel. Every category restyled as light-only.</div></div>
+      <div class="pmap i-vio"><div class="pm-k"><span class="ord">2</span>Pick the structure</div><div class="pm-b">Ledger (argument / portfolio / process), or measurement/data-table. Content pages backlink to their category page.</div></div>
+      <div class="pmap"><div class="pm-k"><span class="ord">3</span>Decide the renderer</div><div class="pm-b">Linear flows = pure CSS. Branching / parallel / merge process diagrams = custom-SVG (or inline-SVG) process map. Data = real tables. Mermaid stays out of process maps.
+        <div class="branch amb"><span class="bk">REDRAW RULE</span> A source diagram is reproduced node-for-node in the new style &mdash; never flattened into a list.</div>
+      </div></div>
+      <div class="pmap"><div class="pm-k"><span class="ord">4</span>Delegate</div><div class="pm-b">Hand structure to <code>visual-explainer</code>; hand any diagram to <code>custom-svg-diagram</code>.</div></div>
+      <div class="pmap i-rose"><div class="pm-k"><span class="ord">5</span>Apply constraints</div><div class="pm-b"><span class="tt">The non-negotiables.</span> Light-only, palette from the repo, display + mono fonts, fixed backlink, no emoji, no JS on restyled pages.</div></div>
+      <div class="pmap"><div class="pm-k"><span class="ord">6</span>Verify</div><div class="pm-b">Run the checklist &mdash; including the diagram-fidelity check (a source diagram means the page still draws one).</div></div>
+      <div class="pmap"><div class="pm-k"><span class="ord">7</span>Ship</div><div class="pm-b"><code>git add</code>, commit, push &mdash; verify it renders live at <code>motorthings.github.io/diagrams</code>.</div></div>
+    </div>
+  </section>
 
-    <!-- 01 map -->
-    <section class="sec">
-      <div class="sec-title"><span class="n">01</span><h2>The builder pipeline</h2></div>
-      <div class="sec-body">
-        <div class="pmap"><div class="pm-k"><span class="tag">Start</span>User asks<br>for a page</div><div class="pm-b">A request arrives for a visual explainer.</div></div>
-        <div class="pmap i-acc"><div class="pm-k"><span class="ord">1</span>Pick the palette</div><div class="pm-b">Gulf Stream Racing (default) or a per-category custom Ledger palette &mdash; e.g. coldprint indigo, oxblood + steel. Every category restyled as light-only.</div></div>
-        <div class="pmap i-vio"><div class="pm-k"><span class="ord">2</span>Pick the structure</div><div class="pm-b">Ledger (argument / portfolio / process), or measurement/data-table. Content pages backlink to their category page.</div></div>
-        <div class="pmap i-amb"><div class="pm-k"><span class="ord">3</span>Decide the renderer</div><div class="pm-b">Linear flows = pure CSS. Branching / parallel / merge process diagrams = custom-SVG (or inline-SVG) process map. Data = real tables. Mermaid stays out of process maps.
-          <div class="branch amb"><span class="bk">REDRAW RULE</span> A source diagram is reproduced node-for-node in the new style &mdash; never flattened into a list.</div>
-        </div></div>
-        <div class="pmap"><div class="pm-k"><span class="ord">4</span>Delegate</div><div class="pm-b">Hand structure to <code>visual-explainer</code>; hand any diagram to <code>custom-svg-diagram</code>.</div></div>
-        <div class="pmap i-rose"><div class="pm-k"><span class="ord">5</span>Apply constraints</div><div class="pm-b"><span class="tt">The non-negotiables.</span> Light-only, palette from the repo, display + mono fonts, fixed backlink, no emoji, no JS on restyled pages.</div></div>
-        <div class="pmap"><div class="pm-k"><span class="ord">6</span>Verify</div><div class="pm-b">Run the checklist &mdash; including the diagram-fidelity check (a source diagram means the page still draws one).</div></div>
-        <div class="pmap"><div class="pm-k"><span class="ord">7</span>Ship</div><div class="pm-b"><code>git add</code>, commit, push &mdash; verify it renders live at <code>motorthings.github.io/diagrams</code>.</div></div>
-      </div>
-    </section>
+  <!-- 02 -->
+  <section class="sec">
+    <div class="sec-head"><span class="sec-num">02</span><h2 class="sec-title">Rendering decisions</h2></div>
+    <div class="sec-body">
+      <p class="lead">Pick the renderer by content type, not preference. The diagram is a real drawing, not a list.</p>
+      <div class="pmap i-teal"><div class="pm-k"><span class="tag">Linear</span>A &rarr; B &rarr; C</div><div class="pm-b"><span class="tt">Pure-CSS flow.</span> Linear flow, any length, no branching, perfect vertical alignment, zero JS. Centered nodes with arrow connectors.</div></div>
+      <div class="pmap i-acc"><div class="pm-k"><span class="tag">Process map</span>Branch / parallel /<br>merge</div><div class="pm-b"><span class="tt">Custom-SVG map.</span> Decision gates, fan-outs, joins. Drawn node-for-node with the palette colors, rules and connectors; machine-verified or hand-checked geometry.</div></div>
+      <div class="pmap i-vio"><div class="pm-k"><span class="tag">Ledger argument</span>Recap / portfolio /<br>case</div><div class="pm-b"><span class="tt">Ruled sheet.</span> Masthead, numbered sections, <code>.pmap</code> detail rows, tables. Rows are for detail, not for drawing a flow.</div></div>
+      <div class="pmap i-blue"><div class="pm-k"><span class="tag">Data</span>Inventories /<br>matrices</div><div class="pm-b"><span class="tt">Real tables.</span> Semantic <code>&lt;table&gt;</code>, not CSS grids pretending.</div></div>
+      <div class="pmap i-rose"><div class="pm-k"><span class="tag">Sequence / ER</span>Rare</div><div class="pm-b"><span class="tt">Mermaid only here.</span> Sequence, entity-relationship, state-machine. Not used for architecture or process maps.</div></div>
+    </div>
+  </section>
 
-    <!-- 02 rendering -->
-    <section class="sec">
-      <div class="sec-title"><span class="n">02</span><h2>Rendering decisions</h2></div>
-      <div class="sec-body">
-        <p class="lead">Pick the renderer by content type, not preference. The diagram is a real drawing, not a list.</p>
-        <div class="pmap i-teal"><div class="pm-k"><span class="tag">Linear</span>A &rarr; B &rarr; C</div><div class="pm-b"><span class="tt">Pure-CSS flow.</span> Linear flow, any length, no branching, perfect vertical alignment, zero JS. Centered nodes with arrow connectors.</div></div>
-        <div class="pmap i-acc"><div class="pm-k"><span class="tag">Process map</span>Branch / parallel /<br>merge</div><div class="pm-b"><span class="tt">Custom-SVG map.</span> Decision gates, fan-outs, joins. Drawn node-for-node with the palette colors, rules and connectors; machine-verified or hand-checked geometry.</div></div>
-        <div class="pmap i-vio"><div class="pm-k"><span class="tag">Ledger argument</span>Recap / portfolio /<br>case</div><div class="pm-b"><span class="tt">Ruled sheet.</span> Masthead, numbered sections, <code>.pmap</code> detail rows, tables. Rows are for detail, not for drawing a flow.</div></div>
-        <div class="pmap i-blue"><div class="pm-k"><span class="tag">Data</span>Inventories /<br>matrices</div><div class="pm-b"><span class="tt">Real tables.</span> Semantic <code>&lt;table&gt;</code>, not CSS grids pretending.</div></div>
-        <div class="pmap i-rose"><div class="pm-k"><span class="tag">Sequence / ER</span>Rare</div><div class="pm-b"><span class="tt">Mermaid only here.</span> Sequence, entity-relationship, state-machine. Not used for architecture or process maps.</div></div>
-      </div>
-    </section>
+  <!-- 03 -->
+  <section class="sec">
+    <div class="sec-head"><span class="sec-num">03</span><h2 class="sec-title">Design rules</h2></div>
+    <div class="sec-body">
+      <p class="lead">These override <code>visual-explainer</code> defaults. Every page complies.</p>
+      <div class="pmap i-rose"><div class="pm-k">Typography<br>&amp; color</div><div class="pm-b">
+        <ul><li><b>Fonts:</b> Instrument Serif (display) + Public Sans (body) + JetBrains Mono (mono)</li><li><b>Palette:</b> from the repo &mdash; Gulf Stream Racing default, or the category&rsquo;s custom Ledger palette</li><li><b>Light-only:</b> restyled categories carry no dark mode and no theme toggle</li><li><b>No emoji</b> &mdash; Unicode entities only</li></ul>
+      </div></div>
+      <div class="pmap i-acc"><div class="pm-k">Diagram<br>fidelity</div><div class="pm-b">
+        <ul><li>Redraw a source process map node-for-node in the new style</li><li>Never condense many nodes into one, never flatten a diagram into rows or a list</li><li>Every diagram carries its palette colors and connectors; no Mermaid in process maps</li></ul>
+      </div></div>
+      <div class="pmap i-blue"><div class="pm-k">Layout &amp;<br>navigation</div><div class="pm-b">
+        <ul><li><b>Spine + masthead</b> Ledger sheet with a rule spine label</li><li><b>Backlink:</b> fixed top-left to the category page (<code>../&lt;category&gt;.html</code>)</li><li><b>Favicon:</b> <code>../icon.svg</code>, adjusted for depth</li><li><b>Reduced motion:</b> a <code>@media (prefers-reduced-motion: reduce)</code> block</li></ul>
+      </div></div>
+    </div>
+  </section>
 
-    <!-- 03 constraints -->
-    <section class="sec">
-      <div class="sec-title"><span class="n">03</span><h2>Design rules</h2></div>
-      <div class="sec-body">
-        <p class="lead">These override <code>visual-explainer</code> defaults. Every page complies.</p>
-        <div class="pmap i-rose"><div class="pm-k">Typography<br>&amp; color</div><div class="pm-b">
-          <ul><li><b>Fonts:</b> Instrument Serif (display) + Public Sans (body) + JetBrains Mono (mono)</li><li><b>Palette:</b> from the repo &mdash; Gulf Stream Racing default, or the category&rsquo;s custom Ledger palette</li><li><b>Light-only:</b> restyled categories carry no dark mode and no theme toggle</li><li><b>No emoji</b> &mdash; Unicode entities only</li></ul>
-        </div></div>
-        <div class="pmap i-acc"><div class="pm-k">Diagram<br>fidelity</div><div class="pm-b">
-          <ul><li>Redraw a source process map node-for-node in the new style</li><li>Never condense many nodes into one, never flatten a diagram into rows or a list</li><li>Every diagram carries its palette colors and connectors; no Mermaid in process maps</li></ul>
-        </div></div>
-        <div class="pmap i-blue"><div class="pm-k">Layout &amp;<br>navigation</div><div class="pm-b">
-          <ul><li><b>Spine + masthead</b> Ledger sheet with a rule spine label</li><li><b>Backlink:</b> fixed top-left to the category page (<code>../&lt;category&gt;.html</code>)</li><li><b>Favicon:</b> <code>../icon.svg</code>, adjusted for depth</li><li><b>Reduced motion:</b> a <code>@media (prefers-reduced-motion: reduce)</code> block</li></ul>
-        </div></div>
-      </div>
-    </section>
+  <!-- 04 -->
+  <section class="sec">
+    <div class="sec-head"><span class="sec-num">04</span><h2 class="sec-title">Verification checklist</h2></div>
+    <div class="sec-body">
+      <p class="lead">Run before committing &mdash; every item must pass.</p>
+      <table class="tbl">
+        <thead><tr><th>Check</th><th>What to look for</th></tr></thead>
+        <tbody>
+          <tr><td class="f">No Mermaid / no JS</td><td>Restyled pages are <code>mermaid 0</code>, no <code>&lt;script&gt;</code>, no theme toggle.</td></tr>
+          <tr><td class="f">Light-only</td><td>No dark mode, no <code>html.dark</code>, no <code>prefers-color-scheme</code>.</td></tr>
+          <tr><td class="f">Diagram fidelity</td><td>If the source had a flow/process diagram, the page still <em>draws</em> one (an SVG map) &mdash; it isn&rsquo;t restated as a list.</td></tr>
+          <tr><td class="f">Backlink</td><td>Click it &mdash; goes to the right category page.</td></tr>
+          <tr><td class="f">Mobile</td><td>Resize to 375px &mdash; no horizontal scroll, grids stack, h1 doesn&rsquo;t overflow.</td></tr>
+          <tr><td class="f">Palette &amp; contrast</td><td>Every node/row/text readable against the sheet; colors from the category palette.</td></tr>
+          <tr><td class="f">No broken links</td><td>Click every link in the footer and body.</td></tr>
+          <tr><td class="f">Title tag</td><td><code>[Project] &mdash; [Page Name]</code>, matches the h1.</td></tr>
+          <tr><td class="f">Meta description</td><td>Present, 120&ndash;155 chars, describes this page.</td></tr>
+          <tr><td class="f">No emoji</td><td>Unicode entities only.</td></tr>
+          <tr><td class="f">Reduced motion</td><td><code>@media (prefers-reduced-motion: reduce)</code> block present.</td></tr>
+        </tbody>
+      </table>
+      <div class="note"><span class="mk">The core split</span><b>Theme from the repo; structure from visual-explainer; diagrams from custom-svg-diagram.</b> Pages are Ledger and light-only. A process flow is a drawn process map, reproduced node-for-node &mdash; a rules sheet is for detail, not for drawing. When restyling a page whose source drew a diagram, the new page draws it again.</div>
+    </div>
+  </section>
 
-    <!-- 04 checklist -->
-    <section class="sec">
-      <div class="sec-title"><span class="n">04</span><h2>Verification checklist</h2></div>
-      <div class="sec-body">
-        <p class="lead">Run before committing &mdash; every item must pass.</p>
-        <table class="tbl">
-          <thead><tr><th>Check</th><th>What to look for</th></tr></thead>
-          <tbody>
-            <tr><td class="nm">No Mermaid / no JS</td><td>Restyled pages are <code>mermaid 0</code>, no <code>&lt;script&gt;</code>, no theme toggle.</td></tr>
-            <tr><td class="nm">Light-only</td><td>No dark mode, no <code>html.dark</code>, no <code>prefers-color-scheme</code>.</td></tr>
-            <tr><td class="nm">Diagram fidelity</td><td>If the source had a flow/process diagram, the page still <em>draws</em> one (an SVG map) &mdash; it isn&rsquo;t restated as a list.</td></tr>
-            <tr><td class="nm">Backlink</td><td>Click it &mdash; goes to the right category page.</td></tr>
-            <tr><td class="nm">Mobile</td><td>Resize to 375px &mdash; no horizontal scroll, grids stack, h1 doesn&rsquo;t overflow.</td></tr>
-            <tr><td class="nm">Palette &amp; contrast</td><td>Every node/row/text readable against the sheet; colors from the category palette.</td></tr>
-            <tr><td class="nm">No broken links</td><td>Click every link in the footer and body.</td></tr>
-            <tr><td class="nm">Title tag</td><td><code>[Project] &mdash; [Page Name]</code>, matches the h1.</td></tr>
-            <tr><td class="nm">Meta description</td><td>Present, 120&ndash;155 chars, describes this page.</td></tr>
-            <tr><td class="nm">No emoji</td><td>Unicode entities only.</td></tr>
-            <tr><td class="nm">Reduced motion</td><td><code>@media (prefers-reduced-motion: reduce)</code> block present.</td></tr>
-          </tbody>
-        </table>
-        <div class="note"><span class="mk">The core split</span><p><b>Theme from the repo; structure from visual-explainer; diagrams from custom-svg-diagram.</b> Pages are Ledger and light-only. A process flow is a drawn process map, reproduced node-for-node &mdash; a rules sheet is for detail, not for drawing. When restyling a page whose source drew a diagram, the new page draws it again.</p></div>
-      </div>
-    </section>
+  <footer class="footer">
+    <a href="../claude-skills.html">&larr; Claude Skills</a>
+    <span>&copy; 2025-2026 Charlie Fuller</span>
+  </footer>
 
-    <footer class="footer">
-      <a href="../claude-skills.html">&larr; Claude Skills</a>
-      <span>&copy; 2025-2026 Charlie Fuller</span>
-    </footer>
-
-  </div>
-</div>
-
+</main>
 </body>
 </html>
