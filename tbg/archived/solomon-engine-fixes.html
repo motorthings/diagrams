@@ -1,1003 +1,340 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" class="light">
 <head>
 <meta charset="UTF-8">
-<link rel="icon" type="image/svg+xml" href="../../icon.svg">
+<link rel="icon" href="../../icon.svg" type="image/svg+xml" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Solomon Engine — Critical Fixes Plan</title>
+<meta name="description" content="Post stress-test critical fixes plan for the Solomon Engine: 11 fixes across scoring, conversation control, UI/UX, and audit, for testers Menchie Lobo and Niharika Arun.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600;9..144,700&family=Source+Code+Pro:wght@400;500;600" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Mulish:ital,wght@0,300;0,400;0,600;0,700;0,800;1,400&display=swap" rel="stylesheet">
 <style>
-  /* ============ THEME — dark blueprint ============ */
-  :root {
-    --font-body: 'Fraunces', Georgia, serif;
-    --font-mono: 'Source Code Pro', 'SF Mono', Consolas, monospace;
+  :root{--font-body:'Mulish','Segoe UI',Helvetica,sans-serif;--font-mono:'Mulish',ui-monospace,'SF Mono',Consolas,monospace;
+    --bg:#14181C;--surface:#1B2127;--surface2:#232B33;--border:#303A43;--border-bright:#42505C;
+    --text:#F4F5F6;--text-dim:#CBD0D6;--text-faint:#87919B;
+    --primary:#A79CF2;--primary-dim:rgba(167,156,242,0.12);--metric:#58D6B4;--metric-dim:rgba(88,214,180,0.12);
+    --blue:#6CACE4;--blue-dim:rgba(108,172,228,0.12);
+    --violet:#B9A0E8;--violet-dim:rgba(185,160,232,0.12);
+    --amber:#E8B54D;--amber-dim:rgba(232,181,77,0.12);
+    --rose:#E88280;--rose-dim:rgba(232,130,128,0.12);}
+  html.light{--bg:#F7F3EF;--surface:#FFFFFF;--surface2:#F0E9E1;--border:#E1D6CB;--border-bright:#CDBBA8;
+    --text:#241A12;--text-dim:#574A3C;--text-faint:#8C7E6E;
+    --primary:#4F46E5;--primary-dim:rgba(79,70,229,0.08);--metric:#0E7C6E;--metric-dim:rgba(14,124,110,0.08);
+    --blue:#2F6FA8;--blue-dim:rgba(47,111,168,0.08);
+    --violet:#7C3AED;--violet-dim:rgba(124,58,237,0.07);
+    --amber:#A5650A;--amber-dim:rgba(165,101,10,0.08);
+    --rose:#C23A30;--rose-dim:rgba(194,58,48,0.07);}
+  *{margin:0;padding:0;box-sizing:border-box}
+  html{scroll-behavior:smooth}
+  body{background:
+      radial-gradient(at 10% 0%,var(--primary-dim),transparent 55%),
+      radial-gradient(at 90% 80%,var(--metric-dim),transparent 55%),
+      var(--bg);
+    color:var(--text);font-family:var(--font-body);font-size:17px;line-height:1.62;-webkit-font-smoothing:antialiased;min-height:100vh}
 
-    --bg: #0b0f1a;
-    --surface: #131825;
-    --surface2: #1a2133;
-    --surface-elevated: #1e2840;
-    --border: rgba(255,255,255,0.07);
-    --border-bright: rgba(255,255,255,0.14);
-    --text: #dde4f0;
-    --text-dim: #7a8aaa;
+  .crumbs{font-size:13px;font-weight:600;color:var(--text-dim);display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+  .crumbs a{color:var(--primary);text-decoration:none}
+  .crumbs a:hover{text-decoration:underline}
+  .crumbs .sep{color:var(--text-faint)}
+  .crumbs .current{color:var(--text-dim);font-weight:400}
+  .crumbs-top{max-width:1080px;margin:0 auto;padding:18px 24px 0}
 
-    --p0: #f87171;
-    --p0-dim: rgba(248,113,113,0.10);
-    --p0-border: rgba(248,113,113,0.30);
+  .wrap{max-width:1080px;margin:0 auto;padding:0 24px 80px}
 
-    --p1: #fb923c;
-    --p1-dim: rgba(251,146,60,0.10);
-    --p1-border: rgba(251,146,60,0.30);
+  .hero{padding:44px 0 24px;border-bottom:1px solid var(--border);margin-bottom:10px}
+  .hero .tagline{font-family:var(--font-mono);font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.14em;color:var(--rose);margin-bottom:10px}
+  .hero .tagline::before{content:'';display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--rose);margin-right:8px}
+  .hero h1{font-size:52px;line-height:1.0;letter-spacing:-0.03em;font-weight:800;
+    background:linear-gradient(135deg,var(--primary),var(--metric));-webkit-background-clip:text;background-clip:text;color:transparent}
+  .hero .lede{font-size:19px;line-height:1.5;color:var(--text-dim);max-width:920px;margin-top:14px}
+  .hero .lede b{color:var(--text)}
+  .herometa{font-family:var(--font-mono);font-size:11px;letter-spacing:.04em;color:var(--text-faint);margin-top:10px}
 
-    --p2: #fbbf24;
-    --p2-dim: rgba(251,191,36,0.10);
-    --p2-border: rgba(251,191,36,0.30);
+  .sec{margin-top:22px}
+  .sec-head{display:flex;align-items:baseline;gap:14px;padding-bottom:10px;border-bottom:1px solid var(--border);margin-bottom:10px}
+  .sec-num{font-size:23px;font-weight:800;color:var(--primary);font-family:var(--font-mono)}
+  .sec-title{font-size:23px;font-weight:800;color:var(--text);letter-spacing:-0.01em}
+  .sec-count{margin-left:auto;font-family:var(--font-mono);font-size:10px;letter-spacing:.04em;color:var(--text-faint);white-space:nowrap;font-weight:700}
+  .sec-body p{max-width:920px;margin-bottom:12px;color:var(--text-dim)}
+  .sec-body p b,.sec-body strong{color:var(--text)}
+  .sec-body p.nb{margin-bottom:0}
+  .sec-body ul{padding-left:1.3em;margin:2px 0 10px;color:var(--text-dim)}
+  code{font-family:var(--font-mono);font-size:0.84em;color:var(--primary)}
+  .close{margin-top:16px;border-top:1px solid var(--border);padding-top:14px;font-size:14px;line-height:1.6;color:var(--text-dim);max-width:920px}
+  .close b{color:var(--text)}
 
-    --green: #4ade80;
-    --green-dim: rgba(74,222,128,0.10);
-    --blue: #60a5fa;
-    --blue-dim: rgba(96,165,250,0.10);
+  .pmap{padding:14px 4px;border-top:1px solid var(--border);display:grid;grid-template-columns:240px 1fr;gap:4px 28px;align-items:baseline}
+  .pmap:first-of-type{border-top:none}
+  .pmap .pm-k{font-family:var(--font-mono);font-size:11.5px;font-weight:800;text-transform:uppercase;letter-spacing:.08em;color:var(--blue);line-height:1.5}
+  .pmap .pm-k .ord{display:block;color:var(--primary);font-weight:700;font-size:10px;letter-spacing:.16em;margin-bottom:3px}
+  .pmap .pm-b{font-size:14.5px;line-height:1.6;color:var(--text-dim)}
+  .pmap .pm-b .tt{font-weight:800;color:var(--text);font-size:16px}
+  .pmap .pm-b b,.pmap .pm-b strong{color:var(--text)}
+  .pmap.i-vio .pm-k{color:var(--violet)}
+  .pmap.i-teal .pm-k{color:var(--metric)}
+  .pmap.i-amb .pm-k{color:var(--amber)}
+  .pmap.i-rose .pm-k{color:var(--rose)}
+  .pmap.i-acc .pm-k{color:var(--primary)}
+  .branch{font-size:13px;line-height:1.5;padding:1px 0}
+  .branch .bk{font-family:var(--font-mono);font-size:10.5px;font-weight:700;margin-right:8px}
+  .branch.blue .bk{color:var(--blue)}
+  .branch.teal .bk{color:var(--metric)}
+  .branch.vio .bk{color:var(--violet)}
+  .opt{color:var(--rose);font-weight:700}
 
-    --accent: #818cf8;
-    --accent-dim: rgba(129,140,248,0.10);
-  }
+  table.tbl{width:100%;border-collapse:collapse;margin:2px 0 4px}
+  .tbl th{text-align:left;font-family:var(--font-mono);font-size:10px;font-weight:700;color:var(--text-faint);padding:6px 14px 8px 0;border-bottom:2px solid var(--border-bright);letter-spacing:.04em;text-transform:uppercase}
+  .tbl td{padding:9px 14px 9px 0;border-bottom:1px solid var(--border);vertical-align:top;font-size:13px;line-height:1.5;color:var(--text-dim)}
+  .tbl tr:last-child td{border-bottom:none}
+  .tbl td.f{font-weight:700;color:var(--text);width:40%}
+  .tbl td.src code{font-size:0.92em;color:var(--metric)}
 
-  @media (prefers-color-scheme: light) {
-    :root {
-      --bg: #f0f2f8;
-      --surface: #ffffff;
-      --surface2: #eef1f9;
-      --surface-elevated: #e8ecf6;
-      --border: rgba(0,0,0,0.08);
-      --border-bright: rgba(0,0,0,0.14);
-      --text: #1a2035;
-      --text-dim: #5a6480;
-      --p0: #dc2626;
-      --p0-dim: rgba(220,38,38,0.07);
-      --p0-border: rgba(220,38,38,0.25);
-      --p1: #c2410c;
-      --p1-dim: rgba(194,65,12,0.07);
-      --p1-border: rgba(194,65,12,0.25);
-      --p2: #b45309;
-      --p2-dim: rgba(180,83,9,0.07);
-      --p2-border: rgba(180,83,9,0.25);
-    }
-  }
+  .footer{margin-top:30px;border-top:1px solid var(--border);padding:18px 0 0;display:flex;justify-content:space-between;gap:20px;flex-wrap:wrap;font-family:var(--font-mono);font-size:12px;color:var(--text-faint)}
+  .footer a{color:var(--primary);text-decoration:none}
+  .footer a:hover{text-decoration:underline}
 
-  /* ============ RESET ============ */
-  * { margin: 0; padding: 0; box-sizing: border-box; }
-  body {
-    background: var(--bg);
-    background-image:
-      radial-gradient(ellipse at 10% 0%, var(--p0-dim) 0%, transparent 45%),
-      radial-gradient(ellipse at 90% 80%, var(--accent-dim) 0%, transparent 40%),
-      radial-gradient(circle, rgba(255,255,255,0.02) 1px, transparent 1px);
-    background-size: auto, auto, 28px 28px;
-    color: var(--text);
-    font-family: var(--font-body);
-    padding: 48px 32px;
-    min-height: 100vh;
-    overflow-wrap: break-word;
+  @media(max-width:900px){
+    .wrap{padding:0 16px 60px}
+    .hero h1{font-size:38px}
+    .pmap{grid-template-columns:1fr;gap:3px}
+    body{font-size:16px}
   }
-
-  /* ============ ANIMATIONS ============ */
-  @keyframes fadeUp {
-    from { opacity: 0; transform: translateY(12px); }
-    to { opacity: 1; transform: translateY(0); }
-  }
-  @keyframes fadeScale {
-    from { opacity: 0; transform: scale(0.92); }
-    to { opacity: 1; transform: scale(1); }
-  }
-  .ani { animation: fadeUp 0.4s ease-out both; animation-delay: calc(var(--i,0) * 0.05s); }
-  .ani-scale { animation: fadeScale 0.35s ease-out both; animation-delay: calc(var(--i,0) * 0.06s); }
-  @media (prefers-reduced-motion: reduce) {
-    *, *::before, *::after { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; }
-  }
-
-  /* ============ LAYOUT ============ */
-  .container { max-width: 1080px; margin: 0 auto; }
-
-  /* ============ HEADER ============ */
-  .page-header { margin-bottom: 36px; }
-  .status-chip {
-    display: inline-flex; align-items: center; gap: 6px;
-    font-family: var(--font-mono); font-size: 10px; font-weight: 600;
-    text-transform: uppercase; letter-spacing: 1.5px;
-    background: var(--p0-dim); color: var(--p0);
-    border: 1px solid var(--p0-border);
-    padding: 4px 12px; border-radius: 100px; margin-bottom: 14px;
-  }
-  .status-chip::before {
-    content: ''; width: 6px; height: 6px; border-radius: 50%;
-    background: var(--p0); animation: pulse 1.8s ease-in-out infinite;
-  }
-  @keyframes pulse {
-    0%, 100% { opacity: 1; } 50% { opacity: 0.3; }
-  }
-  h1 {
-    font-size: 36px; font-weight: 700; letter-spacing: -0.5px;
-    line-height: 1.15; margin-bottom: 8px;
-  }
-  .subtitle {
-    font-family: var(--font-mono); font-size: 12px; color: var(--text-dim);
-  }
-
-  /* ============ KPI ROW ============ */
-  .kpi-row {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
-    gap: 12px; margin-bottom: 36px;
-  }
-  .kpi-card {
-    background: var(--surface-elevated);
-    border: 1px solid var(--border);
-    border-radius: 10px; padding: 20px 18px;
-    box-shadow: 0 2px 10px rgba(0,0,0,0.15);
-  }
-  .kpi-card__value {
-    font-size: 34px; font-weight: 700; letter-spacing: -1px; line-height: 1;
-    font-variant-numeric: tabular-nums;
-  }
-  .kpi-card__label {
-    font-family: var(--font-mono); font-size: 10px; font-weight: 600;
-    text-transform: uppercase; letter-spacing: 1.2px;
-    color: var(--text-dim); margin-top: 7px;
-  }
-
-  /* ============ SECTION HEADING ============ */
-  .section-heading {
-    font-family: var(--font-mono); font-size: 11px; font-weight: 600;
-    text-transform: uppercase; letter-spacing: 2px; color: var(--text-dim);
-    margin-bottom: 14px; margin-top: 32px;
-    display: flex; align-items: center; gap: 10px;
-  }
-  .section-heading::after {
-    content: ''; flex: 1; height: 1px; background: var(--border);
-  }
-
-  /* ============ FIX CARD ============ */
-  .fix-card {
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: 12px; margin-bottom: 12px;
-    overflow: hidden;
-    transition: border-color 0.2s ease, box-shadow 0.2s ease;
-  }
-  .fix-card:hover { box-shadow: 0 4px 20px rgba(0,0,0,0.2); }
-
-  .fix-card--p0 { border-left: 3px solid var(--p0); }
-  .fix-card--p0:hover { border-color: var(--p0); }
-  .fix-card--p1 { border-left: 3px solid var(--p1); }
-  .fix-card--p1:hover { border-color: var(--p1); }
-  .fix-card--p2 { border-left: 3px solid var(--p2); }
-  .fix-card--p2:hover { border-color: var(--p2); }
-
-  /* Header row inside card */
-  .fix-header {
-    padding: 18px 20px; cursor: pointer;
-    display: flex; align-items: flex-start; gap: 14px;
-    user-select: none;
-  }
-
-  .fix-number {
-    font-family: var(--font-mono); font-size: 11px; font-weight: 600;
-    color: var(--text-dim); min-width: 28px; margin-top: 2px; flex-shrink: 0;
-  }
-
-  .fix-title-wrap { flex: 1; min-width: 0; }
-  .fix-title {
-    font-size: 15px; font-weight: 600; line-height: 1.3; margin-bottom: 4px;
-  }
-  .fix-meta {
-    display: flex; align-items: center; gap: 8px; flex-wrap: wrap;
-  }
-
-  /* Priority badge */
-  .badge {
-    font-family: var(--font-mono); font-size: 10px; font-weight: 700;
-    padding: 2px 9px; border-radius: 5px; letter-spacing: 0.5px;
-    flex-shrink: 0;
-  }
-  .badge--p0 { background: var(--p0-dim); color: var(--p0); border: 1px solid var(--p0-border); }
-  .badge--p1 { background: var(--p1-dim); color: var(--p1); border: 1px solid var(--p1-border); }
-  .badge--p2 { background: var(--p2-dim); color: var(--p2); border: 1px solid var(--p2-border); }
-
-  .fix-category {
-    font-family: var(--font-mono); font-size: 10px; color: var(--text-dim);
-    letter-spacing: 0.3px;
-  }
-
-  /* Chevron toggle */
-  .fix-chevron {
-    font-size: 12px; color: var(--text-dim); flex-shrink: 0;
-    transition: transform 0.2s ease; margin-top: 3px;
-  }
-  details[open] .fix-chevron { transform: rotate(90deg); }
-
-  /* Body */
-  .fix-body {
-    padding: 0 20px 20px 62px;
-    font-size: 13.5px; line-height: 1.65; color: var(--text-dim);
-    border-top: 1px solid var(--border);
-  }
-
-  .fix-body summary { display: none; } /* hide default details summary */
-
-  .fix-row {
-    display: grid;
-    grid-template-columns: 120px 1fr;
-    gap: 8px 16px; margin-top: 14px;
-  }
-  .fix-row > * { min-width: 0; }
-
-  .fix-label {
-    font-family: var(--font-mono); font-size: 10px; font-weight: 600;
-    text-transform: uppercase; letter-spacing: 1px;
-    color: var(--text-dim); padding-top: 2px; flex-shrink: 0;
-  }
-  .fix-value { color: var(--text); font-size: 13px; line-height: 1.6; }
-  .fix-value strong { color: var(--text); font-weight: 600; }
-  .fix-value p { margin-top: 6px; }
-  .fix-value p:first-child { margin-top: 0; }
-
-  code {
-    font-family: var(--font-mono); font-size: 11.5px;
-    background: var(--accent-dim); color: var(--accent);
-    padding: 1px 6px; border-radius: 4px;
-  }
-
-  /* File path chip */
-  .filepath {
-    display: inline-flex; align-items: center; gap: 5px;
-    font-family: var(--font-mono); font-size: 11px;
-    background: var(--surface2); color: var(--blue);
-    border: 1px solid var(--border); border-radius: 6px;
-    padding: 3px 10px; margin-top: 4px;
-  }
-  .filepath::before {
-    content: '⌁'; font-size: 12px; opacity: 0.7;
-  }
-
-  /* Code diff block */
-  .diff-block {
-    background: var(--bg); border: 1px solid var(--border);
-    border-radius: 8px; overflow: hidden; margin-top: 10px;
-  }
-  .diff-block__header {
-    font-family: var(--font-mono); font-size: 10px; font-weight: 600;
-    padding: 6px 12px; border-bottom: 1px solid var(--border);
-    color: var(--text-dim); display: flex; gap: 12px;
-  }
-  .diff-block pre {
-    padding: 10px 12px; font-family: var(--font-mono);
-    font-size: 11.5px; line-height: 1.7; overflow-x: auto;
-    white-space: pre-wrap; word-break: break-word;
-  }
-  .diff-del { color: var(--p0); background: var(--p0-dim); display: block; border-radius: 2px; }
-  .diff-add { color: var(--green); background: var(--green-dim); display: block; border-radius: 2px; }
-  .diff-ctx { color: var(--text-dim); display: block; }
-
-  /* Fix list */
-  .fix-list {
-    list-style: none; padding: 0; margin-top: 8px;
-  }
-  .fix-list li {
-    padding: 3px 0 3px 16px; position: relative;
-    font-size: 13px; color: var(--text);
-  }
-  .fix-list li::before {
-    content: '›'; position: absolute; left: 0;
-    color: var(--text-dim); font-weight: 700;
-  }
-
-  /* ============ SUMMARY TABLE ============ */
-  .table-wrap {
-    background: var(--surface); border: 1px solid var(--border);
-    border-radius: 12px; overflow: hidden; margin-top: 16px;
-  }
-  .table-scroll { overflow-x: auto; -webkit-overflow-scrolling: touch; }
-  .data-table {
-    width: 100%; border-collapse: collapse; font-size: 13px; line-height: 1.5;
-  }
-  .data-table thead { position: sticky; top: 0; z-index: 2; }
-  .data-table th {
-    background: var(--surface2);
-    font-family: var(--font-mono); font-size: 10px; font-weight: 600;
-    text-transform: uppercase; letter-spacing: 1.2px; color: var(--text-dim);
-    text-align: left; padding: 12px 16px;
-    border-bottom: 2px solid var(--border-bright); white-space: nowrap;
-  }
-  .data-table td {
-    padding: 11px 16px; border-bottom: 1px solid var(--border); vertical-align: middle;
-  }
-  .data-table tbody tr:last-child td { border-bottom: none; }
-  .data-table tbody tr:nth-child(even) { background: rgba(255,255,255,0.02); }
-  .data-table tbody tr { transition: background 0.12s ease; }
-  .data-table tbody tr:hover { background: var(--surface-elevated); }
-  .data-table tfoot td {
-    background: var(--surface2); font-weight: 600;
-    font-family: var(--font-mono); font-size: 11px;
-    border-top: 2px solid var(--border-bright); border-bottom: none;
-    padding: 12px 16px;
-  }
-
-  /* Effort badge */
-  .effort {
-    font-family: var(--font-mono); font-size: 11px; font-weight: 600;
-    padding: 2px 8px; border-radius: 5px;
-  }
-  .effort--s { background: var(--green-dim); color: var(--green); }
-  .effort--m { background: var(--p1-dim); color: var(--p1); }
-  .effort--l { background: var(--p0-dim); color: var(--p0); }
-
-  /* ============ RESPONSIVE ============ */
-  @media (max-width: 768px) {
-    body { padding: 20px 16px; }
-    h1 { font-size: 26px; }
-    .fix-row { grid-template-columns: 1fr; gap: 4px; }
-    .fix-label { padding-top: 0; }
-    .fix-body { padding-left: 20px; }
-    .kpi-card__value { font-size: 26px; }
-  }
-.backlink{position:fixed;top:12px;left:16px;z-index:200;font-family:var(--font-mono,monospace);font-size:11px;color:var(--text-dim,#8b949e);text-decoration:none;padding:6px 10px;border:1px solid var(--border,rgba(255,255,255,0.08));border-radius:6px;background:var(--surface,#161b22);transition:color .15s,border-color .15s}.backlink:hover{color:var(--text,#e6edf3);border-color:var(--text-dim,#8b949e)}
+  @media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+<style>
+  .chip{display:inline-block;font-family:var(--font-mono);font-size:10px;font-weight:800;padding:1px 8px;border-radius:999px;letter-spacing:.04em}
+  .chip.r{color:var(--rose);background:var(--rose-dim)}
+  .chip.a{color:var(--amber);background:var(--amber-dim)}
+  .chip.t{color:var(--metric);background:var(--metric-dim)}
+  .chip.b{color:var(--blue);background:var(--blue-dim)}
+  .chip.pri{color:var(--primary);background:var(--primary-dim)}
+  .diff{font-family:var(--font-mono);font-size:12px;background:var(--surface2);border:1px solid var(--border);padding:12px 14px;border-radius:8px;overflow-x:auto;line-height:1.7;margin:8px 0;white-space:pre}
+  .diff .d{color:var(--rose)}
+  .diff .a{color:var(--metric)}
+  .diff .ctx{color:var(--text-dim)}
+  .filep{font-family:var(--font-mono);font-size:12px;color:var(--blue)}
+  @media(max-width:900px){.diff{white-space:pre-wrap;word-break:break-word}}
 </style>
 </head>
 <body>
-<style>
-.crumbs-at-top{max-width:1100px;margin:0 auto;padding:14px 24px 0}
-.crumbs{font-family:var(--font-mono,monospace);font-size:13px;font-weight:600;display:flex;align-items:center;gap:8px;flex-wrap:wrap;min-width:0}
-.crumbs a{color:var(--accent);text-decoration:none}
-.crumbs a:hover,.crumbs a:focus-visible{text-decoration:underline;outline:none}
-.crumbs .sep{color:var(--text-dim)}
-.crumbs .current{color:var(--text-dim);font-weight:400}
-</style>
-<nav class="crumbs crumbs-at-top" aria-label="Breadcrumb">
-  <a href="../../index.html">Index</a>
-  <span class="sep">/</span>
-  <span class="current" aria-current="page">Solomon Engine Critical Fixes Plan</span>
-</nav>
 
-<div class="container">
-
-  <!-- HEADER -->
-  <header class="page-header ani" style="--i:0">
-    <div class="status-chip">Critical Revisions Required</div>
-    <h1>Solomon Engine<br>Critical Fixes Plan</h1>
-    <p class="subtitle">Post Stress-Test · Testers: Menchie Lobo, Niharika Arun · April 22, 2026</p>
-  </header>
-
-  <!-- KPI SUMMARY -->
-  <div class="kpi-row">
-    <div class="kpi-card ani-scale" style="--i:1">
-      <div class="kpi-card__value">11</div>
-      <div class="kpi-card__label">Total Fixes</div>
-    </div>
-    <div class="kpi-card ani-scale" style="--i:2">
-      <div class="kpi-card__value" style="color:var(--p0)">5</div>
-      <div class="kpi-card__label">P0 Critical</div>
-    </div>
-    <div class="kpi-card ani-scale" style="--i:3">
-      <div class="kpi-card__value" style="color:var(--p1)">5</div>
-      <div class="kpi-card__label">P1 Serious</div>
-    </div>
-    <div class="kpi-card ani-scale" style="--i:4">
-      <div class="kpi-card__value" style="color:var(--p2)">1</div>
-      <div class="kpi-card__label">P2 Audit</div>
-    </div>
-    <div class="kpi-card ani-scale" style="--i:5">
-      <div class="kpi-card__value" style="color:var(--green)">3</div>
-      <div class="kpi-card__label">Files Affected</div>
-    </div>
-  </div>
-
-  <!-- SECTION 1: SCORING & PROGRESS -->
-  <div class="section-heading ani" style="--i:6">Scoring &amp; Progress Logic</div>
-
-  <!-- FIX 1 -->
-  <details class="fix-card fix-card--p0 ani" style="--i:7" open>
-    <summary class="fix-header">
-      <span class="fix-number">#1</span>
-      <div class="fix-title-wrap">
-        <div class="fix-title">False "All Done!" at Low Scores</div>
-        <div class="fix-meta">
-          <span class="badge badge--p0">P0</span>
-          <span class="fix-category">Scoring · Backend</span>
-        </div>
-      </div>
-      <span class="fix-chevron">▸</span>
-    </summary>
-    <div class="fix-body">
-      <div class="fix-row">
-        <span class="fix-label">Issue</span>
-        <div class="fix-value">System shows green checkmark and "All Done!" even when score is 2–35%, misleading users into thinking they've completed the interview.</div>
-      </div>
-      <div class="fix-row">
-        <span class="fix-label">Root Cause</span>
-        <div class="fix-value">Backend completion threshold was deliberately lowered to <code>≥ 1%</code> for testing and was <strong>never restored</strong>. Comment in code even says so.</div>
-      </div>
-      <div class="fix-row">
-        <span class="fix-label">File</span>
-        <div class="fix-value">
-          <div class="filepath">backend/api/routes/interviews.py · line 468</div>
-        </div>
-      </div>
-      <div class="fix-row">
-        <span class="fix-label">Change</span>
-        <div class="fix-value">
-          <div class="diff-block">
-            <div class="diff-block__header"><span>interviews.py:468</span></div>
-            <pre><span class="diff-del">- s.get("segment_completeness_score", 0) >= 1  # Lowered to 1% for testing</span>
-<span class="diff-add">+ s.get("segment_completeness_score", 0) >= 70  # Align with frontend threshold</span></pre>
-          </div>
-          Also aligns with the frontend's existing <code>score >= 70</code> check in <code>CompletenessResult.tsx:30</code>.
-        </div>
-      </div>
-    </div>
-  </details>
-
-  <!-- FIX 2 -->
-  <details class="fix-card fix-card--p0 ani" style="--i:8">
-    <summary class="fix-header">
-      <span class="fix-number">#2</span>
-      <div class="fix-title-wrap">
-        <div class="fix-title">"Continue Anyway" Never Appears on Last Segment</div>
-        <div class="fix-meta">
-          <span class="badge badge--p0">P0</span>
-          <span class="fix-category">Scoring · Frontend</span>
-        </div>
-      </div>
-      <span class="fix-chevron">▸</span>
-    </summary>
-    <div class="fix-body">
-      <div class="fix-row">
-        <span class="fix-label">Issue</span>
-        <div class="fix-value">Users trapped in "Needs More Detail" retry loop indefinitely on Segment 2 — the escape button is coded to never appear on the last segment.</div>
-      </div>
-      <div class="fix-row">
-        <span class="fix-label">Root Cause</span>
-        <div class="fix-value">Condition is <code>retryCount >= 3 &amp;&amp; !isLastSegment</code>. The <code>!isLastSegment</code> guard intentionally prevents the button on Segment 2 — the intent was likely to force completion, but instead it creates an inescapable trap.</div>
-      </div>
-      <div class="fix-row">
-        <span class="fix-label">File</span>
-        <div class="fix-value">
-          <div class="filepath">frontend/components/CompletenessResult.tsx · lines 211–221</div>
-        </div>
-      </div>
-      <div class="fix-row">
-        <span class="fix-label">Change</span>
-        <div class="fix-value">
-          <div class="diff-block">
-            <div class="diff-block__header"><span>CompletenessResult.tsx:211</span></div>
-            <pre><span class="diff-del">- {retryCount >= 3 && !isLastSegment && (</span>
-<span class="diff-add">+ {retryCount >= 3 && (</span>
-<span class="diff-ctx">    &lt;button onClick={onProceed}&gt;</span>
-<span class="diff-del">-     Continue Anyway</span>
-<span class="diff-add">+     {isLastSegment ? "Submit Anyway" : "Continue Anyway"}</span>
-<span class="diff-ctx">    &lt;/button&gt;</span>
-<span class="diff-ctx">  )}</span></pre>
-          </div>
-        </div>
-      </div>
-    </div>
-  </details>
-
-  <!-- FIX 3 -->
-  <details class="fix-card fix-card--p1 ani" style="--i:9">
-    <summary class="fix-header">
-      <span class="fix-number">#3</span>
-      <div class="fix-title-wrap">
-        <div class="fix-title">Skipped Questions Penalize Score</div>
-        <div class="fix-meta">
-          <span class="badge badge--p1">P1</span>
-          <span class="fix-category">Scoring · Backend</span>
-        </div>
-      </div>
-      <span class="fix-chevron">▸</span>
-    </summary>
-    <div class="fix-body">
-      <div class="fix-row">
-        <span class="fix-label">Issue</span>
-        <div class="fix-value">Skipped answers count as 0 against the full denominator, making it impossible to score 100% if any question was skipped — unfairly punishes valid "skip/pass" responses.</div>
-      </div>
-      <div class="fix-row">
-        <span class="fix-label">Root Cause</span>
-        <div class="fix-value"><code>calculate_segment_completeness()</code> evaluates the transcript against all target categories regardless of whether questions were actually asked/answered.</div>
-      </div>
-      <div class="fix-row">
-        <span class="fix-label">File</span>
-        <div class="fix-value">
-          <div class="filepath">backend/services/interview_segments.py · lines 450–530</div>
-        </div>
-      </div>
-      <div class="fix-row">
-        <span class="fix-label">Change</span>
-        <div class="fix-value">
-          <ul class="fix-list">
-            <li>Track skipped categories in segment data (skip detection already exists in prompts)</li>
-            <li>Pass <code>skipped_categories</code> as an argument to <code>calculate_segment_completeness()</code></li>
-            <li>Filter skipped categories from the denominator before Claude evaluates completeness</li>
-            <li>Store <code>skipped_categories</code> as a JSON column on the <code>interview_segments</code> table for auditability</li>
-          </ul>
-        </div>
-      </div>
-    </div>
-  </details>
-
-  <!-- SECTION 2: CONVERSATION CONTROL -->
-  <div class="section-heading ani" style="--i:10">Conversation Control</div>
-
-  <!-- FIX 4 -->
-  <details class="fix-card fix-card--p0 ani" style="--i:11">
-    <summary class="fix-header">
-      <span class="fix-number">#4</span>
-      <div class="fix-title-wrap">
-        <div class="fix-title">Silence Detection Fires at 11s (Should Be 15s)</div>
-        <div class="fix-meta">
-          <span class="badge badge--p0">P0</span>
-          <span class="fix-category">Conversation · ElevenLabs Config</span>
-        </div>
-      </div>
-      <span class="fix-chevron">▸</span>
-    </summary>
-    <div class="fix-body">
-      <div class="fix-row">
-        <span class="fix-label">Issue</span>
-        <div class="fix-value">"Are you there?" prompt fires at 11 seconds — too aggressive, interrupts users who are thinking or taking a breath mid-answer.</div>
-      </div>
-      <div class="fix-row">
-        <span class="fix-label">Root Cause</span>
-        <div class="fix-value">This is <strong>ElevenLabs server-side VAD</strong> (Voice Activity Detection), not the frontend 30s/45s constants (those control the auto-end banner only). The ElevenLabs agent has its own inactivity prompt timer set independently on the dashboard.</div>
-      </div>
-      <div class="fix-row">
-        <span class="fix-label">File</span>
-        <div class="fix-value">
-          <div class="filepath">ElevenLabs Agent Dashboard — both Segment 1 &amp; 2 agents</div>
-          <div class="filepath">backend/services/interview_segments.py · lines 100, 162</div>
-        </div>
-      </div>
-      <div class="fix-row">
-        <span class="fix-label">Change</span>
-        <div class="fix-value">
-          <ul class="fix-list">
-            <li><strong>(Dashboard)</strong> ElevenLabs agent → Conversation settings → increase inactivity prompt delay from ~11s to <strong>15s</strong> for both agents</li>
-            <li><strong>(System prompt)</strong> Add to both segment system prompts: <em>"Do not prompt the user if they pause. Wait at least 15 seconds of silence before checking in."</em></li>
-          </ul>
-        </div>
-      </div>
-    </div>
-  </details>
-
-  <!-- FIX 5 -->
-  <details class="fix-card fix-card--p0 ani" style="--i:12">
-    <summary class="fix-header">
-      <span class="fix-number">#5</span>
-      <div class="fix-title-wrap">
-        <div class="fix-title">Zombie Sessions — Auto-End Non-Functional</div>
-        <div class="fix-meta">
-          <span class="badge badge--p0">P0</span>
-          <span class="fix-category">Conversation · Frontend</span>
-        </div>
-      </div>
-      <span class="fix-chevron">▸</span>
-    </summary>
-    <div class="fix-body">
-      <div class="fix-row">
-        <span class="fix-label">Issue</span>
-        <div class="fix-value">When silence persists for 30–45s the session should auto-end, but it doesn't — creating infinite "zombie" loops the user can't escape.</div>
-      </div>
-      <div class="fix-row">
-        <span class="fix-label">Root Cause</span>
-        <div class="fix-value"><code>MIN_CONVERSATION_AGE = 5 * 60 * 1000</code> (5 minutes) — silence detection is <strong>completely disabled</strong> for the first 5 minutes of a session. If a session stalls before that mark, auto-end can never trigger.</div>
-      </div>
-      <div class="fix-row">
-        <span class="fix-label">File</span>
-        <div class="fix-value">
-          <div class="filepath">frontend/components/SegmentedVoiceInterview.tsx · lines 38–40, 441–488</div>
-        </div>
-      </div>
-      <div class="fix-row">
-        <span class="fix-label">Change</span>
-        <div class="fix-value">
-          <div class="diff-block">
-            <div class="diff-block__header"><span>SegmentedVoiceInterview.tsx:41</span></div>
-            <pre><span class="diff-del">- const MIN_CONVERSATION_AGE = 5 * 60 * 1000; // 5 min minimum before auto-end triggers</span>
-<span class="diff-add">+ const MIN_CONVERSATION_AGE = 90 * 1000; // 90s minimum — enough to prevent false triggers at start</span></pre>
-          </div>
-          Also add a WebSocket error handler: if the ElevenLabs connection drops or errors, call <code>endSegment()</code> automatically rather than leaving the user in a blank session.
-        </div>
-      </div>
-    </div>
-  </details>
-
-  <!-- FIX 6 -->
-  <details class="fix-card fix-card--p1 ani" style="--i:13">
-    <summary class="fix-header">
-      <span class="fix-number">#6</span>
-      <div class="fix-title-wrap">
-        <div class="fix-title">Premature Termination — Tools &amp; Frameworks Never Reached</div>
-        <div class="fix-meta">
-          <span class="badge badge--p1">P1</span>
-          <span class="fix-category">Conversation · System Prompts</span>
-        </div>
-      </div>
-      <span class="fix-chevron">▸</span>
-    </summary>
-    <div class="fix-body">
-      <div class="fix-row">
-        <span class="fix-label">Issue</span>
-        <div class="fix-value">Segments end after only 3–4 questions, missing entire categories like "Tools" and "Frameworks" which appear later in the script.</div>
-      </div>
-      <div class="fix-row">
-        <span class="fix-label">Root Cause</span>
-        <div class="fix-value">Likely one of two causes: (a) ElevenLabs agent dashboard has a max-turn or max-duration limit set too low, or (b) the <code>SEGMENT_COMPLETE</code> signal in the system prompt is being triggered too aggressively before all categories are covered.</div>
-      </div>
-      <div class="fix-row">
-        <span class="fix-label">File</span>
-        <div class="fix-value">
-          <div class="filepath">backend/services/interview_segments.py · lines 46–173 (both segment prompts)</div>
-          <div class="filepath">ElevenLabs Agent Dashboard — check max turn / max duration settings</div>
-        </div>
-      </div>
-      <div class="fix-row">
-        <span class="fix-label">Change</span>
-        <div class="fix-value">
-          <ul class="fix-list">
-            <li>Add to both system prompts: <em>"You MUST cover ALL of the following topics before signaling completion: [enumerate all categories]. Do not send the completion signal until every topic has been addressed at least once."</em></li>
-            <li>Audit ElevenLabs agent dashboard for any max-turn or max-duration settings; increase or remove them</li>
-            <li>Add a backend guard in the webhook handler: reject <code>SEGMENT_COMPLETE</code> signals if fewer than N categories appear in the transcript</li>
-          </ul>
-        </div>
-      </div>
-    </div>
-  </details>
-
-  <!-- FIX 7 -->
-  <details class="fix-card fix-card--p1 ani" style="--i:14">
-    <summary class="fix-header">
-      <span class="fix-number">#7</span>
-      <div class="fix-title-wrap">
-        <div class="fix-title">Language Guardrail Broken — Hindi / Tagalog Drift</div>
-        <div class="fix-meta">
-          <span class="badge badge--p1">P1</span>
-          <span class="fix-category">Conversation · System Prompts</span>
-        </div>
-      </div>
-      <span class="fix-chevron">▸</span>
-    </summary>
-    <div class="fix-body">
-      <div class="fix-row">
-        <span class="fix-label">Issue</span>
-        <div class="fix-value">System ignored Tagalog input, then actively switched to Hindi, and refused to switch back even when the user corrected it in English.</div>
-      </div>
-      <div class="fix-row">
-        <span class="fix-label">Root Cause</span>
-        <div class="fix-value">The English-only directive exists in <code>interview_segments.py</code> at lines 100 and 162, but the <strong>live ElevenLabs agents on the dashboard may have outdated prompts</strong> that predate this guardrail. Code in repo ≠ what's deployed.</div>
-      </div>
-      <div class="fix-row">
-        <span class="fix-label">File</span>
-        <div class="fix-value">
-          <div class="filepath">backend/services/interview_segments.py · lines 100, 162</div>
-          <div class="filepath">ElevenLabs Agent Dashboard — verify live system prompts match code</div>
-        </div>
-      </div>
-      <div class="fix-row">
-        <span class="fix-label">Change</span>
-        <div class="fix-value">
-          <ul class="fix-list">
-            <li>Re-sync both agent system prompts to ElevenLabs dashboard — they may have drifted</li>
-            <li>Move the English-only rule to the <strong>first line</strong> of both system prompts (currently buried at the end where the model may deprioritize it)</li>
-            <li>Strengthen the directive to: <em>"CRITICAL: Conduct this entire interview in English only. If the user responds in any other language, immediately reply in English only. Do not acknowledge, mirror, or switch to their language under any circumstances."</em></li>
-          </ul>
-        </div>
-      </div>
-    </div>
-  </details>
-
-  <!-- SECTION 3: UI/UX -->
-  <div class="section-heading ani" style="--i:15">UI / UX Breakdowns</div>
-
-  <!-- FIX 8 -->
-  <details class="fix-card fix-card--p0 ani" style="--i:16">
-    <summary class="fix-header">
-      <span class="fix-number">#8</span>
-      <div class="fix-title-wrap">
-        <div class="fix-title">Results Screen Flashes 2s or Fails to Load</div>
-        <div class="fix-meta">
-          <span class="badge badge--p0">P0</span>
-          <span class="fix-category">UI/UX · Frontend</span>
-        </div>
-      </div>
-      <span class="fix-chevron">▸</span>
-    </summary>
-    <div class="fix-body">
-      <div class="fix-row">
-        <span class="fix-label">Issue</span>
-        <div class="fix-value">After segment completion, the results screen either flashes for ~2 seconds then vanishes, or fails to load entirely, leaving users stranded on a blank screen.</div>
-      </div>
-      <div class="fix-row">
-        <span class="fix-label">Root Cause</span>
-        <div class="fix-value">The code has no auto-dismiss timer — but a <strong>race condition</strong> exists: the component polls for completion, renders the results screen, then a subsequent state update (from a still-running poll interval) transitions the component away from the results view. The poll interval is not stopped when results are shown.</div>
-      </div>
-      <div class="fix-row">
-        <span class="fix-label">File</span>
-        <div class="fix-value">
-          <div class="filepath">frontend/components/SegmentedVoiceInterview.tsx · lines 603+, 792–809</div>
-        </div>
-      </div>
-      <div class="fix-row">
-        <span class="fix-label">Change</span>
-        <div class="fix-value">
-          <ul class="fix-list">
-            <li>Add a <code>resultsLocked</code> boolean state — set to <code>true</code> the moment completion data is received</li>
-            <li>When <code>resultsLocked === true</code>, stop all polling intervals immediately (in the state update's effect)</li>
-            <li>Results view should only unmount when user explicitly clicks "Continue to Next Segment" or "Redo" — never from a background state transition</li>
-            <li>Add <code>useEffect</code> cleanup on the polling interval that runs when the results view becomes visible</li>
-          </ul>
-        </div>
-      </div>
-    </div>
-  </details>
-
-  <!-- FIX 9 -->
-  <details class="fix-card fix-card--p1 ani" style="--i:17">
-    <summary class="fix-header">
-      <span class="fix-number">#9</span>
-      <div class="fix-title-wrap">
-        <div class="fix-title">"End Segment" Button Disappears During Transitions</div>
-        <div class="fix-meta">
-          <span class="badge badge--p1">P1</span>
-          <span class="fix-category">UI/UX · Frontend</span>
-        </div>
-      </div>
-      <span class="fix-chevron">▸</span>
-    </summary>
-    <div class="fix-body">
-      <div class="fix-row">
-        <span class="fix-label">Issue</span>
-        <div class="fix-value">The "End Segment" button appears correctly but vanishes when the AI transitions between topics, trapping users in the session with no exit.</div>
-      </div>
-      <div class="fix-row">
-        <span class="fix-label">Root Cause</span>
-        <div class="fix-value">Button requires <code>lastSpokeAtRef.current !== null</code>. During topic transitions the AI resets its state (or reconnects), which may clear this ref — causing the button to disappear even though the AI had already spoken.</div>
-      </div>
-      <div class="fix-row">
-        <span class="fix-label">File</span>
-        <div class="fix-value">
-          <div class="filepath">frontend/components/SegmentedVoiceInterview.tsx · lines 1227–1237</div>
-        </div>
-      </div>
-      <div class="fix-row">
-        <span class="fix-label">Change</span>
-        <div class="fix-value">
-          <div class="diff-block">
-            <div class="diff-block__header"><span>SegmentedVoiceInterview.tsx:1227</span></div>
-            <pre><span class="diff-del">- {elapsedSeconds >= 180 && lastSpokeAtRef.current !== null && (</span>
-<span class="diff-add">+ {elapsedSeconds >= 180 && hasAISpoken && (  // hasAISpoken: boolean state, set once, never reset</span></pre>
-          </div>
-          Replace the ref check with a persistent <code>hasAISpoken</code> boolean state — set to <code>true</code> the first time the AI speaks, and never reset. Unlike a ref, this guarantees the button stays visible through transitions.
-        </div>
-      </div>
-    </div>
-  </details>
-
-  <!-- FIX 10 -->
-  <details class="fix-card fix-card--p1 ani" style="--i:18">
-    <summary class="fix-header">
-      <span class="fix-number">#10</span>
-      <div class="fix-title-wrap">
-        <div class="fix-title">No Confirmation Emails on Completion</div>
-        <div class="fix-meta">
-          <span class="badge badge--p1">P1</span>
-          <span class="fix-category">UI/UX · Backend / Resend Webhook</span>
-        </div>
-      </div>
-      <span class="fix-chevron">▸</span>
-    </summary>
-    <div class="fix-body">
-      <div class="fix-row">
-        <span class="fix-label">Issue</span>
-        <div class="fix-value">Users receive no confirmation email upon interview completion, leaving them uncertain whether their session was recorded.</div>
-      </div>
-      <div class="fix-row">
-        <span class="fix-label">Root Cause</span>
-        <div class="fix-value">Two compounding issues: (1) Fix #1 is blocking — the <code>all_complete</code> flag never fires correctly due to the 1% threshold, so the email trigger never runs. (2) Even with Fix #1 applied, the Resend webhook is likely gated on <code>status = 'completed'</code> (100% both segments) rather than any "final" session state.</div>
-      </div>
-      <div class="fix-row">
-        <span class="fix-label">File</span>
-        <div class="fix-value">
-          <div class="filepath">backend/api/routes/interviews.py · webhook handlers</div>
-          <div class="filepath">Resend webhook configuration (external)</div>
-        </div>
-      </div>
-      <div class="fix-row">
-        <span class="fix-label">Change</span>
-        <div class="fix-value">
-          <ul class="fix-list">
-            <li><strong>Dependency:</strong> Apply Fix #1 first — this unblocks the completion path</li>
-            <li>Add an explicit Resend email call directly in the <code>all_complete</code> handler in <code>interviews.py</code> — don't rely solely on the webhook which may have conditions we can't easily debug</li>
-            <li>Audit Resend webhook config: change trigger from <code>status = 'completed'</code> to <code>status IN ('completed', 'partially_complete')</code> or on any session state that includes <code>all_complete = true</code></li>
-          </ul>
-        </div>
-      </div>
-    </div>
-  </details>
-
-  <!-- SECTION 4: AUDIT -->
-  <div class="section-heading ani" style="--i:19">Verification &amp; Audit</div>
-
-  <!-- FIX 11 -->
-  <details class="fix-card fix-card--p2 ani" style="--i:20">
-    <summary class="fix-header">
-      <span class="fix-number">#11</span>
-      <div class="fix-title-wrap">
-        <div class="fix-title">Verify Segment 2 Agent Wiring</div>
-        <div class="fix-meta">
-          <span class="badge badge--p2">P2</span>
-          <span class="fix-category">Audit · Config</span>
-        </div>
-      </div>
-      <span class="fix-chevron">▸</span>
-    </summary>
-    <div class="fix-body">
-      <div class="fix-row">
-        <span class="fix-label">Issue</span>
-        <div class="fix-value">Possible that Segment 2 agent is pulling Segment 1 instructions ("Pain Points") instead of the "Work Style" script.</div>
-      </div>
-      <div class="fix-row">
-        <span class="fix-label">Root Cause</span>
-        <div class="fix-value"><code>ELEVENLABS_AGENT_SEGMENT_2</code> defaults to a hardcoded fallback agent ID (<code>agent_9101kms0edweeyqtgrw2n9n7h2bw</code>). If the environment variable isn't set in production, it silently uses this default — which may not be correctly configured.</div>
-      </div>
-      <div class="fix-row">
-        <span class="fix-label">File</span>
-        <div class="fix-value">
-          <div class="filepath">backend/services/interview_segments.py · line ~120</div>
-          <div class="filepath">Production environment variables</div>
-        </div>
-      </div>
-      <div class="fix-row">
-        <span class="fix-label">Change</span>
-        <div class="fix-value">
-          <ul class="fix-list">
-            <li>Confirm <code>ELEVENLABS_AGENT_SEGMENT_2</code> is set in production env vars</li>
-            <li>Open ElevenLabs dashboard and confirm agent <code>agent_9101kms0edweeyqtgrw2n9n7h2bw</code> is configured with the Work Style script</li>
-            <li>Add a startup log: <code>logger.info(f"Segment 2 agent: {segment_2_agent_id}")</code> for easier future debugging</li>
-            <li>Raise an error on startup if either agent ID env var is missing (don't silently fall back)</li>
-          </ul>
-        </div>
-      </div>
-    </div>
-  </details>
-
-  <!-- SUMMARY TABLE -->
-  <div class="section-heading ani" style="--i:21">Implementation Summary</div>
-
-  <div class="table-wrap ani" style="--i:22">
-    <div class="table-scroll">
-      <table class="data-table">
-        <thead>
-          <tr>
-            <th>#</th>
-            <th>Fix</th>
-            <th>Priority</th>
-            <th>File</th>
-            <th>Effort</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr style="--i:1">
-            <td><code>01</code></td>
-            <td>False "All Done!" at low scores</td>
-            <td><span class="badge badge--p0">P0</span></td>
-            <td><code style="font-size:10px">routes/interviews.py:468</code></td>
-            <td><span class="effort effort--s">S</span></td>
-          </tr>
-          <tr style="--i:2">
-            <td><code>02</code></td>
-            <td>"Continue Anyway" missing on last segment</td>
-            <td><span class="badge badge--p0">P0</span></td>
-            <td><code style="font-size:10px">CompletenessResult.tsx:211</code></td>
-            <td><span class="effort effort--s">S</span></td>
-          </tr>
-          <tr style="--i:3">
-            <td><code>03</code></td>
-            <td>Skipped questions penalize score</td>
-            <td><span class="badge badge--p1">P1</span></td>
-            <td><code style="font-size:10px">interview_segments.py:450</code></td>
-            <td><span class="effort effort--m">M</span></td>
-          </tr>
-          <tr style="--i:4">
-            <td><code>04</code></td>
-            <td>Silence detection fires at 11s</td>
-            <td><span class="badge badge--p0">P0</span></td>
-            <td><code style="font-size:10px">ElevenLabs Dashboard + prompts</code></td>
-            <td><span class="effort effort--s">S</span></td>
-          </tr>
-          <tr style="--i:5">
-            <td><code>05</code></td>
-            <td>Zombie sessions — auto-end disabled 5min</td>
-            <td><span class="badge badge--p0">P0</span></td>
-            <td><code style="font-size:10px">SegmentedVoiceInterview.tsx:41</code></td>
-            <td><span class="effort effort--s">S</span></td>
-          </tr>
-          <tr style="--i:6">
-            <td><code>06</code></td>
-            <td>Premature termination — misses Tools/Frameworks</td>
-            <td><span class="badge badge--p1">P1</span></td>
-            <td><code style="font-size:10px">interview_segments.py + Dashboard</code></td>
-            <td><span class="effort effort--m">M</span></td>
-          </tr>
-          <tr style="--i:7">
-            <td><code>07</code></td>
-            <td>Language guardrail broken (Hindi/Tagalog)</td>
-            <td><span class="badge badge--p1">P1</span></td>
-            <td><code style="font-size:10px">interview_segments.py:100,162</code></td>
-            <td><span class="effort effort--s">S</span></td>
-          </tr>
-          <tr style="--i:8">
-            <td><code>08</code></td>
-            <td>Results screen flashes / fails to load</td>
-            <td><span class="badge badge--p0">P0</span></td>
-            <td><code style="font-size:10px">SegmentedVoiceInterview.tsx:603</code></td>
-            <td><span class="effort effort--m">M</span></td>
-          </tr>
-          <tr style="--i:9">
-            <td><code>09</code></td>
-            <td>"End Segment" button disappears in transitions</td>
-            <td><span class="badge badge--p1">P1</span></td>
-            <td><code style="font-size:10px">SegmentedVoiceInterview.tsx:1227</code></td>
-            <td><span class="effort effort--s">S</span></td>
-          </tr>
-          <tr style="--i:10">
-            <td><code>10</code></td>
-            <td>No confirmation emails on completion</td>
-            <td><span class="badge badge--p1">P1</span></td>
-            <td><code style="font-size:10px">interviews.py + Resend config</code></td>
-            <td><span class="effort effort--m">M</span></td>
-          </tr>
-          <tr style="--i:11">
-            <td><code>11</code></td>
-            <td>Verify Segment 2 agent wiring</td>
-            <td><span class="badge badge--p2">P2</span></td>
-            <td><code style="font-size:10px">interview_segments.py:120 + env vars</code></td>
-            <td><span class="effort effort--s">S</span></td>
-          </tr>
-        </tbody>
-        <tfoot>
-          <tr>
-            <td colspan="2">11 fixes total</td>
-            <td>5× P0 · 5× P1 · 1× P2</td>
-            <td></td>
-            <td>7× Small · 3× Medium · 0× Large</td>
-          </tr>
-        </tfoot>
-      </table>
-    </div>
-  </div>
-
-  <!-- EFFORT LEGEND -->
-  <p style="font-family:var(--font-mono);font-size:11px;color:var(--text-dim);margin-top:10px;margin-bottom:48px;">
-    <span class="effort effort--s" style="margin-right:8px">S</span> &lt; 1 hour &nbsp;&nbsp;
-    <span class="effort effort--m" style="margin-right:8px">M</span> 1–4 hours &nbsp;&nbsp;
-    <span class="effort effort--l" style="margin-right:8px">L</span> 4+ hours
-  </p>
-
+<div class="crumbs crumbs-top" aria-label="Breadcrumb">
+  <a href="../../index.html">Index</a><span class="sep">/</span>
+  <span class="current" aria-current="page">Critical Fixes Plan</span>
 </div>
 
-<script>
-// Allow clicking the summary row to expand/collapse the details element
-document.querySelectorAll('.fix-header').forEach(function(header) {
-  // The parent <details> handles toggling natively — just style the chevron
-  var details = header.closest('details');
-  if (details) {
-    header.addEventListener('click', function() {
-      // native details toggle handles the open state
-      // chevron rotation is handled by CSS details[open] .fix-chevron
-    });
-  }
-});
-</script>
+<main class="wrap">
+
+  <header class="hero">
+    <div class="tagline">Critical Revisions Required</div>
+    <h1>Solomon Engine Critical Fixes Plan</h1>
+    <p class="herometa">Post Stress-Test &middot; Testers: Menchie Lobo, Niharika Arun &middot; April 22, 2026</p>
+  </header>
+
+  <div class="pmap"><div class="pm-k">Total Fixes</div><div class="pm-b">11</div></div>
+  <div class="pmap i-rose"><div class="pm-k">P0 Critical</div><div class="pm-b">5</div></div>
+  <div class="pmap i-amb"><div class="pm-k">P1 Serious</div><div class="pm-b">5</div></div>
+  <div class="pmap i-teal"><div class="pm-k">P2 Audit</div><div class="pm-b">1</div></div>
+  <div class="pmap"><div class="pm-k">Files Affected</div><div class="pm-b">3</div></div>
+
+  <!-- 01 -->
+  <section class="sec">
+    <div class="sec-head"><span class="sec-num">01</span><h2 class="sec-title">False &ldquo;All Done!&rdquo; at Low Scores</h2><span class="sec-count"><span class="chip r">P0</span>&nbsp; Scoring &middot; Backend</span></div>
+    <div class="sec-body">
+      <div class="pmap"><div class="pm-k">Issue</div><div class="pm-b">System shows green checkmark and &ldquo;All Done!&rdquo; even when score is 2&ndash;35%, misleading users into thinking they&rsquo;ve completed the interview.</div></div>
+      <div class="pmap"><div class="pm-k">Root Cause</div><div class="pm-b">Backend completion threshold was deliberately lowered to <code>&ge; 1%</code> for testing and was <b>never restored</b>. Comment in code even says so.</div></div>
+      <div class="pmap"><div class="pm-k">File</div><div class="pm-b"><span class="filep">backend/api/routes/interviews.py</span> &middot; line 468</div></div>
+      <div class="pmap"><div class="pm-k">Change</div><div class="pm-b"><pre class="diff"><span class="d">- s.get(&quot;segment_completeness_score&quot;, 0) &gt;= 1  # Lowered to 1% for testing</span>
+<span class="a">+ s.get(&quot;segment_completeness_score&quot;, 0) &gt;= 70  # Align with frontend threshold</span></pre>Also aligns with the frontend&rsquo;s existing <code>score &gt;= 70</code> check in <code>CompletenessResult.tsx:30</code>.</div></div>
+    </div>
+  </section>
+
+  <!-- 02 -->
+  <section class="sec">
+    <div class="sec-head"><span class="sec-num">02</span><h2 class="sec-title">&ldquo;Continue Anyway&rdquo; Never Appears on Last Segment</h2><span class="sec-count"><span class="chip r">P0</span>&nbsp; Scoring &middot; Frontend</span></div>
+    <div class="sec-body">
+      <div class="pmap"><div class="pm-k">Issue</div><div class="pm-b">Users trapped in &ldquo;Needs More Detail&rdquo; retry loop indefinitely on Segment 2 &mdash; the escape button is coded to never appear on the last segment.</div></div>
+      <div class="pmap"><div class="pm-k">Root Cause</div><div class="pm-b">Condition is <code>retryCount &gt;= 3 &amp;&amp; !isLastSegment</code>. The <code>!isLastSegment</code> guard intentionally prevents the button on Segment 2 &mdash; the intent was likely to force completion, but instead it creates an inescapable trap.</div></div>
+      <div class="pmap"><div class="pm-k">File</div><div class="pm-b"><span class="filep">frontend/components/CompletenessResult.tsx</span> &middot; lines 211&ndash;221</div></div>
+      <div class="pmap"><div class="pm-k">Change</div><div class="pm-b"><pre class="diff"><span class="d">- {retryCount &gt;= 3 &amp;&amp; !isLastSegment &amp;&amp; (</span>
+<span class="a">+ {retryCount &gt;= 3 &amp;&amp; (</span>
+<span class="ctx">    &lt;button onClick={onProceed}&gt;</span>
+<span class="d">-     Continue Anyway</span>
+<span class="a">+     {isLastSegment ? &quot;Submit Anyway&quot; : &quot;Continue Anyway&quot;}</span>
+<span class="ctx">    &lt;/button&gt;</span>
+<span class="ctx">  )}</span></pre></div></div>
+    </div>
+  </section>
+
+  <!-- 03 -->
+  <section class="sec">
+    <div class="sec-head"><span class="sec-num">03</span><h2 class="sec-title">Skipped Questions Penalize Score</h2><span class="sec-count"><span class="chip a">P1</span>&nbsp; Scoring &middot; Backend</span></div>
+    <div class="sec-body">
+      <div class="pmap"><div class="pm-k">Issue</div><div class="pm-b">Skipped answers count as 0 against the full denominator, making it impossible to score 100% if any question was skipped &mdash; unfairly punishes valid &ldquo;skip/pass&rdquo; responses.</div></div>
+      <div class="pmap"><div class="pm-k">Root Cause</div><div class="pm-b"><code>calculate_segment_completeness()</code> evaluates the transcript against all target categories regardless of whether questions were actually asked/answered.</div></div>
+      <div class="pmap"><div class="pm-k">File</div><div class="pm-b"><span class="filep">backend/services/interview_segments.py</span> &middot; lines 450&ndash;530</div></div>
+      <div class="pmap"><div class="pm-k">Change</div><div class="pm-b">
+        <ul>
+          <li>Track skipped categories in segment data (skip detection already exists in prompts)</li>
+          <li>Pass <code>skipped_categories</code> as an argument to <code>calculate_segment_completeness()</code></li>
+          <li>Filter skipped categories from the denominator before Claude evaluates completeness</li>
+          <li>Store <code>skipped_categories</code> as a JSON column on the <code>interview_segments</code> table for auditability</li>
+        </ul></div></div>
+    </div>
+  </section>
+
+  <!-- 04 -->
+  <section class="sec">
+    <div class="sec-head"><span class="sec-num">04</span><h2 class="sec-title">Silence Detection Fires at 11s (Should Be 15s)</h2><span class="sec-count"><span class="chip r">P0</span>&nbsp; Conversation &middot; ElevenLabs Config</span></div>
+    <div class="sec-body">
+      <div class="pmap"><div class="pm-k">Issue</div><div class="pm-b">&ldquo;Are you there?&rdquo; prompt fires at 11 seconds &mdash; too aggressive, interrupts users who are thinking or taking a breath mid-answer.</div></div>
+      <div class="pmap"><div class="pm-k">Root Cause</div><div class="pm-b">This is <b>ElevenLabs server-side VAD</b> (Voice Activity Detection), not the frontend 30s/45s constants (those control the auto-end banner only). The ElevenLabs agent has its own inactivity prompt timer set independently on the dashboard.</div></div>
+      <div class="pmap"><div class="pm-k">File</div><div class="pm-b"><span class="filep">ElevenLabs Agent Dashboard</span> &mdash; both Segment 1 &amp; 2 agents<br><span class="filep">backend/services/interview_segments.py</span> &middot; lines 100, 162</div></div>
+      <div class="pmap"><div class="pm-k">Change</div><div class="pm-b">
+        <ul>
+          <li><b>(Dashboard)</b> ElevenLabs agent &rarr; Conversation settings &rarr; increase inactivity prompt delay from ~11s to <b>15s</b> for both agents</li>
+          <li><b>(System prompt)</b> Add to both segment system prompts: <em>&ldquo;Do not prompt the user if they pause. Wait at least 15 seconds of silence before checking in.&rdquo;</em></li>
+        </ul></div></div>
+    </div>
+  </section>
+
+  <!-- 05 -->
+  <section class="sec">
+    <div class="sec-head"><span class="sec-num">05</span><h2 class="sec-title">Zombie Sessions &mdash; Auto-End Non-Functional</h2><span class="sec-count"><span class="chip r">P0</span>&nbsp; Conversation &middot; Frontend</span></div>
+    <div class="sec-body">
+      <div class="pmap"><div class="pm-k">Issue</div><div class="pm-b">When silence persists for 30&ndash;45s the session should auto-end, but it doesn&rsquo;t &mdash; creating infinite &ldquo;zombie&rdquo; loops the user can&rsquo;t escape.</div></div>
+      <div class="pmap"><div class="pm-k">Root Cause</div><div class="pm-b"><code>MIN_CONVERSATION_AGE = 5 * 60 * 1000</code> (5 minutes) &mdash; silence detection is <b>completely disabled</b> for the first 5 minutes of a session. If a session stalls before that mark, auto-end can never trigger.</div></div>
+      <div class="pmap"><div class="pm-k">File</div><div class="pm-b"><span class="filep">frontend/components/SegmentedVoiceInterview.tsx</span> &middot; lines 38&ndash;40, 441&ndash;488</div></div>
+      <div class="pmap"><div class="pm-k">Change</div><div class="pm-b"><pre class="diff"><span class="d">- const MIN_CONVERSATION_AGE = 5 * 60 * 1000; // 5 min minimum before auto-end triggers</span>
+<span class="a">+ const MIN_CONVERSATION_AGE = 90 * 1000; // 90s minimum &mdash; enough to prevent false triggers at start</span></pre>Also add a WebSocket error handler: if the ElevenLabs connection drops or errors, call <code>endSegment()</code> automatically rather than leaving the user in a blank session.</div></div>
+    </div>
+  </section>
+
+  <!-- 06 -->
+  <section class="sec">
+    <div class="sec-head"><span class="sec-num">06</span><h2 class="sec-title">Premature Termination &mdash; Tools &amp; Frameworks Never Reached</h2><span class="sec-count"><span class="chip a">P1</span>&nbsp; Conversation &middot; System Prompts</span></div>
+    <div class="sec-body">
+      <div class="pmap"><div class="pm-k">Issue</div><div class="pm-b">Segments end after only 3&ndash;4 questions, missing entire categories like &ldquo;Tools&rdquo; and &ldquo;Frameworks&rdquo; which appear later in the script.</div></div>
+      <div class="pmap"><div class="pm-k">Root Cause</div><div class="pm-b">Likely one of two causes: (a) ElevenLabs agent dashboard has a max-turn or max-duration limit set too low, or (b) the <code>SEGMENT_COMPLETE</code> signal in the system prompt is being triggered too aggressively before all categories are covered.</div></div>
+      <div class="pmap"><div class="pm-k">File</div><div class="pm-b"><span class="filep">backend/services/interview_segments.py</span> &middot; lines 46&ndash;173 (both segment prompts)<br><span class="filep">ElevenLabs Agent Dashboard</span> &mdash; check max turn / max duration settings</div></div>
+      <div class="pmap"><div class="pm-k">Change</div><div class="pm-b">
+        <ul>
+          <li>Add to both system prompts: <em>&ldquo;You MUST cover ALL of the following topics before signaling completion: [enumerate all categories]. Do not send the completion signal until every topic has been addressed at least once.&rdquo;</em></li>
+          <li>Audit ElevenLabs agent dashboard for any max-turn or max-duration settings; increase or remove them</li>
+          <li>Add a backend guard in the webhook handler: reject <code>SEGMENT_COMPLETE</code> signals if fewer than N categories appear in the transcript</li>
+        </ul></div></div>
+    </div>
+  </section>
+
+  <!-- 07 -->
+  <section class="sec">
+    <div class="sec-head"><span class="sec-num">07</span><h2 class="sec-title">Language Guardrail Broken &mdash; Hindi / Tagalog Drift</h2><span class="sec-count"><span class="chip a">P1</span>&nbsp; Conversation &middot; System Prompts</span></div>
+    <div class="sec-body">
+      <div class="pmap"><div class="pm-k">Issue</div><div class="pm-b">System ignored Tagalog input, then actively switched to Hindi, and refused to switch back even when the user corrected it in English.</div></div>
+      <div class="pmap"><div class="pm-k">Root Cause</div><div class="pm-b">The English-only directive exists in <code>interview_segments.py</code> at lines 100 and 162, but the <b>live ElevenLabs agents on the dashboard may have outdated prompts</b> that predate this guardrail. Code in repo &ne; what&rsquo;s deployed.</div></div>
+      <div class="pmap"><div class="pm-k">File</div><div class="pm-b"><span class="filep">backend/services/interview_segments.py</span> &middot; lines 100, 162<br><span class="filep">ElevenLabs Agent Dashboard</span> &mdash; verify live system prompts match code</div></div>
+      <div class="pmap"><div class="pm-k">Change</div><div class="pm-b">
+        <ul>
+          <li>Re-sync both agent system prompts to ElevenLabs dashboard &mdash; they may have drifted</li>
+          <li>Move the English-only rule to the <b>first line</b> of both system prompts (currently buried at the end where the model may deprioritize it)</li>
+          <li>Strengthen the directive to: <em>&ldquo;CRITICAL: Conduct this entire interview in English only. If the user responds in any other language, immediately reply in English only. Do not acknowledge, mirror, or switch to their language under any circumstances.&rdquo;</em></li>
+        </ul></div></div>
+    </div>
+  </section>
+
+  <!-- 08 -->
+  <section class="sec">
+    <div class="sec-head"><span class="sec-num">08</span><h2 class="sec-title">Results Screen Flashes 2s or Fails to Load</h2><span class="sec-count"><span class="chip r">P0</span>&nbsp; UI/UX &middot; Frontend</span></div>
+    <div class="sec-body">
+      <div class="pmap"><div class="pm-k">Issue</div><div class="pm-b">After segment completion, the results screen either flashes for ~2 seconds then vanishes, or fails to load entirely, leaving users stranded on a blank screen.</div></div>
+      <div class="pmap"><div class="pm-k">Root Cause</div><div class="pm-b">The code has no auto-dismiss timer &mdash; but a <b>race condition</b> exists: the component polls for completion, renders the results screen, then a subsequent state update (from a still-running poll interval) transitions the component away from the results view. The poll interval is not stopped when results are shown.</div></div>
+      <div class="pmap"><div class="pm-k">File</div><div class="pm-b"><span class="filep">frontend/components/SegmentedVoiceInterview.tsx</span> &middot; lines 603+, 792&ndash;809</div></div>
+      <div class="pmap"><div class="pm-k">Change</div><div class="pm-b">
+        <ul>
+          <li>Add a <code>resultsLocked</code> boolean state &mdash; set to <code>true</code> the moment completion data is received</li>
+          <li>When <code>resultsLocked === true</code>, stop all polling intervals immediately (in the state update&rsquo;s effect)</li>
+          <li>Results view should only unmount when user explicitly clicks &ldquo;Continue to Next Segment&rdquo; or &ldquo;Redo&rdquo; &mdash; never from a background state transition</li>
+          <li>Add <code>useEffect</code> cleanup on the polling interval that runs when the results view becomes visible</li>
+        </ul></div></div>
+    </div>
+  </section>
+
+  <!-- 09 -->
+  <section class="sec">
+    <div class="sec-head"><span class="sec-num">09</span><h2 class="sec-title">&ldquo;End Segment&rdquo; Button Disappears During Transitions</h2><span class="sec-count"><span class="chip a">P1</span>&nbsp; UI/UX &middot; Frontend</span></div>
+    <div class="sec-body">
+      <div class="pmap"><div class="pm-k">Issue</div><div class="pm-b">The &ldquo;End Segment&rdquo; button appears correctly but vanishes when the AI transitions between topics, trapping users in the session with no exit.</div></div>
+      <div class="pmap"><div class="pm-k">Root Cause</div><div class="pm-b">Button requires <code>lastSpokeAtRef.current !== null</code>. During topic transitions the AI resets its state (or reconnects), which may clear this ref &mdash; causing the button to disappear even though the AI had already spoken.</div></div>
+      <div class="pmap"><div class="pm-k">File</div><div class="pm-b"><span class="filep">frontend/components/SegmentedVoiceInterview.tsx</span> &middot; lines 1227&ndash;1237</div></div>
+      <div class="pmap"><div class="pm-k">Change</div><div class="pm-b"><pre class="diff"><span class="d">- {elapsedSeconds &gt;= 180 &amp;&amp; lastSpokeAtRef.current !== null &amp;&amp; (</span>
+<span class="a">+ {elapsedSeconds &gt;= 180 &amp;&amp; hasAISpoken &amp;&amp; (  // hasAISpoken: boolean state, set once, never reset</span></pre>Replace the ref check with a persistent <code>hasAISpoken</code> boolean state &mdash; set to <code>true</code> the first time the AI speaks, and never reset. Unlike a ref, this guarantees the button stays visible through transitions.</div></div>
+    </div>
+  </section>
+
+  <!-- 10 -->
+  <section class="sec">
+    <div class="sec-head"><span class="sec-num">10</span><h2 class="sec-title">No Confirmation Emails on Completion</h2><span class="sec-count"><span class="chip a">P1</span>&nbsp; UI/UX &middot; Backend / Resend Webhook</span></div>
+    <div class="sec-body">
+      <div class="pmap"><div class="pm-k">Issue</div><div class="pm-b">Users receive no confirmation email upon interview completion, leaving them uncertain whether their session was recorded.</div></div>
+      <div class="pmap"><div class="pm-k">Root Cause</div><div class="pm-b">Two compounding issues: (1) Fix #1 is blocking &mdash; the <code>all_complete</code> flag never fires correctly due to the 1% threshold, so the email trigger never runs. (2) Even with Fix #1 applied, the Resend webhook is likely gated on <code>status = &rsquo;completed&rsquo;</code> (100% both segments) rather than any &ldquo;final&rdquo; session state.</div></div>
+      <div class="pmap"><div class="pm-k">File</div><div class="pm-b"><span class="filep">backend/api/routes/interviews.py</span> &middot; webhook handlers<br><span class="filep">Resend webhook configuration (external)</span></div></div>
+      <div class="pmap"><div class="pm-k">Change</div><div class="pm-b">
+        <ul>
+          <li><b>Dependency:</b> Apply Fix #1 first &mdash; this unblocks the completion path</li>
+          <li>Add an explicit Resend email call directly in the <code>all_complete</code> handler in <code>interviews.py</code> &mdash; don&rsquo;t rely solely on the webhook which may have conditions we can&rsquo;t easily debug</li>
+          <li>Audit Resend webhook config: change trigger from <code>status = &rsquo;completed&rsquo;</code> to <code>status IN (&rsquo;completed&rsquo;, &rsquo;partially_complete&rsquo;)</code> or on any session state that includes <code>all_complete = true</code></li>
+        </ul></div></div>
+    </div>
+  </section>
+
+  <!-- 11 -->
+  <section class="sec">
+    <div class="sec-head"><span class="sec-num">11</span><h2 class="sec-title">Verify Segment 2 Agent Wiring</h2><span class="sec-count"><span class="chip t">P2</span>&nbsp; Audit &middot; Config</span></div>
+    <div class="sec-body">
+      <div class="pmap"><div class="pm-k">Issue</div><div class="pm-b">Possible that Segment 2 agent is pulling Segment 1 instructions (&ldquo;Pain Points&rdquo;) instead of the &ldquo;Work Style&rdquo; script.</div></div>
+      <div class="pmap"><div class="pm-k">Root Cause</div><div class="pm-b"><code>ELEVENLABS_AGENT_SEGMENT_2</code> defaults to a hardcoded fallback agent ID (<code>agent_9101kms0edweeyqtgrw2n9n7h2bw</code>). If the environment variable isn&rsquo;t set in production, it silently uses this default &mdash; which may not be correctly configured.</div></div>
+      <div class="pmap"><div class="pm-k">File</div><div class="pm-b"><span class="filep">backend/services/interview_segments.py</span> &middot; line ~120<br><span class="filep">Production environment variables</span></div></div>
+      <div class="pmap"><div class="pm-k">Change</div><div class="pm-b">
+        <ul>
+          <li>Confirm <code>ELEVENLABS_AGENT_SEGMENT_2</code> is set in production env vars</li>
+          <li>Open ElevenLabs dashboard and confirm agent <code>agent_9101kms0edweeyqtgrw2n9n7h2bw</code> is configured with the Work Style script</li>
+          <li>Add a startup log: <code>logger.info(f&quot;Segment 2 agent: {segment_2_agent_id}&quot;)</code> for easier future debugging</li>
+          <li>Raise an error on startup if either agent ID env var is missing (don&rsquo;t silently fall back)</li>
+        </ul></div></div>
+    </div>
+  </section>
+
+  <!-- 12 -->
+  <section class="sec">
+    <div class="sec-head"><span class="sec-num">12</span><h2 class="sec-title">Implementation Summary</h2></div>
+    <div class="sec-body">
+      <table class="tbl">
+        <thead><tr><th>#</th><th>Fix</th><th>Priority</th><th>File</th><th>Effort</th></tr></thead>
+        <tbody>
+          <tr><td class="f"><code>01</code></td><td>False &ldquo;All Done!&rdquo; at low scores</td><td><span class="chip r">P0</span></td><td><code>routes/interviews.py:468</code></td><td><span class="chip t">S</span></td></tr>
+          <tr><td class="f"><code>02</code></td><td>&ldquo;Continue Anyway&rdquo; missing on last segment</td><td><span class="chip r">P0</span></td><td><code>CompletenessResult.tsx:211</code></td><td><span class="chip t">S</span></td></tr>
+          <tr><td class="f"><code>03</code></td><td>Skipped questions penalize score</td><td><span class="chip a">P1</span></td><td><code>interview_segments.py:450</code></td><td><span class="chip a">M</span></td></tr>
+          <tr><td class="f"><code>04</code></td><td>Silence detection fires at 11s</td><td><span class="chip r">P0</span></td><td><code>ElevenLabs Dashboard + prompts</code></td><td><span class="chip t">S</span></td></tr>
+          <tr><td class="f"><code>05</code></td><td>Zombie sessions &mdash; auto-end disabled 5min</td><td><span class="chip r">P0</span></td><td><code>SegmentedVoiceInterview.tsx:41</code></td><td><span class="chip t">S</span></td></tr>
+          <tr><td class="f"><code>06</code></td><td>Premature termination &mdash; misses Tools/Frameworks</td><td><span class="chip a">P1</span></td><td><code>interview_segments.py + Dashboard</code></td><td><span class="chip a">M</span></td></tr>
+          <tr><td class="f"><code>07</code></td><td>Language guardrail broken (Hindi/Tagalog)</td><td><span class="chip a">P1</span></td><td><code>interview_segments.py:100,162</code></td><td><span class="chip t">S</span></td></tr>
+          <tr><td class="f"><code>08</code></td><td>Results screen flashes / fails to load</td><td><span class="chip r">P0</span></td><td><code>SegmentedVoiceInterview.tsx:603</code></td><td><span class="chip a">M</span></td></tr>
+          <tr><td class="f"><code>09</code></td><td>&ldquo;End Segment&rdquo; button disappears in transitions</td><td><span class="chip a">P1</span></td><td><code>SegmentedVoiceInterview.tsx:1227</code></td><td><span class="chip t">S</span></td></tr>
+          <tr><td class="f"><code>10</code></td><td>No confirmation emails on completion</td><td><span class="chip a">P1</span></td><td><code>interviews.py + Resend config</code></td><td><span class="chip a">M</span></td></tr>
+          <tr><td class="f"><code>11</code></td><td>Verify Segment 2 agent wiring</td><td><span class="chip t">P2</span></td><td><code>interview_segments.py:120 + env vars</code></td><td><span class="chip t">S</span></td></tr>
+        </tbody>
+      </table>
+      <div class="pmap i-acc"><div class="pm-k">Totals</div><div class="pm-b">11 fixes total &nbsp;&middot;&nbsp; 5&times; P0 &middot; 5&times; P1 &middot; 1&times; P2 &nbsp;&middot;&nbsp; 7&times; Small &middot; 3&times; Medium &middot; 0&times; Large</div></div>
+      <div class="pmap"><div class="pm-k">Effort Legend</div><div class="pm-b"><span class="chip t">S</span> &lt; 1 hour &nbsp;&nbsp; <span class="chip a">M</span> 1&ndash;4 hours &nbsp;&nbsp; <span class="chip r">L</span> 4+ hours</div></div>
+    </div>
+  </section>
+
+  <footer class="footer">
+    <a href="../../index.html">&larr; Index</a>
+    <span>&copy; 2025-2026 Charlie Fuller</span>
+  </footer>
+
+</main>
 </body>
 </html>

@@ -1,508 +1,383 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" class="light">
 <head>
 <meta charset="UTF-8">
-<link rel="icon" type="image/svg+xml" href="../icon.svg">
+<link rel="icon" href="../../icon.svg" type="image/svg+xml" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>L&D Cohort Automation — Pipeline Architecture</title>
+<meta name="description" content="Automation for The Bradbury Group's L&amp;D Cohort program: files renamed and routed, sheets and docs populated, transcripts analyzed by AI, facilitator notes generated, follow-up drafts created.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600;9..144,700&family=Source+Code+Pro:wght@400;500;600" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Mulish:ital,wght@0,300;0,400;0,600;0,700;0,800;1,400&display=swap" rel="stylesheet">
 <style>
-  :root {
-    --font-body: 'Fraunces', Georgia, serif;
-    --font-mono: 'Source Code Pro', 'SF Mono', Consolas, monospace;
-    --bg: #0c0f1a;
-    --surface: #141829;
-    --surface2: #1a1f35;
-    --surface-elevated: #1e2440;
-    --border: rgba(255,255,255,0.06);
-    --border-bright: rgba(255,255,255,0.12);
-    --text: #e2e8f0;
-    --text-dim: #7a8ba8;
-    --accent: #60a5fa;
-    --accent-dim: rgba(96,165,250,0.12);
-    --phase1: #f472b6; --phase1-dim: rgba(244,114,182,0.12);
-    --phase2: #a78bfa; --phase2-dim: rgba(167,139,250,0.12);
-    --phase3: #34d399; --phase3-dim: rgba(52,211,153,0.12);
-    --phase4: #60a5fa; --phase4-dim: rgba(96,165,250,0.12);
-    --phase5: #fbbf24; --phase5-dim: rgba(251,191,36,0.12);
-    --phase6: #f87171; --phase6-dim: rgba(248,113,113,0.12);
-    --phase7: #818cf8; --phase7-dim: rgba(129,140,248,0.12);
-    --green: #34d399; --green-dim: rgba(52,211,153,0.12);
-    --orange: #fbbf24; --orange-dim: rgba(251,191,36,0.12);
+  :root{--font-body:'Mulish','Segoe UI',Helvetica,sans-serif;--font-mono:'Mulish',ui-monospace,'SF Mono',Consolas,monospace;
+    --bg:#14181C;--surface:#1B2127;--surface2:#232B33;--border:#303A43;--border-bright:#42505C;
+    --text:#F4F5F6;--text-dim:#CBD0D6;--text-faint:#87919B;
+    --primary:#A79CF2;--primary-dim:rgba(167,156,242,0.12);--metric:#58D6B4;--metric-dim:rgba(88,214,180,0.12);
+    --blue:#6CACE4;--blue-dim:rgba(108,172,228,0.12);
+    --violet:#B9A0E8;--violet-dim:rgba(185,160,232,0.12);
+    --amber:#E8B54D;--amber-dim:rgba(232,181,77,0.12);
+    --rose:#E88280;--rose-dim:rgba(232,130,128,0.12);}
+  html.light{--bg:#F7F3EF;--surface:#FFFFFF;--surface2:#F0E9E1;--border:#E1D6CB;--border-bright:#CDBBA8;
+    --text:#241A12;--text-dim:#574A3C;--text-faint:#8C7E6E;
+    --primary:#4F46E5;--primary-dim:rgba(79,70,229,0.08);--metric:#0E7C6E;--metric-dim:rgba(14,124,110,0.08);
+    --blue:#2F6FA8;--blue-dim:rgba(47,111,168,0.08);
+    --violet:#7C3AED;--violet-dim:rgba(124,58,237,0.07);
+    --amber:#A5650A;--amber-dim:rgba(165,101,10,0.08);
+    --rose:#C23A30;--rose-dim:rgba(194,58,48,0.07);}
+  *{margin:0;padding:0;box-sizing:border-box}
+  html{scroll-behavior:smooth}
+  body{background:
+      radial-gradient(at 10% 0%,var(--primary-dim),transparent 55%),
+      radial-gradient(at 90% 80%,var(--metric-dim),transparent 55%),
+      var(--bg);
+    color:var(--text);font-family:var(--font-body);font-size:17px;line-height:1.62;-webkit-font-smoothing:antialiased;min-height:100vh}
+
+  .crumbs{font-size:13px;font-weight:600;color:var(--text-dim);display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+  .crumbs a{color:var(--primary);text-decoration:none}
+  .crumbs a:hover{text-decoration:underline}
+  .crumbs .sep{color:var(--text-faint)}
+  .crumbs .current{color:var(--text-dim);font-weight:400}
+  .crumbs-top{max-width:1080px;margin:0 auto;padding:18px 24px 0}
+
+  .wrap{max-width:1080px;margin:0 auto;padding:0 24px 80px}
+
+  .hero{padding:44px 0 24px;border-bottom:1px solid var(--border);margin-bottom:10px}
+  .hero .tagline{font-family:var(--font-mono);font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.14em;color:var(--primary);margin-bottom:10px}
+  .hero h1{font-size:52px;line-height:1.0;letter-spacing:-0.03em;font-weight:800;
+    background:linear-gradient(135deg,var(--primary),var(--metric));-webkit-background-clip:text;background-clip:text;color:transparent}
+  .hero .lede{font-size:19px;line-height:1.5;color:var(--text-dim);max-width:920px;margin-top:14px}
+  .hero .lede b{color:var(--text)}
+
+  .sec{margin-top:22px}
+  .sec-head{display:flex;align-items:baseline;gap:14px;padding-bottom:10px;border-bottom:1px solid var(--border);margin-bottom:10px}
+  .sec-num{font-size:23px;font-weight:800;color:var(--primary);font-family:var(--font-mono)}
+  .sec-title{font-size:23px;font-weight:800;color:var(--text);letter-spacing:-0.01em}
+  .sec-body p{max-width:920px;margin-bottom:12px;color:var(--text-dim)}
+  .sec-body p b,.sec-body strong{color:var(--text)}
+  .sec-body p.nb{margin-bottom:0}
+  code{font-family:var(--font-mono);font-size:0.84em;color:var(--primary)}
+  .close{margin-top:16px;border-top:1px solid var(--border);padding-top:14px;font-size:14px;line-height:1.6;color:var(--text-dim);max-width:920px}
+  .close b{color:var(--text)}
+
+  .pmap{padding:14px 4px;border-top:1px solid var(--border);display:grid;grid-template-columns:240px 1fr;gap:4px 28px;align-items:baseline}
+  .pmap:first-of-type{border-top:none}
+  .pmap .pm-k{font-family:var(--font-mono);font-size:11.5px;font-weight:800;text-transform:uppercase;letter-spacing:.08em;color:var(--blue);line-height:1.5}
+  .pmap .pm-k .ord{display:block;color:var(--primary);font-weight:700;font-size:10px;letter-spacing:.16em;margin-bottom:3px}
+  .pmap .pm-k .tag{display:block;color:var(--text-faint);font-weight:700;font-size:10px;letter-spacing:.16em;margin-bottom:3px}
+  .pmap .pm-b{font-size:14.5px;line-height:1.6;color:var(--text-dim)}
+  .pmap .pm-b .tt{font-weight:800;color:var(--text);font-size:16px}
+  .pmap.i-vio .pm-k{color:var(--violet)}
+  .pmap.i-teal .pm-k{color:var(--metric)}
+  .pmap.i-amb .pm-k{color:var(--amber)}
+  .pmap.i-rose .pm-k{color:var(--rose)}
+  .pmap.i-acc .pm-k{color:var(--primary)}
+  .branch{font-size:13px;line-height:1.5;padding:1px 0}
+  .branch .bk{font-family:var(--font-mono);font-size:10.5px;font-weight:700;margin-right:8px}
+  .branch.blue .bk{color:var(--blue)}
+  .branch.teal .bk{color:var(--metric)}
+  .branch.vio .bk{color:var(--violet)}
+  .opt{color:var(--rose);font-weight:700}
+
+  table.tbl{width:100%;border-collapse:collapse;margin:2px 0 4px}
+  .tbl th{text-align:left;font-family:var(--font-mono);font-size:10px;font-weight:700;color:var(--text-faint);padding:6px 14px 8px 0;border-bottom:2px solid var(--border-bright);letter-spacing:.04em;text-transform:uppercase}
+  .tbl td{padding:9px 14px 9px 0;border-bottom:1px solid var(--border);vertical-align:top;font-size:13px;line-height:1.5;color:var(--text-dim)}
+  .tbl tr:last-child td{border-bottom:none}
+  .tbl td.f{font-weight:700;color:var(--text);width:40%}
+  .tbl td.src code{font-size:0.92em;color:var(--metric)}
+
+  .footer{margin-top:30px;border-top:1px solid var(--border);padding:18px 0 0;display:flex;justify-content:space-between;gap:20px;flex-wrap:wrap;font-family:var(--font-mono);font-size:12px;color:var(--text-faint)}
+  .footer a{color:var(--primary);text-decoration:none}
+  .footer a:hover{text-decoration:underline}
+
+  @media(max-width:900px){
+    .wrap{padding:0 16px 60px}
+    .hero h1{font-size:38px}
+    .pmap{grid-template-columns:1fr;gap:3px}
+    body{font-size:16px}
   }
-  @media (prefers-color-scheme: light) {
-    :root {
-      --bg: #f8fafc; --surface: #ffffff; --surface2: #f1f5f9;
-      --surface-elevated: #ffffff; --border: rgba(0,0,0,0.08);
-      --border-bright: rgba(0,0,0,0.14); --text: #0f172a;
-      --text-dim: #64748b; --accent: #2563eb;
-      --accent-dim: rgba(37,99,235,0.08);
-      --phase1: #db2777; --phase1-dim: rgba(219,39,119,0.08);
-      --phase2: #7c3aed; --phase2-dim: rgba(124,58,237,0.08);
-      --phase3: #059669; --phase3-dim: rgba(5,150,105,0.08);
-      --phase4: #2563eb; --phase4-dim: rgba(37,99,235,0.08);
-      --phase5: #d97706; --phase5-dim: rgba(217,119,6,0.08);
-      --phase6: #dc2626; --phase6-dim: rgba(220,38,38,0.08);
-      --phase7: #4f46e5; --phase7-dim: rgba(79,70,229,0.08);
-      --green: #059669; --green-dim: rgba(5,150,105,0.08);
-      --orange: #d97706; --orange-dim: rgba(217,119,6,0.08);
-    }
-  }
-  * { margin:0; padding:0; box-sizing:border-box; }
-  body {
-    background: var(--bg);
-    background-image:
-      radial-gradient(ellipse at 30% 0%, var(--phase2-dim) 0%, transparent 50%),
-      radial-gradient(ellipse at 70% 80%, var(--phase3-dim) 0%, transparent 40%);
-    color: var(--text); font-family: var(--font-body);
-    padding: 40px; min-height: 100vh; overflow-wrap: break-word;
-  }
-
-  @keyframes fadeUp { from { opacity:0; transform:translateY(14px); } to { opacity:1; transform:translateY(0); } }
-  @keyframes fadeScale { from { opacity:0; transform:scale(0.92); } to { opacity:1; transform:scale(1); } }
-  .anim { animation: fadeUp 0.4s ease-out both; animation-delay: calc(var(--i,0)*0.06s); }
-  .anim-s { animation: fadeScale 0.35s ease-out both; animation-delay: calc(var(--i,0)*0.06s); }
-  @media (prefers-reduced-motion: reduce) { *,*::before,*::after { animation-duration:0.01ms!important; transition-duration:0.01ms!important; } }
-
-  .wrap { max-width:1400px; margin:0 auto; display:grid; grid-template-columns:170px 1fr; gap:0 40px; }
-  .main { min-width:0; }
-
-  .toc { position:sticky; top:24px; align-self:start; padding:14px 0; grid-row:1/-1; max-height:calc(100dvh - 48px); overflow-y:auto; }
-  .toc::-webkit-scrollbar { width:3px; } .toc::-webkit-scrollbar-thumb { background:var(--surface-elevated); border-radius:2px; }
-  .toc-title { font-family:var(--font-mono); font-size:9px; font-weight:700; text-transform:uppercase; letter-spacing:2px; color:var(--text-dim); padding:0 0 10px; margin-bottom:8px; border-bottom:1px solid var(--border); }
-  .toc a { display:block; font-size:11px; color:var(--text-dim); text-decoration:none; padding:4px 8px; border-radius:5px; border-left:2px solid transparent; transition:all .15s; line-height:1.4; margin-bottom:1px; }
-  .toc a:hover { color:var(--text); background:var(--surface2); }
-  .toc a.active { color:var(--text); border-left-color:var(--accent); }
-
-  h1 { font-size:38px; font-weight:700; letter-spacing:-1.5px; margin-bottom:6px; text-wrap:balance; }
-  .subtitle { color:var(--text-dim); font-family:var(--font-mono); font-size:12px; margin-bottom:8px; }
-  .tagline { color:var(--text-dim); font-size:14px; line-height:1.7; margin-bottom:32px; max-width:700px; }
-  .tagline strong { color:var(--text); }
-
-  .sec-head { font-size:20px; font-weight:700; letter-spacing:-0.5px; margin:40px 0 16px; padding-top:8px; scroll-margin-top:24px;
-    display:flex; align-items:center; gap:10px; }
-  .sec-head .dot { width:10px; height:10px; border-radius:50%; flex-shrink:0; }
-
-  .card { background:var(--surface); border:1px solid var(--border); border-radius:12px; padding:20px 24px; margin-bottom:16px; }
-  .card--hero { background:var(--surface-elevated); border-color:color-mix(in srgb,var(--border) 50%,var(--accent) 50%); box-shadow:0 4px 24px rgba(0,0,0,0.12); }
-  .card-label { font-family:var(--font-mono); font-size:10px; font-weight:600; text-transform:uppercase; letter-spacing:1.5px; margin-bottom:10px; display:flex; align-items:center; gap:8px; }
-  .card-label .dot { width:7px; height:7px; border-radius:50%; }
-
-  .kpi-row { display:grid; grid-template-columns:repeat(auto-fit,minmax(140px,1fr)); gap:12px; margin-bottom:16px; }
-  .kpi { background:var(--surface-elevated); border:1px solid var(--border); border-radius:10px; padding:16px; text-align:center; }
-  .kpi-val { font-size:28px; font-weight:700; letter-spacing:-1px; font-variant-numeric:tabular-nums; }
-  .kpi-lbl { font-family:var(--font-mono); font-size:9px; font-weight:600; text-transform:uppercase; letter-spacing:1.5px; color:var(--text-dim); margin-top:4px; }
-
-  .module-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(220px,1fr)); gap:10px; }
-  .mod { background:var(--surface2); border:1px solid var(--border); border-radius:8px; padding:12px 14px; transition:border-color .15s; }
-  .mod:hover { border-color:var(--border-bright); }
-  .mod-name { font-weight:600; font-size:13px; margin-bottom:4px; display:flex; align-items:center; gap:6px; }
-  .mod-name code { font-family:var(--font-mono); font-size:11px; background:var(--accent-dim); color:var(--accent); padding:1px 5px; border-radius:3px; }
-  .mod-desc { font-size:11px; color:var(--text-dim); line-height:1.5; }
-
-  .flow-arrow { display:flex; justify-content:center; align-items:center; gap:8px; color:var(--text-dim); font-family:var(--font-mono); font-size:11px; padding:6px 0; }
-  .flow-arrow svg { width:20px; height:20px; fill:none; stroke:var(--border-bright); stroke-width:2; stroke-linecap:round; stroke-linejoin:round; }
-
-  .naming-demo { background:var(--surface2); border:1px solid var(--border); border-radius:8px; padding:16px 20px; font-family:var(--font-mono); font-size:14px; text-align:center; letter-spacing:0.5px; margin:12px 0; }
-  .naming-demo .seg { padding:2px 6px; border-radius:4px; margin:0 2px; }
-
-  .props-table { width:100%; border-collapse:collapse; font-size:12px; }
-  .props-table th { font-family:var(--font-mono); font-size:10px; font-weight:600; text-transform:uppercase; letter-spacing:1px; color:var(--text-dim); text-align:left; padding:8px 12px; border-bottom:2px solid var(--border-bright); white-space:nowrap; }
-  .props-table td { padding:8px 12px; border-bottom:1px solid var(--border); vertical-align:top; }
-  .props-table tbody tr:nth-child(even) { background:var(--accent-dim); }
-  .props-table tbody tr:hover { background:var(--border); }
-  .props-table code { font-family:var(--font-mono); font-size:10px; background:var(--accent-dim); color:var(--accent); padding:1px 4px; border-radius:3px; }
-
-  .hitl-grid { display:grid; grid-template-columns:1fr 1fr; gap:16px; }
-  .hitl-box { border-radius:10px; padding:16px 20px; border:1px solid var(--border); }
-  .hitl-box h4 { font-size:13px; font-weight:600; margin-bottom:8px; display:flex; align-items:center; gap:6px; }
-  .hitl-box ul { list-style:none; font-size:12px; line-height:1.8; }
-  .hitl-box li { padding-left:14px; position:relative; }
-  .hitl-box li::before { content:'›'; color:var(--text-dim); font-weight:600; position:absolute; left:0; }
-
-  .tag { font-family:var(--font-mono); font-size:9px; font-weight:500; padding:2px 6px; border-radius:4px; white-space:nowrap; }
-
-  .mermaid-wrap { position:relative; background:var(--surface); border:1px solid var(--border); border-radius:12px; padding:32px 24px; overflow:auto; margin-bottom:16px; scrollbar-width:thin; scrollbar-color:var(--border) transparent; }
-  .mermaid-wrap::-webkit-scrollbar { width:6px; height:6px; }
-  .mermaid-wrap::-webkit-scrollbar-track { background:transparent; }
-  .mermaid-wrap::-webkit-scrollbar-thumb { background:var(--border); border-radius:3px; }
-  .mermaid-wrap .mermaid { display:flex; justify-content:center; transition:transform .2s ease; transform-origin:top center; }
-  .zoom-controls { position:absolute; top:8px; right:8px; display:flex; gap:2px; z-index:10; background:var(--surface); border:1px solid var(--border); border-radius:6px; padding:2px; }
-  .zoom-controls button { width:28px; height:28px; border:none; background:transparent; color:var(--text-dim); font-family:var(--font-mono); font-size:14px; cursor:pointer; border-radius:4px; display:flex; align-items:center; justify-content:center; transition:background .15s,color .15s; }
-  .zoom-controls button:hover { background:var(--border); color:var(--text); }
-  .mermaid-wrap.is-zoomed { cursor:grab; }
-  .mermaid-wrap.is-panning { cursor:grabbing; user-select:none; }
-
-  .mermaid .nodeLabel { font-family:var(--font-body)!important; font-size:14px!important; color:var(--text)!important; }
-  .mermaid .edgeLabel { font-family:var(--font-mono)!important; font-size:11px!important; color:var(--text-dim)!important; background-color:var(--bg)!important; }
-  .mermaid .edgeLabel rect { fill:var(--bg)!important; }
-
-  .setup-steps { counter-reset:setup; }
-  .setup-step { background:var(--surface2); border:1px solid var(--border); border-radius:8px; padding:14px 18px 14px 48px; margin-bottom:8px; position:relative; font-size:13px; line-height:1.6; }
-  .setup-step::before { counter-increment:setup; content:counter(setup); position:absolute; left:16px; top:14px; font-family:var(--font-mono); font-size:12px; font-weight:700; color:var(--accent); }
-  .setup-step code { font-family:var(--font-mono); font-size:11px; background:var(--accent-dim); color:var(--accent); padding:1px 5px; border-radius:3px; }
-
-  details.collapsible { border:1px solid var(--border); border-radius:10px; overflow:hidden; margin-bottom:16px; }
-  details.collapsible summary { padding:14px 20px; background:var(--surface); font-family:var(--font-mono); font-size:12px; font-weight:600; cursor:pointer; list-style:none; display:flex; align-items:center; gap:8px; color:var(--text); transition:background .15s; }
-  details.collapsible summary:hover { background:var(--surface-elevated); }
-  details.collapsible summary::-webkit-details-marker { display:none; }
-  details.collapsible summary::before { content:'▸'; font-size:11px; color:var(--text-dim); transition:transform .15s; }
-  details.collapsible[open] summary::before { transform:rotate(90deg); }
-  details.collapsible .body { padding:16px 20px; border-top:1px solid var(--border); font-size:13px; line-height:1.6; }
-
-  @media (max-width:1000px) {
-    .wrap { grid-template-columns:1fr; padding-top:0; }
-    body { padding:16px; padding-top:0; }
-    .toc { position:sticky; top:0; z-index:200; max-height:none; display:flex; gap:4px; align-items:center; overflow-x:auto; -webkit-overflow-scrolling:touch; background:var(--bg); border-bottom:1px solid var(--border); padding:10px 0; margin:0 -16px; padding-left:16px; padding-right:16px; grid-row:auto; }
-    .toc::-webkit-scrollbar { display:none; } .toc-title { display:none; }
-    .toc a { white-space:nowrap; flex-shrink:0; border-left:none; border-bottom:2px solid transparent; border-radius:4px 4px 0 0; padding:6px 10px; font-size:10px; }
-    .toc a.active { border-left:none; border-bottom-color:var(--accent); background:var(--surface); }
-    .main { padding-top:20px; } .sec-head { scroll-margin-top:52px; }
-    h1 { font-size:24px; } .hitl-grid { grid-template-columns:1fr; } .module-grid { grid-template-columns:1fr; }
-  }
-.backlink{position:fixed;top:12px;left:16px;z-index:200;font-family:var(--font-mono,monospace);font-size:11px;color:var(--text-dim,#8b949e);text-decoration:none;padding:6px 10px;border:1px solid var(--border,rgba(255,255,255,0.08));border-radius:6px;background:var(--surface,#161b22);transition:color .15s,border-color .15s}.backlink:hover{color:var(--text,#e6edf3);border-color:var(--text-dim,#8b949e)}
+  @media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+<style>
+  .mermaid-wrap{position:relative;background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:28px 20px;overflow:auto;margin:8px 0 4px;scrollbar-width:thin;scrollbar-color:var(--border) transparent}
+  .mermaid-wrap::-webkit-scrollbar{width:6px;height:6px}
+  .mermaid-wrap::-webkit-scrollbar-track{background:transparent}
+  .mermaid-wrap::-webkit-scrollbar-thumb{background:var(--border);border-radius:3px}
+  .mermaid-wrap .mermaid{display:flex;justify-content:center;transition:transform .2s ease;transform-origin:top center}
+  .zoom-controls{position:absolute;top:8px;right:8px;display:flex;gap:2px;z-index:10;background:var(--surface);border:1px solid var(--border);border-radius:6px;padding:2px}
+  .zoom-controls button{width:28px;height:28px;border:none;background:transparent;color:var(--text-faint);font-family:var(--font-mono);font-size:14px;cursor:pointer;border-radius:4px;display:flex;align-items:center;justify-content:center}
+  .zoom-controls button:hover{background:var(--border);color:var(--text)}
+  .herometa{font-family:var(--font-mono);font-size:11px;letter-spacing:.04em;color:var(--text-faint);margin-bottom:6px}
+  .col2{display:grid;grid-template-columns:1fr 1fr;gap:6px 28px}
+  @media(max-width:900px){.col2{grid-template-columns:1fr}}
 </style>
 </head>
 <body>
-<style>
-.crumbs-at-top{max-width:1100px;margin:0 auto;padding:14px 24px 0}
-.crumbs{font-family:var(--font-mono,monospace);font-size:13px;font-weight:600;display:flex;align-items:center;gap:8px;flex-wrap:wrap;min-width:0}
-.crumbs a{color:var(--accent);text-decoration:none}
-.crumbs a:hover,.crumbs a:focus-visible{text-decoration:underline;outline:none}
-.crumbs .sep{color:var(--text-dim)}
-.crumbs .current{color:var(--text-dim);font-weight:400}
-</style>
-<nav class="crumbs crumbs-at-top" aria-label="Breadcrumb">
-  <a href="../../index.html">Index</a>
-  <span class="sep">/</span>
-  <span class="current" aria-current="page">L&amp;D Cohort Automation</span>
-</nav>
 
-
-<div class="wrap">
-
-<nav class="toc" id="toc">
-  <div class="toc-title">Contents</div>
-  <a href="#s1">Overview</a>
-  <a href="#s2">Architecture</a>
-  <a href="#s3">Pipeline Flow</a>
-  <a href="#s4">Data Flow</a>
-  <a href="#s5">Naming Convention</a>
-  <a href="#s6">Human-in-the-Loop</a>
-  <a href="#s7">Setup Guide</a>
-  <a href="#s8">Script Properties</a>
-</nav>
-
-<div class="main">
-
-<h1 class="anim" style="--i:0">L&D Cohort Automation</h1>
-<p class="subtitle anim" style="--i:1">google apps script &bull; clasp cli &bull; the bradbury group</p>
-<p class="tagline anim" style="--i:2">Automates the <strong>11-step post-session SOP</strong> for The Bradbury Group's L&D Cohort program. Files are renamed and routed, sheets and docs are populated, transcripts are analyzed by AI, facilitator notes are generated, and follow-up drafts are created &mdash; all automatically. <strong>Humans review and release.</strong></p>
-
-<div class="kpi-row anim-s" style="--i:3">
-  <div class="kpi"><div class="kpi-val" style="color:var(--phase1)">14</div><div class="kpi-lbl">Files</div></div>
-  <div class="kpi"><div class="kpi-val" style="color:var(--phase3)">8</div><div class="kpi-lbl">Phases</div></div>
-  <div class="kpi"><div class="kpi-val" style="color:var(--phase2)">11</div><div class="kpi-lbl">SOP Steps</div></div>
-  <div class="kpi"><div class="kpi-val" style="color:var(--phase5)">90+</div><div class="kpi-lbl">Tests Pass</div></div>
+<div class="crumbs crumbs-top" aria-label="Breadcrumb">
+  <a href="../../index.html">Index</a><span class="sep">/</span>
+  <span class="current" aria-current="page">Pipeline Architecture</span>
 </div>
 
-<!-- ─── 1. Overview ─── -->
-<div id="s1" class="sec-head anim" style="--i:4"><span class="dot" style="background:var(--accent)"></span> Overview</div>
+<main class="wrap">
 
-<div class="card card--hero anim" style="--i:5">
-  <p style="font-size:13px;line-height:1.7;color:var(--text-dim)">After every L&D Cohort session, Paige manually runs an 11-step SOP: rename recording &amp; transcript files, move them to Drive folders, link them in the Schedule Sheet, run the transcript through Walter (AI) for homework/analysis, populate Facilitator Notes, update the Hub doc, and notify learners. This automation handles <strong style="color:var(--text)">all of it</strong> &mdash; from file drop to Gmail draft &mdash; in a single pipeline triggered by <code style="font-family:var(--font-mono);font-size:11px;background:var(--accent-dim);color:var(--accent);padding:1px 5px;border-radius:3px">runPipelineManual(weekNum, sessionLetter)</code>.</p>
-</div>
+  <header class="hero">
+    <div class="tagline">The Bradbury Group // L&amp;D Cohort</div>
+    <h1>L&amp;D Cohort Automation</h1>
+    <p class="lede">Automates the <b>11-step post-session SOP</b> for The Bradbury Group&rsquo;s L&amp;D Cohort program. Files are renamed and routed, sheets and docs are populated, transcripts are analyzed by AI, facilitator notes are generated, and follow-up drafts are created &mdash; all automatically. <b>Humans review and release.</b></p>
+  </header>
 
-<!-- ─── 2. Architecture ─── -->
-<div id="s2" class="sec-head anim" style="--i:6"><span class="dot" style="background:var(--phase2)"></span> Architecture</div>
+  <div class="pmap i-acc"><div class="pm-k">Snapshot</div><div class="pm-b">This pipeline is driven by <code>runPipelineManual(weekNum, sessionLetter)</code> and persists state to Script Properties.</div></div>
+  <div class="pmap"><div class="pm-k">Files</div><div class="pm-b">14</div></div>
+  <div class="pmap"><div class="pm-k">Phases</div><div class="pm-b">8</div></div>
+  <div class="pmap"><div class="pm-k">SOP Steps</div><div class="pm-b">11</div></div>
+  <div class="pmap"><div class="pm-k">Tests Pass</div><div class="pm-b">90+</div></div>
 
-<div class="module-grid anim" style="--i:7">
-  <div class="mod" style="border-left:3px solid var(--text-dim)">
-    <div class="mod-name"><code>Config.gs</code></div>
-    <div class="mod-desc">Script Properties reader, folder ID constants, feature flags</div>
-  </div>
-  <div class="mod" style="border-left:3px solid var(--text-dim)">
-    <div class="mod-name"><code>Utils.gs</code></div>
-    <div class="mod-desc">Naming parser/builder, date helpers, execution logger, pipeline state</div>
-  </div>
-  <div class="mod" style="border-left:3px solid var(--phase1)">
-    <div class="mod-name"><code>FileManager.gs</code></div>
-    <div class="mod-desc">Drive: detect type, rename, move, create shortcuts, extract text</div>
-  </div>
-  <div class="mod" style="border-left:3px solid var(--phase2)">
-    <div class="mod-name"><code>SheetUpdater.gs</code></div>
-    <div class="mod-desc">Schedule Sheet: find session rows, write links, mark steps complete</div>
-  </div>
-  <div class="mod" style="border-left:3px solid var(--phase3)">
-    <div class="mod-name"><code>HubUpdater.gs</code></div>
-    <div class="mod-desc">00_START_HERE doc: append session entry with synopsis &amp; hyperlinks</div>
-  </div>
-  <div class="mod" style="border-left:3px solid var(--phase4)">
-    <div class="mod-name"><code>WalterApi.gs</code></div>
-    <div class="mod-desc">Claude/Gemini API: L&D analysis prompt, JSON parse, analysis doc</div>
-  </div>
-  <div class="mod" style="border-left:3px solid var(--phase5)">
-    <div class="mod-name"><code>DocPopulator.gs</code></div>
-    <div class="mod-desc">FN template: copy, fill {{placeholders}} from Walter JSON</div>
-  </div>
-  <div class="mod" style="border-left:3px solid var(--phase6)">
-    <div class="mod-name"><code>GmailDrafter.gs</code></div>
-    <div class="mod-desc">Create follow-up email draft with links, synopsis, homework</div>
-  </div>
-  <div class="mod" style="border-left:3px solid var(--phase7)">
-    <div class="mod-name"><code>ClickUpApi.gs</code></div>
-    <div class="mod-desc">Create review tasks in ClickUp (graceful skip if no key)</div>
-  </div>
-  <div class="mod" style="border-left:3px solid var(--accent)">
-    <div class="mod-name"><code>Orchestrator.gs</code></div>
-    <div class="mod-desc">Sequences all phases, manages state, handles 6-min limit</div>
-  </div>
-  <div class="mod" style="border-left:3px solid var(--accent)">
-    <div class="mod-name"><code>Triggers.gs</code></div>
-    <div class="mod-desc">Gmail poll trigger, weekly BAM trigger setup</div>
-  </div>
-  <div class="mod" style="border-left:3px solid var(--orange)">
-    <div class="mod-name"><code>TestHarness.gs</code></div>
-    <div class="mod-desc">Per-phase test functions, setup helpers, E2E pipeline test</div>
-  </div>
-  <div class="mod" style="border-left:3px solid var(--orange)">
-    <div class="mod-name"><code>TestData.gs</code></div>
-    <div class="mod-desc">Dummy transcript (~9K chars), metadata, Walter response</div>
-  </div>
-</div>
-
-<!-- ─── 3. Pipeline Flow ─── -->
-<div id="s3" class="sec-head anim" style="--i:8"><span class="dot" style="background:var(--phase3)"></span> Pipeline Flow</div>
-
-<div class="mermaid-wrap anim" style="--i:9">
-  <div class="zoom-controls">
-    <button onclick="zoomDiagram(this,1.2)" title="Zoom in">+</button>
-    <button onclick="zoomDiagram(this,0.8)" title="Zoom out">&minus;</button>
-    <button onclick="resetZoom(this)" title="Reset">&#8634;</button>
-  </div>
-  <pre class="mermaid">
-graph TD
-  START["Files dropped in<br/>00_Incoming"] --> FM
-
-  subgraph Phase1["Phase 1 — File Management"]
-    FM["Detect file type<br/>recording vs transcript"] --> RN["Rename per convention<br/>LD-C1_W03A_Recording_2026-04-28"]
-    RN --> MV["Move to destination<br/>01_Recordings / 02_Transcripts"]
-    MV --> SC["Create shortcuts<br/>in 00_SHARED subfolders"]
-    SC --> EX["Extract transcript text"]
-  end
-
-  EX --> SU
-
-  subgraph Phase2["Phase 2 — Sheet Updates"]
-    SU["Find session row<br/>in Schedule Sheet"] --> LK["Write recording &<br/>transcript links"]
-    LK --> MS["Mark SOP steps<br/>complete"]
-  end
-
-  MS --> HU
-
-  subgraph Phase3["Phase 3 — Hub Doc"]
-    HU["Append session entry<br/>to 00_START_HERE"]
-  end
-
-  HU --> WA
-
-  subgraph Phase4["Phase 4 — Walter AI Analysis"]
-    WA["Send transcript to<br/>Claude or Gemini API"] --> JP["Parse structured<br/>JSON response"]
-    JP --> AD["Create formatted<br/>Analysis Doc in Drive"]
-  end
-
-  AD --> DP
-
-  subgraph Phase5["Phase 5 — FN Population"]
-    DP["Copy FN template"] --> PH["Replace placeholders<br/>with Walter data"]
-  end
-
-  PH --> GD
-
-  subgraph Phase6["Phase 6 — Notifications"]
-    GD["Create Gmail draft<br/>with links & analysis"]
-    GD --> CU["Create ClickUp<br/>review tasks"]
-  end
-
-  CU --> DONE["Pipeline Complete"]
-
-  classDef p1 fill:#f472b622,stroke:#f472b6,stroke-width:2px
-  classDef p2 fill:#a78bfa22,stroke:#a78bfa,stroke-width:2px
-  classDef p3 fill:#34d39922,stroke:#34d399,stroke-width:2px
-  classDef p4 fill:#60a5fa22,stroke:#60a5fa,stroke-width:2px
-  classDef p5 fill:#fbbf2422,stroke:#fbbf24,stroke-width:2px
-  classDef p6 fill:#f8717122,stroke:#f87171,stroke-width:2px
-  classDef start fill:#818cf822,stroke:#818cf8,stroke-width:2px
-  classDef done fill:#34d39944,stroke:#34d399,stroke-width:3px
-
-  class START start
-  class FM,RN,MV,SC,EX p1
-  class SU,LK,MS p2
-  class HU p3
-  class WA,JP,AD p4
-  class DP,PH p5
-  class GD,CU p6
-  class DONE done
-  </pre>
-</div>
-
-<!-- ─── 4. Data Flow ─── -->
-<div id="s4" class="sec-head anim" style="--i:10"><span class="dot" style="background:var(--phase4)"></span> Data Flow &amp; Pipeline State</div>
-
-<div class="mermaid-wrap anim" style="--i:11">
-  <div class="zoom-controls">
-    <button onclick="zoomDiagram(this,1.2)" title="Zoom in">+</button>
-    <button onclick="zoomDiagram(this,0.8)" title="Zoom out">&minus;</button>
-    <button onclick="resetZoom(this)" title="Reset">&#8634;</button>
-  </div>
-  <pre class="mermaid">
-graph LR
-  subgraph State["PIPELINE_W03A<br/>Script Properties"]
-    S1["transcriptText"]
-    S2["recordingUrl"]
-    S3["transcriptUrl"]
-    S4["walterJson"]
-    S5["analysisUrl"]
-    S6["fnDocUrl"]
-    S7["synopsis"]
-    S8["draftId"]
-  end
-
-  FM2["FileManager"] -->|"writes"| S1
-  FM2 -->|"writes"| S2
-  FM2 -->|"writes"| S3
-  WA2["WalterApi"] -->|"reads"| S1
-  WA2 -->|"writes"| S4
-  WA2 -->|"writes"| S5
-  WA2 -->|"writes"| S7
-  DP2["DocPopulator"] -->|"reads"| S4
-  DP2 -->|"writes"| S6
-  GD2["GmailDrafter"] -->|"reads"| S4
-  GD2 -->|"reads"| S2
-  GD2 -->|"reads"| S3
-  GD2 -->|"reads"| S6
-  GD2 -->|"writes"| S8
-  HU2["HubUpdater"] -->|"reads"| S2
-  HU2 -->|"reads"| S3
-  HU2 -->|"reads"| S7
-
-  classDef state fill:#60a5fa22,stroke:#60a5fa,stroke-width:2px
-  classDef mod fill:#a78bfa22,stroke:#a78bfa,stroke-width:2px
-  class S1,S2,S3,S4,S5,S6,S7,S8 state
-  class FM2,WA2,DP2,GD2,HU2 mod
-  </pre>
-</div>
-
-<div class="card anim" style="--i:12">
-  <p style="font-size:12px;color:var(--text-dim);line-height:1.7">Pipeline state is persisted to <code style="font-family:var(--font-mono);font-size:11px;background:var(--accent-dim);color:var(--accent);padding:1px 5px;border-radius:3px">PIPELINE_{sessionId}</code> in Script Properties as a JSON string. Each phase reads what it needs and writes what downstream phases will consume. If the 5-minute limit is approaching, the Orchestrator saves state and schedules a continuation trigger.</p>
-</div>
-
-<!-- ─── 5. Naming Convention ─── -->
-<div id="s5" class="sec-head anim" style="--i:13"><span class="dot" style="background:var(--phase5)"></span> Naming Convention</div>
-
-<div class="card anim" style="--i:14">
-  <div class="naming-demo">
-    <span class="seg" style="background:var(--phase1-dim);color:var(--phase1)">LD-C1</span>
-    <span style="color:var(--text-dim)">_</span>
-    <span class="seg" style="background:var(--phase2-dim);color:var(--phase2)">W03A</span>
-    <span style="color:var(--text-dim)">_</span>
-    <span class="seg" style="background:var(--phase3-dim);color:var(--phase3)">Recording</span>
-    <span style="color:var(--text-dim)">_</span>
-    <span class="seg" style="background:var(--phase4-dim);color:var(--phase4)">2026-04-28</span>
-  </div>
-  <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:16px;font-size:12px;">
-    <div><span class="tag" style="background:var(--phase1-dim);color:var(--phase1)">PREFIX</span> Cohort identifier: <code style="font-family:var(--font-mono);font-size:11px">LD-C1</code></div>
-    <div><span class="tag" style="background:var(--phase2-dim);color:var(--phase2)">WEEK+SESSION</span> Week number + letter: <code style="font-family:var(--font-mono);font-size:11px">W03A</code></div>
-    <div><span class="tag" style="background:var(--phase3-dim);color:var(--phase3)">DESCRIPTION</span> File type: Recording, Transcript, FacilitatorNotes, WalterAnalysis</div>
-    <div><span class="tag" style="background:var(--phase4-dim);color:var(--phase4)">DATE</span> Session date: <code style="font-family:var(--font-mono);font-size:11px">yyyy-MM-dd</code></div>
-  </div>
-</div>
-
-<!-- ─── 6. Human-in-the-Loop ─── -->
-<div id="s6" class="sec-head anim" style="--i:15"><span class="dot" style="background:var(--phase6)"></span> Human-in-the-Loop Model</div>
-
-<div class="hitl-grid anim" style="--i:16">
-  <div class="hitl-box" style="background:var(--green-dim)">
-    <h4 style="color:var(--green)"><span class="dot" style="width:8px;height:8px;border-radius:50%;background:var(--green);display:inline-block"></span> Auto-generated</h4>
-    <ul>
-      <li>File renaming &amp; routing</li>
-      <li>Schedule Sheet links &amp; status</li>
-      <li>Hub doc session entry</li>
-      <li>Walter AI transcript analysis</li>
-      <li>Analysis doc in Drive</li>
-      <li>Facilitator Notes population</li>
-      <li>Gmail follow-up draft</li>
-      <li>ClickUp review tasks</li>
-    </ul>
-  </div>
-  <div class="hitl-box" style="background:var(--phase5-dim)">
-    <h4 style="color:var(--phase5)"><span class="dot" style="width:8px;height:8px;border-radius:50%;background:var(--phase5);display:inline-block"></span> Human reviews &amp; releases</h4>
-    <ul>
-      <li>Review Walter analysis accuracy</li>
-      <li>Edit Facilitator Notes before sharing</li>
-      <li>Review &amp; send Gmail draft</li>
-      <li>Confirm deliverables in sheet</li>
-      <li>Check ClickUp tasks for completeness</li>
-    </ul>
-  </div>
-</div>
-
-<!-- ─── 7. Setup Guide ─── -->
-<div id="s7" class="sec-head anim" style="--i:17"><span class="dot" style="background:var(--phase7)"></span> Setup Guide</div>
-
-<div class="setup-steps anim" style="--i:18">
-  <div class="setup-step">Install clasp: <code>npm install -g @google/clasp</code></div>
-  <div class="setup-step">Login: <code>clasp login</code> (opens browser for Google OAuth)</div>
-  <div class="setup-step">Enable Apps Script API at <code>https://script.google.com/home/usersettings</code></div>
-  <div class="setup-step">Clone the repo &amp; create Apps Script project: <code>clasp create --type standalone --title "LD Cohort Automation"</code></div>
-  <div class="setup-step">Push code: <code>clasp push</code> (confirm manifest overwrite)</div>
-  <div class="setup-step">Open editor: <code>clasp open</code> &mdash; run <code>setupScriptProperties()</code></div>
-  <div class="setup-step">Set API key: run <code>setClaudeApiKey()</code> or <code>setGeminiApiKey()</code> (paste key in function body first)</div>
-  <div class="setup-step">Run <code>testSprint0()</code> to verify foundation</div>
-  <div class="setup-step">Run <code>testFullPipeline()</code> for end-to-end verification</div>
-  <div class="setup-step">Replace placeholder folder IDs with real Drive folder IDs in Script Properties</div>
-  <div class="setup-step">Enable feature flags one at a time via <code>FEATURE_FLAGS</code> JSON in Script Properties</div>
-</div>
-
-<!-- ─── 8. Script Properties ─── -->
-<div id="s8" class="sec-head anim" style="--i:19"><span class="dot" style="background:var(--accent)"></span> Script Properties Reference</div>
-
-<details class="collapsible anim" style="--i:20" open>
-  <summary>All Script Properties</summary>
-  <div class="body">
-    <div style="overflow-x:auto">
-    <table class="props-table">
-      <thead><tr><th>Property</th><th>Purpose</th><th>Source</th></tr></thead>
-      <tbody>
-        <tr><td><code>FOLDER_INCOMING</code></td><td>Drive ID: 00_Incoming folder</td><td>Drive URL</td></tr>
-        <tr><td><code>FOLDER_RECORDINGS</code></td><td>Drive ID: 01_Recordings folder</td><td>Drive URL</td></tr>
-        <tr><td><code>FOLDER_TRANSCRIPTS</code></td><td>Drive ID: 02_Transcripts folder</td><td>Drive URL</td></tr>
-        <tr><td><code>FOLDER_FN</code></td><td>Drive ID: 03_FacilitatorNotes folder</td><td>Drive URL</td></tr>
-        <tr><td><code>FOLDER_ANALYSIS</code></td><td>Drive ID: 05_Analysis folder</td><td>Drive URL</td></tr>
-        <tr><td><code>FOLDER_SHARED</code></td><td>Drive ID: 00_SHARED folder (with subfolders)</td><td>Drive URL</td></tr>
-        <tr><td><code>SCHEDULE_SHEET_ID</code></td><td>Schedule Sheet spreadsheet ID</td><td>Sheet URL</td></tr>
-        <tr><td><code>HUB_DOC_ID</code></td><td>00_START_HERE overview doc ID</td><td>Doc URL</td></tr>
-        <tr><td><code>FN_TEMPLATE_ID</code></td><td>Facilitator Notes template doc ID</td><td>Doc URL</td></tr>
-        <tr><td><code>CLAUDE_API_KEY</code></td><td>Anthropic API key (checked first)</td><td>console.anthropic.com</td></tr>
-        <tr><td><code>GEMINI_API_KEY</code></td><td>Google AI key (fallback)</td><td>aistudio.google.com</td></tr>
-        <tr><td><code>CLICKUP_API_KEY</code></td><td>ClickUp API token (optional)</td><td>ClickUp settings</td></tr>
-        <tr><td><code>CLICKUP_LIST_ID</code></td><td>ClickUp list for review tasks</td><td>ClickUp URL</td></tr>
-        <tr><td><code>FACILITATOR_EMAIL</code></td><td>Email for Gmail drafts</td><td>Manual</td></tr>
-        <tr><td><code>COHORT_PREFIX</code></td><td>Naming prefix (e.g., LD-C1)</td><td>Manual</td></tr>
-        <tr><td><code>EXECUTION_LOG_SHEET</code></td><td>Sheet ID for _ExecutionLog tab</td><td>Sheet URL</td></tr>
-        <tr><td><code>FEATURE_FLAGS</code></td><td>JSON: which phases are enabled</td><td>Manual</td></tr>
-      </tbody>
-    </table>
+  <!-- 01 -->
+  <section class="sec">
+    <div class="sec-head"><span class="sec-num">01</span><h2 class="sec-title">Overview</h2></div>
+    <div class="sec-body">
+      <p>After every L&amp;D Cohort session, Paige manually runs an 11-step SOP: rename recording &amp; transcript files, move them to Drive folders, link them in the Schedule Sheet, run the transcript through Walter (AI) for homework/analysis, populate Facilitator Notes, update the Hub doc, and notify learners. This automation handles <b>all of it</b> &mdash; from file drop to Gmail draft &mdash; in a single pipeline triggered by <code>runPipelineManual(weekNum, sessionLetter)</code>.</p>
     </div>
-  </div>
-</details>
+  </section>
 
-<details class="collapsible anim" style="--i:21">
-  <summary>Feature Flags JSON</summary>
-  <div class="body">
-    <pre style="font-family:var(--font-mono);font-size:12px;background:var(--surface2);padding:16px;border-radius:8px;overflow-x:auto;line-height:1.6">{
+  <!-- 02 -->
+  <section class="sec">
+    <div class="sec-head"><span class="sec-num">02</span><h2 class="sec-title">Architecture</h2></div>
+    <div class="sec-body">
+      <div class="pmap"><div class="pm-k">Config.gs</div><div class="pm-b">Script Properties reader, folder ID constants, feature flags</div></div>
+      <div class="pmap"><div class="pm-k">Utils.gs</div><div class="pm-b">Naming parser/builder, date helpers, execution logger, pipeline state</div></div>
+      <div class="pmap i-teal"><div class="pm-k">FileManager.gs</div><div class="pm-b">Drive: detect type, rename, move, create shortcuts, extract text</div></div>
+      <div class="pmap"><div class="pm-k">SheetUpdater.gs</div><div class="pm-b">Schedule Sheet: find session rows, write links, mark steps complete</div></div>
+      <div class="pmap"><div class="pm-k">HubUpdater.gs</div><div class="pm-b">00_START_HERE doc: append session entry with synopsis &amp; hyperlinks</div></div>
+      <div class="pmap i-vio"><div class="pm-k">WalterApi.gs</div><div class="pm-b">Claude/Gemini API: L&amp;D analysis prompt, JSON parse, analysis doc</div></div>
+      <div class="pmap"><div class="pm-k">DocPopulator.gs</div><div class="pm-b">FN template: copy, fill {{placeholders}} from Walter JSON</div></div>
+      <div class="pmap"><div class="pm-k">GmailDrafter.gs</div><div class="pm-b">Create follow-up email draft with links, synopsis, homework</div></div>
+      <div class="pmap"><div class="pm-k">ClickUpApi.gs</div><div class="pm-b">Create review tasks in ClickUp (graceful skip if no key)</div></div>
+      <div class="pmap i-acc"><div class="pm-k">Orchestrator.gs</div><div class="pm-b">Sequences all phases, manages state, handles 6-min limit</div></div>
+      <div class="pmap i-acc"><div class="pm-k">Triggers.gs</div><div class="pm-b">Gmail poll trigger, weekly BAM trigger setup</div></div>
+      <div class="pmap i-amb"><div class="pm-k">TestHarness.gs</div><div class="pm-b">Per-phase test functions, setup helpers, E2E pipeline test</div></div>
+      <div class="pmap i-amb"><div class="pm-k">TestData.gs</div><div class="pm-b">Dummy transcript (~9K chars), metadata, Walter response</div></div>
+    </div>
+  </section>
+
+  <!-- 03 -->
+  <section class="sec">
+    <div class="sec-head"><span class="sec-num">03</span><h2 class="sec-title">Pipeline Flow</h2></div>
+    <div class="sec-body">
+      <div class="mermaid-wrap">
+        <div class="zoom-controls">
+          <button onclick="zoomDiagram(this, 1.2)" title="Zoom in">+</button>
+          <button onclick="zoomDiagram(this, 0.8)" title="Zoom out">&minus;</button>
+          <button onclick="resetZoom(this)" title="Reset zoom">&#8634;</button>
+        </div>
+        <pre class="mermaid">
+      graph TD
+        START["Files dropped in
+      00_Incoming"] --> FM
+
+        subgraph Phase1["Phase 1 — File Management"]
+          FM["Detect file type
+      recording vs transcript"] --> RN["Rename per convention
+      LD-C1_W03A_Recording_2026-04-28"]
+          RN --> MV["Move to destination
+      01_Recordings / 02_Transcripts"]
+          MV --> SC["Create shortcuts
+      in 00_SHARED subfolders"]
+          SC --> EX["Extract transcript text"]
+        end
+
+        EX --> SU
+
+        subgraph Phase2["Phase 2 — Sheet Updates"]
+          SU["Find session row
+      in Schedule Sheet"] --> LK["Write recording &
+      transcript links"]
+          LK --> MS["Mark SOP steps
+      complete"]
+        end
+
+        MS --> HU
+
+        subgraph Phase3["Phase 3 — Hub Doc"]
+          HU["Append session entry
+      to 00_START_HERE"]
+        end
+
+        HU --> WA
+
+        subgraph Phase4["Phase 4 — Walter AI Analysis"]
+          WA["Send transcript to
+      Claude or Gemini API"] --> JP["Parse structured
+      JSON response"]
+          JP --> AD["Create formatted
+      Analysis Doc in Drive"]
+        end
+
+        AD --> DP
+
+        subgraph Phase5["Phase 5 — FN Population"]
+          DP["Copy FN template"] --> PH["Replace placeholders
+      with Walter data"]
+        end
+
+        PH --> GD
+
+        subgraph Phase6["Phase 6 — Notifications"]
+          GD["Create Gmail draft
+      with links & analysis"]
+          GD --> CU["Create ClickUp
+      review tasks"]
+        end
+
+        CU --> DONE["Pipeline Complete"]
+
+        classDef p1 fill:#EAF2F9,stroke:#2F6FA8,color:#241A12,stroke-width:1.5px
+        classDef p2 fill:#ECE6FB,stroke:#7C3AED,color:#241A12,stroke-width:1.5px
+        classDef p3 fill:#E4F1EE,stroke:#0E7C6E,color:#241A12,stroke-width:1.5px
+        classDef p4 fill:#E9E7FB,stroke:#4F46E5,color:#241A12,stroke-width:1.5px
+        classDef p5 fill:#FAF0DC,stroke:#A5650A,color:#241A12,stroke-width:1.5px
+        classDef p6 fill:#FBEBEA,stroke:#C23A30,color:#241A12,stroke-width:1.5px
+        classDef start fill:#E4F1EE,stroke:#0E7C6E,color:#241A12,stroke-width:1.5px
+        classDef done fill:#D9F3EC,stroke:#0E7C6E,color:#241A12,stroke-width:2.5px
+
+        class START start
+        class FM,RN,MV,SC,EX p1
+        class SU,LK,MS p2
+        class HU p3
+        class WA,JP,AD p4
+        class DP,PH p5
+        class GD,CU p6
+        class DONE done
+        </pre>
+      </div>
+    </div>
+  </section>
+
+  <!-- 04 -->
+  <section class="sec">
+    <div class="sec-head"><span class="sec-num">04</span><h2 class="sec-title">Data Flow &amp; Pipeline State</h2></div>
+    <div class="sec-body">
+      <div class="mermaid-wrap">
+        <div class="zoom-controls">
+          <button onclick="zoomDiagram(this, 1.2)" title="Zoom in">+</button>
+          <button onclick="zoomDiagram(this, 0.8)" title="Zoom out">&minus;</button>
+          <button onclick="resetZoom(this)" title="Reset zoom">&#8634;</button>
+        </div>
+        <pre class="mermaid">
+      graph LR
+        subgraph State["PIPELINE_W03A
+      Script Properties"]
+          S1["transcriptText"]
+          S2["recordingUrl"]
+          S3["transcriptUrl"]
+          S4["walterJson"]
+          S5["analysisUrl"]
+          S6["fnDocUrl"]
+          S7["synopsis"]
+          S8["draftId"]
+        end
+
+        FM2["FileManager"] -->|"writes"| S1
+        FM2 -->|"writes"| S2
+        FM2 -->|"writes"| S3
+        WA2["WalterApi"] -->|"reads"| S1
+        WA2 -->|"writes"| S4
+        WA2 -->|"writes"| S5
+        WA2 -->|"writes"| S7
+        DP2["DocPopulator"] -->|"reads"| S4
+        DP2 -->|"writes"| S6
+        GD2["GmailDrafter"] -->|"reads"| S4
+        GD2 -->|"reads"| S2
+        GD2 -->|"reads"| S3
+        GD2 -->|"reads"| S6
+        GD2 -->|"writes"| S8
+        HU2["HubUpdater"] -->|"reads"| S2
+        HU2 -->|"reads"| S3
+        HU2 -->|"reads"| S7
+
+        classDef state fill:#E9E7FB,stroke:#4F46E5,color:#241A12,stroke-width:1.5px
+        classDef mod fill:#ECE6FB,stroke:#7C3AED,color:#241A12,stroke-width:1.5px
+        class S1,S2,S3,S4,S5,S6,S7,S8 state
+        class FM2,WA2,DP2,GD2,HU2 mod
+        </pre>
+      </div>
+      <p class="nb">Pipeline state is persisted to <code>PIPELINE_{sessionId}</code> in Script Properties as a JSON string. Each phase reads what it needs and writes what downstream phases will consume. If the 5-minute limit is approaching, the Orchestrator saves state and schedules a continuation trigger.</p>
+    </div>
+  </section>
+
+  <!-- 05 -->
+  <section class="sec">
+    <div class="sec-head"><span class="sec-num">05</span><h2 class="sec-title">Naming Convention</h2></div>
+    <div class="sec-body">
+      <p class="nb"><code>LD-C1_W03A_Recording_2026-04-28</code></p>
+      <div class="col2">
+        <div class="pmap"><div class="pm-k">Prefix</div><div class="pm-b">Cohort identifier: <code>LD-C1</code></div></div>
+        <div class="pmap"><div class="pm-k">Week + Session</div><div class="pm-b">Week number + letter: <code>W03A</code></div></div>
+        <div class="pmap"><div class="pm-k">Description</div><div class="pm-b">File type: Recording, Transcript, FacilitatorNotes, WalterAnalysis</div></div>
+        <div class="pmap"><div class="pm-k">Date</div><div class="pm-b">Session date: <code>yyyy-MM-dd</code></div></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 06 -->
+  <section class="sec">
+    <div class="sec-head"><span class="sec-num">06</span><h2 class="sec-title">Human-in-the-Loop Model</h2></div>
+    <div class="sec-body">
+      <div class="pmap i-teal"><div class="pm-k">Auto-generated</div><div class="pm-b">
+        File renaming &amp; routing<br>Schedule Sheet links &amp; status<br>Hub doc session entry<br>Walter AI transcript analysis<br>Analysis doc in Drive<br>Facilitator Notes population<br>Gmail follow-up draft<br>ClickUp review tasks</div></div>
+      <div class="pmap i-amb"><div class="pm-k">Human reviews &amp; releases</div><div class="pm-b">
+        Review Walter analysis accuracy<br>Edit Facilitator Notes before sharing<br>Review &amp; send Gmail draft<br>Confirm deliverables in sheet<br>Check ClickUp tasks for completeness</div></div>
+    </div>
+  </section>
+
+  <!-- 07 -->
+  <section class="sec">
+    <div class="sec-head"><span class="sec-num">07</span><h2 class="sec-title">Setup Guide</h2></div>
+    <div class="sec-body">
+      <div class="pmap"><div class="pm-k">Step 1</div><div class="pm-b">Install clasp: <code>npm install -g @google/clasp</code></div></div>
+      <div class="pmap"><div class="pm-k">Step 2</div><div class="pm-b">Login: <code>clasp login</code> (opens browser for Google OAuth)</div></div>
+      <div class="pmap"><div class="pm-k">Step 3</div><div class="pm-b">Enable Apps Script API at <code>https://script.google.com/home/usersettings</code></div></div>
+      <div class="pmap"><div class="pm-k">Step 4</div><div class="pm-b">Clone the repo &amp; create Apps Script project: <code>clasp create --type standalone --title "LD Cohort Automation"</code></div></div>
+      <div class="pmap"><div class="pm-k">Step 5</div><div class="pm-b">Push code: <code>clasp push</code> (confirm manifest overwrite)</div></div>
+      <div class="pmap"><div class="pm-k">Step 6</div><div class="pm-b">Open editor: <code>clasp open</code> &mdash; run <code>setupScriptProperties()</code></div></div>
+      <div class="pmap"><div class="pm-k">Step 7</div><div class="pm-b">Set API key: run <code>setClaudeApiKey()</code> or <code>setGeminiApiKey()</code> (paste key in function body first)</div></div>
+      <div class="pmap"><div class="pm-k">Step 8</div><div class="pm-b">Run <code>testSprint0()</code> to verify foundation</div></div>
+      <div class="pmap"><div class="pm-k">Step 9</div><div class="pm-b">Run <code>testFullPipeline()</code> for end-to-end verification</div></div>
+      <div class="pmap"><div class="pm-k">Step 10</div><div class="pm-b">Replace placeholder folder IDs with real Drive folder IDs in Script Properties</div></div>
+      <div class="pmap"><div class="pm-k">Step 11</div><div class="pm-b">Enable feature flags one at a time via <code>FEATURE_FLAGS</code> JSON in Script Properties</div></div>
+    </div>
+  </section>
+
+  <!-- 08 -->
+  <section class="sec">
+    <div class="sec-head"><span class="sec-num">08</span><h2 class="sec-title">Script Properties Reference</h2></div>
+    <div class="sec-body">
+      <p class="nb"><b>All Script Properties</b></p>
+      <table class="tbl">
+        <thead><tr><th>Property</th><th>Purpose</th><th>Source</th></tr></thead>
+        <tbody>
+          <tr><td class="f"><code>FOLDER_INCOMING</code></td><td>Drive ID: 00_Incoming folder</td><td class="src"><code>Drive URL</code></td></tr>
+          <tr><td class="f"><code>FOLDER_RECORDINGS</code></td><td>Drive ID: 01_Recordings folder</td><td class="src"><code>Drive URL</code></td></tr>
+          <tr><td class="f"><code>FOLDER_TRANSCRIPTS</code></td><td>Drive ID: 02_Transcripts folder</td><td class="src"><code>Drive URL</code></td></tr>
+          <tr><td class="f"><code>FOLDER_FN</code></td><td>Drive ID: 03_FacilitatorNotes folder</td><td class="src"><code>Drive URL</code></td></tr>
+          <tr><td class="f"><code>FOLDER_ANALYSIS</code></td><td>Drive ID: 05_Analysis folder</td><td class="src"><code>Drive URL</code></td></tr>
+          <tr><td class="f"><code>FOLDER_SHARED</code></td><td>Drive ID: 00_SHARED folder (with subfolders)</td><td class="src"><code>Drive URL</code></td></tr>
+          <tr><td class="f"><code>SCHEDULE_SHEET_ID</code></td><td>Schedule Sheet spreadsheet ID</td><td class="src"><code>Sheet URL</code></td></tr>
+          <tr><td class="f"><code>HUB_DOC_ID</code></td><td>00_START_HERE overview doc ID</td><td class="src"><code>Doc URL</code></td></tr>
+          <tr><td class="f"><code>FN_TEMPLATE_ID</code></td><td>Facilitator Notes template doc ID</td><td class="src"><code>Doc URL</code></td></tr>
+          <tr><td class="f"><code>CLAUDE_API_KEY</code></td><td>Anthropic API key (checked first)</td><td class="src"><code>console.anthropic.com</code></td></tr>
+          <tr><td class="f"><code>GEMINI_API_KEY</code></td><td>Google AI key (fallback)</td><td class="src"><code>aistudio.google.com</code></td></tr>
+          <tr><td class="f"><code>CLICKUP_API_KEY</code></td><td>ClickUp API token (optional)</td><td class="src"><code>ClickUp settings</code></td></tr>
+          <tr><td class="f"><code>CLICKUP_LIST_ID</code></td><td>ClickUp list for review tasks</td><td class="src"><code>ClickUp URL</code></td></tr>
+          <tr><td class="f"><code>FACILITATOR_EMAIL</code></td><td>Email for Gmail drafts</td><td class="src"><code>Manual</code></td></tr>
+          <tr><td class="f"><code>COHORT_PREFIX</code></td><td>Naming prefix (e.g., LD-C1)</td><td class="src"><code>Manual</code></td></tr>
+          <tr><td class="f"><code>EXECUTION_LOG_SHEET</code></td><td>Sheet ID for _ExecutionLog tab</td><td class="src"><code>Sheet URL</code></td></tr>
+          <tr><td class="f"><code>FEATURE_FLAGS</code></td><td>JSON: which phases are enabled</td><td class="src"><code>Manual</code></td></tr>
+        </tbody>
+      </table>
+      <p class="nb" style="margin-top:14px"><b>Feature Flags JSON</b></p>
+      <pre style="font-family:var(--font-mono);font-size:12px;background:var(--surface2);padding:16px;border-radius:8px;overflow-x:auto;line-height:1.6">{
   "fileManagement": false,
   "sheetUpdater":   false,
   "hubUpdater":     false,
@@ -512,56 +387,49 @@ graph LR
   "clickUpApi":     false,
   "weeklyBam":      false
 }</pre>
-    <p style="font-size:12px;color:var(--text-dim);margin-top:12px">Set to <code style="font-family:var(--font-mono);font-size:11px;background:var(--green-dim);color:var(--green);padding:1px 5px;border-radius:3px">true</code> one at a time as you validate each phase with real data.</p>
-  </div>
-</details>
+      <p class="nb" style="margin-top:12px">Set to <code>true</code> one at a time as you validate each phase with real data.</p>
+    </div>
+  </section>
 
-</div><!-- /main -->
-</div><!-- /wrap -->
+  <footer class="footer">
+    <a href="../../index.html">&larr; Index</a>
+    <span>&copy; 2025-2026 Charlie Fuller</span>
+  </footer>
+
+</main>
 
 <script type="module">
   import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs';
-  const isDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
   mermaid.initialize({
-    startOnLoad: true,
-    theme: 'base',
-    look: 'classic',
+    startOnLoad: true, theme: 'base', look: 'classic',
     themeVariables: {
-      primaryColor: isDark ? '#1e2440' : '#ede9fe',
-      primaryBorderColor: isDark ? '#a78bfa' : '#7c3aed',
-      primaryTextColor: isDark ? '#e2e8f0' : '#0f172a',
-      secondaryColor: isDark ? '#14252e' : '#ecfdf5',
-      secondaryBorderColor: isDark ? '#34d399' : '#059669',
-      secondaryTextColor: isDark ? '#e2e8f0' : '#0f172a',
-      tertiaryColor: isDark ? '#2a2010' : '#fef3c7',
-      tertiaryBorderColor: isDark ? '#fbbf24' : '#d97706',
-      tertiaryTextColor: isDark ? '#e2e8f0' : '#0f172a',
-      lineColor: isDark ? '#4a5568' : '#94a3b8',
-      fontSize: '14px',
-      fontFamily: "'Sora', system-ui, sans-serif",
+      primaryColor: '#FFFFFF', primaryBorderColor: '#4F46E5', primaryTextColor: '#241A12',
+      secondaryColor: '#F0E9E1', secondaryBorderColor: '#0E7C6E', secondaryTextColor: '#241A12',
+      tertiaryColor: '#F0E9E1', tertiaryBorderColor: '#CDBBA8', tertiaryTextColor: '#241A12',
+      lineColor: '#8C7E6E', fontSize: '13px', fontFamily: "'Mulish', Helvetica, sans-serif"
     }
   });
 </script>
 <script>
-  function updateZoomState(w){var t=w.querySelector('.mermaid');var z=parseFloat(t.dataset.zoom||'1');w.classList.toggle('is-zoomed',z>1);}
-  function zoomDiagram(b,f){var w=b.closest('.mermaid-wrap');var t=w.querySelector('.mermaid');var c=parseFloat(t.dataset.zoom||'1');var n=Math.min(Math.max(c*f,0.3),5);t.dataset.zoom=n;t.style.transform='scale('+n+')';updateZoomState(w);}
-  function resetZoom(b){var w=b.closest('.mermaid-wrap');var t=w.querySelector('.mermaid');t.dataset.zoom='1';t.style.transform='scale(1)';updateZoomState(w);}
-  document.querySelectorAll('.mermaid-wrap').forEach(function(w){
-    w.addEventListener('wheel',function(e){if(!e.ctrlKey&&!e.metaKey)return;e.preventDefault();var t=w.querySelector('.mermaid');var c=parseFloat(t.dataset.zoom||'1');var f=e.deltaY<0?1.1:0.9;var n=Math.min(Math.max(c*f,0.3),5);t.dataset.zoom=n;t.style.transform='scale('+n+')';updateZoomState(w);},{passive:false});
-    var sx,sy,sl,st;
-    w.addEventListener('mousedown',function(e){if(e.target.closest('.zoom-controls'))return;var t=w.querySelector('.mermaid');if(parseFloat(t.dataset.zoom||'1')<=1)return;w.classList.add('is-panning');sx=e.clientX;sy=e.clientY;sl=w.scrollLeft;st=w.scrollTop;});
-    window.addEventListener('mousemove',function(e){if(!w.classList.contains('is-panning'))return;w.scrollLeft=sl-(e.clientX-sx);w.scrollTop=st-(e.clientY-sy);});
-    window.addEventListener('mouseup',function(){w.classList.remove('is-panning');});
+  function zoomDiagram(btn, factor) {
+    var wrap = btn.closest('.mermaid-wrap'), target = wrap.querySelector('.mermaid');
+    var next = Math.min(Math.max((parseFloat(target.dataset.zoom || '1')) * factor, 0.3), 5);
+    target.dataset.zoom = next; target.style.transform = 'scale(' + next + ')';
+  }
+  function resetZoom(btn) {
+    var wrap = btn.closest('.mermaid-wrap'), target = wrap.querySelector('.mermaid');
+    target.dataset.zoom = '1'; target.style.transform = 'scale(1)';
+  }
+  document.querySelectorAll('.mermaid-wrap').forEach(function(wrap) {
+    wrap.addEventListener('wheel', function(e) {
+      if (!e.ctrlKey && !e.metaKey) return;
+      e.preventDefault();
+      var target = wrap.querySelector('.mermaid');
+      var c = parseFloat(target.dataset.zoom || '1');
+      target.dataset.zoom = Math.min(Math.max(c * (e.deltaY < 0 ? 1.1 : 0.9), 0.3), 5);
+      target.style.transform = 'scale(' + target.dataset.zoom + ')';
+    }, { passive: false });
   });
-
-  // Scroll spy
-  (function(){
-    var toc=document.getElementById('toc');var links=toc.querySelectorAll('a');var sections=[];
-    links.forEach(function(l){var id=l.getAttribute('href').slice(1);var el=document.getElementById(id);if(el)sections.push({id:id,el:el,link:l});});
-    var obs=new IntersectionObserver(function(entries){entries.forEach(function(e){if(e.isIntersecting){links.forEach(function(l){l.classList.remove('active');});var m=sections.find(function(s){return s.el===e.target;});if(m){m.link.classList.add('active');if(window.innerWidth<=1000)m.link.scrollIntoView({behavior:'smooth',block:'nearest',inline:'center'});}}});},{rootMargin:'-10% 0px -80% 0px'});
-    sections.forEach(function(s){obs.observe(s.el);});
-    links.forEach(function(l){l.addEventListener('click',function(e){e.preventDefault();var id=l.getAttribute('href').slice(1);var el=document.getElementById(id);if(el){el.scrollIntoView({behavior:'smooth',block:'start'});history.replaceState(null,'','#'+id);}});});
-  })();
 </script>
 
 </body>

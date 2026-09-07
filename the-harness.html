@@ -1,472 +1,284 @@
-<!doctype html>
-<html lang="en" data-theme="light">
+<!DOCTYPE html>
+<html lang="en" class="light">
 <head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta charset="UTF-8">
+<link rel="icon" href="icon.svg" type="image/svg+xml" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>The Harness</title>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Big+Shoulders+Display:wght@600;700;800&family=Source+Serif+4:opsz,wght@8..60,400;8..60,500;8..60,600&family=IBM+Plex+Mono:wght@400;500;600&display=swap">
+<meta name="description" content="The model is the engine; the harness is the loom bolted around it — memory, system prompt, guardrails, tools, orchestration. Engine plus loom is an agent.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Mulish:ital,wght@0,300;0,400;0,600;0,700;0,800;1,400&display=swap" rel="stylesheet">
 <style>
-  :root{
-    --bg: #EEF0F2;
-    --panel: #FFFFFF;
-    --ink: #171B21;
-    --muted: #55606E;
-    --line: #C7CDD3;
-    --line-soft: #DADFE3;
-    --accent-blue: #2454C7;
-    --accent-blue-deep: #1B3E96;
-    --accent-copper: #A8611F;
-    --accent-rose: #A93B4A;
-    --on-blue: #F6F8FF;
-  }
-  
-  :root
+  :root{--font-body:'Mulish','Segoe UI',Helvetica,sans-serif;--font-mono:'Mulish',ui-monospace,'SF Mono',Consolas,monospace;
+    --bg:#14181C;--surface:#1B2127;--surface2:#232B33;--border:#303A43;--border-bright:#42505C;
+    --text:#F4F5F6;--text-dim:#CBD0D6;--text-faint:#87919B;
+    --primary:#A79CF2;--primary-dim:rgba(167,156,242,0.12);--metric:#58D6B4;--metric-dim:rgba(88,214,180,0.12);
+    --blue:#6CACE4;--blue-dim:rgba(108,172,228,0.12);
+    --violet:#B9A0E8;--violet-dim:rgba(185,160,232,0.12);
+    --amber:#E8B54D;--amber-dim:rgba(232,181,77,0.12);
+    --rose:#E88280;--rose-dim:rgba(232,130,128,0.12);}
+  html.light{--bg:#F7F3EF;--surface:#FFFFFF;--surface2:#F0E9E1;--border:#E1D6CB;--border-bright:#CDBBA8;
+    --text:#241A12;--text-dim:#574A3C;--text-faint:#8C7E6E;
+    --primary:#4F46E5;--primary-dim:rgba(79,70,229,0.08);--metric:#0E7C6E;--metric-dim:rgba(14,124,110,0.08);
+    --blue:#2F6FA8;--blue-dim:rgba(47,111,168,0.08);
+    --violet:#7C3AED;--violet-dim:rgba(124,58,237,0.07);
+    --amber:#A5650A;--amber-dim:rgba(165,101,10,0.08);
+    --rose:#C23A30;--rose-dim:rgba(194,58,48,0.07);}
+  *{margin:0;padding:0;box-sizing:border-box}
+  html{scroll-behavior:smooth}
+  body{background:
+      radial-gradient(at 10% 0%,var(--primary-dim),transparent 55%),
+      radial-gradient(at 90% 80%,var(--metric-dim),transparent 55%),
+      var(--bg);
+    color:var(--text);font-family:var(--font-body);font-size:17px;line-height:1.62;-webkit-font-smoothing:antialiased;min-height:100vh}
 
-  *{ box-sizing: border-box; }
-  body{
-    margin: 0;
-    background: var(--bg);
-    color: var(--ink);
-    font-family: 'Source Serif 4', Georgia, 'Times New Roman', serif;
-    -webkit-font-smoothing: antialiased;
-  }
-  .page{
-    max-width: 1100px;
-    margin: 0 auto;
-    padding: 64px 32px 80px;
-    display: flex;
-    flex-direction: column;
-    gap: 56px;
-  }
-  .toplink{
-    display: inline-flex;
-    align-items: center;
-    gap: 8px;
-    align-self: flex-start;
-    font-family: 'IBM Plex Mono', monospace;
-    font-size: 12px;
-    font-weight: 500;
-    letter-spacing: 0.12em;
-    text-transform: uppercase;
-    color: var(--accent-copper);
-    text-decoration: none;
-    transition: color .15s ease;
-  }
-  .toplink:hover{ color: var(--accent-rose); }
+  .crumbs{font-size:13px;font-weight:600;color:var(--text-dim);display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+  .crumbs a{color:var(--primary);text-decoration:none}
+  .crumbs a:hover{text-decoration:underline}
+  .crumbs .sep{color:var(--text-faint)}
+  .crumbs .current{color:var(--text-dim);font-weight:400}
+  .crumbs-top{max-width:1080px;margin:0 auto;padding:18px 24px 0}
 
-  .eyebrow{
-    font-family: 'IBM Plex Mono', monospace;
-    font-size: 12px;
-    letter-spacing: 0.14em;
-    text-transform: uppercase;
-    color: var(--accent-copper);
-    margin: 0 0 14px;
-  }
-  h1{
-    font-family: 'Big Shoulders Display', sans-serif;
-    font-weight: 800;
-    font-size: clamp(48px, 8vw, 84px);
-    line-height: 0.92;
-    letter-spacing: -0.01em;
-    text-transform: uppercase;
-    margin: 0 0 20px;
-    text-wrap: balance;
-  }
-  .dek{
-    font-size: 19px;
-    line-height: 1.6;
-    color: var(--muted);
-    margin: 0 0 14px;
-    max-width: none;
-  }
-  .lede{
-    font-size: 18px;
-    line-height: 1.7;
-    margin: 0 0 18px;
-    max-width: none;
-  }
-  .lede strong{ color: var(--ink); font-weight: 600; }
-  .lede-list{
-    list-style: none;
-    margin: 20px 0 24px;
-    padding: 0;
-    display: flex;
-    flex-direction: column;
-    gap: 12px;
-    max-width: none;
-  }
-  .lede-list li{
-    position: relative;
-    padding-left: 28px;
-    font-size: 18px;
-    line-height: 1.6;
-    color: var(--muted);
-  }
-  .lede-list li::before{
-    content: "";
-    position: absolute;
-    left: 3px;
-    top: 0.68em;
-    width: 8px;
-    height: 8px;
-    border-radius: 50%;
-    background: var(--accent-copper);
-  }
-  .lede-list li strong{ color: var(--ink); font-weight: 600; }
+  .wrap{max-width:1080px;margin:0 auto;padding:0 24px 80px}
 
-  header{
-    border-bottom: 1px solid var(--line);
-    padding-bottom: 40px;
-  }
+  .hero{padding:44px 0 24px;border-bottom:1px solid var(--border);margin-bottom:10px}
+  .hero .tagline{font-family:var(--font-mono);font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.14em;color:var(--primary);margin-bottom:10px}
+  .hero h1{font-size:52px;line-height:1.0;letter-spacing:-0.03em;font-weight:800;
+    background:linear-gradient(135deg,var(--primary),var(--metric));-webkit-background-clip:text;background-clip:text;color:transparent}
+  .hero .lede{font-size:19px;line-height:1.5;color:var(--text-dim);max-width:920px;margin-top:14px}
+  .hero .lede b{color:var(--text)}
 
-  figure.diagram{
-    margin: 0;
-    background:
-      linear-gradient(var(--line-soft) 1px, transparent 1px) 0 0/40px 40px,
-      linear-gradient(90deg, var(--line-soft) 1px, transparent 1px) 0 0/40px 40px,
-      var(--panel);
-    border: 1px solid var(--line);
-    border-radius: 6px;
-    padding: 8px;
-    overflow-x: auto;
-  }
-  figure.diagram svg{
-    display: block;
-    width: 100%;
-    height: auto;
-    min-width: 720px;
-    color: var(--ink);
-  }
-  figcaption{
-    font-family: 'IBM Plex Mono', monospace;
-    font-size: 13px;
-    line-height: 1.7;
-    color: var(--muted);
-    margin-top: 16px;
-    max-width: none;
-  }
-  figcaption b{ color: var(--ink); font-weight: 600; }
+  .sec{margin-top:26px}
+  .sec-head{display:flex;align-items:baseline;gap:14px;padding-bottom:10px;border-bottom:1px solid var(--border);margin-bottom:14px}
+  .sec-num{font-size:23px;font-weight:800;color:var(--primary);font-family:var(--font-mono)}
+  .sec-title{font-size:23px;font-weight:800;color:var(--text);letter-spacing:-0.01em}
+  .sec-body p{max-width:920px;margin-bottom:12px;color:var(--text-dim)}
+  .sec-body p b,.sec-body strong{color:var(--text)}
+  code{font-family:var(--font-mono);font-size:0.84em;color:var(--primary)}
 
-  h2{
-    font-family: 'Big Shoulders Display', sans-serif;
-    font-weight: 700;
-    font-size: 30px;
-    text-transform: uppercase;
-    letter-spacing: 0.01em;
-    margin: 0 0 24px;
-  }
+  .intro p{max-width:920px;margin-bottom:12px;color:var(--text-dim)}
+  .intro p b,.intro p strong{color:var(--text)}
 
-  .compare{
-    display: grid;
-    grid-template-columns: 1fr;
-    gap: 0;
-    border: 1px solid var(--line);
-    border-radius: 6px;
-    overflow: hidden;
-  }
-  .compare-row{
-    display: grid;
-    grid-template-columns: 150px 1fr 1fr;
-    border-top: 1px solid var(--line);
-  }
-  .compare-row:first-child{ border-top: none; }
-  .compare-row > div{
-    padding: 16px 20px;
-    font-size: 15.5px;
-    line-height: 1.5;
-  }
-  .compare-row.head{
-    background: var(--bg);
-  }
-  .compare-row.head .label{
-    font-family: 'IBM Plex Mono', monospace;
-    font-size: 11px;
-    color: var(--muted);
-  }
-  .compare-row.head .col-model{
-    font-family: 'Big Shoulders Display', sans-serif;
-    font-weight: 700;
-    text-transform: uppercase;
-    font-size: 20px;
-    color: var(--accent-blue);
-  }
-  .compare-row.head .col-harness{
-    font-family: 'Big Shoulders Display', sans-serif;
-    font-weight: 700;
-    text-transform: uppercase;
-    font-size: 20px;
-    color: var(--accent-copper);
-  }
-  .compare-row.head .sub{
-    font-family: 'IBM Plex Mono', monospace;
-    font-weight: 400;
-    text-transform: none;
-    font-size: 12px;
-    letter-spacing: 0;
-    color: var(--muted);
-  }
-  .compare-row .rowlabel{
-    font-family: 'IBM Plex Mono', monospace;
-    font-size: 12px;
-    letter-spacing: 0.03em;
-    color: var(--muted);
-    display: flex;
-    align-items: center;
-    border-right: 1px solid var(--line-soft);
-  }
-  .compare-row .col-model{ border-right: 1px solid var(--line-soft); color: var(--ink); }
-  .compare-row .col-harness{ color: var(--ink); }
+  .mk{list-style:none;margin:18px 0 4px;display:flex;flex-direction:column;gap:12px;max-width:920px;padding:0}
+  .mk li{position:relative;padding-left:28px;font-size:17px;line-height:1.6;color:var(--text-dim)}
+  .mk li::before{content:"";position:absolute;left:2px;top:.66em;width:9px;height:9px;border-radius:50%;background:var(--primary)}
+  .mk li strong{color:var(--text)}
 
-  .grid{
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 1px;
-    background: var(--line);
-    border: 1px solid var(--line);
-    border-radius: 6px;
-    overflow: hidden;
-  }
-  .card{
-    background: var(--panel);
-    padding: 22px 22px 24px;
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
-  }
-  .card .tag{
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    font-family: 'IBM Plex Mono', monospace;
-    font-size: 12px;
-    letter-spacing: 0.06em;
-    text-transform: uppercase;
-    color: var(--accent-copper);
-  }
-  .card .tag::before{
-    content: "";
-    width: 7px;
-    height: 7px;
-    border-radius: 50%;
-    background: var(--accent-copper);
-    flex: none;
-  }
-  .card p{
-    margin: 0;
-    font-size: 15px;
-    line-height: 1.55;
-    color: var(--muted);
-  }
-  .card p b{ color: var(--ink); font-weight: 600; }
+  .dg{background:var(--surface2);border:1px solid var(--border);border-radius:12px;padding:10px;overflow-x:auto;margin:6px 0 16px}
+  .dg svg{display:block;width:100%;height:auto;min-width:880px}
+  .dg svg text{font-family:var(--font-mono)}
+  .dg figcaption{font-size:14px;line-height:1.7;color:var(--text-dim);margin-top:16px;padding:0 4px;max-width:920px}
+  .dg figcaption b{color:var(--text)}
 
-  footer{
-    border-top: 1px solid var(--line);
-    padding-top: 32px;
-    display: flex;
-    flex-direction: column;
-    gap: 0;
-    align-items: stretch;
-  }
-  footer p{
-    margin: 0 0 16px;
-    font-size: 16px;
-    line-height: 1.7;
-    color: var(--muted);
-    max-width: none;
-  }
-  footer p:last-child{ margin-bottom: 0; }
-  footer p b{ color: var(--ink); font-weight: 600; }
+  .close{margin-top:20px;border-top:1px solid var(--border);padding-top:14px;font-size:14px;line-height:1.6;color:var(--text-dim);max-width:920px}
+  .close b{color:var(--text)}
 
-  @media (max-width: 720px){
-    .grid{ grid-template-columns: 1fr; }
-    .compare-row{ grid-template-columns: 100px 1fr 1fr; }
-    .compare-row > div{ padding: 12px 14px; font-size: 14px; }
+  table.tbl{width:100%;border-collapse:collapse;margin:2px 0 4px}
+  .tbl th{text-align:left;font-family:var(--font-mono);font-size:10px;font-weight:700;color:var(--text-faint);padding:6px 14px 8px 0;border-bottom:2px solid var(--border-bright);letter-spacing:.04em;text-transform:uppercase}
+  .tbl td{padding:9px 14px 9px 0;border-bottom:1px solid var(--border);vertical-align:top;font-size:13px;line-height:1.55;color:var(--text-dim)}
+  .tbl tr:last-child td{border-bottom:none}
+  .tbl td.f{font-weight:700;color:var(--text);width:22%}
+  .tbl td.src code{font-size:0.92em;color:var(--metric)}
+
+  .pmap{padding:14px 4px;border-top:1px solid var(--border);display:grid;grid-template-columns:240px 1fr;gap:4px 28px;align-items:baseline}
+  .pmap:first-of-type{border-top:none}
+  .pmap .pm-k{font-family:var(--font-mono);font-size:11.5px;font-weight:800;text-transform:uppercase;letter-spacing:.08em;color:var(--primary);line-height:1.5}
+  .pmap .pm-b{font-size:15px;line-height:1.6;color:var(--text-dim)}
+  .pmap .pm-b b{color:var(--text)}
+  .pmap.i-amb .pm-k{color:var(--amber)}
+  .pmap.i-teal .pm-k{color:var(--metric)}
+  .pmap.i-vio .pm-k{color:var(--violet)}
+  .pmap.i-rose .pm-k{color:var(--rose)}
+  .pmap.i-acc .pm-k{color:var(--primary)}
+
+  .footer{margin-top:30px;border-top:1px solid var(--border);padding:18px 0 0;display:flex;justify-content:space-between;gap:20px;flex-wrap:wrap;font-family:var(--font-mono);font-size:12px;color:var(--text-faint)}
+  .footer a{color:var(--primary);text-decoration:none}
+  .footer a:hover{text-decoration:underline}
+
+  @media(max-width:900px){
+    .wrap{padding:0 16px 60px}
+    .hero h1{font-size:38px}
+    .pmap{grid-template-columns:1fr;gap:3px}
+    body{font-size:16px}
   }
+  @media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
 </style>
 </head>
 <body>
-<style>
-.crumbs-at-top{max-width:1100px;margin:0 auto;padding:14px 24px 0}
-.crumbs{font-family:var(--font-mono,monospace);font-size:13px;font-weight:600;display:flex;align-items:center;gap:8px;flex-wrap:wrap;min-width:0}
-.crumbs a{color:var(--accent);text-decoration:none}
-.crumbs a:hover,.crumbs a:focus-visible{text-decoration:underline;outline:none}
-.crumbs .sep{color:var(--muted)}
-.crumbs .current{color:var(--muted);font-weight:400}
-</style>
-<nav class="crumbs crumbs-at-top" aria-label="Breadcrumb">
-  <a href="index.html">Index</a>
-  <span class="sep">/</span>
-  <span class="current" aria-current="page">The Harness</span>
-</nav>
 
-<div class="page">
+<div class="crumbs crumbs-top" aria-label="Breadcrumb">
+  <a href="index.html">Index</a><span class="sep">/</span>
+  <span class="current" aria-current="page">The Harness</span>
+</div>
 
-  <a href="enablement.html" class="toplink">&larr; Enablement</a>
+<main class="wrap">
 
-  <header>
-    <p class="eyebrow">Agent architecture, under the hood</p>
-    <h1>The&nbsp;Harness</h1>
-    <p class="dek">The model is the engine — one combustion stroke per call, nothing more.</p>
-    <p class="dek">The harness is the loom bolted around it: fuel line, ignition map, governor, actuators, dashboard. Everything that turns a single stroke into a running vehicle.</p>
-    <p class="dek">Engine plus loom, wired together, is what "agent" means.</p>
+  <header class="hero">
+    <div class="tagline">Agent Architecture, Under the Hood</div>
+    <h1>The Harness</h1>
+    <p class="lede">The model is the engine &mdash; one combustion stroke per call, nothing more.</p>
+    <p class="lede">The harness is the loom bolted around it: fuel line, ignition map, governor, actuators, dashboard. Everything that turns a single stroke into a running vehicle.</p>
+    <p class="lede">Engine plus loom, wired together, is what &ldquo;agent&rdquo; means.</p>
   </header>
 
-  <section>
-    <p class="lede">Ask a raw model a question and it fires once — no memory of the last stroke, no way to touch anything outside the cylinder. An <strong>agent</strong> isn't a different model. It's the same engine bolted into a car — and the wiring that makes it run is the harness.</p>
-    <ul class="lede-list">
-      <li><strong>Fuel line</strong> — memory &amp; context, re-fed into the engine each stroke.</li>
-      <li><strong>Ignition map</strong> — the system prompt, the tune it fires to.</li>
-      <li><strong>Governor</strong> — the guardrails that keep a bad stroke from firing.</li>
-      <li><strong>Actuators</strong> — the tools that turn a decision into motion.</li>
-      <li><strong>Wiring loom</strong> — the copper that routes every signal and pipes the exhaust back to the tank.</li>
+  <section class="intro">
+    <p>Ask a raw model a question and it fires once &mdash; no memory of the last stroke, no way to touch anything outside the cylinder. An <strong>agent</strong> isn&rsquo;t a different model. It&rsquo;s the same engine bolted into a car &mdash; and the wiring that makes it run is the harness.</p>
+    <ul class="mk">
+      <li><strong>Fuel line</strong> &mdash; memory &amp; context, re-fed into the engine each stroke.</li>
+      <li><strong>Ignition map</strong> &mdash; the system prompt, the tune it fires to.</li>
+      <li><strong>Governor</strong> &mdash; the guardrails that keep a bad stroke from firing.</li>
+      <li><strong>Actuators</strong> &mdash; the tools that turn a decision into motion.</li>
+      <li><strong>Wiring loom</strong> &mdash; the copper that routes every signal and pipes the exhaust back to the tank.</li>
     </ul>
-    <p class="lede">That loom is <strong>the harness</strong>. Engine plus harness, wired together, is what "<strong>agent</strong>" means. Every part below carries its engineering name — and, so it sticks, its part number under the hood.</p>
+    <p>That loom is <strong>the harness</strong>. Engine plus harness, wired together, is what &ldquo;<strong>agent</strong>&rdquo; means. Every part below carries its engineering name &mdash; and, so it sticks, its part number under the hood.</p>
   </section>
 
-  <section>
-    <h2>One cycle, four strokes</h2>
-    <figure class="diagram">
-      <svg viewBox="0 0 1160 780" role="img" aria-label="Schematic of an AI agent drawn as a car: a dashed outer boundary labeled AGENT encloses the blue MODEL, the engine, and the copper HARNESS wiring around it. Memory feeds intake, the model compresses it into a decision, ignition sparks the power stroke, a governor clears the action, and it fans out through multiple actuators — search, code, files — onto the road. The exhaust stroke pipes the result back to the fuel tank and spins up a turbo that boosts the next intake, closing the loop; the model can instead exit through the dashboard to the driver.">
+  <!-- 01 -->
+  <section class="sec">
+    <div class="sec-head"><span class="sec-num">01</span><h2 class="sec-title">One cycle, four strokes</h2></div>
+    <div class="dg">
+      <svg viewBox="0 0 1160 780" role="img" aria-label="Schematic of an AI agent drawn as a car: a dashed outer boundary labeled AGENT encloses the blue MODEL, the engine, and the copper HARNESS wiring around it. Memory feeds intake, the model compresses it into a decision, ignition sparks the power stroke, a governor clears the action, and it fans out through multiple actuators &mdash; search, code, files &mdash; onto the road. The exhaust stroke pipes the result back to the fuel tank and spins up a turbo that boosts the next intake, closing the loop; the model can instead exit through the dashboard to the driver.">
         <defs>
           <marker id="arH" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="6.5" markerHeight="6.5" orient="auto-start-reverse">
-            <path d="M0,0 L10,5 L0,10 z" fill="var(--muted)"/>
+            <path d="M0,0 L10,5 L0,10 z" fill="var(--text-dim)"/>
           </marker>
-          <marker id="arCopper" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="6.5" markerHeight="6.5" orient="auto-start-reverse">
-            <path d="M0,0 L10,5 L0,10 z" fill="var(--accent-copper)"/>
+          <marker id="arAmber" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="6.5" markerHeight="6.5" orient="auto-start-reverse">
+            <path d="M0,0 L10,5 L0,10 z" fill="var(--amber)"/>
           </marker>
           <marker id="arRose" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="6.5" markerHeight="6.5" orient="auto-start-reverse">
-            <path d="M0,0 L10,5 L0,10 z" fill="var(--accent-rose)"/>
+            <path d="M0,0 L10,5 L0,10 z" fill="var(--rose)"/>
           </marker>
         </defs>
 
         <!-- Outer boundary: the agent = model + harness, wired together -->
-        <rect x="8" y="8" width="1144" height="722" rx="14" fill="none" stroke="var(--ink)" stroke-width="1.5" stroke-dasharray="7 5" opacity="0.55"/>
-        <rect x="962" y="8" width="182" height="36" rx="6" fill="var(--panel)" stroke="var(--ink)" stroke-width="1.5"/>
-        <text x="1053" y="27" text-anchor="middle" font-family="'Big Shoulders Display',sans-serif" font-weight="800" font-size="17" letter-spacing="0.02em" fill="var(--ink)">AGENT</text>
-        <text x="1053" y="40" text-anchor="middle" font-family="'IBM Plex Mono',monospace" font-size="8.5" fill="var(--muted)">model + harness, wired</text>
+        <rect x="8" y="8" width="1144" height="722" rx="14" fill="none" stroke="var(--text)" stroke-width="1.5" stroke-dasharray="7 5" opacity="0.55"/>
+        <rect x="962" y="8" width="182" height="36" rx="6" fill="var(--surface)" stroke="var(--text)" stroke-width="1.5"/>
+        <text x="1053" y="27" text-anchor="middle" font-weight="800" font-size="17" letter-spacing="0.02em" fill="var(--text)">AGENT</text>
+        <text x="1053" y="40" text-anchor="middle" font-size="8.5" fill="var(--text-dim)">model + harness, wired</text>
 
         <!-- Four-stroke stage tags -->
-        <rect x="47" y="16" width="140" height="26" rx="13" fill="none" stroke="var(--accent-blue)" stroke-width="1.25"/>
-        <text x="117" y="33" text-anchor="middle" font-family="'IBM Plex Mono',monospace" font-size="11" letter-spacing="0.08em" fill="var(--accent-blue)">1 · INTAKE</text>
+        <rect x="47" y="16" width="140" height="26" rx="13" fill="none" stroke="var(--primary)" stroke-width="1.25"/>
+        <text x="117" y="33" text-anchor="middle" font-size="11" letter-spacing="0.08em" fill="var(--primary)">1 &middot; INTAKE</text>
 
-        <rect x="288" y="16" width="144" height="26" rx="13" fill="var(--bg)" stroke="var(--accent-blue)" stroke-width="1.25"/>
-        <text x="360" y="33" text-anchor="middle" font-family="'IBM Plex Mono',monospace" font-size="11" letter-spacing="0.08em" fill="var(--accent-blue)">2 · COMPRESSION</text>
+        <rect x="288" y="16" width="144" height="26" rx="13" fill="var(--surface)" stroke="var(--primary)" stroke-width="1.25"/>
+        <text x="360" y="33" text-anchor="middle" font-size="11" letter-spacing="0.08em" fill="var(--primary)">2 &middot; COMPRESSION</text>
 
-        <rect x="700" y="16" width="202" height="26" rx="13" fill="none" stroke="var(--accent-blue)" stroke-width="1.25"/>
-        <text x="801" y="33" text-anchor="middle" font-family="'IBM Plex Mono',monospace" font-size="11" letter-spacing="0.08em" fill="var(--accent-blue)">3 · POWER STROKE</text>
+        <rect x="700" y="16" width="202" height="26" rx="13" fill="none" stroke="var(--primary)" stroke-width="1.25"/>
+        <text x="801" y="33" text-anchor="middle" font-size="11" letter-spacing="0.08em" fill="var(--primary)">3 &middot; POWER STROKE</text>
 
         <!-- System prompt -->
-        <rect x="270" y="66" width="180" height="70" rx="3" fill="var(--panel)" stroke="var(--line)" stroke-width="1.5"/>
-        <text x="360" y="98" text-anchor="middle" font-family="'Big Shoulders Display',sans-serif" font-weight="700" font-size="20" fill="var(--ink)">ECU MAP</text>
-        <text x="360" y="118" text-anchor="middle" font-family="'IBM Plex Mono',monospace" font-size="10.5" fill="var(--muted)">system prompt</text>
-        <line x1="360" y1="136" x2="360" y2="233" stroke="var(--muted)" stroke-width="1.5" marker-end="url(#arH)"/>
-        <text x="374" y="192" font-family="'IBM Plex Mono',monospace" font-size="11" fill="var(--muted)">the tune it fires to</text>
+        <rect x="270" y="66" width="180" height="70" rx="3" fill="var(--surface)" stroke="var(--border)" stroke-width="1.5"/>
+        <text x="360" y="98" text-anchor="middle" font-weight="700" font-size="20" fill="var(--text)">ECU MAP</text>
+        <text x="360" y="118" text-anchor="middle" font-size="10.5" fill="var(--text-dim)">system prompt</text>
+        <line x1="360" y1="136" x2="360" y2="233" stroke="var(--text-dim)" stroke-width="1.5" marker-end="url(#arH)"/>
+        <text x="374" y="192" font-size="11" fill="var(--text-dim)">the tune it fires to</text>
 
         <!-- Memory -->
-        <rect x="34" y="255" width="166" height="90" rx="3" fill="var(--panel)" stroke="var(--line)" stroke-width="1.5"/>
-        <text x="117" y="298" text-anchor="middle" font-family="'Big Shoulders Display',sans-serif" font-weight="700" font-size="19" fill="var(--ink)">FUEL TANK</text>
-        <text x="117" y="318" text-anchor="middle" font-family="'IBM Plex Mono',monospace" font-size="10" fill="var(--muted)">memory &amp; context</text>
+        <rect x="34" y="255" width="166" height="90" rx="3" fill="var(--surface)" stroke="var(--border)" stroke-width="1.5"/>
+        <text x="117" y="298" text-anchor="middle" font-weight="700" font-size="19" fill="var(--text)">FUEL TANK</text>
+        <text x="117" y="318" text-anchor="middle" font-size="10" fill="var(--text-dim)">memory &amp; context</text>
 
         <!-- Model (core) -->
-        <rect x="270" y="235" width="180" height="130" rx="4" fill="var(--accent-blue)" stroke="var(--accent-blue-deep)" stroke-width="1.5"/>
-        <text x="360" y="288" text-anchor="middle" font-family="'Big Shoulders Display',sans-serif" font-weight="800" font-size="30" fill="var(--on-blue)">ENGINE</text>
-        <text x="360" y="309" text-anchor="middle" font-family="'IBM Plex Mono',monospace" font-size="11" fill="var(--on-blue)" opacity="0.9">the model</text>
-        <text x="360" y="328" text-anchor="middle" font-family="'IBM Plex Mono',monospace" font-size="9.5" fill="var(--on-blue)" opacity="0.75">one stroke, then it's spent</text>
+        <rect x="270" y="235" width="180" height="130" rx="4" fill="var(--primary)" stroke="var(--primary)" stroke-width="1.5"/>
+        <text x="360" y="288" text-anchor="middle" font-weight="800" font-size="30" fill="#FFFFFF">ENGINE</text>
+        <text x="360" y="309" text-anchor="middle" font-size="11" fill="#FFFFFF" opacity="0.9">the model</text>
+        <text x="360" y="328" text-anchor="middle" font-size="9.5" fill="#FFFFFF" opacity="0.75">one stroke, then it&rsquo;s spent</text>
 
         <!-- Guardrails -->
-        <rect x="520" y="255" width="150" height="90" rx="3" fill="var(--panel)" stroke="var(--line)" stroke-width="1.5"/>
-        <text x="595" y="298" text-anchor="middle" font-family="'Big Shoulders Display',sans-serif" font-weight="700" font-size="18" fill="var(--ink)">GOVERNOR</text>
-        <text x="595" y="317" text-anchor="middle" font-family="'IBM Plex Mono',monospace" font-size="10" fill="var(--muted)">guardrails</text>
+        <rect x="520" y="255" width="150" height="90" rx="3" fill="var(--surface)" stroke="var(--border)" stroke-width="1.5"/>
+        <text x="595" y="298" text-anchor="middle" font-weight="700" font-size="18" fill="var(--text)">GOVERNOR</text>
+        <text x="595" y="317" text-anchor="middle" font-size="10" fill="var(--text-dim)">guardrails</text>
 
         <!-- Actuators: multiple tools, fanned off the harness bus -->
-        <text x="810" y="247" text-anchor="middle" font-family="'IBM Plex Mono',monospace" font-size="9.5" letter-spacing="0.05em" fill="var(--muted)">ACTUATORS · TOOLS</text>
+        <text x="810" y="247" text-anchor="middle" font-size="9.5" letter-spacing="0.05em" fill="var(--text-dim)">ACTUATORS &middot; TOOLS</text>
 
-        <line x1="730" y1="269.5" x2="730" y2="329.5" stroke="var(--accent-copper)" stroke-width="1.5"/>
-        <line x1="890" y1="269.5" x2="890" y2="329.5" stroke="var(--accent-copper)" stroke-width="1.5"/>
+        <line x1="730" y1="269.5" x2="730" y2="329.5" stroke="var(--amber)" stroke-width="1.5"/>
+        <line x1="890" y1="269.5" x2="890" y2="329.5" stroke="var(--amber)" stroke-width="1.5"/>
 
-        <rect x="740" y="257" width="140" height="25" rx="3" fill="var(--panel)" stroke="var(--line)" stroke-width="1.5"/>
-        <text x="810" y="274" text-anchor="middle" font-family="'Big Shoulders Display',sans-serif" font-weight="700" font-size="13" fill="var(--ink)">SEARCH</text>
-        <rect x="740" y="287" width="140" height="25" rx="3" fill="var(--panel)" stroke="var(--line)" stroke-width="1.5"/>
-        <text x="810" y="304" text-anchor="middle" font-family="'Big Shoulders Display',sans-serif" font-weight="700" font-size="13" fill="var(--ink)">RUN CODE</text>
-        <rect x="740" y="317" width="140" height="25" rx="3" fill="var(--panel)" stroke="var(--line)" stroke-width="1.5"/>
-        <text x="810" y="334" text-anchor="middle" font-family="'Big Shoulders Display',sans-serif" font-weight="700" font-size="13" fill="var(--ink)">FILES</text>
+        <rect x="740" y="257" width="140" height="25" rx="3" fill="var(--surface)" stroke="var(--border)" stroke-width="1.5"/>
+        <text x="810" y="274" text-anchor="middle" font-weight="700" font-size="13" fill="var(--text)">SEARCH</text>
+        <rect x="740" y="287" width="140" height="25" rx="3" fill="var(--surface)" stroke="var(--border)" stroke-width="1.5"/>
+        <text x="810" y="304" text-anchor="middle" font-weight="700" font-size="13" fill="var(--text)">RUN CODE</text>
+        <rect x="740" y="317" width="140" height="25" rx="3" fill="var(--surface)" stroke="var(--border)" stroke-width="1.5"/>
+        <text x="810" y="334" text-anchor="middle" font-weight="700" font-size="13" fill="var(--text)">FILES</text>
 
-        <line x1="730" y1="269.5" x2="740" y2="269.5" stroke="var(--accent-copper)" stroke-width="1.5"/>
-        <line x1="730" y1="299.5" x2="740" y2="299.5" stroke="var(--accent-copper)" stroke-width="1.5"/>
-        <line x1="730" y1="329.5" x2="740" y2="329.5" stroke="var(--accent-copper)" stroke-width="1.5"/>
-        <line x1="880" y1="269.5" x2="890" y2="269.5" stroke="var(--accent-copper)" stroke-width="1.5"/>
-        <line x1="880" y1="299.5" x2="890" y2="299.5" stroke="var(--accent-copper)" stroke-width="1.5"/>
-        <line x1="880" y1="329.5" x2="890" y2="329.5" stroke="var(--accent-copper)" stroke-width="1.5"/>
+        <line x1="730" y1="269.5" x2="740" y2="269.5" stroke="var(--amber)" stroke-width="1.5"/>
+        <line x1="730" y1="299.5" x2="740" y2="299.5" stroke="var(--amber)" stroke-width="1.5"/>
+        <line x1="730" y1="329.5" x2="740" y2="329.5" stroke="var(--amber)" stroke-width="1.5"/>
+        <line x1="880" y1="269.5" x2="890" y2="269.5" stroke="var(--amber)" stroke-width="1.5"/>
+        <line x1="880" y1="299.5" x2="890" y2="299.5" stroke="var(--amber)" stroke-width="1.5"/>
+        <line x1="880" y1="329.5" x2="890" y2="329.5" stroke="var(--amber)" stroke-width="1.5"/>
 
         <!-- Environment -->
-        <rect x="950" y="255" width="132" height="90" rx="3" fill="var(--panel)" stroke="var(--line)" stroke-width="1.5"/>
-        <text x="1016" y="298" text-anchor="middle" font-family="'Big Shoulders Display',sans-serif" font-weight="700" font-size="18" fill="var(--ink)">THE ROAD</text>
-        <text x="1016" y="317" text-anchor="middle" font-family="'IBM Plex Mono',monospace" font-size="9.5" fill="var(--muted)">environment</text>
+        <rect x="950" y="255" width="132" height="90" rx="3" fill="var(--surface)" stroke="var(--border)" stroke-width="1.5"/>
+        <text x="1016" y="298" text-anchor="middle" font-weight="700" font-size="18" fill="var(--text)">THE ROAD</text>
+        <text x="1016" y="317" text-anchor="middle" font-size="9.5" fill="var(--text-dim)">environment</text>
 
         <!-- Main flow arrows -->
-        <line x1="200" y1="300" x2="266" y2="300" stroke="var(--muted)" stroke-width="1.5" marker-end="url(#arH)"/>
-        <text x="233" y="289" text-anchor="middle" font-family="'IBM Plex Mono',monospace" font-size="10" fill="var(--muted)">feeds</text>
+        <line x1="200" y1="300" x2="266" y2="300" stroke="var(--text-dim)" stroke-width="1.5" marker-end="url(#arH)"/>
+        <text x="233" y="289" text-anchor="middle" font-size="10" fill="var(--text-dim)">feeds</text>
 
-        <line x1="450" y1="300" x2="516" y2="300" stroke="var(--muted)" stroke-width="1.5" marker-end="url(#arH)"/>
-        <text x="483" y="289" text-anchor="middle" font-family="'IBM Plex Mono',monospace" font-size="10" fill="var(--muted)">ignition</text>
+        <line x1="450" y1="300" x2="516" y2="300" stroke="var(--text-dim)" stroke-width="1.5" marker-end="url(#arH)"/>
+        <text x="483" y="289" text-anchor="middle" font-size="10" fill="var(--text-dim)">ignition</text>
 
-        <line x1="670" y1="300" x2="726" y2="300" stroke="var(--muted)" stroke-width="1.5" marker-end="url(#arH)"/>
-        <text x="698" y="289" text-anchor="middle" font-family="'IBM Plex Mono',monospace" font-size="10" fill="var(--muted)">permitted</text>
+        <line x1="670" y1="300" x2="726" y2="300" stroke="var(--text-dim)" stroke-width="1.5" marker-end="url(#arH)"/>
+        <text x="698" y="289" text-anchor="middle" font-size="10" fill="var(--text-dim)">permitted</text>
 
-        <line x1="894" y1="300" x2="946" y2="300" stroke="var(--muted)" stroke-width="1.5" marker-end="url(#arH)"/>
-        <text x="920" y="289" text-anchor="middle" font-family="'IBM Plex Mono',monospace" font-size="10" fill="var(--muted)">actuates</text>
+        <line x1="894" y1="300" x2="946" y2="300" stroke="var(--text-dim)" stroke-width="1.5" marker-end="url(#arH)"/>
+        <text x="920" y="289" text-anchor="middle" font-size="10" fill="var(--text-dim)">actuates</text>
 
         <!-- connector pins -->
-        <circle cx="200" cy="300" r="3.5" fill="var(--accent-copper)"/>
-        <circle cx="266" cy="300" r="3.5" fill="var(--accent-copper)"/>
-        <circle cx="450" cy="300" r="3.5" fill="var(--accent-copper)"/>
-        <circle cx="516" cy="300" r="3.5" fill="var(--accent-copper)"/>
-        <circle cx="670" cy="300" r="3.5" fill="var(--accent-copper)"/>
-        <circle cx="730" cy="300" r="3.5" fill="var(--accent-copper)"/>
-        <circle cx="890" cy="300" r="3.5" fill="var(--accent-copper)"/>
-        <circle cx="946" cy="300" r="3.5" fill="var(--accent-copper)"/>
-        <circle cx="360" cy="235" r="3.5" fill="var(--accent-copper)"/>
+        <circle cx="200" cy="300" r="3.5" fill="var(--amber)"/>
+        <circle cx="266" cy="300" r="3.5" fill="var(--amber)"/>
+        <circle cx="450" cy="300" r="3.5" fill="var(--amber)"/>
+        <circle cx="516" cy="300" r="3.5" fill="var(--amber)"/>
+        <circle cx="670" cy="300" r="3.5" fill="var(--amber)"/>
+        <circle cx="730" cy="300" r="3.5" fill="var(--amber)"/>
+        <circle cx="890" cy="300" r="3.5" fill="var(--amber)"/>
+        <circle cx="946" cy="300" r="3.5" fill="var(--amber)"/>
+        <circle cx="360" cy="235" r="3.5" fill="var(--amber)"/>
 
         <!-- Guardrail rejection arc back to model -->
-        <path d="M 595,255 C 595,172 452,172 452,237" fill="none" stroke="var(--accent-rose)" stroke-width="1.5" stroke-dasharray="4 3" marker-end="url(#arRose)"/>
-        <text x="524" y="163" text-anchor="middle" font-family="'IBM Plex Mono',monospace" font-size="10.5" fill="var(--accent-rose)">denied → retry</text>
+        <path d="M 595,255 C 595,172 452,172 452,237" fill="none" stroke="var(--rose)" stroke-width="1.5" stroke-dasharray="4 3" marker-end="url(#arRose)"/>
+        <text x="524" y="163" text-anchor="middle" font-size="10.5" fill="var(--rose)">denied &rarr; retry</text>
 
         <!-- Output branch (loop exit) -->
-        <line x1="360" y1="365" x2="360" y2="418" stroke="var(--muted)" stroke-width="1.5" stroke-dasharray="4 3" marker-end="url(#arH)"/>
-        <text x="374" y="396" font-family="'IBM Plex Mono',monospace" font-size="10.5" fill="var(--muted)">or: no call needed</text>
+        <line x1="360" y1="365" x2="360" y2="418" stroke="var(--text-dim)" stroke-width="1.5" stroke-dasharray="4 3" marker-end="url(#arH)"/>
+        <text x="374" y="396" font-size="10.5" fill="var(--text-dim)">or: no call needed</text>
 
-        <rect x="270" y="420" width="180" height="66" rx="3" fill="var(--panel)" stroke="var(--line)" stroke-width="1.5"/>
-        <text x="360" y="448" text-anchor="middle" font-family="'Big Shoulders Display',sans-serif" font-weight="700" font-size="19" fill="var(--ink)">DASHBOARD</text>
-        <text x="360" y="468" text-anchor="middle" font-family="'IBM Plex Mono',monospace" font-size="10" fill="var(--muted)">output, rendered</text>
+        <rect x="270" y="420" width="180" height="66" rx="3" fill="var(--surface)" stroke="var(--border)" stroke-width="1.5"/>
+        <text x="360" y="448" text-anchor="middle" font-weight="700" font-size="19" fill="var(--text)">DASHBOARD</text>
+        <text x="360" y="468" text-anchor="middle" font-size="10" fill="var(--text-dim)">output, rendered</text>
 
-        <line x1="360" y1="486" x2="360" y2="516" stroke="var(--muted)" stroke-width="1.5" stroke-dasharray="4 3" marker-end="url(#arH)"/>
+        <line x1="360" y1="486" x2="360" y2="516" stroke="var(--text-dim)" stroke-width="1.5" stroke-dasharray="4 3" marker-end="url(#arH)"/>
 
         <!-- HUMAN: in the loop and above the loop -->
-        <rect x="286" y="520" width="148" height="64" rx="6" fill="var(--panel)" stroke="var(--accent-rose)" stroke-width="1.75"/>
-        <text x="360" y="548" text-anchor="middle" font-family="'Big Shoulders Display',sans-serif" font-weight="800" font-size="21" fill="var(--accent-rose)">HUMAN</text>
-        <text x="360" y="567" text-anchor="middle" font-family="'IBM Plex Mono',monospace" font-size="8.5" fill="var(--muted)">driver — steers &amp; brakes</text>
+        <rect x="286" y="520" width="148" height="64" rx="6" fill="var(--surface)" stroke="var(--rose)" stroke-width="1.75"/>
+        <text x="360" y="548" text-anchor="middle" font-weight="800" font-size="21" fill="var(--rose)">HUMAN</text>
+        <text x="360" y="567" text-anchor="middle" font-size="8.5" fill="var(--text-dim)">driver &mdash; steers &amp; brakes</text>
 
-        <!-- IN THE LOOP: foot on the brake — releases a consequential action before it fires -->
-        <line x1="412" y1="552" x2="694" y2="306" stroke="var(--accent-copper)" stroke-width="1.75" marker-end="url(#arCopper)"/>
-        <text x="540" y="480" font-family="'IBM Plex Mono',monospace" font-size="10.5" fill="var(--accent-copper)">RELEASE — in the loop</text>
-        <text x="540" y="494" font-family="'IBM Plex Mono',monospace" font-size="10.5" fill="var(--accent-copper)">approves the action before it fires</text>
+        <!-- IN THE LOOP: foot on the brake &mdash; releases a consequential action before it fires -->
+        <line x1="412" y1="552" x2="694" y2="306" stroke="var(--amber)" stroke-width="1.75" marker-end="url(#arAmber)"/>
+        <text x="540" y="480" font-size="10.5" fill="var(--amber)">RELEASE &mdash; in the loop</text>
+        <text x="540" y="494" font-size="10.5" fill="var(--amber)">approves the action before it fires</text>
 
-        <!-- ABOVE THE LOOP: hand on the wheel — steers the tune, sets the destination -->
-        <line x1="308" y1="552" x2="330" y2="150" stroke="var(--accent-copper)" stroke-width="1.75" stroke-dasharray="4 3" marker-end="url(#arCopper)"/>
-        <text x="344" y="388" font-family="'IBM Plex Mono',monospace" font-size="10.5" fill="var(--accent-copper)">STEERS — above the loop</text>
-        <text x="344" y="402" font-family="'IBM Plex Mono',monospace" font-size="10.5" fill="var(--accent-copper)">sets the destination &amp; the tune</text>
+        <!-- ABOVE THE LOOP: hand on the wheel &mdash; steers the tune, sets the destination -->
+        <line x1="308" y1="552" x2="330" y2="150" stroke="var(--amber)" stroke-width="1.75" stroke-dasharray="4 3" marker-end="url(#arAmber)"/>
+        <text x="344" y="388" font-size="10.5" fill="var(--amber)">STEERS &mdash; above the loop</text>
+        <text x="344" y="402" font-size="10.5" fill="var(--amber)">sets the destination &amp; the tune</text>
 
         <!-- Loop-back: exhaust, piped back into the tank -->
-        <path d="M 1016,345 L 1016,650 L 117,650 L 117,345" fill="none" stroke="var(--accent-copper)" stroke-width="1.75" marker-end="url(#arCopper)"/>
-        <circle cx="1016" cy="345" r="3.5" fill="var(--accent-copper)"/>
-        <circle cx="117" cy="345" r="3.5" fill="var(--accent-copper)"/>
-        <rect x="447" y="638" width="240" height="24" rx="12" fill="var(--bg)" stroke="var(--accent-copper)" stroke-width="1.25"/>
-        <text x="567" y="654" text-anchor="middle" font-family="'IBM Plex Mono',monospace" font-size="11" letter-spacing="0.08em" fill="var(--accent-copper)">4 · EXHAUST</text>
-        <text x="567" y="686" text-anchor="middle" font-family="'IBM Plex Mono',monospace" font-size="11" fill="var(--accent-copper)">piped back into the tank instead of vented — that's what makes it a loop</text>
+        <path d="M 1016,345 L 1016,650 L 117,650 L 117,345" fill="none" stroke="var(--amber)" stroke-width="1.75" marker-end="url(#arAmber)"/>
+        <circle cx="1016" cy="345" r="3.5" fill="var(--amber)"/>
+        <circle cx="117" cy="345" r="3.5" fill="var(--amber)"/>
+        <rect x="447" y="638" width="240" height="24" rx="12" fill="var(--surface)" stroke="var(--amber)" stroke-width="1.25"/>
+        <text x="567" y="654" text-anchor="middle" font-size="11" letter-spacing="0.08em" fill="var(--amber)">4 &middot; EXHAUST</text>
+        <text x="567" y="686" text-anchor="middle" font-size="11" fill="var(--amber)">piped back into the tank instead of vented &mdash; that&rsquo;s what makes it a loop</text>
 
-        <!-- Turbo: the exhaust doesn't just refill the tank, it spins this up too -->
-        <circle cx="117" cy="650" r="15" fill="var(--bg)" stroke="var(--accent-copper)" stroke-width="1.5"/>
-        <g stroke="var(--accent-copper)" stroke-width="1.75" stroke-linecap="round">
+        <!-- Turbo: the exhaust doesn&rsquo;t just refill the tank, it spins this up too -->
+        <circle cx="117" cy="650" r="15" fill="var(--surface)" stroke="var(--amber)" stroke-width="1.5"/>
+        <g stroke="var(--amber)" stroke-width="1.75" stroke-linecap="round">
           <line x1="117" y1="639" x2="117" y2="646"/>
           <line x1="128" y1="650" x2="121" y2="650"/>
           <line x1="117" y1="661" x2="117" y2="654"/>
@@ -474,101 +286,69 @@
           <line x1="124.8" y1="642.2" x2="119.8" y2="647.2"/>
           <line x1="109.2" y1="657.8" x2="114.2" y2="652.8"/>
         </g>
-        <text x="140" y="632" font-family="'IBM Plex Mono',monospace" font-size="11" font-weight="600" letter-spacing="0.06em" fill="var(--accent-copper)">TURBO</text>
-        <text x="140" y="647" font-family="'IBM Plex Mono',monospace" font-size="9" fill="var(--muted)">exhaust spins it up —</text>
-        <text x="140" y="660" font-family="'IBM Plex Mono',monospace" font-size="9" fill="var(--muted)">boosts the next intake</text>
+        <text x="140" y="632" font-size="11" font-weight="600" letter-spacing="0.06em" fill="var(--amber)">TURBO</text>
+        <text x="140" y="647" font-size="9" fill="var(--text-dim)">exhaust spins it up &mdash;</text>
+        <text x="140" y="660" font-size="9" fill="var(--text-dim)">boosts the next intake</text>
 
         <!-- Legend -->
-        <g font-family="'IBM Plex Mono',monospace" font-size="11">
-          <rect x="40" y="703" width="14" height="14" rx="3" fill="var(--accent-blue)"/>
-          <text x="62" y="714" fill="var(--ink)"><tspan font-weight="600" fill="var(--accent-blue)">MODEL</tspan> — one stroke at a time</text>
+        <g font-size="11">
+          <rect x="40" y="703" width="14" height="14" rx="3" fill="var(--primary)"/>
+          <text x="62" y="714" fill="var(--text)"><tspan font-weight="600" fill="var(--primary)">MODEL</tspan> &mdash; one stroke at a time</text>
 
-          <line x1="440" y1="710" x2="462" y2="710" stroke="var(--accent-copper)" stroke-width="2.5"/>
-          <text x="472" y="714" fill="var(--ink)"><tspan font-weight="600" fill="var(--accent-copper)">HARNESS</tspan> — every wire, every tool</text>
+          <line x1="440" y1="710" x2="462" y2="710" stroke="var(--amber)" stroke-width="2.5"/>
+          <text x="472" y="714" fill="var(--text)"><tspan font-weight="600" fill="var(--amber)">HARNESS</tspan> &mdash; every wire, every tool</text>
 
-          <line x1="860" y1="710" x2="882" y2="710" stroke="var(--accent-rose)" stroke-width="2.5" stroke-dasharray="4 3"/>
-          <text x="892" y="714" fill="var(--ink)"><tspan font-weight="600" fill="var(--accent-rose)">CUTOFF</tspan> — governor says no</text>
+          <line x1="860" y1="710" x2="882" y2="710" stroke="var(--rose)" stroke-width="2.5" stroke-dasharray="4 3"/>
+          <text x="892" y="714" fill="var(--text)"><tspan font-weight="600" fill="var(--rose)">CUTOFF</tspan> &mdash; governor says no</text>
         </g>
       </svg>
-    </figure>
-    <figcaption>
-      One turn, four strokes:
-      <br><b>Intake</b> — draws memory into the engine.
-      <br><b>Compression</b> — the forward pass.
-      <br><b>Ignition</b> — sparks the power stroke: the proposed action runs the governor, then fans out through the actuators onto the road.
-      <br><b>Exhaust</b> — instead of venting, piped back into the tank and spinning up a turbo that boosts the next intake.
-      <br><br>The dashed outline is the <b>agent</b>: the engine plus everything wired around it. The engine (blue) only ever sees the top row; every copper line is the harness.
-      <br><br>And the <b>human</b> is in it, not just at the end: above the loop they steer the tune and set the destination; in the loop they release a consequential action before it fires. The driver isn't just reading the dashboard — hand on the wheel, foot on the brake.
-    </figcaption>
-  </section>
-
-  <section>
-    <h2>Engine vs. harness</h2>
-    <div class="compare">
-      <div class="compare-row head">
-        <div class="label">ATTRIBUTE</div>
-        <div class="col-model">Model <span class="sub">— the engine</span></div>
-        <div class="col-harness">Harness <span class="sub">— the wiring loom</span></div>
-      </div>
-      <div class="compare-row">
-        <div class="rowlabel">STATE</div>
-        <div class="col-model">None — same weights, same forward pass, every single call.</div>
-        <div class="col-harness">Holds the conversation, files, and task state between turns.</div>
-      </div>
-      <div class="compare-row">
-        <div class="rowlabel">ONE CALL DOES</div>
-        <div class="col-model">Fires once — intake, compression, one stroke — then it's spent.</div>
-        <div class="col-harness">Keeps the crank turning: strokes the cycle again, and again, and again.</div>
-      </div>
-      <div class="compare-row">
-        <div class="rowlabel">CAN IT ACT?</div>
-        <div class="col-model">Only proposes an action in text; can't execute anything itself.</div>
-        <div class="col-harness">Actuates the tool call against the real world and hands the result back.</div>
-      </div>
-      <div class="compare-row">
-        <div class="rowlabel">LIMITS</div>
-        <div class="col-model">No concept of permissions, budgets, or what's off-limits.</div>
-        <div class="col-harness">The governor — enforces guardrails, sandboxing, and rate limits before anything fires.</div>
-      </div>
+      <figcaption>
+        One turn, four strokes:
+        <br><b>Intake</b> &mdash; draws memory into the engine.
+        <br><b>Compression</b> &mdash; the forward pass.
+        <br><b>Ignition</b> &mdash; sparks the power stroke: the proposed action runs the governor, then fans out through the actuators onto the road.
+        <br><b>Exhaust</b> &mdash; instead of venting, piped back into the tank and spinning up a turbo that boosts the next intake.
+        <br><br>The dashed outline is the <b>agent</b>: the engine plus everything wired around it. The engine (blue) only ever sees the top row; every copper line is the harness.
+        <br><br>And the <b>human</b> is in it, not just at the end: above the loop they steer the tune and set the destination; in the loop they release a consequential action before it fires. The driver isn&rsquo;t just reading the dashboard &mdash; hand on the wheel, foot on the brake.
+      </figcaption>
     </div>
   </section>
 
-  <section>
-    <h2>What's in the wiring</h2>
-    <div class="grid">
-      <div class="card">
-        <div class="tag">ECU map</div>
-        <p>The system prompt — standing instructions the model is <b>re-shown every call</b>, the tune it fires to, saying who it's being right now and what matters.</p>
-      </div>
-      <div class="card">
-        <div class="tag">Actuators</div>
-        <p>Tools — usually <b>more than one</b>: search, code execution, a filesystem. Each is a function definition plus the code that actually runs it and returns a result.</p>
-      </div>
-      <div class="card">
-        <div class="tag">Fuel tank</div>
-        <p>Memory &amp; context — the transcript and task state the harness assembles and re-feeds each stroke, since the engine itself <b>remembers nothing</b>.</p>
-      </div>
-      <div class="card">
-        <div class="tag">The road</div>
-        <p>Sandbox / environment — the actual place actions happen, kept <b>separate</b> from anything the harness doesn't want the actuators touching.</p>
-      </div>
-      <div class="card">
-        <div class="tag">Governor</div>
-        <p>Guardrails — permission checks, rate limits, and approval gates enforced <b>before</b> a proposed action is allowed to fire.</p>
-      </div>
-      <div class="card">
-        <div class="tag">Wiring loom</div>
-        <p>Orchestration — scheduling and coordination across calls or subagents. This is the harness itself: the loom <b>routing signals</b> between every part above.</p>
-      </div>
-    </div>
+  <!-- 02 -->
+  <section class="sec">
+    <div class="sec-head"><span class="sec-num">02</span><h2 class="sec-title">Engine vs. harness</h2></div>
+    <table class="tbl">
+      <thead><tr><th>Attribute</th><th>Model <span style="font-weight:400;text-transform:none;letter-spacing:0">&mdash; the engine</span></th><th>Harness <span style="font-weight:400;text-transform:none;letter-spacing:0">&mdash; the wiring loom</span></th></tr></thead>
+      <tbody>
+        <tr><td class="f">State</td><td>None &mdash; same weights, same forward pass, every single call.</td><td>Holds the conversation, files, and task state between turns.</td></tr>
+        <tr><td class="f">One call does</td><td>Fires once &mdash; intake, compression, one stroke &mdash; then it&rsquo;s spent.</td><td>Keeps the crank turning: strokes the cycle again, and again, and again.</td></tr>
+        <tr><td class="f">Can it act?</td><td>Only proposes an action in text; can&rsquo;t execute anything itself.</td><td>Actuates the tool call against the real world and hands the result back.</td></tr>
+        <tr><td class="f">Limits</td><td>No concept of permissions, budgets, or what&rsquo;s off-limits.</td><td>The governor &mdash; enforces guardrails, sandboxing, and rate limits before anything fires.</td></tr>
+      </tbody>
+    </table>
   </section>
 
-  <footer>
-    <p>The name isn't a metaphor stretched thin. Pop the hood on an actual engine and the wiring harness is exactly this: the bundle of copper that carries fuel data, ignition timing, and governor signals between every part, then routes the exhaust back around.</p>
-    <p>Swap <b>engine</b> for <b>model</b>, <b>driver</b> for <b>user</b>, and the analogy holds all the way down. No wiring, no car — no matter how good the engine is.</p>
+  <!-- 03 -->
+  <section class="sec">
+    <div class="sec-head"><span class="sec-num">03</span><h2 class="sec-title">What&rsquo;s in the wiring</h2></div>
+    <div class="pmap"><div class="pm-k">ECU map</div><div class="pm-b">The system prompt &mdash; standing instructions the model is <b>re-shown every call</b>, the tune it fires to, saying who it&rsquo;s being right now and what matters.</div></div>
+    <div class="pmap"><div class="pm-k">Actuators</div><div class="pm-b">Tools &mdash; usually <b>more than one</b>: search, code execution, a filesystem. Each is a function definition plus the code that actually runs it and returns a result.</div></div>
+    <div class="pmap"><div class="pm-k">Fuel tank</div><div class="pm-b">Memory &amp; context &mdash; the transcript and task state the harness assembles and re-feeds each stroke, since the engine itself <b>remembers nothing</b>.</div></div>
+    <div class="pmap"><div class="pm-k">The road</div><div class="pm-b">Sandbox / environment &mdash; the actual place actions happen, kept <b>separate</b> from anything the harness doesn&rsquo;t want the actuators touching.</div></div>
+    <div class="pmap"><div class="pm-k">Governor</div><div class="pm-b">Guardrails &mdash; permission checks, rate limits, and approval gates enforced <b>before</b> a proposed action is allowed to fire.</div></div>
+    <div class="pmap"><div class="pm-k">Wiring loom</div><div class="pm-b">Orchestration &mdash; scheduling and coordination across calls or subagents. This is the harness itself: the loom <b>routing signals</b> between every part above.</div></div>
+  </section>
+
+  <div class="close">
+    <p>The name isn&rsquo;t a metaphor stretched thin. Pop the hood on an actual engine and the wiring harness is exactly this: the bundle of copper that carries fuel data, ignition timing, and governor signals between every part, then routes the exhaust back around.</p>
+    <p>Swap <b>engine</b> for <b>model</b>, <b>driver</b> for <b>user</b>, and the analogy holds all the way down. No wiring, no car &mdash; no matter how good the engine is.</p>
+  </div>
+
+  <footer class="footer">
+    <a href="index.html">&larr; Index</a>
+    <span>&copy; 2025-2026 Charlie Fuller</span>
   </footer>
 
-</div>
-
+</main>
 </body>
 </html>
