@@ -109,11 +109,6 @@
   </div>
 
   <div class="figure">
-    <div class="view-toggle" id="viewtoggle" role="tablist" aria-label="Choose a view">
-      <button class="on" data-view="board" role="tab" aria-selected="true">Board</button>
-      <button data-view="matrix" role="tab" aria-selected="false">Matrix</button>
-    </div>
-
     <div class="board" id="board">
       <div class="axis">
         <div>sources &middot; 76 items</div>
@@ -126,7 +121,6 @@
       </div>
     </div>
 
-    <div class="matrix" id="matrix"></div>
     <p class="fig-caveat" id="caveat">Ribbon width is an item's mass split across the calls it serves, not a head-count &mdash; one item can feed several fault lines. Hover a stream or a prediction to trace where its evidence lands.</p>
   </div>
 
@@ -359,40 +353,7 @@
   });
   wrap.addEventListener('mouseleave', () => tooltip.classList.remove('on'));
 
-  /* ---------- matrix ---------- */
-  function buildMatrix() {
-    let rows = '<table><thead><tr><th>prediction</th>';
-    STREAMS.forEach(s => rows += '<th><span class="sw" style="background:' + s.color + '"></span>' + s.name + '</th>');
-    rows += '<th>streams</th><th>queue</th></tr></thead><tbody>';
-    PREDICTIONS.forEach(p => {
-      const n = STREAMS.filter(s => p.cells[s.id]).length;
-      rows += '<tr><td>' + p.name + '</td>';
-      STREAMS.forEach(s => {
-        const c = p.cells[s.id];
-        rows += c ? '<td class="cell' + (c >= 8 ? ' heat' : '') + '">' + c + '</td>' : '<td class="cell zero">&middot;</td>';
-      });
-      rows += '<td class="streams">' + n + '</td>';
-      rows += '<td class="queue">' + p.queue.toFixed(1) + '</td>';
-      rows += '</tr>';
-    });
-    return rows + '</tbody></table>';
-  }
-
   renderBoard(document.getElementById('chart'));
-  document.getElementById('matrix').innerHTML = buildMatrix();
-
-  document.getElementById('viewtoggle').addEventListener('click', e => {
-    const btn = e.target.closest('button');
-    if (!btn) return;
-    document.querySelectorAll('#viewtoggle button').forEach(b => {
-      b.classList.toggle('on', b === btn);
-      b.setAttribute('aria-selected', b === btn ? 'true' : 'false');
-    });
-    const board = document.getElementById('board');
-    const matrix = document.getElementById('matrix');
-    if (btn.dataset.view === 'board') { board.style.display = ''; matrix.style.display = 'none'; }
-    else { board.style.display = 'none'; matrix.style.display = 'block'; }
-  });
 })();
 </script>
 </body>
