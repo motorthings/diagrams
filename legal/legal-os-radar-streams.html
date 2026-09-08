@@ -58,20 +58,19 @@
   .view-toggle button.on { background: var(--primary); color: #fff; }
   .view-toggle button:not(.on):hover { color: var(--primary); }
 
-  .fig-caveat { font-size: 12px; color: var(--text-faint); max-width: 760px; margin: 10px 0 0; }
-  .fig-caveat b { color: var(--text-dim); }
+  .axis { display: flex; justify-content: space-between; gap: 24px; margin: 24px 0 8px; padding-bottom: 12px; border-bottom: 1px solid var(--border); }
+  .axis > div { flex: 0 0 auto; white-space: nowrap; font-family: var(--font-mono); font-size: 10px; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; color: var(--text-faint); }
 
-  .sankey-wrap { position: relative; }
-  .sankey-wrap svg { width: 100%; height: auto; display: block; }
-  .sk-node { cursor: pointer; }
-  .sk-band { cursor: pointer; transition: opacity 0.15s ease; }
-  .sk-band.dim, .sk-node.dim { opacity: 0.12; }
-  .sk-label { font-family: var(--font-mono); }
-  .sk-label .name { font-size: 12px; font-weight: 700; fill: var(--text); }
-  .sk-label .num { font-size: 11px; fill: var(--text-faint); }
-  .sk-axis { font-size: 10px; fill: var(--text-faint); font-family: var(--font-mono); letter-spacing: 0.12em; }
-  .sk-corr { fill: var(--primary); }
-  .sk-legend { font-size: 11px; fill: var(--text-faint); font-family: var(--font-mono); }
+  .board-wrap { position: relative; }
+  .board-wrap svg { width: 100%; height: auto; display: block; }
+
+  .legend { display: flex; flex-wrap: wrap; gap: 12px 32px; align-items: center; margin-top: 6px; padding-top: 18px; border-top: 1px solid var(--border); font-size: 12.5px; line-height: 1.6; color: var(--text-faint); }
+  .legend .swatches { display: inline-flex; gap: 2px; vertical-align: middle; margin-right: 6px; }
+  .legend .swatches span { width: 9px; height: 15px; border-radius: 1px; display: inline-block; }
+  .legend b { color: var(--text-dim); }
+
+  .fig-caveat { font-size: 12px; color: var(--text-faint); max-width: 760px; margin: 12px 0 0; }
+  .fig-caveat b { color: var(--text-dim); }
 
   .tooltip { position: absolute; pointer-events: none; z-index: 10; background: #1F1A1C; color: #fff; border-radius: 8px; padding: 10px 14px; font-size: 12px; line-height: 1.5; max-width: 340px; box-shadow: 0 6px 24px rgba(0,0,0,0.35); opacity: 0; transform: translateY(2px); transition: opacity 0.12s ease, transform 0.12s ease; }
   .tooltip.on { opacity: 1; transform: translateY(0); }
@@ -96,9 +95,10 @@
   .footer { margin-top: 48px; padding-top: 18px; border-top: 1px solid var(--border); font-size: 13px; color: var(--text-faint); }
   .footer a { color: var(--text-dim); text-decoration: none; } .footer a:hover { color: var(--text); }
 
-  @media (prefers-reduced-motion: reduce) { .sk-band, .sk-node { transition: none; } }
-  @media print { .tooltip { display: none; } .sk-band { opacity: 1 !important; } }
-  @media (max-width: 720px) { .matrix table { font-size: 11px; } .matrix th, .matrix td { padding: 6px 7px; } }
+  @media (prefers-reduced-motion: reduce) { .board-wrap svg * { transition: none !important; } }
+  @media print { .tooltip { display: none; } }
+  /* <720px: drop the ribbon field + stream rail/label column; keep rank + colour bands + pips */
+  @media (max-width: 720px) { .board-ribbons, .board-rails { display: none; } .matrix table { font-size: 11px; } .matrix th, .matrix td { padding: 6px 7px; } }
 </style>
 </head>
 <body>
@@ -106,25 +106,36 @@
   <div class="nav-inner">
     <nav class="crumbs" aria-label="Breadcrumb"><a href="../index.html">Index</a><span class="sep">/</span><a href="index.html">Legal</a><span class="sep">/</span><a href="legal-os-radar.html">Radar</a><span class="sep">/</span><span class="current" aria-current="page">The streams</span></nav>
   </div>
-  <div class="subnav"><a class="sp" href="legal-os-fault-line-radar-how-it-works.html">How it works</a><a class="sp" href="legal-os-fault-line-radar.html">The scoring engine</a><a class="sp" href="legal-os-fault-line-radar-app.html">The screen</a><span class="sp cur" aria-current="page">The streams</span><a class="sp" href="legal-os-fault-line-radar-kb.html">The sources</a><a class="sp" href="legal-os-radar-buildlog.html">How I built it</a><a class="sp" href="legal-os-radar-master-reference.html">Master reference</a></div>
+  <div class="subnav"><a class="sp" href="legal-os-fault-line-radar-how-it-works.html">How it works</a><a class="sp" href="legal-os-fault-line-radar.html">The scoring engine</a><a class="sp" href="legal-os-fault-line-radar-app.html">The screen</a><span class="sp cur" aria-current="page">The streams</span><a class="sp" href="legal-os-fault-line-radar-kb.html">The sources</a><a class="sp" href="legal-os-radar-buildlog.html">How I built it</a></div>
 </div>
 
 <div class="container">
   <div class="hero">
     <div class="kicker">Legal AI OS &middot; prediction engine</div>
     <h1>The streams</h1>
-    <p class="deck">Four streams of information converge into predictions about which legal-AI duty will fire next &mdash; and the more streams that point at a fault line, the stronger the call.</p>
+    <p class="deck">Four streams of evidence feed eleven fault-line predictions. The more streams that point at the same fault line, the stronger the call &mdash; so a prediction's bar is built out of its streams. One colour means one source agrees; four colours means the engine is sure.</p>
   </div>
 
   <div class="figure">
     <div class="view-toggle" id="viewtoggle" role="tablist" aria-label="Choose a view">
-      <button class="on" data-view="flow" role="tab" aria-selected="true">Flow</button>
+      <button class="on" data-view="board" role="tab" aria-selected="true">Board</button>
       <button data-view="matrix" role="tab" aria-selected="false">Matrix</button>
     </div>
 
-    <div class="sankey-wrap" id="sankey"></div>
+    <div class="board" id="board">
+      <div class="axis">
+        <div>sources &middot; 76 items</div>
+        <div>ranked by queue &middot; 11 fault lines</div>
+      </div>
+      <div class="board-wrap" id="chart"></div>
+      <div class="legend">
+        <span><span class="swatches"><span style="background:#C4506B"></span><span style="background:#1E8A6A"></span><span style="background:#2563eb"></span><span style="background:#B07C2E"></span></span><b>bar length = queue (0&ndash;10)</b> &middot; each colour band is one stream's share of that call</span>
+        <span><b>pips = corroboration</b>, out of four streams</span>
+      </div>
+    </div>
+
     <div class="matrix" id="matrix"></div>
-    <p class="fig-caveat" id="caveat"></p>
+    <p class="fig-caveat" id="caveat">Ribbon width is an item's mass split across the calls it serves, not a head-count &mdash; one item can feed several fault lines. Hover a stream or a prediction to trace where its evidence lands.</p>
   </div>
 
   <div class="footer">&copy; 2025&ndash;2026 Charlie Fuller &middot; part of the legal-os platform &middot; <a href="https://www.linkedin.com/in/charlie-fuller-colorado/" target="_blank" rel="noopener">LinkedIn</a></div>
@@ -134,172 +145,210 @@
 (function () {
   "use strict";
 
-  const SOURCES = [
-    { id: 'rules',       name: 'Rules & rulings',   items: 25, color: 'var(--rose)',
-      desc: 'what courts and regulators are deciding', contains: 'court sanctions · ethics opinions · statutes' },
-    { id: 'vendors',     name: 'Vendors',           items: 24, color: 'var(--metric)',
-      desc: 'what software companies are building', contains: 'capital rounds · acquisitions · product launches' },
-    { id: 'capability',  name: 'Capability',        items: 17, color: 'var(--blue)',
-      desc: 'what AI can do', contains: 'model releases · benchmarks · studies' },
-    { id: 'market',      name: 'Market & insurers', items: 10, color: 'var(--amber)',
-      desc: 'what insurers and clients are demanding', contains: 'insurer questionnaires · client demands · adoption' },
-  ];
-  // the predictions — fault lines ranked by queue (prediction strength)
-  const FAULT_LINES = [
-    { id: 'verification',       name: 'verification',      control: 'Documented verification + trace logs', corr: 4, queue: 8.6 },
-    { id: 'competence',         name: 'competence',        control: 'Firm-wide training + governance program', corr: 3, queue: 7.9 },
-    { id: 'disclosure',         name: 'disclosure',        control: 'Verification-by-default with an audit trail', corr: 2, queue: 7.6 },
-    { id: 'convergence',        name: 'convergence',       control: 'One operating model, to the strictest standard', corr: 3, queue: 7.5 },
-    { id: 'insurance',          name: 'insurance',         control: 'Governance as an insurable artifact', corr: 1, queue: 7.3 },
-    { id: 'confidentiality',    name: 'confidentiality',   control: 'Data-flow mapping + vendor attestation', corr: 2, queue: 6.9 },
-    { id: 'benchmark',          name: 'benchmark',         control: 'Tool-certification benchmark (NERVE)', corr: 3, queue: 6.9 },
-    { id: 'agentic',            name: 'agentic',           control: 'Human-decides gates + scope-limiting', corr: 3, queue: 5.8 },
-    { id: 'vendor_liability',   name: 'vendor liability',  control: 'Tool-provenance documentation', corr: 2, queue: 2.3 },
-    { id: 'judicial_analytics', name: 'judge analytics',   control: 'Guardrailed strategy sim (no actor prediction)', corr: 1, queue: 1.9 },
-    { id: 'fees',               name: 'fees',              control: 'Value-delivered measurement', corr: 1, queue: 1.7 },
-  ];
-  // v = fractional mass (item split across its fault lines); n = integer item count
-  const FLOWS = [
-    { s:'rules',      fl:'verification',       v:7.58, n:13 },
-    { s:'rules',      fl:'competence',         v:2.33, n:5 },
-    { s:'rules',      fl:'disclosure',         v:3.92, n:9 },
-    { s:'rules',      fl:'convergence',        v:2.75, n:4 },
-    { s:'rules',      fl:'confidentiality',    v:4.42, n:8 },
-    { s:'rules',      fl:'vendor_liability',   v:2.00, n:3 },
-    { s:'rules',      fl:'judicial_analytics', v:1.00, n:1 },
-    { s:'rules',      fl:'fees',               v:1.00, n:1 },
-    { s:'capability', fl:'verification',       v:2.50, n:3 },
-    { s:'capability', fl:'competence',         v:5.00, n:5 },
-    { s:'capability', fl:'benchmark',          v:3.50, n:4 },
-    { s:'capability', fl:'agentic',            v:6.00, n:6 },
-    { s:'market',     fl:'verification',       v:2.58, n:4 },
-    { s:'market',     fl:'competence',         v:2.58, n:4 },
-    { s:'market',     fl:'disclosure',         v:0.25, n:1 },
-    { s:'market',     fl:'convergence',        v:1.00, n:1 },
-    { s:'market',     fl:'insurance',          v:1.00, n:1 },
-    { s:'market',     fl:'confidentiality',    v:1.33, n:2 },
-    { s:'market',     fl:'benchmark',          v:0.25, n:1 },
-    { s:'market',     fl:'agentic',            v:1.00, n:1 },
-    { s:'vendors',    fl:'verification',       v:2.00, n:3 },
-    { s:'vendors',    fl:'convergence',        v:1.50, n:3 },
-    { s:'vendors',    fl:'benchmark',          v:10.00, n:15 },
-    { s:'vendors',    fl:'agentic',            v:8.50, n:12 },
-    { s:'vendors',    fl:'vendor_liability',   v:2.00, n:3 },
-  ];
-
-  const srcById = Object.fromEntries(SOURCES.map(s => [s.id, s]));
-  const flById = Object.fromEntries(FAULT_LINES.map(f => [f.id, f]));
-
-  const CORR_OP = { 1: 0.22, 2: 0.40, 3: 0.62, 4: 0.90 };
-  const corrColor = c => 'var(--primary)';
-
-  /* ---------------- FLOW (funnel) ---------------- */
-  function buildFlow() {
-    const H = 470, TP = 16, BP = 54;
-    const usable = H - TP - BP;              // 400
-    const totalMass = SOURCES.reduce((a, s) => a + s.items, 0); // 76
-    const scale = usable / totalMass;
-    const lx = 152, mx = 470, rx = 802;
-
-    let y = TP; const srcPos = {};
-    SOURCES.forEach(s => { const h = s.items * scale; srcPos[s.id] = [y, y + h]; y += h; });
-    const mid = [TP, TP + usable];
-    const eh = usable / FAULT_LINES.length;
-    const flPos = {};
-    FAULT_LINES.forEach((f, i) => { const y0 = TP + i * eh; flPos[f.id] = [y0, y0 + eh]; });
-
-    function band(x0, x1, s0, s1, m0, m1, color, op) {
-      const dx = (x1 - x0) * 0.55;
-      return '<path class="sk-band" d="M ' + x0 + ' ' + s0.toFixed(1) + ' C ' + (x0 + dx).toFixed(1) + ' ' + s0.toFixed(1) + ', ' + (x1 - dx).toFixed(1) + ' ' + m0.toFixed(1) + ', ' + x1 + ' ' + m0.toFixed(1)
-        + ' L ' + x1 + ' ' + m1.toFixed(1) + ' C ' + (x1 - dx).toFixed(1) + ' ' + m1.toFixed(1) + ', ' + (x0 + dx).toFixed(1) + ' ' + s1.toFixed(1) + ', ' + x0 + ' ' + s1.toFixed(1) + ' Z"'
-        + ' fill="' + color + '" fill-opacity="' + op + '" stroke="' + color + '" stroke-opacity="' + Math.min(1, op + 0.2) + '" stroke-width="0.5"/>';
-    }
-
-    const parts = [];
-    parts.push('<svg viewBox="0 0 960 ' + H + '" role="img" aria-label="Four streams flow into a scoring engine that ranks eleven fault-line predictions">');
-
-    // sources -> scoring
-    SOURCES.forEach(s => {
-      const [y0, y1] = srcPos[s.id];
-      parts.push(band(lx, mx, y0, y1, y0, y1, s.color, 0.5));
-    });
-
-    // scoring -> predictions (colored by corroboration)
-    FAULT_LINES.forEach(f => {
-      const [y0, y1] = flPos[f.id];
-      parts.push(band(mx, rx, mid[0], mid[1], y0, y1, corrColor(f.corr), CORR_OP[f.corr] * 0.55));
-    });
-
-    // source bars + labels
-    SOURCES.forEach(s => {
-      const [y0, y1] = srcPos[s.id];
-      parts.push('<rect class="sk-node" data-src="' + s.id + '" x="' + (lx - 5) + '" y="' + y0.toFixed(1) + '" width="5" height="' + (y1 - y0).toFixed(1) + '" rx="2.5" fill="' + s.color + '"/>');
-      const cy = (y0 + y1) / 2;
-      parts.push('<g class="sk-node" data-src="' + s.id + '">'
-        + '<text class="sk-label" x="' + (lx - 16) + '" y="' + (cy - 3).toFixed(1) + '" text-anchor="end"><tspan class="name">' + s.name + '</tspan></text>'
-        + '<text class="sk-label" x="' + (lx - 16) + '" y="' + (cy + 12).toFixed(1) + '" text-anchor="end"><tspan class="num">' + s.items + ' items</tspan></text>'
-        + '</g>');
-    });
-
-    // scoring node
-    parts.push('<rect class="sk-node" data-mid="1" x="' + (mx - 6) + '" y="' + mid[0].toFixed(1) + '" width="12" height="' + (mid[1] - mid[0]).toFixed(1) + '" rx="6" fill="var(--slate)"/>');
-    const mcy = (mid[0] + mid[1]) / 2;
-    parts.push('<text class="sk-label" x="' + mx + '" y="' + (mcy - 4).toFixed(1) + '" text-anchor="middle"><tspan class="name" fill="var(--text)">scoring</tspan></text>');
-    parts.push('<text class="sk-label" x="' + mx + '" y="' + (mcy + 12).toFixed(1) + '" text-anchor="middle"><tspan class="num">5 dimensions</tspan></text>');
-
-    // prediction bars (corroboration) + labels
-    FAULT_LINES.forEach(f => {
-      const [y0, y1] = flPos[f.id];
-      parts.push('<rect class="sk-node" data-fl="' + f.id + '" x="' + rx + '" y="' + y0.toFixed(1) + '" width="5" height="' + (y1 - y0).toFixed(1) + '" rx="2.5" fill="' + corrColor(f.corr) + '" fill-opacity="' + CORR_OP[f.corr] + '"/>');
-      const cy = (y0 + y1) / 2;
-      parts.push('<g class="sk-node" data-fl="' + f.id + '">'
-        + '<text class="sk-label" x="' + (rx + 16) + '" y="' + (cy - 3).toFixed(1) + '" text-anchor="start"><tspan class="name">' + f.name + '</tspan></text>'
-        + '<text class="sk-label" x="' + (rx + 16) + '" y="' + (cy + 12).toFixed(1) + '" text-anchor="start"><tspan class="num">' + f.queue.toFixed(1) + ' · </tspan><tspan class="sk-corr">' + f.corr + ' stream' + (f.corr === 1 ? '' : 's') + '</tspan></text>'
-        + '</g>');
-    });
-
-    parts.push('<text class="sk-axis" x="' + lx + '" y="' + (H - 26) + '" text-anchor="middle">sources &middot; 76 items</text>');
-    parts.push('<text class="sk-axis" x="' + mx + '" y="' + (H - 26) + '" text-anchor="middle">scoring engine</text>');
-    parts.push('<text class="sk-axis" x="' + rx + '" y="' + (H - 26) + '" text-anchor="middle">predictions &middot; 11 fault lines</text>');
-    parts.push('<text class="sk-legend" x="' + rx + '" y="' + (H - 10) + '" text-anchor="middle">darker = more streams corroborate</text>');
-
-    parts.push('</svg>');
-    return parts.join('');
-  }
-
-  /* ---------------- MATRIX ---------------- */
-  function buildMatrix() {
-    let rows = '<table><thead><tr><th>prediction</th>';
-    SOURCES.forEach(s => rows += '<th><span class="sw" style="background:' + s.color + '"></span>' + s.name + '</th>');
-    rows += '<th>streams</th><th>queue</th></tr></thead><tbody>';
-    FAULT_LINES.forEach(f => {
-      rows += '<tr><td>' + f.name + '</td>';
-      SOURCES.forEach(s => {
-        const x = FLOWS.find(z => z.s === s.id && z.fl === f.id);
-        if (x) rows += '<td class="cell' + (x.n >= 8 ? ' heat' : '') + '">' + x.n + '</td>';
-        else rows += '<td class="cell zero">&middot;</td>';
-      });
-      rows += '<td class="streams">' + f.corr + '</td>';
-      rows += '<td class="queue">' + f.queue.toFixed(1) + '</td>';
-      rows += '</tr>';
-    });
-    return rows + '</tbody></table>';
-  }
-
-  const CAVEATS = {
-    flow: 'Read left to right: four streams of evidence pour into the scoring engine, which ranks eleven fault-line predictions. Each prediction is sized by its queue and shaded by corroboration &mdash; <b>the darker the bar, the more streams agree on it</b>. Verification sits at the top because all four streams point at it. Hover a stream or prediction for what it contains and what you would build for it.',
-    matrix: 'The same 76 items as a grid &mdash; each prediction is a row, each stream a column. A cell is how many items that stream contributes to that prediction. The <b>streams</b> column counts how many columns light up: more columns means a stronger, better-corroborated call. The <b>queue</b> is the prediction strength (0&ndash;10). This view cannot cross or overlap, so it is exact at a glance.'
+  // Site stream hues (light theme) — one hue per stream.
+  const C = {
+    ink: '#171416', muted: '#8A8481', faint: '#D9D2CE',
+    rule: '#C4506B', vendor: '#1E8A6A', capability: '#2563eb', market: '#B07C2E'
   };
 
-  /* ---------------- tooltips ---------------- */
+  const STREAMS = [
+    { id: 'rules',      short: 'rules',      name: 'Rules & rulings',   items: 25, color: C.rule,
+      desc: 'what courts and regulators are deciding', contains: 'court sanctions · ethics opinions · statutes' },
+    { id: 'vendors',    short: 'vendors',    name: 'Vendors',           items: 24, color: C.vendor,
+      desc: 'what software companies are building', contains: 'capital rounds · acquisitions · product launches' },
+    { id: 'capability', short: 'capability', name: 'Capability',        items: 17, color: C.capability,
+      desc: 'what AI can do', contains: 'model releases · benchmarks · studies' },
+    { id: 'market',     short: 'market',     name: 'Market & insurers', items: 10, color: C.market,
+      desc: 'what insurers and clients are demanding', contains: 'insurer questionnaires · client demands · adoption' },
+  ];
+
+  // Ordered by queue, descending — row order IS the ranking.
+  const PREDICTIONS = [
+    { name: 'verification',      queue: 8.6, control: 'Documented verification + trace logs', cells: { rules: 13, vendors: 3, capability: 3, market: 4 } },
+    { name: 'competence',        queue: 7.9, control: 'Firm-wide training + governance program', cells: { rules: 5, capability: 5, market: 4 } },
+    { name: 'disclosure',        queue: 7.6, control: 'Verification-by-default with an audit trail', cells: { rules: 9, market: 1 } },
+    { name: 'convergence',       queue: 7.5, control: 'One operating model, to the strictest standard', cells: { rules: 4, vendors: 3, market: 1 } },
+    { name: 'insurance',         queue: 7.3, control: 'Governance as an insurable artifact', cells: { market: 1 } },
+    { name: 'confidentiality',   queue: 6.9, control: 'Data-flow mapping + vendor attestation', cells: { rules: 8, market: 2 } },
+    { name: 'benchmark',         queue: 6.9, control: 'Tool-certification benchmark (NERVE)', cells: { vendors: 15, capability: 4, market: 1 } },
+    { name: 'agentic',           queue: 5.8, control: 'Human-decides gates + scope-limiting', cells: { vendors: 12, capability: 6, market: 1 } },
+    { name: 'vendor liability',  queue: 2.3, control: 'Tool-provenance documentation', cells: { rules: 3, vendors: 3 } },
+    { name: 'judge analytics',   queue: 1.9, control: 'Guardrailed strategy sim (no actor prediction)', cells: { rules: 1 } },
+    { name: 'fees',              queue: 1.7, control: 'Value-delivered measurement', cells: { rules: 1 } },
+  ];
+
+  const L = {
+    W: 1160, H: 780,
+    labelRight: 152,
+    railX: 170, railW: 18,
+    railTop: 40, railSpan: 660, railGap: 16,
+    barX: 470, barMax: 430,
+    rowTop: 46, rowH: 62,
+    queueX: 960, pipX: 1010,
+    dim: 0.07, dimNode: 0.28, rest: 0.5, lit: 0.85
+  };
+
+  const NS = 'http://www.w3.org/2000/svg';
+  function el(tag, attrs, text) {
+    const n = document.createElementNS(NS, tag);
+    for (const k in attrs) n.setAttribute(k, attrs[k]);
+    if (text != null) n.textContent = text;
+    return n;
+  }
+
+  function layout() {
+    const totalItems = STREAMS.reduce((a, s) => a + s.items, 0);
+    const usable = L.railSpan - L.railGap * (STREAMS.length - 1);
+    const rails = {};
+    let y = L.railTop;
+    STREAMS.forEach(s => {
+      rails[s.id] = { y, h: (s.items / totalItems) * usable, color: s.color, name: s.name, items: s.items };
+      y += rails[s.id].h + L.railGap;
+    });
+
+    const rows = PREDICTIONS.map((p, i) => {
+      const rowY = L.rowTop + i * L.rowH;
+      const total = Object.values(p.cells).reduce((a, b) => a + b, 0);
+      const barH = 10 + p.queue * 2.6;
+      const barLen = (p.queue / 10) * L.barMax;
+      const barY = rowY + 22;
+      const active = STREAMS.filter(s => p.cells[s.id]);
+      let x = L.barX;
+      const segments = active.map(s => {
+        const w = (p.cells[s.id] / total) * barLen;
+        const seg = { x, y: barY, w: Math.max(w, 1.5), h: barH, color: s.color, stream: s.id, n: p.cells[s.id], streamItems: s.items };
+        x += w; return seg;
+      });
+      return { name: p.name, queue: p.queue, control: p.control, cells: p.cells, rowY, barY, barH, barLen, total, active, segments };
+    });
+
+    const cursor = {}; STREAMS.forEach(s => { cursor[s.id] = rails[s.id].y; });
+    const ribbons = [];
+    rows.forEach(r => {
+      let ay = r.barY;                              // arrival order == segment order => no crossing at the join
+      r.active.forEach(s => {
+        const streamTotal = PREDICTIONS.reduce((a, q) => a + (q.cells[s.id] || 0), 0);
+        const w1 = (r.cells[s.id] / streamTotal) * rails[s.id].h;
+        const w2 = (r.cells[s.id] / r.total) * r.barH;
+        const y0 = cursor[s.id], y1 = y0 + w1, y2 = ay, y3 = ay + w2;
+        const x0 = L.railX + L.railW, x1 = L.barX, mx = (x0 + x1) / 2;
+        ribbons.push({ stream: s.id, pred: r.name, color: s.color, n: r.cells[s.id], streamItems: s.items, predTotal: r.total,
+          d: 'M' + x0 + ',' + y0 + ' C' + mx + ',' + y0 + ' ' + mx + ',' + y2 + ' ' + x1 + ',' + y2
+            + ' L' + x1 + ',' + y3 + ' C' + mx + ',' + y3 + ' ' + mx + ',' + y1 + ' ' + x0 + ',' + y1 + ' Z' });
+        cursor[s.id] = y1; ay = y3;
+      });
+    });
+    return { rails, rows, ribbons };
+  }
+
+  function renderBoard(mount) {
+    const { rails, rows, ribbons } = layout();
+    const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+    const svg = el('svg', { viewBox: '0 0 ' + L.W + ' ' + L.H, style: 'width:100%;height:auto;display:block', role: 'img', 'aria-label': 'Four evidence streams feeding eleven ranked fault-line predictions' });
+
+    // ribbons (the flow) — wrapped so <720px can drop them
+    const field = el('g', { class: 'board-ribbons' });
+    svg.appendChild(field);
+    const paths = ribbons.map(r => {
+      const p = el('path', { d: r.d, fill: r.color, style: 'transition:opacity 180ms ease-out', 'data-stream': r.stream, 'data-pred': r.pred, 'data-n': r.n, 'data-stream-items': r.streamItems, 'data-pred-total': r.predTotal });
+      p.__r = r; field.appendChild(p); return p;
+    });
+
+    // rails (streams)
+    const railWrap = el('g', { class: 'board-rails' });
+    svg.appendChild(railWrap);
+    const railNodes = STREAMS.map(s => {
+      const r = rails[s.id];
+      const g = el('g', { style: 'cursor:pointer;transition:opacity 180ms ease-out', tabindex: '0', role: 'button', 'data-stream': s.id });
+      g.appendChild(el('rect', { x: L.railX, y: r.y, width: L.railW, height: r.h, rx: 3, fill: r.color }));
+      g.appendChild(el('text', { x: L.labelRight, y: r.y + r.h / 2 - 2, 'text-anchor': 'end', 'font-size': 15, 'font-weight': 600, fill: C.ink }, s.name));
+      g.appendChild(el('text', { x: L.labelRight, y: r.y + r.h / 2 + 16, 'text-anchor': 'end', 'font-size': 12, 'font-weight': 500, 'letter-spacing': '0.06em', fill: C.muted }, s.items + ' items'));
+      g.__stream = s.id; railWrap.appendChild(g); return g;
+    });
+
+    // prediction rows
+    const rowNodes = rows.map(r => {
+      const hit = el('g', { style: 'cursor:pointer', tabindex: '0', role: 'button', 'data-pred': r.name });
+      hit.appendChild(el('rect', { x: 160, y: r.rowY, width: 1000, height: 56, fill: 'transparent' }));
+      const g = el('g', { opacity: 1, style: 'transition:opacity 180ms ease-out' });
+      g.appendChild(el('text', { x: L.barX, y: r.rowY + 12, 'font-size': 17, 'font-weight': 600, fill: C.ink }, r.name));
+      g.appendChild(el('text', { x: 940, y: r.rowY + 12, 'text-anchor': 'end', 'font-size': 12, 'font-weight': 500, 'letter-spacing': '0.04em', fill: C.muted }, r.active.length + ' ' + (r.active.length === 1 ? 'stream' : 'streams') + ' · ' + r.total + ' ' + (r.total === 1 ? 'item' : 'items')));
+      r.segments.forEach(s => g.appendChild(el('rect', { x: s.x, y: s.y, width: s.w, height: s.h, fill: s.color, 'data-stream': s.stream, 'data-pred': r.name, 'data-n': s.n, 'data-stream-items': s.streamItems, 'data-pred-total': r.total })));
+      g.appendChild(el('text', { x: L.queueX, y: r.barY + r.barH / 2 + 7, 'font-size': 21, 'font-weight': 300, fill: C.ink }, r.queue.toFixed(1)));
+      STREAMS.forEach((s, i) => g.appendChild(el('rect', { x: L.pipX + i * 14, y: r.barY + r.barH / 2 - 4.5, width: 9, height: 9, rx: 2, fill: r.cells[s.id] ? s.color : C.faint })));
+      hit.appendChild(g); hit.__row = r; hit.__inner = g; svg.appendChild(hit); return hit;
+    });
+
+    // progressive disclosure
+    let hs = null, hp = null, revealed = false;
+    const paint = () => {
+      if (!revealed) { revealed = true; if (field.getAnimations) field.getAnimations().forEach(a => a.cancel()); }
+      const idle = !hs && !hp;
+      const row = hp && rows.find(r => r.name === hp);
+      paths.forEach(p => { p.style.opacity = idle ? L.rest : (p.__r.stream === hs || p.__r.pred === hp) ? L.lit : L.dim; });
+      railNodes.forEach(g => g.setAttribute('opacity', idle || g.__stream === hs || (row && row.cells[g.__stream]) ? 1 : 0.22));
+      rowNodes.forEach(g => g.__inner.setAttribute('opacity', idle || g.__row.name === hp || (hs && g.__row.cells[hs]) ? 1 : L.dimNode));
+    };
+    const set = (s, p) => { hs = s; hp = p; paint(); };
+
+    railNodes.forEach(g => { g.onmouseenter = g.onfocus = () => set(g.__stream, null); });
+    rowNodes.forEach(g => { g.onmouseenter = g.onfocus = () => set(null, g.__row.name); });
+    svg.onmouseleave = () => set(null, null);
+    svg.addEventListener('blur', () => set(null, null), true);
+    svg.addEventListener('keydown', e => { if (e.key === 'Escape') set(null, null); });
+
+    paths.forEach(p => { p.style.opacity = L.rest; });
+    mount.replaceChildren(svg);
+
+    // reveal once, on the wrapper <g> — never the same property paint() writes
+    if (!reduced && typeof field.animate === 'function') {
+      field.animate([{ opacity: 0 }, { opacity: 1 }], { duration: 520, easing: 'ease-out', fill: 'none' });
+    }
+
+    return { svg, set, rails, rows, ribbons };
+  }
+
+  /* ---------- tooltips ---------- */
   const tooltip = document.createElement('div');
   tooltip.className = 'tooltip';
-  document.querySelector('.sankey-wrap').appendChild(tooltip);
+  document.getElementById('chart').appendChild(tooltip);
 
+  function ribbonTT(sid, pid, n, streamItems, predTotal) {
+    const s = STREAMS.find(z => z.id === sid);
+    const p = PREDICTIONS.find(z => z.name === pid);
+    const share = Math.round(n / predTotal * 100);
+    return '<div class="tt-src">' + s.name + ' &rarr; ' + p.name + '</div>'
+      + '<div class="tt-main">' + n + ' of ' + streamItems + ' ' + s.short + ' items · ' + share + '% of ' + p.name + '</div>'
+      + '<div class="tt-sub">build: ' + p.control + '</div>';
+  }
+  function streamTT(sid) {
+    const s = STREAMS.find(z => z.id === sid);
+    return '<div class="tt-src">' + s.name + '</div>'
+      + '<div class="tt-main">' + s.items + ' items</div>'
+      + '<div class="tt-sub">' + s.desc + ' &mdash; ' + s.contains + '</div>';
+  }
+  function predTT(pid) {
+    const p = PREDICTIONS.find(z => z.name === pid);
+    const n = STREAMS.filter(s => p.cells[s.id]).length;
+    return '<div class="tt-src">prediction · queue ' + p.queue.toFixed(1) + '</div>'
+      + '<div class="tt-main">' + p.name + '</div>'
+      + '<div class="tt-sub">build: ' + p.control + '</div>'
+      + '<div class="tt-sub">' + n + ' stream' + (n === 1 ? '' : 's') + ' corroborate this &mdash; more streams means a more confident call.</div>';
+  }
+  function ttFor(target) {
+    const seg = target.closest('[data-stream][data-pred]');
+    if (seg) return ribbonTT(seg.getAttribute('data-stream'), seg.getAttribute('data-pred'), +seg.getAttribute('data-n'), +seg.getAttribute('data-stream-items'), +seg.getAttribute('data-pred-total'));
+    const rail = target.closest('[data-stream]');
+    if (rail) return streamTT(rail.getAttribute('data-stream'));
+    const row = target.closest('[data-pred]');
+    if (row) return predTT(row.getAttribute('data-pred'));
+    return null;
+  }
   function showTooltip(html, x, y) {
     tooltip.innerHTML = html;
     tooltip.classList.add('on');
-    const wrap = document.querySelector('.sankey-wrap');
+    const wrap = document.getElementById('chart');
     const r = wrap.getBoundingClientRect();
     let tx = x, ty = y;
     if (tx + 340 > r.width) tx = x - 340;
@@ -307,78 +356,50 @@
     tooltip.style.left = tx + 'px';
     tooltip.style.top = ty + 'px';
   }
-  function hideTooltip() { tooltip.classList.remove('on'); }
 
-  function flTooltip(fl) {
-    const f = flById[fl];
-    return '<div class="tt-src">prediction &middot; queue ' + f.queue.toFixed(1) + '</div>'
-      + '<div class="tt-main">' + f.name + '</div>'
-      + '<div class="tt-sub">build: ' + f.control + '</div>'
-      + '<div class="tt-sub">' + f.corr + ' stream' + (f.corr === 1 ? '' : 's') + ' corroborate this &mdash; more streams means a more confident call.</div>';
-  }
-  function sourceTooltip(sid) {
-    const s = srcById[sid];
-    return '<div class="tt-src">' + s.name + '</div>'
-      + '<div class="tt-main">' + s.items + ' items</div>'
-      + '<div class="tt-sub">' + s.desc + ' &mdash; ' + s.contains + '</div>';
-  }
-  function midTooltip() {
-    return '<div class="tt-src">scoring engine</div>'
-      + '<div class="tt-main">5 dimensions</div>'
-      + '<div class="tt-sub">Every item is scored across capability, ruling, adoption, enablement, and software, weighted by source authority. A fault line fires when its score crosses 7.</div>';
-  }
-
-  function dimExcept(src, fl) {
-    document.querySelectorAll('#sankey .sk-band').forEach(b => {
-      const keep = (src && b.dataset.src === src) || (fl && b.dataset.fl === fl);
-      b.classList.toggle('dim', !keep);
-    });
-    document.querySelectorAll('#sankey .sk-node').forEach(n => {
-      const keep = (src && n.dataset.src === src) || (fl && n.dataset.fl === fl);
-      n.classList.toggle('dim', !keep);
-    });
-  }
-  function clearDim() { document.querySelectorAll('#sankey .sk-band.dim, #sankey .sk-node.dim').forEach(b => b.classList.remove('dim')); }
-
-  /* ---------------- render + wire ---------------- */
-  document.getElementById('sankey').innerHTML = buildFlow();
-  document.getElementById('matrix').innerHTML = buildMatrix();
-  document.getElementById('caveat').innerHTML = CAVEATS.flow;
-
-  const wrap = document.querySelector('.sankey-wrap');
+  const wrap = document.getElementById('chart');
   wrap.addEventListener('mousemove', e => {
-    const wr = wrap.getBoundingClientRect();
-    const x = e.clientX - wr.left + 14, y = e.clientY - wr.top + 14;
-    const n = e.target.closest('.sk-node');
-    if (n && n.dataset.fl) { showTooltip(flTooltip(n.dataset.fl), x, y); return; }
-    if (n && n.dataset.src) { showTooltip(sourceTooltip(n.dataset.src), x, y); return; }
-    if (n && n.dataset.mid) { showTooltip(midTooltip(), x, y); return; }
-    hideTooltip();
+    const r = wrap.getBoundingClientRect();
+    const x = e.clientX - r.left + 14, y = e.clientY - r.top + 14;
+    const tt = ttFor(e.target);
+    if (tt) showTooltip(tt, x, y);
+    else tooltip.classList.remove('on');
   });
-  wrap.addEventListener('mouseleave', hideTooltip);
-  wrap.addEventListener('mouseover', e => {
-    const n = e.target.closest('.sk-node');
-    if (!n) return;
-    if (n.dataset.src) dimExcept(n.dataset.src, null);
-    else if (n.dataset.fl) dimExcept(null, n.dataset.fl);
-  });
-  wrap.addEventListener('mouseout', e => {
-    if (!e.relatedTarget || !e.relatedTarget.closest('.sk-node')) clearDim();
-  });
+  wrap.addEventListener('mouseleave', () => tooltip.classList.remove('on'));
 
-  // view toggle
+  /* ---------- matrix ---------- */
+  function buildMatrix() {
+    let rows = '<table><thead><tr><th>prediction</th>';
+    STREAMS.forEach(s => rows += '<th><span class="sw" style="background:' + s.color + '"></span>' + s.name + '</th>');
+    rows += '<th>streams</th><th>queue</th></tr></thead><tbody>';
+    PREDICTIONS.forEach(p => {
+      const n = STREAMS.filter(s => p.cells[s.id]).length;
+      rows += '<tr><td>' + p.name + '</td>';
+      STREAMS.forEach(s => {
+        const c = p.cells[s.id];
+        rows += c ? '<td class="cell' + (c >= 8 ? ' heat' : '') + '">' + c + '</td>' : '<td class="cell zero">&middot;</td>';
+      });
+      rows += '<td class="streams">' + n + '</td>';
+      rows += '<td class="queue">' + p.queue.toFixed(1) + '</td>';
+      rows += '</tr>';
+    });
+    return rows + '</tbody></table>';
+  }
+
+  renderBoard(document.getElementById('chart'));
+  document.getElementById('matrix').innerHTML = buildMatrix();
+
   document.getElementById('viewtoggle').addEventListener('click', e => {
     const btn = e.target.closest('button');
     if (!btn) return;
-    const view = btn.dataset.view;
     document.querySelectorAll('#viewtoggle button').forEach(b => {
       b.classList.toggle('on', b === btn);
       b.setAttribute('aria-selected', b === btn ? 'true' : 'false');
     });
-    const isFlow = view === 'flow';
-    document.querySelector('.sankey-wrap').style.display = isFlow ? '' : 'none';
-    document.querySelector('.matrix').style.display = isFlow ? 'none' : 'block';
-    document.getElementById('caveat').innerHTML = CAVEATS[view];
+    const board = document.getElementById('board');
+    const matrix = document.getElementById('matrix');
+    if (btn.dataset.view === 'board') { board.style.display = ''; matrix.style.display = 'none'; }
+    else { board.style.display = 'none'; matrix.style.display = 'block'; }
   });
 })();
 </script>
