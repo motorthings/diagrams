@@ -167,6 +167,13 @@
   .figure { margin: 20px 0 8px; }
   .fig-caveat { font-size: 12px; color: var(--text-faint); max-width: 760px; margin: 10px 0 0; }
 
+  /* readout decoder */
+  .decoder { margin: 4px 0 0; max-width: 780px; border-top: 1px solid var(--border); }
+  .decoder .drow { display: grid; grid-template-columns: 190px 1fr; gap: 16px; padding: 9px 0; border-bottom: 1px solid var(--border); align-items: baseline; }
+  .decoder .dmark { font-family: var(--font-mono); font-size: 11px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: var(--text-dim); }
+  .decoder .ddef { font-size: 14px; color: var(--text-dim); line-height: 1.55; }
+  @media (max-width: 640px) { .decoder .drow { grid-template-columns: 1fr; gap: 2px; } }
+
   .footer { margin-top: 48px; padding-top: 18px; border-top: 1px solid var(--border); font-size: 13px; color: var(--text-faint); }
   .footer a { color: var(--text-dim); text-decoration: none; } .footer a:hover { color: var(--text); }
 
@@ -216,17 +223,18 @@
 <section>
         <h2>The readout</h2>
     <p class="lede">Here are all eleven fault lines (middle of the diagram) ranked by pressure, drawn as a board: the four evidence streams on the left flow into a bar for each line, so the whole call is readable at a glance. The line-by-line detail and the move for each fault line live together in one table, collapsed, a few sections down, once the meters that drive it have been named.</p>
-    <p class="lede" style="margin-top:24px">Read the diagram from left to right. The four streams sit on the left, each block sized by how many items it holds, and they flow into the eleven predictions on the right, one bar each. A longer bar means more pressure behind that prediction. Each bar is built of coloured bands, one per stream feeding it, so a single colour means one kind of evidence is making the call and all four means the whole board agrees. The little squares on the far right count that agreement.</p>
+    <div class="decoder">
+      <div class="drow"><div class="dmark">Stream blocks &middot; left</div><div class="ddef">each sized by how many items it holds</div></div>
+      <div class="drow"><div class="dmark">Bar length</div><div class="ddef">more pressure behind that prediction, on the 0&ndash;10 queue</div></div>
+      <div class="drow"><div class="dmark">Coloured bands</div><div class="ddef">one band per stream feeding the bar: a single colour means one kind of evidence is making the call, all four means the whole board agrees</div></div>
+      <div class="drow"><div class="dmark">Squares &middot; far right</div><div class="ddef">count that corroboration, out of four streams</div></div>
+    </div>
     <div class="figure">
       <div class="axis">
         <div>sources &middot; 76 items</div>
         <div>ranked by queue &middot; 11 fault lines</div>
       </div>
       <div class="board-wrap" id="chart"></div>
-      <div class="legend">
-        <span><span class="swatches"><span style="background:var(--rose)"></span><span style="background:var(--metric)"></span><span style="background:var(--blue)"></span><span style="background:var(--amber)"></span></span><b>bar length = queue (0&ndash;10)</b> &middot; each colour band is one stream's share of that call</span>
-        <span><b>pips = corroboration</b>, out of four streams</span>
-      </div>
       <p class="fig-caveat">One piece of evidence can push on more than one prediction, so the ribbons show how each stream's weight is divided across the calls it supports rather than a simple head-count. Hover any stream or any prediction to trace where its evidence actually lands.</p>
     </div>
     
@@ -477,6 +485,9 @@
     const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
 
     const svg = el('svg', { viewBox: '0 0 ' + L.W + ' ' + L.H, style: 'width:100%;height:auto;display:block', role: 'img', 'aria-label': 'Four evidence streams feeding eleven ranked fault-line predictions' });
+    // flow cue across the top — reads as one left-to-right direction
+    svg.appendChild(el('text', { x: L.W / 2, y: 22, 'text-anchor': 'middle', 'font-size': 11, 'font-weight': 600, 'letter-spacing': '0.08em', fill: C.muted },
+      'inputs · 4 evidence streams   →   fault lines · one bar each, ranked   →   output · queue & corroboration'));
 
     // ribbons (the flow) — wrapped so <720px can drop them
     const field = el('g', { class: 'board-ribbons' });
