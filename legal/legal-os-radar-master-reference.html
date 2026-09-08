@@ -93,19 +93,30 @@
   .score-cell { padding: 0; }
 
   /* funnel */
-  .funnel { display: flex; flex-direction: column; align-items: center; gap: 0; }
-  .fnode { display: flex; flex-direction: column; align-items: center; gap: 6px; width: 100%; max-width: 560px; }
-  .fbox { border-radius: 10px; padding: 12px 18px; text-align: center; font-weight: 600; font-size: 14px; line-height: 1.4; width: 100%; }
-  .fbox--in { background: var(--primary-dim); border: 2px solid var(--primary); }
-  .fbox--fan { background: var(--blue); background: rgba(96,165,250,0.12); border: 2px solid var(--blue); }
-  .fbox--verify { background: var(--amber); background: rgba(217,160,91,0.14); border: 2px solid var(--amber); }
-  .fbox--gate { background: var(--metric-dim); border: 2px dashed var(--metric); }
-  .fbox--kill { background: var(--rose); background: rgba(227,108,137,0.14); border: 2px dashed var(--rose); }
-  .fbox--fan { background: rgba(37,99,235,0.08); }
-  .fbox--verify { background: rgba(176,124,46,0.12); }
-  .fbox--kill { background: rgba(196,80,107,0.12); }
-  .farrow { padding: 2px 0; font-size: 20px; color: var(--text-faint); font-family: var(--font-mono); }
-  .fnote { font-family: var(--font-mono); font-size: 11px; color: var(--text-faint); margin-top: 4px; }
+  /* evidence-admission process diagram */
+  .ev { max-width: 660px; margin: 4px auto 0; }
+  .ev-step { position: relative; display: flex; gap: 14px; align-items: flex-start; background: var(--surface); border: 1px solid var(--border); border-left: 4px solid var(--accent); border-radius: 12px; padding: 14px 18px; box-shadow: 0 1px 2px rgba(23,20,22,0.04); }
+  .ev-step .num { flex: 0 0 auto; width: 27px; height: 27px; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-family: var(--font-mono); font-size: 12px; font-weight: 700; color: #fff; background: var(--accent); }
+  .ev-step .body { flex: 1; min-width: 0; }
+  .ev-step .tag { display: block; font-family: var(--font-mono); font-size: 9px; font-weight: 700; letter-spacing: 0.11em; text-transform: uppercase; color: var(--accent); margin-bottom: 3px; }
+  .ev-step .t { font-weight: 700; font-size: 15px; line-height: 1.35; }
+  .ev-step .s { margin-top: 4px; font-size: 13px; color: var(--text-faint); line-height: 1.5; }
+  .ev-conn { width: 2px; height: 22px; background: var(--border-bright); margin: 0 auto; }
+  .ev-gate { text-align: center; background: var(--metric-dim); border: 2px dashed var(--metric); border-radius: 12px; padding: 13px 18px; }
+  .ev-gate .tag { display: block; font-family: var(--font-mono); font-size: 9px; font-weight: 700; letter-spacing: 0.11em; text-transform: uppercase; color: var(--metric); margin-bottom: 3px; }
+  .ev-gate .t { font-weight: 700; font-size: 15px; }
+  .ev-forkconn { width: 62%; height: 18px; margin: 0 auto; border-top: 2px solid var(--border-bright); border-left: 2px solid var(--border-bright); border-right: 2px solid var(--border-bright); border-radius: 7px 7px 0 0; position: relative; }
+  .ev-forkconn::before { content: ''; position: absolute; top: -12px; left: 50%; transform: translateX(-50%); width: 2px; height: 12px; background: var(--border-bright); }
+  .ev-fork { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  .ev-out { border-radius: 12px; padding: 13px 16px; }
+  .ev-out .tag { display: block; font-family: var(--font-mono); font-size: 9px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; margin-bottom: 4px; }
+  .ev-out .t { font-weight: 700; font-size: 15px; }
+  .ev-out .s { margin-top: 4px; font-size: 12.5px; color: var(--text-faint); line-height: 1.45; }
+  .ev-out--pass { background: var(--metric-dim); border: 2px solid var(--metric); }
+  .ev-out--pass .tag { color: var(--metric); }
+  .ev-out--kill { background: rgba(196,80,107,0.12); border: 2px dashed var(--rose); }
+  .ev-out--kill .tag { color: var(--rose); }
+  @media (max-width: 560px) { .ev-fork { grid-template-columns: 1fr; } .ev-forkconn { display: none; } }
 
   .axis { display: flex; justify-content: space-between; gap: 24px; margin: 24px 0 8px; padding-bottom: 12px; border-bottom: 1px solid var(--border); }
   .axis > div { flex: 0 0 auto; white-space: nowrap; font-family: var(--font-mono); font-size: 10px; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; color: var(--text-faint); }
@@ -236,16 +247,39 @@
     <div class="sec-head">Part 4</div>
     <h2>How evidence gets in</h2>
     <p class="lede">A fact does not enter the feed because someone found it. It enters because it survived being argued against.</p>
-    <div class="funnel">
-      <div class="fnode"><div class="fbox fbox--in">A fact is found on the internet</div></div>
-      <div class="farrow">&darr;</div>
-      <div class="fnode"><div class="fbox fbox--fan">Split the question, search it from several directions at once &mdash; including one angle that looks for where the story is wrong</div></div>
-      <div class="farrow">&darr;</div>
-      <div class="fnode"><div class="fbox fbox--verify">Three independent reviewers each try to prove it false</div></div>
-      <div class="farrow">&darr;</div>
-      <div class="fnode"><div class="fbox fbox--gate">Does it survive 2 of 3 skeptics?</div></div>
-      <div class="farrow">&darr;</div>
-      <div class="fnode"><div class="fbox fbox--kill">Admitted and ranked &middot; or killed &mdash; and if a date or amount cannot be verified, the honest answer is "we found nothing," not a guessed number</div></div>
+    <div class="ev">
+      <div class="ev-step" style="--accent: var(--primary)">
+        <div class="num">1</div>
+        <div class="body"><span class="tag">Found</span><div class="t">A fact turns up on the internet</div><div class="s">A ruling, a filing, a funding round, a product launch. Nothing counts yet.</div></div>
+      </div>
+      <div class="ev-conn"></div>
+      <div class="ev-step" style="--accent: var(--blue)">
+        <div class="num">2</div>
+        <div class="body"><span class="tag">Search</span><div class="t">Split the question and chase it from several angles at once</div><div class="s">Including one angle whose whole job is to look for where the story falls apart.</div></div>
+      </div>
+      <div class="ev-conn"></div>
+      <div class="ev-step" style="--accent: var(--amber)">
+        <div class="num">3</div>
+        <div class="body"><span class="tag">Adversarial review</span><div class="t">Three independent reviewers each try to prove it false</div><div class="s">Not to confirm it. To break it.</div></div>
+      </div>
+      <div class="ev-conn"></div>
+      <div class="ev-gate">
+        <span class="tag">Gate</span>
+        <div class="t">Does it survive at least 2 of the 3 skeptics?</div>
+      </div>
+      <div class="ev-forkconn"></div>
+      <div class="ev-fork">
+        <div class="ev-out ev-out--pass">
+          <span class="tag">Survives &rarr; admitted</span>
+          <div class="t">Admitted and ranked</div>
+          <div class="s">It enters the feed and starts counting toward a prediction.</div>
+        </div>
+        <div class="ev-out ev-out--kill">
+          <span class="tag">Fails &rarr; killed</span>
+          <div class="t">Thrown out</div>
+          <div class="s">And if a date or amount can't be verified, the honest answer is "we found nothing," never a guessed number.</div>
+        </div>
+      </div>
     </div>
     <p class="fig-caveat">This is the step that caught real mistakes: a court rule only one source mentioned, a "disqualification" that was actually a reprimand, a claim about two vendors no source could hold up.</p>
   </section>
