@@ -1,0 +1,386 @@
+<!DOCTYPE html>
+<html class="light">
+<head>
+<meta charset="UTF-8">
+<link rel="icon" type="image/svg+xml" href="../icon.svg">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="The Fault-Line Radar reads four streams of information and turns them into predictions about which legal-AI duty will fire next. The more streams that corroborate a fault line, the stronger the call.">
+<title>Legal AI OS — Fault-Line Radar (the streams)</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Mulish:ital,wght@0,300;0,400;0,600;0,700;0,800;1,400&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --font-body: 'Mulish', 'Segoe UI', Helvetica, sans-serif;
+    --font-mono: 'Mulish', ui-monospace, 'SF Mono', Consolas, monospace;
+    --bg: #171416; --surface: #1E1A1D; --surface2: #262024;
+    --border: #332D31; --border-bright: #463D42;
+    --text: #F5F2F1; --text-dim: #C9C3C1; --text-faint: #8A8481;
+    --primary: #E39CB2; --primary-dim: rgba(227,156,178,0.12);
+    --metric: #5FBF9B; --metric-dim: rgba(95,191,155,0.12);
+    --slate: #948E8C; --violet: #C9A3B8; --amber: #D9A05B; --rose: #E36C89; --blue: #60a5fa;
+  }
+  html.light {
+    --bg: #F5F2F1; --surface: #FFFFFF; --surface2: #EDE8E6;
+    --border: #D9D2CE; --border-bright: #C4B9B4;
+    --text: #171416; --text-dim: #4A4442; --text-faint: #8A8481;
+    --primary: #B83159; --primary-dim: rgba(184,49,89,0.10);
+    --metric: #1E8A6A; --metric-dim: rgba(30,138,106,0.10);
+    --slate: #6A6461; --violet: #8A5A76; --amber: #B07C2E; --rose: #C4506B; --blue: #2563eb;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    background: var(--bg);
+    background-image: radial-gradient(at 10% 0%, var(--primary-dim) 0%, transparent 40%), radial-gradient(at 90% 80%, var(--metric-dim) 0%, transparent 40%);
+    color: var(--text); font-family: var(--font-body); font-size: 15px; line-height: 1.7; min-height: 100vh; -webkit-font-smoothing: antialiased;
+  }
+  .nav { position: sticky; top: 0; z-index: 100; backdrop-filter: blur(16px); background: color-mix(in srgb, var(--surface) 85%, transparent); border-bottom: 1px solid var(--border); }
+  .nav-inner { max-width: 1120px; margin: 0 auto; padding: 12px 20px; display: flex; align-items: center; justify-content: space-between; }
+  .crumbs { font-family: var(--font-mono); font-size: 13px; font-weight: 600; display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+  .crumbs a { color: var(--primary); text-decoration: none; } .crumbs a:hover { text-decoration: underline; }
+  .crumbs .sep { color: var(--text-faint); } .crumbs .current { color: var(--text-dim); font-weight: 400; }
+  .subnav { display: flex; flex-wrap: wrap; gap: 6px 10px; align-items: center; max-width: 1120px; margin: 0 auto; padding: 6px 20px; border-top: 1px solid var(--border); }
+  .subnav .sp { font-family: var(--font-mono); font-size: 12px; font-weight: 700; line-height: 1; text-decoration: none; color: var(--text-dim); background: var(--surface2); border: 1px solid var(--border); border-radius: 999px; padding: 5px 13px; white-space: nowrap; }
+  .subnav a.sp:hover { color: var(--primary); border-color: var(--border-bright); background: var(--primary-dim); }
+  .subnav .sp.cur { color: var(--text-faint); border-style: dashed; background: transparent; cursor: default; }
+  @media (max-width: 640px) { .subnav { padding: 6px 14px; } .subnav .sp { font-size: 11px; padding: 4px 10px; } }
+
+  .container { max-width: 1120px; margin: 0 auto; padding: 40px 24px 80px; }
+  .hero { margin-bottom: 20px; }
+  .hero .kicker { font-family: var(--font-mono); font-size: 11px; font-weight: 700; letter-spacing: 0.2em; text-transform: uppercase; color: var(--text-faint); margin-bottom: 12px; }
+  .hero h1 { font-size: 38px; font-weight: 800; letter-spacing: -1px; margin-bottom: 10px; background: linear-gradient(135deg, var(--primary), var(--metric)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+
+  .deck { font-size: 21px; font-weight: 700; letter-spacing: -0.2px; color: var(--text); max-width: 760px; line-height: 1.4; margin: 6px 0 0; }
+  .figure { margin: 28px 0 8px; }
+
+  .view-toggle { display: inline-flex; border: 1px solid var(--border); border-radius: 999px; overflow: hidden; margin: 0 0 18px; }
+  .view-toggle button { font-family: var(--font-mono); font-size: 12px; font-weight: 700; letter-spacing: 0.02em; padding: 7px 20px; background: transparent; border: none; color: var(--text-dim); cursor: pointer; transition: color 0.15s ease, background 0.15s ease; }
+  .view-toggle button.on { background: var(--primary); color: #fff; }
+  .view-toggle button:not(.on):hover { color: var(--primary); }
+
+  .fig-caveat { font-size: 12px; color: var(--text-faint); max-width: 760px; margin: 10px 0 0; }
+  .fig-caveat b { color: var(--text-dim); }
+
+  .sankey-wrap { position: relative; }
+  .sankey-wrap svg { width: 100%; height: auto; display: block; }
+  .sk-node { cursor: pointer; }
+  .sk-band { cursor: pointer; transition: opacity 0.15s ease; }
+  .sk-band.dim, .sk-node.dim { opacity: 0.12; }
+  .sk-label { font-family: var(--font-mono); }
+  .sk-label .name { font-size: 12px; font-weight: 700; fill: var(--text); }
+  .sk-label .num { font-size: 11px; fill: var(--text-faint); }
+  .sk-axis { font-size: 10px; fill: var(--text-faint); font-family: var(--font-mono); letter-spacing: 0.12em; }
+  .sk-corr { fill: var(--primary); }
+  .sk-legend { font-size: 11px; fill: var(--text-faint); font-family: var(--font-mono); }
+
+  .tooltip { position: absolute; pointer-events: none; z-index: 10; background: #1F1A1C; color: #fff; border-radius: 8px; padding: 10px 14px; font-size: 12px; line-height: 1.5; max-width: 340px; box-shadow: 0 6px 24px rgba(0,0,0,0.35); opacity: 0; transform: translateY(2px); transition: opacity 0.12s ease, transform 0.12s ease; }
+  .tooltip.on { opacity: 1; transform: translateY(0); }
+  .tooltip .tt-src { font-family: var(--font-mono); font-size: 10px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; opacity: 0.75; margin-bottom: 3px; }
+  .tooltip .tt-main { font-weight: 700; margin: 2px 0 4px; }
+  .tooltip .tt-sub { opacity: 0.85; font-size: 12.5px; }
+  .tooltip .tt-sub + .tt-sub { margin-top: 4px; }
+
+  .matrix { display: none; }
+  .matrix table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  .matrix th, .matrix td { text-align: right; padding: 9px 12px; border-bottom: 1px solid var(--border); white-space: nowrap; }
+  .matrix th:first-child, .matrix td:first-child { text-align: left; }
+  .matrix thead th { font-family: var(--font-mono); font-size: 10px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--text-faint); font-weight: 700; border-bottom: 2px solid var(--border); }
+  .matrix tbody td:first-child { font-weight: 700; }
+  .matrix .cell { font-family: var(--font-mono); font-weight: 700; }
+  .matrix .cell.zero { color: var(--text-faint); font-weight: 400; }
+  .matrix .cell.heat { background: var(--primary-dim); }
+  .matrix .sw { display: inline-block; width: 8px; height: 8px; border-radius: 2px; margin-right: 6px; vertical-align: baseline; }
+  .matrix .streams { color: var(--primary); font-weight: 800; }
+  .matrix .queue { color: var(--metric); font-weight: 800; }
+
+  .footer { margin-top: 48px; padding-top: 18px; border-top: 1px solid var(--border); font-size: 13px; color: var(--text-faint); }
+  .footer a { color: var(--text-dim); text-decoration: none; } .footer a:hover { color: var(--text); }
+
+  @media (prefers-reduced-motion: reduce) { .sk-band, .sk-node { transition: none; } }
+  @media print { .tooltip { display: none; } .sk-band { opacity: 1 !important; } }
+  @media (max-width: 720px) { .matrix table { font-size: 11px; } .matrix th, .matrix td { padding: 6px 7px; } }
+</style>
+</head>
+<body>
+<div class="nav">
+  <div class="nav-inner">
+    <nav class="crumbs" aria-label="Breadcrumb"><a href="../index.html">Index</a><span class="sep">/</span><a href="index.html">Legal</a><span class="sep">/</span><a href="legal-os-radar.html">Radar</a><span class="sep">/</span><span class="current" aria-current="page">The streams</span></nav>
+  </div>
+  <div class="subnav"><a class="sp" href="legal-os-fault-line-radar-how-it-works.html">How it works</a><a class="sp" href="legal-os-fault-line-radar.html">The scoring engine</a><a class="sp" href="legal-os-fault-line-radar-app.html">The screen</a><span class="sp cur" aria-current="page">The streams</span><a class="sp" href="legal-os-fault-line-radar-kb.html">The sources</a><a class="sp" href="legal-os-radar-buildlog.html">How I built it</a><a class="sp" href="legal-os-radar-master-reference.html">Master reference</a></div>
+</div>
+
+<div class="container">
+  <div class="hero">
+    <div class="kicker">Legal AI OS &middot; prediction engine</div>
+    <h1>The streams</h1>
+    <p class="deck">Four streams of information converge into predictions about which legal-AI duty will fire next &mdash; and the more streams that point at a fault line, the stronger the call.</p>
+  </div>
+
+  <div class="figure">
+    <div class="view-toggle" id="viewtoggle" role="tablist" aria-label="Choose a view">
+      <button class="on" data-view="flow" role="tab" aria-selected="true">Flow</button>
+      <button data-view="matrix" role="tab" aria-selected="false">Matrix</button>
+    </div>
+
+    <div class="sankey-wrap" id="sankey"></div>
+    <div class="matrix" id="matrix"></div>
+    <p class="fig-caveat" id="caveat"></p>
+  </div>
+
+  <div class="footer">&copy; 2025&ndash;2026 Charlie Fuller &middot; part of the legal-os platform &middot; <a href="https://www.linkedin.com/in/charlie-fuller-colorado/" target="_blank" rel="noopener">LinkedIn</a></div>
+</div>
+
+<script>
+(function () {
+  "use strict";
+
+  const SOURCES = [
+    { id: 'rules',       name: 'Rules & rulings',   items: 25, color: 'var(--rose)',
+      desc: 'what courts and regulators are deciding', contains: 'court sanctions · ethics opinions · statutes' },
+    { id: 'vendors',     name: 'Vendors',           items: 24, color: 'var(--metric)',
+      desc: 'what software companies are building', contains: 'capital rounds · acquisitions · product launches' },
+    { id: 'capability',  name: 'Capability',        items: 17, color: 'var(--blue)',
+      desc: 'what AI can do', contains: 'model releases · benchmarks · studies' },
+    { id: 'market',      name: 'Market & insurers', items: 10, color: 'var(--amber)',
+      desc: 'what insurers and clients are demanding', contains: 'insurer questionnaires · client demands · adoption' },
+  ];
+  // the predictions — fault lines ranked by queue (prediction strength)
+  const FAULT_LINES = [
+    { id: 'verification',       name: 'verification',      control: 'Documented verification + trace logs', corr: 4, queue: 8.6 },
+    { id: 'competence',         name: 'competence',        control: 'Firm-wide training + governance program', corr: 3, queue: 7.9 },
+    { id: 'disclosure',         name: 'disclosure',        control: 'Verification-by-default with an audit trail', corr: 2, queue: 7.6 },
+    { id: 'convergence',        name: 'convergence',       control: 'One operating model, to the strictest standard', corr: 3, queue: 7.5 },
+    { id: 'insurance',          name: 'insurance',         control: 'Governance as an insurable artifact', corr: 1, queue: 7.3 },
+    { id: 'confidentiality',    name: 'confidentiality',   control: 'Data-flow mapping + vendor attestation', corr: 2, queue: 6.9 },
+    { id: 'benchmark',          name: 'benchmark',         control: 'Tool-certification benchmark (NERVE)', corr: 3, queue: 6.9 },
+    { id: 'agentic',            name: 'agentic',           control: 'Human-decides gates + scope-limiting', corr: 3, queue: 5.8 },
+    { id: 'vendor_liability',   name: 'vendor liability',  control: 'Tool-provenance documentation', corr: 2, queue: 2.3 },
+    { id: 'judicial_analytics', name: 'judge analytics',   control: 'Guardrailed strategy sim (no actor prediction)', corr: 1, queue: 1.9 },
+    { id: 'fees',               name: 'fees',              control: 'Value-delivered measurement', corr: 1, queue: 1.7 },
+  ];
+  // v = fractional mass (item split across its fault lines); n = integer item count
+  const FLOWS = [
+    { s:'rules',      fl:'verification',       v:7.58, n:13 },
+    { s:'rules',      fl:'competence',         v:2.33, n:5 },
+    { s:'rules',      fl:'disclosure',         v:3.92, n:9 },
+    { s:'rules',      fl:'convergence',        v:2.75, n:4 },
+    { s:'rules',      fl:'confidentiality',    v:4.42, n:8 },
+    { s:'rules',      fl:'vendor_liability',   v:2.00, n:3 },
+    { s:'rules',      fl:'judicial_analytics', v:1.00, n:1 },
+    { s:'rules',      fl:'fees',               v:1.00, n:1 },
+    { s:'capability', fl:'verification',       v:2.50, n:3 },
+    { s:'capability', fl:'competence',         v:5.00, n:5 },
+    { s:'capability', fl:'benchmark',          v:3.50, n:4 },
+    { s:'capability', fl:'agentic',            v:6.00, n:6 },
+    { s:'market',     fl:'verification',       v:2.58, n:4 },
+    { s:'market',     fl:'competence',         v:2.58, n:4 },
+    { s:'market',     fl:'disclosure',         v:0.25, n:1 },
+    { s:'market',     fl:'convergence',        v:1.00, n:1 },
+    { s:'market',     fl:'insurance',          v:1.00, n:1 },
+    { s:'market',     fl:'confidentiality',    v:1.33, n:2 },
+    { s:'market',     fl:'benchmark',          v:0.25, n:1 },
+    { s:'market',     fl:'agentic',            v:1.00, n:1 },
+    { s:'vendors',    fl:'verification',       v:2.00, n:3 },
+    { s:'vendors',    fl:'convergence',        v:1.50, n:3 },
+    { s:'vendors',    fl:'benchmark',          v:10.00, n:15 },
+    { s:'vendors',    fl:'agentic',            v:8.50, n:12 },
+    { s:'vendors',    fl:'vendor_liability',   v:2.00, n:3 },
+  ];
+
+  const srcById = Object.fromEntries(SOURCES.map(s => [s.id, s]));
+  const flById = Object.fromEntries(FAULT_LINES.map(f => [f.id, f]));
+
+  const CORR_OP = { 1: 0.22, 2: 0.40, 3: 0.62, 4: 0.90 };
+  const corrColor = c => 'var(--primary)';
+
+  /* ---------------- FLOW (funnel) ---------------- */
+  function buildFlow() {
+    const H = 470, TP = 16, BP = 54;
+    const usable = H - TP - BP;              // 400
+    const totalMass = SOURCES.reduce((a, s) => a + s.items, 0); // 76
+    const scale = usable / totalMass;
+    const lx = 152, mx = 470, rx = 802;
+
+    let y = TP; const srcPos = {};
+    SOURCES.forEach(s => { const h = s.items * scale; srcPos[s.id] = [y, y + h]; y += h; });
+    const mid = [TP, TP + usable];
+    const eh = usable / FAULT_LINES.length;
+    const flPos = {};
+    FAULT_LINES.forEach((f, i) => { const y0 = TP + i * eh; flPos[f.id] = [y0, y0 + eh]; });
+
+    function band(x0, x1, s0, s1, m0, m1, color, op) {
+      const dx = (x1 - x0) * 0.55;
+      return '<path class="sk-band" d="M ' + x0 + ' ' + s0.toFixed(1) + ' C ' + (x0 + dx).toFixed(1) + ' ' + s0.toFixed(1) + ', ' + (x1 - dx).toFixed(1) + ' ' + m0.toFixed(1) + ', ' + x1 + ' ' + m0.toFixed(1)
+        + ' L ' + x1 + ' ' + m1.toFixed(1) + ' C ' + (x1 - dx).toFixed(1) + ' ' + m1.toFixed(1) + ', ' + (x0 + dx).toFixed(1) + ' ' + s1.toFixed(1) + ', ' + x0 + ' ' + s1.toFixed(1) + ' Z"'
+        + ' fill="' + color + '" fill-opacity="' + op + '" stroke="' + color + '" stroke-opacity="' + Math.min(1, op + 0.2) + '" stroke-width="0.5"/>';
+    }
+
+    const parts = [];
+    parts.push('<svg viewBox="0 0 960 ' + H + '" role="img" aria-label="Four streams flow into a scoring engine that ranks eleven fault-line predictions">');
+
+    // sources -> scoring
+    SOURCES.forEach(s => {
+      const [y0, y1] = srcPos[s.id];
+      parts.push(band(lx, mx, y0, y1, y0, y1, s.color, 0.5));
+    });
+
+    // scoring -> predictions (colored by corroboration)
+    FAULT_LINES.forEach(f => {
+      const [y0, y1] = flPos[f.id];
+      parts.push(band(mx, rx, mid[0], mid[1], y0, y1, corrColor(f.corr), CORR_OP[f.corr] * 0.55));
+    });
+
+    // source bars + labels
+    SOURCES.forEach(s => {
+      const [y0, y1] = srcPos[s.id];
+      parts.push('<rect class="sk-node" data-src="' + s.id + '" x="' + (lx - 5) + '" y="' + y0.toFixed(1) + '" width="5" height="' + (y1 - y0).toFixed(1) + '" rx="2.5" fill="' + s.color + '"/>');
+      const cy = (y0 + y1) / 2;
+      parts.push('<g class="sk-node" data-src="' + s.id + '">'
+        + '<text class="sk-label" x="' + (lx - 16) + '" y="' + (cy - 3).toFixed(1) + '" text-anchor="end"><tspan class="name">' + s.name + '</tspan></text>'
+        + '<text class="sk-label" x="' + (lx - 16) + '" y="' + (cy + 12).toFixed(1) + '" text-anchor="end"><tspan class="num">' + s.items + ' items</tspan></text>'
+        + '</g>');
+    });
+
+    // scoring node
+    parts.push('<rect class="sk-node" data-mid="1" x="' + (mx - 6) + '" y="' + mid[0].toFixed(1) + '" width="12" height="' + (mid[1] - mid[0]).toFixed(1) + '" rx="6" fill="var(--slate)"/>');
+    const mcy = (mid[0] + mid[1]) / 2;
+    parts.push('<text class="sk-label" x="' + mx + '" y="' + (mcy - 4).toFixed(1) + '" text-anchor="middle"><tspan class="name" fill="var(--text)">scoring</tspan></text>');
+    parts.push('<text class="sk-label" x="' + mx + '" y="' + (mcy + 12).toFixed(1) + '" text-anchor="middle"><tspan class="num">5 dimensions</tspan></text>');
+
+    // prediction bars (corroboration) + labels
+    FAULT_LINES.forEach(f => {
+      const [y0, y1] = flPos[f.id];
+      parts.push('<rect class="sk-node" data-fl="' + f.id + '" x="' + rx + '" y="' + y0.toFixed(1) + '" width="5" height="' + (y1 - y0).toFixed(1) + '" rx="2.5" fill="' + corrColor(f.corr) + '" fill-opacity="' + CORR_OP[f.corr] + '"/>');
+      const cy = (y0 + y1) / 2;
+      parts.push('<g class="sk-node" data-fl="' + f.id + '">'
+        + '<text class="sk-label" x="' + (rx + 16) + '" y="' + (cy - 3).toFixed(1) + '" text-anchor="start"><tspan class="name">' + f.name + '</tspan></text>'
+        + '<text class="sk-label" x="' + (rx + 16) + '" y="' + (cy + 12).toFixed(1) + '" text-anchor="start"><tspan class="num">' + f.queue.toFixed(1) + ' · </tspan><tspan class="sk-corr">' + f.corr + ' stream' + (f.corr === 1 ? '' : 's') + '</tspan></text>'
+        + '</g>');
+    });
+
+    parts.push('<text class="sk-axis" x="' + lx + '" y="' + (H - 26) + '" text-anchor="middle">sources &middot; 76 items</text>');
+    parts.push('<text class="sk-axis" x="' + mx + '" y="' + (H - 26) + '" text-anchor="middle">scoring engine</text>');
+    parts.push('<text class="sk-axis" x="' + rx + '" y="' + (H - 26) + '" text-anchor="middle">predictions &middot; 11 fault lines</text>');
+    parts.push('<text class="sk-legend" x="' + rx + '" y="' + (H - 10) + '" text-anchor="middle">darker = more streams corroborate</text>');
+
+    parts.push('</svg>');
+    return parts.join('');
+  }
+
+  /* ---------------- MATRIX ---------------- */
+  function buildMatrix() {
+    let rows = '<table><thead><tr><th>prediction</th>';
+    SOURCES.forEach(s => rows += '<th><span class="sw" style="background:' + s.color + '"></span>' + s.name + '</th>');
+    rows += '<th>streams</th><th>queue</th></tr></thead><tbody>';
+    FAULT_LINES.forEach(f => {
+      rows += '<tr><td>' + f.name + '</td>';
+      SOURCES.forEach(s => {
+        const x = FLOWS.find(z => z.s === s.id && z.fl === f.id);
+        if (x) rows += '<td class="cell' + (x.n >= 8 ? ' heat' : '') + '">' + x.n + '</td>';
+        else rows += '<td class="cell zero">&middot;</td>';
+      });
+      rows += '<td class="streams">' + f.corr + '</td>';
+      rows += '<td class="queue">' + f.queue.toFixed(1) + '</td>';
+      rows += '</tr>';
+    });
+    return rows + '</tbody></table>';
+  }
+
+  const CAVEATS = {
+    flow: 'Read left to right: four streams of evidence pour into the scoring engine, which ranks eleven fault-line predictions. Each prediction is sized by its queue and shaded by corroboration &mdash; <b>the darker the bar, the more streams agree on it</b>. Verification sits at the top because all four streams point at it. Hover a stream or prediction for what it contains and what you would build for it.',
+    matrix: 'The same 76 items as a grid &mdash; each prediction is a row, each stream a column. A cell is how many items that stream contributes to that prediction. The <b>streams</b> column counts how many columns light up: more columns means a stronger, better-corroborated call. The <b>queue</b> is the prediction strength (0&ndash;10). This view cannot cross or overlap, so it is exact at a glance.'
+  };
+
+  /* ---------------- tooltips ---------------- */
+  const tooltip = document.createElement('div');
+  tooltip.className = 'tooltip';
+  document.querySelector('.sankey-wrap').appendChild(tooltip);
+
+  function showTooltip(html, x, y) {
+    tooltip.innerHTML = html;
+    tooltip.classList.add('on');
+    const wrap = document.querySelector('.sankey-wrap');
+    const r = wrap.getBoundingClientRect();
+    let tx = x, ty = y;
+    if (tx + 340 > r.width) tx = x - 340;
+    if (ty + 110 > r.height) ty = y - 110;
+    tooltip.style.left = tx + 'px';
+    tooltip.style.top = ty + 'px';
+  }
+  function hideTooltip() { tooltip.classList.remove('on'); }
+
+  function flTooltip(fl) {
+    const f = flById[fl];
+    return '<div class="tt-src">prediction &middot; queue ' + f.queue.toFixed(1) + '</div>'
+      + '<div class="tt-main">' + f.name + '</div>'
+      + '<div class="tt-sub">build: ' + f.control + '</div>'
+      + '<div class="tt-sub">' + f.corr + ' stream' + (f.corr === 1 ? '' : 's') + ' corroborate this &mdash; more streams means a more confident call.</div>';
+  }
+  function sourceTooltip(sid) {
+    const s = srcById[sid];
+    return '<div class="tt-src">' + s.name + '</div>'
+      + '<div class="tt-main">' + s.items + ' items</div>'
+      + '<div class="tt-sub">' + s.desc + ' &mdash; ' + s.contains + '</div>';
+  }
+  function midTooltip() {
+    return '<div class="tt-src">scoring engine</div>'
+      + '<div class="tt-main">5 dimensions</div>'
+      + '<div class="tt-sub">Every item is scored across capability, ruling, adoption, enablement, and software, weighted by source authority. A fault line fires when its score crosses 7.</div>';
+  }
+
+  function dimExcept(src, fl) {
+    document.querySelectorAll('#sankey .sk-band').forEach(b => {
+      const keep = (src && b.dataset.src === src) || (fl && b.dataset.fl === fl);
+      b.classList.toggle('dim', !keep);
+    });
+    document.querySelectorAll('#sankey .sk-node').forEach(n => {
+      const keep = (src && n.dataset.src === src) || (fl && n.dataset.fl === fl);
+      n.classList.toggle('dim', !keep);
+    });
+  }
+  function clearDim() { document.querySelectorAll('#sankey .sk-band.dim, #sankey .sk-node.dim').forEach(b => b.classList.remove('dim')); }
+
+  /* ---------------- render + wire ---------------- */
+  document.getElementById('sankey').innerHTML = buildFlow();
+  document.getElementById('matrix').innerHTML = buildMatrix();
+  document.getElementById('caveat').innerHTML = CAVEATS.flow;
+
+  const wrap = document.querySelector('.sankey-wrap');
+  wrap.addEventListener('mousemove', e => {
+    const wr = wrap.getBoundingClientRect();
+    const x = e.clientX - wr.left + 14, y = e.clientY - wr.top + 14;
+    const n = e.target.closest('.sk-node');
+    if (n && n.dataset.fl) { showTooltip(flTooltip(n.dataset.fl), x, y); return; }
+    if (n && n.dataset.src) { showTooltip(sourceTooltip(n.dataset.src), x, y); return; }
+    if (n && n.dataset.mid) { showTooltip(midTooltip(), x, y); return; }
+    hideTooltip();
+  });
+  wrap.addEventListener('mouseleave', hideTooltip);
+  wrap.addEventListener('mouseover', e => {
+    const n = e.target.closest('.sk-node');
+    if (!n) return;
+    if (n.dataset.src) dimExcept(n.dataset.src, null);
+    else if (n.dataset.fl) dimExcept(null, n.dataset.fl);
+  });
+  wrap.addEventListener('mouseout', e => {
+    if (!e.relatedTarget || !e.relatedTarget.closest('.sk-node')) clearDim();
+  });
+
+  // view toggle
+  document.getElementById('viewtoggle').addEventListener('click', e => {
+    const btn = e.target.closest('button');
+    if (!btn) return;
+    const view = btn.dataset.view;
+    document.querySelectorAll('#viewtoggle button').forEach(b => {
+      b.classList.toggle('on', b === btn);
+      b.setAttribute('aria-selected', b === btn ? 'true' : 'false');
+    });
+    const isFlow = view === 'flow';
+    document.querySelector('.sankey-wrap').style.display = isFlow ? '' : 'none';
+    document.querySelector('.matrix').style.display = isFlow ? 'none' : 'block';
+    document.getElementById('caveat').innerHTML = CAVEATS[view];
+  });
+})();
+</script>
+</body>
+</html>
