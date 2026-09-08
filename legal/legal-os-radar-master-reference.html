@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html class="light">
+<html>
 <head>
 <meta charset="UTF-8">
 <link rel="icon" type="image/svg+xml" href="../icon.svg">
@@ -13,14 +13,6 @@
   :root {
     --font-body: 'Mulish', 'Segoe UI', Helvetica, sans-serif;
     --font-mono: 'Mulish', ui-monospace, 'SF Mono', Consolas, monospace;
-    --bg: #171416; --surface: #1E1A1D; --surface2: #262024;
-    --border: #332D31; --border-bright: #463D42;
-    --text: #F5F2F1; --text-dim: #C9C3C1; --text-faint: #8A8481;
-    --primary: #E39CB2; --primary-dim: rgba(227,156,178,0.12);
-    --metric: #5FBF9B; --metric-dim: rgba(95,191,155,0.12);
-    --slate: #948E8C; --violet: #C9A3B8; --amber: #D9A05B; --rose: #E36C89; --blue: #60a5fa;
-  }
-  html.light {
     --bg: #F5F2F1; --surface: #FFFFFF; --surface2: #EDE8E6;
     --border: #D9D2CE; --border-bright: #C4B9B4;
     --text: #171416; --text-dim: #4A4442; --text-faint: #8A8481;
@@ -100,19 +92,28 @@
   .fbox--verify { background: var(--amber); background: rgba(217,160,91,0.14); border: 2px solid var(--amber); }
   .fbox--gate { background: var(--metric-dim); border: 2px dashed var(--metric); }
   .fbox--kill { background: var(--rose); background: rgba(227,108,137,0.14); border: 2px dashed var(--rose); }
-  html.light .fbox--fan { background: rgba(37,99,235,0.08); }
-  html.light .fbox--verify { background: rgba(176,124,46,0.12); }
-  html.light .fbox--kill { background: rgba(196,80,107,0.12); }
+  .fbox--fan { background: rgba(37,99,235,0.08); }
+  .fbox--verify { background: rgba(176,124,46,0.12); }
+  .fbox--kill { background: rgba(196,80,107,0.12); }
   .farrow { padding: 2px 0; font-size: 20px; color: var(--text-faint); font-family: var(--font-mono); }
   .fnote { font-family: var(--font-mono); font-size: 11px; color: var(--text-faint); margin-top: 4px; }
 
-  .sankey-wrap svg { width: 100%; height: auto; display: block; }
-  .sk-node { cursor: pointer; } .sk-band { cursor: pointer; transition: opacity 0.15s ease; }
-  .sk-band.dim, .sk-node.dim { opacity: 0.12; }
-  .sk-label .name { font-size: 12px; font-weight: 700; fill: var(--text); }
-  .sk-label .num { font-size: 11px; fill: var(--text-faint); }
-  .sk-axis { font-size: 10px; fill: var(--text-faint); font-family: var(--font-mono); letter-spacing: 0.12em; }
-  .sk-corr { fill: var(--primary); }
+  .axis { display: flex; justify-content: space-between; gap: 24px; margin: 24px 0 8px; padding-bottom: 12px; border-bottom: 1px solid var(--border); }
+  .axis > div { flex: 0 0 auto; white-space: nowrap; font-family: var(--font-mono); font-size: 10px; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; color: var(--text-faint); }
+  .board-wrap { position: relative; }
+  .board-wrap svg { width: 100%; height: auto; display: block; }
+  .legend { display: flex; flex-wrap: wrap; gap: 12px 32px; align-items: center; margin-top: 6px; padding-top: 18px; border-top: 1px solid var(--border); font-size: 12.5px; line-height: 1.6; color: var(--text-faint); }
+  .legend .swatches { display: inline-flex; gap: 2px; vertical-align: middle; margin-right: 6px; }
+  .legend .swatches span { width: 9px; height: 15px; border-radius: 1px; display: inline-block; }
+  .legend b { color: var(--text-dim); }
+  .tooltip { position: absolute; pointer-events: none; z-index: 10; background: #1F1A1C; color: #fff; border-radius: 8px; padding: 10px 14px; font-size: 12px; line-height: 1.5; max-width: 340px; box-shadow: 0 6px 24px rgba(0,0,0,0.35); opacity: 0; transform: translateY(2px); transition: opacity 0.12s ease, transform 0.12s ease; }
+  .tooltip.on { opacity: 1; transform: translateY(0); }
+  .tooltip .tt-src { font-family: var(--font-mono); font-size: 10px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; opacity: 0.75; margin-bottom: 3px; }
+  .tooltip .tt-main { font-weight: 700; margin: 2px 0 4px; }
+  .tooltip .tt-sub { opacity: 0.85; font-size: 12.5px; }
+  .tooltip .tt-sub + .tt-sub { margin-top: 4px; }
+  @media print { .tooltip { display: none; } }
+  @media (max-width: 720px) { .board-ribbons, .board-rails { display: none; } }
 
   .callout { background: var(--metric-dim); border: 1px solid var(--border-bright); border-radius: 12px; padding: 16px 18px; margin-top: 18px; }
   .callout b { color: var(--metric); }
@@ -123,7 +124,7 @@
 
   .footer { margin-top: 48px; padding-top: 18px; border-top: 1px solid var(--border); font-size: 13px; color: var(--text-faint); }
   .footer a { color: var(--text-dim); text-decoration: none; } .footer a:hover { color: var(--text); }
-  @media (prefers-reduced-motion: reduce) { .sk-band, .sk-node { transition: none; } }
+  @media (prefers-reduced-motion: reduce) { .board-wrap svg * { transition: none !important; } }
 </style>
 </head>
 <body>
@@ -231,8 +232,19 @@
   <section>
     <div class="sec-head">Part 5</div>
     <h2>The streams</h2>
-    <p class="lede">Seventy-six dated, cited items flow from four buckets into eleven fault-line predictions. The number beside each prediction is how many streams corroborate it &mdash; more streams, more confident call. Full interactive version: <a href="legal-os-radar-streams.html">the streams page</a>.</p>
-    <div class="figure"><div class="sankey-wrap" id="sankey"></div></div>
+    <p class="lede">Seventy-six dated, cited items flow from four streams into eleven fault-line predictions, ranked by queue score. Each prediction's bar is built out of its streams &mdash; one colour means one source agrees, four colours means the engine is sure. Full interactive version: <a href="legal-os-radar-streams.html">the streams page</a>.</p>
+    <div class="figure">
+      <div class="axis">
+        <div>sources &middot; 76 items</div>
+        <div>ranked by queue &middot; 11 fault lines</div>
+      </div>
+      <div class="board-wrap" id="chart"></div>
+      <div class="legend">
+        <span><span class="swatches"><span style="background:var(--rose)"></span><span style="background:var(--metric)"></span><span style="background:var(--blue)"></span><span style="background:var(--amber)"></span></span><b>bar length = queue (0&ndash;10)</b> &middot; each colour band is one stream's share of that call</span>
+        <span><b>pips = corroboration</b>, out of four streams</span>
+      </div>
+      <p class="fig-caveat">Bar length scales with the queue score (0&ndash;10); each colour band is one stream's share of that call. Ribbon width is an item's mass split across the calls it serves, not a head-count &mdash; one item can feed several fault lines. Hover a stream or a prediction to trace where its evidence lands.</p>
+    </div>
   </section>
 
   <section>
@@ -250,88 +262,225 @@
 <script>
 (function () {
   "use strict";
-  const SOURCES = [
-    { id: 'rules',       name: 'Rules & rulings',   items: 25, color: 'var(--rose)',   desc: 'what courts and regulators are deciding', contains: 'court sanctions · ethics opinions · statutes' },
-    { id: 'vendors',     name: 'Vendors',           items: 24, color: 'var(--metric)', desc: 'what software companies are building', contains: 'capital rounds · acquisitions · product launches' },
-    { id: 'capability',  name: 'Capability',        items: 17, color: 'var(--blue)',   desc: 'what AI can do', contains: 'model releases · benchmarks · studies' },
-    { id: 'market',      name: 'Market & insurers', items: 10, color: 'var(--amber)',  desc: 'what insurers and clients are demanding', contains: 'insurer questionnaires · client demands · adoption' },
+
+  // Stream hues follow the page theme tokens — one hue per stream.
+  const C = { ink: 'var(--text)', muted: 'var(--text-faint)', faint: 'var(--border-bright)',
+    rule: 'var(--rose)', vendor: 'var(--metric)', capability: 'var(--blue)', market: 'var(--amber)' };
+
+  const STREAMS = [
+    { id: 'rules',      short: 'rules',      name: 'Rules & rulings',   items: 25, color: C.rule,
+      desc: 'what courts and regulators are deciding', contains: 'court sanctions · ethics opinions · statutes' },
+    { id: 'vendors',    short: 'vendors',    name: 'Vendors',           items: 24, color: C.vendor,
+      desc: 'what software companies are building', contains: 'capital rounds · acquisitions · product launches' },
+    { id: 'capability', short: 'capability', name: 'Capability',        items: 17, color: C.capability,
+      desc: 'what AI can do', contains: 'model releases · benchmarks · studies' },
+    { id: 'market',     short: 'market',     name: 'Market & insurers', items: 10, color: C.market,
+      desc: 'what insurers and clients are demanding', contains: 'insurer questionnaires · client demands · adoption' },
   ];
-  const FAULT_LINES = [
-    { id: 'verification',       name: 'verification',      control: 'Documented verification + trace logs', corr: 4, queue: 8.6 },
-    { id: 'competence',         name: 'competence',        control: 'Firm-wide training + governance program', corr: 3, queue: 7.9 },
-    { id: 'disclosure',         name: 'disclosure',        control: 'Verification-by-default with an audit trail', corr: 2, queue: 7.6 },
-    { id: 'convergence',        name: 'convergence',       control: 'One operating model, to the strictest standard', corr: 3, queue: 7.5 },
-    { id: 'insurance',          name: 'insurance',         control: 'Governance as an insurable artifact', corr: 1, queue: 7.3 },
-    { id: 'confidentiality',    name: 'confidentiality',   control: 'Data-flow mapping + vendor attestation', corr: 2, queue: 6.9 },
-    { id: 'benchmark',          name: 'benchmark',         control: 'Tool-certification benchmark (NERVE)', corr: 3, queue: 6.9 },
-    { id: 'agentic',            name: 'agentic',           control: 'Human-decides gates + scope-limiting', corr: 3, queue: 5.8 },
-    { id: 'vendor_liability',   name: 'vendor liability',  control: 'Tool-provenance documentation', corr: 2, queue: 2.3 },
-    { id: 'judicial_analytics', name: 'judge analytics',   control: 'Guardrailed strategy sim (no actor prediction)', corr: 1, queue: 1.9 },
-    { id: 'fees',               name: 'fees',              control: 'Value-delivered measurement', corr: 1, queue: 1.7 },
+
+  // Ordered by queue, descending — row order IS the ranking.
+  const PREDICTIONS = [
+    { name: 'verification',      queue: 8.6, control: 'Documented verification + trace logs', cells: { rules: 13, vendors: 3, capability: 3, market: 4 } },
+    { name: 'competence',        queue: 7.9, control: 'Firm-wide training + governance program', cells: { rules: 5, capability: 5, market: 4 } },
+    { name: 'disclosure',        queue: 7.6, control: 'Verification-by-default with an audit trail', cells: { rules: 9, market: 1 } },
+    { name: 'convergence',       queue: 7.5, control: 'One operating model, to the strictest standard', cells: { rules: 4, vendors: 3, market: 1 } },
+    { name: 'insurance',         queue: 7.3, control: 'Governance as an insurable artifact', cells: { market: 1 } },
+    { name: 'confidentiality',   queue: 6.9, control: 'Data-flow mapping + vendor attestation', cells: { rules: 8, market: 2 } },
+    { name: 'benchmark',         queue: 6.9, control: 'Tool-certification benchmark (NERVE)', cells: { vendors: 15, capability: 4, market: 1 } },
+    { name: 'agentic',           queue: 5.8, control: 'Human-decides gates + scope-limiting', cells: { vendors: 12, capability: 6, market: 1 } },
+    { name: 'vendor liability',  queue: 2.3, control: 'Tool-provenance documentation', cells: { rules: 3, vendors: 3 } },
+    { name: 'judge analytics',   queue: 1.9, control: 'Guardrailed strategy sim (no actor prediction)', cells: { rules: 1 } },
+    { name: 'fees',              queue: 1.7, control: 'Value-delivered measurement', cells: { rules: 1 } },
   ];
-  const FLOWS = [
-    { s:'rules',      fl:'verification',       v:7.58, n:13 }, { s:'rules',      fl:'competence', v:2.33, n:5 },
-    { s:'rules',      fl:'disclosure',         v:3.92, n:9 },  { s:'rules',      fl:'convergence', v:2.75, n:4 },
-    { s:'rules',      fl:'confidentiality',    v:4.42, n:8 },  { s:'rules',      fl:'vendor_liability', v:2.00, n:3 },
-    { s:'rules',      fl:'judicial_analytics', v:1.00, n:1 },  { s:'rules',      fl:'fees', v:1.00, n:1 },
-    { s:'capability', fl:'verification',       v:2.50, n:3 },  { s:'capability', fl:'competence', v:5.00, n:5 },
-    { s:'capability', fl:'benchmark',          v:3.50, n:4 },  { s:'capability', fl:'agentic', v:6.00, n:6 },
-    { s:'market',     fl:'verification',       v:2.58, n:4 },  { s:'market',     fl:'competence', v:2.58, n:4 },
-    { s:'market',     fl:'disclosure',         v:0.25, n:1 },  { s:'market',     fl:'convergence', v:1.00, n:1 },
-    { s:'market',     fl:'insurance',          v:1.00, n:1 },  { s:'market',     fl:'confidentiality', v:1.33, n:2 },
-    { s:'market',     fl:'benchmark',          v:0.25, n:1 },  { s:'market',     fl:'agentic', v:1.00, n:1 },
-    { s:'vendors',    fl:'verification',       v:2.00, n:3 },  { s:'vendors',    fl:'convergence', v:1.50, n:3 },
-    { s:'vendors',    fl:'benchmark',          v:10.00, n:15 }, { s:'vendors',    fl:'agentic', v:8.50, n:12 },
-    { s:'vendors',    fl:'vendor_liability',   v:2.00, n:3 },
-  ];
-  const srcById = Object.fromEntries(SOURCES.map(s => [s.id, s]));
-  const flById = Object.fromEntries(FAULT_LINES.map(f => [f.id, f]));
-  const flTotal = {};
-  FAULT_LINES.forEach(f => flTotal[f.id] = FLOWS.filter(x => x.fl === f.id).reduce((a, x) => a + x.v, 0));
-  const H = 470, TP = 12, BP = 46, usable = H - TP - BP;
-  const totalMass = FAULT_LINES.reduce((a, f) => a + flTotal[f.id], 0);
-  const scale = usable / totalMass, lx = 160, rx = 760, dx = (rx - lx) * 0.42;
+
+  const L = {
+    W: 1160, H: 780,
+    labelRight: 152,
+    railX: 170, railW: 18,
+    railTop: 40, railSpan: 660, railGap: 16,
+    barX: 470, barMax: 430,
+    rowTop: 46, rowH: 62,
+    queueX: 960, pipX: 1010,
+    dim: 0.07, dimNode: 0.28, rest: 0.5, lit: 0.85
+  };
+
+  const NS = 'http://www.w3.org/2000/svg';
+  function el(tag, attrs, text) {
+    const n = document.createElementNS(NS, tag);
+    for (const k in attrs) n.setAttribute(k, attrs[k]);
+    if (text != null) n.textContent = text;
+    return n;
+  }
+
   function layout() {
-    let y = TP; const srcPos = {};
-    SOURCES.forEach(s => { const h = s.items * scale; srcPos[s.id] = [y, y + h]; y += h; });
-    y = TP; const flPos = {};
-    FAULT_LINES.forEach(f => { const h = flTotal[f.id] * scale; flPos[f.id] = [y, y + h]; y += h; });
-    const srcSlice = {}, flSlice = {};
-    SOURCES.forEach(s => { let c = srcPos[s.id][0]; FAULT_LINES.forEach(f => { const x = FLOWS.find(z => z.s === s.id && z.fl === f.id); if (!x) return; srcSlice[s.id + '|' + f.id] = [c, c + x.v * scale]; c += x.v * scale; }); });
-    FAULT_LINES.forEach(f => { let c = flPos[f.id][0]; SOURCES.forEach(s => { const x = FLOWS.find(z => z.s === s.id && z.fl === f.id); if (!x) return; flSlice[s.id + '|' + f.id] = [c, c + x.v * scale]; c += x.v * scale; }); });
-    return { srcPos, flPos, srcSlice, flSlice };
-  }
-  function bandPath(s0, s1, m0, m1) {
-    return 'M ' + lx + ' ' + s0.toFixed(1) + ' C ' + (lx + dx).toFixed(1) + ' ' + s0.toFixed(1) + ', ' + (rx - dx).toFixed(1) + ' ' + m0.toFixed(1) + ', ' + rx + ' ' + m0.toFixed(1)
-      + ' L ' + rx + ' ' + m1.toFixed(1) + ' C ' + (rx - dx).toFixed(1) + ' ' + m1.toFixed(1) + ', ' + (lx + dx).toFixed(1) + ' ' + s1.toFixed(1) + ', ' + lx + ' ' + s1.toFixed(1) + ' Z';
-  }
-  function buildSankey() {
-    const L = layout(); const parts = [];
-    parts.push('<svg viewBox="0 0 960 ' + H + '" role="img" aria-label="Sankey of four streams flowing into eleven fault-line predictions">');
-    FLOWS.forEach(x => {
-      const ss = L.srcSlice[x.s + '|' + x.fl], ms = L.flSlice[x.s + '|' + x.fl];
-      if (!ss || !ms) return; const pad = 0.7;
-      const s0 = ss[0] + pad, s1 = ss[1] - pad, m0 = ms[0] + pad, m1 = ms[1] - pad;
-      if (s1 - s0 < 0.5 || m1 - m0 < 0.5) return;
-      parts.push('<path class="sk-band" data-src="' + x.s + '" data-fl="' + x.fl + '" d="' + bandPath(s0, s1, m0, m1) + '" fill="' + srcById[x.s].color + '" fill-opacity="0.6" stroke="' + srcById[x.s].color + '" stroke-opacity="0.9" stroke-width="0.6"/>');
+    const totalItems = STREAMS.reduce((a, s) => a + s.items, 0);
+    const usable = L.railSpan - L.railGap * (STREAMS.length - 1);
+    const rails = {};
+    let y = L.railTop;
+    STREAMS.forEach(s => {
+      rails[s.id] = { y, h: (s.items / totalItems) * usable, color: s.color, name: s.name, items: s.items };
+      y += rails[s.id].h + L.railGap;
     });
-    SOURCES.forEach(s => {
-      const [y0, y1] = L.srcPos[s.id];
-      parts.push('<rect class="sk-node" data-src="' + s.id + '" x="' + lx + '" y="' + y0.toFixed(1) + '" width="5" height="' + (y1 - y0).toFixed(1) + '" rx="2.5" fill="' + s.color + '"/>');
-      const cy = (y0 + y1) / 2;
-      parts.push('<g class="sk-node" data-src="' + s.id + '"><text class="sk-label" x="' + (lx - 14) + '" y="' + (cy - 3).toFixed(1) + '" text-anchor="end"><tspan class="name">' + s.name + '</tspan></text><text class="sk-label" x="' + (lx - 14) + '" y="' + (cy + 12).toFixed(1) + '" text-anchor="end"><tspan class="num">' + s.items + ' items</tspan></text></g>');
+
+    const rows = PREDICTIONS.map((p, i) => {
+      const rowY = L.rowTop + i * L.rowH;
+      const total = Object.values(p.cells).reduce((a, b) => a + b, 0);
+      const barH = 10 + p.queue * 2.6;
+      const barLen = (p.queue / 10) * L.barMax;
+      const barY = rowY + 22;
+      const active = STREAMS.filter(s => p.cells[s.id]);
+      let x = L.barX;
+      const segments = active.map(s => {
+        const w = (p.cells[s.id] / total) * barLen;
+        const seg = { x, y: barY, w: Math.max(w, 1.5), h: barH, color: s.color, stream: s.id, n: p.cells[s.id], streamItems: s.items };
+        x += w; return seg;
+      });
+      return { name: p.name, queue: p.queue, control: p.control, cells: p.cells, rowY, barY, barH, barLen, total, active, segments };
     });
-    FAULT_LINES.forEach(f => {
-      const [y0, y1] = L.flPos[f.id];
-      parts.push('<rect class="sk-node" data-fl="' + f.id + '" x="' + (rx - 5) + '" y="' + y0.toFixed(1) + '" width="5" height="' + (y1 - y0).toFixed(1) + '" rx="2.5" fill="var(--text-faint)"/>');
-      const cy = (y0 + y1) / 2;
-      parts.push('<g class="sk-node" data-fl="' + f.id + '"><text class="sk-label" x="' + (rx + 14) + '" y="' + (cy - 3).toFixed(1) + '" text-anchor="start"><tspan class="name">' + f.name + '</tspan></text><text class="sk-label" x="' + (rx + 14) + '" y="' + (cy + 12).toFixed(1) + '" text-anchor="start"><tspan class="num">' + f.queue.toFixed(1) + ' · </tspan><tspan class="sk-corr">' + f.corr + ' stream' + (f.corr === 1 ? '' : 's') + '</tspan></text></g>');
+
+    const cursor = {}; STREAMS.forEach(s => { cursor[s.id] = rails[s.id].y; });
+    const ribbons = [];
+    rows.forEach(r => {
+      let ay = r.barY;                              // arrival order == segment order => no crossing at the join
+      r.active.forEach(s => {
+        const streamTotal = PREDICTIONS.reduce((a, q) => a + (q.cells[s.id] || 0), 0);
+        const w1 = (r.cells[s.id] / streamTotal) * rails[s.id].h;
+        const w2 = (r.cells[s.id] / r.total) * r.barH;
+        const y0 = cursor[s.id], y1 = y0 + w1, y2 = ay, y3 = ay + w2;
+        const x0 = L.railX + L.railW, x1 = L.barX, mx = (x0 + x1) / 2;
+        ribbons.push({ stream: s.id, pred: r.name, color: s.color, n: r.cells[s.id], streamItems: s.items, predTotal: r.total,
+          d: 'M' + x0 + ',' + y0 + ' C' + mx + ',' + y0 + ' ' + mx + ',' + y2 + ' ' + x1 + ',' + y2
+            + ' L' + x1 + ',' + y3 + ' C' + mx + ',' + y3 + ' ' + mx + ',' + y1 + ' ' + x0 + ',' + y1 + ' Z' });
+        cursor[s.id] = y1; ay = y3;
+      });
     });
-    parts.push('<text class="sk-axis" x="' + lx + '" y="' + (H - 16) + '" text-anchor="middle">sources · 76 items</text>');
-    parts.push('<text class="sk-axis" x="' + rx + '" y="' + (H - 16) + '" text-anchor="middle">predictions · 11 fault lines</text>');
-    parts.push('</svg>'); return parts.join('');
+    return { rails, rows, ribbons };
   }
-  document.getElementById('sankey').innerHTML = buildSankey();
+
+  function renderBoard(mount) {
+    const { rails, rows, ribbons } = layout();
+    const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+    const svg = el('svg', { viewBox: '0 0 ' + L.W + ' ' + L.H, style: 'width:100%;height:auto;display:block', role: 'img', 'aria-label': 'Four evidence streams feeding eleven ranked fault-line predictions' });
+
+    // ribbons (the flow) — wrapped so <720px can drop them
+    const field = el('g', { class: 'board-ribbons' });
+    svg.appendChild(field);
+    const paths = ribbons.map(r => {
+      const p = el('path', { d: r.d, fill: r.color, style: 'transition:opacity 180ms ease-out', 'data-stream': r.stream, 'data-pred': r.pred, 'data-n': r.n, 'data-stream-items': r.streamItems, 'data-pred-total': r.predTotal });
+      p.__r = r; field.appendChild(p); return p;
+    });
+
+    // rails (streams)
+    const railWrap = el('g', { class: 'board-rails' });
+    svg.appendChild(railWrap);
+    const railNodes = STREAMS.map(s => {
+      const r = rails[s.id];
+      const g = el('g', { style: 'cursor:pointer;transition:opacity 180ms ease-out', tabindex: '0', role: 'button', 'data-stream': s.id });
+      g.appendChild(el('rect', { x: L.railX, y: r.y, width: L.railW, height: r.h, rx: 3, fill: r.color }));
+      g.appendChild(el('text', { x: L.labelRight, y: r.y + r.h / 2 - 2, 'text-anchor': 'end', 'font-size': 15, 'font-weight': 600, fill: C.ink }, s.name));
+      g.appendChild(el('text', { x: L.labelRight, y: r.y + r.h / 2 + 16, 'text-anchor': 'end', 'font-size': 12, 'font-weight': 500, 'letter-spacing': '0.06em', fill: C.muted }, s.items + ' items'));
+      g.__stream = s.id; railWrap.appendChild(g); return g;
+    });
+
+    // prediction rows
+    const rowNodes = rows.map(r => {
+      const hit = el('g', { style: 'cursor:pointer', tabindex: '0', role: 'button', 'data-pred': r.name });
+      hit.appendChild(el('rect', { x: 160, y: r.rowY, width: 1000, height: 56, fill: 'transparent' }));
+      const g = el('g', { opacity: 1, style: 'transition:opacity 180ms ease-out' });
+      g.appendChild(el('text', { x: L.barX, y: r.rowY + 12, 'font-size': 17, 'font-weight': 600, fill: C.ink }, r.name));
+      g.appendChild(el('text', { x: 940, y: r.rowY + 12, 'text-anchor': 'end', 'font-size': 12, 'font-weight': 500, 'letter-spacing': '0.04em', fill: C.muted }, r.active.length + ' ' + (r.active.length === 1 ? 'stream' : 'streams') + ' · ' + r.total + ' ' + (r.total === 1 ? 'item' : 'items')));
+      r.segments.forEach(s => g.appendChild(el('rect', { x: s.x, y: s.y, width: s.w, height: s.h, fill: s.color, 'data-stream': s.stream, 'data-pred': r.name, 'data-n': s.n, 'data-stream-items': s.streamItems, 'data-pred-total': r.total })));
+      g.appendChild(el('text', { x: L.queueX, y: r.barY + r.barH / 2 + 7, 'font-size': 21, 'font-weight': 300, fill: C.ink }, r.queue.toFixed(1)));
+      STREAMS.forEach((s, i) => g.appendChild(el('rect', { x: L.pipX + i * 14, y: r.barY + r.barH / 2 - 4.5, width: 9, height: 9, rx: 2, fill: r.cells[s.id] ? s.color : C.faint })));
+      hit.appendChild(g); hit.__row = r; hit.__inner = g; svg.appendChild(hit); return hit;
+    });
+
+    // progressive disclosure
+    let hs = null, hp = null, revealed = false;
+    const paint = () => {
+      if (!revealed) { revealed = true; if (field.getAnimations) field.getAnimations().forEach(a => a.cancel()); }
+      const idle = !hs && !hp;
+      const row = hp && rows.find(r => r.name === hp);
+      paths.forEach(p => { p.style.opacity = idle ? L.rest : (p.__r.stream === hs || p.__r.pred === hp) ? L.lit : L.dim; });
+      railNodes.forEach(g => g.setAttribute('opacity', idle || g.__stream === hs || (row && row.cells[g.__stream]) ? 1 : 0.22));
+      rowNodes.forEach(g => g.__inner.setAttribute('opacity', idle || g.__row.name === hp || (hs && g.__row.cells[hs]) ? 1 : L.dimNode));
+    };
+    const set = (s, p) => { hs = s; hp = p; paint(); };
+
+    railNodes.forEach(g => { g.onmouseenter = g.onfocus = () => set(g.__stream, null); });
+    rowNodes.forEach(g => { g.onmouseenter = g.onfocus = () => set(null, g.__row.name); });
+    svg.onmouseleave = () => set(null, null);
+    svg.addEventListener('blur', () => set(null, null), true);
+    svg.addEventListener('keydown', e => { if (e.key === 'Escape') set(null, null); });
+
+    paths.forEach(p => { p.style.opacity = L.rest; });
+    mount.replaceChildren(svg);
+
+    // reveal once, on the wrapper <g> — never the same property paint() writes
+    if (!reduced && typeof field.animate === 'function') {
+      field.animate([{ opacity: 0 }, { opacity: 1 }], { duration: 520, easing: 'ease-out', fill: 'none' });
+    }
+  }
+
+  /* ---------- tooltips ---------- */
+  const wrap = document.getElementById('chart');
+  const tooltip = document.createElement('div');
+  tooltip.className = 'tooltip';
+  wrap.appendChild(tooltip);
+
+  function ribbonTT(sid, pid, n, streamItems, predTotal) {
+    const s = STREAMS.find(z => z.id === sid);
+    const p = PREDICTIONS.find(z => z.name === pid);
+    const share = Math.round(n / predTotal * 100);
+    return '<div class="tt-src">' + s.name + ' &rarr; ' + p.name + '</div>'
+      + '<div class="tt-main">' + n + ' of ' + streamItems + ' ' + s.short + ' items · ' + share + '% of ' + p.name + '</div>'
+      + '<div class="tt-sub">build: ' + p.control + '</div>';
+  }
+  function streamTT(sid) {
+    const s = STREAMS.find(z => z.id === sid);
+    return '<div class="tt-src">' + s.name + '</div>'
+      + '<div class="tt-main">' + s.items + ' items</div>'
+      + '<div class="tt-sub">' + s.desc + ' &mdash; ' + s.contains + '</div>';
+  }
+  function predTT(pid) {
+    const p = PREDICTIONS.find(z => z.name === pid);
+    const n = STREAMS.filter(s => p.cells[s.id]).length;
+    return '<div class="tt-src">prediction · queue ' + p.queue.toFixed(1) + '</div>'
+      + '<div class="tt-main">' + p.name + '</div>'
+      + '<div class="tt-sub">build: ' + p.control + '</div>'
+      + '<div class="tt-sub">' + n + ' stream' + (n === 1 ? '' : 's') + ' corroborate this &mdash; more streams means a more confident call.</div>';
+  }
+  function ttFor(target) {
+    const seg = target.closest('[data-stream][data-pred]');
+    if (seg) return ribbonTT(seg.getAttribute('data-stream'), seg.getAttribute('data-pred'), +seg.getAttribute('data-n'), +seg.getAttribute('data-stream-items'), +seg.getAttribute('data-pred-total'));
+    const rail = target.closest('[data-stream]');
+    if (rail) return streamTT(rail.getAttribute('data-stream'));
+    const row = target.closest('[data-pred]');
+    if (row) return predTT(row.getAttribute('data-pred'));
+    return null;
+  }
+  function showTooltip(html, x, y) {
+    tooltip.innerHTML = html;
+    tooltip.classList.add('on');
+    const r = wrap.getBoundingClientRect();
+    let tx = x, ty = y;
+    if (tx + 340 > r.width) tx = x - 340;
+    if (ty + 110 > r.height) ty = y - 110;
+    tooltip.style.left = tx + 'px';
+    tooltip.style.top = ty + 'px';
+  }
+
+  renderBoard(wrap);
+
+  wrap.addEventListener('mousemove', e => {
+    const r = wrap.getBoundingClientRect();
+    const x = e.clientX - r.left + 14, y = e.clientY - r.top + 14;
+    const tt = ttFor(e.target);
+    if (tt) showTooltip(tt, x, y);
+    else tooltip.classList.remove('on');
+  });
+  wrap.addEventListener('mouseleave', () => tooltip.classList.remove('on'));
 })();
 </script>
 </body>
