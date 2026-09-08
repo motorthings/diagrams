@@ -241,7 +241,7 @@
       <div class="drow"><div class="dmark">Stream blocks &middot; left</div><div class="ddef">each sized by how many items it holds</div></div>
       <div class="drow"><div class="dmark">Bar length</div><div class="ddef">more pressure behind that prediction, on the 0&ndash;10 queue</div></div>
       <div class="drow"><div class="dmark">Coloured bands</div><div class="ddef">one band per stream feeding the bar: a single colour means one kind of evidence is making the call, all four means the whole board agrees</div></div>
-      <div class="drow"><div class="dmark">Squares &middot; far right</div><div class="ddef">count that corroboration, out of four streams</div></div>
+      <div class="drow"><div class="dmark">Score &middot; far right</div><div class="ddef">the queue as a number, 0&ndash;10 &mdash; the read that line ends on</div></div>
     </div>
     <div class="figure">
       <div class="axis">
@@ -427,7 +427,7 @@
     railTop: 40, railSpan: 660, railGap: 16,
     barX: 470, barMax: 430,
     rowTop: 46, rowH: 62,
-    queueX: 960, pipX: 1010,
+    queueX: 960,
     dim: 0.07, dimNode: 0.28, rest: 0.5, lit: 0.85
   };
 
@@ -491,7 +491,7 @@
     const svg = el('svg', { viewBox: '0 0 ' + L.W + ' ' + L.H, style: 'width:100%;height:auto;display:block', role: 'img', 'aria-label': 'Four evidence streams feeding eleven ranked fault-line predictions' });
     // flow cue across the top — reads as one left-to-right direction
     svg.appendChild(el('text', { x: L.W / 2, y: 22, 'text-anchor': 'middle', 'font-size': 11, 'font-weight': 600, 'letter-spacing': '0.08em', fill: C.muted },
-      'inputs · 4 evidence streams   →   fault lines · one bar each, ranked   →   output · queue & corroboration'));
+      'inputs · 4 evidence streams   →   fault lines · one bar each, ranked   →   output · queue (0&ndash;10)'));
 
     // ribbons (the flow) — wrapped so <720px can drop them
     const field = el('g', { class: 'board-ribbons' });
@@ -522,7 +522,6 @@
       g.appendChild(el('text', { x: 940, y: r.rowY + 12, 'text-anchor': 'end', 'font-size': 12, 'font-weight': 500, 'letter-spacing': '0.04em', fill: C.muted }, r.active.length + ' ' + (r.active.length === 1 ? 'stream' : 'streams') + ' · ' + r.total + ' ' + (r.total === 1 ? 'item' : 'items')));
       r.segments.forEach(s => g.appendChild(el('rect', { x: s.x, y: s.y, width: s.w, height: s.h, fill: s.color, 'data-stream': s.stream, 'data-pred': r.name, 'data-n': s.n, 'data-stream-items': s.streamItems, 'data-pred-total': r.total })));
       g.appendChild(el('text', { x: L.queueX, y: r.barY + r.barH / 2 + 7, 'font-size': 21, 'font-weight': 300, fill: C.ink }, r.queue.toFixed(1)));
-      STREAMS.forEach((s, i) => g.appendChild(el('rect', { x: L.pipX + i * 14, y: r.barY + r.barH / 2 - 4.5, width: 9, height: 9, rx: 2, fill: r.cells[s.id] ? s.color : C.faint })));
       hit.appendChild(g); hit.__row = r; hit.__inner = g; svg.appendChild(hit); return hit;
     });
 
