@@ -70,6 +70,7 @@
   .tooltip .tt-main { font-weight: 700; margin: 2px 0 4px; }
   .tooltip .tt-sub { opacity: 0.85; font-size: 12.5px; }
   .tooltip .tt-sub + .tt-sub { margin-top: 4px; }
+  .tooltip .tt-def { margin: 2px 0 6px; font-size: 12.5px; line-height: 1.45; color: #e9e2e2; }
 
   .matrix { display: none; }
   .matrix table { width: 100%; border-collapse: collapse; font-size: 13px; }
@@ -89,7 +90,7 @@
 
   @media (prefers-reduced-motion: reduce) { .board-wrap svg * { transition: none !important; } }
   @media print { .tooltip { display: none; } }
-  /* <720px: drop the ribbon field + stream rail/label column; keep rank + colour bands + pips */
+  /* <720px: drop the ribbon field + stream rail/label column; keep rank + colour bands */
   @media (max-width: 720px) { .board-ribbons, .board-rails { display: none; } .matrix table { font-size: 11px; } .matrix th, .matrix td { padding: 6px 7px; } }
 </style>
 </head>
@@ -117,7 +118,6 @@
       <div class="board-wrap" id="chart"></div>
       <div class="legend">
         <span><span class="swatches"><span style="background:#C4506B"></span><span style="background:#1E8A6A"></span><span style="background:#2563eb"></span><span style="background:#B07C2E"></span></span><b>bar length = queue (0&ndash;10)</b> &middot; each colour band is one stream's share of that call</span>
-        <span><b>pips = corroboration</b>, out of four streams</span>
       </div>
     </div>
 
@@ -150,17 +150,17 @@
 
   // Ordered by queue, descending — row order IS the ranking.
   const PREDICTIONS = [
-    { name: 'verification',      queue: 8.6, control: 'Documented verification + trace logs', cells: { rules: 13, vendors: 3, capability: 3, market: 4 } },
-    { name: 'competence',        queue: 7.9, control: 'Firm-wide training + governance program', cells: { rules: 5, capability: 5, market: 4 } },
-    { name: 'disclosure',        queue: 7.6, control: 'Verification-by-default with an audit trail', cells: { rules: 9, market: 1 } },
-    { name: 'convergence',       queue: 7.5, control: 'One operating model, to the strictest standard', cells: { rules: 4, vendors: 3, market: 1 } },
-    { name: 'insurance',         queue: 7.3, control: 'Governance as an insurable artifact', cells: { market: 1 } },
-    { name: 'confidentiality',   queue: 6.9, control: 'Data-flow mapping + vendor attestation', cells: { rules: 8, market: 2 } },
-    { name: 'benchmark',         queue: 6.9, control: 'Tool-certification benchmark (NERVE)', cells: { vendors: 15, capability: 4, market: 1 } },
-    { name: 'agentic',           queue: 5.8, control: 'Human-decides gates + scope-limiting', cells: { vendors: 12, capability: 6, market: 1 } },
-    { name: 'vendor liability',  queue: 2.3, control: 'Tool-provenance documentation', cells: { rules: 3, vendors: 3 } },
-    { name: 'judge analytics',   queue: 1.9, control: 'Guardrailed strategy sim (no actor prediction)', cells: { rules: 1 } },
-    { name: 'fees',              queue: 1.7, control: 'Value-delivered measurement', cells: { rules: 1 } },
+{ name: 'verification', def: 'Checking that what the AI wrote is true before it reaches a court or a client.',      queue: 8.6, control: 'Documented verification + trace logs', cells: { rules: 13, vendors: 3, capability: 3, market: 4 } },
+{ name: 'competence', def: 'Knowing the tool well enough to catch it being quietly wrong.',        queue: 7.9, control: 'Firm-wide training + governance program', cells: { rules: 5, capability: 5, market: 4 } },
+{ name: 'disclosure', def: 'Saying when AI helped produce the work.',        queue: 7.6, control: 'Verification-by-default with an audit trail', cells: { rules: 9, market: 1 } },
+{ name: 'convergence', def: 'Rules landing across courts and states that a firm must follow everywhere at once.',       queue: 7.5, control: 'One operating model, to the strictest standard', cells: { rules: 4, vendors: 3, market: 1 } },
+{ name: 'insurance', def: 'Insurers deciding whether they will still cover a firm that uses AI.',         queue: 7.3, control: 'Governance as an insurable artifact', cells: { market: 1 } },
+{ name: 'confidentiality', def: 'Keeping client secrets out of the AI tool that reads them.',   queue: 6.9, control: 'Data-flow mapping + vendor attestation', cells: { rules: 8, market: 2 } },
+{ name: 'benchmark', def: 'A shared test that certifies a legal AI tool is accurate enough to trust.',         queue: 6.9, control: 'Tool-certification benchmark (NERVE)', cells: { vendors: 15, capability: 4, market: 1 } },
+{ name: 'agentic', def: 'AI that acts on its own, and how much a human stays in charge.',           queue: 5.8, control: 'Human-decides gates + scope-limiting', cells: { vendors: 12, capability: 6, market: 1 } },
+{ name: 'vendor liability', def: 'Who takes the blame, the seller or the firm, when an AI tool does harm.',  queue: 2.3, control: 'Tool-provenance documentation', cells: { rules: 3, vendors: 3 } },
+{ name: 'judge analytics', def: 'Predicting how a judge will rule, allowed in some places and banned in others.',   queue: 1.9, control: 'Guardrailed strategy sim (no actor prediction)', cells: { rules: 1 } },
+{ name: 'fees', def: 'Billing for work AI does in minutes that used to take a lawyer hours.',              queue: 1.7, control: 'Value-delivered measurement', cells: { rules: 1 } },
   ];
 
   const L = {
@@ -170,7 +170,7 @@
     railTop: 40, railSpan: 660, railGap: 16,
     barX: 470, barMax: 430,
     rowTop: 46, rowH: 62,
-    queueX: 960, pipX: 1010,
+    queueX: 960,
     dim: 0.07, dimNode: 0.28, rest: 0.5, lit: 0.85
   };
 
@@ -262,7 +262,6 @@
       g.appendChild(el('text', { x: 940, y: r.rowY + 12, 'text-anchor': 'end', 'font-size': 12, 'font-weight': 500, 'letter-spacing': '0.04em', fill: C.muted }, r.active.length + ' ' + (r.active.length === 1 ? 'stream' : 'streams') + ' · ' + r.total + ' ' + (r.total === 1 ? 'item' : 'items')));
       r.segments.forEach(s => g.appendChild(el('rect', { x: s.x, y: s.y, width: s.w, height: s.h, fill: s.color, 'data-stream': s.stream, 'data-pred': r.name, 'data-n': s.n, 'data-stream-items': s.streamItems, 'data-pred-total': r.total })));
       g.appendChild(el('text', { x: L.queueX, y: r.barY + r.barH / 2 + 7, 'font-size': 21, 'font-weight': 300, fill: C.ink }, r.queue.toFixed(1)));
-      STREAMS.forEach((s, i) => g.appendChild(el('rect', { x: L.pipX + i * 14, y: r.barY + r.barH / 2 - 4.5, width: 9, height: 9, rx: 2, fill: r.cells[s.id] ? s.color : C.faint })));
       hit.appendChild(g); hit.__row = r; hit.__inner = g; svg.appendChild(hit); return hit;
     });
 
@@ -296,10 +295,6 @@
   }
 
   /* ---------- tooltips ---------- */
-  const tooltip = document.createElement('div');
-  tooltip.className = 'tooltip';
-  document.getElementById('chart').appendChild(tooltip);
-
   function ribbonTT(sid, pid, n, streamItems, predTotal) {
     const s = STREAMS.find(z => z.id === sid);
     const p = PREDICTIONS.find(z => z.name === pid);
@@ -319,6 +314,7 @@
     const n = STREAMS.filter(s => p.cells[s.id]).length;
     return '<div class="tt-src">prediction · queue ' + p.queue.toFixed(1) + '</div>'
       + '<div class="tt-main">' + p.name + '</div>'
+      + '<div class="tt-def">' + p.def + '</div>'
       + '<div class="tt-sub">build: ' + p.control + '</div>'
       + '<div class="tt-sub">' + n + ' stream' + (n === 1 ? '' : 's') + ' corroborate this &mdash; more streams means a more confident call.</div>';
   }
@@ -354,6 +350,10 @@
   wrap.addEventListener('mouseleave', () => tooltip.classList.remove('on'));
 
   renderBoard(document.getElementById('chart'));
+
+  const tooltip = document.createElement('div');
+  tooltip.className = 'tooltip';
+  document.getElementById('chart').appendChild(tooltip);
 })();
 </script>
 </body>
