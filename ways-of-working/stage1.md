@@ -97,7 +97,7 @@ Create `vault/CLAUDE.md`:
 ```markdown
 # About
 
-[Your name], [your role] at Contentful.
+[Your name], [your role] at a company.
 [One sentence on what you work on.]
 
 ## What I'm focused on right now

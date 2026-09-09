@@ -44,9 +44,9 @@ This is more setup upfront but gives you complete control. Claude Code talks to 
 TOKEN=$(op read "op://Employee/<your-item-id>/notesPlain")
 
 # Search your open issues
-curl -s -u "you@contentful.com:$TOKEN" \
+curl -s -u "you@yourcompany.com:$TOKEN" \
   -H "Content-Type: application/json" \
-  -X POST "https://contentful.atlassian.net/rest/api/3/search/jql" \
+  -X POST "https://yourcompany.atlassian.net/rest/api/3/search/jql" \
   -d '{"jql":"assignee = currentUser() AND resolution = Unresolved","fields":["key","summary","status"]}'
 ```
 

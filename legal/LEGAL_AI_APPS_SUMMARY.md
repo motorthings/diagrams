@@ -40,7 +40,7 @@ Ten functions:
 Standalone demo of function #1, built for **Perkins Coie**. Paste or upload a matter summary → practice-area classification, conflict check, risk assessment, staffing recommendation, each scored with reasoning. Two-stage LLM pipeline (router → evaluator) then **deterministic** weighted scoring (25/25/20/15/15) that deliberately does not trust the LLM's own numbers. Full audit trail reconstructs the decision chain. Next.js (Vercel) + FastAPI (Fly.io) + SQLite. 15 synthetic test fixtures against the live endpoint.
 
 ### Legal Contract Review — `legal-contract-review/`
-The full production contract-analysis SaaS (origin of function #2). Router classifies each contract into 5 types; type-specific expert agent extracts terms, flags issues, computes weighted 0–100 risk score. Human-in-the-loop review workflow, RAG chat grounded in the contract text, triage + admin analytics dashboards, voice interview (ElevenLabs), team feedback loop on AI quality. Next.js (Vercel) + FastAPI + Celery (Railway) + Supabase/pgvector + Voyage AI. Contentful AI Solutions Partner demonstration piece.
+The full production contract-analysis SaaS (origin of function #2). Router classifies each contract into 5 types; type-specific expert agent extracts terms, flags issues, computes weighted 0–100 risk score. Human-in-the-loop review workflow, RAG chat grounded in the contract text, triage + admin analytics dashboards, voice interview (ElevenLabs), team feedback loop on AI quality. Next.js (Vercel) + FastAPI + Celery (Railway) + Supabase/pgvector + Voyage AI. A demonstration piece built for an AI-solutions role.
 
 ---
 
