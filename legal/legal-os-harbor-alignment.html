@@ -1,0 +1,388 @@
+<!DOCTYPE html>
+<html lang="en" class="light">
+<head>
+<meta charset="UTF-8">
+<link rel="icon" type="image/svg+xml" href="../icon.svg">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="Harbor's legal AI service framework and the AESOP lifecycle agree on the shape and disagree on three things. The divergences are the interesting part.">
+<title>Legal AI OS &mdash; Harbor Framework Alignment</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Mulish:ital,wght@0,300;0,400;0,600;0,700;0,800;1,400&display=swap" rel="stylesheet">
+<script>
+  (function () {
+    try {
+      var t = localStorage.getItem('diagram-theme');
+      if (t === 'dark') document.documentElement.classList.remove('light');
+      else document.documentElement.classList.add('light');
+    } catch (e) {}
+  })();
+</script>
+<style>
+  :root {
+    --font-body: 'Mulish', 'Segoe UI', Helvetica, sans-serif;
+    --font-mono: 'Mulish', ui-monospace, 'SF Mono', Consolas, monospace;
+    --bg: #171416; --surface: #1E1A1D; --surface2: #262024;
+    --border: #332D31; --border-bright: #463D42;
+    --text: #F5F2F1; --text-dim: #C9C3C1; --text-faint: #8A8481;
+    --primary: #E39CB2; --primary-dim: rgba(227,156,178,0.12);
+    --metric: #5FBF9B; --metric-dim: rgba(95,191,155,0.12);
+    --slate: #948E8C; --rose: #E36C89;
+    --text-muted: #8A8481;
+    /* diagram roles: AESOP stages coloured by their Harbor band */
+    --storage: #5FBF9B; --compute: #E39CB2; --model: #948E8C;
+    --arr-color: #8A8481; --arr-color-strong: #E39CB2;
+  }
+  html.light {
+    --bg: #F5F2F1; --surface: #FFFFFF; --surface2: #EDE8E6;
+    --border: #D9D2CE; --border-bright: #C4B9B4;
+    --text: #171416; --text-dim: #4A4442; --text-faint: #8A8481;
+    --primary: #B83159; --primary-dim: rgba(184,49,89,0.10);
+    --metric: #1E8A6A; --metric-dim: rgba(30,138,106,0.10);
+    --slate: #6A6461; --rose: #C4506B;
+    --text-muted: #8A8481;
+    --storage: #1E8A6A; --compute: #B83159; --model: #6A6461;
+    --arr-color: #8A8481; --arr-color-strong: #B83159;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    background: var(--bg);
+    background-image:
+      radial-gradient(at 10% 0%, var(--primary-dim) 0%, transparent 40%),
+      radial-gradient(at 90% 80%, var(--metric-dim) 0%, transparent 40%);
+    color: var(--text); font-family: var(--font-body);
+    font-size: 15px; line-height: 1.7; min-height: 100vh; -webkit-font-smoothing: antialiased;
+  }
+  .nav { position: sticky; top: 0; z-index: 100; backdrop-filter: blur(16px);
+    background: color-mix(in srgb, var(--surface) 85%, transparent); border-bottom: 1px solid var(--border); }
+  .nav-inner { max-width: 1120px; margin: 0 auto; padding: 12px 20px; display: flex; align-items: center; justify-content: space-between; }
+  .crumbs { font-family: var(--font-mono); font-size: 13px; font-weight: 600; display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+  .crumbs a { color: var(--primary); text-decoration: none; }
+  .crumbs a:hover, .crumbs a:focus-visible { text-decoration: underline; outline: none; }
+  .crumbs .sep { color: var(--text-faint); }
+  .crumbs .current { color: var(--text-dim); font-weight: 400; }
+  .theme-toggle { width: 36px; height: 36px; border-radius: 10px; border: 1px solid var(--border);
+    background: var(--surface); cursor: pointer; display: flex; align-items: center; justify-content: center;
+    font-size: 16px; line-height: 1; color: var(--text-dim); transition: all 0.2s; flex-shrink: 0; }
+  .theme-toggle:hover, .theme-toggle:focus-visible { border-color: var(--primary); color: var(--primary); outline: none; }
+  .subnav { display: flex; flex-wrap: wrap; gap: 6px 10px; align-items: center; max-width: 1120px; margin: 0 auto; padding: 6px 20px; border-top: 1px solid var(--border); }
+  .subnav .sp { font-family: var(--font-mono); font-size: 12px; font-weight: 700; line-height: 1; text-decoration: none; color: var(--text-dim); background: var(--surface2); border: 1px solid var(--border); border-radius: 999px; padding: 5px 13px; white-space: nowrap; }
+  .subnav a.sp:hover { color: var(--primary); border-color: var(--border-bright); background: var(--primary-dim); }
+  .subnav .sp.cur { color: var(--text-faint); border-style: dashed; background: transparent; cursor: default; }
+
+  .container { max-width: 1120px; margin: 0 auto; padding: 40px 24px 80px; }
+  @keyframes fadeUp { from { opacity: 0; transform: translateY(14px); } to { opacity: 1; transform: translateY(0); } }
+
+  .hero { margin-bottom: 12px; animation: fadeUp 0.5s ease both; }
+  .hero .kicker { font-family: var(--font-mono); font-size: 11px; font-weight: 700; letter-spacing: 0.2em; text-transform: uppercase; color: var(--text-faint); margin-bottom: 12px; }
+  .hero h1 { font-size: 42px; font-weight: 800; letter-spacing: -1px; line-height: 1.08; margin-bottom: 12px; max-width: 820px;
+    background: linear-gradient(135deg, var(--primary), var(--metric));
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+  .hero .deck { font-size: 20px; font-weight: 700; letter-spacing: -0.2px; color: var(--text); max-width: 780px; line-height: 1.45; }
+
+  section.sec { margin-top: 46px; animation: fadeUp 0.5s ease both; }
+  .secnum { font-family: var(--font-mono); font-size: 11px; font-weight: 700; letter-spacing: 0.2em; text-transform: uppercase; color: var(--primary); margin-bottom: 8px; }
+  h2 { font-size: 27px; font-weight: 800; letter-spacing: -0.5px; margin-bottom: 12px; }
+  h3 { font-size: 18px; font-weight: 800; letter-spacing: -0.2px; margin: 22px 0 6px; }
+  section.sec p { color: var(--text-dim); max-width: 780px; margin-bottom: 12px; }
+  section.sec p b { color: var(--text); font-weight: 700; }
+  section.sec p:last-child { margin-bottom: 0; }
+
+  .figure { margin: 22px 0 6px; }
+  .svg-wrap { background: var(--surface); border: 1px solid var(--border); border-radius: 14px; padding: 18px 14px; overflow-x: auto; }
+  .svg-wrap svg { display: block; width: 100%; max-width: 760px; min-width: 600px; height: auto; margin: 0 auto; }
+  .sv-sec { font-family: var(--font-mono); font-size: 11px; font-weight: 700; letter-spacing: 2px; fill: var(--text-muted); text-transform: uppercase; }
+  .sv-grp { font-family: var(--font-mono); font-size: 12.5px; font-weight: 700; letter-spacing: 0.08em; fill: var(--text); text-transform: uppercase; }
+  .sv-grp--sub { font-family: var(--font-mono); font-size: 11px; font-weight: 400; letter-spacing: 0.04em; fill: var(--text-muted); text-transform: none; }
+  .sv-title { font-family: var(--font-mono); font-size: 16px; font-weight: 700; fill: var(--text); letter-spacing: 0.01em; }
+  .sv-sub { font-family: var(--font-mono); font-size: 13px; font-weight: 400; fill: var(--text-dim); letter-spacing: 0.01em; }
+  .sv-arrow { fill: none; stroke: var(--arr-color); stroke-width: 2; stroke-linejoin: round; stroke-linecap: round; }
+  .sv-arrow-d { fill: none; stroke: var(--arr-color); stroke-width: 2; stroke-dasharray: 3 3; stroke-linejoin: round; stroke-linecap: round; }
+  .sv-arrow--strong { fill: none; stroke: var(--arr-color-strong); stroke-width: 2.75; stroke-linejoin: round; stroke-linecap: round; }
+  .sv-box-storage { stroke: var(--storage); } .sv-box-compute { stroke: var(--compute); } .sv-box-model { stroke: var(--model); }
+  .sv-arrow-lbl { font-family: var(--font-mono); font-size: 12px; font-weight: 700; fill: var(--text); letter-spacing: 0.01em; }
+  .sv-pill { fill: var(--bg); }
+  .legend { display: flex; flex-wrap: wrap; gap: 10px 26px; margin-top: 14px; }
+  .legend-item { display: flex; align-items: center; gap: 8px; font-family: var(--font-mono); font-size: 11.5px; color: var(--text-dim); }
+  .legend-swatch { width: 12px; height: 12px; border-radius: 3px; border: 1.5px solid currentColor; flex-shrink: 0; }
+  .fig-caption { font-size: 13.5px; color: var(--text-faint); max-width: 780px; margin-top: 12px; line-height: 1.6; }
+  .fig-caption b { color: var(--text-dim); font-weight: 600; }
+
+  .table-wrap { margin-top: 16px; overflow-x: auto; background: var(--surface); border: 1px solid var(--border); border-radius: 12px; }
+  table.data-table { width: 100%; border-collapse: collapse; font-size: 14px; min-width: 520px; }
+  .data-table th { font-family: var(--font-mono); font-size: 10.5px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; text-align: left; padding: 12px 16px; color: var(--text-faint); background: var(--surface2); border-bottom: 1px solid var(--border); }
+  .data-table td { padding: 12px 16px; border-bottom: 1px solid var(--border); vertical-align: top; color: var(--text-dim); line-height: 1.55; }
+  .data-table tr:last-child td { border-bottom: none; }
+  .data-table td:first-child { color: var(--text); font-weight: 600; }
+  .data-table td .tag { font-family: var(--font-mono); font-size: 11px; font-weight: 700; letter-spacing: 0.04em; color: var(--metric); }
+  .data-table td .tag.consume { color: var(--slate); }
+  .data-table td .date { font-family: var(--font-mono); font-size: 12.5px; font-weight: 700; color: var(--primary); white-space: nowrap; }
+  .table-caption { font-size: 13.5px; color: var(--text-faint); max-width: 780px; margin-top: 12px; line-height: 1.6; }
+  .table-caption b { color: var(--text-dim); font-weight: 600; }
+
+  .pull { border-left: 3px solid var(--primary); background: var(--surface); border-radius: 0 12px 12px 0; padding: 22px 26px; margin: 22px 0 18px; }
+  .pull p { font-size: 24px; font-weight: 800; letter-spacing: -0.4px; line-height: 1.3; color: var(--text); max-width: 720px; margin: 0; }
+
+  .split { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-top: 20px; }
+  .card { background: var(--surface); border: 1px solid var(--border); border-top: 3px solid var(--border-bright); border-radius: 12px; padding: 18px 20px; min-width: 0; }
+  .card.organic { border-top-color: var(--metric); }
+  .card.deliberate { border-top-color: var(--primary); }
+  .card .ck { font-family: var(--font-mono); font-size: 11px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; color: var(--text-faint); margin-bottom: 8px; }
+  .card.organic .ck { color: var(--metric); }
+  .card.deliberate .ck { color: var(--primary); }
+  .card p { font-size: 14px; color: var(--text-dim); margin: 0; }
+  .card p b { color: var(--text); font-weight: 700; }
+
+  .callout { margin-top: 20px; background: var(--primary-dim); border: 1px solid var(--border-bright); border-left: 3px solid var(--primary); border-radius: 0 12px 12px 0; padding: 16px 22px; }
+  .callout p { font-size: 16px; font-weight: 700; color: var(--text); margin: 0; max-width: 780px; }
+
+  .footer { margin-top: 52px; padding-top: 18px; border-top: 1px solid var(--border); font-size: 13px; color: var(--text-faint); }
+  .footer a { color: var(--text-dim); text-decoration: none; }
+  .footer a:hover { color: var(--text); text-decoration: underline; }
+
+  @media (max-width: 860px) { .split { grid-template-columns: 1fr; } }
+  @media (max-width: 640px) {
+    .container { padding: 28px 16px 64px; }
+    .hero h1 { font-size: 30px; }
+    .hero .deck { font-size: 17px; }
+    h2 { font-size: 22px; }
+    .subnav { padding: 6px 14px; }
+    .subnav .sp { font-size: 11px; padding: 4px 10px; }
+    .pull p { font-size: 19px; }
+  }
+  @media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation-duration: 0.01ms !important; animation-iteration-count: 1 !important; } }
+</style>
+</head>
+<body>
+<div class="nav">
+  <div class="nav-inner">
+    <nav class="crumbs" aria-label="Breadcrumb">
+      <a href="../index.html">Index</a>
+      <span class="sep">/</span>
+      <a href="index.html">Legal</a>
+      <span class="sep">/</span>
+      <span class="current" aria-current="page">Harbor Alignment</span>
+    </nav>
+    <button class="theme-toggle" id="themeToggle" type="button" aria-label="Toggle light and dark theme">&#9788;</button>
+  </div>
+  <div class="subnav">
+    <a class="sp" href="legal-ai-os-overview.html">Legal AI OS</a>
+    <a class="sp" href="legal-os-full-platform.html">Full platform</a>
+    <a class="sp" href="legal-os-radar.html">Fault-Line Radar</a>
+    <span class="sp cur" aria-current="page">Harbor alignment</span>
+  </div>
+</div>
+
+<div class="container">
+
+  <div class="hero">
+    <div class="kicker">Legal AI OS &middot; alignment</div>
+    <h1>The same arc, arrived at twice</h1>
+    <p class="deck">Two lifecycle models built independently, three months apart. One describes what a legal AI practice does. The other computes what a firm should do next. They agree on the shape. They disagree on three things, and the disagreements are the interesting part.</p>
+  </div>
+
+  <section class="sec">
+    <div class="secnum">01 &middot; the lifecycle</div>
+    <h2>The lifecycle</h2>
+    <p>AESOP runs on seven stages. Harbor's service framework runs on three bands. Put them side by side and the stages sort themselves into the bands with almost no arguing.</p>
+    <p>Two stages land in Advise. Two land in Implement. Three land in Manage. The line between Design and Build is the same line Harbor draws between advising and doing.</p>
+
+    <div class="figure">
+      <div class="svg-wrap">
+        <svg viewBox="0 0 672 736" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Seven AESOP lifecycle stages mapped onto three Harbor service bands: Advise, Implement, Manage">
+<defs>
+  <marker id="arr" viewBox="0 0 10 10" refX="9.5" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M 0 0 L 10 5 L 0 10 z" style="fill:var(--arr-color)"></path></marker>
+  <marker id="arrStrong" viewBox="0 0 10 10" refX="9.5" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M 0 0 L 10 5 L 0 10 z" style="fill:var(--arr-color-strong)"></path></marker>
+</defs>
+<rect x="34" y="38" width="260" height="674" rx="12" style="fill:var(--surface2);stroke:var(--text-muted)" stroke-width="1.5"></rect>
+<rect x="46" y="48" width="144.9" height="26" rx="7" style="fill:var(--surface)"></rect>
+<text class="sv-grp" x="118.45" y="65" text-anchor="middle">AESOP lifecycle</text>
+<rect x="392" y="82" width="260" height="542" rx="12" style="fill:var(--surface2);stroke:var(--text-muted)" stroke-width="1.5"></rect>
+<rect x="404" y="92" width="120.72" height="26" rx="7" style="fill:var(--surface)"></rect>
+<text class="sv-grp" x="464.36" y="109" text-anchor="middle">Harbor bands</text>
+<rect x="60" y="90" width="208" height="64" rx="8" class="sv-box-storage" style="fill:var(--storage);fill-opacity:0.13" stroke-width="1.5"></rect>
+<text class="sv-title" x="164" y="110.5" text-anchor="middle" style="fill:var(--storage)">Discover</text>
+<text class="sv-sub" x="164" y="132.5" text-anchor="middle">frame the problem</text>
+<rect x="60" y="178" width="208" height="64" rx="8" class="sv-box-storage" style="fill:var(--storage);fill-opacity:0.13" stroke-width="1.5"></rect>
+<text class="sv-title" x="164" y="198.5" text-anchor="middle" style="fill:var(--storage)">Design</text>
+<text class="sv-sub" x="164" y="220.5" text-anchor="middle">spec the build</text>
+<rect x="60" y="266" width="208" height="64" rx="8" class="sv-box-compute" style="fill:var(--compute);fill-opacity:0.13" stroke-width="1.5"></rect>
+<text class="sv-title" x="164" y="286.5" text-anchor="middle" style="fill:var(--compute)">Build</text>
+<text class="sv-sub" x="164" y="308.5" text-anchor="middle">ship the system</text>
+<rect x="60" y="354" width="208" height="64" rx="8" class="sv-box-compute" style="fill:var(--compute);fill-opacity:0.13" stroke-width="1.5"></rect>
+<text class="sv-title" x="164" y="374.5" text-anchor="middle" style="fill:var(--compute)">Operationalize</text>
+<text class="sv-sub" x="164" y="396.5" text-anchor="middle">put it to work</text>
+<rect x="60" y="442" width="208" height="64" rx="8" class="sv-box-model" style="fill:var(--model);fill-opacity:0.13" stroke-width="1.5"></rect>
+<text class="sv-title" x="164" y="462.5" text-anchor="middle" style="fill:var(--model)">Evaluate</text>
+<text class="sv-sub" x="164" y="484.5" text-anchor="middle">score the output</text>
+<rect x="60" y="530" width="208" height="64" rx="8" class="sv-box-model" style="fill:var(--model);fill-opacity:0.13" stroke-width="1.5"></rect>
+<text class="sv-title" x="164" y="550.5" text-anchor="middle" style="fill:var(--model)">Repair</text>
+<text class="sv-sub" x="164" y="572.5" text-anchor="middle">fix what failed</text>
+<rect x="60" y="618" width="208" height="64" rx="8" class="sv-box-model" style="fill:var(--model);fill-opacity:0.13" stroke-width="1.5"></rect>
+<text class="sv-title" x="164" y="638.5" text-anchor="middle" style="fill:var(--model)">Track</text>
+<text class="sv-sub" x="164" y="660.5" text-anchor="middle">watch it hold</text>
+<rect x="418" y="134" width="208" height="64" rx="8" class="sv-box-storage" style="fill:var(--storage);fill-opacity:0.13" stroke-width="1.5"></rect>
+<text class="sv-title" x="522" y="154.5" text-anchor="middle" style="fill:var(--storage)">Advise</text>
+<text class="sv-sub" x="522" y="176.5" text-anchor="middle">Harbor band 1</text>
+<rect x="418" y="310" width="208" height="64" rx="8" class="sv-box-compute" style="fill:var(--compute);fill-opacity:0.13" stroke-width="1.5"></rect>
+<text class="sv-title" x="522" y="330.5" text-anchor="middle" style="fill:var(--compute)">Implement</text>
+<text class="sv-sub" x="522" y="352.5" text-anchor="middle">Harbor band 2</text>
+<rect x="418" y="530" width="208" height="64" rx="8" class="sv-box-model" style="fill:var(--model);fill-opacity:0.13" stroke-width="1.5"></rect>
+<text class="sv-title" x="522" y="550.5" text-anchor="middle" style="fill:var(--model)">Manage</text>
+<text class="sv-sub" x="522" y="572.5" text-anchor="middle">Harbor band 3</text>
+<path class="sv-arrow" d="M 268 122 L 293 122 Q 304 122 304 133 L 304 145 Q 304 156 315 156 L 418 156" marker-end="url(#arr)" stroke-width="2"></path>
+<path class="sv-arrow" d="M 268 210 L 309 210 Q 320 210 320 199 L 320 187 Q 320 176 331 176 L 418 176" marker-end="url(#arr)" stroke-width="2"></path>
+<path class="sv-arrow" d="M 268 298 L 293 298 Q 304 298 304 309 L 304 321 Q 304 332 315 332 L 418 332" marker-end="url(#arr)" stroke-width="2"></path>
+<path class="sv-arrow" d="M 268 386 L 309 386 Q 320 386 320 375 L 320 363 Q 320 352 331 352 L 418 352" marker-end="url(#arr)" stroke-width="2"></path>
+<path class="sv-arrow" d="M 268 474 L 293 474 Q 304 474 304 485 L 304 535 Q 304 546 315 546 L 418 546" marker-end="url(#arr)" stroke-width="2"></path>
+<path class="sv-arrow" d="M 268 562 L 418 562" marker-end="url(#arr)" stroke-width="2"></path>
+<path class="sv-arrow" d="M 268 650 L 325 650 Q 336 650 336 639 L 336 589 Q 336 578 347 578 L 418 578" marker-end="url(#arr)" stroke-width="2"></path>
+</svg>
+      </div>
+      <div class="legend">
+        <span class="legend-item"><span class="legend-swatch" style="color:var(--storage)"></span>Advise band</span>
+        <span class="legend-item"><span class="legend-swatch" style="color:var(--compute)"></span>Implement band</span>
+        <span class="legend-item"><span class="legend-swatch" style="color:var(--model)"></span>Manage band</span>
+      </div>
+      <p class="fig-caption">Seven stages against three bands. The correspondence is close enough to be meaningful and loose enough to be real.</p>
+    </div>
+  </section>
+
+  <section class="sec">
+    <div class="secnum">02 &middot; the operating model</div>
+    <h2>The operating model</h2>
+    <p>Harbor names five capabilities in its Enterprise AI Operating Model. Every one of them already has a home in AESOP. The two lists were written without reference to each other.</p>
+
+    <div class="table-wrap">
+      <table class="data-table">
+        <thead>
+          <tr><th scope="col">Harbor's capability</th><th scope="col">AESOP equivalent</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>AI Strategy: define outcomes before buying</td><td>Metrics before build; problems before solutions</td></tr>
+          <tr><td>Measure what matters</td><td>Certification bands, deterministic scoring, eval harness</td></tr>
+          <tr><td>Invest with intention</td><td>Portfolio prioritization with a weighted score and a veto rule</td></tr>
+          <tr><td>Change behavior, not just technology</td><td>Working agreement, adoption plan with its own metrics</td></tr>
+          <tr><td>Build trust at the speed of innovation</td><td>Human-edit feedback loop, drift monitoring, go/no-go gates</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="table-caption">Also pre-contact. Two independent alignments is a pattern, not a coincidence.</p>
+  </section>
+
+  <section class="sec">
+    <div class="secnum">03 &middot; the artifact</div>
+    <h2>The artifact</h2>
+    <p>Harbor publishes a list of what an Advise engagement delivers. The roadmap generator produces some of those items from scratch and reads the rest as inputs. The split is clean.</p>
+
+    <div class="table-wrap">
+      <table class="data-table">
+        <thead>
+          <tr><th scope="col">Harbor's Advise deliverable</th><th scope="col">Generator</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>Readiness assessment</td><td><span class="tag consume">Consumed as input</span></td></tr>
+          <tr><td>Use-case identification and prioritization</td><td><span class="tag">Generated</span></td></tr>
+          <tr><td>Workflow and process analysis</td><td><span class="tag consume">Consumed as input</span></td></tr>
+          <tr><td>Technology and model evaluation</td><td><span class="tag">Generated, with per-claim provenance tiers</span></td></tr>
+          <tr><td>Governance and risk frameworks</td><td><span class="tag">Generated, from advisory GOVERN verdicts</span></td></tr>
+          <tr><td>Deployment roadmap</td><td><span class="tag">Generated</span></td></tr>
+          <tr><td>Business case and success measures</td><td><span class="tag">Generated, via the AI Profit Paradox</span></td></tr>
+          <tr><td>Operating model design</td><td><span class="tag">Generated, as the roadmap's Manage band</span></td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="table-caption">Items two, four, six and seven are generated. The rest are consumed. The taxonomy is Harbor's, not invented.</p>
+  </section>
+
+  <section class="sec">
+    <div class="secnum">04 &middot; where the models diverge</div>
+    <h2>Where the models diverge</h2>
+    <p>A perfect match would be suspicious. These two models were built by different people for different jobs, and the seams show in three places.</p>
+
+    <h3>Granularity</h3>
+    <p>Harbor's model is three bands, sized for a service organization to describe itself. AESOP's is seven stages with gates between them.</p>
+    <p>Seven stages means seven places to stop and check. The gates are the product, not the stages.</p>
+
+    <h3>The loop</h3>
+    <p>Harbor's Advise &rarr; Implement &rarr; Manage reads sequential. AESOP's Evaluate &rarr; Repair &rarr; Track is a loop, and the Fault-Line Radar instruments the market half of it. Harbor sells model and platform evaluation as an episode, appearing once in Advise and again in Manage.</p>
+    <p>Nothing in the published framework says <b>when</b> to re-evaluate. The Radar does.</p>
+
+    <h3>Service model versus machine</h3>
+    <p>Harbor's framework describes what good practitioners do. The generator computes what should happen. Complementary, not competing.</p>
+    <p>Harbor does not need a machine that replaces consultants. It needs one that makes their judgment explicit, replayable, and inheritable.</p>
+  </section>
+
+  <section class="sec">
+    <div class="secnum">05 &middot; the asymmetry</div>
+    <h2>The asymmetry</h2>
+    <div class="pull">
+      <p>The machine exists. The knowledge does not have a home.</p>
+    </div>
+    <p>Harbor's enablement teams have run AI adoption, training and change management inside law firms, including Magic Circle firms. The knowledge is real and it is the asset. What it lacks is a structured place to live and a way to be deployed against a specific client's facts.</p>
+    <p>The generator has the opposite problem: a working machine with generic knowledge and no proprietary base to draw on.</p>
+    <p>Neither is a product alone.</p>
+  </section>
+
+  <section class="sec">
+    <div class="secnum">06 &middot; what is organic and what is deliberate</div>
+    <h2>What is organic and what is deliberate</h2>
+    <p>The timeline matters, because it separates two different claims. One is that the thinking converged on its own. The other is that some of it was built to match.</p>
+
+    <div class="table-wrap">
+      <table class="data-table">
+        <thead>
+          <tr><th scope="col">Date</th><th scope="col">Event</th></tr>
+        </thead>
+        <tbody>
+          <tr><td><span class="date">2026-05-17 or earlier</span></td><td>AESOP lifecycle exists. Earliest repo history is a merge commit; the lifecycle predates it</td></tr>
+          <tr><td><span class="date">2026-08</span></td><td>Harbor Deploy launches</td></tr>
+          <tr><td><span class="date">2026-08-25</span></td><td>Harbor's Operationalizing AI report published</td></tr>
+          <tr><td><span class="date">2026-09-01</span></td><td>Eudia / Harbor partnership announced</td></tr>
+          <tr><td><span class="date">2026-09-05</span></td><td>Fault-Line Radar lands in legal-os</td></tr>
+          <tr><td><span class="date">2026-09-07</span></td><td>radar/advisory.py, the four-effect-order model</td></tr>
+          <tr><td><span class="date">2026-09-11</span></td><td>The roadmap generator design begins</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="split">
+      <div class="card organic">
+        <div class="ck">Organic convergence</div>
+        <p>The AESOP lifecycle predates Harbor's published framework by roughly three months. Same arc, arrived at independently.</p>
+      </div>
+      <div class="card deliberate">
+        <div class="ck">Deliberate alignment</div>
+        <p>The Radar and advisory.py postdate Harbor Deploy. The roadmap generator is explicitly shaped to Harbor's Advise deliverable list.</p>
+      </div>
+    </div>
+
+    <div class="callout">
+      <p>Do not blur those. The first is evidence of thinking. The second is evidence of listening.</p>
+    </div>
+  </section>
+
+  <div class="footer">&copy; 2025&ndash;2026 Charlie Fuller &middot; part of the legal-os platform &middot; <a href="https://www.linkedin.com/in/charlie-fuller-colorado/" target="_blank" rel="noopener">LinkedIn</a></div>
+</div>
+
+<script>
+(function () {
+  "use strict";
+  var root = document.documentElement;
+  var btn = document.getElementById('themeToggle');
+  var SUN = '\u263C', MOON = '\u263E';
+  function paint() {
+    var light = root.classList.contains('light');
+    btn.textContent = light ? MOON : SUN;
+    btn.setAttribute('aria-label', light ? 'Switch to dark theme' : 'Switch to light theme');
+  }
+  btn.addEventListener('click', function () {
+    root.classList.toggle('light');
+    try { localStorage.setItem('diagram-theme', root.classList.contains('light') ? 'light' : 'dark'); } catch (e) {}
+    paint();
+  });
+  paint();
+})();
+</script>
+</body>
+</html>
