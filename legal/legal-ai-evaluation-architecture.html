@@ -128,9 +128,16 @@
   .mermaid-wrap::-webkit-scrollbar-track { background:transparent; }
   .mermaid-wrap::-webkit-scrollbar-thumb { background:var(--border); border-radius:3px; }
 
-  .mermaid .nodeLabel { font-family: var(--font-display) !important; font-size: 15px !important; }
-  .mermaid .edgeLabel { font-family: var(--font-mono) !important; font-size: 11px !important; }
+  .mermaid .nodeLabel { font-family: var(--font-display) !important; font-size: 15px !important; color: var(--text) !important; }
+  .mermaid .edgeLabel { font-family: var(--font-mono) !important; font-size: 11px !important; color: var(--text-dim) !important; }
+  .mermaid .edgeLabel span { color: var(--text-dim) !important; }
+  .mermaid .edgeLabel rect, .mermaid .edgeLabel .labelBkg { fill: var(--surface) !important; }
+  .mermaid .marker { fill: var(--text-muted) !important; stroke: var(--text-muted) !important; }
   .mermaid .node rect, .mermaid .node circle, .mermaid .node polygon { stroke-width: 1.5px !important; }
+
+  /* Mermaid paints text at init time from themeVariables; the classDef CSS bridge
+     below only overrides shape fill/stroke, so text needs its own override. */
+  .mermaid text { fill: var(--text) !important; }
 
   .mermaid g.input rect, .mermaid g.input polygon, .mermaid g.input circle { fill: var(--amber-dim) !important; stroke: var(--amber) !important; }
   .mermaid g.agent rect, .mermaid g.agent polygon, .mermaid g.agent circle { fill: var(--secondary-dim) !important; stroke: var(--secondary) !important; }
@@ -263,41 +270,41 @@
       <button onclick="resetZoom(this)" title="Reset">&#8634;</button>
     </div>
     <pre class="mermaid">
-      flowchart TD
-        A["Agent output in production"] --> B["Programmatic checks"]
-        A --> C["Independent rubric scorers"]
-        A --> D["Sampled traces for human review"]
+flowchart TD
+  A["Agent output in production"] --> B["Programmatic checks"]
+  A --> C["Independent rubric scorers"]
+  A --> D["Sampled traces for human review"]
 
-        B --> E["Weighted score"]
-        C --> E
+  B --> E["Weighted score"]
+  C --> E
 
-        D --> F["Open coding by a reviewer"]
-        F --> G["Axial coding into failure categories"]
+  D --> F["Open coding by a reviewer"]
+  F --> G["Axial coding into failure categories"]
 
-        E --> H{"Any Tier 1 below 75"}
-        H -->|"Yes"| I["Capped at 74.9. Cannot certify."]
-        H -->|"No"| J["Certification band awarded"]
+  E --> H{"Any Tier 1 below 75"}
+  H -->|"Yes"| I["Capped at 74.9. Cannot certify."]
+  H -->|"No"| J["Certification band awarded"]
 
-        I --> K["Instruction rewrite"]
-        G --> K
-        K --> A
+  I --> K["Instruction rewrite"]
+  G --> K
+  K --> A
 
-        classDef input fill:rgba(180,83,9,0.08),stroke:#b45309,stroke-width:2px,color:#0a1628
-        classDef agent fill:rgba(74,144,196,0.08),stroke:#4a90c4,stroke-width:2px,color:#0a1628
-        classDef research fill:rgba(124,58,237,0.08),stroke:#7c3aed,stroke-width:2px,color:#0a1628
-        classDef gate fill:rgba(180,83,9,0.08),stroke:#b45309,stroke-width:2px,color:#0a1628
-        classDef closed fill:rgba(225,29,72,0.08),stroke:#e11d48,stroke-width:2px,color:#0a1628
-        classDef output fill:rgba(15,118,110,0.06),stroke:#0f766e,stroke-width:2px,color:#0a1628
-        classDef flow fill:rgba(232,98,26,0.08),stroke:#e8621a,stroke-width:2px,color:#0a1628
+  classDef input fill:#342a24,stroke:#D9A05B,stroke-width:2px,color:#F5F2F1
+  classDef agent fill:#341d25,stroke:#B83159,stroke-width:2px,color:#F5F2F1
+  classDef research fill:#332a30,stroke:#C9A3B8,stroke-width:2px,color:#F5F2F1
+  classDef gate fill:#342a24,stroke:#D9A05B,stroke-width:2px,color:#F5F2F1
+  classDef closed fill:#36242a,stroke:#E36C89,stroke-width:2px,color:#F5F2F1
+  classDef output fill:#262e2c,stroke:#5FBF9B,stroke-width:2px,color:#F5F2F1
+  classDef flow fill:#362a2f,stroke:#E39CB2,stroke-width:2px,color:#F5F2F1
 
-        class A input
-        class B,C agent
-        class D,F,G research
-        class E flow
-        class H gate
-        class I closed
-        class J output
-        class K flow
+  class A input
+  class B,C agent
+  class D,F,G research
+  class E flow
+  class H gate
+  class I closed
+  class J output
+  class K flow
     </pre>
   </div>
 
@@ -388,22 +395,24 @@
   </div>
 </div>
 
-<script type="module">
-  import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs';
-  const isDark = document.documentElement.classList.contains('light');
+<script src="https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.min.js"></script>
+<script>
+  // UMD build, not the ESM module: a type="module" script is deferred, so it runs
+  // after DOMContentLoaded and startOnLoad never fires. The sync build catches it.
   mermaid.initialize({
     startOnLoad: true, theme: 'base', look: 'classic',
     themeVariables: {
-      primaryColor: isDark ? '#132240' : '#f5f8fc',
-      primaryBorderColor: isDark ? '#f37021' : '#e8621a',
-      primaryTextColor: isDark ? '#e8edf5' : '#0a1628',
-      secondaryColor: isDark ? '#132240' : '#ffffff',
-      secondaryBorderColor: isDark ? '#6cace4' : '#4a90c4',
-      secondaryTextColor: isDark ? '#e8edf5' : '#0a1628',
-      tertiaryColor: isDark ? '#132240' : '#ffffff',
-      tertiaryBorderColor: isDark ? '#2dd4bf' : '#0f766e',
-      tertiaryTextColor: isDark ? '#e8edf5' : '#0a1628',
-      lineColor: isDark ? '#5e7aa3' : '#7a9ab8',
+      primaryColor: '#262024',
+      primaryBorderColor: '#E39CB2',
+      primaryTextColor: '#F5F2F1',
+      secondaryColor: '#262024',
+      secondaryBorderColor: '#B83159',
+      secondaryTextColor: '#F5F2F1',
+      tertiaryColor: '#262024',
+      tertiaryBorderColor: '#5FBF9B',
+      tertiaryTextColor: '#F5F2F1',
+      lineColor: '#948E8C',
+      edgeLabelBackground: '#1E1A1D',
       fontSize: '15px', fontFamily: "'Mulish', sans-serif",
     }
   });
