@@ -128,17 +128,22 @@
   .mermaid-wrap::-webkit-scrollbar-track { background:transparent; }
   .mermaid-wrap::-webkit-scrollbar-thumb { background:var(--border); border-radius:3px; }
 
+  /* Force node/edge text to follow the page color scheme. themeVariables covers
+     default nodes, but a classDef that sets color: hardcodes one value that breaks
+     in the opposite scheme — so no classDef sets color:, and these carry it. */
   .mermaid .nodeLabel { font-family: var(--font-display) !important; font-size: 15px !important; color: var(--text) !important; }
-  .mermaid .edgeLabel { font-family: var(--font-mono) !important; font-size: 11px !important; color: var(--text-dim) !important; }
-  .mermaid .edgeLabel span { color: var(--text-dim) !important; }
-  .mermaid .edgeLabel rect, .mermaid .edgeLabel .labelBkg { fill: var(--surface) !important; }
-  .mermaid .marker { fill: var(--text-muted) !important; stroke: var(--text-muted) !important; }
+  .mermaid .edgeLabel { font-family: var(--font-mono) !important; font-size: 11px !important; color: var(--text-dim) !important; background-color: var(--bg) !important; }
+  .mermaid .edgeLabel rect { fill: var(--bg) !important; }
+  .mermaid .edgeLabel .labelBkg { background-color: var(--bg) !important; }
+
   .mermaid .node rect, .mermaid .node circle, .mermaid .node polygon { stroke-width: 1.5px !important; }
+  .mermaid .edge-pattern-solid { stroke-width: 1.5px; }
 
-  /* Mermaid paints text at init time from themeVariables; the classDef CSS bridge
-     below only overrides shape fill/stroke, so text needs its own override. */
-  .mermaid text { fill: var(--text) !important; }
-
+  /* NOTE: Mermaid 11 emits classDef as an inline style with !important on the shape
+     element, and inline !important beats stylesheet !important. These class bridges
+     therefore do NOT apply — they are inert. Node fill/stroke comes from the classDef
+     values in the diagram source, which are static and cannot read CSS variables.
+     Kept only in case Mermaid changes; do not tune --*-dim expecting an effect. */
   .mermaid g.input rect, .mermaid g.input polygon, .mermaid g.input circle { fill: var(--amber-dim) !important; stroke: var(--amber) !important; }
   .mermaid g.agent rect, .mermaid g.agent polygon, .mermaid g.agent circle { fill: var(--secondary-dim) !important; stroke: var(--secondary) !important; }
   .mermaid g.output rect, .mermaid g.output polygon, .mermaid g.output circle { fill: var(--metric-dim) !important; stroke: var(--metric) !important; }
@@ -285,13 +290,13 @@
         L --> M["Knowledge base repair"]
         M --> D
 
-        classDef input fill:#342a24,stroke:#D9A05B,stroke-width:2px,color:#F5F2F1
-        classDef closed fill:#36242a,stroke:#E36C89,stroke-width:2px,color:#F5F2F1
-        classDef agent fill:#341d25,stroke:#B83159,stroke-width:2px,color:#F5F2F1
-        classDef flow fill:#362a2f,stroke:#E39CB2,stroke-width:2px,color:#F5F2F1
-        classDef gate fill:#342a24,stroke:#D9A05B,stroke-width:2px,color:#F5F2F1
-        classDef output fill:#262e2c,stroke:#5FBF9B,stroke-width:2px,color:#F5F2F1
-        classDef research fill:#332a30,stroke:#C9A3B8,stroke-width:2px,color:#F5F2F1
+        classDef input fill:#B07C2E20,stroke:#B07C2E,stroke-width:2px
+        classDef closed fill:#C4506B20,stroke:#C4506B,stroke-width:2px
+        classDef agent fill:#A4093F20,stroke:#A4093F,stroke-width:2px
+        classDef flow fill:#B8315920,stroke:#B83159,stroke-width:2px
+        classDef gate fill:#B07C2E20,stroke:#B07C2E,stroke-width:2px
+        classDef output fill:#1E8A6A20,stroke:#1E8A6A,stroke-width:2px
+        classDef research fill:#8A5A7620,stroke:#8A5A76,stroke-width:2px
 
         class A input
         class B,C closed
@@ -386,20 +391,34 @@
 <script>
   // UMD build, not the ESM module: a type="module" script is deferred, so it runs
   // after DOMContentLoaded and startOnLoad never fires. The sync build catches it.
+  // Mermaid initializes once and can't react, so read the theme at load time from
+  // the html.light class (repo convention — never matchMedia).
+  const isLight = document.documentElement.classList.contains('light');
   mermaid.initialize({
     startOnLoad: true, theme: 'base', look: 'classic',
-    themeVariables: {
-      primaryColor: '#262024',
+    themeVariables: isLight ? {
+      primaryColor: '#FFFFFF',
+      primaryBorderColor: '#B83159',
+      primaryTextColor: '#171416',
+      secondaryColor: '#FFFFFF',
+      secondaryBorderColor: '#A4093F',
+      secondaryTextColor: '#171416',
+      tertiaryColor: '#FFFFFF',
+      tertiaryBorderColor: '#1E8A6A',
+      tertiaryTextColor: '#171416',
+      lineColor: '#8A8481',
+      fontSize: '15px', fontFamily: "'Mulish', sans-serif",
+    } : {
+      primaryColor: '#1E1A1D',
       primaryBorderColor: '#E39CB2',
       primaryTextColor: '#F5F2F1',
-      secondaryColor: '#262024',
+      secondaryColor: '#1E1A1D',
       secondaryBorderColor: '#B83159',
       secondaryTextColor: '#F5F2F1',
-      tertiaryColor: '#262024',
+      tertiaryColor: '#1E1A1D',
       tertiaryBorderColor: '#5FBF9B',
       tertiaryTextColor: '#F5F2F1',
       lineColor: '#948E8C',
-      edgeLabelBackground: '#1E1A1D',
       fontSize: '15px', fontFamily: "'Mulish', sans-serif",
     }
   });
