@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <link rel="icon" type="image/svg+xml" href="../icon.svg">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<meta name="description" content="The Fault-Line Radar reads four streams of information and turns them into predictions about which legal-AI duty will fire next. The more streams that corroborate a fault line, the stronger the call.">
+<meta name="description" content="The Fault-Line Radar reads four streams of information and ranks the eleven legal-AI fault lines by what the record already shows. The more streams that corroborate a line, the better supported its reading.">
 <title>Legal AI OS — Fault-Line Radar (the streams)</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -104,9 +104,9 @@
 
 <div class="container">
   <div class="hero">
-    <div class="kicker">Legal AI OS &middot; prediction engine</div>
+    <div class="kicker">Legal AI OS &middot; governance record</div>
     <h1>The streams</h1>
-    <p class="deck">Four streams of evidence feed eleven fault-line predictions. The more streams that point at the same fault line, the stronger the call &mdash; so a prediction's bar is built out of its streams. One colour means one source agrees; four colours means the engine is sure.</p>
+    <p class="deck">Four streams of evidence feed eleven ranked fault lines. The more streams that point at the same line, the better supported the reading &mdash; so a line's bar is built out of its streams. One colour means one source agrees; four colours means the engine is sure.</p>
   </div>
 
   <div class="figure">
@@ -121,7 +121,7 @@
       </div>
     </div>
 
-    <p class="fig-caveat" id="caveat">Ribbon width is an item's mass split across the calls it serves, not a head-count &mdash; one item can feed several fault lines. Hover a stream or a prediction to trace where its evidence lands.</p>
+    <p class="fig-caveat" id="caveat">Ribbon width is an item's mass split across the calls it serves, not a head-count &mdash; one item can feed several fault lines. Hover a stream or a line to trace where its evidence lands.</p>
   </div>
 
   <div class="footer">&copy; 2025&ndash;2026 Charlie Fuller &middot; part of the legal-os platform &middot; <a href="https://www.linkedin.com/in/charlie-fuller-colorado/" target="_blank" rel="noopener">LinkedIn</a></div>
@@ -149,7 +149,7 @@
   ];
 
   // Ordered by queue, descending — row order IS the ranking.
-  const PREDICTIONS = [
+  const LINES = [
 { name: 'verification', def: 'Checking that what the AI wrote is true before it reaches a court or a client.',      queue: 8.6, control: 'Documented verification + trace logs', cells: { rules: 13, vendors: 3, capability: 3, market: 4 } },
 { name: 'competence', def: 'Knowing the tool well enough to catch it being quietly wrong.',        queue: 7.9, control: 'Firm-wide training + governance program', cells: { rules: 5, capability: 5, market: 4 } },
 { name: 'disclosure', def: 'Saying when AI helped produce the work.',        queue: 7.6, control: 'Verification-by-default with an audit trail', cells: { rules: 9, market: 1 } },
@@ -192,7 +192,7 @@
       y += rails[s.id].h + L.railGap;
     });
 
-    const rows = PREDICTIONS.map((p, i) => {
+    const rows = LINES.map((p, i) => {
       const rowY = L.rowTop + i * L.rowH;
       const total = Object.values(p.cells).reduce((a, b) => a + b, 0);
       const barH = 10 + p.queue * 2.6;
@@ -213,7 +213,7 @@
     rows.forEach(r => {
       let ay = r.barY;                              // arrival order == segment order => no crossing at the join
       r.active.forEach(s => {
-        const streamTotal = PREDICTIONS.reduce((a, q) => a + (q.cells[s.id] || 0), 0);
+        const streamTotal = LINES.reduce((a, q) => a + (q.cells[s.id] || 0), 0);
         const w1 = (r.cells[s.id] / streamTotal) * rails[s.id].h;
         const w2 = (r.cells[s.id] / r.total) * r.barH;
         const y0 = cursor[s.id], y1 = y0 + w1, y2 = ay, y3 = ay + w2;
@@ -231,7 +231,7 @@
     const { rails, rows, ribbons } = layout();
     const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
 
-    const svg = el('svg', { viewBox: '0 0 ' + L.W + ' ' + L.H, style: 'width:100%;height:auto;display:block', role: 'img', 'aria-label': 'Four evidence streams feeding eleven ranked fault-line predictions' });
+    const svg = el('svg', { viewBox: '0 0 ' + L.W + ' ' + L.H, style: 'width:100%;height:auto;display:block', role: 'img', 'aria-label': 'Four evidence streams feeding eleven ranked fault lines' });
 
     // ribbons (the flow) — wrapped so <720px can drop them
     const field = el('g', { class: 'board-ribbons' });
@@ -253,7 +253,7 @@
       g.__stream = s.id; railWrap.appendChild(g); return g;
     });
 
-    // prediction rows
+    // fault-line rows
     const rowNodes = rows.map(r => {
       const hit = el('g', { style: 'cursor:pointer', tabindex: '0', role: 'button', 'data-pred': r.name });
       hit.appendChild(el('rect', { x: 160, y: r.rowY, width: 1000, height: 56, fill: 'transparent' }));
@@ -297,7 +297,7 @@
   /* ---------- tooltips ---------- */
   function ribbonTT(sid, pid, n, streamItems, predTotal) {
     const s = STREAMS.find(z => z.id === sid);
-    const p = PREDICTIONS.find(z => z.name === pid);
+    const p = LINES.find(z => z.name === pid);
     const share = Math.round(n / predTotal * 100);
     return '<div class="tt-src">' + s.name + ' &rarr; ' + p.name + '</div>'
       + '<div class="tt-main">' + n + ' of ' + streamItems + ' ' + s.short + ' items · ' + share + '% of ' + p.name + '</div>'
@@ -310,9 +310,9 @@
       + '<div class="tt-sub">' + s.desc + ' &mdash; ' + s.contains + '</div>';
   }
   function predTT(pid) {
-    const p = PREDICTIONS.find(z => z.name === pid);
+    const p = LINES.find(z => z.name === pid);
     const n = STREAMS.filter(s => p.cells[s.id]).length;
-    return '<div class="tt-src">prediction · queue ' + p.queue.toFixed(1) + '</div>'
+    return '<div class="tt-src">line · queue ' + p.queue.toFixed(1) + '</div>'
       + '<div class="tt-main">' + p.name + '</div>'
       + '<div class="tt-def">' + p.def + '</div>'
       + '<div class="tt-sub">build: ' + p.control + '</div>'
