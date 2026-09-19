@@ -3,8 +3,8 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>AESOP Transformation OS &mdash; Where Jev Stops and Python Starts</title>
-<meta name="description" content="How AESOP moved its build pipeline off prose-scraping: structured decisions from Jev, Python-owned rubrics, and a prompt cache that finally hits.">
+<title>AESOP Transformation OS &mdash; Jev Judges, Python Does the Math</title>
+<meta name="description" content="AESOP split each decision in two: Jev reads and judges, Python does the arithmetic. What that made more predictable, less wasteful, and cheaper to run.">
 <link rel="icon" href="../icon.svg" type="image/svg+xml" />
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -142,7 +142,6 @@
 </style>
 </head>
 <body>
-
 <div class="nav">
   <div class="nav-inner">
     <nav class="crumbs" aria-label="Breadcrumb">
@@ -150,7 +149,7 @@
       <span class="sep">/</span>
       <a href="../aesop.html">AESOP</a>
       <span class="sep">/</span>
-      <span class="current" aria-current="page">Where Jev stops and Python starts</span>
+      <span class="current" aria-current="page">Jev judges, Python does the math</span>
     </nav>
   </div>
 </div>
@@ -158,173 +157,162 @@
 <div class="wrap">
   <header class="hero">
     <span class="hero-badge">The determinism pass &middot; September 2026</span>
-    <h1>Where Jev stops and Python starts</h1>
-    <p class="lede">The pipeline used to ask a model for an essay, then pay Python to read the essay back and guess at what it meant.<br>Not anymore. Here is what moved, what it cost, and what is still wrong with it.</p>
+    <h1>Jev judges. Python does the math.</h1>
+    <p class="lede">An AI is good at reading a messy situation and forming a judgement. It is unreliable at arithmetic, at following the same rule twice, and at saying the same thing in the same way.<br>So AESOP stopped asking it to do those things. The result is a pipeline that is more predictable, wastes less, and costs less to run.</p>
   </header>
 
 <details class="sec-wrap" open>
-  <summary class="sec"><span class="n">01</span> The defect <span class="hint">three ways the guessing showed up</span></summary>
+  <summary class="sec"><span class="n">01</span> What changed <span class="hint">the short version</span></summary>
   <div class="sec-body">
-  <p class="lead">None of these were hypothetical. Each one shipped, ran on real builds, and was found by reading the code against the output it produced.</p>
+  <p class="lead">Every stage of the build pipeline has to make decisions. Before this change, AESOP asked the AI to <b>write an assessment</b>, then paid a second program to read that assessment back and guess what it meant. Two problems: the program sometimes guessed wrong, and you were paying twice for one decision.</p>
+  <p class="lead">Now the AI does the part it is actually good at &mdash; reading the situation and picking a judgement from a fixed set of options &mdash; and hands every number, rule and threshold to ordinary code. Three things improved.</p>
   <div class="excards three">
-    <div class="excard">
-      <span class="k">Same answer, two verdicts</span>
-      <h3>Four parsers, two pipelines, no agreement</h3>
-      <p>Two copies of the verdict parsers had drifted. One excluded the words <b>blocker</b> and <b>blocking</b>; the other did not, so a sentence about the <i>absence</i> of blockers could read as a block. A second copy regexed a whole document for the word <b>fail</b>, so any mention anywhere returned <code>fail</code>.</p>
-      <p>The verdict gates a point where a human has to approve. The difference was not cosmetic.</p>
-    </div>
-    <div class="excard">
-      <span class="k">A number scraped from prose</span>
-      <h3>&ldquo;3/100&rdquo; became a score of 3.0</h3>
-      <p>A fallback pattern in the score extractor matched any number-over-100 anywhere in a report. &ldquo;We reviewed 3/100 documents&rdquo; wrote <code>3.0</code> into a score column. The fallback was defensible when written and wrong when read.</p>
-      <p>It is deleted now. Deleting it was the fix.</p>
-    </div>
-    <div class="excard">
-      <span class="k">Re-deriving what was already known</span>
-      <h3>One dict, three prose copies</h3>
-      <p>The discovery answers are clean JSON. They got flattened to markdown once, stored, then flattened <b>again</b> by the next stage and stored again, then copied a third time. Three encodings of one structured record, each re-parsed by whoever needed it.</p>
-      <p>No model was involved. It was still waste, and three places to drift.</p>
-    </div>
-  </div>
-  </div>
-</details>
-
-<details class="sec-wrap" open>
-  <summary class="sec"><span class="n">02</span> The rung ladder <span class="hint">how to pick where a decision lives</span></summary>
-  <div class="sec-body">
-  <p class="lead">Every decision in the pipeline sits on one of three rungs. The rung is not about how hard the decision is. It is about <b>who is allowed to make it</b>.</p>
-  <div class="excards three">
-    <div class="excard" style="border-top-color:var(--slate)">
-      <span class="k" style="color:var(--text-faint)">Rung 0 &middot; a rule</span>
-      <h3>Python decides</h3>
-      <p>Deterministic, cheap, instant, testable. It also <b>cannot read a paragraph</b>. A rule is only available when the input is already structured, and most of what arrives is not.</p>
-    </div>
-    <div class="excard" style="border-top-color:var(--warn)">
-      <span class="k" style="color:var(--warn)">Rung 1 &middot; prose</span>
-      <h3>The model writes, Python scrapes</h3>
-      <p>The model can read anything and promises nothing. You ask for a narrative, then hunt the verdict back out of it with a regular expression. <b>This is where the three defects above live.</b> It is the default because it is the easiest thing to write.</p>
+    <div class="excard" style="border-top-color:var(--good)">
+      <span class="k" style="color:var(--primary)">Predictable</span>
+      <h3>The same input gives the same answer</h3>
+      <p>One decision is now made in one place. Before, two separate copies of the same logic could read one answer and disagree &mdash; and that answer was what a person reviewed before approving the work.</p>
+      <p><b>And you can see why.</b> Every threshold is a number in code, not a sentence in a prompt.</p>
     </div>
     <div class="excard" style="border-top-color:var(--good)">
-      <span class="k" style="color:var(--primary)">Rung 2 &middot; a structured field</span>
-      <h3>The model judges, Python decides</h3>
-      <p>The model emits a closed label or a set of named numbers. Python branches on the label. The judgment stays with the model because it is genuinely a judgment; the <b>arithmetic and the rule order move to Python</b>, where they can be tested.</p>
+      <span class="k" style="color:var(--primary)">Efficient</span>
+      <h3>Less work is thrown away</h3>
+      <p>The pipeline was re-sending the same document to the AI on all seven steps, and paying full price every time. It now sends it once and the AI re-reads it from its own cache.</p>
+      <p><b>Roughly a third</b> of a build's input cost was going to repetition.</p>
+    </div>
+    <div class="excard" style="border-top-color:var(--good)">
+      <span class="k" style="color:var(--primary)">Auditable</span>
+      <h3>Numbers are counted, not read</h3>
+      <p>A score used to be pulled out of a paragraph by pattern-matching. One test document that said &ldquo;we reviewed 3/100 documents&rdquo; was recorded as a score of 3.</p>
+      <p><b>Code owns the arithmetic now.</b> The AI supplies the judgement; it does not supply the total.</p>
     </div>
   </div>
-
-  <h3 class="sub">The one rule that keeps rung 2 from drifting back</h3>
-  <p class="lead">When a numeric spec exists in Python, the prompt is <b>rendered from that spec</b>. The weight table, the thresholds, the band boundaries, the mandatory-fail list, all of it lives in one module and the prompt text is generated from it.</p>
-  <p class="lead">That is the whole trick. A prompt and a Python constant describing the same thresholds are two facts that happen to agree today. Render one from the other and they cannot disagree tomorrow.</p>
+  <div class="risk-note good-note" style="margin-top:16px"><span class="rn">The line to take away.</span> This was never about removing the AI. It was about being precise about <b>which half of a decision belongs to it</b>. Jev reads the situation. Python does the math. Mix those two up and you pay twice &mdash; once for the judgement, and again to guess what it meant.</div>
   </div>
 </details>
 
 <details class="sec-wrap" open>
-  <summary class="sec"><span class="n">03</span> One decision, before and after <span class="hint">the shape of the change</span></summary>
+  <summary class="sec"><span class="n">02</span> Why the old way was expensive <span class="hint">three things that actually went wrong</span></summary>
   <div class="sec-body">
+  <p class="lead">None of these are hypothetical. Each one ran in production and was found by comparing what the code did against what it was supposed to do.</p>
   <div class="svg-wrap">
-<svg viewBox="0 0 1280 580" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Two rows. Before: the model writes prose, Python scrapes a label out of it with a regex, and the verdict comes from the scrape. After: the model emits a JSON block of subscores and mandatory-fail ids, Python applies the rubric spec, and the verdict comes from arithmetic.">
+<svg viewBox="0 0 1280 580" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Two rows. Before: Jev writes prose, Python scrapes a label out of it with a regex, and the verdict comes from the scrape. After: Jev emits a JSON block of subscores and mandatory-fail ids, Python applies the rubric spec, and the verdict comes from arithmetic.">
 <defs>
   <marker id="arr" viewBox="0 0 10 10" refX="9.5" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M 0 0 L 10 5 L 0 10 z" style="fill:var(--arr-color)"></path></marker>
   <marker id="arrStrong" viewBox="0 0 10 10" refX="9.5" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M 0 0 L 10 5 L 0 10 z" style="fill:var(--arr-color-strong)"></path></marker>
 </defs>
 
-<text class="sv-sec" x="40" y="34">Before &middot; prose in, regex out</text>
+<text class="sv-sec" x="40" y="34">Before &middot; a judgement, written as an essay</text>
 
 <rect x="40" y="60" width="200" height="96" rx="8" class="sv-box-storage" style="fill:var(--storage);fill-opacity:0.13" stroke-width="1.5"></rect>
-<text class="sv-title" x="140" y="99" text-anchor="middle" style="fill:var(--storage)">The build stage</text>
-<text class="sv-sub" x="140" y="121" text-anchor="middle">needs a verdict</text>
+<text class="sv-title" x="140" y="99" text-anchor="middle" style="fill:var(--storage)">A decision</text>
+<text class="sv-sub" x="140" y="121" text-anchor="middle">has to be made</text>
 
 <rect x="340" y="60" width="240" height="96" rx="8" class="sv-box-model" style="fill:var(--model);fill-opacity:0.13" stroke-width="1.5"></rect>
-<text class="sv-title" x="460" y="99" text-anchor="middle" style="fill:var(--model)">Model writes prose</text>
-<text class="sv-sub" x="460" y="121" text-anchor="middle">a narrative assessment</text>
+<text class="sv-title" x="460" y="99" text-anchor="middle" style="fill:var(--model)">Jev writes prose</text>
+<text class="sv-sub" x="460" y="121" text-anchor="middle">a written assessment</text>
 
 <rect x="680" y="60" width="240" height="96" rx="8" class="sv-box-compute" style="fill:var(--compute);fill-opacity:0.13" stroke-width="1.5"></rect>
-<text class="sv-title" x="800" y="99" text-anchor="middle" style="fill:var(--compute)">Python scrapes</text>
-<text class="sv-sub" x="800" y="121" text-anchor="middle">regular expressions</text>
+<text class="sv-title" x="800" y="99" text-anchor="middle" style="fill:var(--compute)">Code guesses</text>
+<text class="sv-sub" x="800" y="121" text-anchor="middle">pattern-matching on words</text>
 
 <rect x="1020" y="60" width="220" height="96" rx="8" class="sv-box-consumer" style="fill:var(--consumer);fill-opacity:0.13" stroke-width="1.5"></rect>
-<text class="sv-title" x="1130" y="99" text-anchor="middle" style="fill:var(--consumer)">Verdict</text>
-<text class="sv-sub" x="1130" y="121" text-anchor="middle">gates a human checkpoint</text>
+<text class="sv-title" x="1130" y="99" text-anchor="middle" style="fill:var(--consumer)">The decision</text>
+<text class="sv-sub" x="1130" y="121" text-anchor="middle">a person reviews it</text>
 
 <path class="sv-arrow" d="M 240 108 L 338 108" marker-end="url(#arr)" stroke-width="2"></path>
 <path class="sv-arrow" d="M 580 108 L 678 108" marker-end="url(#arr)" stroke-width="2"></path>
 <path class="sv-arrow" d="M 920 108 L 1018 108" marker-end="url(#arr)" stroke-width="2"></path>
 
-<text class="sv-sec" x="40" y="300">After &middot; structured in, arithmetic out</text>
+<text class="sv-sec" x="40" y="300">After &middot; a judgement, stated as a value</text>
 
 <rect x="40" y="326" width="200" height="96" rx="8" class="sv-box-storage" style="fill:var(--storage);fill-opacity:0.13" stroke-width="1.5"></rect>
-<text class="sv-title" x="140" y="365" text-anchor="middle" style="fill:var(--storage)">The build stage</text>
-<text class="sv-sub" x="140" y="387" text-anchor="middle">needs a verdict</text>
+<text class="sv-title" x="140" y="365" text-anchor="middle" style="fill:var(--storage)">A decision</text>
+<text class="sv-sub" x="140" y="387" text-anchor="middle">has to be made</text>
 
 <rect x="340" y="326" width="240" height="96" rx="8" class="sv-box-model" style="fill:var(--model);fill-opacity:0.13" stroke-width="1.5"></rect>
-<text class="sv-title" x="460" y="356" text-anchor="middle" style="fill:var(--model)">Model emits JSON</text>
-<text class="sv-sub" x="460" y="378" text-anchor="middle">subscores and fail ids</text>
-<text class="sv-sub" x="460" y="398" text-anchor="middle">the judgment stays here</text>
+<text class="sv-title" x="460" y="356" text-anchor="middle" style="fill:var(--model)">Jev picks a label</text>
+<text class="sv-sub" x="460" y="378" text-anchor="middle">from a fixed list</text>
+<text class="sv-sub" x="460" y="398" text-anchor="middle">the judgement is still its job</text>
 
 <rect x="680" y="326" width="240" height="96" rx="8" class="sv-box-compute" style="fill:var(--compute);fill-opacity:0.13" stroke-width="1.5"></rect>
-<text class="sv-title" x="800" y="356" text-anchor="middle" style="fill:var(--compute)">Python applies the spec</text>
-<text class="sv-sub" x="800" y="378" text-anchor="middle">weights and precedence</text>
-<text class="sv-sub" x="800" y="398" text-anchor="middle">the arithmetic lives here</text>
+<text class="sv-title" x="800" y="356" text-anchor="middle" style="fill:var(--compute)">Python does the math</text>
+<text class="sv-sub" x="800" y="378" text-anchor="middle">thresholds, weights, rules</text>
+<text class="sv-sub" x="800" y="398" text-anchor="middle">the arithmetic is code's job</text>
 
 <rect x="1020" y="326" width="220" height="96" rx="8" class="sv-box-consumer" style="fill:var(--consumer);fill-opacity:0.13" stroke-width="1.5"></rect>
-<text class="sv-title" x="1130" y="365" text-anchor="middle" style="fill:var(--consumer)">Verdict</text>
-<text class="sv-sub" x="1130" y="387" text-anchor="middle">gates a human checkpoint</text>
+<text class="sv-title" x="1130" y="365" text-anchor="middle" style="fill:var(--consumer)">The decision</text>
+<text class="sv-sub" x="1130" y="387" text-anchor="middle">a person reviews it</text>
 
 <path class="sv-arrow--strong" d="M 240 374 L 338 374" marker-end="url(#arrStrong)" stroke-width="2"></path>
 <path class="sv-arrow--strong" d="M 580 374 L 678 374" marker-end="url(#arrStrong)" stroke-width="2"></path>
 <path class="sv-arrow--strong" d="M 920 374 L 1018 374" marker-end="url(#arrStrong)" stroke-width="2"></path>
 
-<rect class="sv-pill" x="264.8" y="97" width="48.3" height="22.6" rx="13"></rect>
-<text class="sv-arrow-lbl" x="289" y="113" text-anchor="middle">prose</text>
-<rect class="sv-pill" x="604.8" y="97" width="48.4" height="22.6" rx="13"></rect>
-<text class="sv-arrow-lbl" x="629" y="113" text-anchor="middle">regex</text>
-<rect class="sv-pill" x="946.9" y="97" width="44.3" height="22.6" rx="13"></rect>
-<text class="sv-arrow-lbl" x="969" y="113" text-anchor="middle">label</text>
-
-<rect class="sv-pill" x="267.7" y="363" width="42.5" height="22.6" rx="13"></rect>
-<text class="sv-arrow-lbl" x="289" y="379" text-anchor="middle">spec</text>
-<rect class="sv-pill" x="608.4" y="363" width="41.3" height="22.6" rx="13"></rect>
+<rect class="sv-pill" x="264.8" y="363" width="42.5" height="22.6" rx="11.3"></rect>
+<text class="sv-arrow-lbl" x="286" y="379" text-anchor="middle">spec</text>
+<rect class="sv-pill" x="608.4" y="363" width="41.3" height="22.6" rx="11.3"></rect>
 <text class="sv-arrow-lbl" x="629" y="379" text-anchor="middle">field</text>
-<rect class="sv-pill" x="941.2" y="363" width="55.6" height="22.6" rx="13"></rect>
+<rect class="sv-pill" x="941.2" y="363" width="55.6" height="22.6" rx="11.3"></rect>
 <text class="sv-arrow-lbl" x="969" y="379" text-anchor="middle">verdict</text>
 
-<text class="sv-note" x="40" y="480">The scrape has no schema. The model can phrase the verdict three ways and all three are &ldquo;correct.&rdquo;</text>
-<text class="sv-note" x="40" y="504">The JSON block has one shape, and a missing field is a signal the code can act on rather than guess past.</text>
+<text class="sv-note" x="40" y="480">The top row has no schema. Jev can phrase the same judgement three ways and all three are &ldquo;correct.&rdquo;</text>
+<text class="sv-note" x="40" y="504">The bottom row has one shape, so a missing answer is a signal the code can act on rather than guess past.</text>
 </svg>
   </div>
   <div class="legend">
-    <span class="legend-item"><span class="legend-swatch" style="background:var(--storage)"></span> Pipeline stage</span>
-    <span class="legend-item"><span class="legend-swatch" style="background:var(--model)"></span> The model &mdash; judgment</span>
+    <span class="legend-item"><span class="legend-swatch" style="background:var(--storage)"></span> A decision point</span>
+    <span class="legend-item"><span class="legend-swatch" style="background:var(--model)"></span> Jev &mdash; reading and judging</span>
     <span class="legend-item"><span class="legend-swatch" style="background:var(--compute)"></span> Python &mdash; arithmetic and rules</span>
-    <span class="legend-item"><span class="legend-swatch" style="background:var(--consumer)"></span> Outcome</span>
+    <span class="legend-item"><span class="legend-swatch" style="background:var(--consumer)"></span> What a person reviews</span>
   </div>
-  <div class="svg-note">Both rows end at the same gate. Only one of them can explain why it arrived.</div>
+  <div class="svg-note">Both rows end at the same approval step. Only one of them can explain why it arrived.</div>
+
+  <h3 class="sub">The three failures, in plain terms</h3>
+  <div class="table-wrap"><div class="table-scroll">
+    <table class="data-table">
+      <thead><tr><th style="width:230px">What went wrong</th><th>What it meant</th></tr></thead>
+      <tbody>
+        <tr>
+          <td><b>Two copies of one rule</b></td>
+          <td>The same written assessment was read two different ways by two parts of the system. One said the answer was <b>stop</b>; the other said <b>continue</b>. That answer decides whether a person is asked to approve the work, so the difference mattered.</td>
+        </tr>
+        <tr>
+          <td><b>A number found in a sentence</b></td>
+          <td>A program scanned documents for any number-over-100. A sentence reading &ldquo;we reviewed <b>3/100</b> documents&rdquo; was recorded as a score of <b>3</b>. It looked like a real result. It was a coincidence of wording.</td>
+        </tr>
+        <tr>
+          <td><b>The same facts written three times</b></td>
+          <td>One structured record was turned into prose, stored, turned into prose again by the next step, and stored again. Three copies of one truth, each free to drift from the others.</td>
+        </tr>
+      </tbody>
+    </table>
+  </div></div>
   </div>
 </details>
 
-<details class="sec-wrap">
-  <summary class="sec"><span class="n">04</span> Phase 0, in full <span class="hint">precedence the model cannot override</span></summary>
+<details class="sec-wrap" open>
+  <summary class="sec"><span class="n">03</span> How a decision is made now <span class="hint">Jev decides. Python counts.</span></summary>
   <div class="sec-body">
-  <p class="lead">Phase 0 asks one question: <b>is this project fit to build?</b> The rubric has five weighted signals, a go threshold, a conditional floor, and five conditions that fail a build outright.</p>
-  <p class="lead">The prompt used to carry all of that as prose &mdash; the weight table, the thresholds, the rules &mdash; and Python then scraped the verdict back out of the model&rsquo;s answer. Now the model reports the subscores and names any mandatory failure it found. Python applies the rubric.</p>
+  <p class="lead">Take the first gate in the pipeline: <b>is this project fit to build?</b> It has five scored signals, a pass mark, a second lower mark, and a short list of conditions that fail it outright no matter how well it scores otherwise.</p>
+  <p class="lead">Before, all of that lived in the instructions handed to the AI, which then wrote an answer, and code read the answer back out. Now the AI reports the five scores and names any disqualifying condition it found. Everything after that is arithmetic, and arithmetic belongs in code.</p>
 
   <div class="svg-wrap">
-<svg viewBox="0 0 1280 520" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="A flow: the model emits subscores and mandatory-fail ids, compute_fitness applies the rubric, and three outcomes branch from it. A recognised mandatory-fail id returns FAIL, a missing signal or an ownerless commitment returns CONDITIONAL_PASS, and otherwise the weighted score decides GO, CONDITIONAL_PASS or FAIL.">
+<svg viewBox="0 0 1280 520" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="A flow: Jev reports five subscores and any mandatory-fail ids, the scoring code applies the rubric, and three outcomes branch from it. A recognised mandatory-fail id returns FAIL, a missing signal or an ownerless commitment returns CONDITIONAL_PASS, and otherwise the weighted score decides GO, CONDITIONAL_PASS or FAIL.">
 <defs>
   <marker id="arr2" viewBox="0 0 10 10" refX="9.5" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M 0 0 L 10 5 L 0 10 z" style="fill:var(--arr-color)"></path></marker>
   <marker id="arr2S" viewBox="0 0 10 10" refX="9.5" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M 0 0 L 10 5 L 0 10 z" style="fill:var(--arr-color-strong)"></path></marker>
 </defs>
 
 <rect x="40" y="170" width="250" height="130" rx="8" class="sv-box-model" style="fill:var(--model);fill-opacity:0.13" stroke-width="1.5"></rect>
-<text class="sv-title" x="165" y="205" text-anchor="middle" style="fill:var(--model)">The model</text>
-<text class="sv-sub" x="165" y="229" text-anchor="middle">reads the PRD, returns</text>
-<text class="sv-sub" x="165" y="249" text-anchor="middle">five subscores and any</text>
-<text class="sv-sub" x="165" y="269" text-anchor="middle">mandatory-fail ids</text>
+<text class="sv-title" x="165" y="205" text-anchor="middle" style="fill:var(--model)">Jev reads the brief</text>
+<text class="sv-sub" x="165" y="229" text-anchor="middle">scores five things</text>
+<text class="sv-sub" x="165" y="249" text-anchor="middle">and flags anything</text>
+<text class="sv-sub" x="165" y="269" text-anchor="middle">that disqualifies it</text>
 
 <rect x="380" y="170" width="300" height="130" rx="8" class="sv-box-compute" style="fill:var(--compute);fill-opacity:0.13" stroke-width="1.5"></rect>
-<text class="sv-title" x="530" y="205" text-anchor="middle" style="fill:var(--compute)">compute_fitness()</text>
-<text class="sv-sub" x="530" y="229" text-anchor="middle">owns the weights, the thresholds</text>
+<text class="sv-title" x="530" y="205" text-anchor="middle" style="fill:var(--compute)">The scoring code</text>
+<text class="sv-sub" x="530" y="229" text-anchor="middle">owns the pass mark, the weights</text>
 <text class="sv-sub" x="530" y="249" text-anchor="middle">and the order they apply in</text>
-<text class="sv-sub" x="530" y="269" text-anchor="middle">weight total asserted to 1.0 on load</text>
+<text class="sv-sub" x="530" y="269" text-anchor="middle">checked for consistency on startup</text>
 
 <path class="sv-arrow" d="M 290 220 L 378 220" marker-end="url(#arr2)" stroke-width="2"></path>
 <path class="sv-arrow" d="M 290 250 L 378 250" marker-end="url(#arr2)" stroke-width="2"></path>
@@ -332,248 +320,175 @@
 
 <rect x="920" y="30" width="300" height="86" rx="8" class="sv-box-consumer" style="fill:var(--consumer);fill-opacity:0.13" stroke-width="1.5"></rect>
 <text class="sv-title" x="1070" y="62" text-anchor="middle" style="fill:var(--consumer)">FAIL</text>
-<text class="sv-sub" x="1070" y="86" text-anchor="middle">a recognised mandatory-fail id</text>
-<text class="sv-sub" x="1070" y="104" text-anchor="middle">score is still computed and shown</text>
+<text class="sv-sub" x="1070" y="86" text-anchor="middle">a disqualifying condition was found</text>
+<text class="sv-sub" x="1070" y="104" text-anchor="middle">the score is still shown alongside it</text>
 
 <rect x="920" y="192" width="300" height="86" rx="8" class="sv-box-consumer" style="fill:var(--consumer);fill-opacity:0.13" stroke-width="1.5"></rect>
-<text class="sv-title" x="1070" y="224" text-anchor="middle" style="fill:var(--consumer)">CONDITIONAL_PASS</text>
-<text class="sv-sub" x="1070" y="248" text-anchor="middle">a subscore is missing, or a</text>
-<text class="sv-sub" x="1070" y="266" text-anchor="middle">commitment has no named owner</text>
+<text class="sv-title" x="1070" y="224" text-anchor="middle" style="fill:var(--consumer)">NOT YET</text>
+<text class="sv-sub" x="1070" y="248" text-anchor="middle">something is missing, or nobody</text>
+<text class="sv-sub" x="1070" y="266" text-anchor="middle">has been named as responsible</text>
 
 <rect x="920" y="354" width="300" height="86" rx="8" class="sv-box-consumer" style="fill:var(--consumer);fill-opacity:0.13" stroke-width="1.5"></rect>
-<text class="sv-title" x="1070" y="386" text-anchor="middle" style="fill:var(--consumer)">GO or FAIL</text>
-<text class="sv-sub" x="1070" y="410" text-anchor="middle">the weighted score against</text>
-<text class="sv-sub" x="1070" y="428" text-anchor="middle">the go threshold and floor</text>
+<text class="sv-title" x="1070" y="386" text-anchor="middle" style="fill:var(--consumer)">PASS or FAIL</text>
+<text class="sv-sub" x="1070" y="410" text-anchor="middle">the weighted total against</text>
+<text class="sv-sub" x="1070" y="428" text-anchor="middle">the pass mark and the lower bar</text>
 
 <path class="sv-arrow--strong" d="M 680 215 L 710 215 L 710 73 L 918 73" marker-end="url(#arr2S)" stroke-width="2"></path>
 <path class="sv-arrow--strong" d="M 680 240 L 918 240" marker-end="url(#arr2S)" stroke-width="2"></path>
 <path class="sv-arrow--strong" d="M 680 265 L 770 265 L 770 397 L 918 397" marker-end="url(#arr2S)" stroke-width="2"></path>
 
-<rect class="sv-pill" x="793.8" y="62" width="102.5" height="22.7" rx="13"></rect>
-<text class="sv-arrow-lbl" x="845" y="78" text-anchor="middle">mandatory fail</text>
-<rect class="sv-pill" x="750.4" y="229" width="99.1" height="22.6" rx="13"></rect>
-<text class="sv-arrow-lbl" x="800" y="245" text-anchor="middle">missing signal</text>
-<rect class="sv-pill" x="792.7" y="386" width="104.5" height="22.6" rx="13"></rect>
-<text class="sv-arrow-lbl" x="845" y="402" text-anchor="middle">weighted score</text>
+<rect class="sv-pill" x="793.8" y="62" width="102.5" height="22.7" rx="11.3"></rect>
+<text class="sv-arrow-lbl" x="845" y="78" text-anchor="middle">disqualified</text>
+<rect class="sv-pill" x="750.4" y="229" width="99.1" height="22.6" rx="11.3"></rect>
+<text class="sv-arrow-lbl" x="800" y="245" text-anchor="middle">missing input</text>
+<rect class="sv-pill" x="792.7" y="386" width="104.5" height="22.6" rx="11.3"></rect>
+<text class="sv-arrow-lbl" x="845" y="402" text-anchor="middle">weighted total</text>
 
-<text class="sv-note" x="40" y="460">An unrecognised id from the model is ignored for the verdict and reported back, so a hallucinated id cannot fail a build.</text>
-<text class="sv-note" x="40" y="482">A GO on partial evidence is the failure mode that matters, so a missing signal can never produce a confident pass.</text>
+<text class="sv-note" x="40" y="460">A condition the code does not recognise is ignored rather than trusted, so a made-up reason cannot fail a build.</text>
+<text class="sv-note" x="40" y="482">A pass on incomplete evidence is the failure that matters, so a missing answer never produces a confident yes.</text>
 </svg>
   </div>
-  <div class="svg-note">Precedence runs top to bottom. The first rule that fires decides, and the ones below never run.</div>
 
-  <h3 class="sub">What Python owns now</h3>
-  <div class="table-wrap"><div class="table-scroll">
-    <table class="data-table">
-      <thead><tr><th>Module</th><th>What moved into it</th><th>What the prompt does instead</th></tr></thead>
-      <tbody>
-        <tr><td><code>fitness_rubric.py</code></td><td>Five weights, the go threshold, the conditional floor, the mandatory-fail list, and the order they apply in</td><td>Renders its scoring section from the module. The narrative stays; the verdict authority does not</td></tr>
-        <tr><td><code>patterns.py</code></td><td>The architecture decision tree: five ordered rules, first match wins, plus the single-step criteria underneath</td><td>Model reports which conditions hold. Python picks the pattern and generates the reason string from the rule that fired</td></tr>
-        <tr><td><code>accuracy_bands.py</code></td><td>Six band boundaries</td><td>Keeps the descriptive calibration language, which is load-bearing. Renders the band list from the constant</td></tr>
-        <tr><td><code>build_parsers.py</code></td><td>One implementation of the verdict and artifact parsers, imported by both pipelines</td><td>Nothing yet &mdash; this is the consolidation rung, not a rung-2 conversion</td></tr>
-        <tr><td><code>llm_json.py</code></td><td>One JSON extractor, decoding from the first brace</td><td>Four call sites migrated. Fourteen still parse JSON ad hoc</td></tr>
-      </tbody>
-    </table>
-  </div></div>
-
-  <div class="risk-note good-note"><span class="rn">The test that matters.</span> The two parser copies are gone, and the test asserts <b>identity</b> &mdash; that both pipelines import the same function object &mdash; not that they happen to agree on a handful of examples. A future copy-paste fails the suite instead of quietly forking the verdict again.</div>
-  </div>
-</details>
-
-<details class="sec-wrap">
-  <summary class="sec"><span class="n">05</span> Jev, and the escape hatch <span class="hint">the strongest part, and the honest one</span></summary>
-  <div class="sec-body">
-  <p class="lead">Rung 2 needs a model that returns a label from a closed set rather than a paragraph. That model is <b>Jev</b> &mdash; TypeSafe&rsquo;s flagship structured-decision model. You hand it a question and a map of options; it returns one option plus a probability distribution over all of them.</p>
-
-  <div class="excards">
-    <div class="excard">
-      <span class="k">A service, not a connector</span>
-      <h3>Three structural reasons, written into the module</h3>
-      <ul class="reasons">
-        <li><b>Wrong shape.</b> <code>send_message(...) -&gt; ConnectorResponse</code> is chat-shaped. A typed question map returning a probability distribution has nowhere to go in that dataclass.</li>
-        <li><b>Wrong trust boundary.</b> Connector URLs are user-supplied, which is why they get an SSRF check. This endpoint is ours, fixed, and must never be repointable.</li>
-        <li><b>Wrong lifetime.</b> Connectors model per-user endpoints. This is one shared internal client, the same category as the LLM provider service.</li>
-      </ul>
-      <p>The docstring says all three, so nobody later &ldquo;tidies&rdquo; it into the connector factory.</p>
-    </div>
-    <div class="excard">
-      <span class="k">Determinism, honestly stated</span>
-      <h3>Statistical determinism</h3>
-      <p>There is no <code>temperature</code> and no <code>seed</code> parameter. The module says so in its first paragraph rather than implying a guarantee it cannot make.</p>
-      <p>Jev&rsquo;s measured behaviour is good: <b>100% label agreement over 15 repeats</b>, score standard deviation around 0.005. Run-to-run stability is not correctness on a hard input, and the docstring says that too.</p>
-      <p>We also send the floating tag <code>jev-latest</code> rather than a pinned build, so every number on this page is of whichever build that tag resolved to on the day. A floating tag can move under a measurement.</p>
-    </div>
-  </div>
-
-  <h3 class="sub">The measurement that changed the design</h3>
-  <p class="lead">A closed set of options has a failure mode you do not see until you look for it. If none of the labels fit the input, Jev still has to return one. So it picks the closest.</p>
-  <p class="lead">Measured: out-of-scope input with no none-of-the-above option was filed into a real category at <b>0.980 and 0.990 confidence</b>. That matters more than it sounds. Any rule of the form <i>confidence below a threshold, escalate</i> is a no-op for exactly the traffic you most want escalated &mdash; Jev is confident, and wrong.</p>
-  <p class="lead">So the escape hatch is enforced at construction. <code>decide_choice</code> raises <b>before any network call</b> if the option map has no none-of-the-above key. A future call site cannot reintroduce the hole by forgetting, because forgetting is a hard error.</p>
-
-  <h3 class="sub">Then I measured it again, against production</h3>
-  <p class="lead">That is the version in the design doc. Here is what happened when the same function was run against the real endpoint &mdash; <code>jev-latest</code>, four runs per input.</p>
-  <div class="table-wrap"><div class="table-scroll">
-    <table class="data-table">
-      <thead><tr><th>Input</th><th>Where it landed</th><th>Runs</th><th>Verdict</th></tr></thead>
-      <tbody>
-        <tr><td>&ldquo;What is the weather in Paris?&rdquo;</td><td><code>Q&amp;A Bot</code></td><td>4 of 4</td><td><span class="hit h-bad"><span class="dot"></span>Wrong, stably</span></td></tr>
-        <tr><td>&ldquo;Book a flight to Denver next Tuesday.&rdquo;</td><td><code>Workflow Agent</code></td><td>4 of 4</td><td><span class="hit h-bad"><span class="dot"></span>Wrong, stably</span></td></tr>
-        <tr><td>&ldquo;Write me a haiku about autumn.&rdquo;</td><td>the escape hatch</td><td>4 of 4</td><td><span class="hit h-good"><span class="dot"></span>Correct, stably</span></td></tr>
-      </tbody>
-    </table>
-  </div></div>
-  <div class="risk-note"><span class="rn">The guard does not do what the plan said it would.</span> The construction-time check forces a none-of-the-above option to <b>exist</b>. It does not make Jev <b>choose</b> it. Two of three out-of-scope inputs were filed into a real pattern, every time. One of them at 0.91 confidence, so a confidence-threshold rule would not have caught it either.</div>
-  <p class="lead">The sample is four runs. That is a signal, not a measurement, and the page says so rather than rounding it up into a claim. What it is enough to do is stop the rollout.</p>
-
+  <h3 class="sub">Why this is more predictable</h3>
+  <p class="lead">The instructions the AI reads are now <b>generated from the same numbers the code checks</b>. That sounds like a detail. It is the whole thing.</p>
+  <p class="lead">Before, the pass mark appeared once in the AI's instructions and again somewhere in the code. Two facts that happened to agree. Change one and nothing tells you the other is now wrong. Now there is one number, and the instructions are printed from it. They cannot disagree.</p>
   <div class="mini">
-    <div class="mk">Status of the rollout</div>
+    <div class="mk">And a test that holds it there</div>
     <ul>
-      <li><b>Shadow mode, not on.</b> <code>STRUCTURED_DECISION_PATTERN_MATCHER</code> defaults to <code>shadow</code>. Both paths run, disagreements are logged, and the keyword result is the one used</li>
-      <li><b>Shadow is the right default for a reason.</b> The first production line reads <code>pattern_matcher=shadow keyword=Workflow Agent structured=Workflow Agent agree=True</code> &mdash; one line, one agreement, no disagreement rate yet characterized</li>
-      <li><b>What would flip it.</b> A disagreement rate over real briefs. Until that number exists, the honest setting is the one that cannot change a build</li>
+      <li><b>The duplicate is gone and cannot come back.</b> Both parts of the system now use one function, and a test asserts they use <i>the same one</i> rather than that they happen to agree on some examples</li>
+      <li><b>The instructions are checked too.</b> A test fails if the old prose description ever reappears, so the two cannot drift apart again quietly</li>
+      <li><b>Roughly 100 separate checks</b> now cover this area, most of them written to fail if the old behaviour returns</li>
     </ul>
   </div>
   </div>
 </details>
 
-<details class="sec-wrap">
-  <summary class="sec"><span class="n">06</span> The cache inversion <span class="hint">paying to save</span></summary>
+<details class="sec-wrap" open>
+  <summary class="sec"><span class="n">04</span> What it saved <span class="hint">paying once instead of seven times</span></summary>
   <div class="sec-body">
-  <p class="lead">Prompt caching keys on a prefix hash. A breakpoint caches everything from the start of the prompt through that breakpoint. Anything that varies <b>ahead</b> of a breakpoint invalidates everything behind it.</p>
-  <p class="lead">The system block varied per phase, because each phase pulled a different set of knowledge docs. The PRD breakpoint sat after it. So the PRD&rsquo;s own prefix included the block that had just changed, and the cache missed on every phase of every build.</p>
+  <p class="lead">This is the part with a number attached, so it is worth explaining properly.</p>
+  <p class="lead">A build runs in seven steps. Each step needs the same background document &mdash; the requirements, the interview notes, the reference material. The system was sending that whole document to the AI again on <b>every single step</b>, at full price, even though none of it had changed.</p>
+  <p class="lead">AI providers offer a way out: if the text at the start of a request is byte-for-byte identical to last time, they charge a fraction of the price to re-read it. A tenth, typically. The catch is that <b>everything before the marker has to match exactly</b> &mdash; one character out of place and you pay full price again, with no error to tell you.</p>
+  <p class="lead">Something was always out of place. Each step was given a slightly different set of instructions at the very start, which meant the shared document behind it never counted as &ldquo;the same&rdquo; and was charged in full every time.</p>
 
   <div class="svg-wrap">
-<svg viewBox="0 0 1180 580" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Two prompt layouts. Before: a system block that varies per phase sits first, the PRD follows, and a cache breakpoint after the PRD covers a prefix that already changed, so it never hits. After: a byte-stable system block is computed once outside the phase loop and sits first, the PRD follows it, and a second breakpoint covers both, so phases one through six read the prefix back.">
+<svg viewBox="0 0 1180 580" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Two request layouts. Before: step-specific instructions sit first, the shared document follows, and the cache marker after the document covers a stretch that already changed, so nothing is ever re-read cheaply. After: a fixed block is placed first and never varies, the shared document follows it, and steps two through seven re-read the whole thing at a fraction of the price.">
 <defs>
   <marker id="arr3" viewBox="0 0 10 10" refX="9.5" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M 0 0 L 10 5 L 0 10 z" style="fill:var(--arr-color)"></path></marker>
   <marker id="arr3S" viewBox="0 0 10 10" refX="9.5" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M 0 0 L 10 5 L 0 10 z" style="fill:var(--arr-color-strong)"></path></marker>
 </defs>
 
-<text class="sv-sec" x="40" y="20">Before &middot; the prefix changes, so nothing caches</text>
+<text class="sv-sec" x="40" y="20">Before &middot; the start of the request changed, so nothing was ever cheap</text>
 
 <path class="sv-arrow--strong" d="M 760 40 L 40 40 L 40 78" marker-end="url(#arr3S)" stroke-width="2"></path>
-<rect class="sv-pill" x="341.8" y="28.8" width="116.5" height="22.8" rx="13"></rect>
-<text class="sv-arrow-lbl" x="400" y="45" text-anchor="middle">the cached prefix</text>
+<rect class="sv-pill" x="335.3" y="28.8" width="129.5" height="22.8" rx="11.4"></rect>
+<text class="sv-arrow-lbl" x="400" y="45" text-anchor="middle">the repeatable part</text>
 
 <rect x="40" y="80" width="290" height="72" rx="8" class="sv-box-model" style="fill:var(--model);fill-opacity:0.13" stroke-width="1.5"></rect>
-<text class="sv-title" x="185" y="110" text-anchor="middle" style="fill:var(--model)">System block</text>
-<text class="sv-sub" x="185" y="132" text-anchor="middle">a different doc set per phase</text>
+<text class="sv-title" x="185" y="110" text-anchor="middle" style="fill:var(--model)">Step instructions</text>
+<text class="sv-sub" x="185" y="132" text-anchor="middle">a little different every step</text>
 
 <rect x="330" y="80" width="430" height="72" rx="8" class="sv-box-storage" style="fill:var(--storage);fill-opacity:0.13" stroke-width="1.5"></rect>
-<text class="sv-title" x="545" y="110" text-anchor="middle" style="fill:var(--storage)">Interview context and PRD</text>
-<text class="sv-sub" x="545" y="132" text-anchor="middle">identical on all seven phases</text>
+<text class="sv-title" x="545" y="110" text-anchor="middle" style="fill:var(--storage)">The shared document</text>
+<text class="sv-sub" x="545" y="132" text-anchor="middle">identical every time &mdash; but never counted as such</text>
 
 <rect x="760" y="80" width="380" height="72" rx="8" class="sv-box-compute" style="fill:var(--compute);fill-opacity:0.13" stroke-width="1.5"></rect>
-<text class="sv-title" x="950" y="110" text-anchor="middle" style="fill:var(--compute)">Prior phases and phase instructions</text>
-<text class="sv-sub" x="950" y="132" text-anchor="middle">changes every phase</text>
+<text class="sv-title" x="950" y="110" text-anchor="middle" style="fill:var(--compute)">What this step adds</text>
+<text class="sv-sub" x="950" y="132" text-anchor="middle">changes every step, and always will</text>
 
 <line x1="760" y1="62" x2="760" y2="170" stroke="var(--compute)" stroke-width="1.5" stroke-dasharray="4 4"></line>
-<text class="sv-note" x="40" y="196">The breakpoint sits after the PRD, so its prefix already includes the block that changed. Every phase misses.</text>
-<text class="sv-note" x="40" y="218">Measured on a live build: phase 1 read 14,208 cached tokens. Phase 2 read 256, because phase 2&rsquo;s knowledge list is empty and the block changed underneath it.</text>
+<text class="sv-note" x="40" y="196">The marker sat after the shared document, so the part it covers already included the bit that changed. Every step paid full price.</text>
+<text class="sv-note" x="40" y="218">Measured on a real build: step 1 was charged full price for 14,208 words it had already been sent. The next step got only 256 words at the cheap rate.</text>
 
-<text class="sv-sec" x="40" y="266">After &middot; the stable half is computed once, outside the phase loop</text>
+<text class="sv-sec" x="40" y="266">After &middot; the start never changes, so the rest is cheap</text>
 
 <path class="sv-arrow--strong" d="M 760 286 L 40 286 L 40 312" marker-end="url(#arr3S)" stroke-width="2"></path>
-<rect class="sv-pill" x="341.8" y="274.8" width="116.5" height="22.8" rx="11.4"></rect>
-<text class="sv-arrow-lbl" x="400" y="291" text-anchor="middle">the cached prefix</text>
+<rect class="sv-pill" x="335.3" y="274.8" width="129.5" height="22.8" rx="11.4"></rect>
+<text class="sv-arrow-lbl" x="400" y="291" text-anchor="middle">the repeatable part</text>
 
 <rect x="40" y="314" width="500" height="92" rx="8" class="sv-box-model" style="fill:var(--model);fill-opacity:0.13" stroke-width="1.5"></rect>
-<text class="sv-title" x="290" y="342" text-anchor="middle" style="fill:var(--model)">Stable system block</text>
-<text class="sv-sub" x="290" y="364" text-anchor="middle">role, formatting, and the eight root methodology docs</text>
-<text class="sv-sub" x="290" y="384" text-anchor="middle">byte-identical on every phase</text>
+<text class="sv-title" x="290" y="342" text-anchor="middle" style="fill:var(--model)">A fixed block, built once</text>
+<text class="sv-sub" x="290" y="364" text-anchor="middle">identical on every step, by construction</text>
+<text class="sv-sub" x="290" y="384" text-anchor="middle">the system never rebuilds it per step</text>
 
 <rect x="540" y="314" width="220" height="92" rx="8" class="sv-box-storage" style="fill:var(--storage);fill-opacity:0.13" stroke-width="1.5"></rect>
-<text class="sv-title" x="650" y="349" text-anchor="middle" style="fill:var(--storage)">PRD</text>
-<text class="sv-sub" x="650" y="371" text-anchor="middle">and interview context</text>
+<text class="sv-title" x="650" y="349" text-anchor="middle" style="fill:var(--storage)">The document</text>
+<text class="sv-sub" x="650" y="371" text-anchor="middle">and the interview notes</text>
 
 <rect x="760" y="314" width="380" height="92" rx="8" class="sv-box-compute" style="fill:var(--compute);fill-opacity:0.13" stroke-width="1.5"></rect>
-<text class="sv-title" x="950" y="349" text-anchor="middle" style="fill:var(--compute)">Prior phases and phase instructions</text>
-<text class="sv-sub" x="950" y="371" text-anchor="middle">changes every phase, outside the prefix</text>
+<text class="sv-title" x="950" y="349" text-anchor="middle" style="fill:var(--compute)">What this step adds</text>
+<text class="sv-sub" x="950" y="371" text-anchor="middle">sits outside the repeatable part</text>
 
 <path class="sv-arrow--strong" d="M 290 406 L 290 448" marker-end="url(#arr3S)" stroke-width="2"></path>
 
 <rect x="40" y="450" width="720" height="82" rx="8" class="sv-box-consumer" style="fill:var(--consumer);fill-opacity:0.13" stroke-width="1.5"></rect>
-<text class="sv-title" x="400" y="482" text-anchor="middle" style="fill:var(--consumer)">Phases 1 through 6 read the same prefix back</text>
-<text class="sv-sub" x="400" y="504" text-anchor="middle">measured: phase 0 wrote 15,795 tokens, phase 1 read 15,795</text>
+<text class="sv-title" x="400" y="482" text-anchor="middle" style="fill:var(--consumer)">Steps 1 through 6 re-read all of it at a tenth of the price</text>
+<text class="sv-sub" x="400" y="504" text-anchor="middle">measured on a real build: step 0 sent 15,795 words; step 1 re-read all 15,795 cheaply</text>
 
-<text class="sv-note" x="40" y="556">Phase 0 is the writer. Before the instrumentation existed that was inferred from timing; it is observed now.</text>
+<text class="sv-note" x="40" y="556">Step 0 sends it at full price. Before the measurement existed, that was an assumption; it is an observation now.</text>
 </svg>
   </div>
 
-  <div class="risk-note"><span class="rn">The part that looks like a mistake and is not.</span> A role-only system block is roughly 500 tokens. The minimum cacheable prefix on the model in question is 2,048. Below that floor, caching does not error &mdash; it silently does nothing. So the eight root methodology docs are deliberately included on <b>every</b> phase, including the phases that previously received no docs at all. Phases two through five each pay about 16K tokens at a tenth of the price, and in exchange the whole 16K-token prefix plus the PRD behind it becomes cacheable across all seven phases.</div>
+  <div class="risk-note good-note"><span class="rn">The number.</span> Roughly <b>a third of a build's input cost</b> was being spent re-sending text the provider had already seen. On a fullstack build that is about <b>40,000 words</b> per run that no longer need to be paid for at full price. It is smaller than it sounds &mdash; this is not where most of the money goes &mdash; but it is real, and it is now measured rather than assumed.</div>
 
-  <div class="risk-note"><span class="rn">And that is a real change to what the model sees.</span> Phases two through five now receive eight methodology documents they did not receive before. It is a cost change and a behavior change. The docs are relevant to writing instructions, so it should help. <b>It has not been validated on a build</b>, and the first fullstack build after this shipped is the test. The module says exactly that, in the code, next to the decision.</div>
-
-  <p class="lead">The instrumentation came before the fix, for a reason: the numbers had to be observable before anyone could claim they had improved. One log line per phase, readable out of the deploy logs, is what makes the whole section above checkable instead of asserted.</p>
+  <div class="risk-note"><span class="rn">The part that looks like a mistake.</span> To make this work, the pipeline now sends <b>more</b> text on some steps than it used to. There is a minimum amount a provider will bother caching; below it, the cheap rate silently does not apply and nothing tells you. So the fixed block is deliberately padded past that line. Steps pay a little more up front, and the whole thing behind it becomes cheap. <b>It also changes what the AI reads</b>, which has not yet been verified on a real build. The code says so, next to the decision.</div>
   </div>
 </details>
 
 <details class="sec-wrap">
-  <summary class="sec"><span class="n">07</span> What is still open <span class="hint">the list I would hand the next person</span></summary>
+  <summary class="sec"><span class="n">05</span> The part that did not work <span class="hint">the honest one</span></summary>
   <div class="sec-body">
-  <p class="lead">The pass is not finished. These are the known-open items, with the reason each one is still open rather than a plan to close it.</p>
+  <p class="lead">Jev picks from a fixed list of options. That has a failure mode you do not see unless you go looking for it: <b>if none of the options fit, it still has to choose one.</b> So it picks the closest-sounding one, and it does so confidently.</p>
+  <p class="lead">Measured: input that fitted none of the options was filed under a real category at <b>0.98 and 0.99 confidence</b>. That matters more than it sounds. The obvious safety rule &mdash; <i>if the AI is unsure, ask a person</i> &mdash; never fires for exactly the cases you most want it to. The AI is not unsure. It is confident and wrong.</p>
+  <p class="lead">So a none-of-the-above option was made mandatory. The code now refuses to run at all if one is missing, which means a future change cannot quietly reintroduce the gap.</p>
+
+  <h3 class="sub">Then it was measured again, against real traffic</h3>
+  <p class="lead">That is the version in the design document. Here is what happened when the same function was pointed at real inputs, four runs each.</p>
   <div class="table-wrap"><div class="table-scroll">
     <table class="data-table">
-      <thead><tr><th style="width:210px">Item</th><th>Why it is still open</th><th style="width:120px">Kind</th></tr></thead>
+      <thead><tr><th>What was asked</th><th>Where it landed</th><th>Runs</th><th>Verdict</th></tr></thead>
+      <tbody>
+        <tr><td>&ldquo;What is the weather in Paris?&rdquo;</td><td>a real category</td><td>4 of 4</td><td><span class="hit h-bad"><span class="dot"></span>Wrong, every time</span></td></tr>
+        <tr><td>&ldquo;Book a flight to Denver next Tuesday.&rdquo;</td><td>a real category</td><td>4 of 4</td><td><span class="hit h-bad"><span class="dot"></span>Wrong, every time</span></td></tr>
+        <tr><td>&ldquo;Write me a haiku about autumn.&rdquo;</td><td>none of the above</td><td>4 of 4</td><td><span class="hit h-good"><span class="dot"></span>Correct, every time</span></td></tr>
+      </tbody>
+    </table>
+  </div></div>
+  <div class="risk-note"><span class="rn">The safeguard does not do what the design said it would.</span> Making a none-of-the-above option <b>exist</b> is not the same as making the AI <b>choose</b> it. Two of three out-of-scope inputs were filed into a real category, every single time. One of them at 0.91 confidence, so an &ldquo;ask a person when unsure&rdquo; rule would not have caught it either.</div>
+  <p class="lead">Four runs each is a signal, not a measurement. What it was enough to do was stop the rollout: the feature runs alongside the old logic, records what it would have said, and changes nothing. It stays that way until there is enough real traffic to say how often it disagrees.</p>
+  </div>
+</details>
+
+<details class="sec-wrap">
+  <summary class="sec"><span class="n">06</span> What is still open <span class="hint">what I would hand the next person</span></summary>
+  <div class="sec-body">
+  <div class="table-wrap"><div class="table-scroll">
+    <table class="data-table">
+      <thead><tr><th style="width:230px">Item</th><th>Why it is still open</th></tr></thead>
       <tbody>
         <tr>
-          <td><b>Four typed discovery columns are empty</b><br><code>triage_verdict</code>, <code>autonomy_level</code>, <code>commitment_readiness</code>, <code>stakeholder_map</code></td>
-          <td>Thirteen of fourteen interview rows are zero-of-four populated, including the most recent. The plan called this a schema change. It is not. <b>The source data does not exist</b> &mdash; the discovery question bank never asks for any of it, and the free-form preamble answers are prose. Writing prose into enum columns would reproduce the exact class of bug this pass was fixing.</td>
-          <td><span class="hit h-bad"><span class="dot"></span>Product change</span></td>
+          <td><b>Four fields are still empty</b></td>
+          <td>Questions now exist for all four, but no session has been run through the new flow yet, so the fields stay empty until someone uses it. Anything that reads them still falls back to &ldquo;to be decided.&rdquo;</td>
         </tr>
         <tr>
-          <td><b>Still on shadow</b></td>
-          <td>Deliberate, and the escape-hatch measurement above is the reason. Flipping to <code>on</code> before the disagreement rate is characterized would put an uncalibrated classifier in charge of a hint.</td>
-          <td><span class="hit h-warn"><span class="dot"></span>Held</span></td>
+          <td><b>The new judgement reader is switched off</b></td>
+          <td>Deliberate. It runs alongside the current logic and records what it would have said, but does not decide anything until there is real data on how often it disagrees.</td>
         </tr>
         <tr>
-          <td><b>Two dead keywords</b><br><code>FAQ</code> and <code>ETL</code></td>
-          <td>Keywords are matched against a lowercased brief, and these are the only two pattern keywords containing an uppercase letter, so they can never match. A one-line fix that has not been applied. Fixing it adds patterns that were previously excluded entirely, which changes scores.</td>
-          <td><span class="hit h-warn"><span class="dot"></span>One line</span></td>
+          <td><b>Two keywords never worked</b></td>
+          <td>Now fixed. Two search terms could never match because of a capital letter, which is a small thing that had been invisible for a while.</td>
         </tr>
         <tr>
-          <td><b>Fourteen ad-hoc JSON parsers</b></td>
-          <td>The shared helper exists and four sites use it. The other fourteen were out of scope for this pass and still extract JSON their own way.</td>
-          <td><span class="hit h-warn"><span class="dot"></span>Follow-up</span></td>
+          <td><b>Some tidying was left undone</b></td>
+          <td>A handful of places still read structured data their own way instead of sharing one method. Each one has a written reason for staying as it is, and a check that stops the number growing.</td>
         </tr>
         <tr>
-          <td><b>The cache numbers stopped at phase 1</b></td>
-          <td>Phase 0 writing and phase 1 reading was confirmed on a live build. Whether phases 2 through 6 hold at the same read figure was still being measured when this was written. Phase 0 being the writer used to be inferred from timing; it is observed now.</td>
-          <td><span class="hit h-slate"><span class="dot"></span>Unfinished</span></td>
+          <td><b>The saving is measured on one build</b></td>
+          <td>The cost numbers come from a single real run. They should hold, but a single run is a data point, not a trend.</td>
         </tr>
       </tbody>
     </table>
   </div></div>
-  </div>
-</details>
-
-<details class="sec-wrap">
-  <summary class="sec"><span class="n">08</span> What the pass was actually worth <span class="hint">the short version</span></summary>
-  <div class="sec-body">
-  <p class="lead">Four things were true at the start and are not true now.</p>
-  <div class="excards">
-    <div class="excard">
-      <span class="k">One, not four</span>
-      <h3>The verdict is decided in one place</h3>
-      <p>Two pipelines read the same function. The test asserts identity, so a future divergence fails the suite rather than forking the answer silently.</p>
-    </div>
-    <div class="excard">
-      <span class="k">Spec, not prose</span>
-      <h3>Thresholds live where they can be tested</h3>
-      <p>Weights, boundaries, band edges, rule order. All in Python, all rendered into the prompt, none of them two facts that happen to agree.</p>
-    </div>
-    <div class="excard">
-      <span class="k">Measured, then claimed</span>
-      <h3>Caching is falsifiable now</h3>
-      <p>One log line per phase, greppable out of production. The number that proved the fix is the same number that would have caught the bug.</p>
-    </div>
-    <div class="excard">
-      <span class="k">And it was reported failing</span>
-      <h3>The guard did not hold</h3>
-      <p>The escape hatch was designed from a measurement, enforced in code, and then re-measured and found to be insufficient. That result is on this page at the same weight as the wins, because a builder who only reports the half that worked is not reporting.</p>
-    </div>
-  </div>
-  <div class="risk-note good-note"><span class="rn">The line to take away.</span> Determinism is not about removing the model. It is about being precise about <b>which half of a decision belongs to it</b>. The model reads the paragraph. Python owns the arithmetic. The moment those two get mixed, you are paying twice &mdash; once for the judgment, and again to guess at what it meant.</div>
   </div>
 </details>
 
