@@ -102,13 +102,6 @@
   .data-table td b{color:var(--text)}
   .data-table tr:last-child td{border-bottom:none}
 
-  .hit{display:inline-flex;align-items:center;gap:6px;font-family:var(--font-mono);font-size:10.5px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;white-space:nowrap}
-  .dot{width:7px;height:7px;border-radius:50%;flex:0 0 auto}
-  .h-good{color:var(--good)}.h-good .dot{background:var(--good)}
-  .h-bad{color:var(--bad)}.h-bad .dot{background:var(--bad)}
-  .h-warn{color:var(--warn)}.h-warn .dot{background:var(--warn)}
-  .h-slate{color:var(--text-faint)}.h-slate .dot{background:var(--text-faint)}
-
   details.col{margin-top:16px}
   details.col>summary{cursor:pointer;padding:12px 14px;background:var(--surface);border:1px solid var(--border);border-left:3px solid var(--primary);border-radius:10px;display:flex;align-items:center;gap:12px;font-size:15px;font-weight:700;color:var(--text);list-style:none}
   details.col>summary::-webkit-details-marker{display:none}
@@ -442,55 +435,31 @@
 </details>
 
 <details class="sec-wrap">
-  <summary class="sec"><span class="n">05</span> The part that did not work <span class="hint">the honest one</span></summary>
-  <div class="sec-body">
-  <p class="lead">Jev picks from a fixed list of options. That has a failure mode you do not see unless you go looking for it: <b>if none of the options fit, it still has to choose one.</b> So it picks the closest-sounding one, and it does so confidently.</p>
-  <p class="lead">Measured: input that fitted none of the options was filed under a real category at <b>0.98 and 0.99 confidence</b>. That matters more than it sounds. The obvious safety rule &mdash; <i>if the AI is unsure, ask a person</i> &mdash; never fires for exactly the cases you most want it to. The AI is not unsure. It is confident and wrong.</p>
-  <p class="lead">So a none-of-the-above option was made mandatory. The code now refuses to run at all if one is missing, which means a future change cannot quietly reintroduce the gap.</p>
-
-  <h3 class="sub">Then it was measured again, against real traffic</h3>
-  <p class="lead">That is the version in the design document. Here is what happened when the same function was pointed at real inputs, four runs each.</p>
-  <div class="table-wrap"><div class="table-scroll">
-    <table class="data-table">
-      <thead><tr><th>What was asked</th><th>Where it landed</th><th>Runs</th><th>Verdict</th></tr></thead>
-      <tbody>
-        <tr><td>&ldquo;What is the weather in Paris?&rdquo;</td><td>a real category</td><td>4 of 4</td><td><span class="hit h-bad"><span class="dot"></span>Wrong, every time</span></td></tr>
-        <tr><td>&ldquo;Book a flight to Denver next Tuesday.&rdquo;</td><td>a real category</td><td>4 of 4</td><td><span class="hit h-bad"><span class="dot"></span>Wrong, every time</span></td></tr>
-        <tr><td>&ldquo;Write me a haiku about autumn.&rdquo;</td><td>none of the above</td><td>4 of 4</td><td><span class="hit h-good"><span class="dot"></span>Correct, every time</span></td></tr>
-      </tbody>
-    </table>
-  </div></div>
-  <div class="risk-note"><span class="rn">The safeguard does not do what the design said it would.</span> Making a none-of-the-above option <b>exist</b> is not the same as making the AI <b>choose</b> it. Two of three out-of-scope inputs were filed into a real category, every single time. One of them at 0.91 confidence, so an &ldquo;ask a person when unsure&rdquo; rule would not have caught it either.</div>
-  <p class="lead">Four runs each is a signal, not a measurement. What it was enough to do was keep it switched off: it runs alongside the current logic, records what it would have said, and changes nothing. It stays that way until there is enough real traffic to say how often it disagrees.</p>
-  </div>
-</details>
-
-<details class="sec-wrap">
-  <summary class="sec"><span class="n">06</span> What is still open <span class="hint">what I would hand the next person</span></summary>
+  <summary class="sec"><span class="n">05</span> What is still open <span class="hint">what I would hand the next person</span></summary>
   <div class="sec-body">
   <div class="table-wrap"><div class="table-scroll">
     <table class="data-table">
       <thead><tr><th style="width:230px">Item</th><th>Why it is still open</th></tr></thead>
       <tbody>
         <tr>
-          <td><b>Four answers are still empty</b></td>
-          <td>Questions now exist for all four, but no session has been run through the new flow yet, so the fields stay empty until someone uses it. Anything that reads them still falls back to &ldquo;to be decided.&rdquo;</td>
+          <td><b>Three of the four fields are half filled</b></td>
+          <td>Questions now exist for three of them, and existing rows were backfilled from answers already on file. They fill unevenly until a session runs through the new flow. The fourth, the triage verdict, has no question and nothing reads it, so it stays empty on purpose.</td>
         </tr>
         <tr>
           <td><b>The second opinion is switched off</b></td>
-          <td>Deliberate. It runs alongside the current logic and records what it would have said, but does not decide anything until there is real data on how often it disagrees.</td>
+          <td>Deliberate. A second reader runs alongside the current logic, records what it would have said, and decides nothing until there is real data on how often the two disagree.</td>
         </tr>
         <tr>
-          <td><b>Two keywords never worked</b></td>
-          <td>Now fixed. Two search terms could never match because of a capital letter, which is a small thing that had been invisible for a while.</td>
+          <td><b>Two keywords never matched</b></td>
+          <td>Fixed. Two search terms could never match because of a capital letter.</td>
         </tr>
         <tr>
           <td><b>Some tidying was left undone</b></td>
-          <td>A handful of places still read structured data their own way instead of sharing one method. Each one has a written reason for staying as it is, and a check that stops the number growing.</td>
+          <td>A handful of places still read structured data their own way instead of sharing one method. Each has a written reason, and a check that stops the number growing.</td>
         </tr>
         <tr>
           <td><b>The saving is measured on one build</b></td>
-          <td>The cost numbers come from a single real run. They should hold, but a single run is a data point, not a trend.</td>
+          <td>The cost numbers come from a single real run. They should hold, but one run is a data point, not a trend.</td>
         </tr>
       </tbody>
     </table>
