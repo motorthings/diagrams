@@ -157,15 +157,15 @@
 
 <div class="wrap">
   <header class="hero">
-    <span class="hero-badge">The determinism pass &middot; September 2026</span>
+    <span class="hero-badge">Making the build predictable &middot; September 2026</span>
     <h1>Jev judges. Python does the math.</h1>
-    <p class="lede">An AI is good at reading a messy situation and forming a judgement. It is unreliable at arithmetic, at following the same rule twice, and at saying the same thing in the same way.<br>So AESOP stopped asking it to do those things. The result is a pipeline that is more predictable, wastes less, and costs less to run.</p>
+    <p class="lede">An AI is good at reading a messy situation and forming a judgement. It is unreliable at arithmetic, at following the same rule twice, and at saying the same thing in the same way.<br>So AESOP stopped asking it to do those things. The result is a build that is more predictable, wastes less, and costs less to run.</p>
   </header>
 
 <details class="sec-wrap" open>
   <summary class="sec"><span class="n">01</span> What changed <span class="hint">the short version</span></summary>
   <div class="sec-body">
-  <p class="lead">Every stage of the build pipeline has to make decisions. Before Jev, AESOP asked the build model to <b>write an assessment</b>, then paid a second program to read that assessment back and guess what it meant. Two problems: the program sometimes guessed wrong, and you were paying twice for one decision.</p>
+  <p class="lead">Every stage of a build has to make decisions. Before Jev, AESOP asked the build model to <b>write an assessment</b>, then paid a second program to read that assessment back and guess what it meant. Two problems: the program sometimes guessed wrong, and you were paying twice for one decision.</p>
   <p class="lead">Now the AI does the part it is actually good at &mdash; reading the situation and picking a judgement from a fixed set of options &mdash; and hands every number, rule and threshold to ordinary code. Three things improved.</p>
   <div class="excards three">
     <div class="excard" style="border-top-color:var(--good)">
@@ -177,7 +177,7 @@
     <div class="excard" style="border-top-color:var(--good)">
       <span class="k" style="color:var(--primary)">Efficient</span>
       <h3>Less work is thrown away</h3>
-      <p>The pipeline was re-sending the same document to the AI on all seven steps, and paying full price every time. It now sends it once and the AI re-reads it from its own cache.</p>
+      <p>The system was re-sending the same document to the AI on all seven steps, and paying full price every time. It now sends it once and the AI re-reads it from its own cache.</p>
       <p><b>Roughly a third</b> of a build's input cost was going to repetition.</p>
     </div>
     <div class="excard" style="border-top-color:var(--good)">
@@ -291,9 +291,9 @@
 </details>
 
 <details class="sec-wrap" open>
-  <summary class="sec"><span class="n">03</span> How a decision is made now <span class="hint">Jev decides. Python counts.</span></summary>
+  <summary class="sec"><span class="n">03</span> How a decision is made now <span class="hint">Jev judges. Python does the math.</span></summary>
   <div class="sec-body">
-  <p class="lead">Take the first gate in the pipeline: <b>is this project fit to build?</b> It has five scored signals, a pass mark, a second lower mark, and a short list of conditions that fail it outright no matter how well it scores otherwise.</p>
+  <p class="lead">Take the first decision the system makes: <b>is this project fit to build?</b> It scores five things, then compares the total against a pass mark and a lower bar. Separately, a short list of conditions fails it outright no matter how well it scores.</p>
   <p class="lead">Before, all of that lived in the instructions handed to the AI, which then wrote an answer, and code read the answer back out. Now the AI reports the five scores and names any disqualifying condition it found. Everything after that is arithmetic, and arithmetic belongs in code.</p>
 
   <div class="svg-wrap">
@@ -312,8 +312,8 @@
 <rect x="380" y="170" width="300" height="130" rx="8" class="sv-box-compute" style="fill:var(--compute);fill-opacity:0.13" stroke-width="1.5"></rect>
 <text class="sv-title" x="530" y="205" text-anchor="middle" style="fill:var(--compute)">The scoring code</text>
 <text class="sv-sub" x="530" y="229" text-anchor="middle">owns the pass mark, the weights</text>
-<text class="sv-sub" x="530" y="249" text-anchor="middle">and the order they apply in</text>
-<text class="sv-sub" x="530" y="269" text-anchor="middle">checked for consistency on startup</text>
+<text class="sv-sub" x="530" y="249" text-anchor="middle">and the order they apply in,</text>
+<text class="sv-sub" x="530" y="269" text-anchor="middle">and they are checked every time it starts</text>
 
 <path class="sv-arrow" d="M 290 220 L 378 220" marker-end="url(#arr2)" stroke-width="2"></path>
 <path class="sv-arrow" d="M 290 250 L 378 250" marker-end="url(#arr2)" stroke-width="2"></path>
@@ -435,7 +435,7 @@
 
   <div class="risk-note good-note"><span class="rn">The number.</span> Roughly <b>a third of a build's input cost</b> was being spent re-sending text the provider had already seen. On a fullstack build that is about <b>40,000 words</b> per run that no longer need to be paid for at full price. It is smaller than it sounds &mdash; this is not where most of the money goes &mdash; but it is real, and it is now measured rather than assumed.</div>
 
-  <div class="risk-note"><span class="rn">The part that looks like a mistake.</span> To make this work, the pipeline now sends <b>more</b> text on some steps than it used to. There is a minimum amount a provider will bother caching; below it, the cheap rate silently does not apply and nothing tells you. So the fixed block is deliberately padded past that line. Steps pay a little more up front, and the whole thing behind it becomes cheap. <b>It also changes what the AI reads</b>, which has not yet been verified on a real build. The code says so, next to the decision.</div>
+  <div class="risk-note"><span class="rn">The part that looks like a mistake.</span> To make this work, the system now sends <b>more</b> text on some steps than it used to. There is a minimum amount a provider will bother caching; below it, the cheap rate silently does not apply and nothing tells you. So the fixed block is deliberately padded past that line. Steps pay a little more up front, and the whole thing behind it becomes cheap. <b>It also changes what the AI reads</b>, which has not yet been verified on a real build. The code says so, next to the decision.</div>
   </div>
 </details>
 
@@ -459,7 +459,7 @@
     </table>
   </div></div>
   <div class="risk-note"><span class="rn">The safeguard does not do what the design said it would.</span> Making a none-of-the-above option <b>exist</b> is not the same as making the AI <b>choose</b> it. Two of three out-of-scope inputs were filed into a real category, every single time. One of them at 0.91 confidence, so an &ldquo;ask a person when unsure&rdquo; rule would not have caught it either.</div>
-  <p class="lead">Four runs each is a signal, not a measurement. What it was enough to do was stop the rollout: the feature runs alongside the old logic, records what it would have said, and changes nothing. It stays that way until there is enough real traffic to say how often it disagrees.</p>
+  <p class="lead">Four runs each is a signal, not a measurement. What it was enough to do was keep it switched off: it runs alongside the current logic, records what it would have said, and changes nothing. It stays that way until there is enough real traffic to say how often it disagrees.</p>
   </div>
 </details>
 
@@ -471,11 +471,11 @@
       <thead><tr><th style="width:230px">Item</th><th>Why it is still open</th></tr></thead>
       <tbody>
         <tr>
-          <td><b>Four fields are still empty</b></td>
+          <td><b>Four answers are still empty</b></td>
           <td>Questions now exist for all four, but no session has been run through the new flow yet, so the fields stay empty until someone uses it. Anything that reads them still falls back to &ldquo;to be decided.&rdquo;</td>
         </tr>
         <tr>
-          <td><b>The new judgement reader is switched off</b></td>
+          <td><b>The second opinion is switched off</b></td>
           <td>Deliberate. It runs alongside the current logic and records what it would have said, but does not decide anything until there is real data on how often it disagrees.</td>
         </tr>
         <tr>
