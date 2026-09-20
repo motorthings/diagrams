@@ -1,0 +1,363 @@
+<!DOCTYPE html>
+<html class="light">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AESOP Transformation OS &mdash; Sounds Like AI</title>
+<meta name="description" content="AESOP's Sounds Like AI mode scores how much an agent's replies read as machine-written, across 139 writing patterns in six families.">
+<link rel="icon" href="../icon.svg" type="image/svg+xml" />
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Mulish:ital,wght@0,300;0,400;0,600;0,700;0,800;1,400&display=swap" rel="stylesheet">
+<style>
+  :root{--font-display:'Mulish',sans-serif;--font-body:'Mulish','Segoe UI',Helvetica,sans-serif;--font-mono:'Mulish',ui-monospace,'SF Mono',Consolas,monospace;
+    --bg:#14181C;--surface:#1B2127;--surface2:#232B33;--surface3:#232B33;--border:#303A43;--border-bright:#42505C;
+    --text:#F4F5F6;--text-dim:#CBD0D6;--text-muted:#87919B;--text-faint:#97A2AD;
+    --primary:#F58A4E;--primary-dim:rgba(245,138,78,0.12);--secondary:#45C7A6;--secondary-dim:rgba(69,199,166,0.10);
+    --metric:#45C7A6;--metric-dim:rgba(69,199,166,0.10);--accent:#F58A4E;--accent-deep:#F58A4E;
+    --good:#45C7A6;--good-dim:rgba(69,199,166,0.10);--warn:#E0B05B;--warn-dim:rgba(224,176,91,0.10);
+    --bad:#E8735F;--bad-dim:rgba(232,115,95,0.10);--amber:#E0B05B;--amber-dim:rgba(224,176,91,0.10);
+    --violet:#B78BD8;--violet-dim:rgba(183,139,216,0.10);--rose:#E8735F;--rose-dim:rgba(232,115,95,0.10);
+    --slate:#87919B;--slate-dim:rgba(135,145,155,0.12);
+    --model:#F58A4E;--compute:#B78BD8;--consumer:#45C7A6;--storage:#6FA8D8;
+    --arr-color:#87919B;--arr-color-strong:#F58A4E;}
+  html.light{--bg:#F7F3EF;--surface:#FFFFFF;--surface2:#F0E9E1;--surface3:#F0E9E1;--border:#E1D6CB;--border-bright:#CDBBA8;
+    --text:#241A12;--text-dim:#574A3C;--text-muted:#6F6255;--text-faint:#6F6255;
+    --primary:#C64A11;--primary-dim:rgba(198,74,17,0.10);--secondary:#0E7C66;--secondary-dim:rgba(14,124,102,0.10);
+    --metric:#0E7C66;--metric-dim:rgba(14,124,102,0.10);--accent:#C64A11;--accent-deep:#C64A11;
+    --good:#0E7C66;--good-dim:rgba(14,124,102,0.10);--warn:#8A5A0B;--warn-dim:rgba(138,90,11,0.10);
+    --bad:#B03A26;--bad-dim:rgba(176,58,38,0.10);--amber:#8A5A0B;--amber-dim:rgba(138,90,11,0.10);
+    --violet:#6D3FC4;--violet-dim:rgba(109,63,196,0.10);--rose:#B03A26;--rose-dim:rgba(176,58,38,0.10);
+    --slate:#6B6259;--slate-dim:rgba(107,98,89,0.12);
+    --model:#C64A11;--compute:#6D3FC4;--consumer:#0E7C66;--storage:#1F5E93;
+    --arr-color:#8C7E6E;--arr-color-strong:#C64A11;}
+  *{margin:0;padding:0;box-sizing:border-box}
+  body{background:var(--bg);background-image:radial-gradient(at 10% 0%,var(--primary-dim) 0%,transparent 40%),radial-gradient(at 90% 80%,var(--metric-dim) 0%,transparent 40%);color:var(--text);font-family:var(--font-body);font-size:15px;line-height:1.7;min-height:100vh;padding:0 24px 72px;-webkit-font-smoothing:antialiased}
+  .nav{max-width:1040px;margin:0 auto;padding:16px 0 4px;background:transparent;border-bottom:none}
+  .nav-inner{max-width:1040px;margin:0 auto;padding:0;display:block}
+  .crumbs{font-family:var(--font-mono);font-size:13px;font-weight:600;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+  .crumbs a{color:var(--primary);text-decoration:none}.crumbs a:hover{text-decoration:underline}.crumbs .sep{color:var(--text-faint)}.crumbs .current{color:var(--text-faint);font-weight:400}.crumbs .home{color:var(--primary)}
+  .wrap{max-width:1040px;margin:0 auto;background:transparent;border:none;box-shadow:none;padding:0}
+  @keyframes fadeUp{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
+  .hero{text-align:center;padding:30px 0 6px;animation:fadeUp .5s ease both}
+  .hero-badge{font-family:var(--font-mono);font-size:11px;font-weight:700;letter-spacing:.2em;text-transform:uppercase;color:var(--primary);display:block;margin-bottom:12px}
+  .hero h1{font-size:40px;font-weight:800;letter-spacing:-1px;line-height:1.05;margin:0 auto 0;max-width:800px;background:linear-gradient(135deg,var(--primary),var(--metric));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+  .hero h1::after{content:"";display:block;height:26px}
+  .hero .lede+.lede{margin-top:12px}
+  .hero .lede{font-size:16px;color:var(--text-dim);max-width:640px;margin:2px auto 0;text-align:left}.hero .lede strong{color:var(--text)}
+
+  .sec{display:flex;align-items:center;gap:12px;font-family:var(--font-mono);font-size:12px;font-weight:700;letter-spacing:.15em;text-transform:uppercase;color:var(--text-faint);margin:8px 0 0;cursor:pointer}
+  .sec .n{color:var(--primary)}.sec .hint{font-family:var(--font-mono);font-size:10px;color:var(--text-faint);text-transform:none;letter-spacing:.5px}
+  details.sec-wrap{background:var(--surface);border:1px solid var(--border);border-radius:14px;margin:18px 0 0;overflow:hidden;animation:fadeUp .5s ease both}
+  details.sec-wrap > summary.sec{margin:0;padding:16px 20px;list-style:none}
+  details.sec-wrap > summary.sec::-webkit-details-marker{display:none}
+  details.sec-wrap > summary.sec::after{content:'+';margin-left:auto;color:var(--primary);flex:0 0 auto;font-family:var(--font-mono);font-weight:400;font-size:18px}
+  details.sec-wrap[open] > summary.sec::after{content:'\2212'}
+  details.sec-wrap .sec-body{padding:4px 22px 24px;border-top:1px solid var(--border);margin-top:2px}
+
+  .excards{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:14px}
+  .excards.three{grid-template-columns:1fr 1fr 1fr}
+  .excard{background:var(--surface);border:1px solid var(--border);border-top:3px solid var(--primary);border-radius:12px;padding:16px 18px;min-width:0}
+  .excard .k{font-family:var(--font-mono);font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--primary);display:block;margin-bottom:4px}
+  .excard h3{font-size:17px;font-weight:800;color:var(--text);margin-bottom:5px}
+  .excard p{font-size:13.5px;color:var(--text-dim);line-height:1.6}.excard p b{color:var(--text)}
+  .excard code{font-family:var(--font-mono);font-size:12.5px;color:var(--primary);font-weight:600}
+
+  .lead{font-size:14.5px;line-height:1.65;color:var(--text-dim);margin:12px 0 0}
+  .lead b{color:var(--text)}
+  .lead code{font-family:var(--font-mono);font-size:13px;color:var(--primary);font-weight:600}
+  h3.sub{font-size:17px;font-weight:800;color:var(--text);margin:22px 0 6px}
+  /* Wrap: balance evens a heading across its lines; pretty stops a heading or
+     paragraph ending on a dangling short word. */
+  .hero h1,.excard h3,h3.sub,.mini .mk,.hero-badge{text-wrap:balance}
+  .hero .lede,.lead,.excard p,.risk-note,.mini li,.data-table td,.data-table th{text-wrap:pretty}
+
+  /* Pure-CSS flowchart — linear A to B to C, so no diagram library.
+     Fills are mixed from existing section tokens; no new hexes. */
+  .flowchart{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:28px 20px;margin-top:14px}
+  .flow-row{display:flex;flex-direction:column;align-items:center;gap:0}
+  .flow-node{display:flex;flex-direction:column;align-items:center;gap:7px;width:100%;max-width:560px;min-width:0;flex-shrink:0}
+  .flow-box{border-radius:12px;padding:16px 20px;text-align:center;width:100%;min-width:0}
+  .flow-box--prompts{background:color-mix(in srgb,var(--violet) 13%,var(--surface));border:2px solid var(--violet)}
+  .flow-box--agent{background:color-mix(in srgb,var(--storage) 13%,var(--surface));border:2px solid var(--storage)}
+  .flow-box--python{background:color-mix(in srgb,var(--metric) 13%,var(--surface));border:2px solid var(--metric)}
+  .flow-box--judge{background:color-mix(in srgb,var(--amber) 13%,var(--surface));border:2px solid var(--amber)}
+  .flow-box-title{font-size:16px;font-weight:800;color:var(--text);margin-bottom:6px;letter-spacing:-.2px}
+  .flow-box-desc{font-size:13px;color:var(--text-dim);line-height:1.55}
+  .flow-box-desc b{color:var(--text)}
+  .flow-tag{font-family:var(--font-mono);font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;padding:2px 8px;border-radius:4px}
+  .flow-tag--prompts{color:var(--violet);background:color-mix(in srgb,var(--violet) 12%,transparent)}
+  .flow-tag--agent{color:var(--storage);background:color-mix(in srgb,var(--storage) 12%,transparent)}
+  .flow-tag--python{color:var(--metric);background:color-mix(in srgb,var(--metric) 12%,transparent)}
+  .flow-tag--judge{color:var(--amber);background:color-mix(in srgb,var(--amber) 12%,transparent)}
+  .flow-arrow{padding:4px 0;font-size:20px;color:var(--border-bright);font-family:var(--font-mono)}
+  .flow-legend{display:flex;flex-wrap:wrap;align-items:center;justify-content:center;gap:10px 18px;margin-top:16px;font-family:var(--font-mono);font-size:10.5px;color:var(--text-dim)}
+  .flow-legend span{display:flex;align-items:center;gap:6px}
+  .flow-swatch{display:inline-block;width:11px;height:11px;border-radius:3px;flex:0 0 auto}
+
+  .table-wrap{margin-top:14px;overflow-x:auto;background:var(--surface);border:1px solid var(--border);border-radius:10px}
+  .table-scroll{overflow-x:auto}
+  /* Below ~640px these tables scroll as a unit rather than crushing a column
+     to one word per line. Above it, the table fills the container. */
+  table.data-table{width:100%;min-width:620px;border-collapse:collapse;font-size:13px}
+  .data-table th{font-family:var(--font-mono);font-size:10.5px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;text-align:left;padding:10px 12px;color:var(--text-faint);background:var(--surface2);border-bottom:1px solid var(--border)}
+  .data-table td{padding:10px 12px;border-bottom:1px solid var(--border);vertical-align:top;color:var(--text-dim)}
+  .data-table td.num{text-align:right;font-variant-numeric:tabular-nums;font-family:var(--font-mono);font-weight:700;color:var(--text);white-space:nowrap}
+  .data-table td code{font-family:var(--font-mono);font-size:12px;color:var(--primary);font-weight:600}
+  .data-table td b{color:var(--text)}
+  .data-table tr:last-child td{border-bottom:none}
+  .data-table tfoot td{background:var(--surface2);font-weight:700;color:var(--text);border-top:1px solid var(--border);border-bottom:none}
+
+  .risk-note{background:var(--surface);border:1px solid var(--border);border-left:4px solid var(--rose);border-radius:10px;padding:14px 16px;margin:14px 0 12px;font-size:14px;line-height:1.6;color:var(--text-dim)}
+  .risk-note b{color:var(--text);font-weight:700}
+  .risk-note .rn{color:var(--rose);font-weight:700}
+  .good-note{border-left-color:var(--good)}
+  .good-note .rn{color:var(--good)}
+
+  .mini{background:var(--surface);border:1px solid var(--border);border-top:3px solid var(--secondary);border-radius:10px;padding:14px 16px;min-width:0;margin-top:14px}
+  .mini .mk{font-family:var(--font-mono);font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;margin-bottom:6px;color:var(--text-faint)}
+  .mini ul{list-style:none}
+  .mini li{font-size:13.5px;color:var(--text-dim);padding:7px 0 7px 16px;position:relative;border-top:1px solid var(--border)}
+  .mini li:first-child{border-top:none}
+  .mini li::before{content:'';position:absolute;left:0;top:14px;width:5px;height:5px;border-radius:50%;background:var(--primary)}
+  .mini li b{color:var(--text);font-weight:700}
+  .mini li code{font-family:var(--font-mono);font-size:12.5px;color:var(--primary);font-weight:600}
+  .duo{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+
+  .foot{margin:40px 0 0;padding:18px 0 8px;border-top:1px solid var(--border);font-family:var(--font-mono);font-size:11px;color:var(--text-faint);display:flex;justify-content:space-between;gap:20px;flex-wrap:wrap}
+  .foot a{color:var(--primary);text-decoration:none}
+
+  @media(max-width:900px){.excards.three{grid-template-columns:1fr}}
+  @media(max-width:760px){.excards,.duo{grid-template-columns:1fr}.hero h1{font-size:30px}.hero,.wrap{padding-left:4px;padding-right:4px}.flowchart{padding:22px 14px}}
+  @media(prefers-reduced-motion:reduce){*,*::before,*::after{animation-duration:.01ms!important;animation-delay:0ms!important;transition-duration:.01ms!important}}
+</style>
+</head>
+<body>
+<div class="nav">
+  <div class="nav-inner">
+    <nav class="crumbs" aria-label="Breadcrumb">
+      <a class="home" href="../index.html">Index</a>
+      <span class="sep">/</span>
+      <a href="../aesop.html">AESOP</a>
+      <span class="sep">/</span>
+      <span class="current" aria-current="page">Sounds Like AI</span>
+    </nav>
+  </div>
+</div>
+
+<div class="wrap">
+  <header class="hero">
+    <span class="hero-badge">AESOP evaluation mode &middot; September 2026</span>
+    <h1>Sounds Like AI</h1>
+    <p class="lede">Ask an agent ordinary questions. Keep the answers. Score how much they read like a machine wrote them.</p>
+    <p class="lede">Nothing is attacked here and nothing is scored for accuracy. An agent can write badly and still be right.</p>
+  </header>
+
+<details class="sec-wrap" open>
+  <summary class="sec"><span class="n">01</span> What this measures <span class="hint">the short version</span></summary>
+  <div class="sec-body">
+  <p class="lead">Most evaluation modes put an agent under pressure. This one does not.</p>
+  <p class="lead">The agent gets twelve everyday requests drawn from what it was built to do. Explain this. Compare those two. Draft a note. Troubleshoot a setting. No adversary, no conductor, no follow-up designed to trip it. Just the questions a real user would send.</p>
+  <p class="lead">Every reply is then read against a catalogue of <b>139 writing patterns</b> and given a score from 0 to 100. High means the writing reads human. Low means it reads machine-written.</p>
+  <p class="lead">That is the whole mode. Three things it deliberately is not.</p>
+  <div class="excards three">
+    <div class="excard" style="border-top-color:var(--violet)">
+      <span class="k" style="color:var(--violet)">Not an attack</span>
+      <h3>Ordinary questions only</h3>
+      <p>Prompts come from the agent's own stated purpose, varied in shape: explanations, recommendations, troubleshooting, comparisons, drafts.</p>
+      <p><b>Nothing tries to make it fail.</b> Cave of Shadows does that. This mode is the quiet one.</p>
+    </div>
+    <div class="excard" style="border-top-color:var(--storage)">
+      <span class="k" style="color:var(--storage)">Not an accuracy score</span>
+      <h3>A correct answer can read badly</h3>
+      <p>Nothing checks whether the reply was right. A correct answer that opens with &ldquo;Great question!&rdquo; still loses points for opening with &ldquo;Great question!&rdquo;</p>
+      <p><b>Right content, wrong register</b> is the thing being found.</p>
+    </div>
+    <div class="excard" style="border-top-color:var(--slate)">
+      <span class="k" style="color:var(--slate)">Not a verdict</span>
+      <h3>The score describes the writing</h3>
+      <p>It is one signal about one behaviour, reported on its own.</p>
+      <p><b>It never feeds the composite score or certification.</b> A safe agent that says &ldquo;delve&rdquo; does not get vetoed for it.</p>
+    </div>
+  </div>
+  </div>
+</details>
+
+<details class="sec-wrap" open>
+  <summary class="sec"><span class="n">02</span> The run <span class="hint">write, ask, scan, adjudicate, score</span></summary>
+  <div class="sec-body">
+  <p class="lead">Five stages, in order. Two of them involve a model. Three are Python.</p>
+
+  <div class="flowchart">
+    <div class="flow-row">
+      <div class="flow-node">
+        <div class="flow-box flow-box--prompts">
+          <div class="flow-box-title">1. Write the prompts</div>
+          <div class="flow-box-desc">Twelve ordinary questions drawn from the agent's stated purpose. Not attacks, not edge cases. Varied in shape: explain, recommend, troubleshoot, compare, draft.</div>
+        </div>
+        <div class="flow-tag flow-tag--prompts">An AI writes it</div>
+      </div>
+      <div class="flow-arrow">&darr;</div>
+      <div class="flow-node">
+        <div class="flow-box flow-box--agent">
+          <div class="flow-box-title">2. Ask the agent</div>
+          <div class="flow-box-desc">Each prompt goes to the agent <b>once</b> and the reply is kept. No adversary, no conductor, no pressure. One turn, then the transcript is stored.</div>
+        </div>
+        <div class="flow-tag flow-tag--agent">The agent under test</div>
+      </div>
+      <div class="flow-arrow">&darr;</div>
+      <div class="flow-node">
+        <div class="flow-box flow-box--python">
+          <div class="flow-box-title">3. Scan</div>
+          <div class="flow-box-desc">Every reply is checked against the catalogue in plain Python. Code blocks, inline code, URLs and markdown table rows are <b>blanked first</b>, so a code agent is not failed for its own flags and pipes.</div>
+        </div>
+        <div class="flow-tag flow-tag--python">Python</div>
+      </div>
+      <div class="flow-arrow">&darr;</div>
+      <div class="flow-node">
+        <div class="flow-box flow-box--judge">
+          <div class="flow-box-title">4. Adjudicate</div>
+          <div class="flow-box-desc">Only matches whose pattern has a <b>stated legitimate reading</b> are shown to a model, which rules each one real or not. It returns verdicts only. Every number stays Python's.</div>
+        </div>
+        <div class="flow-tag flow-tag--judge">The adjudicator</div>
+      </div>
+      <div class="flow-arrow">&darr;</div>
+      <div class="flow-node">
+        <div class="flow-box flow-box--python">
+          <div class="flow-box-title">5. Score</div>
+          <div class="flow-box-desc">Confirmed matches set the score. Repeating one pattern counts for less than it looks, because the twentieth em-dash says no more than the fourth.</div>
+        </div>
+        <div class="flow-tag flow-tag--python">Python</div>
+      </div>
+    </div>
+    <div class="flow-legend">
+      <span><span class="flow-swatch" style="background:var(--violet)"></span> An AI writes or rules</span>
+      <span><span class="flow-swatch" style="background:var(--storage)"></span> The agent under test</span>
+      <span><span class="flow-swatch" style="background:var(--metric)"></span> Python does the counting</span>
+      <span><span class="flow-swatch" style="background:var(--amber)"></span> The adjudicator model</span>
+    </div>
+  </div>
+
+  <div class="risk-note good-note" style="margin-top:16px"><span class="rn">The line to take away.</span> A model is allowed to judge a word in a sentence. It is never allowed to produce a number. The scan is written to the database <b>before</b> the adjudicator is called, so a timeout costs the refinement, not the run.</div>
+  </div>
+</details>
+
+<details class="sec-wrap" open>
+  <summary class="sec"><span class="n">03</span> The catalogue <span class="hint">139 patterns, six families</span></summary>
+  <div class="sec-body">
+  <p class="lead">One JSON file is the single source of truth. The detector reads it, the adjudicator's instructions are rendered from it, and the run records its content hash. Change what gets detected by editing the file, not the code.</p>
+  <p class="lead">Every entry also has to answer one question: <b>when is this legitimate?</b> A pattern that cannot answer it is not ready to be in the catalogue.</p>
+
+  <div class="table-wrap"><div class="table-scroll">
+    <table class="data-table">
+      <thead><tr><th style="width:210px">Family</th><th style="width:90px">Patterns</th><th style="width:120px">Needs a ruling</th><th>What it covers</th></tr></thead>
+      <tbody>
+        <tr><td><b>Word choice</b></td><td class="num">60</td><td class="num">47</td><td>delve, tapestry, leverage, robust, landscape</td></tr>
+        <tr><td><b>Sentence constructions</b></td><td class="num">26</td><td class="num">6</td><td>&ldquo;not X but Y&rdquo;, &ldquo;let's dive in&rdquo;, signposting</td></tr>
+        <tr><td><b>Hedging</b></td><td class="num">15</td><td class="num">2</td><td>&ldquo;it's worth noting&rdquo;, &ldquo;could be argued&rdquo;, adverb crutches</td></tr>
+        <tr><td><b>Formatting and rhythm</b></td><td class="num">12</td><td class="num">12</td><td>em-dash density, tricolon density, uniform paragraphs</td></tr>
+        <tr><td><b>Chatbot pleasantries</b></td><td class="num">14</td><td class="num">3</td><td>&ldquo;Great question!&rdquo;, &ldquo;I hope this helps&rdquo;, &ldquo;want me to also&rdquo;</td></tr>
+        <tr><td><b>Simulated empathy</b></td><td class="num">12</td><td class="num">12</td><td>&ldquo;I hear you&rdquo;, &ldquo;sit with that&rdquo;, &ldquo;how does that land?&rdquo;</td></tr>
+      </tbody>
+      <tfoot><tr><td>Total</td><td class="num">139</td><td class="num">82</td><td>57 have no defensible use and cost no model call</td></tr></tfoot>
+    </table>
+  </div></div>
+
+  <div class="mini">
+    <div class="mk">Two switches worth knowing about</div>
+    <ul>
+      <li><b>The empathy family is off by default, per agent.</b> &ldquo;I hear you&rdquo; is correct in a support agent and a tell in a code assistant. Turn it on where the register is right.</li>
+      <li><b>The catalogue is English only.</b> That is not a limitation to work around. It is the limit of what this mode can say, and it says so in the report.</li>
+    </ul>
+  </div>
+  </div>
+</details>
+
+<details class="sec-wrap" open>
+  <summary class="sec"><span class="n">04</span> A match is a question, not a verdict <span class="hint">the legitimate reading</span></summary>
+  <div class="sec-body">
+  <p class="lead">A pattern with a legitimate reading is never trusted on a match.</p>
+  <p class="lead">Every entry has to state the reading that makes it legitimate. &ldquo;Harness&rdquo; is a tell. <b>&ldquo;Test harness&rdquo; is not.</b> A regex cannot tell you which one it found. A person can, and so can a model given the sentence.</p>
+  <p class="lead">So the catalogue splits in two. <b>82 entries carry a legitimate reading</b> and a match on one goes to the adjudicator, which rules real or not. The other <b>57 have no defensible use</b> and are trusted on the pattern alone. Those cost no model call at all.</p>
+  <p class="lead">That split is the difference between a confident false positive and a question. &ldquo;Deliberate&rdquo; firing on &ldquo;the board deliberated&rdquo; is noise. &ldquo;Delve&rdquo; is not, and it does not need to be asked about.</p>
+
+  <div class="risk-note"><span class="rn">What the adjudicator is shown.</span> Not the bare word. The match plus about 140 characters either side, on one line, so the sentence is legible. The verdict has to name the span it is ruling on. A verdict for a span the model was not shown is discarded.</div>
+  <div class="risk-note"><span class="rn">What it can change.</span> Only whether an occurrence counts. It never returns a score, and one that somehow does is thrown away. If it times out, the unadjudicated scan stands and the run still finishes.</div>
+  </div>
+</details>
+
+<details class="sec-wrap" open>
+  <summary class="sec"><span class="n">05</span> Density, not presence <span class="hint">one em-dash is punctuation</span></summary>
+  <div class="sec-body">
+  <p class="lead">One em-dash is punctuation. Twelve is a tell.</p>
+  <p class="lead">So the detector does not count the first occurrence of a detail pattern. It subtracts an allowance first, based on how long the text is, and only the excess counts. A long document is not punished for using its own punctuation normally.</p>
+  <p class="lead">Then a ceiling: <b>no single pattern can contribute more than three occurrences</b>, no matter how many times it fires. So one punctuation habit cannot outweigh six different real tells sitting next to it. The twentieth em-dash says no more than the fourth, and it is scored that way.</p>
+  <p class="lead">The score has two parts. A <b>presence</b> term, which is how many different patterns are in play. And a <b>density</b> term, which is how thick they run. Density saturates rather than clipping, so a short reply does not hit a cliff at the cap, which is exactly where the cap would bite hardest.</p>
+  <div class="mini">
+    <div class="mk">Worked, in order</div>
+    <ul>
+      <li><b>Blank the code.</b> Fenced blocks, inline code, URLs and table rows go before anything is counted</li>
+      <li><b>Subtract the allowance.</b> What is left over is the count for that pattern</li>
+      <li><b>Cap at three.</b> One pattern, one ceiling, whatever it does</li>
+      <li><b>Weight and blend.</b> Presence plus saturating density, subtracted from 100</li>
+    </ul>
+  </div>
+  </div>
+</details>
+
+<details class="sec-wrap" open>
+  <summary class="sec"><span class="n">06</span> A confident zero is worse than no answer <span class="hint">nothing to score</span></summary>
+  <div class="sec-body">
+  <p class="lead">A reply written in another language matches nothing in an English catalogue. Scored naively, it gets a perfect 100 for the worst possible reason.</p>
+  <p class="lead">Runs that cannot be scanned return <b>no score</b>. The report says why. A run that produced no usable replies at all fails outright rather than passing quietly.</p>
+  <p class="lead">Short runs are still scored, but flagged as a <b>thin sample</b>, because twelve one-line answers do not add up to a reading of anything.</p>
+  <p class="lead">And some things cannot be measured in code at all. An agent restating your question as its opening line is a tell, and no counter will catch it. The report names those patterns explicitly, so a clean score is never read as covering something nobody checked.</p>
+  <div class="risk-note good-note"><span class="rn">The principle.</span> A missing answer and a good answer are different things. This mode would rather say <b>no score</b> than say 100.</div>
+  </div>
+</details>
+
+<details class="sec-wrap" open>
+  <summary class="sec"><span class="n">07</span> How you read the score <span class="hint">the bands</span></summary>
+  <div class="sec-body">
+  <p class="lead">0 to 100, higher is better. Four bands, and the words are the ones the run page uses.</p>
+  <div class="table-wrap"><div class="table-scroll">
+    <table class="data-table">
+      <thead><tr><th style="width:130px">Score</th><th style="width:210px">Reads as</th><th>What it means</th></tr></thead>
+      <tbody>
+        <tr><td class="num">90 &ndash; 100</td><td><b>Reads human</b></td><td>The replies carry almost none of the catalogue. Nothing to look at.</td></tr>
+        <tr><td class="num">80 &ndash; 89</td><td><b>Mostly human</b></td><td>A few patterns, most of them ruled legitimate. Worth a skim of the flagged list.</td></tr>
+        <tr><td class="num">65 &ndash; 79</td><td><b>Noticeably patterned</b></td><td>Enough patterns firing at enough density that a reader would feel it, even without naming it.</td></tr>
+        <tr><td class="num">Below 65</td><td><b>Reads machine-written</b></td><td>The register is the model's default, not the agent's purpose.</td></tr>
+      </tbody>
+    </table>
+  </div></div>
+  <p class="lead">Every flagged match is shown <b>in the sentence it came from</b>, so you can judge it yourself rather than take the number's word for it. Confirmed matches and ruled-out ones are both listed.</p>
+  </div>
+</details>
+
+<details class="sec-wrap" open>
+  <summary class="sec"><span class="n">08</span> What this does not tell you <span class="hint">read this part</span></summary>
+  <div class="sec-body">
+  <p class="lead">The score describes the writing, not the answer. It says nothing about whether the reply was correct, useful, or safe.</p>
+  <p class="lead">It is a <b>stylistic signal, not proof</b> that text was machine-written. People reach for stock phrases too, and a human under deadline writes in cliches.</p>
+  <p class="lead">It is <b>advisory</b>. The mode reports its own 0 to 100 score and nothing else. It does not feed the composite score and it does not touch certification.</p>
+  <div class="mini">
+    <div class="mk">The limits, stated plainly</div>
+    <ul>
+      <li><b>English only.</b> Other languages match nothing and return no score rather than a false pass</li>
+      <li><b>Empathy is off by default.</b> Correct in a support agent, a tell in a code assistant. Per agent, your call</li>
+      <li><b>Some tells are unmeasurable.</b> Restating your question, for one. The report names them so a clean score is not mistaken for full coverage</li>
+      <li><b>Twelve prompts is a sample.</b> Enough to see a register repeat, not enough to characterise an agent</li>
+    </ul>
+  </div>
+  </div>
+</details>
+
+  <div class="foot">
+    <span>&copy; 2025&ndash;2026 Charlie Fuller</span>
+    <a href="../aesop.html">All AESOP explainers &rarr;</a>
+  </div>
+</div>
+
+</body>
+</html>
