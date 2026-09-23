@@ -1,0 +1,510 @@
+<!DOCTYPE html>
+<html class="light">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AESOP Transformation OS &mdash; How Trace Analysis Works</title>
+<meta name="description" content="AESOP's Trace Analysis turns a human's reading of real conversations into failure judges that can be checked against that human, then measures whether a repair moved the rate.">
+<link rel="icon" href="../icon.svg" type="image/svg+xml" />
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Mulish:ital,wght@0,300;0,400;0,600;0,700;0,800;1,400&display=swap" rel="stylesheet">
+<style>
+  :root{--font-display:'Mulish',sans-serif;--font-body:'Mulish','Segoe UI',Helvetica,sans-serif;--font-mono:'Mulish',ui-monospace,'SF Mono',Consolas,monospace;
+    --bg:#14181C;--surface:#1B2127;--surface2:#232B33;--surface3:#232B33;--border:#303A43;--border-bright:#42505C;
+    --text:#F4F5F6;--text-dim:#CBD0D6;--text-muted:#87919B;--text-faint:#97A2AD;
+    --primary:#F58A4E;--primary-dim:rgba(245,138,78,0.12);--secondary:#45C7A6;--secondary-dim:rgba(69,199,166,0.10);
+    --metric:#45C7A6;--metric-dim:rgba(69,199,166,0.10);--accent:#F58A4E;--accent-deep:#F58A4E;
+    --good:#45C7A6;--good-dim:rgba(69,199,166,0.10);--warn:#E0B05B;--warn-dim:rgba(224,176,91,0.10);
+    --bad:#E8735F;--bad-dim:rgba(232,115,95,0.10);--amber:#E0B05B;--amber-dim:rgba(224,176,91,0.10);
+    --violet:#B78BD8;--violet-dim:rgba(183,139,216,0.10);--rose:#E8735F;--rose-dim:rgba(232,115,95,0.10);
+    --slate:#87919B;--slate-dim:rgba(135,145,155,0.12);
+    --model:#F58A4E;--compute:#B78BD8;--consumer:#45C7A6;--storage:#6FA8D8;
+    --arr-color:#87919B;--arr-color-strong:#F58A4E;}
+  html.light{--bg:#F7F3EF;--surface:#FFFFFF;--surface2:#F0E9E1;--surface3:#F0E9E1;--border:#E1D6CB;--border-bright:#CDBBA8;
+    --text:#241A12;--text-dim:#574A3C;--text-muted:#6F6255;--text-faint:#6F6255;
+    --primary:#C64A11;--primary-dim:rgba(198,74,17,0.10);--secondary:#0E7C66;--secondary-dim:rgba(14,124,102,0.10);
+    --metric:#0E7C66;--metric-dim:rgba(14,124,102,0.10);--accent:#C64A11;--accent-deep:#C64A11;
+    --good:#0E7C66;--good-dim:rgba(14,124,102,0.10);--warn:#8A5A0B;--warn-dim:rgba(138,90,11,0.10);
+    --bad:#B03A26;--bad-dim:rgba(176,58,38,0.10);--amber:#8A5A0B;--amber-dim:rgba(138,90,11,0.10);
+    --violet:#6D3FC4;--violet-dim:rgba(109,63,196,0.10);--rose:#B03A26;--rose-dim:rgba(176,58,38,0.10);
+    --slate:#6B6259;--slate-dim:rgba(107,98,89,0.12);
+    --model:#C64A11;--compute:#6D3FC4;--consumer:#0E7C66;--storage:#1F5E93;
+    --arr-color:#8C7E6E;--arr-color-strong:#C64A11;}
+  *{margin:0;padding:0;box-sizing:border-box}
+  body{background:var(--bg);background-image:radial-gradient(at 10% 0%,var(--primary-dim) 0%,transparent 40%),radial-gradient(at 90% 80%,var(--metric-dim) 0%,transparent 40%);color:var(--text);font-family:var(--font-body);font-size:15px;line-height:1.7;min-height:100vh;padding:0 24px 72px;-webkit-font-smoothing:antialiased}
+  .nav{max-width:1040px;margin:0 auto;padding:16px 0 4px;background:transparent;border-bottom:none}
+  .nav-inner{max-width:1040px;margin:0 auto;padding:0;display:block}
+  .crumbs{font-family:var(--font-mono);font-size:13px;font-weight:600;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+  .crumbs a{color:var(--primary);text-decoration:none}.crumbs a:hover{text-decoration:underline}.crumbs .sep{color:var(--text-faint)}.crumbs .current{color:var(--text-faint);font-weight:400}.crumbs .home{color:var(--primary)}
+  .wrap{max-width:1040px;margin:0 auto;background:transparent;border:none;box-shadow:none;padding:0}
+  @keyframes fadeUp{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
+  .hero{text-align:center;padding:30px 0 6px;animation:fadeUp .5s ease both}
+  .hero-badge{font-family:var(--font-mono);font-size:11px;font-weight:700;letter-spacing:.2em;text-transform:uppercase;color:var(--primary);display:block;margin-bottom:12px}
+  .hero h1{font-size:40px;font-weight:800;letter-spacing:-1px;line-height:1.05;margin:0 auto 0;max-width:820px;background:linear-gradient(135deg,var(--primary),var(--metric));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+  .hero h1::after{content:"";display:block;height:26px}
+  .hero .lede+.lede{margin-top:12px}
+  .hero .lede{font-size:16px;color:var(--text-dim);max-width:640px;margin:2px auto 0;text-align:left}.hero .lede strong{color:var(--text)}
+  .hero .lede code{font-family:var(--font-mono);font-size:14px;color:var(--primary);font-weight:600}
+
+  .sec{display:flex;align-items:center;gap:12px;font-family:var(--font-mono);font-size:12px;font-weight:700;letter-spacing:.15em;text-transform:uppercase;color:var(--text-faint);margin:8px 0 0;cursor:pointer}
+  .sec .n{color:var(--primary)}.sec .hint{font-family:var(--font-mono);font-size:10px;color:var(--text-faint);text-transform:none;letter-spacing:.5px}
+  details.sec-wrap{background:var(--surface);border:1px solid var(--border);border-radius:14px;margin:18px 0 0;overflow:hidden;animation:fadeUp .5s ease both}
+  details.sec-wrap > summary.sec{margin:0;padding:16px 20px;list-style:none}
+  details.sec-wrap > summary.sec::-webkit-details-marker{display:none}
+  details.sec-wrap > summary.sec::after{content:'+';margin-left:auto;color:var(--primary);flex:0 0 auto;font-family:var(--font-mono);font-weight:400;font-size:18px}
+  details.sec-wrap[open] > summary.sec::after{content:'\2212'}
+  details.sec-wrap .sec-body{padding:4px 22px 24px;border-top:1px solid var(--border);margin-top:2px}
+
+  .excards{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:14px}
+  .excards.three{grid-template-columns:1fr 1fr 1fr}
+  .excard{background:var(--surface2);border:1px solid var(--border);border-top:3px solid var(--primary);border-radius:12px;padding:16px 18px;min-width:0}
+  .excard.m{border-top-color:var(--model)}.excard.c{border-top-color:var(--compute)}.excard.h{border-top-color:var(--consumer)}
+  .excard .k{font-family:var(--font-mono);font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--primary);display:block;margin-bottom:4px}
+  .excard.m .k{color:var(--model)}.excard.c .k{color:var(--compute)}.excard.h .k{color:var(--consumer)}
+  .excard h3{font-size:17px;font-weight:800;color:var(--text);margin-bottom:5px}
+  .excard p{font-size:13.5px;color:var(--text-dim);line-height:1.6;overflow-wrap:break-word}.excard p+p{margin-top:8px}.excard p b{color:var(--text)}
+  .excard code{font-family:var(--font-mono);font-size:12.5px;color:var(--primary);font-weight:600;overflow-wrap:break-word}
+  .excard ul{list-style:none;margin-top:8px}
+  .excard ul li{font-size:13px;color:var(--text-dim);line-height:1.55;padding:6px 0 6px 14px;position:relative;border-top:1px solid var(--border);overflow-wrap:break-word}
+  .excard ul li:first-child{border-top:none}
+  .excard ul li::before{content:'';position:absolute;left:0;top:13px;width:5px;height:5px;border-radius:50%;background:var(--primary)}
+  .excard ul li b{color:var(--text);font-weight:700}
+
+  .lead{font-size:14.5px;line-height:1.65;color:var(--text-dim);margin:12px 0 0}
+  .lead b{color:var(--text)}
+  .lead code{font-family:var(--font-mono);font-size:13px;color:var(--primary);font-weight:600}
+  h3.sub{font-size:17px;font-weight:800;color:var(--text);margin:22px 0 6px}
+  h4.sub{font-size:14px;font-weight:800;color:var(--text);margin:16px 0 4px}
+
+  .diagram{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:20px 20px 16px;margin-top:18px;animation:fadeUp .5s ease both}
+  .diagram .cap{font-family:var(--font-mono);font-size:11px;color:var(--text-faint);padding:14px 2px 2px;letter-spacing:.03em;line-height:1.6}
+  .dhead{font-family:var(--font-mono);font-size:11px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--text-faint);margin:0 0 12px}
+  .dhead+.loop{margin-bottom:26px}
+  .loop{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:12px}
+  .step{background:var(--surface2);border:1px solid var(--border);border-left:3px solid var(--slate);border-radius:12px;padding:14px 16px;min-width:0;overflow-wrap:break-word}
+  .step.p{border-left-color:var(--consumer)}
+  .step.m{border-left-color:var(--model)}
+  .step.c{border-left-color:var(--compute)}
+  .step .sn{font-family:var(--font-mono);font-size:10.5px;font-weight:700;letter-spacing:.14em;color:var(--text-faint);display:block;margin-bottom:5px}
+  .step h4{font-size:15px;font-weight:800;color:var(--text);margin-bottom:4px;line-height:1.3}
+  .step p{font-size:12.5px;color:var(--text-dim);line-height:1.55}
+  @media (min-width:900px){
+    .loop{grid-template-columns:repeat(4,1fr)}
+    .loop .step{position:relative}
+    .loop .step:not(:last-child)::after{content:"\2192";position:absolute;right:-11px;top:50%;transform:translateY(-50%);color:var(--arr-color);font-family:var(--font-mono);font-size:15px;line-height:1}
+  }
+  .step .who{display:inline-block;font-family:var(--font-mono);font-size:10px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;margin-top:9px}
+  .step.p .who{color:var(--consumer)}.step.m .who{color:var(--model)}.step.c .who{color:var(--compute)}
+  .cycle{border:1px dashed var(--arr-color-strong);border-radius:12px;padding:12px 16px;margin-top:12px;font-size:13px;color:var(--text-dim);line-height:1.6}
+  .cycle b{color:var(--text)}
+
+  .table-wrap{background:var(--surface2);border:1px solid var(--border);border-radius:12px;margin-top:14px;padding:0 16px;overflow:hidden}
+  table{width:100%;border-collapse:collapse;font-size:13.5px}
+  thead th{font-family:var(--font-mono);font-size:11px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--text-faint);text-align:left;padding:0 12px 8px 0;border-bottom:1px solid var(--border-bright)}
+  tbody td{padding:10px 12px 10px 0;border-bottom:1px solid var(--border);color:var(--text-dim);vertical-align:top;overflow-wrap:break-word}
+  tbody tr:last-child td{border-bottom:none}
+  tbody td:first-child{color:var(--text);font-weight:600}
+  td code{font-family:var(--font-mono);font-size:12.5px;color:var(--primary);font-weight:600}
+
+  .pill{display:inline-block;font-family:var(--font-mono);font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;padding:3px 8px;border-radius:999px}
+  .pill.good{background:var(--good-dim);color:var(--good)}
+  .pill.bad{background:var(--bad-dim);color:var(--bad)}
+  .pill.warn{background:var(--warn-dim);color:var(--warn)}
+  .pill.slate{background:var(--slate-dim);color:var(--slate)}
+
+  .note{border-left:3px solid var(--warn);background:var(--warn-dim);border-radius:0 10px 10px 0;padding:12px 16px;margin-top:14px;font-size:13.5px;color:var(--text-dim);line-height:1.6}
+  .note b{color:var(--text)}
+  .note code{font-family:var(--font-mono);font-size:12.5px;color:var(--primary);font-weight:600}
+
+  .foot{max-width:1040px;margin:56px auto 0;padding-top:18px;border-top:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;gap:16px;flex-wrap:wrap;font-family:var(--font-mono);font-size:12px;color:var(--text-faint)}
+  .foot a{color:var(--primary);text-decoration:none}.foot a:hover{text-decoration:underline}
+
+  @media (prefers-reduced-motion:reduce){*{animation:none!important}}
+  @media (max-width:820px){.excards,.excards.three{grid-template-columns:1fr}.hero h1{font-size:31px}}
+  @media (max-width:700px){
+    table,thead,tbody,tr,td{display:block;width:100%}
+    thead{display:none}
+    tbody tr{border:1px solid var(--border);border-radius:12px;padding:12px 14px;margin-top:12px;background:var(--surface2)}
+    tbody td{border-bottom:none;padding:5px 0}
+    tbody td:first-child{font-weight:800;font-size:15px;color:var(--text);margin-bottom:4px}
+    tbody td[data-label]::before{content:attr(data-label);display:block;font-family:var(--font-mono);font-size:10px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--text-faint);margin-bottom:2px}
+  }
+</style>
+</head>
+<body>
+<div class="nav">
+  <div class="nav-inner">
+    <nav class="crumbs" aria-label="Breadcrumb">
+      <a class="home" href="../index.html">Index</a>
+      <span class="sep">/</span>
+      <a href="../aesop.html">AESOP</a>
+      <span class="sep">/</span>
+      <span class="current" aria-current="page">How Trace Analysis works</span>
+    </nav>
+  </div>
+</div>
+
+<div class="wrap">
+
+  <div class="hero">
+    <span class="hero-badge">Evaluate &middot; Trace Analysis</span>
+    <h1>Read the conversations. Then let the reading do the measuring.</h1>
+    <p class="lede">An AESOP evaluation comes back with a great deal. Six specialist reviewers write full reports. Scenarios run against the live agent and are scored. A synthesis pulls the findings together and clusters the failures.</p>
+    <p class="lede">What none of that can do is measure one named failure mode across a repair. A report is read once and filed. Trace Analysis takes the conversations the evaluation already produced, has a person read them, and turns that reading into <strong>judges</strong> that can be run again, and again, on every future version.</p>
+    <p class="lede">The whole loop exists to answer one question honestly: <strong>did the repair actually change anything?</strong></p>
+  </div>
+
+  <!-- ================= the loop ================= -->
+  <div class="diagram">
+    <p class="dhead">The taxonomy &middot; made once, by hand</p>
+    <div class="loop">
+      <div class="step p">
+        <span class="sn">01 &middot; OPEN CODING</span>
+        <h4>A person reads traces</h4>
+        <p>Writes down every failure they notice, in their own words. No model in the room at all.</p>
+        <span class="who">a person</span>
+      </div>
+      <div class="step m">
+        <span class="sn">02 &middot; AXIAL CODING</span>
+        <h4>The agent groups the notes</h4>
+        <p>Into five or six failure patterns. It reads the notes, never the raw traces.</p>
+        <span class="who">the model</span>
+      </div>
+      <div class="step p">
+        <span class="sn">03 &middot; APPROVAL</span>
+        <h4>A person signs off</h4>
+        <p>Edits, rejects, re-ranks. Nothing downstream moves until they do.</p>
+        <span class="who">a person</span>
+      </div>
+      <div class="step m">
+        <span class="sn">04 &middot; REPAIR</span>
+        <h4>The instructions get rewritten</h4>
+        <p>Taxonomy weighted above the reports. Every change cites the code it answers.</p>
+        <span class="who">the model</span>
+      </div>
+    </div>
+
+    <p class="dhead">The measurement &middot; made every time, by machine</p>
+    <div class="loop">
+      <div class="step m">
+        <span class="sn">05 &middot; A JUDGE</span>
+        <h4>One code, narrowed</h4>
+        <p>To a single question a model can answer about one conversation.</p>
+        <span class="who">the model</span>
+      </div>
+      <div class="step c">
+        <span class="sn">06 &middot; VALIDATION</span>
+        <h4>Checked against the human</h4>
+        <p>Does it rule the way you ruled, on the traces you already coded?</p>
+        <span class="who">Python</span>
+      </div>
+      <div class="step m">
+        <span class="sn">07 &middot; PREVALENCE</span>
+        <h4>How often it happens</h4>
+        <p>Across every trace on the run, read by the validated judge.</p>
+        <span class="who">the model</span>
+      </div>
+      <div class="step c">
+        <span class="sn">08 &middot; THE RE-MEASURE</span>
+        <h4>Before and after</h4>
+        <p>The same judge against both runs. The movement, or the absence of one.</p>
+        <span class="who">Python</span>
+      </div>
+    </div>
+
+    <div class="cycle"><b>The cycle turns.</b> A person copies the rewrite into the agent, the run is evaluated again, and steps 05 to 08 measure the same failure modes on the new version. Steps 01 to 04 happen once per taxonomy. Steps 05 to 08 run every time a repair is measured.</div>
+
+    <div class="cap">Four steps are a person&#39;s judgement. Four are mechanical. Nothing crosses over.</div>
+  </div>
+
+  <!-- ================= 01 ================= -->
+  <details class="sec-wrap" open>
+    <summary class="sec"><span class="n">01</span> Open coding <span class="hint">a person, on their own</span></summary>
+    <div class="sec-body">
+      <p class="lead">Someone opens the conversations a run produced and writes down every failure they notice. One note per issue, each tagged with a severity, each optionally tagged with a category.</p>
+
+      <div class="excards">
+        <div class="excard h">
+          <span class="k">The rule that matters</span>
+          <h3>No model in the room</h3>
+          <p>The agent does not suggest, autocomplete, or pre-group anything during this step. The synthesis agent is not invoked until the human asks for it.</p>
+          <p>A suggestion here would anchor the reading. Someone shown four plausible categories finds those four categories.</p>
+        </div>
+        <div class="excard h">
+          <span class="k">Stopping</span>
+          <h3>Saturation, as a nudge</h3>
+          <p>The system watches the categories you write. When your last three notes introduce nothing your earlier notes had not already named, it shows a green badge saying you have probably seen everything.</p>
+          <p>It reads only the category field. Notes left uncategorised tell it nothing, so a run of them can never trigger it. And nothing gates on it.</p>
+        </div>
+      </div>
+
+      <div class="note">
+        <b>Annotate from inside a trace, not with the manual note box.</b> A manual note carries no <code>source_id</code>, so it cannot be joined to anything a judge later says. Validation would come back measuring nothing, and the reason would not be visible anywhere.</div>
+    </div>
+  </details>
+
+  <!-- ================= 02 ================= -->
+  <details class="sec-wrap">
+    <summary class="sec"><span class="n">02</span> Axial coding <span class="hint">the agent groups, Python counts</span></summary>
+    <div class="sec-body">
+      <p class="lead">The synthesis agent reads the notes and proposes five or six failure patterns. It reads the <b>annotations</b>, never the raw traces, because the human has already done the interpretive work and grouping is a different job.</p>
+
+      <div class="excards">
+        <div class="excard m">
+          <span class="k">The agent's job</span>
+          <h3>Names, descriptions, evidence</h3>
+          <ul>
+            <li>A name for the pattern, and what it means</li>
+            <li>The quoted notes that support it</li>
+            <li>A suggested repair direction</li>
+          </ul>
+          <p>That third item is a suggestion, not a decision. It says what to do about the failure, which is not the same as what the failure is.</p>
+        </div>
+        <div class="excard c">
+          <span class="k">Python's job</span>
+          <h3>Every number on the card</h3>
+          <ul>
+            <li><b>Frequency</b> &mdash; how many notes landed here</li>
+            <li><b>Severity spread</b> &mdash; critical, major, minor</li>
+            <li><b>Rank</b> &mdash; frequency times a severity weight</li>
+          </ul>
+          <p>A number the model puts in its own response is discarded rather than used. The counts are recomputed from the data, so the agent cannot inflate them.</p>
+        </div>
+      </div>
+
+      <p class="lead">Five annotations are the design's stated floor and two is what the code enforces. Two is low for a taxonomy, and the number you hit will not be five.</p>
+    </div>
+  </details>
+
+  <!-- ================= 03 ================= -->
+  <details class="sec-wrap">
+    <summary class="sec"><span class="n">03</span> Approval <span class="hint">the gate everything waits behind</span></summary>
+    <div class="sec-body">
+      <p class="lead">A person reviews the taxonomy: accepts, edits, re-ranks, rejects. Until they approve it, nothing downstream will read it.</p>
+
+      <div class="excards">
+        <div class="excard h">
+          <span class="k">What approval writes</span>
+          <h3>Session and codes both</h3>
+          <p>The session is marked approved, with a timestamp.</p>
+          <p>Every code still marked <em>proposed</em> is promoted to <em>approved</em>. A code a person explicitly rejected keeps that verdict, because approving a taxonomy is not a reversal of a decision made inside it.</p>
+        </div>
+        <div class="excard c">
+          <span class="k">What the loader does</span>
+          <h3>Rejected codes are dropped</h3>
+          <p>When Repair asks for the taxonomy it gets the newest approved session for that evaluation, minus any code a person rejected.</p>
+          <p>An approved session with no surviving codes returns nothing at all, rather than an empty block that would read as a human validating nothing.</p>
+        </div>
+      </div>
+    </div>
+  </details>
+
+  <!-- ================= 04 ================= -->
+  <details class="sec-wrap">
+    <summary class="sec"><span class="n">04</span> Repair <span class="hint">where the taxonomy becomes instructions</span></summary>
+    <div class="sec-body">
+      <p class="lead">The taxonomy reaches Repair as a structured block, not as prose. The counts, the severities and the rank are computable, and flattening them into a paragraph discards the work that produced them.</p>
+
+      <div class="excards">
+        <div class="excard m">
+          <span class="k">Ranked above the reports</span>
+          <h3>Because a person read the traffic</h3>
+          <p>The specialist agents scored the instructions. The human watched them fail on real conversations. When the two disagree about what went wrong, the reading wins.</p>
+        </div>
+        <div class="excard m">
+          <span class="k">A proposal, never applied</span>
+          <h3>Someone still copies it in</h3>
+          <p>The repair produces rewritten instructions and a changelog. It does not touch the live agent.</p>
+          <p>A person copies the result in. That is the difference between a suggestion and a deployment, and it is why feeding real user traces into a rewrite is safe.</p>
+        </div>
+      </div>
+
+      <p class="lead">The run records which session fed it, because sessions are editable. Without that, the input to a past repair cannot be reconstructed once someone re-codes it.</p>
+    </div>
+  </details>
+
+  <!-- ================= 05 ================= -->
+  <details class="sec-wrap">
+    <summary class="sec"><span class="n">05</span> A code becomes a judge <span class="hint">one question, three answers</span></summary>
+    <div class="sec-body">
+      <p class="lead">An axial code is a pattern, and a pattern is not yet something a machine can answer. Narrowing it into one question about one conversation is a judgement, so a person does it.</p>
+
+      <div class="excards">
+        <div class="excard m">
+          <span class="k">Seeded, then edited</span>
+          <h3>Two fields, both human</h3>
+          <p><b>The question</b> &mdash; the code reduced to one thing to decide about a single transcript.</p>
+          <p><b>The decision rule</b> &mdash; what counts, what does not, and when the situation never arose. Deliberately not seeded from the code's repair recommendation, since what to do about a failure is not what a judge decides.</p>
+        </div>
+        <div class="excard h">
+          <span class="k">The escape hatch</span>
+          <h3>Three verdicts, and the third is not optional</h3>
+          <p>Every judgement is <em>occurred</em>, <em>did not occur</em>, or <em>not applicable</em>.</p>
+          <p>Folding "the situation never came up" into "it did not happen" makes every rate read low, which is the direction that looks like good news. Deleting the third verdict is an import error, not a config change.</p>
+        </div>
+      </div>
+
+      <h3 class="sub">What each verdict means for the number</h3>
+            <div class="table-wrap"><table>
+        <thead><tr><th>Verdict</th><th>Counted as</th><th>Why</th></tr></thead>
+        <tbody>
+          <tr><td>Occurred</td><td data-label="Counted as">Numerator and denominator</td><td data-label="Why">The failure was there. This is the thing being measured.</td></tr>
+          <tr><td>Did not occur</td><td data-label="Counted as">Denominator only</td><td data-label="Why">The judge looked and the failure was absent. That is evidence.</td></tr>
+          <tr><td>Not applicable</td><td data-label="Counted as">Neither</td><td data-label="Why">The situation never arose, so the judge learned nothing about this code.</td></tr>
+          <tr><td>Skipped, unparseable, unrecognised</td><td data-label="Counted as">Neither</td><td data-label="Why">A trace the model did not rule on is never a negative. It is reported as its own count.</td></tr>
+        </tbody>
+      </table></div>
+    </div>
+  </details>
+
+  <!-- ================= 06 ================= -->
+  <details class="sec-wrap">
+    <summary class="sec"><span class="n">06</span> Validation <span class="hint">the only evidence that a judge works</span></summary>
+    <div class="sec-body">
+      <p class="lead">A judge is a model ruling on one narrow question. The only reason to believe it rules the way a person would is that it was checked against a person who already did it by hand, on the same traces.</p>
+
+      <div class="excards three">
+        <div class="excard h">
+          <span class="k">Positive</span>
+          <h3>You flagged this code here</h3>
+          <p>An annotation on the trace, tagged to this code. The turn it pointed at is kept, so the page can link back to it.</p>
+        </div>
+        <div class="excard h">
+          <span class="k">Negative</span>
+          <h3>You annotated, but not this</h3>
+          <p>The trace carries notes, and none of them are for this code. You looked and did not name it.</p>
+        </div>
+        <div class="excard c">
+          <span class="k">Excluded</span>
+          <h3>You never read it</h3>
+          <p>A trace with no annotations is dropped from the comparison entirely. A human who never opened it did not testify that the failure was absent.</p>
+        </div>
+      </div>
+
+      <h3 class="sub">Reading the result</h3>
+            <div class="table-wrap"><table>
+        <thead><tr><th>Number</th><th>What it says</th><th>How much to trust it</th></tr></thead>
+        <tbody>
+          <tr><td>Recall</td><td data-label="What it says">Of the traces you flagged, the share the judge also caught.</td><td data-label="How much to trust it"><span class="pill good">The headline</span> Your positives are the trustworthy half, so this is the number the judge is judged on.</td></tr>
+          <tr><td>Specificity</td><td data-label="What it says">Of the traces you cleared, the share the judge also cleared.</td><td data-label="How much to trust it"><span class="pill warn">Optimistic</span> People tag what they notice. A miss on your side reads as agreement and inflates this.</td></tr>
+          <tr><td>Agreement</td><td data-label="What it says">Raw share of identical rulings.</td><td data-label="How much to trust it"><span class="pill slate">Context only</span> Failure modes are long-tailed, so a judge that always says no scores well here.</td></tr>
+          <tr><td>Kappa</td><td data-label="What it says">Agreement corrected for chance.</td><td data-label="How much to trust it"><span class="pill slate">Shown as a dash when undefined</span> Two raters who each gave one answer throughout cannot be measured, which is not the same as chance-level agreement.</td></tr>
+        </tbody>
+      </table></div>
+
+      <div class="note">
+        <b>Nothing to compare</b> means the judge ruled on no trace you had annotated, and the run measured nothing. The usual cause is annotations added as manual notes rather than attached to a trace.</div>
+    </div>
+  </details>
+
+  <!-- ================= 07 ================= -->
+  <details class="sec-wrap">
+    <summary class="sec"><span class="n">07</span> Prevalence <span class="hint">turning a verdict into a rate</span></summary>
+    <div class="sec-body">
+      <p class="lead">A validated judge runs across every trace on the evaluation and reports how often the failure was present. One run is one judge against one evaluation.</p>
+
+      <div class="excards">
+        <div class="excard m">
+          <span class="k">The arithmetic</span>
+          <h3>Occurred over decided</h3>
+          <p>The denominator is the traces the judge actually ruled yes or no on. Everything else is excluded, and each exclusion is reported as its own count beside the rate.</p>
+          <p>Per-trace verdicts are written as they land, so a run that dies partway is still inspectable rather than a blank row.</p>
+        </div>
+        <div class="excard c">
+          <span class="k">The honest zero</span>
+          <h3>No rate is not a rate of zero</h3>
+          <p>If every trace came back not applicable, the run stores nothing rather than 0%.</p>
+          <p>Zero would say "we looked and it never happened". Nobody looked at anything the code applies to, and those are different claims.</p>
+        </div>
+      </div>
+    </div>
+  </details>
+
+  <!-- ================= 08 ================= -->
+  <details class="sec-wrap">
+    <summary class="sec"><span class="n">08</span> The re-measure <span class="hint">did the repair move the number</span></summary>
+    <div class="sec-body">
+      <p class="lead">This is what the whole loop was for. The same judge runs against a run taken after the repair, and the two rates are put side by side.</p>
+
+      <div class="excards">
+        <div class="excard c">
+          <span class="k">What makes two runs a pair</span>
+          <h3>Versions, not adjacency</h3>
+          <p>A <b>baseline</b> run is the evaluation a repair was launched from. A <b>post-repair</b> run is one carrying the instruction version that repair produced.</p>
+          <p>Anything else is labelled unrelated and never paired. A delta between two runs that are not comparable is worse than no delta at all.</p>
+        </div>
+        <div class="excard c">
+          <span class="k">What is shown</span>
+          <h3>Both rates, both versions</h3>
+          <p>The panel states the movement in points and names the two instruction versions it was measured across.</p>
+          <p>If the two evaluations ran different pipeline phases, it says so, because then their traces differ for reasons other than the repair and the movement is suggestive rather than measured.</p>
+        </div>
+      </div>
+
+      <div class="note">
+        <b>Version detection is load-bearing here.</b> A repair creates a version record without activating it, because activation is what puts repaired instructions live and that stays a human decision. A run whose version cannot be read cannot be paired, so it silently drops out of every before-and-after comparison. Instructions in the AESOP house style write the keyword in capitals, and for a while the detector only read the mixed-case spelling.</div>
+    </div>
+  </details>
+
+  <!-- ================= getting there ================= -->
+  <details class="sec-wrap">
+    <summary class="sec"><span class="n">09</span> Getting there <span class="hint">three ways in</span></summary>
+    <div class="sec-body">
+      <p class="lead">Trace Analysis is optional. Every step below produces something the next one can use, and none of them is required for a repair to run.</p>
+
+            <div class="table-wrap"><table>
+        <thead><tr><th>Entrance</th><th>Who it is for</th><th>What it does</th></tr></thead>
+        <tbody>
+          <tr><td>Evaluation report</td><td data-label="Who it is for">Anyone who just read a score and wants to know why</td><td data-label="What it does">Opens the session for that run, matched by the evaluation itself. Most evaluations were never filed under a project, so a link carrying only a project would land on an empty list.</td></tr>
+          <tr><td>Sidebar, under Evaluate</td><td data-label="Who it is for">Someone browsing a project's pipeline</td><td data-label="What it does">Lists the runs belonging to that project that carry conversations.</td></tr>
+          <tr><td>Sidebar, eval-only view</td><td data-label="Who it is for">Someone working without projects</td><td data-label="What it does">Lists every run the caller owns that carries conversations, newest first, with its phases and timestamp so two runs of one agent are not the same row twice.</td></tr>
+        </tbody>
+      </table></div>
+
+      <p class="lead">A run only appears in those lists once it has actually spoken to the agent. The interview and execution phases leave transcripts. A run that only read the instructions leaves nothing to annotate, and offering it would open an empty pane.</p>
+    </div>
+  </details>
+
+  <!-- ================= what it costs ================= -->
+  <details class="sec-wrap">
+    <summary class="sec"><span class="n">10</span> What the method will not tell you <span class="hint">the edges</span></summary>
+    <div class="sec-body">
+      <p class="lead">The loop is honest about its own limits, and they are worth knowing before the first number is quoted.</p>
+
+      <div class="excards">
+        <div class="excard h">
+          <span class="k">The human's half</span>
+          <h3>A reading is only as good as the reader</h3>
+          <p>One person codes, deliberately. Design by committee dilutes the coding and produces categories nobody meant.</p>
+          <p>And people tag what they notice, so a failure an annotator missed looks like a failure that was absent. That is why recall leads and specificity is labelled optimistic.</p>
+        </div>
+        <div class="excard m">
+          <span class="k">The machine's half</span>
+          <h3>A validated judge is still narrow</h3>
+          <p>Validation says a judge agrees with you on the traces you coded. It does not say the decision rule is a good definition of the failure in general.</p>
+          <p>That question is what validation exists to keep asking. A judge whose recall drops is telling you the rule has drifted from what you meant.</p>
+        </div>
+        <div class="excard c">
+          <span class="k">The measurement</span>
+          <h3>Prevalence is not causation</h3>
+          <p>A rate falling after a repair is consistent with the repair working. It is not proof, especially if the two runs differed in phases, models or traces.</p>
+          <p>The panel names both instruction versions and warns on a phase mismatch for exactly this reason.</p>
+        </div>
+        <div class="excard">
+          <span class="k">The volume</span>
+          <h3>Coding a run takes an hour</h3>
+          <p>A run produces dozens of conversations and reading them is the price of the method. It is the only step that cannot be delegated to a model without losing the thing it produces.</p>
+        </div>
+      </div>
+    </div>
+  </details>
+
+  <div class="foot">
+    <span>&copy; 2025&ndash;2026 Charlie Fuller</span>
+    <a href="../aesop.html">All AESOP explainers &rarr;</a>
+  </div>
+</div>
+
+</body>
+</html>
