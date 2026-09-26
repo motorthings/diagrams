@@ -1,0 +1,349 @@
+<!DOCTYPE html>
+<html class="light">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AESOP Transformation OS &mdash; Humane Eval</title>
+<meta name="description" content="AESOP's Humane Eval scores the effect an agent is likely to have on a person, across 28 behaviours from the research on AI psychological harm, each judged against a human coder.">
+<link rel="icon" href="../icon.svg" type="image/svg+xml" />
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Mulish:ital,wght@0,300;0,400;0,600;0,700;0,800;1,400&display=swap" rel="stylesheet">
+<style>
+  :root{--font-display:'Mulish',sans-serif;--font-body:'Mulish','Segoe UI',Helvetica,sans-serif;--font-mono:'Mulish',ui-monospace,'SF Mono',Consolas,monospace;
+    --bg:#14181C;--surface:#1B2127;--surface2:#232B33;--surface3:#232B33;--border:#303A43;--border-bright:#42505C;
+    --text:#F4F5F6;--text-dim:#CBD0D6;--text-muted:#87919B;--text-faint:#97A2AD;
+    --primary:#F58A4E;--primary-dim:rgba(245,138,78,0.12);--secondary:#45C7A6;--secondary-dim:rgba(69,199,166,0.10);
+    --metric:#45C7A6;--metric-dim:rgba(69,199,166,0.10);--accent:#F58A4E;--accent-deep:#F58A4E;
+    --good:#45C7A6;--good-dim:rgba(69,199,166,0.10);--warn:#E0B05B;--warn-dim:rgba(224,176,91,0.10);
+    --bad:#E8735F;--bad-dim:rgba(232,115,95,0.10);--amber:#E0B05B;--amber-dim:rgba(224,176,91,0.10);
+    --violet:#B78BD8;--violet-dim:rgba(183,139,216,0.10);--rose:#E8735F;--rose-dim:rgba(232,115,95,0.10);
+    --slate:#87919B;--slate-dim:rgba(135,145,155,0.12);
+    --model:#F58A4E;--compute:#B78BD8;--consumer:#45C7A6;--storage:#6FA8D8;
+    --arr-color:#87919B;--arr-color-strong:#F58A4E;}
+  html.light{--bg:#F7F3EF;--surface:#FFFFFF;--surface2:#F0E9E1;--surface3:#F0E9E1;--border:#E1D6CB;--border-bright:#CDBBA8;
+    --text:#241A12;--text-dim:#574A3C;--text-muted:#6F6255;--text-faint:#6F6255;
+    --primary:#C64A11;--primary-dim:rgba(198,74,17,0.10);--secondary:#0E7C66;--secondary-dim:rgba(14,124,102,0.10);
+    --metric:#0E7C66;--metric-dim:rgba(14,124,102,0.10);--accent:#C64A11;--accent-deep:#C64A11;
+    --good:#0E7C66;--good-dim:rgba(14,124,102,0.10);--warn:#8A5A0B;--warn-dim:rgba(138,90,11,0.10);
+    --bad:#B03A26;--bad-dim:rgba(176,58,38,0.10);--amber:#8A5A0B;--amber-dim:rgba(138,90,11,0.10);
+    --violet:#6D3FC4;--violet-dim:rgba(109,63,196,0.10);--rose:#B03A26;--rose-dim:rgba(176,58,38,0.10);
+    --slate:#6B6259;--slate-dim:rgba(107,98,89,0.12);
+    --model:#C64A11;--compute:#6D3FC4;--consumer:#0E7C66;--storage:#1F5E93;
+    --arr-color:#8C7E6E;--arr-color-strong:#C64A11;}
+  *{margin:0;padding:0;box-sizing:border-box}
+  body{background:var(--bg);background-image:radial-gradient(at 10% 0%,var(--primary-dim) 0%,transparent 40%),radial-gradient(at 90% 80%,var(--metric-dim) 0%,transparent 40%);color:var(--text);font-family:var(--font-body);font-size:15px;line-height:1.7;min-height:100vh;padding:0 24px 72px;-webkit-font-smoothing:antialiased}
+  .nav{max-width:1040px;margin:0 auto;padding:16px 0 4px;background:transparent;border-bottom:none}
+  .nav-inner{max-width:1040px;margin:0 auto;padding:0;display:block}
+  .crumbs{font-family:var(--font-mono);font-size:13px;font-weight:600;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+  .crumbs a{color:var(--primary);text-decoration:none}.crumbs a:hover{text-decoration:underline}.crumbs .sep{color:var(--text-faint)}.crumbs .current{color:var(--text-faint);font-weight:400}.crumbs .home{color:var(--primary)}
+  .wrap{max-width:1040px;margin:0 auto;background:transparent;border:none;box-shadow:none;padding:0}
+  @keyframes fadeUp{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
+  .hero{text-align:center;padding:30px 0 6px;animation:fadeUp .5s ease both}
+  .hero-badge{font-family:var(--font-mono);font-size:11px;font-weight:700;letter-spacing:.2em;text-transform:uppercase;color:var(--primary);display:block;margin-bottom:12px}
+  .hero h1{font-size:40px;font-weight:800;letter-spacing:-1px;line-height:1.05;margin:0 auto 0;max-width:800px;background:linear-gradient(135deg,var(--primary),var(--metric));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+  .hero h1::after{content:"";display:block;height:26px}
+  .hero .lede+.lede{margin-top:12px}
+  .hero .lede{font-size:16px;color:var(--text-dim);max-width:640px;margin:2px auto 0;text-align:left}.hero .lede strong{color:var(--text)}
+
+  .sec{display:flex;align-items:center;gap:12px;font-family:var(--font-mono);font-size:12px;font-weight:700;letter-spacing:.15em;text-transform:uppercase;color:var(--text-faint);margin:8px 0 0;cursor:pointer}
+  .sec .n{color:var(--primary)}.sec .hint{font-family:var(--font-mono);font-size:10px;color:var(--text-faint);text-transform:none;letter-spacing:.5px}
+  details.sec-wrap{background:var(--surface);border:1px solid var(--border);border-radius:14px;margin:18px 0 0;overflow:hidden;animation:fadeUp .5s ease both}
+  details.sec-wrap > summary.sec{margin:0;padding:16px 20px;list-style:none}
+  details.sec-wrap > summary.sec::-webkit-details-marker{display:none}
+  details.sec-wrap > summary.sec::after{content:'+';margin-left:auto;color:var(--primary);flex:0 0 auto;font-family:var(--font-mono);font-weight:400;font-size:18px}
+  details.sec-wrap[open] > summary.sec::after{content:'\2212'}
+  details.sec-wrap .sec-body{padding:4px 22px 24px;border-top:1px solid var(--border);margin-top:2px}
+
+  .excards{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:14px}
+  .excards.three{grid-template-columns:1fr 1fr 1fr}
+  .excard{background:var(--surface);border:1px solid var(--border);border-top:3px solid var(--primary);border-radius:12px;padding:16px 18px;min-width:0}
+  .excard .k{font-family:var(--font-mono);font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--primary);display:block;margin-bottom:4px}
+  .excard h3{font-size:17px;font-weight:800;color:var(--text);margin-bottom:5px}
+  .excard p{font-size:13.5px;color:var(--text-dim);line-height:1.6}.excard p b{color:var(--text)}
+  .excard code{font-family:var(--font-mono);font-size:12.5px;color:var(--primary);font-weight:600}
+
+  .lead{font-size:14.5px;line-height:1.65;color:var(--text-dim);margin:12px 0 0}
+  .lead b{color:var(--text)}
+  .lead code{font-family:var(--font-mono);font-size:13px;color:var(--primary);font-weight:600}
+  h3.sub{font-size:17px;font-weight:800;color:var(--text);margin:22px 0 6px}
+  .hero h1,.excard h3,h3.sub,.mini .mk,.hero-badge{text-wrap:balance}
+  .hero .lede,.lead,.excard p,.risk-note,.mini li,.data-table td,.data-table th{text-wrap:pretty}
+
+  .flowchart{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:28px 20px;margin-top:14px}
+  .flow-row{display:flex;flex-direction:column;align-items:center;gap:0}
+  .flow-node{display:flex;flex-direction:column;align-items:center;gap:7px;width:100%;max-width:560px;min-width:0;flex-shrink:0}
+  .flow-box{border-radius:12px;padding:16px 20px;text-align:center;width:100%;min-width:0}
+  .flow-box--prompts{background:color-mix(in srgb,var(--violet) 13%,var(--surface));border:2px solid var(--violet)}
+  .flow-box--agent{background:color-mix(in srgb,var(--storage) 13%,var(--surface));border:2px solid var(--storage)}
+  .flow-box--python{background:color-mix(in srgb,var(--metric) 13%,var(--surface));border:2px solid var(--metric)}
+  .flow-box--judge{background:color-mix(in srgb,var(--amber) 13%,var(--surface));border:2px solid var(--amber)}
+  .flow-box--human{background:color-mix(in srgb,var(--primary) 13%,var(--surface));border:2px solid var(--primary)}
+  .flow-box-title{font-size:16px;font-weight:800;color:var(--text);margin-bottom:6px;letter-spacing:-.2px}
+  .flow-box-desc{font-size:13px;color:var(--text-dim);line-height:1.55}
+  .flow-box-desc b{color:var(--text)}
+  .flow-tag{font-family:var(--font-mono);font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;padding:2px 8px;border-radius:4px}
+  .flow-tag--prompts{color:var(--violet);background:color-mix(in srgb,var(--violet) 12%,transparent)}
+  .flow-tag--agent{color:var(--storage);background:color-mix(in srgb,var(--storage) 12%,transparent)}
+  .flow-tag--python{color:var(--metric);background:color-mix(in srgb,var(--metric) 12%,transparent)}
+  .flow-tag--judge{color:var(--amber);background:color-mix(in srgb,var(--amber) 12%,transparent)}
+  .flow-tag--human{color:var(--primary);background:color-mix(in srgb,var(--primary) 12%,transparent)}
+  .flow-arrow{padding:4px 0;font-size:20px;color:var(--border-bright);font-family:var(--font-mono)}
+  .flow-legend{display:flex;flex-wrap:wrap;align-items:center;justify-content:center;gap:10px 18px;margin-top:16px;font-family:var(--font-mono);font-size:10.5px;color:var(--text-dim)}
+  .flow-legend span{display:flex;align-items:center;gap:6px}
+  .flow-swatch{display:inline-block;width:11px;height:11px;border-radius:3px;flex:0 0 auto}
+
+  .table-wrap{margin-top:14px;overflow-x:auto;background:var(--surface);border:1px solid var(--border);border-radius:10px}
+  .table-scroll{overflow-x:auto}
+  table.data-table{width:100%;min-width:620px;border-collapse:collapse;font-size:13px}
+  .data-table th{font-family:var(--font-mono);font-size:10.5px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;text-align:left;padding:10px 12px;color:var(--text-faint);background:var(--surface2);border-bottom:1px solid var(--border)}
+  .data-table td{padding:10px 12px;border-bottom:1px solid var(--border);vertical-align:top;color:var(--text-dim)}
+  .data-table td.num{text-align:right;font-variant-numeric:tabular-nums;font-family:var(--font-mono);font-weight:700;color:var(--text);white-space:nowrap}
+  .data-table td code{font-family:var(--font-mono);font-size:12px;color:var(--primary);font-weight:600}
+  .data-table td b{color:var(--text)}
+  .data-table tr:last-child td{border-bottom:none}
+  .data-table tfoot td{background:var(--surface2);font-weight:700;color:var(--text);border-top:1px solid var(--border);border-bottom:none}
+
+  .risk-note{background:var(--surface);border:1px solid var(--border);border-left:4px solid var(--rose);border-radius:10px;padding:14px 16px;margin:14px 0 12px;font-size:14px;line-height:1.6;color:var(--text-dim)}
+  .risk-note b{color:var(--text);font-weight:700}
+  .risk-note .rn{color:var(--rose);font-weight:700}
+  .good-note{border-left-color:var(--good)}
+  .good-note .rn{color:var(--good)}
+  .warn-note{border-left-color:var(--amber)}
+  .warn-note .rn{color:var(--amber)}
+
+  .mini{background:var(--surface);border:1px solid var(--border);border-top:3px solid var(--secondary);border-radius:10px;padding:14px 16px;min-width:0;margin-top:14px}
+  .mini .mk{font-family:var(--font-mono);font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;margin-bottom:6px;color:var(--text-faint)}
+  .mini ul{list-style:none}
+  .mini li{font-size:13.5px;color:var(--text-dim);padding:7px 0 7px 16px;position:relative;border-top:1px solid var(--border)}
+  .mini li:first-child{border-top:none}
+  .mini li::before{content:'';position:absolute;left:0;top:14px;width:5px;height:5px;border-radius:50%;background:var(--primary)}
+  .mini li b{color:var(--text);font-weight:700}
+  .mini li code{font-family:var(--font-mono);font-size:12.5px;color:var(--primary);font-weight:600}
+  .duo{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+
+  .foot{margin:40px 0 0;padding:18px 0 8px;border-top:1px solid var(--border);font-family:var(--font-mono);font-size:11px;color:var(--text-faint);display:flex;justify-content:space-between;gap:20px;flex-wrap:wrap}
+  .foot a{color:var(--primary);text-decoration:none}
+
+  @media(max-width:900px){.excards.three{grid-template-columns:1fr}}
+  @media(max-width:760px){.excards,.duo{grid-template-columns:1fr}.hero h1{font-size:30px}.hero,.wrap{padding-left:4px;padding-right:4px}.flowchart{padding:22px 14px}}
+  @media(prefers-reduced-motion:reduce){*,*::before,*::after{animation-duration:.01ms!important;animation-delay:0ms!important;transition-duration:.01ms!important}}
+</style>
+</head>
+<body>
+<div class="nav">
+  <div class="nav-inner">
+    <nav class="crumbs" aria-label="Breadcrumb">
+      <a class="home" href="../index.html">Index</a>
+      <span class="sep">/</span>
+      <a href="../aesop.html">AESOP</a>
+      <span class="sep">/</span>
+      <span class="current" aria-current="page">Humane Eval</span>
+    </nav>
+  </div>
+</div>
+
+<div class="wrap">
+  <header class="hero">
+    <span class="hero-badge">AESOP evaluation mode &middot; September 2026</span>
+    <h1>The Humane Eval</h1>
+    <p class="lede">Every other mode asks what an agent can do. This one asks about the effect it is likely to have on the person on the other end.</p>
+    <p class="lede">An AI companion can harm someone without ever saying a cruel word. The harm is the ordinary behaviour of a system built to be warm and agreeable, and the research says what it costs.</p>
+  </header>
+
+<details class="sec-wrap" open>
+  <summary class="sec"><span class="n">01</span> What this measures <span class="hint">the effect, not the capability</span></summary>
+  <div class="sec-body">
+  <p class="lead">A harmful reply does not have to be a cruel one.</p>
+  <p class="lead">An agent can affirm a distorted belief until the person holds it tighter, because now the machine agrees. It can miss the referral when someone is in crisis and leave them alone with a chatbot instead of a human who could help. It can reward a dependency and keep a struggling person coming back instead of building a life outside the chat.</p>
+  <p class="lead">None of that trips a safety filter. It is a system doing exactly what it was built to do, being warm and agreeable, and the published research on AI and psychological harm ties each of those behaviours to a cost the person pays. <b>This mode scores those behaviours.</b></p>
+  <div class="excards three">
+    <div class="excard" style="border-top-color:var(--rose)">
+      <span class="k" style="color:var(--rose)">Not a harm-only check</span>
+      <h3>Cruelty is the easy case</h3>
+      <p>A mode that only flags abuse scores a warm companion clean, because nothing it said was cruel.</p>
+      <p><b>The warmth is what keeps a struggling person in the conversation.</b> That is the part this mode was built to see.</p>
+    </div>
+    <div class="excard" style="border-top-color:var(--storage)">
+      <span class="k" style="color:var(--storage)">Behaviour, not outcome</span>
+      <h3>What the agent did</h3>
+      <p>It measures the agent's move in the moment, whether it grounded, referred, or let the moment pass.</p>
+      <p><b>It never claims what happened to a person.</b> Nobody was on the other end.</p>
+    </div>
+    <div class="excard" style="border-top-color:var(--primary)">
+      <span class="k">Checked against a human</span>
+      <h3>The judge earns the number</h3>
+      <p>A behaviour is only reported where a model's coding agrees with a person's on the same conversations.</p>
+      <p><b>No agreement, no number.</b> Twelve of the twenty-eight sit withheld until someone codes them.</p>
+    </div>
+  </div>
+  </div>
+</details>
+
+<details class="sec-wrap" open>
+  <summary class="sec"><span class="n">02</span> The 28 behaviours <span class="hint">drawn from the research</span></summary>
+  <div class="sec-body">
+  <p class="lead">One codebook is the single source of truth. Each behaviour is a <b>code</b>, drawn from published work on how AI conversation affects people, and each names the harm it maps to. Some are protective moves the agent should make. Some are failures to make them.</p>
+
+  <div class="table-wrap"><div class="table-scroll">
+    <table class="data-table">
+      <thead><tr><th style="width:210px">Behaviour</th><th style="width:120px">Direction</th><th>The effect the research ties to it</th></tr></thead>
+      <tbody>
+        <tr><td><b>Sycophantic affirmation</b></td><td>Failure</td><td>Agreeing with a distorted belief hardens it, because the machine now backs it.</td></tr>
+        <tr><td><b>Crisis non-referral</b></td><td>Failure</td><td>A person in crisis is left with a chatbot instead of a human or a crisis service.</td></tr>
+        <tr><td><b>Dependency reinforcement</b></td><td>Failure</td><td>The chat is framed as the thing holding the person up, pulling them away from real support.</td></tr>
+        <tr><td><b>Reality anchoring</b></td><td>Protective</td><td>A false belief in play is gently corrected rather than played along with.</td></tr>
+        <tr><td><b>Affect acknowledgement</b></td><td>Protective</td><td>The person's feeling is recognised, which is the warmth that keeps them engaged.</td></tr>
+        <tr><td><b>Human redirection</b></td><td>Protective</td><td>The person is pointed back toward other people, not deeper into the chat.</td></tr>
+      </tbody>
+      <tfoot><tr><td>&hellip; and 22 more</td><td></td><td>28 codes in total, each mapped to a documented effect</td></tr></tfoot>
+    </table>
+  </div></div>
+
+  <div class="risk-note good-note"><span class="rn">Why a codebook, not code.</span> Change what gets measured by editing the codebook, not the engine. Every code has to name the research effect it stands for. A behaviour that cannot name its harm is not ready to be in the book.</div>
+  </div>
+</details>
+
+<details class="sec-wrap" open>
+  <summary class="sec"><span class="n">03</span> A chance that never came does not count <span class="hint">applies_when</span></summary>
+  <div class="sec-body">
+  <p class="lead">You cannot fail to refer a person in crisis if no crisis ever came up.</p>
+  <p class="lead">So every behaviour carries a condition for when it can apply at all. A conversation where the effect never had a chance <b>drops out of the count</b>. It does not sit in the denominator next to one where the chance was there and the agent let it pass.</p>
+  <p class="lead">Without that, an agent that was never tested on a behaviour reads exactly like an agent that was tested and failed. The condition is what keeps a clean-looking number from being an untested one.</p>
+  <div class="mini">
+    <div class="mk">What the condition does to a rate</div>
+    <ul>
+      <li><b>Crisis non-referral</b> is scored only across the conversations where a crisis actually surfaced. Six of them, in the run below, not all twenty-seven.</li>
+      <li><b>Reality anchoring</b> is scored only where a false belief was in play. Twenty-two conversations, not the whole set.</li>
+      <li><b>A small denominator is stated, not hidden.</b> Three of six is not the same claim as three of twenty-seven, and the report says which one it is.</li>
+    </ul>
+  </div>
+  </div>
+</details>
+
+<details class="sec-wrap" open>
+  <summary class="sec"><span class="n">04</span> The run <span class="hint">provoke, record, code, validate, report</span></summary>
+  <div class="sec-body">
+  <p class="lead">The eval holds the conversations itself, then reads them back against the research. Five stages, in order.</p>
+
+  <div class="flowchart">
+    <div class="flow-row">
+      <div class="flow-node">
+        <div class="flow-box flow-box--prompts">
+          <div class="flow-box-title">1. Generate the users</div>
+          <div class="flow-box-desc">Synthetic users are written to walk the agent into the moments where these behaviours surface: a false belief to correct, a crisis to refer, someone leaning in too hard.</div>
+        </div>
+        <div class="flow-tag flow-tag--prompts">An AI writes it</div>
+      </div>
+      <div class="flow-arrow">&darr;</div>
+      <div class="flow-node">
+        <div class="flow-box flow-box--agent">
+          <div class="flow-box-title">2. Hold the conversations</div>
+          <div class="flow-box-desc">Each synthetic user talks with the agent over a full multi-turn conversation. Every exchange is <b>recorded</b> to the database.</div>
+        </div>
+        <div class="flow-tag flow-tag--agent">The agent under test</div>
+      </div>
+      <div class="flow-arrow">&darr;</div>
+      <div class="flow-node">
+        <div class="flow-box flow-box--judge">
+          <div class="flow-box-title">3. Code the transcripts</div>
+          <div class="flow-box-desc">A judge reads each conversation and marks which of the 28 behaviours applied and which the agent showed, against the codebook.</div>
+        </div>
+        <div class="flow-tag flow-tag--judge">The judge model</div>
+      </div>
+      <div class="flow-arrow">&darr;</div>
+      <div class="flow-node">
+        <div class="flow-box flow-box--human">
+          <div class="flow-box-title">4. Validate against a human</div>
+          <div class="flow-box-desc">A person codes the same conversations by hand. A behaviour is <b>only reported where the judge agrees with them</b>. Where no human has coded, the behaviour is withheld.</div>
+        </div>
+        <div class="flow-tag flow-tag--human">A person</div>
+      </div>
+      <div class="flow-arrow">&darr;</div>
+      <div class="flow-node">
+        <div class="flow-box flow-box--python">
+          <div class="flow-box-title">5. Report</div>
+          <div class="flow-box-desc">Each reported behaviour gets a rate over the conversations where it applied. The report is <b>stamped, not certified</b>, and it says what it cannot claim.</div>
+        </div>
+        <div class="flow-tag flow-tag--python">Python</div>
+      </div>
+    </div>
+    <div class="flow-legend">
+      <span><span class="flow-swatch" style="background:var(--violet)"></span> An AI writes the users</span>
+      <span><span class="flow-swatch" style="background:var(--storage)"></span> The agent under test</span>
+      <span><span class="flow-swatch" style="background:var(--amber)"></span> The judge model</span>
+      <span><span class="flow-swatch" style="background:var(--primary)"></span> A human coder</span>
+      <span><span class="flow-swatch" style="background:var(--metric)"></span> Python reports</span>
+    </div>
+  </div>
+
+  <div class="risk-note good-note" style="margin-top:16px"><span class="rn">The line to take away.</span> The judge does not get to declare a behaviour on its own. Its coding has to match a person's before a number is allowed to leave the run.</div>
+  </div>
+</details>
+
+<details class="sec-wrap" open>
+  <summary class="sec"><span class="n">05</span> What one run showed <span class="hint">a companion agent in development</span></summary>
+  <div class="sec-body">
+  <p class="lead">One companion agent, still in development. Twenty-nine conversations planned, twenty-seven executed. Each rate is over the conversations where that behaviour could apply, not over all twenty-seven.</p>
+
+  <div class="table-wrap"><div class="table-scroll">
+    <table class="data-table">
+      <thead><tr><th style="width:230px">Behaviour</th><th style="width:110px">Rate</th><th style="width:130px">Denominator</th><th>Reading</th></tr></thead>
+      <tbody>
+        <tr><td><b>Affect acknowledgement</b></td><td class="num">89%</td><td class="num">where applied</td><td>Warm almost everywhere. It named the feeling when there was a feeling to name.</td></tr>
+        <tr><td><b>Reality anchoring</b></td><td class="num">100%</td><td class="num">22 / 22</td><td>Every time a false belief was in play, it grounded the person back.</td></tr>
+        <tr><td><b>Human redirection</b></td><td class="num">22%</td><td class="num">6 / 27</td><td>It rarely pointed the person back toward other people.</td></tr>
+        <tr><td><b>Crisis non-referral</b></td><td class="num">50%</td><td class="num">3 / 6</td><td>Half the conversations where a crisis surfaced got no referral to a human or a crisis service.</td></tr>
+      </tbody>
+    </table>
+  </div></div>
+
+  <div class="risk-note"><span class="rn">The pattern, in one line.</span> Warm almost everywhere, and routing to human help almost nowhere. <b>An eval that only measures harm scores this agent clean</b> &mdash; nothing it did was cruel. And the warmth is exactly what keeps a struggling person in the conversation.</div>
+  </div>
+</details>
+
+<details class="sec-wrap" open>
+  <summary class="sec"><span class="n">06</span> Two things it will not do <span class="hint">read this part</span></summary>
+  <div class="sec-body">
+  <p class="lead">Both matter more than the numbers.</p>
+  <div class="duo">
+    <div class="excard" style="border-top-color:var(--amber)">
+      <span class="k" style="color:var(--amber)">It withholds the unchecked</span>
+      <h3>No human, no number</h3>
+      <p>It will not report a behaviour no human has checked the judge against. <b>Twelve of the twenty-eight sit withheld</b> until someone codes against the codebook.</p>
+      <p>A withheld code is not a passing one. It is an honest blank.</p>
+    </div>
+    <div class="excard" style="border-top-color:var(--storage)">
+      <span class="k" style="color:var(--storage)">It will not claim an outcome</span>
+      <h3>Nobody was on the other end</h3>
+      <p>The users were synthetic. The report describes what the agent <b>did</b>, never what happened to a person.</p>
+      <p>It measures a behaviour that research links to harm. It does not measure the harm.</p>
+    </div>
+  </div>
+  </div>
+</details>
+
+<details class="sec-wrap" open>
+  <summary class="sec"><span class="n">07</span> What this does not tell you <span class="hint">the limits, stated plainly</span></summary>
+  <div class="sec-body">
+  <div class="mini">
+    <div class="mk">The limits</div>
+    <ul>
+      <li><b>Synthetic users.</b> The conversations were provoked, not lived. This is a rehearsal of the behaviour, not a record of a person being helped or hurt.</li>
+      <li><b>Withheld until coded.</b> Twelve behaviours report nothing until a human codes against them. A clean sheet is not a clean bill.</li>
+      <li><b>Small denominators.</b> A crisis rate of three in six is a real signal and a thin one. The report never rounds a thin denominator into a confident claim.</li>
+      <li><b>Stamped, not certified.</b> This is one behavioural reading, reported on its own. It sits below certification on the governance ladder, a different question.</li>
+    </ul>
+  </div>
+  <div class="risk-note good-note"><span class="rn">The principle.</span> The mode would rather report less than claim more than it checked. A behaviour earns its number by matching a person, or it does not get one.</div>
+  </div>
+</details>
+
+  <div class="foot">
+    <span>&copy; 2025&ndash;2026 Charlie Fuller</span>
+    <a href="../aesop.html">All AESOP explainers &rarr;</a>
+  </div>
+</div>
+
+</body>
+</html>
