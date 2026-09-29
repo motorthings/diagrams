@@ -1,0 +1,456 @@
+<!DOCTYPE html>
+<html lang="en" class="light">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AESOP Transformation OS &mdash; The Agentic Help System</title>
+<meta name="description" content="How the AESOP help assistant reads the running app for what its documentation cannot cover, and why it now says so when it does not know.">
+<link rel="icon" type="image/svg+xml" href="../icon.svg">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Mulish:ital,wght@0,300;0,400;0,600;0,700;0,800;1,400&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --font-display: 'Mulish', sans-serif;
+    --font-body: 'Mulish', 'Segoe UI', Helvetica, sans-serif;
+    --font-mono: 'Mulish', ui-monospace, 'SF Mono', Consolas, monospace;
+    --bg: #14181C; --surface: #1B2127; --surface2: #232B33; --surface3: #232B33;
+    --border: #303A43; --border-bright: #42505C;
+    --text: #F4F5F6; --text-dim: #CBD0D6; --text-muted: #87919B; --text-faint: #97A2AD;
+    --primary: #F58A4E; --primary-dim: rgba(245,138,78,0.12);
+    --secondary: #45C7A6; --secondary-dim: rgba(69,199,166,0.10);
+    --metric: #45C7A6; --metric-dim: rgba(69,199,166,0.10);
+    --accent: #F58A4E; --accent-deep: #F58A4E;
+    --good: #45C7A6; --good-dim: rgba(69,199,166,0.10);
+    --warn: #E0B05B; --warn-dim: rgba(224,176,91,0.10);
+    --bad: #E8735F; --bad-dim: rgba(232,115,95,0.10);
+    --amber: #E0B05B; --amber-dim: rgba(224,176,91,0.10);
+    --violet: #B78BD8; --violet-dim: rgba(183,139,216,0.10);
+    --rose: #E8735F; --rose-dim: rgba(232,115,95,0.10);
+    --slate: #87919B; --slate-dim: rgba(135,145,155,0.12);
+    --model: #F58A4E; --compute: #B78BD8; --consumer: #45C7A6; --storage: #6FA8D8;
+    --arr-color: #87919B; --arr-color-strong: #F58A4E;
+  }
+  html.light {
+    --bg: #F7F3EF; --surface: #FFFFFF; --surface2: #F0E9E1; --surface3: #F0E9E1;
+    --border: #E1D6CB; --border-bright: #CDBBA8;
+    --text: #241A12; --text-dim: #574A3C; --text-muted: #6F6255; --text-faint: #6F6255;
+    --primary: #C64A11; --primary-dim: rgba(198,74,17,0.10);
+    --secondary: #0E7C66; --secondary-dim: rgba(14,124,102,0.10);
+    --metric: #0E7C66; --metric-dim: rgba(14,124,102,0.10);
+    --accent: #C64A11; --accent-deep: #C64A11;
+    --good: #0E7C66; --good-dim: rgba(14,124,102,0.10);
+    --warn: #8A5A0B; --warn-dim: rgba(138,90,11,0.10);
+    --bad: #B03A26; --bad-dim: rgba(176,58,38,0.10);
+    --amber: #8A5A0B; --amber-dim: rgba(138,90,11,0.10);
+    --violet: #6D3FC4; --violet-dim: rgba(109,63,196,0.10);
+    --rose: #B03A26; --rose-dim: rgba(176,58,38,0.10);
+    --slate: #6B6259; --slate-dim: rgba(107,98,89,0.12);
+    --model: #C64A11; --compute: #6D3FC4; --consumer: #0E7C66; --storage: #1F5E93;
+    --arr-color: #8C7E6E; --arr-color-strong: #C64A11;
+  }
+
+  * { margin:0; padding:0; box-sizing:border-box; }
+
+  body {
+    background: var(--bg);
+    background-image:
+      radial-gradient(at 10% 0%, var(--primary-dim) 0%, transparent 40%),
+      radial-gradient(at 90% 80%, var(--metric-dim) 0%, transparent 40%);
+    color: var(--text); font-family: var(--font-body); font-size: 15px;
+    min-height: 100vh; line-height: 1.7; padding: 0 32px 80px;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  .backlink{position:fixed;top:12px;left:16px;z-index:101;font-family:var(--font-mono,'Mulish',ui-monospace,monospace);font-size:12px;color:var(--text-dim,var(--text3));text-decoration:none;padding:6px 10px;border:1px solid var(--border);border-radius:6px;background:var(--surface);transition:color .15s,border-color .15s}
+  .backlink:hover{color:var(--text);border-color:var(--border-bright,var(--text2))}
+
+  .nav { max-width: 1000px; margin: 0 auto; padding: 16px 0 4px; background: transparent; border-bottom: none; }
+  .nav-inner { max-width: 1000px; margin: 0 auto; padding: 0; display: block; }
+  .crumbs { font-family: var(--font-mono); font-size: 13px; font-weight: 600; display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+  .crumbs a { color: var(--primary); text-decoration: none; }
+  .crumbs a:hover { text-decoration: underline; }
+  .crumbs .sep { color: var(--text-faint); }
+  .crumbs .current { color: var(--text-faint); font-weight: 400; }
+
+  .container { max-width: 1000px; margin: 0 auto; }
+
+  @keyframes fadeUp {
+    from { opacity:0; transform:translateY(12px); }
+    to { opacity:1; transform:translateY(0); }
+  }
+  .animate { animation: fadeUp 0.4s ease-out both; animation-delay: calc(var(--i, 0) * 0.05s); }
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after { animation-duration:0.01ms !important; animation-delay:0ms !important; }
+  }
+
+  .hero { text-align: center; padding: 40px 0 20px; animation: fadeUp 0.5s ease-out; }
+  .hero-badge {
+    display: inline-flex; align-items: center; gap: 6px;
+    padding: 5px 16px; background: var(--primary-dim);
+    border: 1px solid var(--primary); border-radius: 20px;
+    font-family: var(--font-mono); font-size: 10px; font-weight: 600;
+    color: var(--primary); letter-spacing: 1px; text-transform: uppercase;
+    margin-bottom: 20px;
+  }
+  .hero h1 { font-size: 44px; font-weight: 800; letter-spacing: -0.5px; margin-bottom: 10px; color: var(--text); }
+  .hero .lede { font-size: 16px; color: var(--text-dim); max-width: 640px; margin: 2px auto 0; text-align: left; }
+  .hero .lede + .lede { margin-top: 12px; }
+
+  .mermaid-wrap {
+    position: relative; background: var(--surface);
+    border: 1px solid var(--border); border-radius: 14px;
+    padding: 36px 24px; overflow: auto; margin: 32px 0;
+    animation: fadeUp 0.4s ease-out both; animation-delay: 0.08s;
+  }
+  .mermaid-wrap .mermaid { display: flex; justify-content: center; transition: transform 0.2s ease; transform-origin: top center; }
+  .mermaid-wrap.is-zoomed { cursor: grab; }
+  .mermaid-wrap.is-panning { cursor: grabbing; user-select: none; }
+  .zoom-controls {
+    position: absolute; top: 10px; right: 10px; z-index: 10;
+    display: flex; gap: 2px; background: var(--surface);
+    border: 1px solid var(--border); border-radius: 8px; padding: 3px;
+  }
+  .zoom-controls button {
+    width: 30px; height: 30px; border: none; background: transparent;
+    color: var(--text-dim); font-family: var(--font-mono); font-size: 16px;
+    cursor: pointer; border-radius: 5px; display: flex; align-items: center;
+    justify-content: center; transition: background 0.15s, color 0.15s;
+  }
+  .zoom-controls button:hover { background: var(--border); color: var(--text); }
+  .mermaid-wrap { scrollbar-width: thin; scrollbar-color: var(--border) transparent; }
+  .mermaid-wrap::-webkit-scrollbar { width:6px; height:6px; }
+  .mermaid-wrap::-webkit-scrollbar-track { background:transparent; }
+  .mermaid-wrap::-webkit-scrollbar-thumb { background:var(--border); border-radius:3px; }
+
+  .mermaid .nodeLabel { font-family: var(--font-display) !important; font-size: 15px !important; }
+  .mermaid .edgeLabel { font-family: var(--font-mono) !important; font-size: 11px !important; }
+  .mermaid .node rect, .mermaid .node circle, .mermaid .node polygon { stroke-width: 1.5px !important; }
+
+  .mermaid g.input rect, .mermaid g.input polygon, .mermaid g.input circle { fill: var(--amber-dim) !important; stroke: var(--amber) !important; }
+  .mermaid g.flow rect, .mermaid g.flow polygon, .mermaid g.flow circle { fill: var(--primary-dim) !important; stroke: var(--primary) !important; }
+  .mermaid g.agent rect, .mermaid g.agent polygon, .mermaid g.agent circle { fill: var(--secondary-dim) !important; stroke: var(--secondary) !important; }
+  .mermaid g.stage rect, .mermaid g.stage polygon, .mermaid g.stage circle { fill: var(--surface2) !important; stroke: var(--border) !important; }
+  .mermaid g.output rect, .mermaid g.output polygon, .mermaid g.output circle { fill: var(--metric-dim) !important; stroke: var(--metric) !important; }
+  .mermaid g.warn rect, .mermaid g.warn polygon, .mermaid g.warn circle { fill: var(--amber-dim) !important; stroke: var(--amber) !important; stroke-dasharray: 4 3 !important; }
+
+  .mermaid .nodeLabel { color: #F4F5F6 !important; }
+  .mermaid .edgeLabel { color: #CBD0D6 !important; }
+  .mermaid .edgeLabel span { color: #CBD0D6 !important; }
+  .mermaid text { fill: #F4F5F6 !important; }
+  .mermaid .labelBkg { fill: #1B2127 !important; }
+
+  html.light .mermaid .nodeLabel { color: #241A12 !important; }
+  html.light .mermaid .edgeLabel { color: #574A3C !important; }
+  html.light .mermaid .edgeLabel span { color: #574A3C !important; }
+  html.light .mermaid text { fill: #241A12 !important; }
+  html.light .mermaid .labelBkg { fill: #FFFFFF !important; }
+
+  .detail-section { margin-bottom: 40px; }
+  .detail-section h2 {
+    font-family: var(--font-mono); font-size: 12px; font-weight: 700;
+    letter-spacing: 1px; text-transform: uppercase;
+    color: var(--primary); margin-bottom: 16px;
+  }
+  .detail-section p { color: var(--text-dim); max-width: 720px; margin-bottom: 14px; }
+  .detail-section p strong { color: var(--text); }
+  .detail-section .landing { color: var(--text); font-weight: 700; font-size: 17px; line-height: 1.5; max-width: 620px; margin-top: 4px; }
+
+  .context-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 10px; }
+  .context-card {
+    background: var(--surface); border: 1px solid var(--border);
+    border-left: 3px solid; border-radius: 0 10px 10px 0;
+    padding: 16px 18px; font-size: 14px; line-height: 1.5;
+  }
+  .context-card .label { font-family: var(--font-mono); font-size: 10px; font-weight: 600; letter-spacing: 0.5px; text-transform: uppercase; margin-bottom: 4px; }
+  .context-card .name { font-size: 16px; font-weight: 700; margin-bottom: 4px; }
+  .context-card .desc { font-size: 13px; color: var(--text-dim); }
+  .context-card ul { margin: 6px 0 0 16px; font-size: 13px; color: var(--text-dim); }
+  .context-card li { margin-bottom: 3px; }
+  .context-card.amber { border-left-color: var(--amber); } .context-card.amber .label { color: var(--amber); }
+  .context-card.secondary { border-left-color: var(--secondary); } .context-card.secondary .label { color: var(--secondary); }
+  .context-card.metric { border-left-color: var(--metric); } .context-card.metric .label { color: var(--metric); }
+  .context-card.violet { border-left-color: var(--violet); } .context-card.violet .label { color: var(--violet); }
+  .context-card.rose { border-left-color: var(--rose); } .context-card.rose .label { color: var(--rose); }
+  .context-card.slate { border-left-color: var(--slate); } .context-card.slate .label { color: var(--slate); }
+  .context-card.primary { border-left-color: var(--primary); } .context-card.primary .label { color: var(--primary); }
+
+  .compare { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 8px; }
+  @media (max-width: 720px) { .compare { grid-template-columns: 1fr; } }
+  .compare-col {
+    background: var(--surface); border: 1px solid var(--border);
+    border-top: 3px solid var(--border-bright); border-radius: 8px; padding: 18px 20px;
+  }
+  .compare-col.before { border-top-color: var(--rose); }
+  .compare-col.after { border-top-color: var(--good); }
+  .compare-col .tag { font-family: var(--font-mono); font-size: 10px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; margin-bottom: 10px; }
+  .compare-col.before .tag { color: var(--rose); }
+  .compare-col.after .tag { color: var(--good); }
+  .compare-col .q { font-size: 12px; color: var(--text-muted); font-family: var(--font-mono); margin-bottom: 8px; }
+  .compare-col .a { font-size: 14px; color: var(--text-dim); line-height: 1.6; }
+  .compare-col .a em { color: var(--text); font-style: normal; font-weight: 600; }
+
+  .code-line {
+    font-family: var(--font-mono); font-size: 12.5px; color: var(--text-dim);
+    background: var(--surface2); border: 1px solid var(--border); border-radius: 6px;
+    padding: 10px 14px; margin: 10px 0; display: block; overflow-x: auto;
+  }
+
+  .callout {
+    background: var(--surface); border: 1px solid var(--border);
+    border-left: 3px solid var(--primary); border-radius: 0 12px 12px 0;
+    padding: 20px 24px; font-size: 15px; line-height: 1.6;
+    color: var(--text-dim); margin-top: 24px;
+  }
+  .callout strong { color: var(--text); }
+
+  .footer {
+    margin-top: 56px; padding-top: 20px;
+    border-top: 1px solid var(--border);
+    text-align: center; font-size: 13px; color: var(--text-muted);
+  }
+  .footer a { color: var(--primary); text-decoration: none; }
+
+  @media (max-width: 640px) {
+    body { padding: 0 12px 48px; }
+    .hero h1 { font-size: 28px; }
+    .context-grid { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+
+<a href="../index.html" class="backlink">&larr; Index</a>
+
+<nav class="nav">
+  <div class="nav-inner">
+    <div class="crumbs">
+      <a href="../index.html">Index</a>
+      <span class="sep">/</span>
+      <a href="index.html">AESOP</a>
+      <span class="sep">/</span>
+      <span class="current" aria-current="page">The Agentic Help System</span>
+    </div>
+  </div>
+</nav>
+
+<div class="container">
+  <div class="hero">
+    <div class="hero-badge">AESOP &middot; Help</div>
+    <h1>The help system that reads the app</h1>
+    <p class="lede">A help assistant cannot answer a question whose answer lives only in the interface. Asked where to update an agent's instructions, the AESOP help panel described the evaluation pipeline instead, because no document said where that screen was.</p>
+    <p class="lede">More writing does not fix that. Reading the app does.</p>
+  </div>
+
+  <div class="detail-section animate" style="--i:1">
+    <h2>Two Corpora, One Index</h2>
+    <p>Written guides carry intent. What a thing is for, what it will not do, the caveats somebody learned the hard way. They change slowly, which is why they are worth writing down.</p>
+    <p>Pages read off the running app carry surface. Every route, its sections, the controls on it. They change every time somebody ships a change, which is why nobody keeps them current by hand.</p>
+    <p>Both land in the same index and both are retrievable. A question about how something works pulls a guide. A question about where something lives pulls a page.</p>
+  </div>
+
+  <div class="mermaid-wrap animate" style="--i:2">
+    <div class="zoom-controls">
+      <button onclick="zoomDiagram(this, 1.2)" title="Zoom in">+</button>
+      <button onclick="zoomDiagram(this, 0.8)" title="Zoom out">&minus;</button>
+      <button onclick="resetZoom(this)" title="Reset">&#8634;</button>
+    </div>
+    <pre class="mermaid">
+      flowchart TD
+        G["Hand-written guides: intent"] --> IDX["Help index"]
+        APP["The running app"] --> CR["Crawler: logs in, walks routes, reads the DOM"]
+        CR --> IDX
+        Q["A question"] --> RET["Hybrid retrieval: vector arm plus keyword arm, fused by rank"]
+        IDX --> RET
+        RET --> ANS["An answer, or the honest miss"]
+
+        classDef flow fill:rgba(198,74,17,0.10),stroke:#C64A11,stroke-width:2px,color:#241A12
+        classDef agent fill:rgba(14,124,102,0.10),stroke:#0E7C66,stroke-width:2px,color:#241A12
+        classDef output fill:rgba(14,124,102,0.10),stroke:#0E7C66,stroke-width:2px,color:#241A12
+        classDef input fill:rgba(138,90,11,0.10),stroke:#8A5A0B,stroke-width:2px,color:#241A12
+        class G flow
+        class CR agent
+        class IDX output
+        class RET agent
+        class ANS output
+        class Q input
+        class APP flow
+    </pre>
+  </div>
+
+  <div class="detail-section animate" style="--i:3">
+    <h2>The Crawler</h2>
+    <p>A headless browser signs in, walks every route in the app tree, and reads the DOM. One file per page, written where the indexer already looks.</p>
+    <p>The hard rule is what it refuses to read. The crawl runs as a real account, so anything it takes off a row is that account's data and would become help text for every customer. It reads chrome and only chrome.</p>
+
+    <div class="context-grid">
+      <div class="context-card metric">
+        <div class="label">Reads</div>
+        <div class="name">The shape of the page</div>
+        <ul>
+          <li>Headings</li>
+          <li>Buttons and link targets</li>
+          <li>Field labels and placeholders</li>
+          <li>Select options</li>
+          <li>Column headers</li>
+        </ul>
+      </div>
+      <div class="context-card rose">
+        <div class="label">Never reads</div>
+        <div class="name">Anything that is somebody's data</div>
+        <ul>
+          <li>Table cells</li>
+          <li>Paragraphs</li>
+          <li>Any input's value</li>
+          <li>Password fields, at all</li>
+          <li>External links</li>
+        </ul>
+      </div>
+    </div>
+
+    <p style="margin-top:16px">Two more decisions came out of running it. <strong>Chrome is dropped by counting.</strong> A control on most pages is the sidebar; a control on a few is content. Without that filter every document carried the same twenty navigation links. <strong>One page is one block.</strong> Split into a heading per list, a page became three thin chunks and a question stopped matching it. Read as a single dense block, it matches.</p>
+    <p class="landing">A field labelled System Instructions answers the question. Nobody wrote it for the docs. It is in the UI, and it changes with the UI.</p>
+  </div>
+
+  <div class="detail-section animate" style="--i:4">
+    <h2>Retrieval</h2>
+    <p>Two arms run over the same chunks and their results are fused by rank.</p>
+    <p>The <strong>vector arm</strong> returns what sits nearest the question in embedding space. The <strong>keyword arm</strong> counts how many of the question's words appear literally in the chunk, ignoring words of three characters or less so that a question's grammar drops out without a stopword list to maintain.</p>
+    <p>Fusion is reciprocal rank, one over sixty plus the place, summed across both arms. A chunk both arms like wins. A chunk only one arm likes still surfaces, which is the point of having two.</p>
+    <p class="code-line">score = 1/(60 + vector_place) + 1/(60 + keyword_place)</p>
+    <p>Not a weighted sum of the two scores, because a cosine similarity and a word count are not the same unit. Any sum of them needs a constant somebody has to choose and revisit. Rank needs no constant.</p>
+
+    <div class="context-grid" style="margin-top:16px">
+      <div class="context-card metric">
+        <div class="label">Fixed</div>
+        <div class="name">where do I add a new agent</div>
+        <div class="desc">The agent-creation page now ranks first. It used to lose to a written guide.</div>
+      </div>
+      <div class="context-card metric">
+        <div class="label">Fixed</div>
+        <div class="name">where is the custom rubric page</div>
+        <div class="desc">The rubric page is now in the top five. It was absent entirely.</div>
+      </div>
+      <div class="context-card amber">
+        <div class="label">Still loses</div>
+        <div class="name">where can I update my agent's instructions</div>
+        <div class="desc">The answer is in the index and ranks below four written guides, because "agent" and "instructions" appear in most of them and the tie goes to distance.</div>
+      </div>
+    </div>
+    <p class="landing">Coverage is solved. Ranking is the part still worth work, and the honest fix is not more keyword tuning.</p>
+  </div>
+
+  <div class="detail-section animate" style="--i:5">
+    <h2>Grounded Refusal</h2>
+    <p>The system prompt used to end with an instruction to answer anyway.</p>
+    <p class="code-line">If the context doesn't contain enough information, use your core knowledge to answer.</p>
+    <p>That guarantees a confident answer to a question the corpus cannot answer. In this case the core knowledge block had one sentence containing the word Instructions, a description of the evaluation pipeline, and the model reached for it.</p>
+
+    <div class="compare">
+      <div class="compare-col before">
+        <div class="tag">Before</div>
+        <div class="q">where can i update my agent's instructions</div>
+        <div class="a">The Quality Analysis pipeline runs five agents: Instructions, Ethos, Bias, Safety and Synthesis, producing a weighted score.</div>
+      </div>
+      <div class="compare-col after">
+        <div class="tag">After</div>
+        <div class="q">where can i update my agent's instructions</div>
+        <div class="a">The documentation doesn't directly cover updating an agent's instructions, but the closest relevant page is the Custom Rubric Form. <em>An honest miss, and the reader knows where to look next.</em></div>
+      </div>
+    </div>
+
+    <div class="callout">
+      <strong>The line that matters.</strong> A short honest miss beats a confident guess. A wrong answer sends somebody looking for a control that may not exist, and they will trust the next wrong answer too.
+    </div>
+  </div>
+
+  <div class="detail-section animate" style="--i:6">
+    <h2>What Is Still Open</h2>
+    <div class="context-grid">
+      <div class="context-card amber">
+        <div class="label">Blind spot</div>
+        <div class="name">Anything behind a click</div>
+        <div class="desc">Modals, wizard steps, tabs not yet opened. The crawler visits pages, it does not drive them. The agent page's instruction field only exists once Edit is pressed.</div>
+      </div>
+      <div class="context-card amber">
+        <div class="label">Blind spot</div>
+        <div class="name">Pages that need an id</div>
+        <div class="desc">A detail page has no URL until something supplies one, so the crawler is told where to find one. That rule is the single thing still kept by hand.</div>
+      </div>
+      <div class="context-card slate">
+        <div class="label">Inherent</div>
+        <div class="name">Prose still rots</div>
+        <div class="desc">The crawler cannot describe intent, cost, or when to use a thing. That half is still written by a person. It is now the smaller half, and it changes slowly.</div>
+      </div>
+      <div class="context-card slate">
+        <div class="label">Next</div>
+        <div class="name">Let the assistant look twice</div>
+        <div class="desc">One ranked list decides the answer today. Giving the model tools over the index, so it can look again or admit it found nothing, is the fix for the paraphrase case that ranking keeps losing.</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="footer">
+    <a href="../index.html">&larr; Index</a>
+    &nbsp;&middot;&nbsp;
+    &copy; 2025-2026 Charlie Fuller
+  </div>
+</div>
+
+<script type="module">
+  import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs';
+  mermaid.initialize({
+    startOnLoad: true, theme: 'base', look: 'classic',
+    themeVariables: {
+      primaryColor: '#F0E9E1',
+      primaryBorderColor: '#C64A11',
+      primaryTextColor: '#241A12',
+      secondaryColor: '#FFFFFF',
+      secondaryBorderColor: '#0E7C66',
+      secondaryTextColor: '#241A12',
+      tertiaryColor: '#FFFFFF',
+      tertiaryBorderColor: '#0E7C66',
+      tertiaryTextColor: '#241A12',
+      lineColor: '#6F6255',
+      fontSize: '15px', fontFamily: "'Mulish', 'Segoe UI', Helvetica, sans-serif",
+    }
+  });
+</script>
+<script>
+  function updateZoomState(wrap) {
+    const t = wrap.querySelector('.mermaid');
+    wrap.classList.toggle('is-zoomed', parseFloat(t.dataset.zoom || '1') > 1);
+  }
+  function zoomDiagram(btn, factor) {
+    const wrap = btn.closest('.mermaid-wrap'), t = wrap.querySelector('.mermaid');
+    const n = Math.min(Math.max((parseFloat(t.dataset.zoom || '1')) * factor, 0.3), 5);
+    t.dataset.zoom = n; t.style.transform = 'scale(' + n + ')'; updateZoomState(wrap);
+  }
+  function resetZoom(btn) {
+    const wrap = btn.closest('.mermaid-wrap'), t = wrap.querySelector('.mermaid');
+    t.dataset.zoom = '1'; t.style.transform = 'scale(1)'; updateZoomState(wrap);
+  }
+  document.querySelectorAll('.mermaid-wrap').forEach(function(wrap) {
+    wrap.addEventListener('wheel', function(e) {
+      if (!e.ctrlKey && !e.metaKey) return;
+      e.preventDefault();
+      const t = wrap.querySelector('.mermaid');
+      const n = Math.min(Math.max((parseFloat(t.dataset.zoom || '1')) * (e.deltaY < 0 ? 1.1 : 0.9), 0.3), 5);
+      t.dataset.zoom = n; t.style.transform = 'scale(' + n + ')'; updateZoomState(wrap);
+    }, { passive: false });
+    let sx, sy, sl, st;
+    wrap.addEventListener('mousedown', function(e) {
+      if (e.target.closest('.zoom-controls')) return;
+      if (parseFloat(wrap.querySelector('.mermaid').dataset.zoom || '1') <= 1) return;
+      wrap.classList.add('is-panning'); sx = e.clientX; sy = e.clientY;
+      sl = wrap.scrollLeft; st = wrap.scrollTop;
+    });
+    window.addEventListener('mousemove', function(e) {
+      if (!wrap.classList.contains('is-panning')) return;
+      wrap.scrollLeft = sl - (e.clientX - sx); wrap.scrollTop = st - (e.clientY - sy);
+    });
+    window.addEventListener('mouseup', function() { wrap.classList.remove('is-panning'); });
+  });
+</script>
+</body>
+</html>
