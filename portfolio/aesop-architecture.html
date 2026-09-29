@@ -4,8 +4,8 @@
 <meta charset="UTF-8">
 <link rel="icon" href="../icon.svg" type="image/svg+xml" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>AESOP &mdash; Evaluation Wizard &amp; Architecture</title>
-<meta name="description" content="How AESOP's unified evaluation wizard runs five scoring modes across your AI instructions, governance, and live endpoints, and the stack that carries it.">
+<title>AESOP &mdash; Context Architecture</title>
+<meta name="description" content="What context AESOP gathers about an AI agent, where each piece comes from when you do not type it, and what changes downstream because of it.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Mulish:ital,wght@0,300;0,400;0,600;0,700;0,800;1,400&display=swap" rel="stylesheet">
@@ -67,7 +67,7 @@
   .pmap .pm-k{font-family:var(--font-mono);font-size:11.5px;font-weight:800;text-transform:uppercase;letter-spacing:.08em;color:var(--blue);line-height:1.5}
   .pmap .pm-k .ord{display:block;color:var(--primary);font-weight:700;font-size:10px;letter-spacing:.16em;margin-bottom:3px}
   .pmap .pm-k .tag{display:block;color:var(--text-faint);font-weight:700;font-size:10px;letter-spacing:.16em;margin-bottom:3px}
-  .pmap .pm-b{font-size:14.5px;line-height:1.6;color:var(--text-dim)}
+  .pmap .pm-b{font-size:14.5px;line-height:1.6;color:var(--text-dim);min-width:0}
   .pmap .pm-b .tt{font-weight:800;color:var(--text);font-size:15.5px}
   .pmap.i-blue .pm-k{color:var(--blue)}
   .pmap.i-teal .pm-k{color:var(--metric)}
@@ -109,9 +109,25 @@
   .pmap .pm-b .run{font-family:var(--font-mono);font-size:12px;color:var(--text-dim);margin-top:8px}
   .pmap .pm-b .run b{color:var(--text);font-weight:700}
   .pmap .pm-b .run .sep{color:var(--text-faint)}
-  .pmap .pm-k .need{font-family:var(--font-mono);font-size:9.5px;font-weight:700;letter-spacing:.05em;margin-left:6px;white-space:nowrap}
+
+  /* Requirement flags stack under the mode name so two of them cannot run
+     into the description column. */
+  .pmap .pm-k .need{display:block;font-family:var(--font-mono);font-size:9.5px;font-weight:700;letter-spacing:.05em;margin-top:3px;line-height:1.45}
   .pmap .pm-k .need.yes{color:var(--metric)}
   .pmap .pm-k .need.no{color:var(--rose)}
+
+  /* Context path strip: pure CSS, no library. */
+  .path{display:flex;align-items:stretch;gap:10px;flex-wrap:wrap;margin:4px 0 18px}
+  .path .node{flex:1 1 150px;min-width:140px;background:var(--surface);border:1px solid var(--border);border-radius:3px;padding:11px 13px}
+  .path .node .nh{font-family:var(--font-mono);font-size:9.5px;font-weight:800;letter-spacing:.14em;text-transform:uppercase;color:var(--text-faint);margin-bottom:4px}
+  .path .node .nb{font-size:13px;line-height:1.45;color:var(--text-dim)}
+  .path .node .nb b{color:var(--text)}
+  .path .node.src{border-left:3px solid var(--blue)}
+  .path .node.asm{border-left:3px solid var(--primary)}
+  .path .node.rev{border-left:3px solid var(--violet)}
+  .path .node.out{border-left:3px solid var(--metric)}
+  .path .arrow{align-self:center;color:var(--border-bright);font-size:20px;font-weight:700;flex:0 0 auto}
+  @media(max-width:900px){.path .arrow{display:none}.path .node{flex:1 1 100%}}
 </style>
 </head>
 <body>
@@ -121,130 +137,181 @@
   <span class="sep">/</span>
   <a href="../index.html">Index</a><span class="sep">/</span>
   <a href="../aesop.html">AESOP</a><span class="sep">/</span>
-  <span class="current" aria-current="page">Evaluation Wizard &amp; Architecture</span>
+  <span class="current" aria-current="page">Context Architecture</span>
 </div>
 
 <main class="wrap">
 
   <header class="hero">
     <div class="tagline">AESOP &mdash; Enterprise AI Agent Governance</div>
-    <h1>Evaluation Wizard &amp; Architecture</h1>
-    <p class="lede">One unified wizard takes a system&rsquo;s instructions, optional governance documents, and an optional live endpoint and routes them into the evaluation modes that fit. Each mode is a deterministic, agent-run pipeline with a human gate at the end. This page maps the wizard and the stack underneath it.</p>
+    <h1>Context Architecture</h1>
+    <p class="lede">What AESOP knows is bounded by what it was given to read. This page maps <b>what context the platform gathers</b>, where each piece comes from <b>when you never type it</b>, which evaluation mode asks for what, and <b>what actually changes</b> downstream because of it.</p>
   </header>
 
-  <!-- 01 wizard -->
+  <!-- 01 what we gather -->
   <section class="sec">
-    <div class="sec-head"><span class="sec-num">01</span><h2 class="sec-title">Four-step wizard flow<span class="cnt">Materials &rarr; Governance &rarr; Endpoint &rarr; Capabilities</span></h2></div>
+    <div class="sec-head"><span class="sec-num">01</span><h2 class="sec-title">The context<span class="cnt">four layers, one run</span></h2></div>
     <div class="sec-body">
-      <p>The wizard narrows from &ldquo;what are you evaluating&rdquo; to &ldquo;how are you evaluating it.&rdquo; Governance is optional; Endpoint appears only when a live-testing mode is selected.</p>
-      <div class="pmap i-acc"><div class="pm-k"><span class="ord">01</span>Materials</div><div class="pm-b">Provide the inputs for the evaluation.
+      <p>Context arrives in four layers. Only the first is ever fully in your hands. The other three are assembled from what the platform already holds, and each one changes a different part of the result.</p>
+      <div class="pmap i-acc"><div class="pm-k"><span class="ord">Layer 01</span>The agent</div><div class="pm-b"><span class="tt">What is being tested</span>
         <ul>
-          <li><b>Project name</b> &mdash; identifies the run.</li>
-          <li><b>System instructions</b> &mdash; upload or paste.</li>
-          <li><b>Governance documents</b> &mdash; attach the policy layer to evaluate against.</li>
-          <li><b>Vital context</b> &mdash; anything the evaluators need to read the agent fairly.</li>
+          <li><b>System instructions.</b> The object under test. Upload, paste, or read from the agent record.</li>
+          <li><b>Agent name.</b> Also becomes the run name.</li>
+          <li><b>Endpoint URL and auth header.</b> Optional. Providing it unlocks the live modes.</li>
+          <li><b>Instruction version.</b> Detected on create, so a run can be tied to a version later.</li>
         </ul>
       </div></div>
-      <div class="pmap i-blue"><div class="pm-k"><span class="ord">02</span>Governance</div><div class="pm-b">Optionally attach governance documents.
+      <div class="pmap i-blue"><div class="pm-k"><span class="ord">Layer 02</span>The policy layer</div><div class="pm-b"><span class="tt">What it is measured against</span>
         <ul>
-          <li>Select from the document library.</li>
-          <li><b>Optional</b> &mdash; skip when no policy layer is in scope.</li>
+          <li><b>Governance documents.</b> Selected from a shared library or uploaded on the spot. PDF, DOCX, TXT, MD, XML, up to 10MB.</li>
+          <li><b>Document type.</b> Governance, policy, standard, compliance, validation protocol, change control, risk register, audit SOP, regulatory template.</li>
+          <li><b>Org fallback.</b> If you select nothing, the organization's own governance policy and evaluation criteria are used instead.</li>
         </ul>
       </div></div>
-      <div class="pmap i-blue"><div class="pm-k"><span class="ord">03</span>Endpoint</div><div class="pm-b">Only shown when live-testing phases are selected.
+      <div class="pmap i-vio"><div class="pm-k"><span class="ord">Layer 03</span>The run frame</div><div class="pm-b"><span class="tt">What this particular run is for</span>
         <ul>
-          <li><b>Chatbot API URL</b> &mdash; optional.</li>
-          <li><b>Hidden</b> for Quality-Analysis-only runs.</li>
-          <li>Providing it <b>unlocks the live-testing phases</b>.</li>
+          <li><b>Context for this run.</b> Free prose about the agent's real situation.</li>
+          <li><b>Focus.</b> The failure modes you already suspect, to aim the scenario writers.</li>
+          <li><b>Rubric.</b> Generated by the platform, or supplied by you as YAML, JSON, TXT, or MD.</li>
+          <li><b>Modes and reviewers.</b> Which evaluation types run, and which of the six reviewers score the instructions.</li>
         </ul>
       </div></div>
-      <div class="pmap i-vio"><div class="pm-k"><span class="ord">04</span>Capabilities</div><div class="pm-b">Toggle evaluation phases on or off.
+      <div class="pmap i-teal"><div class="pm-k"><span class="ord">Layer 04</span>The audience</div><div class="pm-b"><span class="tt">Who the agent acts on</span>
         <ul>
-          <li><b>Quality Analysis pre-checked</b> &mdash; the default gate.</li>
-          <li>Each phase can be switched off for narrower runs.</li>
-          <li>Seven evaluation modes available on the platform.</li>
+          <li><b>Who it serves.</b> Required whenever human impact is selected.</li>
+          <li><b>What state they are usually in</b> when they arrive.</li>
+          <li><b>How vulnerable</b> they are. Low, mixed, or high.</li>
+          <li><b>How long they interact.</b> One-off or ongoing.</li>
         </ul>
+        <div class="intronote">This is the only context the six reviewers deliberately never see. It reaches the human-impact dimension scorers and nothing else, so a calm reading of the instructions cannot be contaminated by how sympathetic the audience is.</div>
       </div></div>
     </div>
   </section>
 
-  <!-- 02 modes -->
+  <!-- 02 sources -->
   <section class="sec">
-    <div class="sec-head"><span class="sec-num">02</span><h2 class="sec-title">Evaluation modes<span class="cnt">the five wizard pipelines</span></h2></div>
+    <div class="sec-head"><span class="sec-num">02</span><h2 class="sec-title">Where it comes from<span class="cnt">typed, inherited, observed</span></h2></div>
     <div class="sec-body">
-      <p>Each mode carries its own requirement: an <b>instruction set</b>, a <b>live endpoint</b>, or both. Static-analysis modes never touch the endpoint; live modes are the only ones that do.</p>
+      <p>Three ways context gets in. You type it for the run, the platform inherits it from your organization and your past runs, or it is observed from production.</p>
 
-      <div class="pmap i-teal"><div class="pm-k">Quality<br>Analysis<span class="need yes">Needs instructions</span></div><div class="pm-b"><span class="tt">Quality Analysis</span> &mdash; Full 5-agent scored pipeline evaluating <b>Instructions, Ethos, Bias, and Safety</b> with weighted Synthesis scoring and AESOP certification.
-        <div class="run"><b>Pipeline</b> Instructions <span class="sep">&rarr;</span> Ethos <span class="sep">&rarr;</span> Bias <span class="sep">&rarr;</span> Safety <span class="sep">&rarr;</span> Synthesis</div>
+      <div class="path">
+        <div class="node src"><div class="nh">Sources</div><div class="nb">Typed, inherited, observed</div></div>
+        <div class="arrow">&rarr;</div>
+        <div class="node asm"><div class="nh">Assembly</div><div class="nb">Resolved once per run into a <b>single context record</b></div></div>
+        <div class="arrow">&rarr;</div>
+        <div class="node rev"><div class="nh">Consumption</div><div class="nb">Each agent receives <b>its own slice</b>, not the whole pile</div></div>
+        <div class="arrow">&rarr;</div>
+        <div class="node out"><div class="nh">Output</div><div class="nb">A scored, cited report with a human gate</div></div>
+      </div>
+
+      <div class="pmap i-blue"><div class="pm-k">Typed<br>by hand</div><div class="pm-b">Entered for one run and stored on that run. Instructions, vital context, focus, a supplied rubric, the audience fields, and any document you upload inline.</div></div>
+
+      <div class="pmap i-teal"><div class="pm-k">Org document<br>library</div><div class="pm-b">Every uploaded document is org-scoped, so one person's governance packet is available to the whole team on the next run. Documents are extracted to text, split into chunks, and stored with their type label.</div></div>
+
+      <div class="pmap i-vio"><div class="pm-k">Organization<br>context</div><div class="pm-b">Eighteen typed slots that describe the business rather than the agent: company profile, strategic goals, brand guidelines, org chart, authority map, coordination map, tacit knowledge, exposure posture, systemic blockers, stakeholder interviews, and the rest. Each holds text or a file. This is the layer that makes a finding land in your world instead of in the abstract.
+        <div class="run"><b>Read by</b> governance fallback, synthesis, red-team framing, deployment readiness</div>
       </div></div>
 
-      <div class="pmap i-vio"><div class="pm-k">Custom<br>Suite<span class="need yes">Needs instructions</span></div><div class="pm-b"><span class="tt">Rubric testing</span> &mdash; Generates a tailored evaluation rubric from your instructions, then creates targeted test scenarios from that rubric.
-        <div class="run"><b>Pipeline</b> Instructions <span class="sep">&rarr;</span> Rubric testing <span class="sep">&rarr;</span> Test Scenarios <span class="sep">&rarr;</span> Results</div>
+      <div class="pmap i-acc"><div class="pm-k">Prior<br>runs</div><div class="pm-b">The platform remembers what it already established about this agent.
+        <ul>
+          <li><b>Reuse last context.</b> The previous run's vital context, audience, and supplied rubric are offered back, pre-filled, with a box to uncheck.</li>
+          <li><b>Prior reports.</b> Red-team aims at what is already known instead of rediscovering the agent from zero.</li>
+          <li><b>Prior failures and scenarios.</b> Known defects get targeted, and scenarios already run are not repeated.</li>
+          <li><b>Finding history.</b> Across a rolling window of the last five runs, every failing finding is classified as a regression, a repeat, or new.</li>
+        </ul>
       </div></div>
 
-      <div class="pmap i-amb"><div class="pm-k">Black Box<br>Investigation<span class="need yes">Needs endpoint</span><span class="need no">No instructions</span></div><div class="pm-b"><span class="tt">Black Box Investigation</span> &mdash; Interview-based discovery of an unknown chatbot. Probes the endpoint with strategic questions to map its capabilities, boundaries, and behavior with no prior knowledge.
-        <div class="run"><b>Pipeline</b> Endpoint <span class="sep">&rarr;</span> Interview <span class="sep">&rarr;</span> Discovery <span class="sep">&rarr;</span> Report</div>
+      <div class="pmap i-amb"><div class="pm-k">Production<br>traces</div><div class="pm-b">Real conversations, pasted or imported. The parser accepts <code>User/Agent</code>, <code>Human/Assistant</code>, <code>Q/A</code>, and JSONL, and falls back to a model-based parser for formats it does not recognize. Duplicates are dropped on their external id.
+        <ul>
+          <li>Stored per agent with turn index, latency, token usage, and error or refusal flags.</li>
+          <li>These are the traces the human coding pass and the model judge both read.</li>
+        </ul>
       </div></div>
 
-      <div class="pmap i-acc"><div class="pm-k">Adversarial<br>Red-Team<span class="need yes">Needs both</span></div><div class="pm-b"><span class="tt">Adversarial Red-Team</span> &mdash; Red Team attack scenarios. Generates adversarial prompts from analysis reports, then executes them against your live chatbot to surface exploitable weaknesses.
-        <div class="run"><b>Pipeline</b> Reports <span class="sep">&rarr;</span> Attack Scenarios <span class="sep">&rarr;</span> Execute <span class="sep">&rarr;</span> Results</div>
+      <div class="pmap i-vio"><div class="pm-k">Meeting<br>transcripts</div><div class="pm-b">Paste or upload a transcript from Teams, Zoom, Granola, or Otter. The platform extracts proposed changes, each with the source quote, a confidence, the speaker, and the meeting it came from: status changes, milestones, new and updated risks, budget, timeline, scope, decisions, and action items.
+        <div class="run"><b>Review status</b> pending <span class="sep">&rarr;</span> approved / rejected / modified</div>
+        <div class="intronote">Nothing extracted from a transcript is treated as fact until a person approves it. The quote travels with the claim so the approval is a reading, not a guess.</div>
       </div></div>
 
-      <div class="pmap i-blue"><div class="pm-k">Functional<br>Testing<span class="need yes">Needs endpoint</span></div><div class="pm-b"><span class="tt">Functional Testing</span> &mdash; Executes test scenarios (from Rubric testing or Red-Team) against a live chatbot endpoint. Sends real requests, captures responses, and scores pass/fail outcomes.
-        <div class="run"><b>Pipeline</b> Test Scenarios <span class="sep">&rarr;</span> Live Requests <span class="sep">&rarr;</span> Response Capture <span class="sep">&rarr;</span> Pass/Fail Scoring</div>
+      <div class="pmap i-blue"><div class="pm-k">Agent record<br>&amp; project</div><div class="pm-b">The endpoint and its auth are read from the agent record at run time rather than trusted from the form, so a credential typed into a run does not become the thing that gets used. When a run is linked to a project, the project's north-star metric comes with it.</div></div>
+    </div>
+  </section>
+
+  <!-- 03 modes -->
+  <section class="sec">
+    <div class="sec-head"><span class="sec-num">03</span><h2 class="sec-title">What each mode asks for<span class="cnt">seven evaluation types</span></h2></div>
+    <div class="sec-body">
+      <p>The mode you pick decides which context the platform goes looking for. A mode is offered as unavailable, with its reason on the card, rather than running something weak on thin context.</p>
+
+      <div class="pmap i-teal"><div class="pm-k">Review the<br>written instructions<span class="need yes">Needs instructions</span></div><div class="pm-b"><span class="tt">Quality Analysis.</span> Six reviewers score the instructions, then synthesis weights them into one certification.
+        <div class="run"><b>Reviewers</b> Instructions <span class="sep">&rarr;</span> Ethos, Bias, Safety, Legal, InfoSec (parallel) <span class="sep">&rarr;</span> Synthesis</div>
+      </div></div>
+
+      <div class="pmap i-vio"><div class="pm-k">Test it against<br>a rubric<span class="need yes">Needs instructions</span></div><div class="pm-b"><span class="tt">Rubric testing.</span> Generates a tailored rubric from your instructions, or uses the one you supplied, then writes targeted scenarios from it.
+        <div class="run"><b>Pipeline</b> Rubric <span class="sep">&rarr;</span> Test scenarios <span class="sep">&rarr;</span> Execute</div>
+      </div></div>
+
+      <div class="pmap i-acc"><div class="pm-k">Red-team<br>it<span class="need yes">Needs endpoint</span><span class="need no">Needs instructions or a prior report</span></div><div class="pm-b"><span class="tt">Adversarial Red-Team.</span> Builds attacks from what is already known: the instructions, the vital context as the declared audience, and reports from earlier runs. Then executes them against the live agent.
+        <div class="run"><b>Pipeline</b> Briefing <span class="sep">&rarr;</span> Scenarios <span class="sep">&rarr;</span> Off-audience scenarios <span class="sep">&rarr;</span> Persona review <span class="sep">&rarr;</span> Execute</div>
+      </div></div>
+
+      <div class="pmap i-amb"><div class="pm-k">Discover what<br>it does<span class="need yes">Needs endpoint</span><span class="need no">No instructions needed</span></div><div class="pm-b"><span class="tt">Black Box Investigation.</span> Interviews an agent you know nothing about, then reconstructs its instructions from the answers. The result can be fed to red-team later, which is how an undocumented agent gets evaluated at all.
+        <div class="run"><b>Pipeline</b> Interview <span class="sep">&rarr;</span> Reconstructed instructions</div>
+      </div></div>
+
+      <div class="pmap i-blue"><div class="pm-k">Check for<br>differential treatment<span class="need yes">Needs instructions</span></div><div class="pm-b"><span class="tt">Bias Probe.</span> Holds a scenario fixed and varies one attribute at a time, then reads whether the answers move in a way the instructions never licensed.
+        <div class="run"><b>Pipeline</b> Attribute pairs <span class="sep">&rarr;</span> Paired runs <span class="sep">&rarr;</span> Divergence scoring</div>
+      </div></div>
+
+      <div class="pmap i-vio"><div class="pm-k">Check how<br>it sounds<span class="need yes">Needs endpoint</span></div><div class="pm-b"><span class="tt">Sounds Like AI.</span> Asks ordinary questions and reads how the answers are phrased. Instructions sharpen the questions, drawn from what the agent was built to do. Without them the prompts fall back to inferring a domain from the project name, and the run is still worth reading.
+        <div class="run"><b>Pipeline</b> Prompt set <span class="sep">&rarr;</span> Live answers <span class="sep">&rarr;</span> Voice scoring</div>
+      </div></div>
+
+      <div class="pmap i-teal"><div class="pm-k">Measure its effect<br>on the person<span class="need yes">Needs endpoint</span><span class="need yes">Needs the audience fields</span><span class="need no">Needs a scenario phase first</span></div><div class="pm-b"><span class="tt">Human Impact.</span> Reads the conversations the agent actually had and scores what they did to the person in them.
+        <div class="intronote">This one is a real dependency, not a preference. It judges transcripts nobody else produced. With no scenario phase there is nothing to read, and a phase with nothing to read reports nothing, which looks exactly like a clean result. The discovery interview does not satisfy it either: what the interview produces is not the kind of transcript this reads.</div>
       </div></div>
     </div>
   </section>
 
-  <!-- 03 stack -->
+  <!-- 04 what it changes -->
   <section class="sec">
-    <div class="sec-head"><span class="sec-num">03</span><h2 class="sec-title">Tech stack<span class="cnt">frontend &rarr; backend &rarr; data &rarr; AI &rarr; infra</span></h2></div>
+    <div class="sec-head"><span class="sec-num">04</span><h2 class="sec-title">What the context changes<span class="cnt">input &rarr; effect</span></h2></div>
     <div class="sec-body">
-      <p>Enterprise-grade by construction: <b>SOC 2 Type II</b> platforms, TLS + AES-256 encryption, JWT + row-level-security auth, user-controlled data, no AI training on your inputs, and a 99.9% SLA.</p>
+      <p>Gathering context is only worth the trouble if it moves the answer. Each entry below names the mechanism, not the intention.</p>
 
-      <div class="pmap i-teal"><div class="pm-k">Frontend</div><div class="pm-b"><span class="tt">Next.js 16 &middot; React 19 &middot; TypeScript</span>
+      <div class="pmap i-acc"><div class="pm-k">System<br>instructions</div><div class="pm-b">The object under test, and the only input to how confident the review is allowed to sound. Length alone sets the band: under 100 characters is the lowest band, under 500 the next, under 2,000 the next, and 2,000 or more the highest. Below 500 characters the report prints a caveat saying so.
+        <div class="run"><b>Read by</b> all six reviewers <span class="sep">&rarr;</span> confidence band</div>
+      </div></div>
+
+      <div class="pmap i-blue"><div class="pm-k">Governance<br>documents</div><div class="pm-b">Appended to the instructions under a governance header, so they reach every reviewer. Two of them are told explicitly to evaluate the instructions against the documents: <b>Legal Compliance</b> and <b>InfoSec</b>. Because they are appended, they also lengthen the instruction text, which moves the confidence band up.
+        <div class="run"><b>Read by</b> all six reviewers <span class="sep">&rarr;</span> criteria + confidence band</div>
+      </div></div>
+
+      <div class="pmap i-vio"><div class="pm-k">Vital<br>context</div><div class="pm-b">Two entirely different jobs depending on who is reading.
         <ul>
-          <li>Next.js 16 App Router with server and client components.</li>
-          <li>React 19 with functional components and hooks; TypeScript strict mode.</li>
-          <li>Tailwind CSS v4 for utility-first styling.</li>
-          <li><b>Libraries:</b> Recharts (KPI dashboards), Lucide React (icons), Supabase JS (auth + realtime), Server-Sent Events (streaming analysis progress).</li>
+          <li><b>For the six reviewers</b>, it never enters the message. It adjusts the confidence score and nothing else.</li>
+          <li><b>For red-team</b>, it is the declared audience. Every off-audience scenario must fall outside it.</li>
+          <li><b>For synthesis, repair, and the test plan</b>, it is prose to write against.</li>
         </ul>
       </div></div>
 
-      <div class="pmap i-acc"><div class="pm-k">Backend</div><div class="pm-b"><span class="tt">FastAPI &middot; Python &middot; Uvicorn</span>
+      <div class="pmap i-teal"><div class="pm-k">The<br>audience</div><div class="pm-b">A hard precondition. Without the audience fields the human-impact phase is skipped entirely rather than run on a default. The four calibrated scorers read the conversations; they never read the audience description itself, so the score is what the agent did, not what the reader was told to expect.</div></div>
+
+      <div class="pmap i-acc"><div class="pm-k">Prior<br>reports</div><div class="pm-b">Red-team stops rediscovering the agent. Scenarios are aimed at what earlier runs already established, which is what makes the second and third evaluation of an agent cheaper and sharper than the first.</div></div>
+
+      <div class="pmap i-amb"><div class="pm-k">Prior failures<br>&amp; scenarios</div><div class="pm-b">Known defects get targeted and already-run scenarios are skipped, so a repeat evaluation spends its budget on the part of the surface that is still untested.</div></div>
+
+      <div class="pmap i-vio"><div class="pm-k">Trace<br>taxonomy</div><div class="pm-b">Traces are coded by hand, the codes are consolidated, and a person approves the taxonomy. Only then does it become real.
+        <div class="run"><b>Then</b> a judge is built per code <span class="sep">&rarr;</span> validated against the human annotations <span class="sep">&rarr;</span> run across every trace</div>
         <ul>
-          <li>FastAPI with async route handlers and Pydantic models; Uvicorn ASGI serving; SSE streaming via Starlette.</li>
-          <li>JWT middleware for Supabase token validation on every request.</li>
-          <li><b>Agent architecture:</b> specialized agents inheriting a <code>BaseAgent</code> &mdash; deterministic pipelines, probabilistic evaluation, human-in-the-loop at every gate.</li>
-          <li>Prompt files stored as plain <code>.txt</code> for easy iteration; sequential pipeline with report chaining; <code>httpx</code> for async chatbot testing.</li>
+          <li>A judge returns exactly three verdicts: occurred, did not occur, or not applicable. The escape bucket is mandatory, enforced at import.</li>
+          <li>Validation produces a confusion matrix against the human coding: recall, precision, specificity, agreement.</li>
+          <li>The approved taxonomy is the only version that feeds repair and the test plan.</li>
         </ul>
+        <div class="intronote">The effect is traceability. Every rewrite the repair agent proposes cites a named code with its evidence attached, so you can walk a fix back to the conversation that justified it.</div>
       </div></div>
 
-      <div class="pmap i-teal"><div class="pm-k">Database<br>&amp; Auth</div><div class="pm-b"><span class="tt">Supabase &middot; PostgreSQL &middot; Row Level Security</span>
-        <ul>
-          <li>Supabase-hosted PostgreSQL with RLS policies; tables for analyses, evaluations, users, documents, help.</li>
-          <li>Voyage AI vector embeddings (512-dim) for the RAG help system.</li>
-          <li>SQL migrations tracked in <code>/database/migrations/</code>.</li>
-          <li><b>Auth:</b> email/password + magic links; JWT validated server-side; roles <code>org_admin</code> / <code>evaluator</code>; RLS isolates tenant data.</li>
-        </ul>
-      </div></div>
-
-      <div class="pmap i-vio"><div class="pm-k">AI &amp;<br>Evaluation</div><div class="pm-b"><span class="tt">Claude Sonnet 4.5 &middot; 21+ agents &middot; seven modes</span>
-        <ul>
-          <li>Claude Sonnet 4.5 (<code>claude-sonnet-4-5-20250915</code>) for primary agent evaluations; DeepSeek for batch / summary tasks.</li>
-          <li>Temperature 0.1 for consistent, reproducible scoring; 8K max output tokens per agent (16K for Rubric).</li>
-          <li>Cost tracking per analysis with token-level granularity.</li>
-          <li><b>Pipelines:</b> 5-agent Quality Analysis; Rubric generation + scenario generation; interview-based Black Box Investigation; Red Team Red-Team + execution; Functional Testing request/response scoring.</li>
-        </ul>
-      </div></div>
-
-      <div class="pmap i-blue"><div class="pm-k">Infra</div><div class="pm-b"><span class="tt">Vercel &middot; Fly.io &middot; GitHub Actions</span>
-        <ul>
-          <li>Frontend on Vercel with automatic preview deploys; backend on Fly.io via GitHub integration.</li>
-          <li>Supabase managed cloud for database + auth; custom domains with SSL on frontend and API.</li>
-          <li><b>CI/CD:</b> GitHub Actions help-doc reindexing on push; auto-deploy on merge to main; pytest suite for backend validation; per-service environment variables.</li>
-        </ul>
-      </div></div>
+      <div class="close"><b>The honest limit.</b> Context raises confidence; it does not measure correctness. Instructions and governance both move the confidence band by length, which is a statement about how much the platform had to read, not how right it is. The behaviors that actually ground a judgment are the ones read from production: traces, transcripts, and prior runs. Everything else is framing.</div>
     </div>
   </section>
 
