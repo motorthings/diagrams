@@ -152,7 +152,7 @@
   <header class="hero">
     <span class="hero-badge">claude-api skill &middot; Claude Code &middot; September 2026</span>
     <h1>build-eval + hillclimb</h1>
-    <p class="lede">Two commands. <code>/claude-api build-eval</code> builds a test set and a grader from your actual data, pausing for approval at each step. <code>/claude-api hillclimb</code> iterates against them, one change at a time, with a held-out set to catch overfitting. This page maps the full flow of both.</p>
+    <p class="lede">Two commands. <code>/claude-api build-eval</code> builds a test set and a grader from production transcripts, bug reports, and hand-written cases, pausing for approval at each step. <code>/claude-api hillclimb</code> iterates against them, one change at a time, with a held-out set to catch overfitting. This page maps the full flow of both.</p>
     <p class="lede">The primary source is the <a href="https://claude.dev/blog/automating-eval-design-and-hillclimbing/" style="color:var(--primary)">claude.dev playbook by Lance Martin</a> (Sep 28, 2026) and <a href="https://hamel.dev/blog/posts/claude-auto-evals/" style="color:var(--primary)">Hamel Husain's field review</a>.</p>
   </header>
 
@@ -163,27 +163,71 @@
   <p class="lead">The command walks you through three phases: collecting examples in priority order, proposing and validating a grader, and running a baseline with a confidence interval. Claude pauses for your approval before moving between phases.</p>
 
   <h3 class="sub">Phase A &mdash; Data sampling</h3>
-  <p class="lead">Claude collects inputs in a fixed priority order. The rule is to anchor synthetic data in real data whenever possible, and to ask about retention and sensitivity before touching production logs.</p>
+  <p class="lead">Claude collects inputs in a fixed priority order, working from the most grounded data toward the most synthetic. The underlying rule: <b>every synthetic example should be anchored in something real.</b> Fabricated cases not tied to actual behavior measure a hypothetical version of your application, not the one running in production.</p>
 
-  <div class="flow-wrap">
+  <div class="risk-note warn-note" style="margin-top:12px;margin-bottom:0"><span class="rn">Adversarial sampling &mdash; don't pick cases because today's model fails them.</span> Model capability is jagged. If you pick cases where the current model fails, you are sampling the valleys of that model's capability surface &mdash; and the next model will have different valleys. The benchmark ends up measuring that model's failure fingerprint rather than what is intrinsically hard for your application. <b>Pick hard cases because a human judged them hard</b>, not because a particular model got them wrong. You should be able to say why a case is hard before you include it.</div>
+
+  <div class="flow-wrap" style="margin-top:16px">
     <div class="flow-node">
       <div class="flow-box box-start">
         <div class="flow-box-label">Start</div>
         <div class="flow-box-title"><code>/claude-api build-eval</code></div>
-        <div class="flow-box-desc">Run in Claude Code with the claude-api skill installed. Claude begins the interview.</div>
+        <div class="flow-box-desc">Run in Claude Code with the claude-api skill installed. Claude begins the interview, asking about your application and what you want to measure before touching any data.</div>
       </div>
     </div>
-    <div class="flow-arrow">&#8595;</div>
+    <div class="flow-arrow">&#8595;<span class="flow-arrow-label">source 1 &mdash; highest signal</span></div>
 
     <div class="flow-node">
       <div class="flow-box box-data">
-        <div class="flow-box-label">Data sampling &mdash; priority order</div>
-        <div class="flow-box-title">Four sources, in this sequence</div>
-        <ul class="flow-box-list">
-          <li><span class="pri" style="background:var(--bad-dim);color:var(--bad)">1st</span> <b>Production transcripts</b> &mdash; Claude asks about data retention and sensitive info first. The closest thing to real signal.</li>
-          <li><span class="pri" style="background:var(--amber-dim);color:var(--amber)">2nd</span> <b>Bug reports and support tickets</b> &mdash; Known failures. Don't blindly trust user traffic though: users often try what they expect to work, skewing the sample easy.</li>
-          <li><span class="pri" style="background:var(--good-dim);color:var(--good)">3rd</span> <b>5&ndash;10 hand-written cases</b> &mdash; You write these. Pick cases because a human judged them hard &mdash; you should be able to say why before including them.</li>
-          <li><span class="pri" style="background:var(--slate-dim);color:var(--slate)">4th</span> <b>Synthetic cases</b> &mdash; Generated from your codebase and anchored to the real examples above. Last resort, not first.</li>
+        <div class="flow-box-label">Source 1 &mdash; Production transcripts</div>
+        <div class="flow-box-title">Real conversations your application already had</div>
+        <div class="flow-box-desc"><b>Claude asks about data retention and sensitive information before touching any logs.</b> This is the strongest signal because it reflects the actual task distribution &mdash; what your users actually asked, not what you imagined they might ask.</div>
+        <ul class="flow-box-list" style="margin-top:8px">
+          <li><b>Upside:</b> closest to production. A conversation where something actually went wrong is worth a thousand synthetic ones.</li>
+          <li><b>Caution:</b> users often try what they expect to work, which skews the sample easy. Don't rely on production traffic alone for hard cases &mdash; it over-represents the happy path.</li>
+          <li><b>If you have none:</b> skip to source 2. The tool doesn't require production data to proceed.</li>
+        </ul>
+      </div>
+    </div>
+    <div class="flow-arrow">&#8595;<span class="flow-arrow-label">source 2 &mdash; known failures</span></div>
+
+    <div class="flow-node">
+      <div class="flow-box box-data">
+        <div class="flow-box-label">Source 2 &mdash; Bug reports and support tickets</div>
+        <div class="flow-box-title">Documented failures from real use</div>
+        <div class="flow-box-desc">These are cases where the application demonstrably failed and someone noticed. They are good examples of hard cases because a human already judged them wrong.</div>
+        <ul class="flow-box-list" style="margin-top:8px">
+          <li><b>Upside:</b> grounded in real failure. Directly addresses the known gap between what the application does and what it should do.</li>
+          <li><b>Caution:</b> bug reports bias toward the failure modes users know how to describe. Silent failures &mdash; the ones nobody reported &mdash; won't appear here.</li>
+        </ul>
+      </div>
+    </div>
+    <div class="flow-arrow">&#8595;<span class="flow-arrow-label">source 3 &mdash; human judgment</span></div>
+
+    <div class="flow-node">
+      <div class="flow-box box-data">
+        <div class="flow-box-label">Source 3 &mdash; Hand-written cases (5&ndash;10)</div>
+        <div class="flow-box-title">Cases you wrote because you judged them hard</div>
+        <div class="flow-box-desc">You write these yourself. The discipline: <b>you should be able to articulate why a case is hard before you include it.</b> If you can't say why, it probably isn't, and it's filling the benchmark without adding signal.</div>
+        <ul class="flow-box-list" style="margin-top:8px">
+          <li><b>Upside:</b> covers failure modes that don't appear in logs yet &mdash; edge cases you know exist, behaviors you're trying to prevent, scenarios that surface only under specific conditions.</li>
+          <li><b>Upside:</b> immune to the model-failure-fingerprint problem, because you are selecting on human judgment, not model behavior.</li>
+          <li><b>Caution:</b> reflects the failure modes you can imagine. Combine with production data to catch the ones you didn't.</li>
+          <li><b>Good test:</b> would two domain experts reach the same verdict on this case? If not, the case is ambiguous and will produce an unstable grader.</li>
+        </ul>
+      </div>
+    </div>
+    <div class="flow-arrow">&#8595;<span class="flow-arrow-label">source 4 &mdash; last resort</span></div>
+
+    <div class="flow-node">
+      <div class="flow-box box-data">
+        <div class="flow-box-label">Source 4 &mdash; Synthetic cases</div>
+        <div class="flow-box-title">Generated from your codebase, anchored to real examples</div>
+        <div class="flow-box-desc">Claude generates synthetic cases from your codebase and anchors them to the real examples you provided in sources 1&ndash;3. <b>Synthetic cases not anchored in real data measure a hypothetical application.</b> The anchoring is what keeps them honest.</div>
+        <ul class="flow-box-list" style="margin-top:8px">
+          <li><b>When to use:</b> you have no production logs, no bug reports, and only a handful of hand-written cases &mdash; not enough for a stable baseline.</li>
+          <li><b>What anchored means:</b> the synthetic cases are generated to resemble the real examples in structure and difficulty, not invented from scratch. They extend the coverage of real data, not replace it.</li>
+          <li><b>Risk:</b> synthetic cases can over-represent the easy, well-formed versions of a task. Always mix with real data when possible.</li>
         </ul>
       </div>
     </div>
@@ -192,8 +236,8 @@
     <div class="flow-node">
       <div class="flow-box box-validate">
         <div class="flow-box-label">Approval gate</div>
-        <div class="flow-box-title">Review page &mdash; you confirm the inputs</div>
-        <div class="flow-box-desc">Claude generates a plain page showing every input. You review them and confirm before anything is graded. <b>This is the data-first step</b> &mdash; the point where Hamel says most tools go wrong by skipping it.</div>
+        <div class="flow-box-title">Review page &mdash; you confirm the full input set</div>
+        <div class="flow-box-desc">Claude generates a plain static page showing every input with tags (e.g. billing, easy, ambiguous). <b>You review and confirm before anything is graded.</b> This is the data-first step &mdash; the point Hamel flags as where most eval tools go wrong by skipping straight to criteria selection. Nothing moves forward until you have seen the data.</div>
       </div>
     </div>
   </div>
