@@ -1,0 +1,454 @@
+<!DOCTYPE html>
+<html lang="en" class="light">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AESOP Transformation OS &mdash; Hillclimb Handoff</title>
+<meta name="description" content="How AESOP's Export + Hillclimb Pack turns a completed evaluation run into structured input for /claude-api hillclimb &mdash; cases, baseline, grader, and failure clusters in one zip.">
+<link rel="icon" href="../icon.svg" type="image/svg+xml" />
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Mulish:ital,wght@0,300;0,400;0,600;0,700;0,800;1,400&display=swap" rel="stylesheet">
+<style>
+:root{
+  --font-display:'Mulish',sans-serif;
+  --font-body:'Mulish','Segoe UI',Helvetica,sans-serif;
+  --font-mono:'Mulish',ui-monospace,'SF Mono',Consolas,monospace;
+  --bg:#14181C;--surface:#1B2127;--surface2:#232B33;--surface3:#232B33;
+  --border:#303A43;--border-bright:#42505C;
+  --text:#F4F5F6;--text-dim:#CBD0D6;--text-muted:#87919B;--text-faint:#97A2AD;
+  --primary:#F58A4E;--primary-dim:rgba(245,138,78,0.12);
+  --secondary:#45C7A6;--secondary-dim:rgba(69,199,166,0.10);
+  --metric:#45C7A6;--metric-dim:rgba(69,199,166,0.10);
+  --accent:#F58A4E;--accent-deep:#F58A4E;
+  --good:#45C7A6;--good-dim:rgba(69,199,166,0.10);
+  --warn:#E0B05B;--warn-dim:rgba(224,176,91,0.10);
+  --bad:#E8735F;--bad-dim:rgba(232,115,95,0.10);
+  --amber:#E0B05B;--amber-dim:rgba(224,176,91,0.10);
+  --violet:#B78BD8;--violet-dim:rgba(183,139,216,0.10);
+  --rose:#E8735F;--rose-dim:rgba(232,115,95,0.10);
+  --slate:#87919B;--slate-dim:rgba(135,145,155,0.12);
+  --model:#F58A4E;--compute:#B78BD8;--consumer:#45C7A6;--storage:#6FA8D8;
+  --arr-color:#87919B;--arr-color-strong:#F58A4E;
+}
+html.light{
+  --bg:#F7F3EF;--surface:#FFFFFF;--surface2:#F0E9E1;--surface3:#F0E9E1;
+  --border:#E1D6CB;--border-bright:#CDBBA8;
+  --text:#241A12;--text-dim:#574A3C;--text-muted:#6F6255;--text-faint:#6F6255;
+  --primary:#C64A11;--primary-dim:rgba(198,74,17,0.10);
+  --secondary:#0E7C66;--secondary-dim:rgba(14,124,102,0.10);
+  --metric:#0E7C66;--metric-dim:rgba(14,124,102,0.10);
+  --accent:#C64A11;--accent-deep:#C64A11;
+  --good:#0E7C66;--good-dim:rgba(14,124,102,0.10);
+  --warn:#8A5A0B;--warn-dim:rgba(138,90,11,0.10);
+  --bad:#B03A26;--bad-dim:rgba(176,58,38,0.10);
+  --amber:#8A5A0B;--amber-dim:rgba(138,90,11,0.10);
+  --violet:#6D3FC4;--violet-dim:rgba(109,63,196,0.10);
+  --rose:#B03A26;--rose-dim:rgba(176,58,38,0.10);
+  --slate:#6B6259;--slate-dim:rgba(107,98,89,0.12);
+  --model:#C64A11;--compute:#6D3FC4;--consumer:#0E7C66;--storage:#1F5E93;
+  --arr-color:#8C7E6E;--arr-color-strong:#C64A11;
+}
+
+*{margin:0;padding:0;box-sizing:border-box}
+
+body{
+  background:var(--bg);
+  background-image:
+    radial-gradient(at 10% 0%,var(--primary-dim) 0%,transparent 40%),
+    radial-gradient(at 90% 80%,var(--metric-dim) 0%,transparent 40%);
+  color:var(--text);font-family:var(--font-body);font-size:15px;line-height:1.7;
+  min-height:100vh;padding:0 24px 80px;-webkit-font-smoothing:antialiased;
+}
+
+/* Nav */
+.nav{max-width:1040px;margin:0 auto;padding:16px 0 4px}
+.nav-inner{max-width:1040px;margin:0 auto;padding:0;display:block}
+.crumbs{font-family:var(--font-mono);font-size:13px;font-weight:600;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.crumbs a{color:var(--primary);text-decoration:none}.crumbs a:hover{text-decoration:underline}
+.crumbs .sep{color:var(--text-faint)}.crumbs .current{color:var(--text-faint);font-weight:400}
+
+/* Backlink */
+.backlink{position:fixed;top:12px;left:16px;z-index:101;font-family:var(--font-mono);font-size:12px;color:var(--text-dim);text-decoration:none;padding:6px 10px;border:1px solid var(--border);border-radius:6px;background:var(--surface);transition:color .15s,border-color .15s}
+.backlink:hover{color:var(--text);border-color:var(--border-bright)}
+
+/* Wrap */
+.wrap{max-width:1040px;margin:0 auto;padding:0}
+
+/* Animations */
+@keyframes fadeUp{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
+
+/* Hero */
+.hero{text-align:center;padding:32px 0 8px;animation:fadeUp .5s ease both}
+.hero-badge{font-family:var(--font-mono);font-size:11px;font-weight:700;letter-spacing:.2em;text-transform:uppercase;color:var(--primary);display:block;margin-bottom:12px}
+.hero h1{font-size:42px;font-weight:800;letter-spacing:-1px;line-height:1.05;margin:0 auto 0;max-width:820px;background:linear-gradient(135deg,var(--primary),var(--metric));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+.hero h1::after{content:"";display:block;height:22px}
+.hero .lede{font-size:16px;color:var(--text-dim);max-width:640px;margin:2px auto 0;text-align:left}
+.hero .lede+.lede{margin-top:10px}
+.hero .lede strong{color:var(--text)}
+
+/* Section label */
+.sec-label{font-family:var(--font-mono);font-size:11px;font-weight:700;letter-spacing:.18em;text-transform:uppercase;color:var(--primary);margin:40px 0 14px;display:block}
+
+/* Cards */
+.card{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:22px 24px;animation:fadeUp .5s ease both}
+.card-accent{border-left:3px solid var(--primary)}
+.card-teal{border-left:3px solid var(--metric)}
+
+/* Two-col grid */
+.grid-2{display:grid;grid-template-columns:1fr 1fr;gap:18px}
+@media(max-width:680px){.grid-2{grid-template-columns:1fr}}
+
+/* Pack file cards */
+.file-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:4px}
+@media(max-width:680px){.file-grid{grid-template-columns:1fr}}
+
+.file-card{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:18px 20px}
+.file-card .fname{font-family:var(--font-mono);font-size:13px;font-weight:700;color:var(--primary);display:block;margin-bottom:4px}
+.file-card .fdesc{font-size:13px;color:var(--text-dim);margin-bottom:10px}
+.file-card ul{list-style:none;padding:0;margin:0}
+.file-card ul li{font-size:13px;color:var(--text-muted);padding:2px 0 2px 14px;position:relative}
+.file-card ul li::before{content:"&bull;";position:absolute;left:0;color:var(--primary)}
+
+/* Problem callout */
+.problem-grid{display:grid;grid-template-columns:1fr 1fr;gap:20px;align-items:start}
+@media(max-width:680px){.problem-grid{grid-template-columns:1fr}}
+
+.col-label{font-family:var(--font-mono);font-size:10px;font-weight:700;letter-spacing:.15em;text-transform:uppercase;color:var(--text-faint);margin-bottom:8px;display:block}
+.col-item{font-size:14px;color:var(--text-dim);padding:4px 0;border-bottom:1px solid var(--border)}
+.col-item:last-child{border-bottom:none}
+.col-item strong{color:var(--text);font-weight:600}
+
+.bridge-card{background:var(--primary-dim);border:1px solid var(--primary);border-radius:12px;padding:18px 22px;text-align:center}
+.bridge-card .bridge-title{font-size:15px;font-weight:800;color:var(--primary);display:block;margin-bottom:6px}
+.bridge-card .bridge-sub{font-size:13px;color:var(--text-dim)}
+
+/* SVG flow */
+.flow-wrap{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:24px 20px;overflow:hidden}
+.flow-svg{width:100%;height:auto;display:block}
+@media(max-width:640px){.flow-svg{display:none}.flow-mobile{display:flex}}
+.flow-mobile{display:none;flex-direction:column;align-items:center;gap:0}
+.flow-mobile .fm-box{border-radius:10px;padding:12px 18px;text-align:center;font-size:13px;font-weight:700;min-width:200px}
+.flow-mobile .fm-box.orange{background:var(--primary-dim);border:2px solid var(--primary);color:var(--primary)}
+.flow-mobile .fm-box.teal{background:var(--metric-dim);border:2px solid var(--metric);color:var(--metric)}
+.flow-mobile .fm-box.violet{background:var(--violet-dim);border:2px solid var(--violet);color:var(--violet)}
+.flow-mobile .fm-arr{font-size:20px;color:var(--text-faint);padding:4px 0}
+.flow-mobile .fm-sub{font-size:12px;color:var(--text-muted);text-align:center;max-width:220px;margin-top:4px}
+.flow-mobile .fm-branches{display:grid;grid-template-columns:1fr 1fr;gap:10px;width:100%;max-width:360px;margin:8px 0}
+.flow-mobile .fm-branch{border-radius:8px;padding:8px 12px;font-size:12px;text-align:center}
+.flow-mobile .fm-branch.good{background:var(--good-dim);border:1px solid var(--good);color:var(--good)}
+.flow-mobile .fm-branch.warn{background:var(--warn-dim);border:1px solid var(--warn);color:var(--warn)}
+
+/* Split section */
+.split-grid{display:grid;grid-template-columns:1fr auto;gap:24px;align-items:start}
+@media(max-width:640px){.split-grid{grid-template-columns:1fr}}
+
+.callout-box{background:var(--surface2);border-left:3px solid var(--primary);border-radius:0 10px 10px 0;padding:18px 22px;min-width:210px}
+.callout-box .cb-item{font-family:var(--font-mono);font-size:13px;font-weight:600;color:var(--text);padding:4px 0;border-bottom:1px solid var(--border)}
+.callout-box .cb-item:last-child{border-bottom:none}
+.callout-box .cb-item span{color:var(--primary)}
+
+/* Comparison */
+.compare-grid{display:grid;grid-template-columns:1fr 1fr;gap:18px}
+@media(max-width:680px){.compare-grid{grid-template-columns:1fr}}
+
+.cmp-card{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:20px 22px}
+.cmp-card.orange{border-top:3px solid var(--primary)}
+.cmp-card.slate{border-top:3px solid var(--slate)}
+.cmp-title{font-size:14px;font-weight:800;margin-bottom:4px}
+.cmp-title.orange{color:var(--primary)}
+.cmp-title.slate{color:var(--slate)}
+.cmp-sub{font-family:var(--font-mono);font-size:11px;color:var(--text-faint);margin-bottom:14px;letter-spacing:.05em}
+.cmp-card ul{list-style:none;padding:0}
+.cmp-card ul li{font-size:13.5px;color:var(--text-dim);padding:5px 0 5px 16px;position:relative;border-bottom:1px solid var(--border)}
+.cmp-card ul li:last-child{border-bottom:none}
+.cmp-card ul li::before{position:absolute;left:0;font-size:12px}
+.cmp-card.orange ul li::before{content:"&rsaquo;";color:var(--primary)}
+.cmp-card.slate ul li::before{content:"&rsaquo;";color:var(--slate)}
+
+/* Body text */
+.body-text{font-size:15px;color:var(--text-dim);line-height:1.75;margin-bottom:14px}
+.body-text strong{color:var(--text);font-weight:700}
+.body-text code{font-family:var(--font-mono);font-size:13px;color:var(--primary);font-weight:600;background:var(--primary-dim);padding:1px 5px;border-radius:4px}
+
+/* Footer link */
+.footer-link{margin-top:18px;font-size:13px;color:var(--text-muted)}
+.footer-link a{color:var(--primary);text-decoration:none;font-weight:600}
+.footer-link a:hover{text-decoration:underline}
+
+/* Footer */
+.footer{max-width:1040px;margin:56px auto 0;padding-top:24px;border-top:1px solid var(--border);font-family:var(--font-mono);font-size:12px;color:var(--text-faint);text-align:center}
+
+@media(prefers-reduced-motion:reduce){*,*::before,*::after{animation-duration:.01ms!important;animation-delay:0ms!important}}
+</style>
+</head>
+<body>
+
+<a href="../aesop.html" class="backlink">&larr; AESOP</a>
+
+<nav class="nav">
+  <div class="nav-inner">
+    <div class="crumbs">
+      <a href="../index.html">Index</a>
+      <span class="sep">/</span>
+      <a href="../aesop.html">AESOP</a>
+      <span class="sep">/</span>
+      <span class="current" aria-current="page">Hillclimb Handoff</span>
+    </div>
+  </div>
+</nav>
+
+<div class="wrap">
+
+  <!-- Hero -->
+  <div class="hero">
+    <span class="hero-badge">AESOP OS / EVAL TOOLCHAIN</span>
+    <h1>AESOP &rarr; Hillclimb Handoff</h1>
+    <p class="lede">AESOP evaluates your agent and produces a structured evidence pack &mdash; cases, baseline stats, failure clusters, and a grader rubric &mdash; that feeds directly into <code style="font-size:15px;background:var(--primary-dim);color:var(--primary);padding:2px 6px;border-radius:4px;font-family:var(--font-mono)">/claude-api hillclimb</code>.</p>
+    <p class="lede">One export closes the loop between measurement and improvement.</p>
+  </div>
+
+  <!-- Section 1: The Problem -->
+  <span class="sec-label">The Problem</span>
+  <div class="card" style="margin-bottom:0">
+    <div class="problem-grid">
+      <div>
+        <span class="col-label">AESOP produces</span>
+        <div class="col-item"><strong>Per-scenario verdicts</strong> &mdash; pass / fail / inconclusive, with scores</div>
+        <div class="col-item"><strong>Root-cause clusters</strong> &mdash; dominant failure patterns named and assigned</div>
+        <div class="col-item"><strong>Rubric criteria</strong> &mdash; six dimensions as checkable claims</div>
+        <div class="col-item"><strong>Baseline score</strong> &mdash; pass rate, mean, confidence intervals</div>
+      </div>
+      <div>
+        <span class="col-label">/claude-api hillclimb wants</span>
+        <div class="col-item"><strong>Labeled cases</strong> &mdash; verdict + split assignment per scenario</div>
+        <div class="col-item"><strong>Failure summary</strong> &mdash; what failed and why, before round 1</div>
+        <div class="col-item"><strong>A grader</strong> &mdash; checkable yes/no claims for the judge prompt</div>
+        <div class="col-item"><strong>A baseline</strong> &mdash; score + CI to measure improvement against</div>
+      </div>
+    </div>
+    <div style="margin-top:20px">
+      <div class="bridge-card">
+        <span class="bridge-title">Export + Hillclimb Pack</span>
+        <div class="bridge-sub">One button. One zip. One <code style="font-family:var(--font-mono);font-size:12px;color:var(--primary)">hillclimb/</code> directory. Without it, you re-derive all of the above by hand.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Section 2: The Pack -->
+  <span class="sec-label">The Pack</span>
+  <div class="file-grid">
+
+    <div class="file-card">
+      <span class="fname">cases.jsonl</span>
+      <div class="fdesc">One line per scenario from the baseline run.</div>
+      <ul>
+        <li><code style="font-family:var(--font-mono);font-size:12px;color:var(--primary)">scenario_name</code>, <code style="font-family:var(--font-mono);font-size:12px;color:var(--primary)">dimension</code>, <code style="font-family:var(--font-mono);font-size:12px;color:var(--primary)">verdict</code>, <code style="font-family:var(--font-mono);font-size:12px;color:var(--primary)">score</code></li>
+        <li><code style="font-family:var(--font-mono);font-size:12px;color:var(--primary)">failure_bucket</code> from AESOP clustering (null if not run)</li>
+        <li><code style="font-family:var(--font-mono);font-size:12px;color:var(--primary)">split</code>: <code style="font-family:var(--font-mono);font-size:12px;color:var(--metric)">train</code> or <code style="font-family:var(--font-mono);font-size:12px;color:var(--warn)">test</code> &mdash; 70/30, seeded by run ID</li>
+      </ul>
+    </div>
+
+    <div class="file-card">
+      <span class="fname">baseline.json</span>
+      <div class="fdesc">Baseline statistics over all cases.</div>
+      <ul>
+        <li><code style="font-family:var(--font-mono);font-size:12px;color:var(--primary)">pass_rate</code> with Wilson 95% CI</li>
+        <li><code style="font-family:var(--font-mono);font-size:12px;color:var(--primary)">mean_score</code> with standard error CI</li>
+        <li><code style="font-family:var(--font-mono);font-size:12px;color:var(--primary)">n_train</code>, <code style="font-family:var(--font-mono);font-size:12px;color:var(--primary)">n_test</code>, warning when n &lt; 6</li>
+      </ul>
+    </div>
+
+    <div class="file-card">
+      <span class="fname">grader.md</span>
+      <div class="fdesc">AESOP's rubric as checkable yes/no claims.</div>
+      <ul>
+        <li>Six dimensions: Instructions, Ethos, Bias, Safety, Legal, InfoSec</li>
+        <li>Each expressed as a set of yes/no claims a judge can verify</li>
+        <li>Ready to paste as a judge prompt into the hillclimber</li>
+      </ul>
+    </div>
+
+    <div class="file-card">
+      <span class="fname">failures.json</span>
+      <div class="fdesc">Root-cause clusters from AESOP's failure analysis.</div>
+      <ul>
+        <li>Dominant failure patterns with scenario assignments</li>
+        <li>Present only when AESOP's clustering ran on this run</li>
+        <li>Gives the hillclimber a starting point before round 1</li>
+      </ul>
+    </div>
+
+    <div class="file-card" style="grid-column:1/-1">
+      <span class="fname">README.md</span>
+      <div class="fdesc">How to use the pack in a Claude Code session.</div>
+      <ul>
+        <li>Drop the archive into a Claude Code session</li>
+        <li>Run <code style="font-family:var(--font-mono);font-size:12px;color:var(--primary)">/claude-api hillclimb</code>, point it at <code style="font-family:var(--font-mono);font-size:12px;color:var(--primary)">hillclimb/cases.jsonl</code> and <code style="font-family:var(--font-mono);font-size:12px;color:var(--primary)">hillclimb/baseline.json</code></li>
+        <li>The train/test split is pre-assigned &mdash; use it directly</li>
+      </ul>
+    </div>
+
+  </div>
+
+  <!-- Section 3: The Flow -->
+  <span class="sec-label">How It Works</span>
+  <div class="flow-wrap">
+
+    <!-- Desktop SVG: top row S1→S2→S3→S4→S5, branches drop below S4 -->
+    <svg class="flow-svg" viewBox="0 0 980 290" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="AESOP to Hillclimb Handoff flow diagram">
+      <defs>
+        <marker id="arr" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto">
+          <path d="M0,0 L0,6 L8,3 z" fill="var(--arr-color)"/>
+        </marker>
+      </defs>
+
+      <!-- Stage 1: AESOP Evaluation (orange) -->
+      <rect x="8" y="44" width="155" height="78" rx="10" fill="var(--primary-dim)" stroke="var(--primary)" stroke-width="1.5"/>
+      <text x="85" y="72" font-family="var(--font-body)" font-size="13" font-weight="700" fill="var(--primary)" text-anchor="middle">AESOP Evaluation</text>
+      <text x="85" y="89" font-family="var(--font-body)" font-size="11" fill="var(--text-muted)" text-anchor="middle">Scenarios scored across</text>
+      <text x="85" y="104" font-family="var(--font-body)" font-size="11" fill="var(--text-muted)" text-anchor="middle">6 dimensions + clustering</text>
+
+      <!-- Arrow 1→2 -->
+      <line x1="163" y1="83" x2="186" y2="83" stroke="var(--arr-color)" stroke-width="1.5" marker-end="url(#arr)"/>
+
+      <!-- Stage 2: Export Pack (orange) -->
+      <rect x="188" y="44" width="155" height="78" rx="10" fill="var(--primary-dim)" stroke="var(--primary)" stroke-width="1.5"/>
+      <text x="265" y="72" font-family="var(--font-body)" font-size="13" font-weight="700" fill="var(--primary)" text-anchor="middle">Export Pack</text>
+      <text x="265" y="89" font-family="var(--font-body)" font-size="11" fill="var(--text-muted)" text-anchor="middle">hillclimb/ assembled.</text>
+      <text x="265" y="104" font-family="var(--font-body)" font-size="11" fill="var(--text-muted)" text-anchor="middle">Split seeded by run ID.</text>
+
+      <!-- Arrow 2→3 -->
+      <line x1="343" y1="83" x2="366" y2="83" stroke="var(--arr-color)" stroke-width="1.5" marker-end="url(#arr)"/>
+
+      <!-- Stage 3: hillclimb/ pack (teal) -->
+      <rect x="368" y="36" width="168" height="94" rx="10" fill="var(--metric-dim)" stroke="var(--metric)" stroke-width="1.5"/>
+      <text x="452" y="64" font-family="var(--font-body)" font-size="13" font-weight="700" fill="var(--metric)" text-anchor="middle">hillclimb/</text>
+      <text x="452" y="81" font-family="var(--font-body)" font-size="10.5" fill="var(--text-muted)" text-anchor="middle">cases.jsonl &#183; baseline.json</text>
+      <text x="452" y="96" font-family="var(--font-body)" font-size="10.5" fill="var(--text-muted)" text-anchor="middle">grader.md &#183; failures.json</text>
+      <text x="452" y="111" font-family="var(--font-body)" font-size="10.5" fill="var(--text-muted)" text-anchor="middle">README.md</text>
+
+      <!-- Arrow 3→4 -->
+      <line x1="536" y1="83" x2="559" y2="83" stroke="var(--arr-color)" stroke-width="1.5" marker-end="url(#arr)"/>
+
+      <!-- Stage 4: /claude-api hillclimb (violet) -->
+      <rect x="561" y="44" width="165" height="78" rx="10" fill="var(--violet-dim)" stroke="var(--violet)" stroke-width="1.5"/>
+      <text x="643" y="70" font-family="var(--font-body)" font-size="12.5" font-weight="700" fill="var(--violet)" text-anchor="middle">/claude-api hillclimb</text>
+      <text x="643" y="87" font-family="var(--font-body)" font-size="11" fill="var(--text-muted)" text-anchor="middle">Reads cases + grader +</text>
+      <text x="643" y="102" font-family="var(--font-body)" font-size="11" fill="var(--text-muted)" text-anchor="middle">baseline. One patch/round.</text>
+
+      <!-- Arrow 4→5 -->
+      <line x1="726" y1="83" x2="749" y2="83" stroke="var(--arr-color)" stroke-width="1.5" marker-end="url(#arr)"/>
+
+      <!-- Stage 5: Improved Instructions (teal) -->
+      <rect x="751" y="44" width="155" height="78" rx="10" fill="var(--metric-dim)" stroke="var(--metric)" stroke-width="1.5"/>
+      <text x="828" y="72" font-family="var(--font-body)" font-size="13" font-weight="700" fill="var(--metric)" text-anchor="middle">Improved Instructions</text>
+      <text x="828" y="89" font-family="var(--font-body)" font-size="11" fill="var(--text-muted)" text-anchor="middle">Best test-set version.</text>
+      <text x="828" y="104" font-family="var(--font-body)" font-size="11" fill="var(--text-muted)" text-anchor="middle">CI confirmed.</text>
+
+      <!-- Branch fork down from Stage 4 center -->
+      <line x1="643" y1="122" x2="643" y2="152" stroke="var(--arr-color)" stroke-width="1.5"/>
+      <line x1="503" y1="152" x2="783" y2="152" stroke="var(--arr-color)" stroke-width="1.5"/>
+      <line x1="503" y1="152" x2="503" y2="168" stroke="var(--arr-color)" stroke-width="1.5" marker-end="url(#arr)"/>
+      <line x1="783" y1="152" x2="783" y2="168" stroke="var(--arr-color)" stroke-width="1.5" marker-end="url(#arr)"/>
+
+      <!-- Branch label: Revert (warn/amber) -->
+      <rect x="419" y="168" width="168" height="52" rx="8" fill="var(--warn-dim)" stroke="var(--warn)" stroke-width="1.5"/>
+      <text x="503" y="190" font-family="var(--font-body)" font-size="12" font-weight="700" fill="var(--warn)" text-anchor="middle">Train &#8593; + Test flat</text>
+      <text x="503" y="207" font-family="var(--font-body)" font-size="11" fill="var(--text-muted)" text-anchor="middle">Revert &mdash; overfitting detected</text>
+
+      <!-- Branch label: Keep (good/teal) -->
+      <rect x="699" y="168" width="168" height="52" rx="8" fill="var(--good-dim)" stroke="var(--good)" stroke-width="1.5"/>
+      <text x="783" y="190" font-family="var(--font-body)" font-size="12" font-weight="700" fill="var(--good)" text-anchor="middle">Train &#8593; + Test &#8593;</text>
+      <text x="783" y="207" font-family="var(--font-body)" font-size="11" fill="var(--text-muted)" text-anchor="middle">Keep patch, continue</text>
+
+      <!-- Branch annotations -->
+      <text x="370" y="190" font-family="var(--font-mono)" font-size="10" fill="var(--text-faint)" text-anchor="middle">overfitting guard</text>
+      <text x="900" y="190" font-family="var(--font-mono)" font-size="10" fill="var(--text-faint)" text-anchor="middle">hill climbs</text>
+
+    </svg>
+
+    <!-- Mobile fallback -->
+    <div class="flow-mobile">
+      <div class="fm-box orange">AESOP Evaluation</div>
+      <div class="fm-sub">Scenarios scored across 6 dimensions. Failures clustered by root cause.</div>
+      <div class="fm-arr">&darr;</div>
+      <div class="fm-box orange">Export + Hillclimb Pack</div>
+      <div class="fm-sub">hillclimb/ directory assembled. Split seeded by run ID.</div>
+      <div class="fm-arr">&darr;</div>
+      <div class="fm-box teal">hillclimb/</div>
+      <div class="fm-sub">cases.jsonl &bull; baseline.json &bull; grader.md &bull; failures.json &bull; README.md</div>
+      <div class="fm-arr">&darr;</div>
+      <div class="fm-box violet">/claude-api hillclimb</div>
+      <div class="fm-sub">Reads cases + grader + baseline. Iterates one patch per round.</div>
+      <div class="fm-arr">&darr;</div>
+      <div class="fm-branches">
+        <div class="fm-branch warn">Train &uarr; + Test flat &rarr; Revert</div>
+        <div class="fm-branch good">Train &uarr; + Test &uarr; &rarr; Keep</div>
+      </div>
+      <div class="fm-arr">&darr;</div>
+      <div class="fm-box teal">Improved Instructions</div>
+      <div class="fm-sub">Best test-set version. Confidence intervals. No blind hillclimb.</div>
+    </div>
+
+  </div>
+
+  <!-- Section 4: Train/Test Split -->
+  <span class="sec-label">Overfitting Guard</span>
+  <div class="card card-accent">
+    <div class="split-grid">
+      <div>
+        <p class="body-text">The hillclimber reads train transcripts to propose a change. It never looks at test cases until it decides whether to keep the patch.</p>
+        <p class="body-text">A change that lifts train but leaves test flat is reverted &mdash; that is the overfitting check. Without it, you optimise for the examples you have, not for the agent you want.</p>
+        <p class="body-text">AESOP pre-assigns the split: <strong>70% train, 30% test</strong>, seeded by the evaluation run ID. The same run always produces the same split. Re-export the archive next week and the split is identical &mdash; no accidental reassignment between rounds.</p>
+      </div>
+      <div class="callout-box">
+        <div class="cb-item"><span>70%</span> train cases</div>
+        <div class="cb-item"><span>30%</span> test cases</div>
+        <div class="cb-item">Seeded by run ID</div>
+        <div class="cb-item">Stable across re-exports</div>
+        <div class="cb-item">Min. 6 cases recommended</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Section 5: vs build-eval -->
+  <span class="sec-label">vs. Build-Eval</span>
+  <div class="compare-grid">
+
+    <div class="cmp-card slate">
+      <div class="cmp-title slate">/claude-api build-eval</div>
+      <div class="cmp-sub">Start from zero</div>
+      <ul>
+        <li>No existing eval set required</li>
+        <li>Interviews you: prod traffic, bug reports, hand-written cases</li>
+        <li>Validates the grader before use</li>
+        <li>Runs a baseline and prints confidence intervals</li>
+        <li>Right tool when you do not yet have an eval</li>
+      </ul>
+    </div>
+
+    <div class="cmp-card orange">
+      <div class="cmp-title orange">AESOP Hillclimb Pack</div>
+      <div class="cmp-sub">Start from a completed AESOP run</div>
+      <ul>
+        <li>Cases are already scored by a multi-dimensional judge</li>
+        <li>Grader is derived from AESOP's rubric &mdash; no design step</li>
+        <li>Failure clusters already name the dominant failure modes</li>
+        <li>Baseline stats already computed with CI</li>
+        <li>Right tool when AESOP has already run</li>
+      </ul>
+    </div>
+
+  </div>
+
+  <div class="footer-link">
+    New to evals? <a href="claude-api-build-eval.html">See build-eval + hillclimb &rarr;</a>
+  </div>
+
+</div><!-- /wrap -->
+
+<div class="footer">&copy; 2025&ndash;2026 Charlie Fuller</div>
+
+</body>
+</html>
