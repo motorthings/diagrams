@@ -1,0 +1,452 @@
+<!DOCTYPE html>
+<html class="light">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AESOP Studio &mdash; build-eval + hillclimb</title>
+<meta name="description" content="How the claude-api skill's build-eval and hillclimb commands work: full flow, grader types, overfitting guardrails, and the decisions Claude makes at each step.">
+<link rel="icon" href="../icon.svg" type="image/svg+xml" />
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Mulish:ital,wght@0,300;0,400;0,600;0,700;0,800;1,400&display=swap" rel="stylesheet">
+<style>
+  :root{--font-display:'Mulish',sans-serif;--font-body:'Mulish','Segoe UI',Helvetica,sans-serif;--font-mono:'Mulish',ui-monospace,'SF Mono',Consolas,monospace;
+    --bg:#14181C;--surface:#1B2127;--surface2:#232B33;--surface3:#232B33;--border:#303A43;--border-bright:#42505C;
+    --text:#F4F5F6;--text-dim:#CBD0D6;--text-muted:#87919B;--text-faint:#97A2AD;
+    --primary:#F58A4E;--primary-dim:rgba(245,138,78,0.12);--secondary:#45C7A6;--secondary-dim:rgba(69,199,166,0.10);
+    --metric:#45C7A6;--metric-dim:rgba(69,199,166,0.10);--accent:#F58A4E;--accent-deep:#F58A4E;
+    --good:#45C7A6;--good-dim:rgba(69,199,166,0.10);--warn:#E0B05B;--warn-dim:rgba(224,176,91,0.10);
+    --bad:#E8735F;--bad-dim:rgba(232,115,95,0.10);--amber:#E0B05B;--amber-dim:rgba(224,176,91,0.10);
+    --violet:#B78BD8;--violet-dim:rgba(183,139,216,0.10);--rose:#E8735F;--rose-dim:rgba(232,115,95,0.10);
+    --slate:#87919B;--slate-dim:rgba(135,145,155,0.12);
+    --model:#F58A4E;--compute:#B78BD8;--consumer:#45C7A6;--storage:#6FA8D8;
+    --arr-color:#87919B;--arr-color-strong:#F58A4E;}
+  html.light{--bg:#F7F3EF;--surface:#FFFFFF;--surface2:#F0E9E1;--surface3:#F0E9E1;--border:#E1D6CB;--border-bright:#CDBBA8;
+    --text:#241A12;--text-dim:#574A3C;--text-muted:#6F6255;--text-faint:#6F6255;
+    --primary:#C64A11;--primary-dim:rgba(198,74,17,0.10);--secondary:#0E7C66;--secondary-dim:rgba(14,124,102,0.10);
+    --metric:#0E7C66;--metric-dim:rgba(14,124,102,0.10);--accent:#C64A11;--accent-deep:#C64A11;
+    --good:#0E7C66;--good-dim:rgba(14,124,102,0.10);--warn:#8A5A0B;--warn-dim:rgba(138,90,11,0.10);
+    --bad:#B03A26;--bad-dim:rgba(176,58,38,0.10);--amber:#8A5A0B;--amber-dim:rgba(138,90,11,0.10);
+    --violet:#6D3FC4;--violet-dim:rgba(109,63,196,0.10);--rose:#B03A26;--rose-dim:rgba(176,58,38,0.10);
+    --slate:#6B6259;--slate-dim:rgba(107,98,89,0.12);
+    --model:#C64A11;--compute:#6D3FC4;--consumer:#0E7C66;--storage:#1F5E93;
+    --arr-color:#8C7E6E;--arr-color-strong:#C64A11;}
+  *{margin:0;padding:0;box-sizing:border-box}
+  body{background:var(--bg);background-image:radial-gradient(at 10% 0%,var(--primary-dim) 0%,transparent 40%),radial-gradient(at 90% 80%,var(--metric-dim) 0%,transparent 40%);color:var(--text);font-family:var(--font-body);font-size:15px;line-height:1.7;min-height:100vh;padding:0 24px 72px;-webkit-font-smoothing:antialiased}
+  .nav{max-width:1040px;margin:0 auto;padding:16px 0 4px}
+  .nav-inner{max-width:1040px;margin:0 auto;padding:0;display:block}
+  .crumbs{font-family:var(--font-mono);font-size:13px;font-weight:600;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+  .crumbs a{color:var(--primary);text-decoration:none}.crumbs a:hover{text-decoration:underline}.crumbs .sep{color:var(--text-faint)}.crumbs .current{color:var(--text-faint);font-weight:400}
+  .wrap{max-width:1040px;margin:0 auto;padding:0}
+  @keyframes fadeUp{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
+  .hero{text-align:center;padding:30px 0 6px;animation:fadeUp .5s ease both}
+  .hero-badge{font-family:var(--font-mono);font-size:11px;font-weight:700;letter-spacing:.2em;text-transform:uppercase;color:var(--primary);display:block;margin-bottom:12px}
+  .hero h1{font-size:40px;font-weight:800;letter-spacing:-1px;line-height:1.05;margin:0 auto 0;max-width:800px;background:linear-gradient(135deg,var(--primary),var(--metric));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+  .hero h1::after{content:"";display:block;height:26px}
+  .hero .lede{font-size:16px;color:var(--text-dim);max-width:1040px;margin:2px auto 0;text-align:left}.hero .lede+.lede{margin-top:10px}.hero .lede strong{color:var(--text)}
+
+  .sec{display:flex;align-items:center;gap:12px;font-family:var(--font-mono);font-size:12px;font-weight:700;letter-spacing:.15em;text-transform:uppercase;color:var(--text-faint);margin:8px 0 0;cursor:pointer}
+  .sec .n{color:var(--primary)}.sec .hint{font-family:var(--font-mono);font-size:10px;color:var(--text-faint);text-transform:none;letter-spacing:.5px}
+  details.sec-wrap{background:var(--surface);border:1px solid var(--border);border-radius:14px;margin:18px 0 0;overflow:hidden;animation:fadeUp .5s ease both}
+  details.sec-wrap > summary.sec{margin:0;padding:16px 20px;list-style:none}
+  details.sec-wrap > summary.sec::-webkit-details-marker{display:none}
+  details.sec-wrap > summary.sec::after{content:'+';margin-left:auto;color:var(--primary);flex:0 0 auto;font-family:var(--font-mono);font-weight:400;font-size:18px}
+  details.sec-wrap[open] > summary.sec::after{content:'\2212'}
+  details.sec-wrap .sec-body{padding:4px 22px 24px;border-top:1px solid var(--border);margin-top:2px}
+
+  .lead{font-size:14.5px;line-height:1.65;color:var(--text-dim);margin:12px 0 0}
+  .lead b{color:var(--text)}.lead code{font-family:var(--font-mono);font-size:13px;color:var(--primary);font-weight:600}
+  h3.sub{font-size:16px;font-weight:800;color:var(--text);margin:22px 0 8px;letter-spacing:-.2px}
+
+  /* ── flow diagrams ── */
+  .flow-wrap{margin-top:16px;display:flex;flex-direction:column;align-items:center;gap:0}
+  .flow-node{display:flex;flex-direction:column;align-items:center;gap:0;width:100%;max-width:600px}
+  .flow-box{border-radius:12px;padding:14px 20px;width:100%;position:relative}
+  .flow-box-label{font-family:var(--font-mono);font-size:10px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;margin-bottom:4px}
+  .flow-box-title{font-size:15px;font-weight:800;color:var(--text);margin-bottom:4px;letter-spacing:-.2px}
+  .flow-box-desc{font-size:13px;color:var(--text-dim);line-height:1.55}.flow-box-desc b{color:var(--text)}.flow-box-desc code{font-family:var(--font-mono);font-size:12px;color:var(--primary);font-weight:600}
+  .flow-box-list{list-style:none;margin-top:6px}
+  .flow-box-list li{font-size:13px;color:var(--text-dim);padding:4px 0 4px 16px;position:relative;border-top:1px solid var(--border)}
+  .flow-box-list li:first-child{border-top:none}
+  .flow-box-list li::before{content:'';position:absolute;left:0;top:11px;width:5px;height:5px;border-radius:50%;background:currentColor;opacity:.5}
+  .flow-box-list li b{color:var(--text)}.flow-box-list li .pri{font-family:var(--font-mono);font-size:10px;font-weight:700;letter-spacing:.06em;padding:1px 6px;border-radius:3px;margin-right:6px;vertical-align:middle}
+
+  .box-start{background:var(--primary-dim);border:2px solid var(--primary)}
+  .box-start .flow-box-label{color:var(--primary)}
+  .box-data{background:var(--violet-dim);border:2px solid var(--violet)}
+  .box-data .flow-box-label{color:var(--violet)}
+  .box-grade{background:var(--amber-dim);border:2px solid var(--amber)}
+  .box-grade .flow-box-label{color:var(--amber)}
+  .box-validate{background:var(--metric-dim);border:2px solid var(--metric)}
+  .box-validate .flow-box-label{color:var(--metric)}
+  .box-result{background:var(--storage-dim,rgba(111,168,216,0.12));border:2px solid var(--storage)}
+  .box-result .flow-box-label{color:var(--storage)}
+  .box-decision{background:var(--amber-dim);border:2px solid var(--amber);border-radius:10px}
+  .box-decision .flow-box-label{color:var(--amber)}
+  .box-loop{background:var(--violet-dim);border:2px solid var(--violet)}
+  .box-loop .flow-box-label{color:var(--violet)}
+  .box-end{background:var(--metric-dim);border:2px solid var(--metric)}
+  .box-end .flow-box-label{color:var(--metric)}
+
+  .flow-arrow{text-align:center;padding:6px 0;font-size:18px;color:var(--border-bright);line-height:1}
+  .flow-arrow-label{font-family:var(--font-mono);font-size:10px;color:var(--text-faint);text-transform:uppercase;letter-spacing:.08em;display:block;margin-top:1px}
+
+  /* decision branch */
+  .flow-branch{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;width:100%;max-width:700px;margin:0 auto}
+  .flow-outcome{border-radius:10px;padding:12px 14px;text-align:center}
+  .flow-outcome-label{font-weight:800;font-size:13px;display:block;margin-bottom:3px}
+  .flow-outcome-sub{font-size:12px;color:var(--text-dim);line-height:1.45}
+  .outcome-keep{background:var(--good-dim);border:1.5px solid var(--good)}.outcome-keep .flow-outcome-label{color:var(--good)}
+  .outcome-revert-over{background:var(--amber-dim);border:1.5px solid var(--amber)}.outcome-revert-over .flow-outcome-label{color:var(--amber)}
+  .outcome-revert-reg{background:var(--bad-dim);border:1.5px solid var(--bad)}.outcome-revert-reg .flow-outcome-label{color:var(--bad)}
+
+  .flow-merge{text-align:center;padding:4px 0;width:100%;max-width:700px;font-family:var(--font-mono);font-size:18px;color:var(--border-bright)}
+
+  /* step numbers */
+  .step-num{display:inline-flex;align-items:center;justify-content:center;width:22px;height:22px;border-radius:50%;background:var(--primary);color:#fff;font-size:11px;font-weight:800;flex:0 0 22px;margin-right:10px;vertical-align:middle}
+
+  /* excards */
+  .excards{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:14px}
+  .excards.three{grid-template-columns:1fr 1fr 1fr}
+  .excard{background:var(--surface);border:1px solid var(--border);border-top:3px solid var(--primary);border-radius:12px;padding:16px 18px;min-width:0}
+  .excard .k{font-family:var(--font-mono);font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--primary);display:block;margin-bottom:4px}
+  .excard h3{font-size:16px;font-weight:800;color:var(--text);margin-bottom:5px}
+  .excard p{font-size:13.5px;color:var(--text-dim);line-height:1.6}.excard p+p{margin-top:8px}.excard p b{color:var(--text)}
+  .excard code{font-family:var(--font-mono);font-size:12.5px;color:var(--primary);font-weight:600}
+
+  /* risk notes */
+  .risk-note{background:var(--surface);border:1px solid var(--border);border-left:4px solid var(--rose);border-radius:10px;padding:14px 16px;margin:14px 0 0;font-size:14px;line-height:1.6;color:var(--text-dim)}
+  .risk-note b{color:var(--text)}.risk-note .rn{color:var(--rose);font-weight:700}
+  .good-note{border-left-color:var(--good)}.good-note .rn{color:var(--good)}
+  .warn-note{border-left-color:var(--amber)}.warn-note .rn{color:var(--amber)}
+
+  /* numbers */
+  .num-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:14px}
+  .num-card{background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:16px 18px}
+  .num-card .metric{font-size:28px;font-weight:800;color:var(--primary);letter-spacing:-1px;line-height:1}
+  .num-card .metric-label{font-family:var(--font-mono);font-size:11px;color:var(--text-faint);text-transform:uppercase;letter-spacing:.08em;margin-top:4px}
+  .num-card .metric-sub{font-size:13px;color:var(--text-dim);margin-top:6px;line-height:1.5}
+
+  .foot{margin:40px 0 0;padding:18px 0 8px;border-top:1px solid var(--border);font-family:var(--font-mono);font-size:11px;color:var(--text-faint);display:flex;justify-content:space-between;gap:20px;flex-wrap:wrap}
+  .foot a{color:var(--primary);text-decoration:none}
+
+  @media(max-width:900px){.excards.three{grid-template-columns:1fr}}
+  @media(max-width:760px){.excards,.num-grid,.flow-branch{grid-template-columns:1fr}.hero h1{font-size:30px}.hero,.wrap{padding-left:4px;padding-right:4px}}
+  @media(prefers-reduced-motion:reduce){*,*::before,*::after{animation-duration:.01ms!important;animation-delay:0ms!important;transition-duration:.01ms!important}}
+</style>
+</head>
+<body>
+<div class="nav">
+  <div class="nav-inner">
+    <nav class="crumbs" aria-label="Breadcrumb">
+      <a href="../index.html" class="home">Index</a>
+      <span class="sep">/</span>
+      <a href="../aesop.html">AESOP</a>
+      <span class="sep">/</span>
+      <span class="current">build-eval + hillclimb</span>
+    </nav>
+  </div>
+</div>
+
+<div class="wrap">
+  <header class="hero">
+    <span class="hero-badge">claude-api skill &middot; Claude Code &middot; September 2026</span>
+    <h1>build-eval + hillclimb</h1>
+    <p class="lede">Two commands. <code>/claude-api build-eval</code> builds a test set and a grader from your actual data, pausing for approval at each step. <code>/claude-api hillclimb</code> iterates against them, one change at a time, with a held-out set to catch overfitting. This page maps the full flow of both.</p>
+    <p class="lede">The primary source is the <a href="https://claude.dev/blog/automating-eval-design-and-hillclimbing/" style="color:var(--primary)">claude.dev playbook by Lance Martin</a> (Sep 28, 2026) and <a href="https://hamel.dev/blog/posts/claude-auto-evals/" style="color:var(--primary)">Hamel Husain's field review</a>.</p>
+  </header>
+
+<!-- ── SECTION 01: build-eval ── -->
+<details class="sec-wrap" open>
+  <summary class="sec"><span class="n">01</span> /claude-api build-eval <span class="hint">data &rarr; grader &rarr; baseline</span></summary>
+  <div class="sec-body">
+  <p class="lead">The command walks you through three phases: collecting examples in priority order, proposing and validating a grader, and running a baseline with a confidence interval. Claude pauses for your approval before moving between phases.</p>
+
+  <h3 class="sub">Phase A &mdash; Data sampling</h3>
+  <p class="lead">Claude collects inputs in a fixed priority order. The rule is to anchor synthetic data in real data whenever possible, and to ask about retention and sensitivity before touching production logs.</p>
+
+  <div class="flow-wrap">
+    <div class="flow-node">
+      <div class="flow-box box-start">
+        <div class="flow-box-label">Start</div>
+        <div class="flow-box-title"><code>/claude-api build-eval</code></div>
+        <div class="flow-box-desc">Run in Claude Code with the claude-api skill installed. Claude begins the interview.</div>
+      </div>
+    </div>
+    <div class="flow-arrow">&#8595;</div>
+
+    <div class="flow-node">
+      <div class="flow-box box-data">
+        <div class="flow-box-label">Data sampling &mdash; priority order</div>
+        <div class="flow-box-title">Four sources, in this sequence</div>
+        <ul class="flow-box-list">
+          <li><span class="pri" style="background:var(--bad-dim);color:var(--bad)">1st</span> <b>Production transcripts</b> &mdash; Claude asks about data retention and sensitive info first. The closest thing to real signal.</li>
+          <li><span class="pri" style="background:var(--amber-dim);color:var(--amber)">2nd</span> <b>Bug reports and support tickets</b> &mdash; Known failures. Don't blindly trust user traffic though: users often try what they expect to work, skewing the sample easy.</li>
+          <li><span class="pri" style="background:var(--good-dim);color:var(--good)">3rd</span> <b>5&ndash;10 hand-written cases</b> &mdash; You write these. Pick cases because a human judged them hard &mdash; you should be able to say why before including them.</li>
+          <li><span class="pri" style="background:var(--slate-dim);color:var(--slate)">4th</span> <b>Synthetic cases</b> &mdash; Generated from your codebase and anchored to the real examples above. Last resort, not first.</li>
+        </ul>
+      </div>
+    </div>
+    <div class="flow-arrow">&#8595;</div>
+
+    <div class="flow-node">
+      <div class="flow-box box-validate">
+        <div class="flow-box-label">Approval gate</div>
+        <div class="flow-box-title">Review page &mdash; you confirm the inputs</div>
+        <div class="flow-box-desc">Claude generates a plain page showing every input. You review them and confirm before anything is graded. <b>This is the data-first step</b> &mdash; the point where Hamel says most tools go wrong by skipping it.</div>
+      </div>
+    </div>
+  </div>
+
+  <h3 class="sub">Phase B &mdash; Grader selection</h3>
+  <p class="lead">Claude proposes the cheapest grader that fits your output type. The two options are not interchangeable &mdash; picking the wrong one produces a number that can't be validated.</p>
+
+  <div class="excards" style="margin-top:12px">
+    <div class="excard" style="border-top-color:var(--metric)">
+      <span class="k" style="color:var(--metric)">Programmatic</span>
+      <h3>Output is constrained</h3>
+      <p>Exact match, a label from a fixed set, JSON matching a schema, tests that pass.</p>
+      <p><b>Use when the right answer is unambiguous.</b> Fast, cheap, deterministic. The grader agrees with itself by construction.</p>
+    </div>
+    <div class="excard" style="border-top-color:var(--amber)">
+      <span class="k" style="color:var(--amber)">LLM-as-judge</span>
+      <h3>Output is open-ended</h3>
+      <p>A second model reads the input, the output, and a rubric written as <b>checkable claims</b> &mdash; not a 1-to-5 scale. Returns a score with its reasoning.</p>
+      <p>If you have a baseline to compare against, the judge reads both outputs in random order, without knowing which is the baseline, and picks the better one. <b>The judge model should not be the model you are testing.</b></p>
+    </div>
+  </div>
+
+  <div class="risk-note warn-note" style="margin-top:14px"><span class="rn">The bundled-grader trap.</span> Nothing in the tool prevents multiple failure types from landing in one rubric. Hamel's run produced a single grader covering four distinct failure types. A compound grader produces unmeasurable agreement &mdash; a human and a model can agree at the surface for completely different reasons. <b>One grader, one question.</b></div>
+
+  <h3 class="sub">Phase C &mdash; Validation and baseline</h3>
+
+  <div class="flow-wrap" style="margin-top:0">
+    <div class="flow-node">
+      <div class="flow-box box-grade">
+        <div class="flow-box-label">Grader validation</div>
+        <div class="flow-box-title">Claude grades a sample &mdash; you review</div>
+        <div class="flow-box-desc">Claude scores a handful of cases and asks whether you'd have scored any differently. It also runs the grader twice on the same output and reports if the verdict changed. <b>Consistency is necessary, not sufficient</b> &mdash; a grader can agree with itself every time and still be wrong. Human review is the real check here.</div>
+      </div>
+    </div>
+    <div class="flow-arrow">&#8595;</div>
+
+    <div class="flow-node">
+      <div class="flow-box box-validate">
+        <div class="flow-box-label">Diagnostic checks</div>
+        <div class="flow-box-title">Three things Claude checks before the baseline</div>
+        <ul class="flow-box-list">
+          <li><b>Headroom:</b> if the baseline already scores ~95% or above, Claude warns and suggests the hillclimb focus on cost or latency instead of quality.</li>
+          <li><b>Plumbing:</b> checks for timeouts, API errors, and cut-off answers so infrastructure noise doesn't pass as model variance.</li>
+          <li><b>Grader consistency:</b> runs the grader twice on identical output; a changed verdict flags a variance problem before it infects the baseline.</li>
+        </ul>
+      </div>
+    </div>
+    <div class="flow-arrow">&#8595;</div>
+
+    <div class="flow-node">
+      <div class="flow-box box-result">
+        <div class="flow-box-label">Output</div>
+        <div class="flow-box-title">Baseline score + results page</div>
+        <div class="flow-box-desc">You get: the cases, the grader, the runner, one JSON line and one full transcript per case, and a plain page listing each case's score with a link to its transcript. Score is reported with a confidence interval. <b>Now you are ready to hillclimb.</b></div>
+      </div>
+    </div>
+  </div>
+  </div>
+</details>
+
+<!-- ── SECTION 02: hillclimb ── -->
+<details class="sec-wrap" open>
+  <summary class="sec"><span class="n">02</span> /claude-api hillclimb <span class="hint">iterate without fooling yourself</span></summary>
+  <div class="sec-body">
+  <p class="lead">Hillclimbing iterates against the evaluation one change at a time. The discipline is keeping the test set genuinely held out, never pasting failures into the prompt, and reverting anything that only improves on training data. When the score stalls, Claude stops proposing changes and diagnoses the remaining failures instead.</p>
+
+  <div class="flow-wrap">
+    <div class="flow-node">
+      <div class="flow-box box-start">
+        <div class="flow-box-label">Start</div>
+        <div class="flow-box-title"><code>/claude-api hillclimb</code></div>
+        <div class="flow-box-desc">Claude asks what you want to optimize: <b>performance improvement</b>, or <b>cost reduction while performance holds</b>. For cost goals it looks at prompt caching, model choice, effort level, and prompt compatibility first.</div>
+      </div>
+    </div>
+    <div class="flow-arrow">&#8595;</div>
+
+    <div class="flow-node">
+      <div class="flow-box box-data">
+        <div class="flow-box-label">Setup</div>
+        <div class="flow-box-title">Split cases at random: train / test</div>
+        <div class="flow-box-desc">The test set is never seen by the hillclimber. Claude reads only train failures when proposing changes. If a train improvement doesn't hold on the test set, that is the overfitting signal.</div>
+      </div>
+    </div>
+    <div class="flow-arrow">&#8595;</div>
+
+    <div class="flow-node">
+      <div class="flow-box box-validate">
+        <div class="flow-box-label">Pre-flight</div>
+        <div class="flow-box-title">Noise floor check</div>
+        <div class="flow-box-desc">Before the first round, Claude checks that the eval's variance (how far the score can move by chance) is smaller than the smallest improvement you'd act on. If it isn't, Claude says so and suggests more cases or repeats rather than starting rounds that can't measure anything.</div>
+      </div>
+    </div>
+    <div class="flow-arrow">&#8595;<span class="flow-arrow-label">loop begins</span></div>
+
+    <div class="flow-node">
+      <div class="flow-box box-loop">
+        <div class="flow-box-label">Each round</div>
+        <div class="flow-box-title">Read train failures &rarr; propose one change</div>
+        <div class="flow-box-desc">Claude reads the previous round's train transcripts and proposes <b>one change as a patch</b>. The target is a change whose effect can show above the eval's noise: it rewrites the section that causes the failure or adds a missing rule, rather than rewording a line. What can be changed:</div>
+        <ul class="flow-box-list" style="margin-top:8px">
+          <li>System prompt (rewrites, new rules, migration tables for old API shapes)</li>
+          <li>Skill or instruction files</li>
+          <li>Tool descriptions</li>
+          <li>Model choice, effort level, other API parameters</li>
+          <li>Harness code (higher risk of overfitting &mdash; Claude flags this)</li>
+        </ul>
+      </div>
+    </div>
+    <div class="flow-arrow">&#8595;</div>
+
+    <div class="flow-node">
+      <div class="flow-box box-grade">
+        <div class="flow-box-label">Evaluation</div>
+        <div class="flow-box-title">Run eval on both train and test splits</div>
+        <div class="flow-box-desc">The patched change is evaluated on both splits simultaneously. The test result is the authoritative one &mdash; the train result is only a leading indicator.</div>
+      </div>
+    </div>
+    <div class="flow-arrow">&#8595;<span class="flow-arrow-label">decision</span></div>
+  </div>
+
+  <!-- decision branch -->
+  <div style="display:flex;flex-direction:column;align-items:center;gap:0">
+    <div class="flow-branch">
+      <div class="flow-outcome outcome-keep">
+        <span class="flow-outcome-label">Both improve</span>
+        <span class="flow-outcome-sub">Keep the patch. Continue to next round.</span>
+      </div>
+      <div class="flow-outcome outcome-revert-over">
+        <span class="flow-outcome-label">Train up, test flat</span>
+        <span class="flow-outcome-sub">Overfitting signal. Revert. The change addressed the specific examples, not the underlying behavior.</span>
+      </div>
+      <div class="flow-outcome outcome-revert-reg">
+        <span class="flow-outcome-label">Either regresses</span>
+        <span class="flow-outcome-sub">Revert. The change made things worse somewhere it shouldn't have.</span>
+      </div>
+    </div>
+    <div class="flow-merge">&#8595;</div>
+  </div>
+
+  <div class="flow-wrap" style="margin-top:0">
+    <div class="flow-node">
+      <div class="flow-box box-validate">
+        <div class="flow-box-label">Stall detection</div>
+        <div class="flow-box-title">Score stalls for 2&ndash;3 rounds &rarr; diagnosis</div>
+        <div class="flow-box-desc">When no single fix can gain more than the eval's noise, Claude stops proposing changes. Instead it reads every remaining train failure and <b>buckets them by root cause</b>. This step makes no edits &mdash; it only sorts. What this surfaces:</div>
+        <ul class="flow-box-list" style="margin-top:8px">
+          <li><b>Ambiguous tasks</b> &mdash; cases that fail every run regardless of changes. A sign the task or grader is the problem, not the model.</li>
+          <li><b>Grader errors</b> &mdash; a grader marking a correct answer wrong, or instructions contradicting the actual API behavior.</li>
+          <li><b>Harness bugs</b> &mdash; leftover state, timeouts, environment issues that hand the model the answer or deny it context.</li>
+          <li><b>Coverage gaps</b> &mdash; features present in the skill but untested; or cases where the model is following old trained priors rather than the current API.</li>
+        </ul>
+        <div class="flow-box-desc" style="margin-top:8px">Claude may reword tasks, fix graders, or suggest more repeats. Only legitimate failures continue into more rounds.</div>
+      </div>
+    </div>
+    <div class="flow-arrow">&#8595;</div>
+
+    <div class="flow-node">
+      <div class="flow-box box-end">
+        <div class="flow-box-label">Done</div>
+        <div class="flow-box-title">Leave code at the best test-set version</div>
+        <div class="flow-box-desc">Claude reports the final test result against the baseline with confidence intervals. <b>If the gain is within noise, it says so and recommends against merging.</b> The code stays at the version that performed best on the held-out test set &mdash; not the highest train score.</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="risk-note" style="margin-top:18px"><span class="rn">The overfitting rules &mdash; always in force.</span> <b>Never paste failures into the prompt.</b> If Claude reads failing transcripts, the content of those failures must not appear verbatim in the system instructions &mdash; that's memorization, not learning. <b>Keep answers structurally out of the model's reach</b> &mdash; a model that can find the eval answers (via a public repo, a file left in the harness, a git history) will find them. <b>Split is mandatory</b> &mdash; without a held-out set, there is no way to tell improvement from overfitting.</div>
+  </div>
+</details>
+
+<!-- ── SECTION 03: what Claude can change ── -->
+<details class="sec-wrap" open>
+  <summary class="sec"><span class="n">03</span> The four properties of a good eval <span class="hint">design principles behind the tool</span></summary>
+  <div class="sec-body">
+  <p class="lead">These are the principles the tool is built around. An eval that violates any of them will produce misleading hillclimb results &mdash; the tool checks for all four before and during a run.</p>
+
+  <div class="excards two" style="margin-top:14px">
+    <div class="excard" style="border-top-color:var(--primary)">
+      <span class="k">Tasks mirror production</span>
+      <h3>Grade what you actually care about</h3>
+      <p>Tasks picked because they are easy to generate or easy to grade will produce a benchmark that doesn't track production performance. <b>Sample from what the system will actually be used for.</b></p>
+      <p>Don't blindly trust user traffic either: users often try what they expect to work, skewing the sample easy. Mix production logs with hand-written hard cases.</p>
+    </div>
+    <div class="excard" style="border-top-color:var(--metric)">
+      <span class="k">Performance scales with capability</span>
+      <h3>Stronger model, higher score</h3>
+      <p>More capable models at higher effort levels should score higher. If they don't, the tasks are ambiguous or the grader is miscalibrated.</p>
+      <p><b>This is a sanity check you can run before starting hillclimb.</b> A benchmark that doesn't discriminate between model sizes isn't measuring anything real.</p>
+    </div>
+    <div class="excard" style="border-top-color:var(--violet)">
+      <span class="k">Headroom below perfect</span>
+      <h3>The frontier model should not be at 100%</h3>
+      <p>If the best model at the highest effort already scores ~95% or above, you can't reliably judge whether a change helped. <b>The gap should not be explained by impossible or ambiguous tasks.</b></p>
+      <p>A task that fails every run regardless of the model is a broken task, not a hard one. The tool flags this and suggests rewording before hillclimb starts.</p>
+    </div>
+    <div class="excard" style="border-top-color:var(--amber)">
+      <span class="k">Low run-to-run variance</span>
+      <h3>The score should be stable on identical output</h3>
+      <p>High variance usually comes from poorly designed tasks, a grader that answers differently on repeats, or inconsistent effort settings in the harness. Leftover state from a prior run (a file, a git history) can also hand the model the answer.</p>
+      <p><b>The tool checks grader consistency before the baseline and flags variance before hillclimb starts.</b></p>
+    </div>
+  </div>
+  </div>
+</details>
+
+<!-- ── SECTION 04: the numbers ── -->
+<details class="sec-wrap" open>
+  <summary class="sec"><span class="n">04</span> What the tool actually produced <span class="hint">two real benchmarks</span></summary>
+  <div class="sec-body">
+  <p class="lead">Two examples from Anthropic's own playbook. Both ran the full build-eval + hillclimb loop.</p>
+
+  <h3 class="sub">Customer support benchmark &mdash; cost-focused hillclimb</h3>
+  <p class="lead">Started on Opus 4.8 at high effort. Hillclimb goal: reduce cost while holding accuracy. 44 tickets total, 30 for training, 14 held out.</p>
+
+  <div class="num-grid">
+    <div class="num-card">
+      <div class="metric">78.6%</div>
+      <div class="metric-label">Starting accuracy (held-out)</div>
+      <div class="metric-sub">Opus 4.8, high effort, 4.6&cent; per ticket.</div>
+    </div>
+    <div class="num-card">
+      <div class="metric">90.5%</div>
+      <div class="metric-label">Final accuracy (held-out)</div>
+      <div class="metric-sub">Sonnet 5, low effort, ~1&cent; per ticket. Roughly one-fifth the starting cost.</div>
+    </div>
+  </div>
+  <p class="lead" style="margin-top:10px">The hillclimber's path: audited the prompt first (removed contradictory rules, a mandatory scratchpad, tool-call rituals), stepped down to Opus 5.5 at low effort (cleared the accuracy bar at half the cost), then stepped down again to Sonnet 5. Final prompt added routing rules and a refund-cap cross-reference.</p>
+
+  <h3 class="sub" style="margin-top:22px">claude-api skill benchmark &mdash; performance-focused hillclimb</h3>
+  <p class="lead">Eval set derived from API documentation. Testing whether the skill correctly implements code using current API shapes.</p>
+
+  <div class="num-grid">
+    <div class="num-card">
+      <div class="metric">66%</div>
+      <div class="metric-label">Starting pass rate</div>
+      <div class="metric-sub">Skill missing coverage for eight features.</div>
+    </div>
+    <div class="num-card">
+      <div class="metric">87.9%</div>
+      <div class="metric-label">Final pass rate</div>
+      <div class="metric-sub">After three phases: missing sections added, type tables fixed, migration table added for old API shapes.</div>
+    </div>
+  </div>
+  <p class="lead" style="margin-top:10px">The key diagnostic insight from the stall analysis: the skill content was present, but the model was writing older API shapes from its trained priors. The fix was a migration table near the top of the skill mapping from forms the model remembered to current ones &mdash; not more content, but a redirect at the point of failure.</p>
+
+  <div class="risk-note good-note" style="margin-top:16px"><span class="rn">What Hamel found in his run.</span> The tool proposed a single grader bundling four distinct failure types without asking, described it in language that gave no view of the underlying prompt, and when asked to validate labels returned aggregate counts rather than individual cases. His core critique: <b>if an eval tool doesn't put looking at data at the center of your workflow, it's not worth using.</b> The data-first design of build-eval is a direct response to that principle &mdash; but the bundled-grader problem requires the user to enforce one-grader-one-question as a discipline the tool won't enforce for them.</div>
+  </div>
+</details>
+
+  <div class="foot">
+    <span>&copy; 2025&ndash;2026 Charlie Fuller</span>
+    <a href="../aesop.html">All AESOP explainers &rarr;</a>
+  </div>
+</div>
+
+</body>
+</html>
