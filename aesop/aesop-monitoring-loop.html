@@ -1,0 +1,415 @@
+<!DOCTYPE html>
+<html lang="en" class="light">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AESOP Transformation OS — Production Monitoring</title>
+<link rel="icon" type="image/svg+xml" href="../icon.svg">
+<meta name="description" content="How AESOP's production monitoring loop catches drift in a deployed agent: two signal layers, a baseline-plus-delta model, and a triage-to-repair loop.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Mulish:ital,wght@0,300;0,400;0,600;0,700;0,800;1,400&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --font-display: 'Mulish', sans-serif;
+    --font-body: 'Mulish', 'Segoe UI', Helvetica, sans-serif;
+    --font-mono: 'Mulish', ui-monospace, 'SF Mono', Consolas, monospace;
+    --bg: #14181C; --surface: #1B2127; --surface2: #232B33; --surface3: #232B33;
+    --border: #303A43; --border-bright: #42505C;
+    --text: #F4F5F6; --text-dim: #CBD0D6; --text-muted: #87919B; --text-faint: #97A2AD;
+    --primary: #F58A4E; --primary-dim: rgba(245,138,78,0.12);
+    --secondary: #45C7A6; --secondary-dim: rgba(69,199,166,0.10);
+    --metric: #45C7A6; --metric-dim: rgba(69,199,166,0.10);
+    --accent: #F58A4E; --accent-deep: #F58A4E;
+    --good: #45C7A6; --good-dim: rgba(69,199,166,0.10);
+    --warn: #E0B05B; --warn-dim: rgba(224,176,91,0.10);
+    --bad: #E8735F; --bad-dim: rgba(232,115,95,0.10);
+    --amber: #E0B05B; --amber-dim: rgba(224,176,91,0.10);
+    --violet: #B78BD8; --violet-dim: rgba(183,139,216,0.10);
+    --rose: #E8735F; --rose-dim: rgba(232,115,95,0.10);
+    --slate: #87919B; --slate-dim: rgba(135,145,155,0.12);
+    --model: #F58A4E; --compute: #B78BD8; --consumer: #45C7A6; --storage: #6FA8D8;
+    --arr-color: #87919B; --arr-color-strong: #F58A4E;
+  }
+  html.light {
+    --bg: #F7F3EF; --surface: #FFFFFF; --surface2: #F0E9E1; --surface3: #F0E9E1;
+    --border: #E1D6CB; --border-bright: #CDBBA8;
+    --text: #241A12; --text-dim: #574A3C; --text-muted: #6F6255; --text-faint: #6F6255;
+    --primary: #C64A11; --primary-dim: rgba(198,74,17,0.10);
+    --secondary: #0E7C66; --secondary-dim: rgba(14,124,102,0.10);
+    --metric: #0E7C66; --metric-dim: rgba(14,124,102,0.10);
+    --accent: #C64A11; --accent-deep: #C64A11;
+    --good: #0E7C66; --good-dim: rgba(14,124,102,0.10);
+    --warn: #8A5A0B; --warn-dim: rgba(138,90,11,0.10);
+    --bad: #B03A26; --bad-dim: rgba(176,58,38,0.10);
+    --amber: #8A5A0B; --amber-dim: rgba(138,90,11,0.10);
+    --violet: #6D3FC4; --violet-dim: rgba(109,63,196,0.10);
+    --rose: #B03A26; --rose-dim: rgba(176,58,38,0.10);
+    --slate: #6B6259; --slate-dim: rgba(107,98,89,0.12);
+    --model: #C64A11; --compute: #6D3FC4; --consumer: #0E7C66; --storage: #1F5E93;
+    --arr-color: #8C7E6E; --arr-color-strong: #C64A11;
+  }
+
+  * { margin:0; padding:0; box-sizing:border-box; }
+
+  body {
+    background: var(--bg);
+    background-image:
+      radial-gradient(at 10% 0%, var(--primary-dim) 0%, transparent 40%),
+      radial-gradient(at 90% 80%, var(--metric-dim) 0%, transparent 40%);
+    color: var(--text); font-family: var(--font-body); font-size: 15px;
+    min-height: 100vh; line-height: 1.7; padding: 0 32px 80px;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  .nav { max-width: 1000px; margin: 0 auto; padding: 16px 0 4px; background: transparent; border-bottom: none; }
+  .nav-inner { max-width: 1000px; margin: 0 auto; padding: 0; display: block; }
+  .crumbs { font-family: var(--font-mono); font-size: 13px; font-weight: 600; display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+  .crumbs a { color: var(--primary); text-decoration: none; }
+  .crumbs a:hover { text-decoration: underline; }
+  .crumbs .sep { color: var(--text-faint); }
+  .crumbs .current { color: var(--text-faint); font-weight: 400; }
+
+  .backlink{position:fixed;top:12px;left:16px;z-index:101;font-family:var(--font-mono);font-size:12px;color:var(--text-dim);text-decoration:none;padding:6px 10px;border:1px solid var(--border);border-radius:6px;background:var(--surface);transition:color .15s,border-color .15s}
+  .backlink:hover{color:var(--text);border-color:var(--border-bright)}
+
+  .container { max-width: 1000px; margin: 0 auto; }
+
+  @keyframes fadeUp {
+    from { opacity:0; transform:translateY(12px); }
+    to { opacity:1; transform:translateY(0); }
+  }
+  .animate { animation: fadeUp 0.4s ease-out both; animation-delay: calc(var(--i, 0) * 0.05s); }
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after { animation-duration:0.01ms !important; animation-delay:0ms !important; }
+  }
+
+  .hero { text-align: center; padding: 40px 0 16px; animation: fadeUp 0.5s ease-out; }
+  .hero-badge {
+    display: inline-flex; align-items: center; gap: 6px;
+    padding: 5px 16px; background: var(--primary-dim);
+    border: 1px solid var(--primary); border-radius: 20px;
+    font-family: var(--font-mono); font-size: 10px; font-weight: 600;
+    color: var(--primary); letter-spacing: 1px; text-transform: uppercase;
+    margin-bottom: 20px;
+  }
+  .hero h1 {
+    font-size: 44px; font-weight: 800; letter-spacing: -0.5px;
+    margin-bottom: 12px; color: var(--text);
+  }
+  .hero .lede {
+    font-size: 16px; color: var(--text-dim); max-width: 640px; margin: 0 auto;
+    text-align: left; line-height: 1.6;
+  }
+  .hero .lede + .lede { margin-top: 12px; }
+
+  .mermaid-wrap {
+    position: relative; background: var(--surface);
+    border: 1px solid var(--border); border-radius: 14px;
+    padding: 36px 24px; overflow: auto; margin: 32px 0;
+    animation: fadeUp 0.4s ease-out both; animation-delay: 0.08s;
+  }
+  .mermaid-wrap .mermaid {
+    display: flex; justify-content: center;
+    transition: transform 0.2s ease; transform-origin: top center;
+  }
+  .mermaid-wrap.is-zoomed { cursor: grab; }
+  .mermaid-wrap.is-panning { cursor: grabbing; user-select: none; }
+  .zoom-controls {
+    position: absolute; top: 10px; right: 10px; z-index: 10;
+    display: flex; gap: 2px; background: var(--surface);
+    border: 1px solid var(--border); border-radius: 8px; padding: 3px;
+  }
+  .zoom-controls button {
+    width: 30px; height: 30px; border: none; background: transparent;
+    color: var(--text-dim); font-family: var(--font-mono); font-size: 16px;
+    cursor: pointer; border-radius: 5px; display: flex; align-items: center;
+    justify-content: center; transition: background 0.15s, color 0.15s;
+  }
+  .zoom-controls button:hover { background: var(--border); color: var(--text); }
+  .mermaid-wrap { scrollbar-width: thin; scrollbar-color: var(--border) transparent; }
+  .mermaid-wrap::-webkit-scrollbar { width:6px; height:6px; }
+  .mermaid-wrap::-webkit-scrollbar-track { background:transparent; }
+  .mermaid-wrap::-webkit-scrollbar-thumb { background:var(--border); border-radius:3px; }
+
+  .mermaid .nodeLabel { font-family: var(--font-display) !important; font-size: 14px !important; }
+  .mermaid .edgeLabel { font-family: var(--font-mono) !important; font-size: 11px !important; }
+  .mermaid .node rect, .mermaid .node circle, .mermaid .node polygon { stroke-width: 1.5px !important; }
+
+  .mermaid .nodeLabel { color: #F4F5F6 !important; }
+  .mermaid .edgeLabel { color: #CBD0D6 !important; }
+  .mermaid .edgeLabel span { color: #CBD0D6 !important; }
+  .mermaid text { fill: #F4F5F6 !important; }
+  .mermaid .labelBkg { fill: #1B2127 !important; }
+  html.light .mermaid .nodeLabel { color: #241A12 !important; }
+  html.light .mermaid .edgeLabel { color: #574A3C !important; }
+  html.light .mermaid .edgeLabel span { color: #574A3C !important; }
+  html.light .mermaid text { fill: #241A12 !important; }
+  html.light .mermaid .labelBkg { fill: #FFFFFF !important; }
+
+  .detail-section { margin-top: 40px; }
+  .detail-section h2 {
+    font-family: var(--font-mono); font-size: 12px; font-weight: 700;
+    letter-spacing: 1px; text-transform: uppercase;
+    color: var(--primary); margin-bottom: 16px;
+  }
+
+  .context-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 10px; }
+  .context-card {
+    background: var(--surface); border: 1px solid var(--border);
+    border-left: 3px solid; border-radius: 0 10px 10px 0;
+    padding: 16px 18px; font-size: 14px; line-height: 1.5;
+  }
+  .context-card .label { font-family: var(--font-mono); font-size: 10px; font-weight: 600; letter-spacing: 0.5px; text-transform: uppercase; margin-bottom: 4px; }
+  .context-card .name { font-size: 16px; font-weight: 700; margin-bottom: 4px; }
+  .context-card .desc { font-size: 13px; color: var(--text-dim); }
+  .context-card.rose { border-left-color: var(--rose); } .context-card.rose .label { color: var(--rose); }
+  .context-card.violet { border-left-color: var(--violet); } .context-card.violet .label { color: var(--violet); }
+  .context-card.amber { border-left-color: var(--amber); } .context-card.amber .label { color: var(--amber); }
+  .context-card.slate { border-left-color: var(--slate); } .context-card.slate .label { color: var(--slate); }
+  .context-card.secondary { border-left-color: var(--secondary); } .context-card.secondary .label { color: var(--secondary); }
+
+  .gap-list { display: flex; flex-direction: column; gap: 8px; }
+  .gap-row {
+    display: flex; align-items: baseline; gap: 12px;
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 10px; padding: 14px 18px; font-size: 14px;
+  }
+  .gap-row .num { font-family: var(--font-mono); font-size: 12px; font-weight: 700; color: var(--rose); flex-shrink: 0; }
+  .gap-row .gname { font-weight: 700; }
+  .gap-row .gdesc { color: var(--text-dim); font-size: 13px; }
+
+  .phase-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+  @media (max-width: 750px) { .phase-grid { grid-template-columns: 1fr; } }
+  .phase-card {
+    background: var(--surface); border: 1px solid var(--border);
+    border-top: 3px solid var(--secondary); border-radius: 8px;
+    padding: 16px;
+  }
+  .phase-card .num { font-family: var(--font-mono); font-size: 11px; font-weight: 700; color: var(--secondary); margin-bottom: 6px; }
+  .phase-card .title { font-size: 15px; font-weight: 700; margin-bottom: 4px; }
+  .phase-card .desc { font-size: 12px; color: var(--text-dim); line-height: 1.5; }
+  .phase-card.dim { border-top-color: var(--slate); } .phase-card.dim .num { color: var(--slate); }
+  .phase-card.primary { border-top-color: var(--primary); } .phase-card.primary .num { color: var(--primary); }
+
+  .demo-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  @media (max-width: 640px) { .demo-grid { grid-template-columns: 1fr; } }
+
+  .callout {
+    background: var(--surface); border: 1px solid var(--border);
+    border-left: 3px solid var(--primary); border-radius: 0 12px 12px 0;
+    padding: 20px 24px; font-size: 15px; line-height: 1.6;
+    color: var(--text-dim); margin-top: 32px;
+  }
+  .callout strong { color: var(--text); }
+
+  .footer {
+    margin-top: 56px; padding-top: 20px;
+    border-top: 1px solid var(--border);
+    text-align: center; font-size: 13px; color: var(--text-muted);
+  }
+  .footer a { color: var(--primary); text-decoration: none; }
+
+  @media (max-width: 640px) {
+    body { padding: 0 12px 48px; }
+    .hero h1 { font-size: 28px; }
+    .context-grid { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+
+<a href="../index.html" class="backlink">&larr; Index</a>
+
+<nav class="nav">
+  <div class="nav-inner">
+    <div class="crumbs">
+      <a href="../index.html">Index</a>
+      <span class="sep">/</span>
+      <a href="../aesop.html">AESOP</a>
+      <span class="sep">/</span>
+      <span class="current" aria-current="page">Production Monitoring</span>
+    </div>
+  </div>
+</nav>
+
+<div class="container">
+  <div class="hero">
+    <div class="hero-badge">Monitor &middot; Production</div>
+    <h1>Catch the drift before the customer does.</h1>
+    <p class="lede">An agent ships, then it drifts. Last week it was right; this week a stale article wins and the wrong number comes out. Monitoring is the loop that names the failure mode and closes the gap.</p>
+    <p class="lede">Thumbs up, thumbs down can't do it. You need a baseline, a delta, and a way to trace the signal back to the source that broke.</p>
+  </div>
+
+  <div class="mermaid-wrap animate" style="--i:1">
+    <div class="zoom-controls">
+      <button onclick="zoomDiagram(this, 1.2)" title="Zoom in">+</button>
+      <button onclick="zoomDiagram(this, 0.8)" title="Zoom out">&minus;</button>
+      <button onclick="resetZoom(this)" title="Reset">&#8634;</button>
+    </div>
+    <pre class="mermaid">
+      flowchart TD
+        CAPTURE["Capture production interactions"]
+        EXTRACT["Extract signals (two layers)"]
+        DET["Deterministic checks"]
+        JUDGE["Probabilistic judges"]
+        BASELINE["Baseline + delta"]
+        DRIFT{"Drift over threshold?"}
+        ALERT["Alert: name the mode"]
+        TRIAGE["Triage: root cause"]
+        REPAIR["Repair: source or prompt"]
+        REMEASURE["Re-measure: delta closed?"]
+
+        CAPTURE --> EXTRACT
+        EXTRACT --> DET
+        EXTRACT --> JUDGE
+        DET --> BASELINE
+        JUDGE --> BASELINE
+        BASELINE --> DRIFT
+        DRIFT -- "yes" --> ALERT
+        DRIFT -- "no" --> CAPTURE
+        ALERT --> TRIAGE
+        TRIAGE --> REPAIR
+        REPAIR --> REMEASURE
+        REMEASURE --> CAPTURE
+
+        classDef capture fill:#C64A1122,stroke:#C64A11,stroke-width:2px
+        classDef extract fill:#6D3FC422,stroke:#6D3FC4,stroke-width:1.5px
+        classDef det fill:#8A5A0B22,stroke:#8A5A0B,stroke-width:1.5px
+        classDef judge fill:#0E7C6622,stroke:#0E7C66,stroke-width:1.5px
+        classDef baseline fill:#1F5E9322,stroke:#1F5E93,stroke-width:1.5px
+        classDef drift fill:#8A5A0B22,stroke:#8A5A0B,stroke-width:2px
+        classDef alert fill:#B03A2622,stroke:#B03A26,stroke-width:2px
+        classDef repair fill:#0E7C6622,stroke:#0E7C66,stroke-width:1.5px
+
+        class CAPTURE capture
+        class EXTRACT extract
+        class DET det
+        class JUDGE judge
+        class BASELINE baseline
+        class DRIFT drift
+        class ALERT alert
+        class TRIAGE,REPAIR,REMEASURE repair
+    </pre>
+  </div>
+
+  <div class="detail-section animate" style="--i:2">
+    <h2>Five failure modes to watch</h2>
+    <div class="context-grid">
+      <div class="context-card rose"><div class="label">Hallucination</div><div class="name">No grounding</div><div class="desc">A confident answer with no source under it at all.</div></div>
+      <div class="context-card violet"><div class="label">Retrieval failure</div><div class="name">Wrong document</div><div class="desc">The wrong doc pulled, or the right one never surfaced.</div></div>
+      <div class="context-card amber"><div class="label">Attribution error</div><div class="name">Wrong source</div><div class="desc">A right-looking answer built on the wrong source. The wrong phone number.</div></div>
+      <div class="context-card slate"><div class="label">Recency</div><div class="name">Stale article wins</div><div class="desc">A superseded document favored over a newer one.</div></div>
+      <div class="context-card secondary"><div class="label">Guardrail breach</div><div class="name">Off-policy</div><div class="desc">Break character, leak instructions, unsafe or biased output.</div></div>
+    </div>
+  </div>
+
+  <div class="detail-section animate" style="--i:3">
+    <h2>Two layers, one signal</h2>
+    <div class="context-grid">
+      <div class="context-card amber"><div class="label">Deterministic</div><div class="name">Can't hallucinate</div><div class="desc">Entity and format checks, source-date freshness, guardrail rules. The wrong-number bug dies here because it's structural, not semantic.</div></div>
+      <div class="context-card secondary"><div class="label">Probabilistic</div><div class="name">Judges over the semantic</div><div class="desc">Hallucination, attribution, off-policy. Scored, not binary, run over every trace.</div></div>
+    </div>
+  </div>
+
+  <div class="detail-section animate" style="--i:4">
+    <h2>What's missing now</h2>
+    <div class="gap-list">
+      <div class="gap-row"><span class="num">01</span><span class="gname">No failure-mode taxonomy</span><span class="gdesc">Drift is one number from one agent. You can't see which mode moved.</span></div>
+      <div class="gap-row"><span class="num">02</span><span class="gname">No baseline / delta</span><span class="gdesc">Measured against the instructions, not against last week's prevalence.</span></div>
+      <div class="gap-row"><span class="num">03</span><span class="gname">No deterministic layer</span><span class="gdesc">It's all one LLM. The wrong number isn't caught structurally.</span></div>
+      <div class="gap-row"><span class="num">04</span><span class="gname">No scheduled sweeps</span><span class="gdesc">Manual only. No cadence, no trigger on a model or knowledge change.</span></div>
+      <div class="gap-row"><span class="num">05</span><span class="gname">No repair wiring</span><span class="gdesc">Alerts and the repair loop are disconnected. The delta never closes.</span></div>
+    </div>
+  </div>
+
+  <div class="detail-section animate" style="--i:5">
+    <h2>Build phases</h2>
+    <div class="phase-grid">
+      <div class="phase-card primary"><div class="num">Phase 0</div><div class="title">Baseline + delta</div><div class="desc">Per-mode prevalence per sweep, so drift is a delta, not an absolute.</div></div>
+      <div class="phase-card primary"><div class="num">Phase 1</div><div class="title">Deterministic layer</div><div class="desc">Entity, format, freshness checks with no LLM. Catches the named bugs structurally.</div></div>
+      <div class="phase-card"><div class="num">Phase 2</div><div class="title">Per-mode judges</div><div class="desc">Replace the single drift agent with a judge per failure mode.</div></div>
+      <div class="phase-card"><div class="num">Phase 3</div><div class="title">Scheduled sweeps</div><div class="desc">Cadence plus triggers on model update, knowledge change, prompt change.</div></div>
+      <div class="phase-card"><div class="num">Phase 4</div><div class="title">Repair wiring</div><div class="desc">Alert feeds the repair loop; re-measure shows the delta closed.</div></div>
+      <div class="phase-card dim"><div class="num">Phase 5</div><div class="title">Dashboard</div><div class="desc">Render the per-mode prevalence delta. The thing the operator reads.</div></div>
+    </div>
+  </div>
+
+  <div class="detail-section animate" style="--i:6">
+    <h2>The demo: two epochs, one delta</h2>
+    <div class="demo-grid">
+      <div class="context-card secondary"><div class="label">Epoch 1</div><div class="name">Clean knowledge base</div><div class="desc">Sweep. Baseline prevalence near zero. Deterministic checks green.</div></div>
+      <div class="context-card rose"><div class="label">Epoch 2</div><div class="name">Inject a stale article + a transposed number</div><div class="desc">Sweep. Deterministic checks red, recency and attribution prevalence up. The delta is the signal.</div></div>
+    </div>
+  </div>
+
+  <div class="callout animate" style="--i:7">
+    <strong>Honesty, not magic.</strong> Monitoring here is periodic re-evaluation and drift comparison, not continuous stream ingestion &mdash; you can't live-instrument a vendor agent from outside. The demo runs on a synthetic two-epoch fixture built to reproduce two real failure modes. That's a true claim about what the structure catches, not a claim the whole loop is proven in production.
+  </div>
+
+  <div class="footer">
+    <a href="../index.html">&larr; Index</a>
+    &nbsp;&middot;&nbsp;
+    <a href="aesop-trace-analysis.html">Trace Analysis &rarr;</a>
+    &nbsp;&middot;&nbsp;
+    &copy; 2025-2026 Charlie Fuller
+  </div>
+</div>
+
+<script type="module">
+  import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs';
+  mermaid.initialize({
+    startOnLoad: true, theme: 'base', look: 'classic',
+    themeVariables: {
+      primaryColor: '#F0E9E1',
+      primaryBorderColor: '#C64A11',
+      primaryTextColor: '#241A12',
+      secondaryColor: '#FFFFFF',
+      secondaryBorderColor: '#0E7C66',
+      secondaryTextColor: '#241A12',
+      tertiaryColor: '#FFFFFF',
+      tertiaryBorderColor: '#0E7C66',
+      tertiaryTextColor: '#241A12',
+      lineColor: '#6F6255',
+      fontSize: '15px', fontFamily: "'Mulish', 'Segoe UI', Helvetica, sans-serif",
+    }
+  });
+</script>
+<script>
+  function updateZoomState(wrap) {
+    const t = wrap.querySelector('.mermaid');
+    wrap.classList.toggle('is-zoomed', parseFloat(t.dataset.zoom || '1') > 1);
+  }
+  function zoomDiagram(btn, factor) {
+    const wrap = btn.closest('.mermaid-wrap'), t = wrap.querySelector('.mermaid');
+    const n = Math.min(Math.max((parseFloat(t.dataset.zoom || '1')) * factor, 0.3), 5);
+    t.dataset.zoom = n; t.style.transform = 'scale(' + n + ')'; updateZoomState(wrap);
+  }
+  function resetZoom(btn) {
+    const wrap = btn.closest('.mermaid-wrap'), t = wrap.querySelector('.mermaid');
+    t.dataset.zoom = '1'; t.style.transform = 'scale(1)'; updateZoomState(wrap);
+  }
+  document.querySelectorAll('.mermaid-wrap').forEach(function(wrap) {
+    wrap.addEventListener('wheel', function(e) {
+      if (!e.ctrlKey && !e.metaKey) return;
+      e.preventDefault();
+      const t = wrap.querySelector('.mermaid');
+      const n = Math.min(Math.max((parseFloat(t.dataset.zoom || '1')) * (e.deltaY < 0 ? 1.1 : 0.9), 0.3), 5);
+      t.dataset.zoom = n; t.style.transform = 'scale(' + n + ')'; updateZoomState(wrap);
+    }, { passive: false });
+    let sx, sy, sl, st;
+    wrap.addEventListener('mousedown', function(e) {
+      if (e.target.closest('.zoom-controls')) return;
+      if (parseFloat(wrap.querySelector('.mermaid').dataset.zoom || '1') <= 1) return;
+      wrap.classList.add('is-panning'); sx = e.clientX; sy = e.clientY;
+      sl = wrap.scrollLeft; st = wrap.scrollTop;
+    });
+    window.addEventListener('mousemove', function(e) {
+      if (!wrap.classList.contains('is-panning')) return;
+      wrap.scrollLeft = sl - (e.clientX - sx); wrap.scrollTop = st - (e.clientY - sy);
+    });
+    window.addEventListener('mouseup', function() { wrap.classList.remove('is-panning'); });
+  });
+</script>
+</body>
+</html>
