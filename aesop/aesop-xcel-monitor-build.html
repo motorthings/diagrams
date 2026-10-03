@@ -1,0 +1,475 @@
+<!DOCTYPE html>
+<html lang="en" class="light">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AESOP Transformation OS &mdash; Xcel Production Monitor Build</title>
+<link rel="icon" type="image/svg+xml" href="../icon.svg">
+<meta name="description" content="AESOP's Xcel build: 30 governed documents, a deliberately naive retrieval agent, and a provenance monitor scored at 0.944 precision on 240 labeled calls.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Mulish:ital,wght@0,300;0,400;0,600;0,700;0,800;1,400&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --font-display: 'Mulish', sans-serif;
+    --font-body: 'Mulish', 'Segoe UI', Helvetica, sans-serif;
+    --font-mono: 'Mulish', ui-monospace, 'SF Mono', Consolas, monospace;
+    --bg: #14181C; --surface: #1B2127; --surface2: #232B33; --surface3: #232B33;
+    --border: #303A43; --border-bright: #42505C;
+    --text: #F4F5F6; --text-dim: #CBD0D6; --text-muted: #87919B; --text-faint: #97A2AD;
+    --primary: #F58A4E; --primary-dim: rgba(245,138,78,0.12);
+    --secondary: #45C7A6; --secondary-dim: rgba(69,199,166,0.10);
+    --metric: #45C7A6; --metric-dim: rgba(69,199,166,0.10);
+    --accent: #F58A4E; --accent-deep: #F58A4E;
+    --good: #45C7A6; --good-dim: rgba(69,199,166,0.10);
+    --warn: #E0B05B; --warn-dim: rgba(224,176,91,0.10);
+    --bad: #E8735F; --bad-dim: rgba(232,115,95,0.10);
+    --amber: #E0B05B; --amber-dim: rgba(224,176,91,0.10);
+    --violet: #B78BD8; --violet-dim: rgba(183,139,216,0.10);
+    --rose: #E8735F; --rose-dim: rgba(232,115,95,0.10);
+    --slate: #87919B; --slate-dim: rgba(135,145,155,0.12);
+    --model: #F58A4E; --compute: #B78BD8; --consumer: #45C7A6; --storage: #6FA8D8;
+    --arr-color: #87919B; --arr-color-strong: #F58A4E;
+  }
+  html.light {
+    --bg: #F7F3EF; --surface: #FFFFFF; --surface2: #F0E9E1; --surface3: #F0E9E1;
+    --border: #E1D6CB; --border-bright: #CDBBA8;
+    --text: #241A12; --text-dim: #574A3C; --text-muted: #6F6255; --text-faint: #6F6255;
+    --primary: #C64A11; --primary-dim: rgba(198,74,17,0.10);
+    --secondary: #0E7C66; --secondary-dim: rgba(14,124,102,0.10);
+    --metric: #0E7C66; --metric-dim: rgba(14,124,102,0.10);
+    --accent: #C64A11; --accent-deep: #C64A11;
+    --good: #0E7C66; --good-dim: rgba(14,124,102,0.10);
+    --warn: #8A5A0B; --warn-dim: rgba(138,90,11,0.10);
+    --bad: #B03A26; --bad-dim: rgba(176,58,38,0.10);
+    --amber: #8A5A0B; --amber-dim: rgba(138,90,11,0.10);
+    --violet: #6D3FC4; --violet-dim: rgba(109,63,196,0.10);
+    --rose: #B03A26; --rose-dim: rgba(176,58,38,0.10);
+    --slate: #6B6259; --slate-dim: rgba(107,98,89,0.12);
+    --model: #C64A11; --compute: #6D3FC4; --consumer: #0E7C66; --storage: #1F5E93;
+    --arr-color: #8C7E6E; --arr-color-strong: #C64A11;
+  }
+
+  * { margin:0; padding:0; box-sizing:border-box; }
+
+  body {
+    background: var(--bg);
+    background-image:
+      radial-gradient(at 10% 0%, var(--primary-dim) 0%, transparent 40%),
+      radial-gradient(at 90% 80%, var(--metric-dim) 0%, transparent 40%);
+    color: var(--text); font-family: var(--font-body); font-size: 15px;
+    min-height: 100vh; line-height: 1.7; padding: 0 32px 80px;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  .nav { max-width: 1000px; margin: 0 auto; padding: 16px 0 4px; background: transparent; border-bottom: none; }
+  .nav-inner { max-width: 1000px; margin: 0 auto; padding: 0; display: block; }
+  .crumbs { font-family: var(--font-mono); font-size: 13px; font-weight: 600; display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+  .crumbs a { color: var(--primary); text-decoration: none; }
+  .crumbs a:hover { text-decoration: underline; }
+  .crumbs .sep { color: var(--text-faint); }
+  .crumbs .current { color: var(--text-faint); font-weight: 400; }
+
+  .backlink{position:fixed;top:12px;left:16px;z-index:101;font-family:var(--font-mono);font-size:12px;color:var(--text-dim);text-decoration:none;padding:6px 10px;border:1px solid var(--border);border-radius:6px;background:var(--surface);transition:color .15s,border-color .15s}
+  .backlink:hover{color:var(--text);border-color:var(--border-bright)}
+
+  .container { max-width: 1000px; margin: 0 auto; }
+
+  @keyframes fadeUp {
+    from { opacity:0; transform:translateY(12px); }
+    to { opacity:1; transform:translateY(0); }
+  }
+  .animate { animation: fadeUp 0.4s ease-out both; animation-delay: calc(var(--i, 0) * 0.05s); }
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after { animation-duration:0.01ms !important; animation-delay:0ms !important; }
+  }
+
+  .hero { text-align: center; padding: 40px 0 16px; animation: fadeUp 0.5s ease-out; }
+  .hero-badge {
+    display: inline-flex; align-items: center; gap: 6px;
+    padding: 5px 16px; background: var(--primary-dim);
+    border: 1px solid var(--primary); border-radius: 20px;
+    font-family: var(--font-mono); font-size: 10px; font-weight: 600;
+    color: var(--primary); letter-spacing: 1px; text-transform: uppercase;
+    margin-bottom: 20px;
+  }
+  .hero h1 {
+    font-size: 44px; font-weight: 800; letter-spacing: -0.5px;
+    margin-bottom: 12px; color: var(--text);
+  }
+  .hero .lede {
+    font-size: 16px; color: var(--text-dim); max-width: 640px; margin: 0 auto;
+    text-align: left; line-height: 1.6;
+  }
+  .hero .lede + .lede { margin-top: 12px; }
+
+  .mermaid-wrap {
+    position: relative; background: var(--surface);
+    border: 1px solid var(--border); border-radius: 14px;
+    padding: 36px 24px; overflow: auto; margin: 32px 0;
+    animation: fadeUp 0.4s ease-out both; animation-delay: 0.08s;
+  }
+  .mermaid-wrap .mermaid {
+    display: flex; justify-content: center;
+    transition: transform 0.2s ease; transform-origin: top center;
+  }
+  .mermaid-wrap.is-zoomed { cursor: grab; }
+  .mermaid-wrap.is-panning { cursor: grabbing; user-select: none; }
+  .zoom-controls {
+    position: absolute; top: 10px; right: 10px; z-index: 10;
+    display: flex; gap: 2px; background: var(--surface);
+    border: 1px solid var(--border); border-radius: 8px; padding: 3px;
+  }
+  .zoom-controls button {
+    width: 30px; height: 30px; border: none; background: transparent;
+    color: var(--text-dim); font-family: var(--font-mono); font-size: 16px;
+    cursor: pointer; border-radius: 5px; display: flex; align-items: center;
+    justify-content: center; transition: background 0.15s, color 0.15s;
+  }
+  .zoom-controls button:hover { background: var(--border); color: var(--text); }
+  .mermaid-wrap { scrollbar-width: thin; scrollbar-color: var(--border) transparent; }
+  .mermaid-wrap::-webkit-scrollbar { width:6px; height:6px; }
+  .mermaid-wrap::-webkit-scrollbar-track { background:transparent; }
+  .mermaid-wrap::-webkit-scrollbar-thumb { background:var(--border); border-radius:3px; }
+
+  .mermaid .nodeLabel { font-family: var(--font-display) !important; font-size: 14px !important; }
+  .mermaid .edgeLabel { font-family: var(--font-mono) !important; font-size: 11px !important; }
+  .mermaid .node rect, .mermaid .node circle, .mermaid .node polygon { stroke-width: 1.5px !important; }
+
+  .mermaid .nodeLabel { color: #F4F5F6 !important; }
+  .mermaid .edgeLabel { color: #CBD0D6 !important; }
+  .mermaid .edgeLabel span { color: #CBD0D6 !important; }
+  .mermaid text { fill: #F4F5F6 !important; }
+  .mermaid .labelBkg { fill: #1B2127 !important; }
+  html.light .mermaid .nodeLabel { color: #241A12 !important; }
+  html.light .mermaid .edgeLabel { color: #574A3C !important; }
+  html.light .mermaid .edgeLabel span { color: #574A3C !important; }
+  html.light .mermaid text { fill: #241A12 !important; }
+  html.light .mermaid .labelBkg { fill: #FFFFFF !important; }
+
+  .detail-section { margin-top: 40px; }
+  .detail-section h2 {
+    font-family: var(--font-mono); font-size: 12px; font-weight: 700;
+    letter-spacing: 1px; text-transform: uppercase;
+    color: var(--primary); margin-bottom: 16px;
+  }
+  .detail-section .blurb { font-size: 15px; color: var(--text-dim); max-width: 720px; margin-bottom: 18px; }
+  .detail-section .blurb strong { color: var(--text); font-weight: 700; }
+
+  .context-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 10px; }
+  .context-card {
+    background: var(--surface); border: 1px solid var(--border);
+    border-left: 3px solid; border-radius: 0 10px 10px 0;
+    padding: 16px 18px; font-size: 14px; line-height: 1.5;
+  }
+  .context-card .label { font-family: var(--font-mono); font-size: 10px; font-weight: 600; letter-spacing: 0.5px; text-transform: uppercase; margin-bottom: 4px; }
+  .context-card .name { font-size: 16px; font-weight: 700; margin-bottom: 4px; }
+  .context-card .desc { font-size: 13px; color: var(--text-dim); }
+  .context-card.rose { border-left-color: var(--rose); } .context-card.rose .label { color: var(--rose); }
+  .context-card.violet { border-left-color: var(--violet); } .context-card.violet .label { color: var(--violet); }
+  .context-card.amber { border-left-color: var(--amber); } .context-card.amber .label { color: var(--amber); }
+  .context-card.slate { border-left-color: var(--slate); } .context-card.slate .label { color: var(--slate); }
+  .context-card.secondary { border-left-color: var(--secondary); } .context-card.secondary .label { color: var(--secondary); }
+  .context-card.primary { border-left-color: var(--primary); } .context-card.primary .label { color: var(--primary); }
+
+  .gap-list { display: flex; flex-direction: column; gap: 8px; }
+  .gap-row {
+    display: flex; align-items: baseline; gap: 12px;
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 10px; padding: 14px 18px; font-size: 14px;
+  }
+  .gap-row .num { font-family: var(--font-mono); font-size: 12px; font-weight: 700; color: var(--rose); flex-shrink: 0; }
+  .gap-row .gname { font-weight: 700; }
+  .gap-row .gdesc { color: var(--text-dim); font-size: 13px; }
+  .gap-row .check {
+    font-family: var(--font-mono); font-size: 11px; font-weight: 700;
+    color: var(--violet); background: var(--violet-dim);
+    border-radius: 5px; padding: 2px 7px; white-space: nowrap;
+  }
+  @media (max-width: 640px) {
+    .gap-row { flex-direction: column; align-items: flex-start; gap: 4px; }
+  }
+
+  .table-wrap { border: 1px solid var(--border); border-radius: 12px; overflow: hidden; background: var(--surface); }
+  .table-scroll { overflow-x: auto; }
+  table.data-table { width: 100%; border-collapse: collapse; font-size: 13.5px; }
+  table.data-table th, table.data-table td { padding: 11px 16px; text-align: left; vertical-align: top; }
+  table.data-table thead th {
+    font-family: var(--font-mono); font-size: 10px; font-weight: 700;
+    letter-spacing: 0.6px; text-transform: uppercase; color: var(--text-dim);
+    background: var(--surface2); border-bottom: 1px solid var(--border);
+  }
+  table.data-table tbody tr + tr { border-top: 1px solid var(--border); }
+  table.data-table td.mono { font-family: var(--font-mono); font-weight: 600; color: var(--text); }
+  table.data-table td.num { font-family: var(--font-mono); font-weight: 700; color: var(--primary); }
+
+  .metrics { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+  @media (max-width: 640px) { .metrics { grid-template-columns: 1fr; } }
+  .metric-card {
+    background: var(--surface); border: 1px solid var(--border);
+    border-top: 3px solid var(--primary); border-radius: 10px;
+    padding: 20px 18px;
+  }
+  .metric-card .mnum { font-size: 40px; font-weight: 800; letter-spacing: -1.5px; line-height: 1; color: var(--primary); }
+  .metric-card .mlabel { font-family: var(--font-mono); font-size: 11px; font-weight: 700; letter-spacing: 0.8px; text-transform: uppercase; color: var(--text-dim); margin-top: 10px; }
+  .metric-card .mnote { font-size: 13px; color: var(--text-dim); margin-top: 6px; }
+  .metric-card.slate { border-top-color: var(--slate); }
+  .metric-card.slate .mnum { color: var(--slate); }
+
+  .callout {
+    background: var(--surface); border: 1px solid var(--border);
+    border-left: 3px solid var(--primary); border-radius: 0 12px 12px 0;
+    padding: 20px 24px; font-size: 15px; line-height: 1.6;
+    color: var(--text-dim); margin-top: 32px;
+  }
+  .callout strong { color: var(--text); }
+  .callout.land { border-left-color: var(--bad); }
+  .callout.land .big { display: block; font-size: 22px; font-weight: 800; letter-spacing: -0.4px; color: var(--text); line-height: 1.35; margin-top: 10px; }
+
+  .footer {
+    margin-top: 56px; padding-top: 20px;
+    border-top: 1px solid var(--border);
+    text-align: center; font-size: 13px; color: var(--text-muted);
+  }
+  .footer a { color: var(--primary); text-decoration: none; }
+
+  @media (max-width: 640px) {
+    body { padding: 0 12px 48px; }
+    .hero h1 { font-size: 28px; }
+    .context-grid { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+
+<a href="../index.html" class="backlink">&larr; Index</a>
+
+<nav class="nav">
+  <div class="nav-inner">
+    <div class="crumbs">
+      <a href="../index.html">Index</a>
+      <span class="sep">/</span>
+      <a href="../aesop.html">AESOP</a>
+      <span class="sep">/</span>
+      <span class="current" aria-current="page">Xcel Monitor Build</span>
+    </div>
+  </div>
+</nav>
+
+<div class="container">
+  <div class="hero">
+    <div class="hero-badge">Xcel &middot; Production Monitoring</div>
+    <h1>Nobody owned what the AI knew.</h1>
+    <p class="lede">A utility put AI in front of customers. New tariffs, four states, procedures that change on a schedule. After deployment, the knowledge base had no owner and no quality bar.</p>
+    <p class="lede">So the failures show up in a call. A superseded rule. The wrong state's tariff. Not a model failure. A knowledge failure, and the kind you can audit.</p>
+  </div>
+
+  <div class="mermaid-wrap animate" style="--i:1">
+    <div class="zoom-controls">
+      <button onclick="zoomDiagram(this, 1.2)" title="Zoom in">+</button>
+      <button onclick="zoomDiagram(this, 0.8)" title="Zoom out">&minus;</button>
+      <button onclick="resetZoom(this)" title="Reset">&#8634;</button>
+    </div>
+    <pre class="mermaid">
+      flowchart TD
+        KB["Governed knowledge base: 30 documents, four operating companies"]
+        IDX["Retrieval index carrying governance metadata"]
+        AGENT["Served agent: retrieval naive on purpose"]
+        TALK["Customer interaction"]
+        TRACE["Trace: which documents reached the context"]
+        PROV["Retrieval provenance: deterministic"]
+        RAT["Model rationale: not"]
+        CHECKS["Checks read the evidence, not the answer"]
+        FINDING["Finding names the cause"]
+        SCORE["Scored against 240 labeled interactions"]
+
+        KB --> IDX
+        IDX --> AGENT
+        AGENT --> TALK
+        TALK --> TRACE
+        TRACE --> PROV
+        TRACE --> RAT
+        PROV --> CHECKS
+        CHECKS --> FINDING
+        FINDING --> SCORE
+
+        classDef kb fill:#1F5E9322,stroke:#1F5E93,stroke-width:1.5px
+        classDef agent fill:#C64A1122,stroke:#C64A11,stroke-width:2px
+        classDef trace fill:#6D3FC422,stroke:#6D3FC4,stroke-width:1.5px
+        classDef det fill:#0E7C6622,stroke:#0E7C66,stroke-width:1.5px
+        classDef prob fill:#8A5A0B22,stroke:#8A5A0B,stroke-width:1.5px
+        classDef finding fill:#B03A2622,stroke:#B03A26,stroke-width:2px
+
+        class KB,IDX kb
+        class AGENT,TALK agent
+        class TRACE trace
+        class PROV,CHECKS det
+        class RAT prob
+        class FINDING,SCORE finding
+    </pre>
+  </div>
+
+  <div class="detail-section animate" style="--i:2">
+    <h2>Why</h2>
+    <p class="blurb">The utility runs customer-facing AI across four operating companies. Once it shipped, nobody owned the knowledge it answers from. That is the gap this was built against, and it is the gap regulators are starting to name.</p>
+    <div class="context-grid">
+      <div class="context-card rose"><div class="label">The gap</div><div class="name">No owner after deploy</div><div class="desc">A document is superseded on Monday and still in the index on Friday. Nobody is on the hook for what the agent knows.</div></div>
+      <div class="context-card amber"><div class="label">The direction</div><div class="name">Governance evidence</div><div class="desc">Regulation is moving toward AI inventories and evidence that the system is governed. A list of documents is not evidence. A trace of what reached the answer is.</div></div>
+      <div class="context-card violet"><div class="label">The failure that matters</div><div class="name">Knowledge, not model</div><div class="desc">The model did what it was told. It answered from the document retrieval handed it. In a regulated utility that is the failure you can find, name, and fix.</div></div>
+    </div>
+  </div>
+
+  <div class="detail-section animate" style="--i:3">
+    <h2>What was built</h2>
+    <p class="blurb">Four pieces, each small on purpose. The corpus is real governance, the agent is deliberately weak, and the monitor reads the weak agent's trails.</p>
+    <div class="context-grid">
+      <div class="context-card primary"><div class="label">Corpus</div><div class="name">30 governed documents</div><div class="desc">Four operating companies (PSCo, NSPM, NSPW, SPS) across five jurisdictions. Every document carries governance metadata in the index, not only in the file.</div></div>
+      <div class="context-card secondary"><div class="label">Index</div><div class="name">Metadata on every chunk</div><div class="desc">doc_id, topic, jurisdiction, operating company, authority, effective window, status, and the doc that superseded it. Retrieval can filter on it, and the trace reports it.</div></div>
+      <div class="context-card rose"><div class="label">Agent</div><div class="name">Retrieval naive on purpose</div><div class="desc">No jurisdiction filter, no status filter. It pulls the top-k by score and answers. The filters field in the trace records both as null, which is exactly how the failures happen.</div></div>
+      <div class="context-card violet"><div class="label">Monitor</div><div class="name">Reads provenance, not text</div><div class="desc">Checks run over which documents reached the context. Not a string match on the answer. The answer is a symptom. The evidence is the cause.</div></div>
+    </div>
+  </div>
+
+  <div class="detail-section animate" style="--i:4">
+    <h2>How it stays auditable</h2>
+    <p class="blurb">Two questions get asked about any agent answer: why was this document retrieved, and why did the agent use it. They are not the same question, and the contract keeps them apart.</p>
+    <div class="table-wrap"><div class="table-scroll">
+      <table class="data-table">
+        <thead>
+          <tr><th></th><th>Why this doc was retrieved</th><th>Why the agent used it</th></tr>
+        </thead>
+        <tbody>
+          <tr><td class="mono">Nature</td><td class="mono">Deterministic</td><td class="mono">Probabilistic</td></tr>
+          <tr><td class="mono">Source</td><td>Scores, filters, ranking</td><td>Model reasoning</td></tr>
+          <tr><td class="mono">Available</td><td>Always</td><td>Only if the model exposes a trace</td></tr>
+          <tr><td class="mono">Auditable</td><td>Re-runs identically</td><td>No. Not repeatable</td></tr>
+        </tbody>
+      </table>
+    </div></div>
+    <p class="blurb" style="margin-top:18px">The monitor lives entirely in the left column. It reads the evidence, which documents made it into the context and under what metadata, so a finding can name the cause rather than describe the symptom. That column re-runs to the same result every time. The right column does not.</p>
+    <div class="callout">
+      <strong>The rationale is not a record.</strong> A post-hoc explanation is a story the model tells, not what happened. When the trace is not exposed, the field says so. It does not get reconstructed after the fact and presented as the thinking.
+    </div>
+  </div>
+
+  <div class="detail-section animate" style="--i:5">
+    <h2>What it is built to catch</h2>
+    <p class="blurb">Five knowledge failures a utility actually has. Each one is a check over provenance, and each one names the document that caused it.</p>
+    <div class="gap-list">
+      <div class="gap-row"><span class="num">01</span><span class="gname">A superseded document reaching context.</span><span class="gdesc">The replacement is in the index. The old one still scores higher.</span><span class="check">freshness_violation</span></div>
+      <div class="gap-row"><span class="num">02</span><span class="gname">The wrong jurisdiction's rule answering a caller.</span><span class="gdesc">A Minnesota caller answered from a Colorado tariff.</span><span class="check">scope_violation</span></div>
+      <div class="gap-row"><span class="num">03</span><span class="gname">An FAQ outranking the governing tariff.</span><span class="gdesc">The lower-authority document wins the ranking where a tariff exists.</span><span class="check">authority_regression</span></div>
+      <div class="gap-row"><span class="num">04</span><span class="gname">A draft procedure contradicting the current one.</span><span class="gdesc">Two documents, same subject, opposite claims, both in the context.</span><span class="check">contradiction_risk</span></div>
+      <div class="gap-row"><span class="num">05</span><span class="gname">A policy whose effective window does not include the day of the call.</span><span class="gdesc">The same freshness check, reading the window against the call timestamp.</span><span class="check">freshness_violation</span></div>
+    </div>
+  </div>
+
+  <div class="detail-section animate" style="--i:6">
+    <h2>What it measured</h2>
+    <p class="blurb">240 labeled interactions, half of them multi-turn transcripts. Every one carries its expected outcome, so the monitor is scored rather than demonstrated. Precision first, because a monitor that cries wolf gets switched off long before it finds anything.</p>
+    <div class="metrics">
+      <div class="metric-card"><div class="mnum">0.944</div><div class="mlabel">Precision</div><div class="mnote">34 real findings against 2 false alarms. Both false alarms are the same case, and it is argued below rather than tuned away.</div></div>
+      <div class="metric-card"><div class="mnum">0.919</div><div class="mlabel">Recall</div><div class="mnote">34 of 37 labeled failures caught. The three misses share one cause.</div></div>
+      <div class="metric-card slate"><div class="mnum">1.000</div><div class="mlabel">Critical recall</div><div class="mnote">All 23 safety and loss-of-service failures caught. This is the number that decides whether the tool is worth running at all.</div></div>
+    </div>
+    <div class="table-wrap" style="margin-top:14px"><div class="table-scroll">
+      <table class="data-table">
+        <thead>
+          <tr><th>Check</th><th>Precision</th><th>Recall</th></tr>
+        </thead>
+        <tbody>
+          <tr><td class="mono">scope</td><td class="num">1.0</td><td class="num">1.0</td></tr>
+          <tr><td class="mono">authority</td><td class="num">0.857</td><td class="num">1.0</td></tr>
+          <tr><td class="mono">freshness</td><td class="num">0.8</td><td class="num">0.842</td></tr>
+          <tr><td class="mono">contradiction</td><td class="num">0.5</td><td class="num">0.667</td></tr>
+        </tbody>
+      </table>
+    </div></div>
+    <p class="blurb" style="margin-top:18px">Three gaps are known and named, because a score with no stated limit is a claim nobody can check.</p>
+    <div class="gap-list">
+      <div class="gap-row"><span class="num">01</span><span class="gname">Two of the four severity tiers carry no cases.</span><span class="gdesc">Every failure the corpus produces is at safety, rights, or money stakes. Nothing lands at Minor or Advisory, so the tier table reports them as not exercised rather than as passing.</span><span class="check">corpus</span></div>
+      <div class="gap-row"><span class="num">02</span><span class="gname">The check reads metadata, so it cannot catch a document that lies about itself.</span><span class="gdesc">All three misses are one document whose program period ended in its prose while its effective window still says null and its status still says current. A check that reads the window cannot see an expired document that reports the wrong window.</span><span class="check">freshness_violation</span></div>
+      <div class="gap-row"><span class="num">03</span><span class="gname">The monitor declines to route 13 percent of its traffic.</span><span class="gdesc">31 of 240 calls. None of those declines land on the calls the labels call undeterminable, so the routing is losing clean traffic rather than catching ambiguity. A declined call never reaches a provenance verdict.</span><span class="check">coverage</span></div>
+    </div>
+    <p class="blurb" style="margin-top:18px">The two false alarms are one case, and it is a genuine question rather than a defect. A not-yet-in-force deposit document reached the context, and the agent answered without quoting from it. Flagging it says the retrieval was wrong. Not flagging it says the answer was fine. The checks read retrieval, so they flag it. Which is correct belongs to the rubric, not to the check.</p>
+  </div>
+
+  <div class="detail-section animate" style="--i:7">
+    <h2>What generalises</h2>
+    <div class="context-grid">
+      <div class="context-card rose"><div class="label">On scoring</div><div class="name">Recall alone is worthless</div><div class="desc">A monitor that catches every low-severity finding and misses every critical one has a recall of one. You need severity attached to every finding, and the transcript behind it. A count tells you nothing about what broke.</div></div>
+      <div class="context-card secondary"><div class="label">On the fixture</div><div class="name">The retrieval did it, not the script</div><div class="desc">The failures were not written into the labels. The naive agent surfaced a superseded document and a cross-jurisdiction rule on its own, and the monitor caught what the retrieval produced.</div></div>
+    </div>
+  </div>
+
+  <div class="callout land animate" style="--i:8">
+    <strong>The point of the whole build.</strong> A monitor that scores the answer can only tell you the answer was wrong.
+    <span class="big">This one reads the evidence, so it tells you which document did it.</span>
+  </div>
+
+  <div class="footer">
+    <a href="../index.html">&larr; Index</a>
+    &nbsp;&middot;&nbsp;
+    <a href="aesop-monitoring-loop.html">Why the loop is shaped this way &rarr;</a>
+    &nbsp;&middot;&nbsp;
+    &copy; 2025-2026 Charlie Fuller
+  </div>
+</div>
+
+<script type="module">
+  import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs';
+  mermaid.initialize({
+    startOnLoad: true, theme: 'base', look: 'classic',
+    themeVariables: {
+      primaryColor: '#F0E9E1',
+      primaryBorderColor: '#C64A11',
+      primaryTextColor: '#241A12',
+      secondaryColor: '#FFFFFF',
+      secondaryBorderColor: '#0E7C66',
+      secondaryTextColor: '#241A12',
+      tertiaryColor: '#FFFFFF',
+      tertiaryBorderColor: '#0E7C66',
+      tertiaryTextColor: '#241A12',
+      lineColor: '#6F6255',
+      fontSize: '15px', fontFamily: "'Mulish', 'Segoe UI', Helvetica, sans-serif",
+    }
+  });
+</script>
+<script>
+  function updateZoomState(wrap) {
+    const t = wrap.querySelector('.mermaid');
+    wrap.classList.toggle('is-zoomed', parseFloat(t.dataset.zoom || '1') > 1);
+  }
+  function zoomDiagram(btn, factor) {
+    const wrap = btn.closest('.mermaid-wrap'), t = wrap.querySelector('.mermaid');
+    const n = Math.min(Math.max((parseFloat(t.dataset.zoom || '1')) * factor, 0.3), 5);
+    t.dataset.zoom = n; t.style.transform = 'scale(' + n + ')'; updateZoomState(wrap);
+  }
+  function resetZoom(btn) {
+    const wrap = btn.closest('.mermaid-wrap'), t = wrap.querySelector('.mermaid');
+    t.dataset.zoom = '1'; t.style.transform = 'scale(1)'; updateZoomState(wrap);
+  }
+  document.querySelectorAll('.mermaid-wrap').forEach(function(wrap) {
+    wrap.addEventListener('wheel', function(e) {
+      if (!e.ctrlKey && !e.metaKey) return;
+      e.preventDefault();
+      const t = wrap.querySelector('.mermaid');
+      const n = Math.min(Math.max((parseFloat(t.dataset.zoom || '1')) * (e.deltaY < 0 ? 1.1 : 0.9), 0.3), 5);
+      t.dataset.zoom = n; t.style.transform = 'scale(' + n + ')'; updateZoomState(wrap);
+    }, { passive: false });
+    let sx, sy, sl, st;
+    wrap.addEventListener('mousedown', function(e) {
+      if (e.target.closest('.zoom-controls')) return;
+      if (parseFloat(wrap.querySelector('.mermaid').dataset.zoom || '1') <= 1) return;
+      wrap.classList.add('is-panning'); sx = e.clientX; sy = e.clientY;
+      sl = wrap.scrollLeft; st = wrap.scrollTop;
+    });
+    window.addEventListener('mousemove', function(e) {
+      if (!wrap.classList.contains('is-panning')) return;
+      wrap.scrollLeft = sl - (e.clientX - sx); wrap.scrollTop = st - (e.clientY - sy);
+    });
+    window.addEventListener('mouseup', function() { wrap.classList.remove('is-panning'); });
+  });
+</script>
+</body>
+</html>
