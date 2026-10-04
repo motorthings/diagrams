@@ -1,0 +1,310 @@
+<!DOCTYPE html>
+<html lang="en" class="light">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AESOP Studio &mdash; The Audit&ndash;Monitor Feedback Loop</title>
+<link rel="icon" type="image/svg+xml" href="../icon.svg">
+<meta name="description" content="How the AESOP monitor becomes the KB audit's ground truth: production findings re-weight and re-scope the audit, so it grades documents by what actually fails in real calls.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Mulish:ital,wght@0,300;0,400;0,600;0,700;0,800;1,400&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --font-display: 'Mulish', sans-serif;
+    --font-body: 'Mulish', 'Segoe UI', Helvetica, sans-serif;
+    --font-mono: 'Mulish', ui-monospace, 'SF Mono', Consolas, monospace;
+    --bg: #14181C; --surface: #1B2127; --surface2: #232B33; --surface3: #232B33;
+    --border: #303A43; --border-bright: #42505C;
+    --text: #F4F5F6; --text-dim: #CBD0D6; --text-muted: #87919B; --text-faint: #97A2AD;
+    --primary: #F58A4E; --primary-dim: rgba(245,138,78,0.12);
+    --secondary: #45C7A6; --secondary-dim: rgba(69,199,166,0.10);
+    --metric: #45C7A6; --metric-dim: rgba(69,199,166,0.10);
+    --accent: #F58A4E; --accent-deep: #F58A4E;
+    --good: #45C7A6; --good-dim: rgba(69,199,166,0.10);
+    --warn: #E0B05B; --warn-dim: rgba(224,176,91,0.10);
+    --bad: #E8735F; --bad-dim: rgba(232,115,95,0.10);
+    --amber: #E0B05B; --amber-dim: rgba(224,176,91,0.10);
+    --violet: #B78BD8; --violet-dim: rgba(183,139,216,0.10);
+    --rose: #E8735F; --rose-dim: rgba(232,115,95,0.10);
+    --slate: #87919B; --slate-dim: rgba(135,145,155,0.12);
+    --model: #F58A4E; --compute: #B78BD8; --consumer: #45C7A6; --storage: #6FA8D8;
+    --arr-color: #87919B; --arr-color-strong: #F58A4E;
+  }
+  html.light {
+    --bg: #F7F3EF; --surface: #FFFFFF; --surface2: #F0E9E1; --surface3: #F0E9E1;
+    --border: #E1D6CB; --border-bright: #CDBBA8;
+    --text: #241A12; --text-dim: #574A3C; --text-muted: #6F6255; --text-faint: #6F6255;
+    --primary: #C64A11; --primary-dim: rgba(198,74,17,0.10);
+    --secondary: #0E7C66; --secondary-dim: rgba(14,124,102,0.10);
+    --metric: #0E7C66; --metric-dim: rgba(14,124,102,0.10);
+    --accent: #C64A11; --accent-deep: #C64A11;
+    --good: #0E7C66; --good-dim: rgba(14,124,102,0.10);
+    --warn: #8A5A0B; --warn-dim: rgba(138,90,11,0.10);
+    --bad: #B03A26; --bad-dim: rgba(176,58,38,0.10);
+    --amber: #8A5A0B; --amber-dim: rgba(138,90,11,0.10);
+    --violet: #6D3FC4; --violet-dim: rgba(109,63,196,0.10);
+    --rose: #B03A26; --rose-dim: rgba(176,58,38,0.10);
+    --slate: #6B6259; --slate-dim: rgba(107,98,89,0.12);
+    --model: #C64A11; --compute: #6D3FC4; --consumer: #0E7C66; --storage: #1F5E93;
+    --arr-color: #8C7E6E; --arr-color-strong: #C64A11;
+  }
+
+  * { margin:0; padding:0; box-sizing:border-box; }
+
+  body {
+    background: var(--bg);
+    background-image:
+      radial-gradient(at 10% 0%, var(--primary-dim) 0%, transparent 40%),
+      radial-gradient(at 90% 80%, var(--metric-dim) 0%, transparent 40%);
+    color: var(--text); font-family: var(--font-body); font-size: 15px;
+    min-height: 100vh; line-height: 1.7; padding: 0 32px 80px;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  .nav { max-width: 1000px; margin: 0 auto; padding: 16px 0 4px; background: transparent; border-bottom: none; }
+  .nav-inner { max-width: 1000px; margin: 0 auto; padding: 0; display: block; }
+  .crumbs { font-family: var(--font-mono); font-size: 13px; font-weight: 600; display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+  .crumbs a { color: var(--primary); text-decoration: none; }
+  .crumbs a:hover { text-decoration: underline; }
+  .crumbs .sep { color: var(--text-faint); }
+  .crumbs .current { color: var(--text-faint); font-weight: 400; }
+
+  .container { max-width: 1000px; margin: 0 auto; }
+
+  @keyframes fadeUp {
+    from { opacity:0; transform:translateY(12px); }
+    to { opacity:1; transform:translateY(0); }
+  }
+  .animate { animation: fadeUp 0.4s ease-out both; animation-delay: calc(var(--i, 0) * 0.05s); }
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after { animation-duration:0.01ms !important; animation-delay:0ms !important; }
+  }
+
+  .hero { text-align: center; padding: 40px 0 16px; animation: fadeUp 0.5s ease-out; }
+  .hero-badge {
+    display: inline-flex; align-items: center; gap: 6px;
+    padding: 5px 16px; background: var(--primary-dim);
+    border: 1px solid var(--primary); border-radius: 20px;
+    font-family: var(--font-mono); font-size: 10px; font-weight: 600;
+    color: var(--primary); letter-spacing: 1px; text-transform: uppercase;
+    margin-bottom: 20px;
+  }
+  .hero h1 { font-size: 40px; font-weight: 800; letter-spacing: -0.5px; margin-bottom: 12px; color: var(--text); }
+  .hero .lede { font-size: 16px; color: var(--text-dim); max-width: 640px; margin: 0 auto; text-align: left; line-height: 1.6; }
+  .hero .lede + .lede { margin-top: 12px; }
+  .hero .lede strong { color: var(--text); }
+
+  .svg-wrap {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 14px; padding: 28px 20px 20px; margin: 32px auto 0; max-width: 470px;
+    animation: fadeUp 0.4s ease-out both; animation-delay: 0.08s;
+  }
+  .svg-wrap svg { display: block; width: 100%; height: auto; }
+
+  .sv-sec { font-family: var(--font-mono); font-size: 11px; font-weight: 700; letter-spacing: 2px; fill: var(--text-muted); text-transform: uppercase; }
+  .sv-grp { font-family: var(--font-mono); font-size: 12.5px; font-weight: 700; letter-spacing: .08em; fill: var(--text); text-transform: uppercase; }
+  .sv-grp--inner { font-family: var(--font-mono); font-size: 11px; font-weight: 400; letter-spacing: .04em; fill: var(--text-dim); font-variant: small-caps; text-transform: none; }
+  .sv-grp--sub { font-family: var(--font-mono); font-size: 11px; font-weight: 400; letter-spacing: .04em; fill: var(--text-muted); text-transform: none; }
+  .sv-title { font-family: var(--font-mono); font-size: 16px; font-weight: 700; letter-spacing: .01em; }
+  .sv-sub { font-family: var(--font-mono); font-size: 13px; font-weight: 400; fill: var(--text-dim); letter-spacing: .01em; }
+  .sv-arrow { fill: none; stroke: var(--arr-color); stroke-width: 2; stroke-linejoin: round; stroke-linecap: round; }
+  .sv-arrow-d { fill: none; stroke: var(--arr-color); stroke-width: 2; stroke-dasharray: 3 3; stroke-linejoin: round; stroke-linecap: round; }
+  .sv-arrow--strong { fill: none; stroke: var(--arr-color-strong); stroke-width: 2.75; stroke-linejoin: round; stroke-linecap: round; }
+  .sv-box-storage { stroke: var(--storage); } .sv-box-compute { stroke: var(--compute); } .sv-box-model { stroke: var(--model); } .sv-box-consumer { stroke: var(--consumer); }
+  .sv-arrow-lbl { font-family: var(--font-mono); font-size: 12px; font-weight: 700; fill: var(--text); letter-spacing: .01em; }
+  .sv-pill { fill: var(--surface); }
+
+  .legend { display: flex; flex-wrap: wrap; gap: 8px 22px; margin: 14px 2px 2px; }
+  .legend-item { display: flex; align-items: center; gap: 7px; font-family: var(--font-mono); font-size: 11px; color: var(--text-faint); }
+  .legend-swatch { width: 12px; height: 12px; border-radius: 3px; border: 1px solid var(--border); }
+
+  .detail-section { margin-top: 40px; }
+  .detail-section h2 {
+    font-family: var(--font-mono); font-size: 12px; font-weight: 700;
+    letter-spacing: 1px; text-transform: uppercase;
+    color: var(--primary); margin-bottom: 16px;
+  }
+  .detail-section > p { font-size: 15px; color: var(--text-dim); margin-bottom: 14px; }
+  .detail-section > p strong { color: var(--text); }
+
+  .context-grid { display: grid; grid-template-columns: 1fr; gap: 10px; }
+  .context-card {
+    background: var(--surface); border: 1px solid var(--border);
+    border-left: 3px solid; border-radius: 0 10px 10px 0;
+    padding: 16px 18px; font-size: 14px; line-height: 1.5;
+  }
+  .context-card .label { font-family: var(--font-mono); font-size: 10px; font-weight: 600; letter-spacing: 0.5px; text-transform: uppercase; margin-bottom: 4px; }
+  .context-card .name { font-size: 16px; font-weight: 700; margin-bottom: 4px; }
+  .context-card .desc { font-size: 13px; color: var(--text-dim); }
+  .context-card.rose { border-left-color: var(--rose); } .context-card.rose .label { color: var(--rose); }
+  .context-card.violet { border-left-color: var(--violet); } .context-card.violet .label { color: var(--violet); }
+  .context-card.amber { border-left-color: var(--amber); } .context-card.amber .label { color: var(--amber); }
+  .context-card.slate { border-left-color: var(--slate); } .context-card.slate .label { color: var(--slate); }
+  .context-card.secondary { border-left-color: var(--secondary); } .context-card.secondary .label { color: var(--secondary); }
+
+  .gap-list { display: flex; flex-direction: column; gap: 8px; }
+  .gap-row {
+    display: flex; align-items: baseline; gap: 12px;
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 10px; padding: 14px 18px; font-size: 14px;
+  }
+  .gap-row .num { font-family: var(--font-mono); font-size: 12px; font-weight: 700; color: var(--primary); flex-shrink: 0; }
+  .gap-row .gname { font-weight: 700; }
+  .gap-row .gdesc { color: var(--text-dim); font-size: 13px; }
+
+  .table-wrap { overflow-x: auto; background: var(--surface); border: 1px solid var(--border); border-radius: 10px; }
+  table.data-table { width: 100%; border-collapse: collapse; font-size: 13.5px; }
+  .data-table th { font-family: var(--font-mono); font-size: 10.5px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; text-align: left; padding: 10px 14px; color: var(--text-faint); background: var(--surface2); border-bottom: 1px solid var(--border); }
+  .data-table td { padding: 10px 14px; border-bottom: 1px solid var(--border); vertical-align: top; color: var(--text-dim); }
+  .data-table tr:last-child td { border-bottom: none; }
+  .data-table td code { font-family: var(--font-mono); font-size: 12.5px; color: var(--primary); font-weight: 600; white-space: nowrap; }
+  .data-table td b { color: var(--text); }
+
+  .callout {
+    background: var(--surface); border: 1px solid var(--border);
+    border-left: 3px solid var(--primary); border-radius: 0 12px 12px 0;
+    padding: 20px 24px; font-size: 15px; line-height: 1.6;
+    color: var(--text-dim); margin-top: 32px;
+  }
+  .callout strong { color: var(--text); }
+
+  .footer {
+    margin-top: 56px; padding-top: 20px;
+    border-top: 1px solid var(--border);
+    text-align: center; font-size: 13px; color: var(--text-muted);
+  }
+  .footer a { color: var(--primary); text-decoration: none; }
+
+  @media (max-width: 640px) {
+    body { padding: 0 12px 48px; }
+    .hero h1 { font-size: 28px; }
+    .context-grid { grid-template-columns: 1fr; }
+    .gap-row { flex-direction: column; gap: 4px; }
+  }
+</style>
+</head>
+<body>
+
+<nav class="nav">
+  <div class="nav-inner">
+    <div class="crumbs">
+      <a href="../index.html">Index</a>
+      <span class="sep">/</span>
+      <a href="../aesop.html">AESOP</a>
+      <span class="sep">/</span>
+      <span class="current" aria-current="page">The Audit&ndash;Monitor Feedback Loop</span>
+    </div>
+  </div>
+</nav>
+
+<div class="container">
+  <div class="hero">
+    <div class="hero-badge">Xcel demo &middot; The loop</div>
+    <h1>The Audit&ndash;Monitor Feedback Loop</h1>
+    <p class="lede">The KB audit grades documents before they ship. The monitor watches what the agent actually does with them in production. On their own, each has a blind spot. Wired together, the monitor becomes the audit's missing ground truth.</p>
+    <p class="lede">The audit says a document is clean. The monitor says it got served to the wrong state anyway. Feed that back, and the next audit knows which of its grades the real world actually cares about.</p>
+  </div>
+
+  <div class="svg-wrap animate" style="--i:1">
+<svg viewBox="0 0 530 938" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Feedback loop: the KB Audit grades documents before ship; the agent runs in production; the monitor catches what actually failed on live calls; those findings calibrate the audit, and the loop repeats.">
+<defs>
+  <marker id="arr" viewBox="0 0 10 10" refX="9.5" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M 160 0 L 170 5 L 160 10 z" style="fill:var(--arr-color)"></path></marker>
+  <marker id="arrStrong" viewBox="0 0 10 10" refX="9.5" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M 160 0 L 170 5 L 160 10 z" style="fill:var(--arr-color-strong)"></path></marker>
+</defs>
+<rect x="200" y="40" width="250" height="92" rx="8" class="sv-box-storage" style="fill:var(--storage);fill-opacity:0.13" stroke-width="1.5"></rect>
+<text class="sv-title" x="325" y="74.5" text-anchor="middle" style="fill:var(--storage)">KB Audit</text>
+<text class="sv-sub" x="325" y="96.5" text-anchor="middle">grades the docs at rest</text>
+<rect x="200" y="282" width="250" height="92" rx="8" class="sv-box-consumer" style="fill:var(--consumer);fill-opacity:0.13" stroke-width="1.5"></rect>
+<text class="sv-title" x="325" y="316.5" text-anchor="middle" style="fill:var(--consumer)">Agent in production</text>
+<text class="sv-sub" x="325" y="338.5" text-anchor="middle">retrieves and answers</text>
+<rect x="200" y="524" width="250" height="92" rx="8" class="sv-box-compute" style="fill:var(--compute);fill-opacity:0.13" stroke-width="1.5"></rect>
+<text class="sv-title" x="325" y="558.5" text-anchor="middle" style="fill:var(--compute)">Monitor</text>
+<text class="sv-sub" x="325" y="580.5" text-anchor="middle">findings on live calls</text>
+<rect x="200" y="766" width="250" height="92" rx="8" class="sv-box-compute" style="fill:var(--compute);fill-opacity:0.13" stroke-width="1.5"></rect>
+<text class="sv-title" x="325" y="792" text-anchor="middle" style="fill:var(--compute)">Calibrate the audit</text>
+<text class="sv-sub" x="325" y="814" text-anchor="middle">re-weight by real</text>
+<text class="sv-sub" x="325" y="831" text-anchor="middle">exposure</text>
+<path class="sv-arrow" d="M 325 132 L 325 195 Q 325 207 325 219 L 325 282" marker-end="url(#arr)" stroke-width="2"></path>
+<rect class="sv-pill" x="284.64" y="21.5" width="116.72" height="18" rx="9"></rect>
+<text class="sv-arrow-lbl" x="343" y="35.5" text-anchor="middle">ships to prod</text>
+<path class="sv-arrow" d="M 325 374 L 325 437 Q 325 449 325 461 L 325 524" marker-end="url(#arr)" stroke-width="2"></path>
+<rect class="sv-pill" x="258.6" y="231.5" width="168.8" height="18" rx="9"></rect>
+<text class="sv-arrow-lbl" x="343" y="245.5" text-anchor="middle">each answer's record</text>
+<path class="sv-arrow" d="M 325 616 L 325 679 Q 325 691 325 703 L 325 766" marker-end="url(#arr)" stroke-width="2"></path>
+<rect class="sv-pill" x="258.6" y="473.5" width="168.8" height="18" rx="9"></rect>
+<text class="sv-arrow-lbl" x="343" y="487.5" text-anchor="middle">what actually failed</text>
+<path class="sv-arrow" d="M 200 812 L 70 812 L 70 86 L 200 86" marker-end="url(#arrStrong)" stroke-width="2.25" style="stroke:var(--arr-color-strong)"></path>
+<rect class="sv-pill" x="95" y="77" width="80" height="18" rx="9"></rect>
+<text class="sv-arrow-lbl" x="135" y="91" text-anchor="middle">re-weights</text>
+<rect class="sv-pill" x="18" y="440" width="104" height="18" rx="9"></rect>
+<text class="sv-arrow-lbl" x="70" y="454" text-anchor="middle">re-scopes</text>
+</svg>
+    <div class="legend">
+      <span class="legend-item"><span class="legend-swatch" style="background:var(--storage)"></span> Storage &mdash; the audit, grading docs at rest</span>
+      <span class="legend-item"><span class="legend-swatch" style="background:var(--consumer)"></span> Consumer &mdash; the agent in production</span>
+      <span class="legend-item"><span class="legend-swatch" style="background:var(--compute)"></span> Compute &mdash; the monitor and the calibration</span>
+    </div>
+  </div>
+
+  <div class="detail-section animate" style="--i:2">
+    <h2>Two tools, two blind spots</h2>
+    <p>They are not redundant. Each sees something the other structurally cannot, which is exactly why one can correct the other.</p>
+    <div class="context-grid">
+      <div class="context-card secondary"><div class="label">KB Audit &middot; before ship</div><div class="name">Grades the documents, cold</div><div class="desc">Reads every document and scores its writing: clear, complete, consistent, up to date. It sees the whole library at once. It cannot see which documents customers actually hit, or whether retrieval serves them to the wrong person.</div></div>
+      <div class="context-card violet"><div class="label">Monitor &middot; in production</div><div class="name">Watches what actually happened</div><div class="desc">Reads the record behind each live answer and catches the document served to the wrong state, the expired policy that answered, the FAQ that outranked a tariff. It only sees what real traffic asked. It says nothing about documents no one happened to hit.</div></div>
+    </div>
+  </div>
+
+  <div class="detail-section animate" style="--i:3">
+    <h2>What the monitor taught the audit</h2>
+    <p>Run against the same 30 Xcel documents, the two tools lined up in three telling ways. This is the loop in real numbers, not in theory.</p>
+    <div class="table-wrap">
+      <table class="data-table">
+        <thead>
+          <tr><th>What showed up</th><th>KB Audit alone</th><th>What the monitor added</th></tr>
+        </thead>
+        <tbody>
+          <tr><td><b>The stale archive</b></td><td>Scored it 88 &mdash; a mild "add an archival tag" note</td><td>It was actually served <b>4 times</b>. The mild note should have been a top-severity finding.</td></tr>
+          <tr><td><b>The draft procedure</b></td><td>Scored it 63 &mdash; the audit's #1 fix-first item</td><td>Confirmed it answered a live call. The audit's instinct was right, and now it is proven.</td></tr>
+          <tr><td><b>Wrong-state answers</b></td><td>Scored the documents <b>90</b> &mdash; clean</td><td><b>7 findings</b> on those same clean docs: a 90-rated policy served to two wrong states. A blind spot the audit cannot close on its own.</td></tr>
+          <tr><td><b>Conflict pairs</b></td><td>Flagged 4 document pairs as conflicting</td><td>Only <b>1</b> ever surfaced in real traffic. The monitor tells the audit which of its conflicts to prioritize.</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p style="margin-top:14px">The headline: a document can score 90 on the audit and still be wrong in production, because the audit grades the document and the monitor grades the <em>retrieval</em>. Neither is enough alone.</p>
+  </div>
+
+  <div class="detail-section animate" style="--i:4">
+    <h2>Closing the loop: three ways the monitor re-tunes the audit</h2>
+    <p>Each is a concrete change to how the audit scores, driven by what the monitor saw happen for real.</p>
+    <div class="context-grid">
+      <div class="context-card rose"><div class="label">Re-weight</div><div class="name">Escalate by real exposure</div><div class="desc">A document the monitor has actually caught serving stale or out-of-state gets its audit severity raised. Being served wrong 4 times is not a style nit; it is a priority-one fix, and the score should say so.</div></div>
+      <div class="context-card violet"><div class="label">Re-scope</div><div class="name">Grade retrieval, not just prose</div><div class="desc">Add the dimension the audit is missing: not "is this document well written" but "does this well-written document get pulled out of its jurisdiction." That signal only exists in the monitor.</div></div>
+      <div class="context-card secondary"><div class="label">Re-rank</div><div class="name">Prioritize by what traffic hits</div><div class="desc">The audit's backlog is sorted by score. The monitor lets it sort by exposure instead: fix the conflict that fired in production first, not the three that are only theoretical.</div></div>
+    </div>
+  </div>
+
+  <div class="detail-section animate" style="--i:5">
+    <h2>Why this is the honest version</h2>
+    <p>A static audit that never hears back from production slowly drifts into grading a rubric instead of a risk. A monitor with no audit only ever reacts to failures after a customer already saw them. The loop is what keeps each one tied to the thing that matters.</p>
+    <div class="callout">
+      <strong>The audit grades documents; the monitor tells it which grades the real world cares about.</strong> Before ship, the audit is your best guess at what will go wrong. After ship, the monitor is the record of what actually did. Feed the second back into the first, and the audit stops being a checklist and starts being calibrated to production &mdash; which is the only calibration that counts.
+    </div>
+  </div>
+
+  <div class="footer">
+    <a href="../index.html">&larr; Index</a>
+    &nbsp;&middot;&nbsp;
+    <a href="aesop-monitor-rules-engine.html">The Monitor Rules Engine &rarr;</a>
+    &nbsp;&middot;&nbsp;
+    <a href="aesop-langchain-retrieval.html">The Retrieval Layer &rarr;</a>
+    &nbsp;&middot;&nbsp;
+    <a href="aesop-databricks-index.html">The Index Layer &rarr;</a>
+    &nbsp;&middot;&nbsp;
+    &copy; 2025-2026 Charlie Fuller
+  </div>
+</div>
+
+</body>
+</html>
