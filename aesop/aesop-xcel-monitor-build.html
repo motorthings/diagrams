@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>AESOP Transformation OS &mdash; Xcel Production Monitor Build</title>
 <link rel="icon" type="image/svg+xml" href="../icon.svg">
-<meta name="description" content="AESOP's Xcel build: 30 governed documents, a deliberately naive retrieval agent, and a provenance monitor scored at 0.944 precision on 240 labeled calls.">
+<meta name="description" content="AESOP's Xcel build: 30 governed documents, a naive retrieval agent, and a provenance monitor scored at 0.944 precision and now running live as a dashboard on a deployed agent.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Mulish:ital,wght@0,300;0,400;0,600;0,700;0,800;1,400&display=swap" rel="stylesheet">
@@ -249,7 +249,7 @@
     <div class="crumbs">
       <a href="../index.html">Index</a>
       <span class="sep">/</span>
-      <a href="../aesop.html">AESOP</a>
+      <a href="../monitor.html">Monitor</a>
       <span class="sep">/</span>
       <span class="current" aria-current="page">Xcel Monitor Build</span>
     </div>
@@ -262,6 +262,7 @@
     <h1>Nobody owned what the AI knew.</h1>
     <p class="lede">A utility put AI in front of customers. New tariffs, four states, procedures that change on a schedule. After deployment, the knowledge base had no owner and no quality bar.</p>
     <p class="lede">So the failures show up in a call. A superseded rule. The wrong state's tariff. Not a model failure. A knowledge failure, and the kind you can audit.</p>
+    <p class="lede">It started as a scoring script. It runs now as a live dashboard on a deployed agent, filling in real time as the agent takes traffic, every finding tracing back to a named check that re-runs identically.</p>
   </div>
 
   <div class="mermaid-wrap animate" style="--i:1">
@@ -395,14 +396,106 @@
   </div>
 
   <div class="detail-section animate" style="--i:7">
+    <h2>The method, live</h2>
+    <p class="blurb">The 0.944 above is an offline score against a frozen set. The same monitor now runs as a sweep inside AESOP, against a <strong>deployed</strong> agent, and fills a dashboard in real time. Nothing new is being judged. The checks that scored the fixture are the checks that watch production.</p>
+    <p class="blurb">It runs with <strong>no model call</strong>. The deterministic checks (entity, stale) and the provenance checks (grounded, in-scope, authoritative, consistent) are re-derived from each interaction's retrieval trace. One optional LLM drift pass exists and is off by default. The deterministic prevalence delta is primary, so a finding is not a model opinion about an answer. It is arithmetic over what the retrieval did, and it re-runs to the same result every time.</p>
+
+    <div class="mermaid-wrap animate" style="--i:1">
+      <div class="zoom-controls">
+        <button onclick="zoomDiagram(this, 1.2)" title="Zoom in">+</button>
+        <button onclick="zoomDiagram(this, 0.8)" title="Zoom out">&minus;</button>
+        <button onclick="resetZoom(this)" title="Reset">&#8634;</button>
+      </div>
+      <pre class="mermaid">
+        flowchart TD
+          LIVE["Deployed agent taking real traffic"]
+          ITRACE["Interaction trace: retrieval provenance"]
+          DET["Deterministic checks: entity, stale"]
+          PROV["Provenance checks: grounded, in-scope, authoritative, consistent"]
+          FIND["Findings, each named to a check"]
+          DELTA["Deterministic prevalence delta"]
+          DASH["Dashboard: counters, feed, breakdowns, trend"]
+          REPAIR["Fix the knowledge base, rate bends down"]
+
+          LIVE --> ITRACE
+          ITRACE --> DET
+          ITRACE --> PROV
+          DET --> FIND
+          PROV --> FIND
+          FIND --> DELTA
+          DELTA --> DASH
+          DASH --> REPAIR
+          REPAIR --> LIVE
+
+          classDef agent fill:#C64A1122,stroke:#C64A11,stroke-width:2px
+          classDef trace fill:#6D3FC422,stroke:#6D3FC4,stroke-width:1.5px
+          classDef det fill:#0E7C6622,stroke:#0E7C66,stroke-width:1.5px
+          classDef finding fill:#B03A2622,stroke:#B03A26,stroke-width:2px
+          classDef dash fill:#1F5E9322,stroke:#1F5E93,stroke-width:1.5px
+
+          class LIVE agent
+          class ITRACE trace
+          class DET,PROV det
+          class FIND,DELTA finding
+          class DASH,REPAIR dash
+      </pre>
+    </div>
+
+    <p class="blurb" style="margin-top:4px">The loop closes on repair. A knowledge-base fix lands, the next sweep re-derives the findings, and the rate moves. That is the whole point of running it live rather than once.</p>
+  </div>
+
+  <div class="detail-section animate" style="--i:8">
+    <h2>The dashboard</h2>
+    <p class="blurb">Open an agent's Monitor page in AESOP and the board reads production back to you. It is newest-first, it cuts by where the failure happened, and it trends over time so a fix is visible rather than claimed.</p>
+    <div class="context-grid">
+      <div class="context-card primary"><div class="label">Counters</div><div class="name">What the sweep has seen</div><div class="desc">Interactions, sessions, findings, and a findings-rate. The headline is the rate, because a raw count says nothing about how much traffic produced it.</div></div>
+      <div class="context-card violet"><div class="label">Trace feed</div><div class="name">Newest-first, marked</div><div class="desc">Each flagged turn carries the check that fired against it. You click a finding and land on the interaction that caused it, not a summary of it.</div></div>
+      <div class="context-card rose"><div class="label">Findings panel</div><div class="name">By check</div><div class="desc">freshness_violation, scope_violation, authority_regression, contradiction_risk. The same four checks that scored the fixture, counted live.</div></div>
+      <div class="context-card secondary"><div class="label">Where cuts</div><div class="name">Company, jurisdiction, topic</div><div class="desc">By operating company (PSCo, NSPM, NSPW, SPS), by jurisdiction (CO, MN, WI, TX), and by topic. A finding is never just a count, it has a place.</div></div>
+      <div class="context-card amber"><div class="label">Severity</div><div class="name">Major / minor</div><div class="desc">Grouped by stakes, not by consequence. See the honesty note below for why the top tier reads "major" and never "critical".</div></div>
+      <div class="context-card slate"><div class="label">Trend</div><div class="name">Findings per sweep</div><div class="desc">Bars of finding counts with a findings-per-interaction rate beneath. Fix the knowledge base and the rate bends down on the chart. That is the proof the repair worked.</div></div>
+    </div>
+  </div>
+
+  <div class="detail-section animate" style="--i:9">
+    <h2>Two windows that matter first</h2>
+    <p class="blurb">The timeframe selector leads with two windows before the rolling ones, because the two questions an owner actually asks are "how is this agent doing" and "did my last change help."</p>
+    <div class="gap-list">
+      <div class="gap-row"><span class="num">01</span><span class="gname">Since initial deploy.</span><span class="gdesc">The agent's whole record, every interaction since it went live. The health of the thing as it stands.</span><span class="check">whole record</span></div>
+      <div class="gap-row"><span class="num">02</span><span class="gname">Since the last update.</span><span class="gdesc">Only what changed since the monitor last swept. Ship a knowledge-base fix, look here, see whether the rate moved on the traffic that came after it.</span><span class="check">delta</span></div>
+      <div class="gap-row"><span class="num">03</span><span class="gname">Rolling 1h, 24h, 7d, all.</span><span class="gdesc">The ordinary time windows underneath, for the slower read.</span><span class="check">rolling</span></div>
+    </div>
+  </div>
+
+  <div class="detail-section animate" style="--i:10">
+    <h2>Showing it live</h2>
+    <p class="blurb">A monitor that only runs once is a screenshot. This one you can run in front of someone. A <strong>Run conversations</strong> button replays curated, order-preserving deployment traffic a batch at a time, so the board visibly fills as you watch.</p>
+    <div class="context-grid">
+      <div class="context-card primary"><div class="label">Replay</div><div class="name">Fills as you watch</div><div class="desc">Curated real traffic, in order, a batch per press. The counters climb, the feed scrolls, the trend grows a bar.</div></div>
+      <div class="context-card secondary"><div class="label">Idempotent</div><div class="name">Re-pressing adds nothing</div><div class="desc">The sweep is a function of the traffic, not of how many times you ran it. Press it twice on the same batch and the numbers do not move.</div></div>
+      <div class="context-card slate"><div class="label">Resettable</div><div class="name">Back to zero, repeat</div><div class="desc">Clear the board and run it again. The demo is the method, not a recording of it.</div></div>
+    </div>
+  </div>
+
+  <div class="detail-section animate" style="--i:11">
+    <h2>What "major" means, and what it does not</h2>
+    <p class="blurb">The severity on the board stops at <strong>major</strong>. It never says critical. That is a deliberate limit, and it is the same one the frozen rubric already names.</p>
+    <p class="blurb">The provenance layer proves a <strong>retrieval was wrong</strong>. Stale, out of scope, wrong authority. It does not prove a safety-critical <strong>consequence</strong>. A stale late fee and a stale safe-distance are the exact same check firing at wildly different stakes, and the monitor alone cannot tell them apart. So the top tier reads major, because that is what the evidence supports. "Critical" is reserved for a consequence the provenance layer cannot see on its own, and claiming it here would be overreach.</p>
+    <div class="callout">
+      <strong>The check sees the retrieval, not the stakes.</strong> It can tell you the agent answered from the wrong document. It cannot tell you whether that document was about a fee or about a gas line. The person reading the board supplies the stakes. The monitor supplies the fact.
+    </div>
+  </div>
+
+  <div class="detail-section animate" style="--i:12">
     <h2>What generalises</h2>
     <div class="context-grid">
       <div class="context-card rose"><div class="label">On scoring</div><div class="name">Recall alone is worthless</div><div class="desc">A monitor that catches every low-severity finding and misses every critical one has a recall of one. You need severity attached to every finding, and the transcript behind it. A count tells you nothing about what broke.</div></div>
       <div class="context-card secondary"><div class="label">On the fixture</div><div class="name">The retrieval did it, not the script</div><div class="desc">The failures were not written into the labels. The naive agent surfaced a superseded document and a cross-jurisdiction rule on its own, and the monitor caught what the retrieval produced.</div></div>
+      <div class="context-card violet"><div class="label">On the spine</div><div class="name">The AI reads, the code counts</div><div class="desc">The model answers, the checks read retrieval provenance rather than the answer prose, and the arithmetic is deterministic. So an auditor reproduces the findings exactly. The same cut is the limit: the checks pass the same way on a better or a worse model, because they never read the model.</div></div>
     </div>
   </div>
 
-  <div class="callout land animate" style="--i:8">
+  <div class="callout land animate" style="--i:13">
     <strong>The point of the whole build.</strong> A monitor that scores the answer can only tell you the answer was wrong.
     <span class="big">This one reads the evidence, so it tells you which document did it.</span>
   </div>

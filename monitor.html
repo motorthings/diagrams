@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html class="light">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AESOP Transformation OS — Production Monitor</title>
+<link rel="icon" href="icon.svg" type="image/svg+xml">
+<meta name="description" content="AESOP's production monitoring — the runtime loop that catches drift in a deployed agent, and the Xcel build behind it, scored at 0.944 precision and running live.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Mulish:ital,wght@0,300;0,400;0,600;0,700;0,800;1,400&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --font-body:'Mulish','Segoe UI',Helvetica,sans-serif; --font-mono:'Mulish',ui-monospace,'SF Mono',Consolas,monospace;
+    --bg:#14181C; --surface:#1B2127; --surface2:#232B33; --border:#303A43; --border-bright:#42505C;
+    --text:#F4F5F6; --text-dim:#CBD0D6; --text-faint:#87919B;
+    --primary:#F58A4E; --primary-dim:rgba(245,138,78,0.12); --metric:#45C7A6; --metric-dim:rgba(69,199,166,0.12);
+  }
+  html.light{
+    --bg:#F7F3EF; --surface:#FFFFFF; --surface2:#F0E9E1; --border:#E1D6CB; --border-bright:#CDBBA8;
+    --text:#241A12; --text-dim:#574A3C; --text-faint:#8C7E6E;
+    --primary:#C64A11; --primary-dim:rgba(198,74,17,0.10); --metric:#0E7C66; --metric-dim:rgba(14,124,102,0.10);
+  }
+  *{margin:0;padding:0;box-sizing:border-box}
+  body{background:var(--bg);background-image:radial-gradient(at 10% 0%,var(--primary-dim) 0%,transparent 42%),radial-gradient(at 90% 80%,var(--metric-dim) 0%,transparent 42%);color:var(--text);font-family:var(--font-body);font-size:15px;line-height:1.7;min-height:100vh;-webkit-font-smoothing:antialiased}
+  .nav{position:sticky;top:0;z-index:100;backdrop-filter:blur(16px);background:color-mix(in srgb,var(--surface) 85%,transparent);border-bottom:1px solid var(--border)}
+  .nav-inner{max-width:1040px;margin:0 auto;padding:12px 24px}
+  .crumbs{font-family:var(--font-mono);font-size:13px;font-weight:600;display:flex;align-items:center;gap:8px}
+  .crumbs a{color:var(--primary);text-decoration:none}.crumbs .current{color:var(--text-dim)}
+  .container{max-width:1040px;margin:0 auto;padding:48px 24px 80px}
+  @keyframes fadeUp{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:none}}
+  .hero{text-align:center;margin-bottom:14px;animation:fadeUp .5s ease both}
+  .hero .kicker{font-family:var(--font-mono);font-size:11px;font-weight:700;letter-spacing:.2em;text-transform:uppercase;color:var(--text-faint);margin-bottom:12px}
+  .hero h1{font-size:48px;font-weight:800;letter-spacing:-1.5px;line-height:1.02;margin-bottom:10px;background:linear-gradient(135deg,var(--primary),var(--metric));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+  .hero p{font-size:16.5px;color:var(--text-dim);max-width:660px;margin:0 auto}
+  .group{border:1px solid var(--border);border-radius:14px;background:var(--surface);overflow:hidden;animation:fadeUp .5s ease both}
+  .group+.group{margin-top:14px}
+  summary.group-title{cursor:pointer;list-style:none;display:flex;align-items:center;justify-content:space-between;gap:12px;font-family:var(--font-mono);font-size:12px;font-weight:700;letter-spacing:.15em;text-transform:uppercase;color:var(--text-dim);padding:16px 20px;user-select:none;transition:color .15s}
+  summary.group-title::-webkit-details-marker{display:none}
+  summary.group-title:hover{color:var(--text)}
+  summary.group-title::after{content:"+";font-family:var(--font-mono);font-weight:400;font-size:18px;color:var(--text-faint);letter-spacing:0}
+  details[open] summary.group-title{color:var(--text);border-bottom:1px solid var(--border)}
+  details[open] summary.group-title::after{content:"\2212"}
+  .list{display:flex;flex-direction:column}
+  a.row{display:flex;align-items:center;gap:18px;padding:13px 20px;text-decoration:none;color:inherit;transition:background .15s}
+  a.row+a.row{border-top:1px solid var(--border)}
+  a.row:hover{background:var(--surface2)}
+  .row .ct{font-size:15.5px;font-weight:700;color:var(--text);min-width:230px;max-width:300px;flex-shrink:0}
+  .row .cd{font-size:13px;color:var(--text-dim);flex:1}
+  a.row:hover .ct{color:var(--primary)}
+  .row .open{font-family:var(--font-mono);font-size:13px;font-weight:700;color:var(--text-faint);white-space:nowrap}
+  a.row:hover .open{color:var(--primary)}
+  .footer{margin-top:44px;padding-top:18px;border-top:1px solid var(--border);text-align:center;font-size:13px;color:var(--text-faint)}.footer a{color:var(--primary);text-decoration:none}
+  @media(max-width:860px){a.row{align-items:flex-start;flex-direction:column;gap:4px}.row .ct{min-width:0;max-width:none}}
+  @media(max-width:768px){.hero h1{font-size:34px}}
+  @media(prefers-reduced-motion:reduce){*,*::before,*::after{animation-duration:.01ms !important}}
+</style>
+</head>
+<body>
+<div class="nav"><div class="nav-inner">
+  <nav class="crumbs" aria-label="Breadcrumb"><a href="https://sickofancy.ai/">sickofancy.ai</a><span class="sep" style="color:var(--text-faint)">/</span><a href="index.html">Index</a><span class="sep" style="color:var(--text-faint)">/</span><span class="current">Monitor</span></nav>
+</div></div>
+
+<div class="container">
+  <div class="hero">
+    <div class="kicker">Charlie Fuller &middot; AESOP Transformation OS</div>
+    <h1>Production Monitor</h1>
+    <p>What keeps watch after a deployed agent goes live. The runtime loop that catches drift, and the build behind it &mdash; a provenance monitor scored at 0.944 precision, now running as a live dashboard.</p>
+  </div>
+
+  <details class="group" open><summary class="group-title">Production Monitoring</summary><div class="list">
+    <a class="row" href="aesop/aesop-monitoring-loop.html"><span class="ct">Production Monitoring</span><span class="cd">The runtime loop for a deployed agent: capture interactions, extract deterministic and probabilistic signals, diff against a baseline, and close the repair loop when a failure mode drifts.</span><span class="open">&rarr;</span></a>
+    <a class="row" href="aesop/aesop-xcel-monitor-build.html"><span class="ct">Xcel Monitor Build</span><span class="cd">The build behind the loop: 30 governed documents, a deliberately naive retrieval agent, and a monitor that reads provenance and scored 0.944 precision on 240 labeled calls.</span><span class="open">&rarr;</span></a>
+  </div></details>
+
+  <div class="footer">
+    &copy; 2025&ndash;2026 Charlie Fuller &nbsp;&middot;&nbsp;
+    <a href="https://linkedin.com/in/charlie-fuller-colorado/" target="_blank" rel="noopener">LinkedIn</a>
+  </div>
+</div>
+</body>
+</html>
