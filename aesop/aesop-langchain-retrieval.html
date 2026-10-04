@@ -202,8 +202,8 @@
   <div class="hero">
     <div class="hero-badge">Xcel demo &middot; Retrieval layer</div>
     <h1>The LangChain Retrieval Layer</h1>
-    <p class="lede">A customer asks a question. This layer turns it into a query, sends it to Databricks Vector Search, and hands back the closest documents. It is deliberately naive.</p>
-    <p class="lede">It applies <strong>no jurisdiction filter and no status filter</strong>. A superseded document, or a policy from the wrong state, can land in the answer. The retriever still records exactly what it pulled. That record is what the monitor reads.</p>
+    <p class="lede">A customer asks a question. This layer searches the knowledge base, pulls back the documents that read closest to the question, and hands them to the model to answer from. It does the simplest possible version of that on purpose.</p>
+    <p class="lede">It does <strong>not filter by state, and does not filter out old documents</strong>. So an expired policy, or a policy from the wrong state, can end up in the answer. But the search writes down exactly which documents it used. That written record is what the monitor reads.</p>
   </div>
 
   <div class="svg-wrap animate" style="--i:1">
@@ -268,28 +268,28 @@
 
   <div class="detail-section animate" style="--i:2">
     <h2>What happens on one question</h2>
-    <p>The path is short. Four steps from the customer's words to a written answer, and one more to the record that outlives it.</p>
+    <p>The path is short. Four steps from the customer's words to a written answer, and one more that saves the record for the monitor to check later.</p>
     <div class="context-grid">
-      <div class="context-card violet"><div class="label">Step 1 &middot; LangChain</div><div class="name">Normalize, then build the query</div><div class="desc">Whitespace is collapsed. That is the only change. The retriever does not classify the question, does not re-scope it to a state, and does not set a filter. The query body has three fields: the text, the columns to return, and <code>num_results</code>.</div></div>
-      <div class="context-card secondary"><div class="label">Step 2 &middot; Databricks</div><div class="name">Ask for the nearest chunks</div><div class="desc">Vector Search ranks every chunk by embedding similarity and returns the top four. Nothing about the chunk's status, jurisdiction, or authority affects the ranking. Closest by meaning wins.</div></div>
-      <div class="context-card violet"><div class="label">Step 3 &middot; LangChain</div><div class="name">Assemble the prompt</div><div class="desc">The chunks go into the prompt with their governance metadata printed above the text: <code>status</code>, <code>jurisdiction</code>, <code>authority</code>, <code>effective_from</code>. The model can see a document is superseded. The retriever still does not drop it.</div></div>
-      <div class="context-card rose"><div class="label">Step 4 &middot; Model</div><div class="name">Write the answer</div><div class="desc">LLM answers from the passages only. If two passages conflict, it picks one and says which document it used. The answer is prose. It is not what the monitor grades.</div></div>
+      <div class="context-card violet"><div class="label">Step 1 &middot; Search</div><div class="name">Take the question as-is</div><div class="desc">The question is passed straight through. The search does not try to work out which state the caller is in, and it does not narrow the results to current documents. It just asks the knowledge base for the closest matches and says how many to return.</div></div>
+      <div class="context-card secondary"><div class="label">Step 2 &middot; Databricks</div><div class="name">Find the closest matches</div><div class="desc">The knowledge base ranks every document section by how close it reads to the question and returns the top four. Whether a section is current, which state it covers, or how official it is makes no difference to the ranking. Closest in meaning wins.</div></div>
+      <div class="context-card violet"><div class="label">Step 3 &middot; Assemble</div><div class="name">Hand the matches to the model</div><div class="desc">The matches go to the model along with the tags each one carries: whether it is current or expired, which state it is for, how official it is, and its dates. The model can see that a document is expired. The search still hands it over anyway.</div></div>
+      <div class="context-card rose"><div class="label">Step 4 &middot; Model</div><div class="name">Write the answer</div><div class="desc">The model answers only from the passages it was given. If two of them disagree, it picks one and names the document it used. The answer is plain prose, and the prose is not what the monitor grades.</div></div>
     </div>
   </div>
 
   <div class="detail-section animate" style="--i:3">
-    <h2>No filter is the seeded failure, not a bug</h2>
-    <p>The obvious fix is one line: add a <code>filters_json</code> clause so only current, in-state documents come back. Adding it deletes the demo.</p>
-    <p>The whole point of this layer is to fail the way a real deployment fails. A knowledge base goes stale, a jurisdiction filter never gets written, and the agent answers anyway. Fixing the retriever here removes the failures the monitor exists to catch.</p>
-    <p>So the retriever records what it did. Both filter fields are written as <code>null</code>. That null is not a missing value. It is the layer admitting that nothing was filtered.</p>
+    <h2>No filter is the point, not a mistake</h2>
+    <p>The obvious fix is one line: tell the search to only return current, in-state documents. Add that line and there is nothing left to demo.</p>
+    <p>This layer is built to fail the way a real system fails. The knowledge base drifts out of date, nobody ever wrote the rule that keeps one state's documents away from another state's callers, and the agent keeps answering as if everything were fine. Cleaning that up here would hide the exact failures the monitor is meant to catch.</p>
+    <p>So instead, the search records what it did: it notes that no state filter and no date filter were applied. That note is not an oversight. It is the layer stating plainly that it filtered nothing.</p>
     <div class="callout animate" style="--i:3">
-      <strong><code>filters: { jurisdiction: null, status: null }</code> is the diagnosis.</strong> You do not have to guess why a stale document reached the answer. The trace says no status filter was applied. You do not have to guess why a Texas caller got a Minnesota policy. The trace says no jurisdiction filter was applied. The cause is written down, in the record, in the same shape every run.
+      <strong>"No state filter, no date filter" is the diagnosis.</strong> You do not have to guess why an expired document reached the answer. The record says no date filter was applied. You do not have to guess why a Texas caller got a Minnesota policy. The record says no state filter was applied. The cause is written down, every single run, in the same place.
     </div>
   </div>
 
   <div class="detail-section animate" style="--i:4">
-    <h2>What the trace carries</h2>
-    <p>Every retrieved chunk is returned whole: its text plus the governance fields the index attached. The monitor reads these, never the answer prose.</p>
+    <h2>What the record carries</h2>
+    <p>Every document the search pulled comes back in full: its text, plus the tags the knowledge base attached to it. The monitor reads these tags. It never reads the answer the model wrote.</p>
     <div class="table-wrap">
       <table class="data-table">
         <thead>
@@ -306,15 +306,15 @@
         </tbody>
       </table>
     </div>
-    <p style="margin-top:14px">The trace also carries <code>filters</code>, <code>top_k</code>, and the post-normalization <code>query</code>. Together they say what was asked, what came back, and what was filtered out. In this agent, nothing was.</p>
+    <p style="margin-top:14px">The record also saves which filters were applied, how many results were asked for, and the exact wording of the search. Together they say what was asked, what came back, and what was filtered out. On this agent, nothing was filtered out.</p>
   </div>
 
   <div class="detail-section animate" style="--i:5">
     <h2>One layer of two the monitor reads</h2>
-    <p>The five checks run on the retrieved chunks' metadata, not on the sentence the model wrote. A judge that reads the answer is a second AI, with a second way to drift. This layer hands over facts instead.</p>
-    <p>The retriever produces the trace. The index attaches the governance fields to every chunk. The monitor compares those fields against fixed rules and returns the same finding every time.</p>
+    <p>The checks run on the tags attached to the documents, not on the sentence the model wrote. Grading the answer would mean a second AI reading the first one, with its own ways to be wrong. This layer hands over plain facts instead.</p>
+    <p>The search produces the record. The knowledge base attaches the tags to every document. The monitor compares those tags against fixed rules and returns the same finding every time it sees the same situation.</p>
     <div class="callout">
-      <strong>How this layer feeds the AESOP monitor.</strong> Each interaction returns a <code>retrieval</code> block: the chunks, each with status, jurisdiction, operating company, authority, dates, and topic; plus the <code>filters</code> that were applied. The monitor's freshness, scope, authority, contradiction, and unclassified checks read exactly that block. Change a field name here and a check goes blind. The retriever is the supply line; the monitor is the reader.
+      <strong>How this layer feeds the AESOP monitor.</strong> Every answer comes with a record of the documents behind it, each tagged with whether it is current, which state it covers, how official it is, its dates, and its subject, plus a note of which filters were applied. The monitor's checks for out-of-date, wrong-state, lower-authority, and conflicting documents read exactly that record. Rename a tag here and the matching check goes blind. The search is the supply line; the monitor is the reader.
     </div>
   </div>
 
