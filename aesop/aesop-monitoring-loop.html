@@ -237,8 +237,8 @@
   <div class="hero">
     <div class="hero-badge">Monitor &middot; Production</div>
     <h1>Catch the drift before the customer does.</h1>
-    <p class="lede">An agent ships, then it drifts. Last week it was right; this week a stale article wins and the wrong number comes out. Monitoring is the loop that names the failure mode and closes the gap.</p>
-    <p class="lede">Thumbs up, thumbs down can't do it. You need a baseline, a delta, and a way to trace the signal back to the source that broke.</p>
+    <p class="lede">An agent ships, then it drifts. Last week it was right. This week a stale article wins and it gives the wrong answer. Monitoring is how you spot that and fix it.</p>
+    <p class="lede">Thumbs up and thumbs down can't do it. You need a baseline, a way to see what changed, and a way to trace the problem back to the document that broke.</p>
   </div>
 
   <div class="mermaid-wrap animate" style="--i:1">
@@ -249,10 +249,10 @@
     </div>
     <pre class="mermaid">
       flowchart TD
-        CAPTURE["Capture interactions and their retrieval trace"]
+        CAPTURE["Save each interaction and the documents it pulled"]
         TMAN["Trigger: dashboard button"]
-        TCAD["Trigger: scheduled cadence"]
-        TEVT["Trigger: model, KB, or prompt change"]
+        TCAD["Trigger: on a schedule"]
+        TEVT["Trigger: a model, KB, or instruction change"]
         SWEEP["Sweep: one run over a batch"]
 
         TMAN --> SWEEP
@@ -260,32 +260,32 @@
         TEVT --> SWEEP
         CAPTURE --> SWEEP
 
-        SWEEP --> DET["Deterministic checks, no LLM"]
-        SWEEP --> PROV["Provenance checks, read the trace"]
-        SWEEP --> JUDGE["Drift judge, optional LLM"]
+        SWEEP --> DET["Fixed checks, no LLM"]
+        SWEEP --> PROV["Source checks, read the trace"]
+        SWEEP --> JUDGE["Drift judge, optional"]
 
-        PROV --> FRESH["freshness_violation"]
-        PROV --> SCOPE["scope_violation"]
-        PROV --> AUTH["authority_regression"]
-        PROV --> CONTRA["contradiction_risk"]
+        PROV --> FRESH["Stale document won"]
+        PROV --> SCOPE["Wrong jurisdiction answered"]
+        PROV --> AUTH["Governing document skipped"]
+        PROV --> CONTRA["Sources disagree"]
 
-        DET --> FIND["Findings, each tagged to its interaction"]
+        DET --> FIND["Findings, each tied to its interaction"]
         FRESH --> FIND
         SCOPE --> FIND
         AUTH --> FIND
         CONTRA --> FIND
         JUDGE --> FIND
 
-        FIND --> PREV["Prevalence: findings per interaction, per mode"]
-        PREV --> DELTA["Delta against the previous sweep"]
-        DELTA --> GATE{"Mode moved past the threshold on a reliable sweep?"}
+        FIND --> PREV["Rate: how often each mode shows up"]
+        PREV --> DELTA["Change vs the last sweep"]
+        DELTA --> GATE{"Did a mode rise past the set threshold?"}
 
-        GATE -- "yes" --> ALERT["Drift alert: names the mode and the move"]
+        GATE -- "yes" --> ALERT["Drift alert: names the mode and the rise"]
         GATE -- "no" --> DASH["Dashboard"]
         ALERT --> DASH
 
-        DASH --> TRIAGE["Triage: open the flagged trace"]
-        TRIAGE --> REPAIR["Repair: fix the source or the instructions"]
+        DASH --> TRIAGE["Open the flagged trace"]
+        TRIAGE --> REPAIR["Fix the source or the instructions"]
         REPAIR --> REMEASURE["Re-measure on the next sweep"]
         REMEASURE --> CAPTURE
 
@@ -325,15 +325,15 @@
       <div class="context-card violet"><div class="label">Retrieval failure</div><div class="name">Wrong document</div><div class="desc">The wrong doc pulled, or the right one never surfaced.</div></div>
       <div class="context-card amber"><div class="label">Attribution error</div><div class="name">Wrong source</div><div class="desc">A right-looking answer built on the wrong source. The wrong phone number.</div></div>
       <div class="context-card slate"><div class="label">Recency</div><div class="name">Stale article wins</div><div class="desc">A superseded document favored over a newer one.</div></div>
-      <div class="context-card secondary"><div class="label">Guardrail breach</div><div class="name">Off-policy</div><div class="desc">Break character, leak instructions, unsafe or biased output.</div></div>
+      <div class="context-card secondary"><div class="label">Guardrail breach</div><div class="name">Broke the rules</div><div class="desc">Break character, leak system instructions, or output something unsafe or biased.</div></div>
     </div>
   </div>
 
   <div class="detail-section animate" style="--i:3">
     <h2>Two layers, one signal</h2>
     <div class="context-grid">
-      <div class="context-card amber"><div class="label">Reads the trace &middot; no LLM</div><div class="name">Deterministic + provenance</div><div class="desc">Entity and freshness checks over structure, and provenance checks over the retrieval trace &mdash; what was pulled, from where, under whose authority. It reads the sourcing, not the prose, so the same trace scores the same every sweep.</div></div>
-      <div class="context-card secondary"><div class="label">Judges the meaning &middot; optional</div><div class="name">Probabilistic drift judge</div><div class="desc">An LLM pass over the semantic erosion a trace can't show. Off unless a key is set, because the deterministic layer already carries the drift signal on its own.</div></div>
+      <div class="context-card amber"><div class="label">Reads the trace &middot; no LLM</div><div class="name">Fixed checks + source checks</div><div class="desc">It checks the structure and the trace of what the agent retrieved: what it pulled, where it came from, and whose authority it carried. It reads the sourcing, not the wording, so the same trace scores the same every sweep.</div></div>
+      <div class="context-card secondary"><div class="label">Judges the meaning &middot; optional</div><div class="name">Drift judge (optional)</div><div class="desc">An LLM pass over meaning a trace can't show. Off unless a key is set, because the fixed checks already carry the drift signal on their own.</div></div>
     </div>
   </div>
 
@@ -342,34 +342,34 @@
     <div class="gap-list">
       <div class="gap-row"><span class="num">freshness</span><span class="gname">A superseded document won</span><span class="gdesc">The retrieval pulled a doc that a newer version has already replaced.</span></div>
       <div class="gap-row"><span class="num">scope</span><span class="gname">Out of the caller's jurisdiction</span><span class="gdesc">A document answered for the wrong operating company or state. The signal that fires on a loosened filter.</span></div>
-      <div class="gap-row"><span class="num">authority</span><span class="gname">A governing document was skipped</span><span class="gdesc">A lower-authority source answered when a controlling one existed for that topic.</span></div>
+      <div class="gap-row"><span class="num">authority</span><span class="gname">A governing document was skipped</span><span class="gdesc">A weaker source answered when a stronger one already covered the topic.</span></div>
       <div class="gap-row"><span class="num">contradiction</span><span class="gname">The sources disagree</span><span class="gdesc">The retrieved chunks conflict with each other, so the answer rests on a coin flip.</span></div>
-      <div class="gap-row"><span class="num">entity</span><span class="gname">The wrong value came out</span><span class="gdesc">Deterministic entity and freshness checks catch a transposed number or a stale figure structurally, not semantically.</span></div>
+      <div class="gap-row"><span class="num">entity</span><span class="gname">The wrong value came out</span><span class="gdesc">Fixed checks catch a transposed number or a stale figure by its shape, not its meaning.</span></div>
     </div>
   </div>
 
   <div class="detail-section animate" style="--i:5">
     <h2>Inside one sweep</h2>
     <div class="phase-grid">
-      <div class="phase-card primary"><div class="num">Step 1</div><div class="title">Deterministic + provenance</div><div class="desc">Run both check families over the batch with no LLM. Every finding is tagged to the interaction that produced it.</div></div>
-      <div class="phase-card dim"><div class="num">Step 2</div><div class="title">Drift judge, optional</div><div class="desc">An LLM pass scores semantic erosion. Skipped without a key; the sweep still produces a full signal.</div></div>
-      <div class="phase-card primary"><div class="num">Step 3</div><div class="title">Prevalence</div><div class="desc">Findings per interaction, per mode &mdash; the rate that is comparable sweep to sweep, not a raw count.</div></div>
-      <div class="phase-card primary"><div class="num">Step 4</div><div class="title">Delta</div><div class="desc">Compare each mode's rate to the previous sweep. Drift fires when a mode moves past the threshold on a sweep large enough to trust.</div></div>
-      <div class="phase-card"><div class="num">Step 5</div><div class="title">Alert</div><div class="desc">The drift alert names the mode, the direction, and the previous-to-current rate. Idempotent, so a re-sweep adds nothing.</div></div>
+      <div class="phase-card primary"><div class="num">Step 1</div><div class="title">Fixed + source checks</div><div class="desc">Run both check families over the batch with no LLM. Every finding is tied to the interaction that produced it.</div></div>
+      <div class="phase-card dim"><div class="num">Step 2</div><div class="title">Drift judge, optional</div><div class="desc">An LLM pass scores how much the meaning eroded. Skipped without a key; the sweep still produces a full signal.</div></div>
+      <div class="phase-card primary"><div class="num">Step 3</div><div class="title">Rate</div><div class="desc">How often each mode shows up per interaction. A rate you can compare sweep to sweep, not a raw count.</div></div>
+      <div class="phase-card primary"><div class="num">Step 4</div><div class="title">Change</div><div class="desc">Compare each mode's rate to the last sweep. Drift fires when a mode rises past the threshold on a sweep big enough to trust.</div></div>
+      <div class="phase-card"><div class="num">Step 5</div><div class="title">Alert</div><div class="desc">The alert names the mode, the direction, and the old-to-new rate. Re-run the sweep and it adds nothing new.</div></div>
       <div class="phase-card"><div class="num">Step 6</div><div class="title">Dashboard + repair</div><div class="desc">The operator reads the delta, opens the flagged trace, fixes the source or the instructions, and the next sweep re-measures.</div></div>
     </div>
   </div>
 
   <div class="detail-section animate" style="--i:6">
-    <h2>The demo: two waves, one delta</h2>
+    <h2>The demo: two sweeps, one change</h2>
     <div class="demo-grid">
-      <div class="context-card secondary"><div class="label">Wave 1 &middot; baseline</div><div class="name">The agent, running clean</div><div class="desc">Sweep a batch of live-shaped interactions. Scope violations sit near 14%. This is the baseline the next sweep is measured against.</div></div>
-      <div class="context-card rose"><div class="label">Wave 2 &middot; after a change</div><div class="name">A jurisdiction filter loosens upstream</div><div class="desc">Sweep again. Scope violations jump to 73%. The delta fires a drift alert naming scope_violation, up 58 points &mdash; the regression, caught without anyone reading a transcript.</div></div>
+      <div class="context-card secondary"><div class="label">Wave 1 &middot; baseline</div><div class="name">The agent, running clean</div><div class="desc">Sweep 22 live-shaped interactions. Scope violations land at 4.5% &mdash; 1 of 22. This is the baseline the next sweep is measured against.</div></div>
+      <div class="context-card rose"><div class="label">Wave 2 &middot; after a change</div><div class="name">A jurisdiction filter loosens upstream</div><div class="desc">Sweep again. Scope violations rise to 22.7% &mdash; 5 of 22. The delta fires a drift alert naming scope_violation, up 18 points. The rate rose past the threshold; the regression caught without anyone reading a transcript.</div></div>
     </div>
   </div>
 
   <div class="callout animate" style="--i:7">
-    <strong>Honesty, not magic.</strong> This runs live on a deployed agent, but it is periodic re-evaluation and drift comparison, not continuous stream ingestion &mdash; you can't live-instrument a vendor agent from outside. The waves are a governed synthetic corpus built to reproduce real failure modes on demand. The claim is about what the structure catches and how reliably the delta fires, not that every mode has been seen in the wild.
+    <strong>Honesty, not magic.</strong> This runs live on a deployed agent, but it is periodic re-evaluation and drift comparison, not continuous stream ingestion &mdash; you can't live-instrument a vendor agent from outside. The waves are a governed synthetic corpus built to reproduce real failure modes on demand. The claim is about what the structure catches and how reliably the alert fires, not that every mode has been seen in the wild.
   </div>
 
   <div class="footer">

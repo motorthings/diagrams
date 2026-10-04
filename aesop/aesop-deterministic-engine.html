@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>AESOP Transformation OS — The Deterministic Engine</title>
 <link rel="icon" type="image/svg+xml" href="../icon.svg">
-<meta name="description" content="How AESOP's deterministic monitoring engine finds issues in a deployed agent's behavior: pure functions over the retrieval trace, no LLM, the same trace scored the same every time.">
+<meta name="description" content="How AESOP catches a bad agent answer without using an AI to judge it: it reads the documents the agent pulled, compares fixed details, and gives the same finding every time.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Mulish:ital,wght@0,300;0,400;0,600;0,700;0,800;1,400&display=swap" rel="stylesheet">
@@ -235,10 +235,10 @@
 
 <div class="container">
   <div class="hero">
-    <div class="hero-badge">Monitor &middot; Deterministic Engine</div>
-    <h1>The same trace, scored the same, every time.</h1>
-    <p class="lede">The part of the monitor that decides whether an agent misbehaved is not a model. It is a set of pure functions over the retrieval trace &mdash; what the agent pulled, and the metadata on it. No LLM, no sampling, no temperature. Run it twice on the same call and you get the same finding twice.</p>
-    <p class="lede">That is what makes a finding defensible: it reproduces, it explains itself, and its own error rate has been measured.</p>
+    <div class="hero-badge">Monitor &middot; Same Answer Every Run</div>
+    <h1>Same input. Same finding. Every time.</h1>
+    <p class="lede">This is the part of the monitor that decides whether an agent gave a bad answer, and it is not an AI model. It reads the documents the agent pulled to build its answer (the retrieval trace), plus the details attached to each one. Same documents in, same finding out, every time. No guessing, no randomness.</p>
+    <p class="lede">That is what makes a finding hold up: you can re-run it and get the exact same result, it tells you why it flagged something, and we have measured how often it is right.</p>
   </div>
 
   <div class="mermaid-wrap animate" style="--i:1">
@@ -249,29 +249,29 @@
     </div>
     <pre class="mermaid">
       flowchart TD
-        RAG["LangChain retriever on Databricks Vector Search"]
-        TRACE["Retrieval trace: retrieved chunks and their metadata"]
-        CALLER["Caller context: jurisdiction, operating company, as-of date"]
-        ENGINE["Deterministic engine: pure functions, no LLM"]
+        RAG["Retriever: LangChain on Databricks Vector Search"]
+        TRACE["The documents it pulled, plus their details"]
+        CALLER["Who is asking: jurisdiction, company, date"]
+        ENGINE["The engine: fixed rules, no AI model"]
 
         RAG --> TRACE
         TRACE --> ENGINE
         CALLER --> ENGINE
 
-        ENGINE --> SCOPE["scope_violation: chunk jurisdiction or operating company crosses the caller"]
-        ENGINE --> FRESH["freshness_violation: chunk outside its validity window or superseded"]
-        ENGINE --> AUTH["authority_regression: a governing document existed, a lower one was used"]
-        ENGINE --> CONTRA["contradiction_risk: two chunks on one topic carry differing claims"]
-        ENGINE --> ENTITY["entity / stale_value: a transposed number or a stale figure, by rule"]
+        ENGINE --> SCOPE["scope: document is from the wrong jurisdiction or company"]
+        ENGINE --> FRESH["freshness: document is expired or replaced"]
+        ENGINE --> AUTH["authority: a stronger document existed but a weaker one was used"]
+        ENGINE --> CONTRA["contradiction: two documents disagree"]
+        ENGINE --> ENTITY["entity: wrong or outdated number"]
 
-        SCOPE --> FIND["Findings: chunk + field + the rule it broke"]
+        SCOPE --> FIND["Finding: the document, the field, the rule it broke"]
         FRESH --> FIND
         AUTH --> FIND
         CONTRA --> FIND
         ENTITY --> FIND
 
-        ENGINE --> SUPPRESS["missing_metadata / unclassified: reported, not alerted"]
-        FIND --> OUT["Prevalence per mode, compared to the previous sweep"]
+        ENGINE --> SUPPRESS["Can't classify: reported, not flagged"]
+        FIND --> OUT["How often each type occurs, vs the last sweep"]
 
         classDef src fill:#1F5E9322,stroke:#1F5E93,stroke-width:1.5px
         classDef trace fill:#6D3FC422,stroke:#6D3FC4,stroke-width:1.5px
@@ -292,36 +292,36 @@
   </div>
 
   <div class="detail-section animate" style="--i:2">
-    <h2>It reads the trace your stack already emits</h2>
+    <h2>It reads the record your existing setup already produces</h2>
     <div class="context-grid">
-      <div class="context-card secondary"><div class="label">LangChain</div><div class="name">The retriever's output</div><div class="desc">A LangChain retriever returns the documents it pulled, each with its metadata. That returned set, exposed through LangChain's callbacks, is the trace the engine reads. Nothing is re-platformed.</div></div>
-      <div class="context-card secondary"><div class="label">Databricks</div><div class="name">Vector Search results</div><div class="desc">Databricks Vector Search returns each chunk with its metadata columns &mdash; source, jurisdiction, effective dates, authority. The engine compares exactly those fields. The RAG already produces them.</div></div>
-      <div class="context-card slate"><div class="label">The boundary</div><div class="name">It needs the retrieval logged</div><div class="desc">The honest requirement: the RAG logs its retrieval step. LangChain exposes it; if it is captured, the engine runs. If the trace is thin, the engine says so rather than guessing.</div></div>
+      <div class="context-card secondary"><div class="label">LangChain</div><div class="name">What the retriever hands back</div><div class="desc">A LangChain retriever hands back the documents it pulled, each with its details attached. That list, which LangChain can hand over through its callbacks, is what the engine reads. Nothing gets rebuilt.</div></div>
+      <div class="context-card secondary"><div class="label">Databricks</div><div class="name">Vector Search results</div><div class="desc">Databricks Vector Search returns each document chunk with its details: source, jurisdiction, the dates it is valid, who has authority over it. The engine compares exactly those details. Your setup already produces them.</div></div>
+      <div class="context-card slate"><div class="label">The one requirement</div><div class="name">It needs the fetch recorded</div><div class="desc">The honest ask: your system logs what it retrieved. LangChain can expose that. If the record is too thin to judge, the engine tells you instead of guessing.</div></div>
     </div>
   </div>
 
   <div class="detail-section animate" style="--i:3">
-    <h2>The checks and their logic</h2>
+    <h2>What it checks, and why</h2>
     <div class="gap-list">
-      <div class="gap-row"><span class="num">scope</span><span class="gname">Jurisdiction or operating company crosses the caller</span><span class="gdesc">A chunk's jurisdiction or operating company differs from the caller's stated scope. A PSCo document answering an NSPM caller.</span></div>
-      <div class="gap-row"><span class="num">freshness</span><span class="gname">Outside its validity window</span><span class="gdesc">A chunk's effective dates do not contain the call date, or it is flagged superseded. A stale tariff beating the current one.</span></div>
-      <div class="gap-row"><span class="num">authority</span><span class="gname">A governing document was skipped</span><span class="gdesc">For the topic, a higher-authority document exists in the index, but the retrieval used a lower one.</span></div>
-      <div class="gap-row"><span class="num">contradiction</span><span class="gname">The sources disagree</span><span class="gdesc">Two retrieved chunks on the same topic carry differing claims, so the answer rests on which one won.</span></div>
-      <div class="gap-row"><span class="num">entity</span><span class="gname">The wrong value, structurally</span><span class="gdesc">A transposed number or a stale figure, caught by rule against a known-good value, not by meaning.</span></div>
+      <div class="gap-row"><span class="num">scope</span><span class="gname">Wrong jurisdiction or company</span><span class="gdesc">The document is from a different jurisdiction or company than the one asking. A Colorado doc answering a Minnesota question.</span></div>
+      <div class="gap-row"><span class="num">freshness</span><span class="gname">Out of date</span><span class="gdesc">The document has passed the dates it was valid for, or has been replaced. A stale rate beating the current one.</span></div>
+      <div class="gap-row"><span class="num">authority</span><span class="gname">It used the weaker source</span><span class="gdesc">A stronger document on the topic exists in the index, but the agent pulled a weaker one.</span></div>
+      <div class="gap-row"><span class="num">contradiction</span><span class="gname">The sources disagree</span><span class="gdesc">Two pulled documents say different things about the same topic, so the answer depends on which one won.</span></div>
+      <div class="gap-row"><span class="num">entity</span><span class="gname">The wrong number</span><span class="gdesc">A transposed digit or an old figure, caught by a fixed rule against a known-good value, not by understanding.</span></div>
     </div>
   </div>
 
   <div class="detail-section animate" style="--i:4">
-    <h2>Why you can be confident</h2>
+    <h2>Why you can trust a finding</h2>
     <div class="phase-grid">
-      <div class="phase-card primary"><div class="num">Reproducible</div><div class="title">Pure functions</div><div class="desc">Same trace in, same findings out, every run. No sampling, no temperature, no model call. A disputed finding can be re-run and reproduced exactly.</div></div>
-      <div class="phase-card primary"><div class="num">Explainable</div><div class="title">It names the rule</div><div class="desc">Every finding cites the chunk, the field, and the rule it broke &mdash; "chunk X is NSPM, caller is PSCo." An auditor checks each one by hand.</div></div>
-      <div class="phase-card primary"><div class="num">Measured</div><div class="title">A known error rate</div><div class="desc">Scored against labels: 0.944 precision on 240 calls. The control has its own measured error rate, which is the first thing an auditor asks for.</div></div>
+      <div class="phase-card primary"><div class="num">Repeatable</div><div class="title">Same answer every run</div><div class="desc">Same record in, same findings out, every time. No randomness, no AI call. A finding someone disputes can be re-run, and it comes out the same.</div></div>
+      <div class="phase-card primary"><div class="num">Explainable</div><div class="title">It names the rule</div><div class="desc">Every finding points at the document, the field, and the rule it broke, like "this chunk is from NSPM, the caller is PSCo." A person can check each one by hand.</div></div>
+      <div class="phase-card primary"><div class="num">Measured</div><div class="title">A known error rate</div><div class="desc">Checked against 240 calls graded by hand. Out of those 240, it called it right about 226 times (0.944 precision). Knowing its own error rate is the first thing an auditor asks for.</div></div>
     </div>
   </div>
 
   <div class="callout animate" style="--i:5">
-    <strong>The reads-the-trace line is the whole point.</strong> A judge that reads the answer's prose is a second model, and a second place for things to be inconsistent. This engine reads the sourcing &mdash; what was retrieved, from where, under whose authority, as of when &mdash; and compares fields. That is arithmetic, and arithmetic re-runs the same way. The probabilistic judge stays available for the semantic failures a trace cannot show, but it is not what the monitor leans on.
+    <strong>Reading the record is the whole point.</strong> A judge that reads the AI's written answer is just a second AI, and a second place for things to drift. This engine reads where the answer came from: what was pulled, from where, whose rules apply, and as of when. Then it compares the details. That is arithmetic, and arithmetic comes out the same every time. The AI judge is still there for the softer failures a record cannot show, but the monitor does not lean on it. It will not catch everything. What you get is a written list of failure types it does catch, short enough to check and open enough to extend as you find more.
   </div>
 
   <div class="footer">
