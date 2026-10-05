@@ -1,0 +1,162 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<title>Xcel Monitor — How It Works</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400..800&family=Source+Code+Pro:wght@400..600&display=swap" rel="stylesheet">
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; }
+  html, body { height:100%; background:#0F172A; overflow:hidden; }
+  body { font-family:'Fraunces', Georgia, serif; color:#0F172A; -webkit-font-smoothing:antialiased; }
+  #viewport { position:fixed; inset:0; display:flex; align-items:center; justify-content:center; }
+  #stage { position:relative; width:1920px; height:1080px; flex:0 0 auto; transform-origin:center center;
+           border-radius:14px; box-shadow:0 40px 110px rgba(0,0,0,.62), 0 0 0 1px rgba(255,255,255,.05); }
+  .slide { position:absolute; inset:0; width:1920px; height:1080px; border-radius:14px; overflow:hidden; }
+  .slide h1, .slide h2, .slide h3, .slide p { font-weight:inherit; }
+  .slide svg { display:block; overflow:visible; }
+  .slide aside { display:none; }
+  .demo-link { color:inherit; text-decoration:none; border-bottom:3px solid rgba(91,155,213,.35); transition:border-color .15s; }
+  .demo-link:hover { border-bottom-color:#5B9BD5; }
+
+  .pgnav {
+    position:fixed; top:50%; transform:translateY(-50%); z-index:20;
+    width:58px; height:58px; border-radius:50%; display:flex; align-items:center; justify-content:center;
+    background:#FFFFFF; border:1px solid rgba(15,23,42,.10); color:#5B9BD5; text-decoration:none;
+    box-shadow:0 6px 22px rgba(15,23,42,.35);
+    transition:background .15s, color .15s, transform .15s, opacity .25s;
+  }
+  .pgnav:hover { background:#5B9BD5; color:#FFFFFF; }
+  .pgnav:active { transform:translateY(-50%) scale(.94); }
+  .pgnav svg { width:24px; height:24px; }
+  .pgnav.prev { left:22px; }
+  .pgnav.next { right:22px; }
+  .pgnav.off { opacity:0; pointer-events:none; }
+  .pgnav .tip {
+    position:absolute; top:64px; left:50%; transform:translateX(-50%);
+    font-family:'Source Code Pro', monospace; font-size:12px; white-space:nowrap;
+    color:#94A3B8; opacity:0; transition:opacity .15s; pointer-events:none;
+  }
+  .pgnav:hover .tip { opacity:1; }
+
+  #notes { position:fixed; left:0; right:0; bottom:0; max-height:38vh; overflow:auto; display:none;
+           background:rgba(15,23,42,.94); color:#E2E8F0; font:16px/1.55 'Source Code Pro', monospace;
+           padding:18px 28px 22px; border-top:1px solid #334155; z-index:30; }
+  #notes.on { display:block; }
+  #notes .lbl { color:#94A3B8; font-size:12px; letter-spacing:2px; text-transform:uppercase; margin-bottom:8px; }
+  #hint { position:fixed; right:16px; bottom:12px; font:12px 'Source Code Pro', monospace; color:#64748B;
+          opacity:0; transition:opacity .4s; z-index:21; pointer-events:none; }
+  #hint.on { opacity:1; }
+  @media (prefers-reduced-motion: reduce) { .pgnav { transition:none; } }
+</style>
+</head>
+<body>
+<div id="viewport"><div id="stage">
+<section class="slide" id="how" data-transition="fade" style="background:#f4f8fb">
+  <div id="e1-hmg7h" style="position:absolute; bottom:64px; left:128px; width:1664px; display:flex; flex-direction:row; justify-content:space-between">
+    <p style="font-family:'Source Code Pro', monospace; font-size:24px; color:#475569">Charlie Fuller · Xcel Energy</p>
+    <p style="font-family:'Source Code Pro', monospace; font-size:24px; color:#475569">03 / 05</p>
+  </div>
+  <div id="8a59352d" style="position:absolute; top:128px; left:128px; width:1664px; height:31px; display:flex; flex-direction:row; gap:20px; align-items:center">
+    <div style="width:48px; height:4px; display:flex; flex-direction:column; background:#5b9bd5; border-radius:2px">
+    </div>
+    <p style="font-family:'Source Code Pro', monospace; font-size:24px; font-weight:600; letter-spacing:3px; color:#4a8bc5">HOW IT WORKS</p>
+  </div>
+  <div id="deebc19f" style="position:absolute; top:190px; left:128px; width:1664px; display:flex; flex-direction:row; align-items:baseline; justify-content:space-between">
+    <h2 style="font-family:Fraunces, Georgia, serif; font-size:64px; font-weight:800; line-height:1.08; letter-spacing:-1.5px; color:#0f172a">One loop.</h2>
+    <h2 style="font-family:Fraunces, Georgia, serif; font-size:64px; font-weight:800; line-height:1.08; letter-spacing:-1.5px; text-align:center; color:#0f172a">Five fixed checks.</h2>
+    <h2 style="font-family:Fraunces, Georgia, serif; font-size:64px; font-weight:800; line-height:1.08; letter-spacing:-1.5px; text-align:right; color:#0f172a">A named owner.</h2>
+  </div>
+  <div id="2930972f" style="position:absolute; top:300px; left:128px; width:1664px; height:620px; display:flex; flex-direction:row; align-items:center">
+    <svg xmlns="http://www.w3.org/2000/svg" aria-label="A left-to-right loop: capture the interaction and retrieval trace, run five deterministic checks (scope, freshness, authority, contradiction, entity), compute prevalence per failure mode, compare drift against the previous sweep, and produce a finding with a named owner. Each sweep becomes the next baseline." viewBox="0 0 1664 578" style="width:1664px; height:578px; flex:0 0 auto">
+<defs>
+<marker id="ah" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 z" fill="#5B9BD5"/></marker>
+<marker id="ahm" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 z" fill="#94A3B8"/></marker>
+</defs>
+<rect x="0" y="20" width="280" height="400" rx="12" fill="#DCEAF6" stroke="#5B9BD5" stroke-width="2"/>
+<text x="140" y="156" text-anchor="middle" font-family="Fraunces, Georgia, serif" font-size="42" font-weight="700" fill="#0F172A">Capture</text>
+<text x="140" y="222" text-anchor="middle" font-family="Source Code Pro, monospace" font-size="26" fill="#475569">interaction +</text>
+<text x="140" y="262" text-anchor="middle" font-family="Source Code Pro, monospace" font-size="26" fill="#475569">retrieval trace</text>
+<rect x="346" y="20" width="280" height="400" rx="12" fill="#DCEAF6" stroke="#5B9BD5" stroke-width="2"/>
+<text x="486" y="156" text-anchor="middle" font-family="Fraunces, Georgia, serif" font-size="42" font-weight="700" fill="#0F172A">Five checks</text>
+<text x="486" y="214" text-anchor="middle" font-family="Source Code Pro, monospace" font-size="26" fill="#4A8BC5">scope</text>
+<text x="486" y="252" text-anchor="middle" font-family="Source Code Pro, monospace" font-size="26" fill="#4A8BC5">freshness</text>
+<text x="486" y="290" text-anchor="middle" font-family="Source Code Pro, monospace" font-size="26" fill="#4A8BC5">authority</text>
+<text x="486" y="328" text-anchor="middle" font-family="Source Code Pro, monospace" font-size="26" fill="#4A8BC5">contradiction</text>
+<text x="486" y="366" text-anchor="middle" font-family="Source Code Pro, monospace" font-size="26" fill="#4A8BC5">entity</text>
+<rect x="692" y="20" width="280" height="400" rx="12" fill="#DCEAF6" stroke="#5B9BD5" stroke-width="2"/>
+<text x="832" y="156" text-anchor="middle" font-family="Fraunces, Georgia, serif" font-size="42" font-weight="700" fill="#0F172A">Prevalence</text>
+<text x="832" y="222" text-anchor="middle" font-family="Source Code Pro, monospace" font-size="26" fill="#475569">rate per</text>
+<text x="832" y="262" text-anchor="middle" font-family="Source Code Pro, monospace" font-size="26" fill="#475569">failure mode</text>
+<rect x="1038" y="20" width="280" height="400" rx="12" fill="#DCEAF6" stroke="#5B9BD5" stroke-width="2"/>
+<text x="1178" y="156" text-anchor="middle" font-family="Fraunces, Georgia, serif" font-size="42" font-weight="700" fill="#0F172A">Drift</text>
+<text x="1178" y="222" text-anchor="middle" font-family="Source Code Pro, monospace" font-size="26" fill="#475569">against the</text>
+<text x="1178" y="262" text-anchor="middle" font-family="Source Code Pro, monospace" font-size="26" fill="#475569">previous sweep</text>
+<rect x="1384" y="20" width="280" height="400" rx="12" fill="#FFFFFF" stroke="#C026D3" stroke-width="3"/>
+<text x="1524" y="156" text-anchor="middle" font-family="Fraunces, Georgia, serif" font-size="42" font-weight="800" fill="#C026D3">Finding</text>
+<text x="1524" y="222" text-anchor="middle" font-family="Source Code Pro, monospace" font-size="26" fill="#0F172A">with a named</text>
+<text x="1524" y="262" text-anchor="middle" font-family="Source Code Pro, monospace" font-size="26" fill="#0F172A">owner</text>
+<path d="M286 220 L336 220" stroke="#5B9BD5" stroke-width="3" fill="none" marker-end="url(#ah)"/>
+<path d="M632 220 L682 220" stroke="#5B9BD5" stroke-width="3" fill="none" marker-end="url(#ah)"/>
+<path d="M978 220 L1028 220" stroke="#5B9BD5" stroke-width="3" fill="none" marker-end="url(#ah)"/>
+<path d="M1324 220 L1374 220" stroke="#5B9BD5" stroke-width="3" fill="none" marker-end="url(#ah)"/>
+<path d="M1178 424 L1178 482 Q1178 498 1162 498 L156 498 Q140 498 140 482 L140 432" stroke="#94A3B8" stroke-width="2" stroke-dasharray="6 6" fill="none" marker-end="url(#ahm)"/>
+<text x="659" y="556" text-anchor="middle" font-family="Source Code Pro, monospace" font-size="24" fill="#475569">each sweep becomes the next baseline</text>
+</svg>
+  </div>
+  <aside>Capture the interaction and the retrieval trace: what the agent pulled and the metadata on each chunk.&nbsp;<br>Run five deterministic checks: scope, freshness, authority, contradiction, entity.&nbsp;<br>Roll results up into a rate per failure mode.&nbsp;<br>Compare against the last sweep.&nbsp;<br>Anything that moves becomes a finding, and a finding always lands with a person.&nbsp;<br>(No LLM judge in the loop for these five. It is comparisons on metadata.)</aside>
+</section>
+</div></div>
+<a class="pgnav prev" id="pgnav-prev" href="xcel-monitor-02-approach.html" aria-label="Previous"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg><span class="tip">Previous</span></a>
+<a class="pgnav next" id="pgnav-next" href="xcel-monitor-04-what-it-catches.html" aria-label="Next"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg><span class="tip">Next</span></a>
+
+<div id="notes"><div class="lbl">Speaker notes &middot; N to hide</div><div id="notes-body"></div></div>
+<div id="hint">&larr; &rarr; pages &middot; F fullscreen &middot; N notes</div>
+<script>
+(function() {
+  var stage = document.getElementById('stage');
+  var notes = document.getElementById('notes');
+  var notesBody = document.getElementById('notes-body');
+  var hint = document.getElementById('hint');
+  var prevEl = document.getElementById('pgnav-prev');
+  var nextEl = document.getElementById('pgnav-next');
+
+  function fit() {
+    var s = Math.min(window.innerWidth / 1920, window.innerHeight / 1080) * 0.8;
+    stage.style.transform = 'scale(' + s + ')';
+  }
+  function hrefOf(el) { return (el && el.getAttribute) ? el.getAttribute('href') : null; }
+
+  var aside = document.querySelector('.slide aside');
+  notesBody.innerHTML = aside ? aside.innerHTML : '<em>No notes</em>';
+
+  document.addEventListener('keydown', function(e) {
+    if (e.metaKey || e.ctrlKey || e.altKey) return;
+    var k = e.key, h;
+    if (k === 'ArrowRight' || k === 'ArrowDown' || k === 'PageDown' || k === ' ' || k === 'Enter') { e.preventDefault(); h = hrefOf(nextEl); }
+    else if (k === 'ArrowLeft' || k === 'ArrowUp' || k === 'PageUp' || k === 'Backspace') { e.preventDefault(); h = hrefOf(prevEl); }
+    else if (k === 'f' || k === 'F') {
+      if (!document.fullscreenElement) document.documentElement.requestFullscreen && document.documentElement.requestFullscreen();
+      else document.exitFullscreen && document.exitFullscreen();
+      return;
+    }
+    else if (k === 'n' || k === 'N') { notes.classList.toggle('on'); return; }
+    if (h) location.href = h;
+  });
+
+  document.getElementById('viewport').addEventListener('click', function(e) {
+    if (e.target.closest('a')) return;
+    var h = e.clientX > window.innerWidth / 2 ? hrefOf(nextEl) : hrefOf(prevEl);
+    if (h) location.href = h;
+  });
+
+  window.addEventListener('resize', fit);
+  fit();
+  hint.classList.add('on'); setTimeout(function() { hint.classList.remove('on'); }, 4000);
+})();
+</script>
+</body>
+</html>
