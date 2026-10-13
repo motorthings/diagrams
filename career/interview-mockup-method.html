@@ -1,0 +1,502 @@
+<!DOCTYPE html>
+<html lang="en" class="light">
+<head>
+<meta charset="UTF-8">
+<link rel="icon" href="../icon.svg" type="image/svg+xml" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Career &#8212; The Mockup Method</title>
+<meta name="description" content="How to show up to an AI interview with a working artifact instead of a deck: the five-step process, with three annotated builds from real interviews.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Mulish:ital,wght@0,300;0,400;0,600;0,700;0,800;1,400&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --font-display: 'Mulish', sans-serif;
+    --font-body: 'Mulish', 'Segoe UI', Helvetica, sans-serif;
+    --font-mono: 'Mulish', ui-monospace, 'SF Mono', Consolas, monospace;
+    --bg: #14181C; --surface: #1B2127; --surface2: #232B33; --surface3: #232B33;
+    --border: #303A43; --border-bright: #42505C;
+    --text: #F4F5F6; --text-dim: #CBD0D6; --text-muted: #87919B; --text-faint: #97A2AD;
+    --primary: #A79CF2; --primary-dim: rgba(167,156,242,0.12);
+    --secondary: #45C7A6; --secondary-dim: rgba(69,199,166,0.10);
+    --metric: #45C7A6; --metric-dim: rgba(69,199,166,0.10);
+    --accent: #A79CF2; --accent-deep: #A79CF2;
+    --good: #45C7A6; --good-dim: rgba(69,199,166,0.10);
+    --warn: #E0B05B; --warn-dim: rgba(224,176,91,0.10);
+    --bad: #E8735F; --bad-dim: rgba(232,115,95,0.10);
+    --amber: #E0B05B; --amber-dim: rgba(224,176,91,0.10);
+    --violet: #B78BD8; --violet-dim: rgba(183,139,216,0.10);
+    --rose: #E8735F; --rose-dim: rgba(232,115,95,0.10);
+    --slate: #87919B; --slate-dim: rgba(135,145,155,0.12);
+    --arr-color: #87919B; --arr-color-strong: #A79CF2;
+  }
+  html.light {
+    --bg: #F7F3EF; --surface: #FFFFFF; --surface2: #F0E9E1; --surface3: #F0E9E1;
+    --border: #E1D6CB; --border-bright: #CDBBA8;
+    --text: #241A12; --text-dim: #574A3C; --text-muted: #6F6255; --text-faint: #6F6255;
+    --primary: #4F46E5; --primary-dim: rgba(79,70,229,0.10);
+    --secondary: #0E7C66; --secondary-dim: rgba(14,124,102,0.10);
+    --metric: #0E7C66; --metric-dim: rgba(14,124,102,0.10);
+    --accent: #4F46E5; --accent-deep: #4F46E5;
+    --good: #0E7C66; --good-dim: rgba(14,124,102,0.10);
+    --warn: #8A5A0B; --warn-dim: rgba(138,90,11,0.10);
+    --bad: #B03A26; --bad-dim: rgba(176,58,38,0.10);
+    --amber: #8A5A0B; --amber-dim: rgba(138,90,11,0.10);
+    --violet: #6D3FC4; --violet-dim: rgba(109,63,196,0.10);
+    --rose: #B03A26; --rose-dim: rgba(176,58,38,0.10);
+    --slate: #6B6259; --slate-dim: rgba(107,98,89,0.12);
+    --arr-color: #8C7E6E; --arr-color-strong: #4F46E5;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+
+  body {
+    background: var(--bg);
+    background-image:
+      radial-gradient(at 10% 0%, var(--primary-dim) 0%, transparent 40%),
+      radial-gradient(at 90% 80%, var(--metric-dim) 0%, transparent 40%);
+    color: var(--text); font-family: var(--font-body); font-size: 15px;
+    min-height: 100vh; line-height: 1.7; padding: 0 32px 80px;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  .backlink { position: fixed; top: 12px; left: 16px; z-index: 101; font-family: var(--font-mono); font-size: 12px; color: var(--text-dim); text-decoration: none; padding: 6px 10px; border: 1px solid var(--border); border-radius: 6px; background: var(--surface); transition: color .15s, border-color .15s; }
+  .backlink:hover { color: var(--text); border-color: var(--border-bright); }
+
+  .nav { max-width: 1000px; margin: 0 auto; padding: 16px 0 4px; background: transparent; border-bottom: none; }
+  .nav-inner { max-width: 1000px; margin: 0 auto; padding: 0; display: block; }
+  .crumbs { font-family: var(--font-mono); font-size: 13px; font-weight: 600; display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+  .crumbs a { color: var(--primary); text-decoration: none; }
+  .crumbs a:hover { text-decoration: underline; }
+  .crumbs .sep { color: var(--text-faint); }
+  .crumbs .current { color: var(--text-faint); font-weight: 400; }
+
+  .container { max-width: 1000px; margin: 0 auto; }
+
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(12px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  .animate { animation: fadeUp 0.4s ease-out both; animation-delay: calc(var(--i, 0) * 0.06s); }
+
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after { animation-duration: 0.01ms !important; animation-delay: 0ms !important; }
+  }
+
+  .hero { text-align: center; padding: 40px 0 16px; animation: fadeUp 0.5s ease-out; }
+  .hero-badge {
+    display: inline-flex; align-items: center; gap: 6px;
+    padding: 5px 16px; background: var(--primary-dim);
+    border: 1px solid var(--primary); border-radius: 20px;
+    font-family: var(--font-mono); font-size: 10px; font-weight: 600;
+    color: var(--primary); letter-spacing: 1px; text-transform: uppercase;
+    margin-bottom: 20px;
+  }
+  .hero h1 {
+    font-size: 44px; font-weight: 800; letter-spacing: -1px;
+    margin-bottom: 12px; color: var(--text); line-height: 1.1;
+  }
+  .hero .lede { font-size: 16px; color: var(--text-dim); max-width: 640px; margin: 2px auto 0; text-align: left; line-height: 1.65; }
+  .hero .lede + .lede { margin-top: 12px; }
+
+  /* ── Section headings ── */
+  .section { margin-top: 48px; }
+  .section-label {
+    font-family: var(--font-mono); font-size: 11px; font-weight: 700;
+    letter-spacing: 1.2px; text-transform: uppercase; color: var(--primary);
+    margin-bottom: 16px;
+  }
+
+  /* ── Step flow ── */
+  .steps { display: flex; flex-direction: column; gap: 0; }
+  .step-row { display: flex; align-items: flex-start; gap: 20px; }
+  .step-connector {
+    display: flex; flex-direction: column; align-items: center;
+    flex-shrink: 0; width: 36px;
+  }
+  .step-num {
+    width: 36px; height: 36px; border-radius: 50%;
+    background: var(--primary-dim); border: 2px solid var(--primary);
+    display: flex; align-items: center; justify-content: center;
+    font-family: var(--font-mono); font-size: 13px; font-weight: 800;
+    color: var(--primary); flex-shrink: 0;
+  }
+  .step-line {
+    width: 2px; flex-grow: 1; min-height: 28px;
+    background: var(--border); margin: 4px 0;
+  }
+  .step-row:last-child .step-line { display: none; }
+  .step-body {
+    padding: 4px 0 32px; flex: 1; min-width: 0;
+  }
+  .step-title {
+    font-size: 17px; font-weight: 800; color: var(--text);
+    margin-bottom: 4px; line-height: 1.3;
+  }
+  .step-desc { font-size: 14px; color: var(--text-dim); line-height: 1.6; }
+  .step-note {
+    display: inline-block; margin-top: 8px;
+    font-family: var(--font-mono); font-size: 11px; font-weight: 600;
+    color: var(--metric); background: var(--metric-dim);
+    border-radius: 4px; padding: 3px 9px;
+  }
+
+  /* ── Case study cards ── */
+  .case-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 16px;
+    margin-top: 4px;
+  }
+  .case-card {
+    background: var(--surface); border: 1px solid var(--border);
+    border-top: 3px solid var(--primary); border-radius: 12px;
+    padding: 22px 20px; display: flex; flex-direction: column; gap: 12px;
+  }
+  .case-card.violet-top { border-top-color: var(--violet); }
+  .case-card.metric-top { border-top-color: var(--metric); }
+  .case-card .case-label {
+    font-family: var(--font-mono); font-size: 10px; font-weight: 700;
+    letter-spacing: 0.8px; text-transform: uppercase; color: var(--text-muted);
+  }
+  .case-card .case-title { font-size: 16px; font-weight: 800; color: var(--text); line-height: 1.3; }
+  .case-card .case-brief { font-size: 13px; color: var(--text-dim); line-height: 1.55; }
+  .case-card .case-built { font-size: 13px; color: var(--text-dim); line-height: 1.55; }
+  .case-card .case-built strong { color: var(--text); font-weight: 700; }
+  .case-card .case-outcome {
+    font-family: var(--font-mono); font-size: 12px; font-weight: 600;
+    color: var(--good); background: var(--good-dim);
+    border-radius: 6px; padding: 8px 12px; line-height: 1.5;
+  }
+  .case-card.violet-top .case-outcome { color: var(--violet); background: var(--violet-dim); }
+  .case-card.metric-top .case-outcome { color: var(--metric); background: var(--metric-dim); }
+
+  /* ── Detail rows (what + why honest limits) ── */
+  .detail-rows { display: flex; flex-direction: column; gap: 10px; margin-top: 4px; }
+  .detail-row {
+    display: grid; grid-template-columns: 140px 1fr;
+    gap: 16px; align-items: baseline;
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 10px; padding: 14px 18px;
+  }
+  .detail-row .dr-label {
+    font-family: var(--font-mono); font-size: 11px; font-weight: 700;
+    text-transform: uppercase; letter-spacing: 0.6px; color: var(--primary);
+    flex-shrink: 0;
+  }
+  .detail-row .dr-text { font-size: 14px; color: var(--text-dim); line-height: 1.6; }
+  .detail-row .dr-text strong { color: var(--text); font-weight: 700; }
+
+  /* ── Callout / through-line ── */
+  .callout {
+    background: var(--surface); border: 1px solid var(--border);
+    border-left: 3px solid var(--primary); border-radius: 0 12px 12px 0;
+    padding: 20px 24px; margin-top: 32px; font-size: 15px; line-height: 1.65;
+    color: var(--text-dim);
+  }
+  .callout strong { color: var(--text); }
+  .callout .land {
+    display: block; font-size: 18px; font-weight: 800; color: var(--text);
+    margin-top: 10px; letter-spacing: -0.3px; line-height: 1.35;
+  }
+
+  .footer {
+    margin-top: 56px; padding-top: 20px; border-top: 1px solid var(--border);
+    text-align: center; font-size: 13px; color: var(--text-muted);
+  }
+
+  @media (max-width: 640px) {
+    body { padding: 0 12px 48px; }
+    .hero h1 { font-size: 28px; }
+    .case-grid { grid-template-columns: 1fr; }
+    .detail-row { grid-template-columns: 1fr; gap: 4px; }
+  }
+</style>
+</head>
+<body>
+
+<a href="../index.html" class="backlink">&larr; Index</a>
+
+<nav class="nav">
+  <div class="nav-inner">
+    <div class="crumbs">
+      <a href="../index.html">Index</a>
+      <span class="sep">/</span>
+      <span class="current" aria-current="page">The Mockup Method</span>
+    </div>
+  </div>
+</nav>
+
+<div class="container">
+
+  <div class="hero">
+    <div class="hero-badge">Interview Method</div>
+    <h1>Show up with the thing.</h1>
+    <p class="lede">Most candidates answer the interview question. This is about building the answer before they ask it &mdash; a working artifact seeded with the company&#8217;s actual problem, ready before the room.</p>
+    <p class="lede">Three roles. Three builds. One process.</p>
+  </div>
+
+  <!-- ── The Process ── -->
+  <div class="section animate" style="--i:1">
+    <div class="section-label">The Process</div>
+    <p style="font-size:15px;color:var(--text-dim);max-width:720px;margin-bottom:20px;line-height:1.7;">Research is not a phase you complete. It runs through every step &mdash; from the first pass on the company through the final rehearsal with the voice agent. Each pass surfaces what the last one missed.</p>
+    <div class="steps">
+
+      <div class="step-row">
+        <div class="step-connector">
+          <div class="step-num">1</div>
+          <div class="step-line"></div>
+        </div>
+        <div class="step-body">
+          <div class="step-title">Research the company and everyone in the room</div>
+          <div class="step-desc">Same step, two targets. The company: what keeps the team up at night, not just what they do. The JD is a symptom &mdash; read what it implies. The people: LinkedIn is the floor. Find their writing, their talks, what they&#8217;ve publicly tried to solve. Know what each person in the room cares about before they tell you.</div>
+          <div class="step-desc" style="margin-top:10px;"><strong style="color:var(--text)">Company prompts:</strong></div>
+          <ul style="margin:8px 0 0 18px;font-size:13px;color:var(--text-dim);line-height:1.8;display:flex;flex-direction:column;gap:2px;">
+            <li>What has this company said publicly about AI in the last 12 months? Press releases, earnings calls, regulatory filings?</li>
+            <li>What did they just ship, and what does that tell you about what they&#8217;re building next?</li>
+            <li>What is the regulatory or competitive pressure forcing this role to exist right now?</li>
+            <li>What failure mode would this team be embarrassed by in front of their own leadership?</li>
+            <li>What does the JD want to see that isn&#8217;t in the title? Read the responsibilities, not the requirements.</li>
+          </ul>
+          <div class="step-desc" style="margin-top:10px;"><strong style="color:var(--text)">Per-person prompts:</strong></div>
+          <ul style="margin:8px 0 0 18px;font-size:13px;color:var(--text-dim);line-height:1.8;display:flex;flex-direction:column;gap:2px;">
+            <li>What did they work on before this role? What did that experience make them care about?</li>
+            <li>What have they posted, published, or presented? What is the consistent argument they make?</li>
+            <li>What role do they play in the decision &mdash; technical validator, business owner, future peer?</li>
+            <li>What question would they most want answered that nobody ever thinks to address?</li>
+            <li>What would make them look good to their own leadership if this hire worked out?</li>
+          </ul>
+          <span class="step-note">the question they want answered is rarely the one they ask</span>
+        </div>
+      </div>
+
+      <div class="step-row">
+        <div class="step-connector">
+          <div class="step-num">2</div>
+          <div class="step-line"></div>
+        </div>
+        <div class="step-body">
+          <div class="step-title">Assemble a knowledge folder and audit what you have</div>
+          <div class="step-desc">Put everything in one place: the assignment, every transcript, every piece of research, the JD, notes from any calls. Then treat it like a PRD intake &mdash; assess completeness before you start designing anything. The goal is to know exactly what you&#8217;re working with, what you&#8217;re missing, and what you can&#8217;t get because it&#8217;s proprietary or internal. That last category isn&#8217;t a problem &mdash; it&#8217;s an assumption you&#8217;ll name explicitly.</div>
+          <div class="step-desc" style="margin-top:10px;"><strong style="color:var(--text)">Completeness audit prompts:</strong></div>
+          <ul style="margin:8px 0 0 18px;font-size:13px;color:var(--text-dim);line-height:1.8;display:flex;flex-direction:column;gap:2px;">
+            <li>Do I have the actual assignment brief, or am I working from memory? Is it written down?</li>
+            <li>What industry context do I have? Competitive landscape, market position, analyst coverage?</li>
+            <li>What is the regulatory environment? Industry-specific rules, state law, federal oversight, pending legislation?</li>
+            <li>What geopolitical or macro factors are relevant? Is the company exposed to anything that affects how they build or buy AI?</li>
+            <li>What do I know about the company&#8217;s legal posture? Any public litigation, consent decrees, or compliance obligations that would constrain the build?</li>
+            <li>What internal information would I need that I can&#8217;t have? Architecture docs, internal data schemas, vendor contracts, budget constraints?</li>
+            <li>For each gap: is it a blocker, or is it an assumption I can name and carry?</li>
+            <li>If I had to describe exactly what I need to build right now, what would I say? Can I write it in two paragraphs?</li>
+          </ul>
+          <div class="step-desc" style="margin-top:10px;">The output of this step is a short brief &mdash; not a formal PRD, but the equivalent: what you&#8217;re building, why, what you know, what you&#8217;re assuming, and what you&#8217;d need to revisit once you have access to the real system.</div>
+          <span class="step-note">know what you have before you design anything</span>
+        </div>
+      </div>
+
+      <div class="step-row">
+        <div class="step-connector">
+          <div class="step-num">3</div>
+          <div class="step-line"></div>
+        </div>
+        <div class="step-body">
+          <div class="step-title">Name the gap and check it against the assignment</div>
+          <div class="step-desc">Every role has one real job underneath the listed responsibilities. Name it in a single sentence. Then hold it against the brief &mdash; the JD, the take-home assignment, whatever they gave you &mdash; and ask whether your understanding accounts for everything they asked for.</div>
+          <div class="step-desc" style="margin-top:10px;"><strong style="color:var(--text)">Alignment checks:</strong></div>
+          <ul style="margin:8px 0 0 18px;font-size:13px;color:var(--text-dim);line-height:1.8;display:flex;flex-direction:column;gap:2px;">
+            <li>What is the one thing this role exists to prevent or produce? Can I say it in one sentence?</li>
+            <li>Does my artifact address that sentence, or does it address something adjacent to it?</li>
+            <li>What does the assignment explicitly ask for that I have not yet addressed?</li>
+            <li>What does the assignment implicitly want to see &mdash; the judgment or taste behind the ask &mdash; that I could miss if I only read it literally?</li>
+            <li>If I came back to this target tomorrow with fresh eyes, what would I say I got wrong?</li>
+          </ul>
+          <span class="step-note">always come back to the target</span>
+        </div>
+      </div>
+
+      <div class="step-row">
+        <div class="step-connector">
+          <div class="step-num">4</div>
+          <div class="step-line"></div>
+        </div>
+        <div class="step-body">
+          <div class="step-title">Check your presentation against the KB for flaws</div>
+          <div class="step-desc">Before building anything, take what you have &mdash; your research, your thesis, your plan &mdash; and run it against everything you know. Ask it to find what you missed, not to confirm what you already think.</div>
+          <div class="step-desc" style="margin-top:10px;"><strong style="color:var(--text)">KB audit prompts:</strong></div>
+          <ul style="margin:8px 0 0 18px;font-size:13px;color:var(--text-dim);line-height:1.8;display:flex;flex-direction:column;gap:2px;">
+            <li>What is wrong or overstated in my thesis? What would a skeptic dismantle first?</li>
+            <li>What am I assuming that I have not verified? What would break my argument if the assumption is false?</li>
+            <li>What does the assignment ask for that I am not doing? What is the version of this that a great candidate would submit that I have not built yet?</li>
+            <li>What does someone in this role know that I am treating as if I already know it?</li>
+            <li>What is the most important thing I left out?</li>
+            <li>If they push back hard on my central recommendation, what is the weakest part of my defense?</li>
+          </ul>
+          <span class="step-note">ask for the flaws, not the validation</span>
+        </div>
+      </div>
+
+      <div class="step-row">
+        <div class="step-connector">
+          <div class="step-num">5</div>
+          <div class="step-line"></div>
+        </div>
+        <div class="step-body">
+          <div class="step-title">Build the artifact seeded with their failure modes</div>
+          <div class="step-desc">Not a generic demo. Built on the company&#8217;s actual domain: their document types, their risk classes, their named failure patterns. The artifact should be able to fail in the ways their real system fails &mdash; and show you catching it.</div>
+          <div class="step-desc" style="margin-top:10px;"><strong style="color:var(--text)">Use their actual stack.</strong> If they run on Databricks, build on Databricks. Supabase, Salesforce, Monday.com &mdash; whatever the JD names or the research surfaces. Free accounts are available for a low-scope project in almost every platform. When you demo on their infrastructure, they don&#8217;t have to imagine the translation. The question shifts from &#8220;could this work on our stack&#8221; to &#8220;when do we start.&#8221;</div>
+          <div class="step-desc" style="margin-top:10px;"><strong style="color:var(--text)">Build to reuse, not to impress once.</strong> The highest-leverage build is one you can expand and re-apply, not a bespoke artifact you throw away after the interview. If the work is genuinely in the domain you want to work in, build it as a real piece of a real platform &mdash; one that gets better as you add to it. Each new interview surfaces a different angle on the same system. A monitoring layer built for one company teaches you something that improves the evaluation layer for the next. A help system built for one platform becomes the reference architecture you reach for in the next conversation about knowledge management. You stop starting over. The platform grows, and so does your depth in it.</div>
+          <div class="step-desc" style="margin-top:10px;"><strong style="color:var(--text)">Build checks:</strong></div>
+          <ul style="margin:8px 0 0 18px;font-size:13px;color:var(--text-dim);line-height:1.8;display:flex;flex-direction:column;gap:2px;">
+            <li>What platform does the JD name, or what does the research say they run on? Am I building there?</li>
+            <li>Is the data shaped like their data, or is it shaped like a tutorial?</li>
+            <li>Does the artifact fail in the ways their real system would fail? Can I demonstrate a failure and a catch?</li>
+            <li>What is the honest limit of what I built? Where does it break down, and am I stating that upfront?</li>
+            <li>What would this look like in production at their scale? What would I do differently with six months and a team?</li>
+            <li>Does the build address the specific sentence I wrote in step 3, or did I drift to something easier to build?</li>
+          </ul>
+          <span class="step-note">their stack, their data, their failure modes</span>
+        </div>
+      </div>
+
+      <div class="step-row">
+        <div class="step-connector">
+          <div class="step-num">6</div>
+          <div class="step-line"></div>
+        </div>
+        <div class="step-body">
+          <div class="step-title">Show the decisions and come back to the target</div>
+          <div class="step-desc">What you chose not to build is as important as what you built. Walk through the decisions out loud. Then return to the assignment and confirm: does what I built answer what they asked? Not what I found interesting &mdash; what they asked.</div>
+          <div class="step-desc" style="margin-top:10px;"><strong style="color:var(--text)">Final alignment check:</strong></div>
+          <ul style="margin:8px 0 0 18px;font-size:13px;color:var(--text-dim);line-height:1.8;display:flex;flex-direction:column;gap:2px;">
+            <li>Re-read the original assignment or JD. Does my work answer it directly?</li>
+            <li>What did I build that they didn&#8217;t ask for? Is it additive or is it a distraction?</li>
+            <li>What did they ask for that I still haven&#8217;t addressed? If I can&#8217;t answer this, I am not done.</li>
+            <li>Can I state the honest limit in one sentence without hedging? If not, I don&#8217;t understand it yet.</li>
+            <li>Have I named my assumptions explicitly &mdash; what I inferred from public sources, what I couldn&#8217;t know, and what I&#8217;d validate once inside?</li>
+            <li>If I were them, would I see myself in this role after reviewing what I submitted?</li>
+          </ul>
+          <span class="step-note">the assignment is the target &mdash; always return to it</span>
+        </div>
+      </div>
+
+
+      <div class="step-row">
+        <div class="step-connector">
+          <div class="step-num">7</div>
+          <div class="step-line"></div>
+        </div>
+        <div class="step-body">
+          <div class="step-title">Build the deck and the script</div>
+          <div class="step-desc">Short presentation, grounded in what you found. Write the talk track as a full script alongside it &mdash; not notes. You need to know exactly what you mean to say on each point before anyone asks a question. Claude Code builds both in one session from your research corpus.</div>
+          <div class="step-desc" style="margin-top:10px;"><strong style="color:var(--text)">State your assumptions explicitly.</strong> You did not have access to their internal systems, their actual data, or the full context behind the role. Say that. Name what you assumed, what you inferred, and what you would need to validate once you&#8217;re inside. This isn&#8217;t a disclaimer &mdash; it&#8217;s proof of judgment. Candidates who present as if they know everything they couldn&#8217;t possibly know signal worse than candidates who are honest about the edges of their research. The framing: <em>&#8220;Based on what&#8217;s publicly available, I assumed X. I&#8217;d want to confirm that against your actual setup before committing to this approach.&#8221;</em></div>
+        </div>
+      </div>
+
+      <div class="step-row">
+        <div class="step-connector">
+          <div class="step-num">8</div>
+          <div class="step-line"></div>
+        </div>
+        <div class="step-body">
+          <div class="step-title">Build a voice agent shaped like the room</div>
+          <div class="step-desc">Use your research on the actual people in the meeting: their roles, their background, what they already know, what they care about. Give the agent everything they would walk in knowing. The questions it asks should only make sense if you understand the org&#8217;s specific situation &mdash; not generic interview questions.</div>
+          <span class="step-note">research the people, not just the company</span>
+        </div>
+      </div>
+
+      <div class="step-row">
+        <div class="step-connector">
+          <div class="step-num">9</div>
+          <div class="step-line"></div>
+        </div>
+        <div class="step-body">
+          <div class="step-title">Run presentations. Iterate the deck and the talk track.</div>
+          <div class="step-desc">Present to the agent. Its questions find what you left out, what you got wrong, and what you glossed over because you assumed it was obvious. Revise. Run it again. The questions get easier as the gaps close &mdash; not because the agent simplifies, but because you actually know the material now.</div>
+        </div>
+      </div>
+
+      <div class="step-row">
+        <div class="step-connector">
+          <div class="step-num">10</div>
+          <div class="step-line"></div>
+        </div>
+        <div class="step-body">
+          <div class="step-title">Set difficulty levels. Match the agent to the room.</div>
+          <div class="step-desc">Build the agent with multiple settings. Early runs: surface-level questions to find the obvious holes. Later runs: hard questions from someone who knows the domain well. The hardest setting should be harder than the actual room &mdash; so when you get there, the questions feel slow.</div>
+          <span class="step-note">you&#8217;re ready when you answer without thinking</span>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <div class="callout animate" style="--i:2" style="margin-top:24px;">
+    The presentation is the eval. The agent&#8217;s questions are the score. The gaps it finds are the findings. You iterate the deck the same way you&#8217;d iterate an agent that keeps failing the same check &mdash; fix the source, not the symptom, and run it again.
+    <span class="land">You&#8217;re not rehearsing. You&#8217;re running evals on yourself.</span>
+  </div>
+
+  <!-- ── Three Builds ── -->
+  <div class="section animate" style="--i:3">
+    <div class="section-label">Three Builds</div>
+    <div class="case-grid">
+
+      <div class="case-card">
+        <div class="case-label">Xcel Energy &middot; AI Ops Contract</div>
+        <div class="case-title">Nobody owned what the AI knew.</div>
+        <div class="case-brief">The role was post-deployment quality and governance for production AI agents. No monitoring layer existed.</div>
+        <div class="case-built"><strong>Built:</strong> A working monitor over a retrieval agent serving energy utility customers &mdash; 30 governed documents across four operating companies, a deliberately naive agent that returns confident wrong answers, and a provenance checker scored at 0.944 precision on 240 labeled calls. The documents warned about themselves; the retrieval ignored them. That was the point.</div>
+        <div class="case-outcome">Got the role. Onboarded Oct 2026.</div>
+      </div>
+
+      <div class="case-card violet-top">
+        <div class="case-label">Melior &middot; AI Program Manager</div>
+        <div class="case-title">They wrote the transcripts. They knew who said what.</div>
+        <div class="case-brief">Final-round exercise: analyze five FakeCo discovery transcripts, build a consulting deck, present to a panel playing the executive team. The panel had written the transcripts themselves.</div>
+        <div class="case-built"><strong>Built:</strong> A full discovery-to-roadmap deck (14 slides, systematic quote verification against source transcripts), plus an ElevenLabs rehearsal agent voiced as the three executives &mdash; so the CEO could push back on the proposal the night before the room.</div>
+        <div class="case-outcome">Received an offer. Declined in favor of Xcel.</div>
+      </div>
+
+      <div class="case-card metric-top">
+        <div class="case-label">Contentful &middot; AI Consulting (Legal)</div>
+        <div class="case-title">Contract review shouldn&#8217;t take two weeks.</div>
+        <div class="case-brief">Built as a proof-of-concept during the Contentful engagement: what an AI-assisted legal review layer would actually look like in production.</div>
+        <div class="case-built"><strong>Built:</strong> A two-stage router with specialized contract analysis, a 30-item legal-standards library, weighted multi-dimensional risk scoring, AI clause recommendations with alternative language, and an attorney feedback loop where attorney corrections evolve the standards over time.</div>
+        <div class="case-outcome">Now in legal-os/contract-review/. Pilot-ready.</div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ── The Deeper Pattern ── -->
+  <div class="section animate" style="--i:5">
+    <div class="section-label">The Deeper Pattern</div>
+    <p style="font-size:15px;color:var(--text-dim);max-width:720px;margin-bottom:20px;line-height:1.7;">
+      This process is not an interview technique. It is the same discipline AESOP applies when building a roadmap for an organization: deep context first, landscape mapped before anything is built, every project aligned to where the org is actually going rather than where someone guessed it was going.
+    </p>
+    <div class="detail-rows">
+      <div class="detail-row">
+        <div class="dr-label">In an interview</div>
+        <div class="dr-text">Research the org. Name the specific gap. Build against their real failure modes. Show your thinking on their problem, not the category of problem.</div>
+      </div>
+      <div class="detail-row">
+        <div class="dr-label">In AESOP</div>
+        <div class="dr-text">Capture organization context. Run structured discovery. Build a portfolio of projects grounded in what was found. Evaluate and deploy only what is aligned to the org&#8217;s actual direction &mdash; not what seemed like a good idea before anyone asked the right questions.</div>
+      </div>
+      <div class="detail-row">
+        <div class="dr-label">Why it&#8217;s the same move</div>
+        <div class="dr-text">In both cases, the artifact is only as good as the context it was built against. A proposal that doesn&#8217;t map to the org&#8217;s actual constraints fails in the room. A project that doesn&#8217;t map to the org&#8217;s actual direction fails in production. The research is not the preparation &mdash; it is the work.</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="callout animate" style="--i:6">
+    Research the real standard. Fix the contract before building. Build the artifact. Grade it honestly. Probe it live.
+    <span class="land">The room goes better when you&#8217;ve already solved it.</span>
+  </div>
+
+  <div class="footer">&copy; 2025&#8211;2026 Charlie Fuller</div>
+
+</div>
+</body>
+</html>
