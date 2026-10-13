@@ -1,0 +1,419 @@
+<!DOCTYPE html>
+<html lang="en" class="light">
+<head>
+<meta charset="UTF-8">
+<link rel="icon" href="../icon.svg" type="image/svg+xml">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AESOP Studio &mdash; Interview Prep Flow</title>
+<meta name="description" content="The 10-phase interview prep process in AESOP: from company research through knowledge audit, build proposal, spec doc, deck, and live voice agent rehearsal.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Mulish:ital,wght@0,300;0,400;0,600;0,700;0,800;1,400&display=swap" rel="stylesheet">
+<style>
+:root {
+  --font-body:'Mulish','Segoe UI',Helvetica,sans-serif;
+  --font-mono:'Mulish',ui-monospace,'SF Mono',Consolas,monospace;
+  --bg:#14181C; --surface:#1B2127; --surface2:#232B33; --surface3:#232B33;
+  --border:#303A43; --border-bright:#42505C;
+  --text:#F4F5F6; --text-dim:#CBD0D6; --text-muted:#87919B; --text-faint:#97A2AD;
+  --primary:#F58A4E; --primary-dim:rgba(245,138,78,0.12);
+  --secondary:#45C7A6; --secondary-dim:rgba(69,199,166,0.10);
+  --metric:#45C7A6; --metric-dim:rgba(69,199,166,0.10);
+  --good:#45C7A6; --good-dim:rgba(69,199,166,0.10);
+  --warn:#E0B05B; --warn-dim:rgba(224,176,91,0.10);
+  --bad:#E8735F; --bad-dim:rgba(232,115,95,0.10);
+  --violet:#B78BD8; --violet-dim:rgba(183,139,216,0.10);
+  --slate:#87919B; --slate-dim:rgba(135,145,155,0.12);
+}
+html.light {
+  --bg:#F7F3EF; --surface:#FFFFFF; --surface2:#F0E9E1; --surface3:#F0E9E1;
+  --border:#E1D6CB; --border-bright:#CDBBA8;
+  --text:#241A12; --text-dim:#574A3C; --text-muted:#6F6255; --text-faint:#6F6255;
+  --primary:#C64A11; --primary-dim:rgba(198,74,17,0.10);
+  --secondary:#0E7C66; --secondary-dim:rgba(14,124,102,0.10);
+  --metric:#0E7C66; --metric-dim:rgba(14,124,102,0.10);
+  --good:#0E7C66; --good-dim:rgba(14,124,102,0.10);
+  --warn:#8A5A0B; --warn-dim:rgba(138,90,11,0.10);
+  --bad:#B03A26; --bad-dim:rgba(176,58,38,0.10);
+  --violet:#6D3FC4; --violet-dim:rgba(109,63,196,0.10);
+  --slate:#6B6259; --slate-dim:rgba(107,98,89,0.12);
+}
+*{margin:0;padding:0;box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{
+  background:var(--bg);
+  background-image:
+    radial-gradient(at 10% 0%,var(--primary-dim),transparent 50%),
+    radial-gradient(at 90% 80%,var(--metric-dim),transparent 50%);
+  color:var(--text);font-family:var(--font-body);font-size:15px;line-height:1.7;
+  -webkit-font-smoothing:antialiased;min-height:100vh;
+}
+
+.nav{max-width:1040px;margin:0 auto;padding:16px 24px 4px}
+.crumbs{font-family:var(--font-mono);font-size:13px;font-weight:600;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.crumbs a{color:var(--primary);text-decoration:none}
+.crumbs a:hover{text-decoration:underline}
+.crumbs .sep{color:var(--text-faint)}
+.crumbs .current{color:var(--text-faint);font-weight:400}
+
+.wrap{max-width:800px;margin:0 auto;padding:0 24px 80px}
+
+.hero{padding:36px 0 28px;border-bottom:1px solid var(--border);margin-bottom:32px}
+.hero .tagline{font-family:var(--font-mono);font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.14em;color:var(--primary);margin-bottom:10px}
+.hero h1{font-size:44px;line-height:1.05;letter-spacing:-0.03em;font-weight:800;
+  background:linear-gradient(135deg,var(--primary),var(--metric));-webkit-background-clip:text;background-clip:text;color:transparent}
+.hero .lede{font-size:16px;color:var(--text-dim);max-width:600px;margin:10px 0 0;text-align:left}
+
+/* ── Flow ── */
+.flow{position:relative;padding-left:40px}
+.flow::before{
+  content:"";position:absolute;left:14px;top:24px;bottom:24px;
+  width:2px;background:linear-gradient(to bottom,var(--primary),var(--metric));
+  opacity:.35;
+}
+
+.phase{position:relative;margin-bottom:0}
+.phase+.phase{margin-top:0}
+
+.phase-connector{
+  position:absolute;left:-26px;top:28px;
+  width:12px;height:2px;background:var(--border-bright);
+}
+
+.phase-dot{
+  position:absolute;left:-32px;top:22px;
+  width:14px;height:14px;border-radius:50%;
+  background:var(--surface);border:2px solid var(--border-bright);
+  transition:border-color .2s,background .2s;
+}
+.phase:hover .phase-dot{border-color:var(--primary);background:var(--primary-dim)}
+
+/* Connector between phases */
+.phase-gap{
+  position:relative;height:10px;
+  margin-left:0;
+}
+
+.phase-card{
+  background:var(--surface);border:1px solid var(--border);border-radius:12px;
+  padding:18px 20px;transition:border-color .15s,box-shadow .15s;
+}
+.phase-card:hover{border-color:var(--border-bright);box-shadow:0 2px 12px rgba(0,0,0,0.06)}
+
+.phase-header{display:flex;align-items:flex-start;gap:12px}
+.phase-num{
+  font-family:var(--font-mono);font-size:11px;font-weight:700;
+  color:var(--primary);min-width:20px;padding-top:2px;
+}
+.phase-title{font-size:15px;font-weight:800;color:var(--text);letter-spacing:-0.01em}
+.phase-desc{font-size:13px;color:var(--text-muted);margin-top:2px;line-height:1.5}
+
+.phase-body{margin-top:12px;padding-top:12px;border-top:1px solid var(--border)}
+.phase-body p{font-size:13.5px;color:var(--text-dim);line-height:1.6;margin-bottom:8px}
+.phase-body p:last-child{margin-bottom:0}
+
+.out-label{
+  display:inline-flex;align-items:center;gap:5px;
+  margin-top:10px;
+  font-family:var(--font-mono);font-size:11px;font-weight:700;
+  color:var(--metric);text-transform:uppercase;letter-spacing:.08em;
+}
+.out-label::before{content:"";width:6px;height:6px;border-radius:50%;background:var(--metric);flex-shrink:0}
+
+.gate-badge{
+  display:inline-flex;align-items:center;gap:4px;margin-top:8px;
+  padding:3px 8px;border-radius:20px;
+  background:var(--warn-dim);border:1px solid var(--warn);
+  font-family:var(--font-mono);font-size:10px;font-weight:700;
+  color:var(--warn);text-transform:uppercase;letter-spacing:.06em;
+}
+
+/* Special last step */
+.phase-card.final{
+  border-color:var(--metric);
+  background:linear-gradient(135deg,var(--surface),var(--metric-dim));
+}
+.phase-card.final .phase-title{
+  background:linear-gradient(135deg,var(--primary),var(--metric));
+  -webkit-background-clip:text;background-clip:text;color:transparent;
+}
+
+/* Input box above the flow */
+.input-box{
+  background:var(--surface2);border:1px solid var(--border);border-radius:12px;
+  padding:16px 20px;margin-bottom:24px;
+}
+.input-box h3{font-size:13px;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:.08em;font-family:var(--font-mono);margin-bottom:10px}
+.input-row{display:flex;gap:10px;flex-wrap:wrap}
+.input-pill{
+  padding:5px 12px;border-radius:20px;
+  background:var(--surface);border:1px solid var(--border);
+  font-size:12px;font-weight:600;color:var(--text-dim);
+}
+.input-pill.required{border-color:var(--primary);color:var(--primary)}
+.input-pill.optional{border-color:var(--border-bright);color:var(--text-muted)}
+
+/* KB callout */
+.kb-callout{
+  background:var(--primary-dim);border:1px solid var(--primary);border-radius:12px;
+  padding:16px 20px;margin-top:28px;
+}
+.kb-callout h3{font-size:13px;font-weight:800;color:var(--primary);margin-bottom:6px}
+.kb-callout p{font-size:13.5px;color:var(--text-dim);line-height:1.6}
+
+.footer{margin-top:44px;padding-top:16px;border-top:1px solid var(--border);display:flex;justify-content:space-between;gap:20px;flex-wrap:wrap;font-family:var(--font-mono);font-size:12px;color:var(--text-faint)}
+.footer a{color:var(--primary);text-decoration:none}
+.footer a:hover{text-decoration:underline}
+
+@media(max-width:640px){.hero h1{font-size:32px}.wrap{padding:0 16px 60px}.flow{padding-left:28px}.flow::before{left:8px}}
+@media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+</head>
+<body>
+
+<nav class="nav" aria-label="Breadcrumb">
+  <div class="crumbs">
+    <a href="../index.html">Index</a><span class="sep">/</span>
+    <a href="../aesop.html">AESOP</a><span class="sep">/</span>
+    <span class="current" aria-current="page">Interview Prep Flow</span>
+  </div>
+</nav>
+
+<main class="wrap">
+
+  <header class="hero">
+    <div class="tagline">AESOP Studio &mdash; Demo mode</div>
+    <h1>Interview Prep Flow</h1>
+    <p class="lede">Ten gated phases. You approve each output before the next one runs. Every artifact feeds a shared knowledge base that becomes the voice agent you rehearse against before you walk in.</p>
+  </header>
+
+  <!-- Inputs -->
+  <div class="input-box">
+    <h3>Session inputs</h3>
+    <div class="input-row">
+      <span class="input-pill required">Company name</span>
+      <span class="input-pill required">Role title</span>
+      <span class="input-pill optional">Job description (PDF/DOCX/paste)</span>
+      <span class="input-pill optional">Assignment brief</span>
+      <span class="input-pill optional">Research docs</span>
+      <span class="input-pill optional">People in the room</span>
+    </div>
+  </div>
+
+  <!-- Flow -->
+  <div class="flow">
+
+    <div class="phase">
+      <div class="phase-dot"></div>
+      <div class="phase-card">
+        <div class="phase-header">
+          <span class="phase-num">01</span>
+          <div>
+            <div class="phase-title">Research</div>
+            <div class="phase-desc">Company context + each person in the room</div>
+          </div>
+        </div>
+        <div class="phase-body">
+          <p>Deep research on the company: AI posture, tech stack, regulatory obligations, competitive position, what the job posting tells you about what&rsquo;s broken. Then the same pass on each person you named &mdash; career arc, public writing, what question candidates never answer for them.</p>
+          <span class="out-label">Research summary</span>
+          <div><span class="gate-badge">&#9650; Gate &mdash; review before continuing</span></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="phase-gap"></div>
+
+    <div class="phase">
+      <div class="phase-dot"></div>
+      <div class="phase-card">
+        <div class="phase-header">
+          <span class="phase-num">02</span>
+          <div>
+            <div class="phase-title">Knowledge Audit</div>
+            <div class="phase-desc">What you have, what you&rsquo;re missing, what to assume</div>
+          </div>
+        </div>
+        <div class="phase-body">
+          <p>Audits the research against the JD and assignment across 10 categories: tech stack, internal architecture, budget constraints, vendor contracts, failure history, regulatory specifics, competitive context. For each gap: status, note, and the named assumption that carries it forward.</p>
+          <span class="out-label">Audit table + gap list</span>
+          <div><span class="gate-badge">&#9650; Gate &mdash; review before continuing</span></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="phase-gap"></div>
+
+    <div class="phase">
+      <div class="phase-dot"></div>
+      <div class="phase-card">
+        <div class="phase-header">
+          <span class="phase-num">03</span>
+          <div>
+            <div class="phase-title">Brief</div>
+            <div class="phase-desc">Your working theory, stated with its assumptions</div>
+          </div>
+        </div>
+        <div class="phase-body">
+          <p>Synthesizes research and audit into a prep brief. Every assumption is named explicitly &mdash; &ldquo;I don&rsquo;t have X, so I&rsquo;m assuming Y.&rdquo; This is what you&rsquo;d tell the panel before you start the demo: what you know, what you inferred, and where you&rsquo;d push back if you&rsquo;re wrong.</p>
+          <span class="out-label">Editable brief</span>
+          <div><span class="gate-badge">&#9650; Gate &mdash; edit before continuing</span></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="phase-gap"></div>
+
+    <div class="phase">
+      <div class="phase-dot"></div>
+      <div class="phase-card">
+        <div class="phase-header">
+          <span class="phase-num">04</span>
+          <div>
+            <div class="phase-title">Flaw Check</div>
+            <div class="phase-desc">Hostile review before the idea leaves the room</div>
+          </div>
+        </div>
+        <div class="phase-body">
+          <p>A skeptic reads the brief and looks for holes: wrong stack assumption, ignored constraint, overreach given the seniority of the role, something that&rsquo;ll get you immediately challenged in the room. Severity-ranked findings: critical, moderate, minor.</p>
+          <span class="out-label">Findings by severity</span>
+          <div><span class="gate-badge">&#9650; Gate &mdash; review before continuing</span></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="phase-gap"></div>
+
+    <div class="phase">
+      <div class="phase-dot"></div>
+      <div class="phase-card">
+        <div class="phase-header">
+          <span class="phase-num">05</span>
+          <div>
+            <div class="phase-title">Build Proposal</div>
+            <div class="phase-desc">What to build, on what stack, with what honest limits</div>
+          </div>
+        </div>
+        <div class="phase-body">
+          <p>Proposes the artifact: what it demonstrates, which stack to build it on (prioritizing the company&rsquo;s own tools with free-tier options called out), failure modes to name up front, and the honest limit &mdash; what you can&rsquo;t know without internal system access.</p>
+          <span class="out-label">Proposal + stack recommendation</span>
+          <div><span class="gate-badge">&#9650; Gate &mdash; review before continuing</span></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="phase-gap"></div>
+
+    <div class="phase">
+      <div class="phase-dot"></div>
+      <div class="phase-card">
+        <div class="phase-header">
+          <span class="phase-num">06</span>
+          <div>
+            <div class="phase-title">Spec Doc</div>
+            <div class="phase-desc">Self-contained build prompt for Claude or Cursor</div>
+          </div>
+        </div>
+        <div class="phase-body">
+          <p>Generates a complete build prompt: the full context, the artifact requirements, the stack choices, the constraints, the output format. Paste it into Claude Artifacts or Cursor and the artifact builds itself. The spec is platform-aware &mdash; it outputs in the form the target builder expects.</p>
+          <span class="out-label">Editable spec doc</span>
+          <div><span class="gate-badge">&#9650; Gate &mdash; edit before continuing</span></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="phase-gap"></div>
+
+    <div class="phase">
+      <div class="phase-dot"></div>
+      <div class="phase-card">
+        <div class="phase-header">
+          <span class="phase-num">07</span>
+          <div>
+            <div class="phase-title">Deck + Talk Track</div>
+            <div class="phase-desc">Slide outline, script, and a Claude Design prompt</div>
+          </div>
+        </div>
+        <div class="phase-body">
+          <p>Slide-by-slide deck outline and a full talk track for each slide. Also generates a Claude Design prompt to render the deck visually. The deck is structured as a presentation, not a portfolio &mdash; it opens with the problem, not the solution, and the hardest line lands last.</p>
+          <span class="out-label">Editable deck + script</span>
+          <div><span class="gate-badge">&#9650; Gate &mdash; edit before continuing</span></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="phase-gap"></div>
+
+    <div class="phase">
+      <div class="phase-dot"></div>
+      <div class="phase-card">
+        <div class="phase-header">
+          <span class="phase-num">08</span>
+          <div>
+            <div class="phase-title">System Prompt</div>
+            <div class="phase-desc">The voice agent&rsquo;s identity: shaped like the room</div>
+          </div>
+        </div>
+        <div class="phase-body">
+          <p>Writes the ElevenLabs agent system prompt. The agent is voiced as the panel: it knows the company, has read the brief, asks the questions a skeptical hiring manager would ask. Difficulty dial built in &mdash; softball, normal, adversarial. Edit to match who&rsquo;s actually walking in.</p>
+          <span class="out-label">Editable system prompt</span>
+          <div><span class="gate-badge">&#9650; Gate &mdash; edit before continuing</span></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="phase-gap"></div>
+
+    <div class="phase">
+      <div class="phase-dot"></div>
+      <div class="phase-card">
+        <div class="phase-header">
+          <span class="phase-num">09</span>
+          <div>
+            <div class="phase-title">KB Assembly</div>
+            <div class="phase-desc">Everything in one knowledge base, capped at 295K chars</div>
+          </div>
+        </div>
+        <div class="phase-body">
+          <p>Concatenates all phase outputs plus any documents you uploaded &mdash; JD, assignment, uploaded research decks, notes &mdash; into a single knowledge base. The agent will be able to cite any of it during rehearsal. Progress bar shows how full the 295K ElevenLabs limit is.</p>
+          <span class="out-label">Compiled KB</span>
+          <div><span class="gate-badge">&#9650; Gate &mdash; review before continuing</span></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="phase-gap"></div>
+
+    <div class="phase">
+      <div class="phase-dot"></div>
+      <div class="phase-card final">
+        <div class="phase-header">
+          <span class="phase-num">10</span>
+          <div>
+            <div class="phase-title">Create Voice Agent</div>
+            <div class="phase-desc">Upload KB, spin up the rehearsal agent, walk in prepared</div>
+          </div>
+        </div>
+        <div class="phase-body">
+          <p>Paste your ElevenLabs API key. AESOP uploads the knowledge base, creates the Conversational AI agent, and returns a dashboard link. Open ElevenLabs, press play, and run your presentation against a panel that sounds like the room and has read everything you gave it.</p>
+          <p>Run as many times as you need. Each rehearsal is an eval on yourself.</p>
+          <span class="out-label">Live rehearsal agent</span>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- /flow -->
+
+  <!-- KB callout -->
+  <div class="kb-callout">
+    <h3>One knowledge base for the whole session</h3>
+    <p>Every document you upload &mdash; JD, assignment, research decks, notes &mdash; and every phase output feeds the same KB. Upload more any time before phase 9 runs. The agent knows everything you gave it, and nothing you didn&rsquo;t.</p>
+  </div>
+
+  <footer class="footer">
+    <span>&copy; 2025&ndash;2026 Charlie Fuller &nbsp;&middot;&nbsp; <a href="https://linkedin.com/in/charlie-fuller-colorado/" target="_blank" rel="noopener">LinkedIn</a></span>
+    <span><a href="../aesop.html">Back to AESOP</a></span>
+  </footer>
+
+</main>
+</body>
+</html>
